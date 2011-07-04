@@ -1,0 +1,733 @@
+<?php
+session_start();
+include("inc/uri_parts.php");
+$_SESSION['screen_name'] = $parts[4];
+
+include_once("functions.php");
+function microtime_float()
+{
+    list($utime, $time) = explode(" ", microtime());
+    return ((float)$utime + (float)$time);
+}
+$startTime = microtime_float();
+//include_once("../../conf/main.php"); 
+?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <style type="text/css">
+	 #map {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top:0px;
+                left:0px;
+                z-index:1;
+            }
+
+        body {
+                margin: 0px;
+                padding: 0px;
+	} 
+	#legend {
+                padding: 0px;
+                position: absolute;
+        }
+        
+        </style>
+        <?php
+		include_once("../../libs/yui/phploader/phploader/loader.php");
+		$loader = new YAHOO_util_Loader("2.8.0");
+		$loader->allowRollups = false;
+		$loader->combine = true;
+		$loader->load("yahoo", "dom", "event", "utilities", "resize", "fonts", "button", "container");
+		echo $loader->tags();
+		//$_REQUEST['popup'] = "false";
+		?>
+		
+        <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
+	<!--<script type="text/javascript" src="http://openlayers.org/dev/OpenLayers.js"></script>-->
+	
+	<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhS4p9AtMz66nyqFUaziGHLM44rOahQ1vHhpXeGXl_ifkSE8O1eT_foV2w"
+		type="text/javascript">
+	</script>
+	
+	<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="/js/ext/ext-all.js"></script>
+        <script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js"></script>
+        <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
+        <link rel="stylesheet" type="text/css" href="/styles/styles.css" />
+
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+
+	
+
+        <script type="text/javascript">
+		var layer;
+		var newLayerStrArr = [];
+		var map,layer,popup,markers,icon1,icon2,snap,feature1,feature2,vectors3,vectorsHelper1,vectorsHelper2;
+		var conf=[];
+		var MapappWin = null;
+		var popupOn = <?php  if ($_REQUEST['popup']) echo $_REQUEST['popup']; else echo "1";?>;
+		//var popupOn = false;
+		var base = [];
+		var doNotUsePopUp = '<?= $_REQUEST['usepopup'] ?>';
+		var layerStr = '<?= $_REQUEST['layers'] ?>';
+		var minxFromFilter = '';
+		var minyFromFilter = '';
+		var maxxFromFilter = '';
+		var maxyFromFilter = '';
+		var graphicLayer;
+		var renderGeometryArray;
+		var resultHtml = "";
+		
+<?php
+$_REQUEST['signaturoff']="true";
+$width = 400;
+$height = 400;
+if ((!$_REQUEST['mapservice']) ||  $_REQUEST['mapservice']!="MapServer")  $_REQUEST['mapservice'] = "WMS"; 
+
+$controlObject = & new control(TRUE,FALSE);
+$controlObject->doNotUseWMS=true;
+if ($mapfileUrl) $mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
+$controlObject -> setMapscriptObject($mapscriptObject);
+if ($_REQUEST['popuppage']) {
+    $popupPage = $_REQUEST['popuppage'];
+}
+else {
+    $popupPage = $_SERVER['PHP_SELF'];
+}
+
+            /* SET FILTER */
+
+//require("../filter_appformap_kujalleq.php");
+
+
+
+
+            /* SET FILTER END */
+if ((!$_REQUEST['lat']) || (!$_REQUEST['lon']))
+{
+    $_REQUEST['lon'] = $openLayers['center']['lon'];
+    $_REQUEST['lat'] = $openLayers['center']['lat'];
+}
+if (!$_REQUEST['zoom'])
+{
+    $_REQUEST['zoom'] = $openLayers['zoom'];
+    if ((!$_REQUEST['zoom']))
+    {
+	$_REQUEST['zoom']="0";
+    } 
+}
+
+ 
+$openLayers['bounds'] = str_replace(" ",",",$openLayers['bounds']);
+$openLayers['restricted'] = str_replace(" ",",",$openLayers['restricted']);
+
+$layers = explode(";",$_REQUEST['layers']);
+//for ($i = 0; $i < sizeof($layers); $i++)
+$u = 0;
+for ($i = 0; $i < sizeof($layers); $i++)
+{
+        $bits = explode(",",$layers[$i]);
+
+        if ($bits[0]) {
+                echo "conf[$u] = ['$bits[0]','$bits[1]']\n";
+                $mapscriptObject -> setStatus($bits[0],"on");
+                $layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
+                echo "conf[$u][2] ='".$layerObj -> getMetaData("appformap_opacity")."'\n";
+                echo "conf[$u][3] ='".$layerObj -> getMetaData("wms_title")."'\n";
+                echo "conf[$u][4] ='".$bits[1]."'\n";
+                $u++;
+                // Only default visible layers i layerStr
+                if (!$bits[1]) {
+                	echo "newLayerStrArr.push('$bits[0]');\n";
+                }
+	}
+}
+?>
+    layerStr = trim(newLayerStrArr.join(";"));
+    var layerBounds = new OpenLayers.Bounds(<?= $openLayers['bounds'] ?>);
+    var restrictedBounds = new OpenLayers.Bounds(<?= $openLayers['restricted'] ?>);
+
+    OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
+        defaultHandlerOptions: {
+            'single': true,
+            'double': false,
+            'pixelTolerance': 0,
+            'stopSingle': false,
+            'stopDouble': false
+        },
+
+        initialize: function(options) {
+            this.handlerOptions = OpenLayers.Util.extend(
+            {}, this.defaultHandlerOptions
+        );
+            OpenLayers.Control.prototype.initialize.apply(
+            this, arguments
+        );
+            this.handler = new OpenLayers.Handler.Click(
+            this, {
+                'click': this.trigger
+            }, this.handlerOptions
+        );
+        },
+
+        trigger: function(e) {
+        	if (popupOn) {
+			var mapBounds = map.getExtent();
+			var boundsArr =  mapBounds.toArray();
+			var boundsStr =  boundsArr.join(",");
+			var coords = map.getLonLatFromViewPortPx(e.xy);
+			try {popup.destroy()} catch(e){};
+			popup = new OpenLayers.Popup.FramedCloud("result",coords,null,"<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>",null, true);
+			map.addPopup(popup)
+			mapSize = map.getSize();
+			var callback = {
+				success:handlerOpenlayersDbQuery,
+				failure:alert,
+				argument:['foo','bar']
+			};
+			var param = 'lan=<?php echo $_REQUEST["lan"];?>&proj=<?php echo $proj; ?>&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + layerStr + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
+			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/http_db_query.phtml", callback, param);
+		}
+	}
+    })
+;
+
+    function init(){
+        function mapLayerChanged(event) {
+            var newlayerArr =[];
+            layerStrArr = layerStr.split(";");
+            for (var i in layerArr) {
+                if (layerArr[i] == event.layer) {
+                    layer = i;
+                }
+            }
+            if (layer) {
+                if (!event.layer.visibility) {
+                    for (i=0;i<layerStrArr.length;i++)
+                    {
+                        if (layerStrArr[i]==layer) var key = i;
+                    }
+                    layerStrArr.splice(key,1);
+                    key = null;
+                }
+                if (event.layer.visibility) {
+                    layerStrArr.push(layer);
+                }
+                layerStr = trim(layerStrArr.join(";"));
+                //alert(layerStr);
+                addLegend(layerStr);
+                layer = null;
+            }
+        }
+        
+        map = new OpenLayers.Map(mapel,{controls: 
+        	[new OpenLayers.Control.Navigation(),
+		new OpenLayers.Control.PanZoomBar(),
+		new OpenLayers.Control.Navigation({'zoomWheelEnabled': false}),
+		new OpenLayers.Control.LayerSwitcher()],
+                'numZoomLevels':20,
+		'projection': new OpenLayers.Projection("EPSG:900913"),
+		'maxResolution': 156543.0339,
+		'units': "m",
+                 eventListeners: {"changelayer": mapLayerChanged}}
+        );
+        //map.projection="EPSG:<?= $proj ?>";
+	//map.maxResolution="auto";
+        /*
+	<?php
+
+        for ($i=0;$i<sizeof($baseMapName);$i++)
+		{
+		if ($baseMapLayersIsSingleTile[$i]) {
+			$isSingleTile = "true";
+		}
+		else {
+			$isSingleTile = "false";
+		}
+	?>
+       
+	base.push(new OpenLayers.Layer.WMS("<?=$baseMapName[$i]?>", "<?=$baseMapServer[$i]?>",{layers:"<?=$baseMapLayers[$i]?>"},{maxExtent:layerBounds ,maxResolution: "auto",singleTile:<?php echo $isSingleTile;?>,transitionEffect:"resize"}));
+	<?php } ?>
+	 */
+	var extent = new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508);
+	map.maxExtent = extent;
+
+	var base = [];
+	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
+		type: G_HYBRID_MAP,
+		sphericalMercator: true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Satellite", {
+		type: G_SATELLITE_MAP,
+		sphericalMercator: true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Terrain", {
+		type: G_PHYSICAL_MAP,
+		sphericalMercator: true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Normal", {
+		type: G_NORMAL_MAP,
+		sphericalMercator: true
+	}));
+	vectors = new OpenLayers.Layer.Vector("Vector Layer");
+ 
+            map.addLayers([vectors]);
+			
+
+        map.addLayers(base);
+        for (var i=0; i<conf.length; i++) {
+            if (conf[i][1]) {popupOn=true}
+            if (conf[i][0]) {
+		    addLayer(conf[i][0],conf[i][3],conf[i][2],"<?php echo $layerConnectionString;?>",conf[i][4]);
+            }
+        }
+        addLegend(layerStr);
+        
+        //Start på url zoom sdsd
+		<?php
+		if ($_REQUEST['bounds']) {
+			$boundsArr = explode(",",$_REQUEST['bounds']); 
+		?>
+			var minxFromFilter = <?php echo $boundsArr[0];?>;
+			var minyFromFilter = <?php echo $boundsArr[1];?>;
+			var maxxFromFilter = <?php echo $boundsArr[2];?>;
+			var maxyFromFilter = <?php echo $boundsArr[3];?>;
+		<?php } ?> 
+		//End på url zoom
+
+       // map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
+        if (minxFromFilter != '') {
+        	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
+        }
+ 
+	//map.restrictedExtent = restrictedBounds;
+          var click = new OpenLayers.Control.Click();
+        map.addControl(click);
+        click.activate();
+        
+        var wkt = '<?php echo $_REQUEST['wkt'];?>';
+		if (wkt) {
+			addGraphicLayerFromGEOM(wkt);
+		}
+    }
+    var layerArr =[]
+    function addLayer(name,title,opacity,connectionString,notVisible) {
+        if (notVisible) var visible = false;
+        else var visible = true;
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:true});
+        map.addLayer(layerArr[name]);
+    }
+   
+       
+	
+    function addGraphicLayer(title,url,extent) {
+
+        try {
+            map.removeLayer(graphicLayer);
+        }
+        catch(e){};
+        graphicLayer = new OpenLayers.Layer.Image(title,url,OpenLayers.Bounds.fromString(extent),map.getSize(),{image:"png",projection:"epsg:<?= $proj ?>", maxExtent:layerBounds,maxResolution: 'auto',singleTile:true,isBaseLayer: false});
+        map.addLayer(graphicLayer);
+    }
+    function deserialize(element) {
+			
+            var type = "wkt";
+			var format = new OpenLayers.Format.WKT;
+            var features = format.read(element);
+            var bounds;
+            if(features) {
+                if(features.constructor != Array) {
+                    features = [features];
+                }
+                for(var i=0; i<features.length; ++i) {
+                    if (!bounds) {
+                        bounds = features[i].geometry.getBounds();
+                    } else {
+                        bounds.extend(features[i].geometry.getBounds());
+                    }
+ 
+                }
+                vectors.addFeatures(features);
+                //map.zoomToExtent(bounds);
+                var plural = (features.length > 1) ? 's' : '';
+                element = features.length + ' feature' + plural + ' added';
+            } else {
+                element = 'Bad input ' + type;
+            }
+        }
+   
+
+    function removeLayer(name){
+        map.removeLayer(layerArr[name]);
+    }
+    function removeAllLayers(){
+        for(var i in layerArr) {
+            var value = layerArr[i];
+            if (i!="kommunegrs") map.removeLayer(value);
+        }
+    }
+    function addLegend(layers) {
+		var param = 'layers=' + layers + '&type=json&lan=<?php echo $_REQUEST["lan"];?>';
+		document.getElementById("legend_img").src = "/apps/viewer/servers/http_legend.phtml?" + param;
+    }
+   
+    function addGraphicLayerFromGEOM(geom) {
+        wktStr = geom; // Set global var
+        var mapBounds = map.getExtent();
+        var boundsArr =  mapBounds.toArray();
+        var boundsStr =  boundsArr.join(",");
+        var mapSize = map.getSize();
+		var callback =
+		{
+		  success:handlerGraphicLayerFromGEOM,
+		  failure:alert,
+		  argument:['foo','bar']
+		};
+		var param = 'geom=' + geom + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
+		var request = YAHOO.util.Connect.asyncRequest('POST', "servers/http_render_geom.phtml", callback, param);
+        }
+    function handlerGraphicLayerFromGEOM(http) {
+
+            if (http.status == 200) {
+                var response = eval('(' + http.responseText + ')');// JSON
+                if (response.overlayMapimageUrl!=false) {
+                    addGraphicLayer("Resultat",response.overlayMapimageUrl,response.extent);
+                }
+            }
+        
+    }
+   
+    function trim(s) {
+        s = s.replace(/(^\;*)|(\;*$)/gi,"");
+        s = s.replace(/[;]{2,}/gi,";");
+        //s = s.replace(/\n /,"\n");
+        return s;
+    }
+    function printVersion()
+    {
+        var mapBounds = map.getExtent();
+        var boundsArr =  mapBounds.toArray();
+        var boundsStr =  boundsArr.join(",");
+        var mapSize = map.getSize();
+        document.printForm.renderGeometryArray.value = renderGeometryArray;
+        document.printForm.extent.value = boundsStr;
+        document.printForm.width.value = mapSize.w;
+        document.printForm.height.value = mapSize.h;
+        document.printForm.layer.value = layerStr;
+        document.printForm.resultHtml.value = resultHtml;
+        document.printForm.bgMap.value = map.baseLayer.name;
+	document.printForm.location.value = "<?php echo $_REQUEST["location"];?>";
+	document.printForm.lan.value = "<?php echo $_REQUEST["lan"];?>";
+        document.printForm.action="print.phtml";
+        document.printForm.target="blank";
+        document.printForm.submit();
+        document.printForm.target="";
+        document.printForm.action="<? echo $_SERVER['PHP_SELF']; ?>";
+    }
+	handlerLegend = function(http)
+    {
+		if (http.status == 200) {
+			var response = eval('(' + http.responseText + ')');// JSON
+			if (response.url!=false) {
+				document.getElementById("legend_img").src= response.url;
+			}
+		}
+    }
+	handlerOpenlayersDbQuery = function(http)
+	{
+		if (http.status == 200) {
+			var response = eval('(' + http.responseText + ')');// JSON
+			if (response.html!=false) {
+				document.getElementById("queryResult").innerHTML= response.html;
+				resultHtml = response.html; // Global var
+			}
+			else {
+				document.getElementById("queryResult").innerHTML= "Found nothing";
+			}
+			
+				//addGraphicLayer("Resultat",response.overlayMapimageUrl,response.extent);
+			vectors.removeAllFeatures();
+			map.raiseLayer(vectors,10);
+			for ( var i=0; i<response.renderGeometryArray.length; ++i ){
+				deserialize(response.renderGeometryArray[i][0]);
+				}
+			renderGeometryArray = response.renderGeometryArray; // Global var
+		}
+	}
+	handlerLegend = function(http)
+	{
+		if (http.status == 200) {
+			var response = eval('(' + http.responseText + ')');// JSON
+			if (response.url!=false) {
+					document.getElementById("legend_img").src= response.url;
+			}
+		}
+	}
+	handlerInsertFeatureInDb = function (data, textStatus, http)
+		{
+			if(http.readyState == 4)
+			{
+				if (http.status == 200) {
+					var response = eval('(' + http.responseText + ')');// JSON
+					if (response.isInserted) {
+					
+						geomInserted = true;
+						geomId = response.id;
+						wkt = null;
+						//alert(response.id);
+					}
+					else {
+						geomInserted = -1;
+						geomId = -1;
+					}
+				}
+			}
+	} 
+	function openMapWin(page,width,height)
+	{
+		var iLangID = iLangID;
+		var iWidth 					= width;
+		var iHeight 				= height;
+		var strWinName = "MapServer";
+		var strURL = page;
+		var popleft = (screen.width - iWidth) / 2;
+		var poptop = (screen.height - iHeight) / 2;
+		
+		var strParameters 	= "width=" + iWidth + ",height=" + iHeight + 
+							",resizable=1,scrollbars=0,status=1,left="+
+							popleft+",top="+poptop+",screenX="+popleft+
+							",screenY="+poptop+",toolbar=0";
+
+		if (MapappWin == null) openWin = true;
+		else if (MapappWin.closed) openWin = true;
+		else openWin = false;
+		
+		if (openWin) {
+			MapappWin 	= window.open(strURL, strWinName, strParameters);
+			MapappWin.focus();
+		} else {
+			if (!MapappWin.closed) {
+				MapappWin.focus();
+			}
+		}
+	}
+	function inFrames()
+	{
+		return ( top != self );
+	}
+	function createPointFromStr(str){
+		var coordArr = str.split(" ");
+		var point = new OpenLayers.Marker(new OpenLayers.LonLat(points1[0],points1[1]));
+		return point;
+	}
+	
+	function setExtentFromPoints(point1,point2)
+	{
+		
+
+		if((point1) && (point2)) {
+			
+			//alert(point1+";"+point2);
+			var points1 = point1.split(" ");
+			var points2 = point2.split(" ");
+			
+			markers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(points1[0],points1[1]),icon1));
+			markers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(points2[0],points2[1]),icon2));
+
+			
+			if (points1[0]<points2[0]) {
+				var left = points1[0];
+				var right = points2[0]
+				}
+			else {
+				var left = points2[0];
+				var right = points1[0]
+				}
+			
+			if (points1[1]<points2[1]) {
+				var bottom = points1[1];
+				var top = points2[1]
+				}
+			else {
+				var bottom = points2[1];
+				var top = points1[1]
+				}
+			
+			
+			var newBounds = new OpenLayers.Bounds(left,bottom,right,top)
+			//alert(newBounds.toString());
+			map.zoomToExtent(newBounds,false);
+			//map.restrictedExtent = new OpenLayers.Bounds(left-10000,bottom-10000,right+10000,top+10000); 
+		}
+		
+	}
+	function toggleControl(e) {
+		                
+		                     //alert(e.newValue.get("name"));
+		                     if(e.newValue.get("name") == "feature1") {
+		                         feature1.activate();
+		                         tool = "1";
+		                     } else {
+		                         feature1.deactivate();
+		                     }
+		                     if(e.newValue.get("name") == "feature2") {
+					 feature2.activate();
+					 tool = "2";
+				     } else {
+					 feature2.deactivate();
+		                     }
+		                 
+            }
+        </script>
+	<script type="text/javascript">	
+/*
+		$(document).ready(function(){
+	//	 	$("#legendButton").button();
+	//		$("#printButton").button();
+	//		$("#popupButton").button();
+	//		$("#legendButton").click(function(){dijit.byId("legendDialog").show();});
+	//		$("#printButton").click(function(){printVersion();return false; });
+	//		$("#legendDialog").dialog({position: ['right','bottom']});
+
+			if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
+			init();
+		    });
+*/
+		</script>
+	</head>
+	<body class="">
+
+	<form name="printForm" id="printForm" method="post" action=""><input
+		type="hidden" name="extent" value="" /> <input type="hidden"
+		name="width" value="" /> <input type="hidden" name="height" value="" />
+	<input type="hidden" name="renderGeometryArray" value="" /> <input
+		type="hidden" name="layer" value="" /> <input type="hidden"
+		name="resultHtml" value="" /> <input type="hidden" name="bgMap"
+		value="" /> <input type="hidden" name="location" value="" /> <input
+		type="hidden" name="lan" value="" /> <input type="hidden" name="type"
+		value="json" /></form>
+
+	<div id="mapel"></div>
+
+	<div
+		style="position: absolute; top: 5px; left: 110px; z-index: 1000; display: line;">
+	<a id="popupButton"
+		href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">Åben
+	som pop-up</a></div>
+
+
+
+		<div id="legendContent"><img alt="" id="legend_img" src="" /></div>
+
+
+	<div style="position: absolute; z-index: 2000; display: none"><textarea
+		id="gml" style="width: 100%" rows="30" cols=""></textarea></div>
+
+	<div style="position: absolute; z-index: 2000; display: none"><a
+		href="javascript:void(0);" onclick="insertFeatureInDb();">Indsaæt</a></div>
+
+	</body>
+
+	<script>
+
+	Ext.onReady(function(){
+	    
+		var win;
+
+
+	if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
+	init();
+
+
+// Navigation history - two "button" controls
+	var ctrl, toolbarItems = [], action, actions = {};
+    ctrl = new OpenLayers.Control.NavigationHistory();
+    map.addControl(ctrl);
+
+  
+
+    action = new GeoExt.Action({
+        text: "Legend",
+	 handler:function(objRef){
+		if(!win){
+		    win = new Ext.Window({
+			title: "Legend",
+			layout:'fit',
+			width:200,
+			height:300,
+			closeAction:'hide',
+			contentEl:legendContent,
+			x:5,
+			y:120
+		    });
+		}
+	    if(typeof(objRef)=="object"){
+            win.show(objRef);
+        	}else{
+            	win.show();
+        	}//end if object reference was passed
+		
+	    },
+        tooltip: "Vis signatur"
+    });
+    actions["legend"] = action;
+    toolbarItems.push(action);
+
+    action = new GeoExt.Action({
+        text: "Print",
+        handler: printVersion,
+        tooltip: "Print kortet"
+    });
+    actions["print"] = action;
+    //toolbarItems.push(action);
+   
+    toolbarItems.push("->");
+    action = new GeoExt.Action({
+        text: "<<",
+        control: ctrl.previous,
+        disabled: true,
+        tooltip: "previous in history"
+    });
+    actions["previous"] = action;
+    toolbarItems.push(action);
+
+    action = new GeoExt.Action({
+        text: ">>",
+        control: ctrl.next,
+        disabled: true,
+        tooltip: "next in history"
+    });
+    actions["next"] = action;
+    toolbarItems.push(action);
+   
+    
+
+
+
+
+new Ext.Viewport({
+        layout: "border",
+        items: {
+            region: "center",
+            id: "mappanel",
+            xtype: "gx_mappanel",
+            map: map,
+        tbar: toolbarItems 
+        }
+    });
+
+mapPanel = Ext.getCmp("mappanel");
+        //mapPanel.setCenter(new OpenLayers.LonLat(0,0),10);
+
+});
+
+
+
+	</script>
+
+
+	</html>
+
+	       

@@ -1,0 +1,221 @@
+<html>
+<head>
+<style>
+
+.layer_text {
+        font-weight: normal;
+        color: #545454;
+        text-align: left;  
+} 
+a:link {
+	color: #545454;
+}
+a:visited {
+	color: #545454;
+}
+body {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 11;
+	margin:0px;
+	padding:0px;
+}
+
+
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+
+
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/js/ext/ext-all.js"></script>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
+
+	
+<script>
+	
+
+var str = "<?php echo $_REQUEST["layers"];?>";
+var arr = str.split(";");
+var lat;
+var lon;
+var defaultLayers = "";
+$(top.mapframe.document).ready(function() 
+	{
+	//	str = top.mapframe.layerStr + ";";
+			//alert("Loaded");
+       // callback(this);
+    });
+
+function loadLayer(i,name,title,table,opacity,connectionString,e){
+	var newArr = [];
+ 	top.mapframe.popupOn = true;
+	//alert (e.checked);
+	if (e.checked) {
+		top.mapframe.addLayer(name,title,opacity,connectionString);
+		arr[i] = name;
+	}
+	else {
+		top.mapframe.removeLayer(name);
+		arr.splice(i,1,0);
+	}
+	
+	str = top.mapframe.trim(arr.join(";"));
+	top.mapframe.layerStr = str + defaultLayers;
+	top.mapframe.addLegend(str + defaultLayers);
+
+}
+function addEmbedStr() {
+	
+	var lonLat = top.mapframe.map.getCenter();
+
+	var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
+	
+	
+	var mapBounds = top.mapframe.map.getExtent();
+	var boundsArr =  mapBounds.toArray();
+	var boundsStr =  boundsArr.join(",");
+	var mapSize = top.mapframe.map.getSize();
+	
+	var embedStr2 = '<div class="mapdivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/client_image.phtml?extent='+boundsStr+'&width='+mapSize.w+'&height='+mapSize.h+'&layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '"/></div>';
+	
+	var embedStr3 = '<div class="legenddivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/legend_img.phtml?layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>"/></div>';
+	
+	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val();
+	
+	document.getElementById('embed_area1').value = embedStr1+embedStr2+embedStr3;
+	document.getElementById('embed_area4').value = embedStr4;
+}
+var items = [];
+
+</script>
+</head>
+<body class="claro">
+
+<?php
+include("inc/uri_parts.php");
+ini_set("display_errors", "On");
+error_reporting(3);
+
+$doNotLoadArr = array();
+$width = 400;
+$height = 400;
+
+include_once("../../conf/main.php");
+include_once("functions.php");
+//include_once("libs/phpgeometry_class.php");
+
+$controlObject = new control(TRUE,FALSE);
+$controlObject->doNotUseWMS=true;
+//$mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
+$mapscriptObject = new mapscript(NULL,"{$basePath}wms/mapfiles/{$parts[4]}.map",$controlObject);
+$controlObject -> setMapscriptObject($mapscriptObject);
+$layerArr = $mapscriptObject -> map -> getAllLayerNames();
+//asort($layerArr);
+$i = 0;
+foreach($layerArr as $layer)
+{
+	$layerObj = $mapscriptObject -> map -> getlayerbyname($layer);
+	if ($layerObj -> getMetaData("appformap_loader") == "true") {
+		$titles[$layer] = $layerObj -> getMetaData("wms_title");
+		$groups[$layer] = $layerObj -> getMetaData("appformap_group");
+	}
+}
+
+asort($titles);
+?>
+<script>
+<?php
+foreach (array_unique($groups) as $group)
+{?>
+items.push({
+        xtype: 'panel',
+	title: '<?php echo $group;?>',
+        bodyStyle: {padding: '5px'},
+        collapsible: true,
+        html: "<div><?php	
+	echo "<div  title='{$group}'>";
+	foreach($titles as $layer=>$title)
+	{
+		$layerObj = $mapscriptObject -> map -> getlayerbyname($layer);
+		$table = $layerObj -> getMetaData("query_table");
+		$abstract = $layerObj -> getMetaData("wms_abstract");
+		$href = $layerObj -> getMetaData("wms_metadataurl_href");
+		$layerGroup = $layerObj -> getMetaData("appformap_group");
+		$opacity = $layerObj -> getMetaData("appformap_opacity");
+		$layerConnectionString = $mapscriptObject -> map -> getMetaData("wms_onlineresource");
+		if (!$table) $table = $layer;
+		if ($layerGroup == $group && ($layerGroup))
+		{
+			if (!(in_array($layer,$doNotLoadArr)) || ($_REQUEST['showcodebox']))
+			{
+				echo "<input class='layer' type='checkbox' name='$layer' id='$layer' onclick='javascript:loadLayer(".$i.",\\\"".$layer."\\\",\\\"".$title."\\\",\\\"".$table."\\\",\\\"".$opacity."\\\",\\\"".$layerConnectionString."\\\",this)'";
+				if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
+				echo "/>";
+				
+				if ($abstract) {
+					$class="class='tooltip' id='tt$layer'";
+				}
+				else {
+					$class = "";
+				}
+				$titleStr = "<span ".$class.">".$title."</span>";
+				if ($href) {
+					echo "<a target='_blank' href='".$href."'>".$titleStr."</a>";
+				}
+				else {
+					echo $titleStr;
+				}
+				echo "<br/>";
+			}
+		}
+		$i++;
+	}
+	echo "</div>";
+echo "</div>\"})\n";
+}
+?>
+   
+new Ext.Viewport({
+        //cls: 'x-layout-grid',
+        autoScroll: true,
+        items: items
+    });
+
+
+</script>
+<?php
+/*
+$i = 0;
+$temp = "server_$i";
+global $$temp;
+while ($$temp != "")
+{
+	$temp = "server_$i";
+	global $$temp;
+	$serviceObject[$i] = & new service($i,$$temp,$controlObject);
+	$i ++;
+}
+$controlObject -> serverCount = $i-2;
+
+for ($i = 0; $i <= $controlObject->serverCount; $i ++)
+{
+
+	echo $serviceObject[$i] -> layercontrol();
+	
+}
+*/
+?>
+<br/>
+<br/>
+<div style="bottom:0px;display:<?php if ($_REQUEST['showcodebox']) {echo "inline";} else {echo "none";}?>;">
+<form id="theForm" name="theForm">
+<div>Interaktivt- og statisk kort</div>
+<input type="text" size="30" id="embed_area1" name="embed_area1" onclick="javascript:document.theForm.embed_area1.focus();document.theForm.embed_area1.select();" readonly='readonly' />
+<div>Url til kort</div>
+<input type="text" size="30" id="embed_area4" name="embed_area4" onclick="javascript:document.theForm.embed_area4.focus();document.theForm.embed_area4.select();" readonly='readonly' />
+<br/>
+<a href="#" id="codeButton">Se kode</a><br />
+</form>
+</div>
+</body>
+</html>

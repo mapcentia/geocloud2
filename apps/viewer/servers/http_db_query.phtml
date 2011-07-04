@@ -1,0 +1,80 @@
+<?php 
+include_once("server_header.inc");
+include_once("../../../conf/main.php");
+include_once("../functions.php");
+
+$postgisdb = $_SESSION['screen_name'];
+
+$width = $_REQUEST['width'];
+$height = $_REQUEST['height'];
+
+$pg_query_function = "intersects";
+//$proj = $_REQUEST["proj"];
+$proj = "900913";
+
+$postgisObject = new postgis();
+$postgisObject -> pg_query_type = "point";
+
+$controlObject = new control(true);
+$controlObject -> doNotUseWMS = true;
+$postgisObject -> setControlObject($controlObject);
+
+$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}.map",$controlObject);
+$controlObject -> setMapscriptObject($mapscriptObject);
+
+$controlObject -> viewRegion($_REQUEST['extent']);
+
+
+$layers = explode(";",$_REQUEST['layers']);
+
+
+
+for ($i = 0; $i < sizeof($layers); $i++)
+{
+	if ($layers[$i]) {
+		$bits = explode(",",$layers[$i]);
+		
+		// We set the query vars
+		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"fieldconf"));
+		
+		$postGisQueryName[strtoupper($bits[0])]="Geologiske interesser";
+		foreach($fieldconfArr as $key=>$value){
+			if ($value->querable) $strs[]= strtoupper($value->column);
+		}
+		$str = implode(",",$strs);
+		$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
+		
+		$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
+		$queryTable = $layerObj -> getMetaData("appformap_query_table");
+		$queryable = $layerObj -> getMetaData("appformap_queryable");
+		if (!$queryTable) {
+			$queryTable = $bits[0];
+		}
+		$queryBuffer = $layerObj -> getMetaData("appformap_query_buffer");
+		if (!$queryBuffer) {
+			$queryBuffer = false;
+		}
+
+		if ($bits[1] || $queryable == true) { 
+			$coords = $_REQUEST['lon'] . " " . $_REQUEST['lat']; 
+			$response['html'] .= $postgisObject -> queryDump('', $coords, $queryTable, '*', 'POSTGIS','',$queryBuffer);
+		}
+		else {
+			if ($response['html']=="") $response['html'] = false;
+		}
+	}
+	else {
+		if ($response['html']=="") $response['html'] = false;
+	}
+}
+
+//$imageName=$controlObject->createMapImage($workingDir,$imgPrefix,$imageLabel);
+//$response['overlayMapimageUrl'] = $imageUrl."overlay".$imageName;
+ 
+if ($response['html']) {
+	$response['html'] = htmlSpecialChars::ConvertDanishChars($response['html']);
+}
+$response['extent'] = $_REQUEST['extent'];
+$response['renderGeometryArray'] = $postgisObject -> renderGeometryArray;
+include_once('server_footer.inc');
+?>

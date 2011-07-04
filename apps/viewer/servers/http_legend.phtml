@@ -1,0 +1,29 @@
+<?php 
+session_start();
+header("Content-type: image/png");
+include_once("../../../conf/main.php");
+	include_once("../functions.php");
+
+	$width = 400;
+	$height = 401;
+
+	$controlObject = & new control(TRUE,FALSE);
+
+	$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}.map",$controlObject);
+	$controlObject -> setMapscriptObject($mapscriptObject);
+
+	if ($_REQUEST['layer']) $_REQUEST['layers'] = $_REQUEST['layer'];
+	$layers = explode(";",$_REQUEST['layers']);
+
+	for ($i = 0; $i < sizeof($layers); $i++)
+	{
+		$bits = explode(",",$layers[$i]);
+		if ($bits[0]) {
+			$mapscriptObject -> setStatus($bits[0],"on");
+		}
+		$response['url'] = $mapscriptObject->drawLegend();
+	}
+	$im=imagecreatefrompng($response['url']);
+	imagepng($im);
+	imagedestroy($im);
+echo $data;

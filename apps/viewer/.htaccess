@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^([\w'-]*)/([\w'-]*)$ $1.phtml
+RewriteRule ^([\w'-]*)$ $1.phtml
