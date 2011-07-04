@@ -1,0 +1,281 @@
+<?php
+function makeMapFile($user) {
+	global $basePath;
+	global $postgisdb;
+	$postgisdb = $user;
+	
+	$table = "volcanx020";
+	$postgisObject = new postgis();
+	$srs = "900913";
+	$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
+	$classObj = new _class();
+	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
+	//$result = $postgisObject->execQuery($sql);
+
+	print_r($postgisObject->PDOerror);
+
+	//$row = $postgisObject->fetchRow($result);
+	
+	ob_start();
+	?>
+	MAP
+	  # 
+	  # Start of map file
+	  #
+	  NAME "<?php echo $user;?>"
+	  STATUS on
+	  #EXTENT <?php echo "{$row['txmin']} {$row['tymin']} {$row['txmax']} {$row['tymax']}\n";?>
+	  EXTENT -180 -90 180 90
+	  SIZE 2000 1500 
+	  #SYMBOLSET "../etc/symbols.sym"
+	  FONTSET "../fonts/fonts.txt"
+	  IMAGECOLOR 255 255 255
+	  TRANSPARENT ON
+	  UNITS METERS
+	  INTERLACE OFF
+	  IMAGETYPE PNG
+	  WEB
+		IMAGEPATH "/var/www/ms_tmp/"
+  		IMAGEURL "http://<?php echo $_SERVER['SERVER_ADDR'];?>/ms_tmp/"
+		METADATA
+		  "wms_title"    "<?php echo $user;?>'s awesome WMS"
+		  "wms_srs"    "EPSG:<?php echo $srs;?> EPSG:4326"
+		  "wms_name"    "<?php echo $user;?>"
+		  "wms_format"    "image/png"
+		  "wms_onlineresource"	"http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $user;?>/"
+		  
+		END
+	  END
+	  #
+	  # Start of reference map
+	  #
+	  QUERYMAP
+		COLOR 255 255 0
+		STYLE normal
+	  END
+	  PROJECTION
+		"init=epsg:<?php echo $srs;?>" 
+	  END
+	  # 
+	  # Start of legend
+	  #
+	  LEGEND
+		STATUS off
+		IMAGECOLOR 255 255 255
+		KEYSIZE 18 12 
+		LABEL
+		  TYPE truetype
+		  FONT "arial"
+		  SIZE 8
+		  COLOR 0 0 0
+		  #SHADOWSIZE 2 2 
+		  #BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  #
+	  # Start of scalebar
+	  #
+	  SCALEBAR
+		STATUS off
+		COLOR 255 255 255
+		OUTLINECOLOR 0 0 0
+		BACKGROUNDCOLOR 0 0 0
+		IMAGECOLOR 255 255 255
+		UNITS METERS
+		INTERVALS 3
+		SIZE 150 5 
+		LABEL
+		  FONT "courierb"
+		  SIZE SMALL
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  Symbol
+    Name 'triangle'
+    Type VECTOR
+    Filled TRUE
+    Points
+     0 1
+     .5 0
+     1 1
+     0 1
+     END
+    END
+	SYMBOL
+    NAME "circle"
+    TYPE ellipse
+    FILLED true
+    POINTS
+      1 1
+    END
+  END
+  Symbol
+  Name 'square'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 1
+  0 0
+  1 0
+  1 1
+  0 1
+  END
+ END
+ Symbol
+  Name 'star'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 .375
+  .35 .375
+  .5 0
+  .65 .375
+  1 .375
+  .75 .625
+  .875 1
+  .5 .75
+  .125 1
+  .25 .625
+  END
+END 
+	  
+	  #
+	  # Start of layers
+	  #
+	<?php
+	$sql="SELECT * FROM geometry_columns";
+		$result = $postgisObject->execQuery($sql);
+		if($postgisObject->PDOerror){
+			makeExceptionReport($postgisObject->PDOerror);
+		}
+		while ($row = $postgisObject->fetchRow($result)) {
+		$wmslayerObj = new wmslayers();
+		$layerArr = $wmslayerObj->get($row['f_table_name']);
+		//print_r($layerArr);
+	?>
+	  
+	  LAYER
+		NAME "<?php echo $row['f_table_name'];?>"
+		STATUS off
+		DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_name'];?>"
+		<?php
+		switch ($row['type']) {
+					case "POINT":
+					$type = "POINT";
+					break;
+					case "LINESTRING":
+					$type = "LINE";
+					break;
+					case "POLYGON":
+					$type = "POLYGON";
+					break;
+					case "MULTIPOINT":
+					$type = "POINT";
+					break;
+					case "MULTILINESTRING":
+					$type = "LINE";
+					break;
+					case "MULTIPOLYGON":
+					$type = "POLYGON";
+					break;
+				}
+		?>
+		TYPE <?php echo $type."\n";?>
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?>"
+		
+		#CLASSITEM
+		<?php if($layerArr['data'][0]['theme_column']) echo "CLASSITEM '".$layerArr['data'][0]['theme_column']."'\n";?>
+
+		#LABELITEM
+		<?php if($layerArr['data'][0]['label_column']) echo "LABELITEM '".$layerArr['data'][0]['label_column']."'\n";?>
+
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "<?php echo $row['f_table_title'];?>"
+		  "wms_srs"    "EPSG:<?php echo $row['srid'];?> EPSG:900913"
+		  "wms_name"    "<?php echo $row['f_table_name'];?>"
+		  "wms_abstract"    "<?php echo $row['f_table_abstract'];?>"
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Mygeocloud"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+		END
+		PROJECTION
+		  "init=epsg:<?php echo $row['srid'];?>" 
+		END
+		<?php
+		$classArr = $classObj -> getAll($row['f_table_name']);
+		foreach ($classArr['data'] as $class) {
+		$class = $classObj -> get($class['id']);
+		//print_r($class);
+		?>
+		CLASS
+		  #NAME
+		  <?php if($class['data'][0]['name']) echo "NAME '".$class['data'][0]['name']."'\n";?>
+		  
+		  #EXPRESSION
+		  <?php if($class['data'][0]['expression']) echo "EXPRESSION '".$class['data'][0]['expression']."'\n";?>
+		  
+		  STYLE
+			  #SYMBOL
+			  <?php if($class['data'][0]['symbol']) echo "SYMBOL '".$class['data'][0]['symbol']."'\n";?>
+			  
+			  #WIDTH
+			  <?php if($class['data'][0]['width']) echo "WIDTH ".$class['data'][0]['width']."\n";?>
+				
+			  #COLOR
+			  <?php if($class['data'][0]['color']) echo "COLOR ". color::hex2RGB($class['data'][0]['color'],true," ")."\n";?>
+			  
+			  #OUTLINECOLOR
+			  <?php if($class['data'][0]['outlinecolor']) echo "OUTLINECOLOR ". color::hex2RGB($class['data'][0]['outlinecolor'],true," ")."\n";?>
+			  
+			  #SIZE
+			  <?php if($class['data'][0]['size']) echo "SIZE ".$class['data'][0]['size']."\n";?>
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  <?php if($class['data'][0]['label']) { ?>
+		  LABEL
+			TYPE truetype
+			FONT "arialbd"
+			SIZE 10
+			#MAXSIZE 10000
+			POSITION CC
+			#BUFFER 1
+			#MINFEATURESIZE 20
+			COLOR 1 1 1
+			OUTLINECOLOR 255 255 255
+			#SHADOWSIZE 2 2 
+			#BACKGROUNDCOLOR 233 246 224
+			#BACKGROUNDSHADOWSIZE 1 1 
+			ANTIALIAS false
+			FORCE false
+		  END #Label
+		  <?php }?>
+		END # Class
+		<?php }
+		?>
+	  END #Layer
+	<?php }?>
+	END #MapFile
+<?php 
+$data = ob_get_clean();
+unlink("{$basePath}wms/mapfiles/{$user}.map");
+$newFile = "{$basePath}wms/mapfiles/{$user}.map";
+$fh = fopen($newFile, 'w');
+fwrite($fh,$data);
+fclose($fh);
+}
+?>
+
+
+ 

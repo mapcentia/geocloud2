@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^([a-z]*)/([a-z]*)$ $2.php

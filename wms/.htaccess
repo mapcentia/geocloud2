@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^([\w'-]*)/([\w'-]*)$ ../cgi-bin/mapserv?map=/var/www/betamygeocloud/wms/mapfiles/$1.map [QSA,L]
