@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^[a-z]* tables_c.php [L]
