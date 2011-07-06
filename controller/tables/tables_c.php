@@ -39,13 +39,4 @@ switch ($parts[4]){
 		$response = $table -> addColumn($obj->data);
 		break;
 }
-function makeArray($notArray) {
-	if (!is_array($notArray)) {
-			 $nowArray = array(0 => $notArray);
-	}
-	else {
-		$nowArray = $notArray; // Input was array. Return it unaltered
-	}
-	return $nowArray;
-}
 include_once("../server_footer.inc");

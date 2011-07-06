@@ -185,10 +185,10 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			var callback = {
 				success:handlerOpenlayersDbQuery,
 				failure:alert,
-				argument:['foo','bar']
+				argument: "Ups"
 			};
 			var param = 'lan=<?php echo $_REQUEST["lan"];?>&proj=<?php echo $proj; ?>&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + layerStr + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
-			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/http_db_query.phtml", callback, param);
+			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/query/<?php echo $_SESSION['screen_name'];?>", callback, param);
 		}
 	}
     })
@@ -370,7 +370,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
     }
     function addLegend(layers) {
 		var param = 'layers=' + layers + '&type=json&lan=<?php echo $_REQUEST["lan"];?>';
-		document.getElementById("legend_img").src = "/apps/viewer/servers/http_legend.phtml?" + param;
+		document.getElementById("legend_img").src = "/apps/viewer/servers/legend/<?php echo $_SESSION['screen_name'];?>?" + param;
     }
    
     function addGraphicLayerFromGEOM(geom) {
@@ -383,7 +383,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		{
 		  success:handlerGraphicLayerFromGEOM,
 		  failure:alert,
-		  argument:['foo','bar']
+		  argument: "Ups"
 		};
 		var param = 'geom=' + geom + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
 		var request = YAHOO.util.Connect.asyncRequest('POST', "servers/http_render_geom.phtml", callback, param);

@@ -1849,7 +1849,7 @@ class postgis extends control
 	{
 		global $theGeometry;
 		global $languageText;
-		$query = "select * from geometry_columns where f_table_name='$table'";
+		$query = "select * from geometry_columns_view where f_table_name='$table'";
 		//echo $query;
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
@@ -1866,6 +1866,8 @@ class postgis extends control
 		return $row[type];
 		if ($field == 'fieldconf')
 		return $row[fieldconf];
+		if ($field == 'f_table_title')
+		return $row[f_table_title];
 	}
 	function insertfeature($geoCoordStr)
 	{

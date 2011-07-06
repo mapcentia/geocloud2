@@ -1,6 +1,8 @@
 <?php
 session_start();
 include_once("../../../conf/main.php");
+include("../inc/uri_parts.php");
+$_SESSION['screen_name'] = $parts[5];
 
 switch($_REQUEST['type'])
 {

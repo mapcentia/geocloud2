@@ -115,7 +115,7 @@ xsi:schemaLocation="http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geose
 			<!--<Lock/>-->
 		</Operations>
     <?php
-    $sql="SELECT * FROM geometry_columns";
+    $sql="SELECT * FROM geometry_columns_view";
     $result = $postgisObject->execQuery($sql);
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);

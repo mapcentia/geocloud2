@@ -1,7 +1,5 @@
 <?php 
 include_once("server_header.inc");
-include_once("../../../conf/main.php");
-include_once("../functions.php");
 
 $postgisdb = $_SESSION['screen_name'];
 
@@ -36,11 +34,14 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		
 		// We set the query vars
 		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"fieldconf"));
+
 		
-		$postGisQueryName[strtoupper($bits[0])]="Geologiske interesser";
+		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) $strs[]= strtoupper($value->column);
+			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 		}
+		sort($strs);
 		$str = implode(",",$strs);
 		$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
 		

@@ -145,7 +145,7 @@ END
 	  # Start of layers
 	  #
 	<?php
-	$sql="SELECT * FROM geometry_columns";
+	$sql="SELECT * FROM geometry_columns_view";
 		$result = $postgisObject->execQuery($sql);
 		if($postgisObject->PDOerror){
 			makeExceptionReport($postgisObject->PDOerror);
