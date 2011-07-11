@@ -38,7 +38,9 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		
 		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
 		foreach($fieldconfArr as $key=>$value){
-			if ($value->querable) $strs[]= strtoupper($value->column);
+			if ($value->querable) {
+				$strs[]= strtoupper($value->column);
+			}
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 		}
 		sort($strs);
@@ -63,6 +65,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		else {
 			if ($response['html']=="") $response['html'] = false;
 		}
+		unset($strs);
 	}
 	else {
 		if ($response['html']=="") $response['html'] = false;

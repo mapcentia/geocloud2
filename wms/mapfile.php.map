@@ -203,6 +203,7 @@ END
                   "appformap_group"  "Mygeocloud"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
+			  <?php if($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"".$layerArr['data'][0]['query_buffer']."\"\n";?>
 		END
 		PROJECTION
 		  "init=epsg:<?php echo $row['srid'];?>" 
