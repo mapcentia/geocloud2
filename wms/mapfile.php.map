@@ -1,20 +1,21 @@
 <?php
-function makeMapFile($user) {
+function makeMapFile($user,$extentLayer=NULL) {
 	global $basePath;
 	global $postgisdb;
 	$postgisdb = $user;
 	
-	$table = "volcanx020";
-	$postgisObject = new postgis();
-	$srs = "900913";
-	$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
-	$classObj = new _class();
-	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
-	//$result = $postgisObject->execQuery($sql);
-
-	print_r($postgisObject->PDOerror);
-
-	//$row = $postgisObject->fetchRow($result);
+	
+		$table = $extentLayer;
+		$postgisObject = new postgis();
+		$srs = "900913";
+		$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
+		$classObj = new _class();
+	if ($extentLayer) {
+		$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
+		$result = $postgisObject->execQuery($sql);
+		//print_r($postgisObject->PDOerror);
+		$row = $postgisObject->fetchRow($result);
+	}
 	
 	ob_start();
 	?>
@@ -24,7 +25,12 @@ function makeMapFile($user) {
 	  #
 	  NAME "<?php echo $user;?>"
 	  STATUS on
+	  <?php if ($extentLayer) { ?>
 	  #EXTENT <?php echo "{$row['txmin']} {$row['tymin']} {$row['txmax']} {$row['tymax']}\n";?>
+	  <?php }
+	  else { ?>
+	  #EXTENT -180 -90 180 90
+	  <?php } ?>
 	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"

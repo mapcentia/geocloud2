@@ -10,7 +10,7 @@ function microtime_float()
     return ((float)$utime + (float)$time);
 }
 $startTime = microtime_float();
-//include_once("../../conf/main.php"); 
+include_once("../../conf/main.php"); 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -64,7 +64,7 @@ $startTime = microtime_float();
         <script type="text/javascript">
 		var layer;
 		var newLayerStrArr = [];
-		var map,layer,popup,markers,icon1,icon2,snap,feature1,feature2,vectors3,vectorsHelper1,vectorsHelper2;
+		var map,layer,popup,markers;
 		var conf=[];
 		var MapappWin = null;
 		var popupOn = <?php  if ($_REQUEST['popup']) echo $_REQUEST['popup']; else echo "1";?>;
@@ -79,13 +79,27 @@ $startTime = microtime_float();
 		var graphicLayer;
 		var renderGeometryArray;
 		var resultHtml = "";
+		var extentFromLayer;
+		
+		function osm_getTileURL(bounds) {
+            var res = this.map.getResolution();
+            var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
+            var y = Math.round((this.maxExtent.top - bounds.top) / (res * this.tileSize.h));
+            var z = this.map.getZoom();
+            var limit = Math.pow(2, z);
+ 
+            if (y < 0 || y >= limit) {
+                return OpenLayers.Util.getImagesLocation() + "404.png";
+            } else {
+                x = ((x % limit) + limit) % limit;
+                return this.url + z + "/" + x + "/" + y + "." + this.type;
+            }
+        }
 		
 <?php
 $_REQUEST['signaturoff']="true";
 $width = 400;
 $height = 400;
-if ((!$_REQUEST['mapservice']) ||  $_REQUEST['mapservice']!="MapServer")  $_REQUEST['mapservice'] = "WMS"; 
-
 $controlObject = & new control(TRUE,FALSE);
 $controlObject->doNotUseWMS=true;
 if ($mapfileUrl) $mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
@@ -144,10 +158,31 @@ for ($i = 0; $i < sizeof($layers); $i++)
                 }
 	}
 }
+
+// Set extent from layer
+$postgisdb = $_SESSION['screen_name'];
+include '../../model/settings_viewer.php';
+$settings_viewer = new Settings_viewer();
+$response = $settings_viewer->get();
+$table = $response['data']['default_extent'];
+$postgisObject = new postgis();
+$srs = "900913";
+$geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
+if ($geomField) {
+$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
+$result = $postgisObject->execQuery($sql);
+$row = $postgisObject->fetchRow($result);
+echo "extentFromLayer = '{$row['txmin']},{$row['tymin']},{$row['txmax']},{$row['tymax']}'\n";
+}
+else {
+echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
+}
+// End setting extent from layer
+
 ?>
     layerStr = trim(newLayerStrArr.join(";"));
-    var layerBounds = new OpenLayers.Bounds(<?= $openLayers['bounds'] ?>);
-    var restrictedBounds = new OpenLayers.Bounds(<?= $openLayers['restricted'] ?>);
+
+    //var restrictedBounds = new OpenLayers.Bounds.fromString('-20037508, -20037508, 20037508, 20037508');
 
     OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
         defaultHandlerOptions: {
@@ -235,26 +270,21 @@ for ($i = 0; $i < sizeof($layers); $i++)
         );
         //map.projection="EPSG:<?= $proj ?>";
 	//map.maxResolution="auto";
-        /*
-	<?php
-
-        for ($i=0;$i<sizeof($baseMapName);$i++)
-		{
-		if ($baseMapLayersIsSingleTile[$i]) {
-			$isSingleTile = "true";
-		}
-		else {
-			$isSingleTile = "false";
-		}
-	?>
-       
-	base.push(new OpenLayers.Layer.WMS("<?=$baseMapName[$i]?>", "<?=$baseMapServer[$i]?>",{layers:"<?=$baseMapLayers[$i]?>"},{maxExtent:layerBounds ,maxResolution: "auto",singleTile:<?php echo $isSingleTile;?>,transitionEffect:"resize"}));
-	<?php } ?>
-	 */
-	var extent = new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508);
-	map.maxExtent = extent;
+        
+	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
 
 	var base = [];
+	base.push(
+	new OpenLayers.Layer.TMS(
+                "OpenStreetMap (Mapnik)",
+                "http://tile.openstreetmap.org/",
+                {
+                    type: 'png', getURL: osm_getTileURL,
+                    displayOutsideMaxExtent: true,
+                    attribution: '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
+                }
+            )
+	);
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
 		sphericalMercator: true
@@ -271,6 +301,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		type: G_NORMAL_MAP,
 		sphericalMercator: true
 	}));
+	
 	vectors = new OpenLayers.Layer.Vector("Vector Layer");
  
             map.addLayers([vectors]);
@@ -307,30 +338,17 @@ for ($i = 0; $i < sizeof($layers); $i++)
         map.addControl(click);
         click.activate();
         
-        var wkt = '<?php echo $_REQUEST['wkt'];?>';
-		if (wkt) {
-			addGraphicLayerFromGEOM(wkt);
-		}
+        
     }
     var layerArr =[]
     function addLayer(name,title,opacity,connectionString,notVisible) {
         if (notVisible) var visible = false;
         else var visible = true;
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:true});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
         map.addLayer(layerArr[name]);
     }
    
        
-	
-    function addGraphicLayer(title,url,extent) {
-
-        try {
-            map.removeLayer(graphicLayer);
-        }
-        catch(e){};
-        graphicLayer = new OpenLayers.Layer.Image(title,url,OpenLayers.Bounds.fromString(extent),map.getSize(),{image:"png",projection:"epsg:<?= $proj ?>", maxExtent:layerBounds,maxResolution: 'auto',singleTile:true,isBaseLayer: false});
-        map.addLayer(graphicLayer);
-    }
     function deserialize(element) {
 			
             var type = "wkt";
@@ -371,32 +389,6 @@ for ($i = 0; $i < sizeof($layers); $i++)
     function addLegend(layers) {
 		var param = 'layers=' + layers + '&type=json&lan=<?php echo $_REQUEST["lan"];?>';
 		document.getElementById("legend_img").src = "/apps/viewer/servers/legend/<?php echo $_SESSION['screen_name'];?>?" + param;
-    }
-   
-    function addGraphicLayerFromGEOM(geom) {
-        wktStr = geom; // Set global var
-        var mapBounds = map.getExtent();
-        var boundsArr =  mapBounds.toArray();
-        var boundsStr =  boundsArr.join(",");
-        var mapSize = map.getSize();
-		var callback =
-		{
-		  success:handlerGraphicLayerFromGEOM,
-		  failure:alert,
-		  argument: "Ups"
-		};
-		var param = 'geom=' + geom + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
-		var request = YAHOO.util.Connect.asyncRequest('POST', "servers/http_render_geom.phtml", callback, param);
-        }
-    function handlerGraphicLayerFromGEOM(http) {
-
-            if (http.status == 200) {
-                var response = eval('(' + http.responseText + ')');// JSON
-                if (response.overlayMapimageUrl!=false) {
-                    addGraphicLayer("Resultat",response.overlayMapimageUrl,response.extent);
-                }
-            }
-        
     }
    
     function trim(s) {
@@ -465,26 +457,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			}
 		}
 	}
-	handlerInsertFeatureInDb = function (data, textStatus, http)
-		{
-			if(http.readyState == 4)
-			{
-				if (http.status == 200) {
-					var response = eval('(' + http.responseText + ')');// JSON
-					if (response.isInserted) {
-					
-						geomInserted = true;
-						geomId = response.id;
-						wkt = null;
-						//alert(response.id);
-					}
-					else {
-						geomInserted = -1;
-						geomId = -1;
-					}
-				}
-			}
-	} 
+	
 	function openMapWin(page,width,height)
 	{
 		var iLangID = iLangID;
@@ -523,79 +496,10 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		return point;
 	}
 	
-	function setExtentFromPoints(point1,point2)
-	{
-		
-
-		if((point1) && (point2)) {
-			
-			//alert(point1+";"+point2);
-			var points1 = point1.split(" ");
-			var points2 = point2.split(" ");
-			
-			markers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(points1[0],points1[1]),icon1));
-			markers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(points2[0],points2[1]),icon2));
-
-			
-			if (points1[0]<points2[0]) {
-				var left = points1[0];
-				var right = points2[0]
-				}
-			else {
-				var left = points2[0];
-				var right = points1[0]
-				}
-			
-			if (points1[1]<points2[1]) {
-				var bottom = points1[1];
-				var top = points2[1]
-				}
-			else {
-				var bottom = points2[1];
-				var top = points1[1]
-				}
-			
-			
-			var newBounds = new OpenLayers.Bounds(left,bottom,right,top)
-			//alert(newBounds.toString());
-			map.zoomToExtent(newBounds,false);
-			//map.restrictedExtent = new OpenLayers.Bounds(left-10000,bottom-10000,right+10000,top+10000); 
-		}
-		
-	}
-	function toggleControl(e) {
-		                
-		                     //alert(e.newValue.get("name"));
-		                     if(e.newValue.get("name") == "feature1") {
-		                         feature1.activate();
-		                         tool = "1";
-		                     } else {
-		                         feature1.deactivate();
-		                     }
-		                     if(e.newValue.get("name") == "feature2") {
-					 feature2.activate();
-					 tool = "2";
-				     } else {
-					 feature2.deactivate();
-		                     }
-		                 
-            }
+	
+	
         </script>
-	<script type="text/javascript">	
-/*
-		$(document).ready(function(){
-	//	 	$("#legendButton").button();
-	//		$("#printButton").button();
-	//		$("#popupButton").button();
-	//		$("#legendButton").click(function(){dijit.byId("legendDialog").show();});
-	//		$("#printButton").click(function(){printVersion();return false; });
-	//		$("#legendDialog").dialog({position: ['right','bottom']});
 
-			if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
-			init();
-		    });
-*/
-		</script>
 	</head>
 	<body class="">
 
@@ -718,8 +622,9 @@ new Ext.Viewport({
         }
     });
 
-mapPanel = Ext.getCmp("mappanel");
-        //mapPanel.setCenter(new OpenLayers.LonLat(0,0),10);
+var mapPanel = Ext.getCmp("mappanel");
+map.zoomToExtent(new OpenLayers.Bounds.fromString(extentFromLayer));
+
 
 });
 

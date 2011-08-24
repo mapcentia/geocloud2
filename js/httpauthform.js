@@ -6,7 +6,7 @@ httpAuth.form = new Ext.FormPanel({
         title: 'Authentication stuff',
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
-        labelWidth: 10,
+        labelWidth: 1,
         defaults: {
             anchor: '95%',
             allowBlank: false,
@@ -15,9 +15,9 @@ httpAuth.form = new Ext.FormPanel({
         items: [ {
             xtype: 'textfield',
 			inputType:'password',
-            id: 'form-name',
-            emptyText: 'Set/update password',
+            id: 'httpAuthForm',
             name: 'pw',
+            emptyText: 'Password'
         }
 			],
         buttons: [{
@@ -32,7 +32,8 @@ httpAuth.form = new Ext.FormPanel({
                     });
                 }
             }
-        }]
+        }],
+        html: "Set password for WFS http authentication"
     });
 httpAuth.onSubmit = function (form, action) {
     var result = action.result;

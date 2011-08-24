@@ -216,6 +216,7 @@ class table extends postgis {
 					$safeColumn = "_state";
 				}
 				$sql.= "ALTER TABLE {$this -> table} RENAME {$value->id} TO {$safeColumn};";
+				$value->column = $safeColumn;
 				unset($fieldconfArr[$value->id]);
 			}
 			$fieldconfArr[$safeColumn] = $value;

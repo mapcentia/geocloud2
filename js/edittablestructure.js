@@ -65,7 +65,7 @@ tableStructure.init = function (table,screenName) {
 		iconCls: 'silk-grid',
 		store: tableStructure.store,
 		//autoExpandColumn: "desc",
-		height: 200,
+		height: 345,
 		//width: 750,
 		viewConfig: {
 			forceFit: true

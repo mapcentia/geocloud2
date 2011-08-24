@@ -4,7 +4,6 @@ var layer;
 var modifyControl;
 var grid;
 Ext.onReady(function() {
-	
 	var map;
 	var fieldsForStore;
 	var columnsForGrid;
@@ -167,10 +166,35 @@ waitConfig: {interval:200}
 	var extent = new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508);
 	map.maxExtent = extent;
 	
+	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
+		type: G_HYBRID_MAP,
+		sphericalMercator: true
+	}));
 	base.push(new OpenLayers.Layer.Google("Google Satellite", {
 		type: G_SATELLITE_MAP,
 		sphericalMercator: true
 	}));
+	base.push(new OpenLayers.Layer.Google("Google Terrain", {
+		type: G_PHYSICAL_MAP,
+		sphericalMercator: true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Normal", {
+		type: G_NORMAL_MAP,
+		sphericalMercator: true
+	}));
+	base.push(
+	new OpenLayers.Layer.TMS(
+                "OpenStreetMap (Mapnik)",
+                "http://tile.openstreetmap.org/",
+                {
+                    type: 'png', getURL: osm_getTileURL,
+                    displayOutsideMaxExtent: true,
+                    attribution: '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
+                }
+            )
+	
+	
+	);
 
 	map.addLayers(base);
 	
@@ -350,6 +374,20 @@ waitConfig: {interval:200}
             })]
         });
         //attributeForm.win.show();
+        function osm_getTileURL(bounds) {
+            var res = this.map.getResolution();
+            var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
+            var y = Math.round((this.maxExtent.top - bounds.top) / (res * this.tileSize.h));
+            var z = this.map.getZoom();
+            var limit = Math.pow(2, z);
+ 
+            if (y < 0 || y >= limit) {
+                return OpenLayers.Util.getImagesLocation() + "404.png";
+            } else {
+                x = ((x % limit) + limit) % limit;
+                return this.url + z + "/" + x + "/" + y + "." + this.type;
+            }
+        }
 	});
 	function getUrlVars() {
 	var mapvars = {};

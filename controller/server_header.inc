@@ -13,6 +13,7 @@ include '../../model/databases.php';
 include '../../libs/FirePHPCore/FirePHP.class.php';
 include '../../libs/FirePHPCore/fb.php';
 include '../../model/tables.php';
+include '../../model/settings_viewer.php';
 include("../../wms/mapfile.php.map");
 
 $postgisdb = $_SESSION['screen_name']; // We change the db to user

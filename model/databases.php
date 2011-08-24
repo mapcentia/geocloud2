@@ -9,8 +9,19 @@ class databases extends postgis {
        			LC_CTYPE='C'
        			CONNECTION LIMIT=-1;
 			";
-
-		if ($this -> execQuery($sql)) {
+		$this -> execQuery($sql);
+		if (!$this->PDOerror) {
+			return true;
+		}
+		else {
+			print_r($this->PDOerror);
+			return false;
+		}
+	}
+	public function doesDbExist($name){
+	    $sql = "select count(*) as count from pg_catalog.pg_database where datname = '{$name}'";
+		$row = $this->fetchRow($this -> execQuery($sql),"assoc");
+		if ($row['count']==1) {
 			return true;
 		}
 		else {

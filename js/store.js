@@ -9,6 +9,7 @@ Ext.onReady(function () {
     var winClasses;
 	var winWmsLayer;
     var fieldsForStore;
+    var settings;
     $.ajax({
         url: '/controller/tables/' + screenName + '/getcolumns/geometry_columns_view',
         async: false,
@@ -19,6 +20,21 @@ Ext.onReady(function () {
                 if (http.status == 200) {
                     var response = eval('(' + http.responseText + ')'); // JSON
                     fieldsForStore = response.forStore;
+                }
+            }
+        }
+    });
+	
+	$.ajax({
+        url: '/controller/settings_viewer/' + screenName + '/get',
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (data, textStatus, http) {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    var response = eval('(' + http.responseText + ')'); // JSON
+                    settings = response.data;
                 }
             }
         }
@@ -65,6 +81,7 @@ Ext.onReady(function () {
         autoSave: true
     });
     store.load();
+    
     // create a grid to display records from the store
     var grid = new Ext.grid.EditorGridPanel({
         title: "Layers in your geocloud",
@@ -520,7 +537,7 @@ Ext.onReady(function () {
             frame: false,
 			border: false,
             region: 'center',
-            title: 'More layer settings',
+            //title: 'More layer settings',
 			id: "detailform",
 			bodyStyle: 'padding: 10px 10px 0 10px;',
             items: [{
@@ -592,6 +609,61 @@ Ext.onReady(function () {
                     })
         }
     };
+    Ext.namespace('viewerSettings');
+	viewerSettings.form = new Ext.FormPanel({
+        region: 'center',
+        frame: false,
+		border: false,
+        title: 'Viewer settings',
+        autoHeight: true,
+        bodyStyle: 'padding: 10px 10px 0 10px;',
+        labelWidth: 1,
+        defaults: {
+            anchor: '95%',
+            allowBlank: false,
+            msgTarget: 'side'
+        },
+        items: [ {
+            width: 20,
+                xtype: 'combo',
+                mode: 'local',
+                triggerAction: 'all',
+                forceSelection: true,
+                editable: false,
+                //fieldLabel: 'Type',
+                name: 'layer',
+                displayField: 'f_table_name',
+                valueField: 'f_table_name',
+                allowBlank: false,
+                store: store,
+				value: settings.default_extent
+            }
+        
+			],
+        buttons: [{
+            text: 'Update',
+            handler: function () {
+                if (viewerSettings.form.getForm().isValid()) {
+                    viewerSettings.form.getForm().submit({
+                        url: '/controller/settings_viewer/' + screenName + '/update_extent',
+                        waitMsg: 'Saving your settings',
+                        success: viewerSettings.onSubmit,
+                        failure: viewerSettings.onSubmit
+                    });
+                }
+            }
+        }],
+        html: "Which layer should be used for default extent"
+    });
+viewerSettings.onSubmit = function (form, action) {
+    var result = action.result;
+    if (result.success) {
+        Ext.MessageBox.alert('Success', result.message);
+        //viewerSettings.form.reset();
+    } else {
+        Ext.MessageBox.alert('Failure', result.message);
+    }
+}
 	var accordion = new Ext.Panel({
 				title: 'Settings and stuff',
 				layout: 'accordion',
@@ -604,6 +676,8 @@ Ext.onReady(function () {
 				border:true,
 				layoutConfig:{animate:true},
 				items: [
+					viewerSettings.form,
+					httpAuth.form,
 					{
 						title: 'WFS stuff',
 						border:false,
@@ -623,8 +697,8 @@ Ext.onReady(function () {
 						},
 						html: '<table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://alpha.mygeocloud.com/wms/'+screenName+'/" size="55"/></td></tr></tbody></table>'
 			 
-					},
-					httpAuth.form
+					}
+					
 				]
 			})
 	var viewport = new Ext.Viewport({

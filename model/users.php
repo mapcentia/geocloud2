@@ -12,21 +12,34 @@ class users extends postgis {
 		$this->postgisdb = "mygeocloud";
 		$sql = "SELECT * FROM users WHERE screenname='{$screenName}'";
 		$row = $this->fetchRow($this->execQuery($sql));
-		if ((!$row['screenname']) && $userId && $tok && $sec) {
+		if ((!$row['screenname']) && $userId && $tok && $sec) { // We create twitter user if not exits
 	 		$sql = "INSERT INTO users(userid,screenname,tok,sec) VALUES({$userId},'{$screenName}','{$tok}','{$sec}')";
 			$result = $this -> execQuery($sql);
 			$this->userId = $userId;
 			$this->tok = $tok;
 			$this->sec = $sec;
 		}
-		elseif($row['userid'] && $row['tok'] && $row['sec']) {
+		elseif($row['userid'] && $row['tok'] && $row['sec']) { // Twitter user exits
 			$this->userId = $row['userid'];
 			$this->tok = $row['tok'];
 			$this->sec = $row['sec'];
 			$this->pw = $row['pw'];
 		}
+		elseif((!$row['screenname']) && (!$userId) && (!$tok) && (!$sec)) {
+			$sql = "INSERT INTO users(userid,screenname,tok,sec) VALUES(NULL,'{$screenName}','NULL','NULL')";
+			$result = $this -> execQuery($sql);
+			$this->userId = NULL;
+			$this->tok = NULL;
+			$this->sec = NULL;
+		}
+		elseif($row['screenname']) {
+			$this->userId = NULL;
+			$this->tok = NULL;
+			$this->sec = NULL;
+			$this->pw = $row['pw'];
+		} 
 		else {
-			die("Could not init user object");
+			//die("Could not init user object");
 		}
 	}
 	public function getHasCloud(){
@@ -57,7 +70,7 @@ class users extends postgis {
 		return $pass;
 	}
 	public function updatePw($pass) {
-		$sql = "UPDATE users SET pw='".$this->encryptPw($pass)."' WHERE userid={$this->userId}";
+		$sql = "UPDATE users SET pw='".$this->encryptPw($pass)."' WHERE screenname='{$this->screenName}'";
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 	 		$response['success'] = true;
@@ -73,5 +86,12 @@ class users extends postgis {
 	public function getPw() {
 		return $this->pw;
 	}
+	function is_valid_ipv4($ip)
+{
+    return preg_match('/\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
+        '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
+        '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
+        '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/', $ip) !== 0;
+} 
 }
 ?>
