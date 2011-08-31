@@ -1,16 +1,24 @@
 <?php
 session_start();
+include_once("functions.php");
 include("inc/uri_parts.php");
 $_SESSION['screen_name'] = $parts[4];
+$postgisdb = $_SESSION['screen_name'];
+$postgisObject = new postgis();
 
-include_once("functions.php");
+
 function microtime_float()
 {
     list($utime, $time) = explode(" ", microtime());
     return ((float)$utime + (float)$time);
 }
 $startTime = microtime_float();
-include_once("../../conf/main.php"); 
+include_once("../../conf/main.php");
+include_once("../../wfs/explodefilter.php");
+include "../../libs/PEAR/XML/Parser.php";
+include "../../libs/PEAR/XML/Unserializer.php";
+include "../../libs/PEAR/XML/Serializer.php";
+$srs = "900913";
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -72,14 +80,14 @@ include_once("../../conf/main.php");
 		var base = [];
 		var doNotUsePopUp = '<?= $_REQUEST['usepopup'] ?>';
 		var layerStr = '<?= $_REQUEST['layers'] ?>';
-		var minxFromFilter = '';
-		var minyFromFilter = '';
-		var maxxFromFilter = '';
-		var maxyFromFilter = '';
 		var graphicLayer;
 		var renderGeometryArray;
 		var resultHtml = "";
 		var extentFromLayer;
+		var minxFromFilter=0;
+		var minyFromFilter=0;
+		var maxxFromFilter=0;
+		var maxyFromFilter=0;
 		
 		function osm_getTileURL(bounds) {
             var res = this.map.getResolution();
@@ -111,14 +119,31 @@ else {
     $popupPage = $_SERVER['PHP_SELF'];
 }
 
-            /* SET FILTER */
+/* SET FILTER */
 
-//require("../filter_appformap_kujalleq.php");
-
-
-
-
-            /* SET FILTER END */
+$filter = "1=1";
+if ($_REQUEST['filter'])
+{
+	$filterKeyValue = explode(":",$_REQUEST['filter']);
+	$unserializer_options = array ('parseAttributes' => TRUE,'typeHints' => FALSE);
+	$unserializer = new XML_Unserializer($unserializer_options);
+	$status = $unserializer->unserialize(urldecode($filterKeyValue[1]));
+	$filterArr = $unserializer->getUnserializedData();
+	$postgisObject = new postgis();
+	$filter.= " AND ".parseFilter($filterArr,$filterKeyValue[0]);
+	$query = "SELECT xmin(extent(transform(the_geom,{$srs}))) as minx, ymin(extent(transform(the_geom,{$srs}))) as miny, xmax(extent(transform(the_geom,{$srs}))) as maxx, ymax(extent(transform(the_geom,{$srs}))) as maxy FROM {$filterKeyValue[0]} WHERE ".$filter;
+	//echo "<!-- TEST {$query} -->\n";
+	$result = $postgisObject -> execQuery($query);
+	$row = pg_fetch_array($result);
+	$buffer = 1000;
+	if ($row[minx]) {
+		echo "minxFromFilter = ".($row[minx]-$buffer).";\n";
+		echo "maxxFromFilter = ".($row[maxx]+$buffer).";\n";
+		echo "minyFromFilter = ".($row[miny]-$buffer).";\n";
+		echo "maxyFromFilter = ".($row[maxy]+$buffer).";\n";
+	}
+}
+/* SET FILTER END */
 if ((!$_REQUEST['lat']) || (!$_REQUEST['lon']))
 {
     $_REQUEST['lon'] = $openLayers['center']['lon'];
@@ -132,8 +157,6 @@ if (!$_REQUEST['zoom'])
 	$_REQUEST['zoom']="0";
     } 
 }
-
- 
 $openLayers['bounds'] = str_replace(" ",",",$openLayers['bounds']);
 $openLayers['restricted'] = str_replace(" ",",",$openLayers['restricted']);
 
@@ -160,13 +183,12 @@ for ($i = 0; $i < sizeof($layers); $i++)
 }
 
 // Set extent from layer
-$postgisdb = $_SESSION['screen_name'];
 include '../../model/settings_viewer.php';
 $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
 $table = $response['data']['default_extent'];
-$postgisObject = new postgis();
-$srs = "900913";
+
+
 $geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
 if ($geomField) {
 $sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
@@ -329,9 +351,7 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 		//End på url zoom
 
        // map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
-        if (minxFromFilter != '') {
-        	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
-        }
+        
  
 	//map.restrictedExtent = restrictedBounds;
           var click = new OpenLayers.Control.Click();
@@ -623,7 +643,14 @@ new Ext.Viewport({
     });
 
 var mapPanel = Ext.getCmp("mappanel");
-map.zoomToExtent(new OpenLayers.Bounds.fromString(extentFromLayer));
+
+if (minxFromFilter!==0) {
+	//alert();
+	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
+}
+else {
+	map.zoomToExtent(new OpenLayers.Bounds.fromString(extentFromLayer));
+}
 
 
 });

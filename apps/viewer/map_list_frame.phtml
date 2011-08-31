@@ -25,7 +25,7 @@ include("inc/uri_parts.php");
 	</div>
 	<div id="main">
 
-		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>?lan=da&usepopup=false&popup=true"></iframe>
+		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>?lan=da&usepopup=false&popup=true&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
 	</div>
 </body>
 <script type="text/javascript">

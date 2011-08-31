@@ -1,6 +1,6 @@
 Ext.namespace('httpAuth');
 httpAuth.form = new Ext.FormPanel({
-        region: 'center',
+        //region: 'center',
         frame: false,
 		border: false,
         title: 'Authentication stuff',
@@ -23,6 +23,7 @@ httpAuth.form = new Ext.FormPanel({
         buttons: [{
             text: 'Update',
             handler: function () {
+				"use strict";
                 if (httpAuth.form.getForm().isValid()) {
                     httpAuth.form.getForm().submit({
                         url: '/controller/users/' + screenName + '/updatepw',
@@ -33,9 +34,10 @@ httpAuth.form = new Ext.FormPanel({
                 }
             }
         }],
-        html: "Set password for WFS http authentication"
+        //html: "Set password for WFS http authentication"
     });
 httpAuth.onSubmit = function (form, action) {
+	"use strict";
     var result = action.result;
     if (result.success) {
         Ext.MessageBox.alert('Success', result.message);
@@ -43,4 +45,4 @@ httpAuth.onSubmit = function (form, action) {
     } else {
         Ext.MessageBox.alert('Failure', result.message);
     }
-}
+};
