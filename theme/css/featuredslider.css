@@ -1,0 +1,167 @@
+/************************************/
+/* 		    FEATURE     slider 		 */
+/************************************/
+
+#wrapper{
+		margin:0 auto;
+		display:none;
+		padding:35px 0 0 0;
+		width:900px;
+		}
+
+		#wrapper *{
+				margin:0;
+				padding:0;
+				}
+
+#fullsize{
+		position:relative;
+		padding:0;
+		}
+
+#information{
+		float:right;
+		position:absolute;
+		top:30px;
+		right:10px;
+		width:47%;
+		height:0;
+		color:#000;
+		overflow:hidden;
+		z-index:96;
+		float:right;
+		padding:0 20px;
+		}
+
+		#information h3{
+				padding:3px 0 10px 3px;
+				color:#666;
+				font:normal bold 2em Arial,Georgia, Helvetica, sans-serif;
+				letter-spacing:-1px;
+				}
+
+				#information p{
+						padding:0 0 5px 3px;
+						color:#000;
+						float:right;
+						font:normal 11px/18px "Lucida Sans", Arial, Helvetica, sans-serif;
+						}
+
+#image{
+		width:350px;
+		height:180px;
+		}
+	
+		#image img{
+				position:absolute;
+				z-index:25;
+				width:350px;
+				height:150px;
+				left:40px;
+				top:20px;
+				padding:1px;
+				background:#fff;
+				border:7px solid #ccc;
+				}
+
+.imgnav{
+		position:absolute;
+		width:25%;
+		height:180px;
+		cursor:pointer;
+		z-index:95;
+		}
+
+		#imgprev{
+				left:0;
+				background:none;
+				}
+
+				#imgnext{
+						right:0;
+						background:none;
+						}
+
+						#imglink{
+								position:absolute;
+								height:150px;
+								width:100%;
+								z-index:90;
+								opacity:.4;
+								filter:alpha(opacity=40);
+								}
+
+.linkhover{
+		}
+
+#thumbnails{
+		margin-top:25px;
+		height:48px;
+		}
+
+#slideleft{
+		margin-top:30px;
+		float:left;
+		width:20px;
+		height:26px;
+		background:url(../images/leftp.gif) top center no-repeat;
+		padding-left:12px;
+		}
+
+		#slideleft:hover{
+				}
+
+				#slideright{
+						margin-top:30px;
+						float:right;
+						width:25px;
+						height:26px;
+						background:url(../images/rightp.gif) top center no-repeat;
+						padding-right:0;
+						}
+
+						#slideright:hover {
+								}
+
+#slidearea{
+		float:left;
+		position:relative;
+		width:835px;
+		margin-left:3px;
+		height:81px;
+		overflow:hidden;
+		}
+
+		html* #slidearea{
+				margin-left:0;
+				}
+				
+				.slider_bg{
+						background:url(../images/slider_bg.png) no-repeat; 
+						height:358px;
+						margin:20px 0 0px 0px;
+						}
+
+#slider{ /* dont change it */
+		position:absolute;
+		left:0;
+		}
+
+		#slider img{
+				cursor:pointer;
+				border:3px solid #d8d8d8;
+				background:#fff;				
+				padding:1px;
+				margin-top:15px;
+				width:80px;
+				height:50px;
+				}
+
+.readmoremain{
+		background:url(../images/readmore.gif) no-repeat;
+		width:88px;
+		height:22px;
+		border:0;
+		float:right;
+		padding-top:10px;
+		}

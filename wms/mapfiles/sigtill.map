@@ -1,0 +1,622 @@
+	MAP
+	  # 
+	  # Start of map file
+	  #
+	  NAME "sigtill"
+	  STATUS on
+	  EXTENT -19903103.1708532 1122281.20457799 19990450.3109756 26744643.4554957
+	  SIZE 2000 1500 
+	  #SYMBOLSET "../etc/symbols.sym"
+	  FONTSET "../fonts/fonts.txt"
+	  IMAGECOLOR 255 255 255
+	  TRANSPARENT ON
+	  UNITS METERS
+	  INTERLACE OFF
+	  IMAGETYPE PNG
+	  WEB
+		METADATA
+		  "wms_title"    "sigtill's awesome WMS"
+		  "wms_srs"    "EPSG:900913 EPSG:4326"
+		  "wms_name"    "sigtill"
+		  "wms_format"    "image/png"
+		  "wms_onlineresource"	"http://alpha.mygeocloud.com/wms/sigtill/"
+		  
+		END
+	  END
+	  #
+	  # Start of reference map
+	  #
+	  QUERYMAP
+		COLOR 255 255 0
+		STYLE normal
+	  END
+	  PROJECTION
+		"init=epsg:900913" 
+	  END
+	  # 
+	  # Start of legend
+	  #
+	  LEGEND
+		STATUS off
+		IMAGECOLOR 255 255 255
+		KEYSIZE 18 12 
+		LABEL
+		  TYPE truetype
+		  FONT "arial"
+		  SIZE 8
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  #
+	  # Start of scalebar
+	  #
+	  SCALEBAR
+		STATUS off
+		COLOR 255 255 255
+		OUTLINECOLOR 0 0 0
+		BACKGROUNDCOLOR 0 0 0
+		IMAGECOLOR 255 255 255
+		UNITS METERS
+		INTERVALS 3
+		SIZE 150 5 
+		LABEL
+		  FONT "courierb"
+		  SIZE SMALL
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  Symbol
+    Name 'triangle'
+    Type VECTOR
+    Filled TRUE
+    Points
+     0 1
+     .5 0
+     1 1
+     0 1
+     END
+    END
+	SYMBOL
+    NAME "circle"
+    TYPE ellipse
+    FILLED true
+    POINTS
+      1 1
+    END
+  END
+  Symbol
+  Name 'square'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 1
+  0 0
+  1 0
+  1 1
+  0 1
+  END
+ END
+ Symbol
+  Name 'star'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 .375
+  .35 .375
+  .5 0
+  .65 .375
+  1 .375
+  .75 .625
+  .875 1
+  .5 .75
+  .125 1
+  .25 .625
+  END
+END 
+	  
+	  #
+	  # Start of layers
+	  #
+		  
+	  LAYER
+		NAME "california_coastline"
+		STATUS off
+		DATA "the_geom from california_coastline"
+				TYPE LINE
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=sigtill"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "California coastline"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "california_coastline"
+		  "wms_abstract"    "Big linestring data set dfdf"
+		  "wms_format"    "image/png"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Coastline'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "nuclear_facilities_update"
+		STATUS off
+		DATA "the_geom from nuclear_facilities_update"
+				TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=sigtill"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "US nuclear plants"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "nuclear_facilities_update"
+		  "wms_abstract"    "Small point datasetsffssfdf dfjdf"
+		  "wms_format"    "image/png"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Nuclear plants'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'triangle'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 0 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "admin2_poly_32"
+		STATUS off
+		DATA "the_geom from admin2_poly_32"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=sigtill"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Afghanistan Provincial Boundaries"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "admin2_poly_32"
+		  "wms_abstract"    "Small polygon dataset"
+		  "wms_format"    "image/png"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Afghanistan Provincial Boundarie'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 51 102 0
+			  
+			  #SIZE
+			  SIZE 20
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		  LABEL
+			TYPE truetype
+			FONT "arialbd"
+			SIZE 10
+			#MAXSIZE 10000
+			POSITION CC
+			#BUFFER 1
+			#MINFEATURESIZE 20
+			COLOR 1 1 1
+			OUTLINECOLOR 255 255 255
+			#SHADOWSIZE 2 2 
+			#BACKGROUNDCOLOR 233 246 224
+			#BACKGROUNDSHADOWSIZE 1 1 
+			ANTIALIAS false
+			FORCE false
+		  END #Label
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "volcanx020"
+		STATUS off
+		DATA "the_geom from volcanx020"
+				TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=sigtill"
+		
+		#CLASSITEM
+		CLASSITEM 'type'
+
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Volcanoes"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "volcanx020"
+		  "wms_abstract"    "All volcanoes in the world"
+		  "wms_format"    "image/png"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Cinder cones'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Cinder cones'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 51 204 204
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Shield volcano'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Shield volcano'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 153 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Pyroclastic cones'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Pyroclastic cones'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 255 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Stratovolcano'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Stratovolcano'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 204 255 255
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Caldera'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Caldera'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 0 0 255
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Maars'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Maars'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 204 153 255
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Complex volcano'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Complex volcano'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 0 255 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "world_countries_shp"
+		STATUS off
+		DATA "the_geom from world_countries_shp"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=sigtill"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		LABELITEM 'name'
+
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "World countries"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "world_countries_shp"
+		  "wms_abstract"    "Guess what?"
+		  "wms_format"    "image/png"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Countries'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		  LABEL
+			TYPE truetype
+			FONT "arialbd"
+			SIZE 10
+			#MAXSIZE 10000
+			POSITION CC
+			#BUFFER 1
+			#MINFEATURESIZE 20
+			COLOR 1 1 1
+			OUTLINECOLOR 255 255 255
+			#SHADOWSIZE 2 2 
+			#BACKGROUNDCOLOR 233 246 224
+			#BACKGROUNDSHADOWSIZE 1 1 
+			ANTIALIAS false
+			FORCE false
+		  END #Label
+		  		END # Class
+			  END #Layer
+		END #MapFile

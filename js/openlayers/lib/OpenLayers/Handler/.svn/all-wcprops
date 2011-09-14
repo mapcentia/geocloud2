@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11962/trunk/openlayers/lib/OpenLayers/Handler
+END
+Click.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/!svn/ver/11807/trunk/openlayers/lib/OpenLayers/Handler/Click.js
+END
+Polygon.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/11793/trunk/openlayers/lib/OpenLayers/Handler/Polygon.js
+END
+Box.js
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/!svn/ver/11923/trunk/openlayers/lib/OpenLayers/Handler/Box.js
+END
+Point.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/!svn/ver/11962/trunk/openlayers/lib/OpenLayers/Handler/Point.js
+END
+RegularPolygon.js
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/!svn/ver/11802/trunk/openlayers/lib/OpenLayers/Handler/RegularPolygon.js
+END
+Feature.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/11948/trunk/openlayers/lib/OpenLayers/Handler/Feature.js
+END
+Path.js
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/!svn/ver/11962/trunk/openlayers/lib/OpenLayers/Handler/Path.js
+END
+Drag.js
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/!svn/ver/11861/trunk/openlayers/lib/OpenLayers/Handler/Drag.js
+END
+MouseWheel.js
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Handler/MouseWheel.js
+END
+Keyboard.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Handler/Keyboard.js
+END
+Pinch.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/!svn/ver/11695/trunk/openlayers/lib/OpenLayers/Handler/Pinch.js
+END
+Hover.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/!svn/ver/11861/trunk/openlayers/lib/OpenLayers/Handler/Hover.js
+END

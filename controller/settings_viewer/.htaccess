@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^[a-z]* settings_viewer_c.php [L]

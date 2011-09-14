@@ -1,0 +1,515 @@
+/*  
+Theme Name: Designplus
+Theme URI: http://www.themeflash.com/
+Description: A Business & Portfolio Theme
+Author: System32
+Author URI: http://www.themeflash.com/ 
+*/	
+
+/***************************
+	GLOBAL RESET
+****************************/	
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font,img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td { 
+		margin: 0; 
+		padding: 0; 
+		border: 0; 
+		outline: 0; 
+		font-weight: inherit; 
+		font-style: inherit; 
+		font-size: 100%; 
+		font-family: inherit;  
+		}   
+
+body{  
+		margin:0px;
+		font:normal 12px/20px "Lucida Sans", Verdana, Helvetica, sans-serif;
+		color:#777;
+		background:#fff;
+		}
+
+* html{
+		margin:0;padding:0;
+		}
+
+
+/************************
+	BASIC STYLES
+*************************/
+.clear{
+		clear:both; 
+		}
+
+.rightalign{
+		float:right;
+		}
+
+.leftalign{ 
+		float:left;
+		}
+
+.textright{
+		text-align:right;
+		}
+
+.textleft{
+		text-align:left;
+		}
+a{
+		text-decoration:none;
+		color:#00919f;
+		}
+ 
+		a:hover{  
+			color:#777;
+			}
+	
+p{
+		margin:0 0 10px 0;
+		font:normal 12px/20px "Lucida Sans",  Arial, Verdana, Helvetica, sans-serif;
+		color:#777;
+		}		
+
+.img_border{ 
+		padding:5px;
+		margin:10px 0;
+		border:1px solid #ccc;
+		}
+		
+/************************
+	BLOCKQUOTE
+*************************/
+
+blockquote, q{
+		quotes: none;
+		}
+
+blockquote:before, blockquote:after,
+q:before, q:after{
+		content: '';
+		content: none;
+		}
+
+blockquote{
+		margin: 15px 0px 15px 5px;
+		background: url(../images/quoteclose.gif) no-repeat bottom right;
+		}
+		
+		blockquote p{
+				font:italic 16px/20px Georgia, Arial, Helvetica, sans-serif;;
+				background: url(../images/quoteopen.gif) no-repeat top left;
+				padding-left: 30px;
+				}
+
+/************************
+		HEADINGS
+*************************/	
+h1{
+		padding:0px;
+		color:#777;
+		font:normal 30px/32px  "Arial", Arial, Helvetica, sans-serif;
+		letter-spacing:-1px;
+		}
+
+h2{
+		color:#555;
+		font:normal 24px/28px  "Lucida Sans", Arial, Helvetica, sans-serif;
+		letter-spacing:-1px;
+		margin:0 0 5px 0;
+		}
+	
+h3{
+		padding:0px;
+		color:#777;
+		font:normal 21px/24px "Lucida Sans", Arial, Helvetica, sans-serif;
+		margin-bottom:10px;
+		}
+
+h4{
+		padding: 0px;
+		color:#777;
+		font:normal 20px/26px "Lucida Sans", Arial, Helvetica, sans-serif;
+		}
+
+h5{
+		padding: 0px;
+		color:#777;
+		font:normal bold 16px/20px "Lucida Sans", Arial, Helvetica, sans-serif;
+		}
+	
+h6{
+		padding: 0px;
+		color:#777;
+		font:normal 11px/14px "Lucida Sans", Arial, Helvetica, sans-serif;
+		margin-bottom:10px;
+		}	
+
+/************************
+	HEAD
+*************************/	
+.header{
+		width:100%;
+		position:relative;
+		}
+	.bg {
+		background: url(../images/bg.jpg) top center no-repeat;		
+		height:502px; 		
+		z-index:2;		
+		}
+	
+.subheader{
+		background: url(../images/bg.jpg) center -250px  no-repeat;	
+		width:100%;
+		height:250px;			
+		}
+	.subbg{
+			width:100%;
+			}
+	
+			.subtitle {
+					text-align:center;
+					color:#666;
+
+					}
+
+			.subtitle p {
+					font:normal 18px Georgia, Helvetica, Sans-serif;
+					font-style:italic;
+					color:#666;
+					}
+
+			.subtitle h1{
+					padding-top:30px;
+					padding-bottom:10px;				
+					color:#666;
+					}
+		
+.logo{
+		margin:20px 0 0 20px;
+		}
+
+/************************
+	CONTENT
+*************************/		
+.box-content{
+		padding:0px 10px 15px 10px;
+		}
+		
+.sepline{
+		background:url(../images/sep-line.gif) top right repeat-y;
+		}	
+
+/************************
+	MID CONTENT LISTS
+*************************/	
+						
+ul.list{
+		margin:5px 0 20px 10px;
+		padding:0;
+		list-style:none;
+		display : inline-block;
+		}
+	
+		ul.list li{
+				padding:3px 5px 3px 25px;
+				}
+			
+				ul.list li{
+						background:url(../images/tick.gif) left 6px no-repeat;
+						}
+
+
+/**************************
+	TWITTER BOX
+***************************/
+
+.twitter{
+		padding:20px 0 0 0; 
+		}
+
+		.twitter p{
+				padding-top:10px;
+				font:italic normal 12px "Georgia", Helvetica, sans-serif;
+				}
+
+/**************************
+	SIDEBAR SUBNAV
+****************************/
+
+ul.subnav{
+		list-style:none;
+		margin:0;
+		padding:0px;
+		}
+
+		ul.subnav li a{
+				voice-family:inherit;
+				margin:1px 0;
+				padding:0;
+				height:100%;
+				text-decoration:none;
+				border-bottom:1px solid #dce6eb;
+				color:#777;
+				}
+
+				ul.subnav li a:link, 
+				ul.subnav li a:visited{
+						color:#777;
+						display:block;
+						padding:6px 0px;
+						}
+
+						ul.subnav li.current a{
+								font-weight:bold;
+								text-decoration:none;
+								background:url(../images/leftp.gif) no-repeat -20px 0 ;
+								color:#00919f !important;	
+								}
+
+								ul.subnav li a:hover{
+										color:#00919f;
+										background:#ecf2f5;
+										padding:6px 2px;
+										text-decoration:none;
+										}
+
+/**************************
+	MIC CONTENT NEWS LISTS
+***************************/
+
+ul.newslist{
+		margin:10px 0;
+		padding:0;;
+		}
+
+		ul.newslist li{
+				border-bottom:1px solid #e6e6e6;
+				padding:10px 0;
+				color:#777;
+				}
+			
+				ul.newslist li a:link, 
+				ul.newslist li a:visited, 
+				ul.newslist li a:active{
+						padding:3px 0px;
+						color:#777;
+						text-decoration:none;
+						}
+
+						ul.newslist li a:hover{
+								color:#00919f;
+								padding:3px 0px;
+								text-decoration:none;
+								}
+
+								span.date{
+										display:block;
+										width:70px;
+										margin:0 0 5px 0;
+										padding:2px 0px;
+										color:#00919f; 
+										font:normal bold 10px/12px Tahoma, Arial, Helvetica, sans-serif;
+										letter-spacing:normal !important;
+										}
+
+
+
+/****************************
+	SERVICES
+*****************************/
+
+.services{
+		}
+			
+		.services h3{
+				padding:0px;
+				color:#777;
+				font:normal 23px/24px "Trebuchet MS", Arial, Helvetica, sans-serif;
+				letter-spacing:-1px;
+				margin-bottom:10px;
+				padding-bottom:10px;
+				border-bottom:1px solid #d1d1d1;
+				}
+
+ul.service_list{
+		margin:10px 0;
+		padding:0;
+		list-style:none;
+		display : inline-block;
+		}
+	
+		ul.service_list li{
+				padding:3px 5px 3px 25px;
+				float:left;
+				width:40%;
+				}
+			
+				ul.service_list li{
+						background:url(../images/tick.gif) left 6px no-repeat;
+						}
+
+/*************************
+	PORTFOLIO
+**************************/
+
+.portfolio{
+		border-bottom:1px solid #d3d3d3;
+		margin-bottom:15px;
+		padding-bottom:20px;	
+		}
+
+.port_details{
+		float:left;
+		margin-top:10px;
+		margin-left:30px;
+		width:280px;
+		}
+
+		.port_details p{
+				margin:0;
+				padding:5px 0;	
+				}
+				
+			.port_details h3{
+					padding:0px;
+					color:#555;
+					font:normal bold 22px/24px "Trebuchet MS", Arial, Helvetica, sans-serif;
+					letter-spacing:-1px;
+					margin-bottom:10px;
+					}				
+
+.port_img {
+	float:left;
+}
+
+a.view{
+		font-size:11px;
+		text-decoration:none;
+		font-weight:bold;
+		float:right;
+		padding-right:10px;
+		margin:10px;
+	 	}
+ 
+a.view:hover{  
+		font-weight:bold;
+		text-decoration:underline;
+		}
+
+/**************************
+	Blog	 
+***************************/
+
+.blog{
+		margin:15px 0;
+		padding:10px 0;
+		border-bottom:1px solid #d3d3d3;	
+	    }
+	
+		.blog p{
+				padding:5px 0;
+			    }
+									
+			.blog h2 a{
+				font:normal 18px/20px Arial, Helvetica, sans-serif;
+			    }				
+	
+
+.post-info{
+		border-bottom:1px solid #E8E8E8;
+		border-top:1px solid #E8E8E8;		
+		padding:5px 15px 5px 0px;
+		font:normal 10px Arial, Helvetica, sans-serif;
+		margin:10px 0;
+		letter-spacing:1px;
+		word-spacing:3px;
+		text-transform:uppercase;
+		}
+
+		.post-info span{
+				color:#257400;
+				font-weight:bold;
+				}
+				
+.blog_img {
+		float:left;
+		margin-right:10px;
+		
+}				
+
+a.links{
+		font-size:14px;
+		text-decoration:underline;
+		color:#0061a7;
+		}
+
+a.links:hover{  
+		color:#5D5D5D;
+		font-weight:bold;
+		text-decoration:none;
+		}
+
+/***************************
+	READ MORE
+****************************/ 
+
+.readmore{   
+		margin-bottom:20px;
+		margin-right:10px;
+		margin-top:10px;	
+		}
+	
+		.readmore:hover{  
+
+				}
+
+/****************************
+	FOOTER
+*****************************/
+
+.footer{
+		margin:0;
+		padding:20px 0px;
+		width:auto;
+		height:46px;
+		background:#dce6eb;
+		border-top:6px solid #d2dfe5;
+		}
+
+		.footer_left{
+				float:left;
+				}
+
+				.footer_left p{
+						font-size:13px;
+						}
+
+		.footer_right{
+				float:right;
+				}
+
+/* ================================================= */
+/* 	 INPUT FIELD CSS                                 */
+/* ================================================= */
+
+.contactform textarea{
+		vertical-align:top;
+		}
+
+.contactform input[type=radio],
+.contactform input[type=checkbox]{
+		border: none;
+		}
+
+input[type=text],
+input[type=password],
+textarea{
+		background: #fff;
+		border: 1px solid #d1d1d1;
+		padding: 5px 8px;
+		margin: 2px 0px;
+		}
+
+input[type=text]:focus,
+input[type=password]:focus{
+		background: #f8f8f8;
+		}

@@ -1,0 +1,63 @@
+div.desc{
+	display: block;
+	text-align: center;
+	
+}
+h1.desc {
+	font-size: 1.6em;
+}
+p.desc,p.desc-small {
+    font-size: 1.6em;
+    text-shadow: #fff 0 1px 0;
+    width: 600px;
+    margin: 0 auto 20px auto;
+    
+}
+p.desc-small{
+	font-size: 1.2em;
+}
+h1.desc,p.desc,p.desc-small{
+	color: #659DBD;
+}
+p.desc strong {
+    font-weight: normal;
+    color: #7d7a67;
+}
+body,input {
+    font-size: 75%;
+    line-height: 1.6666;
+    font-family: 'DroidSerifRegular', Georgia, serif;
+    background: #DEEFF6;
+    margin: 0;
+    padding: 0;
+}
+input.btn {
+    height: 38px;
+    padding: 7px 16px;
+    border: none;
+    background: #70adcd;
+    font-size: 1.3em;
+    vertical-align: middle;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    line-height: 1;
+    color: #fff;
+    -webkit-box-shadow: inset 0 -2px 1px rgba(0,0,0,0);
+    -moz-box-shadow: inset 0 -2px 1px rgba(0,0,0,0);
+    position: relative;
+    top: 5px;
+    margin: 0 auto 0px auto;
+}
+input.btn:hover {
+    cursor: pointer;
+    color: #fff;
+    background: #5285A5;
+    -webkit-box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+    -moz-box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+}
+input, a span, a {
+    -webkit-transition: all 0.4s ease-in-out; -moz-transition: all 0.4s ease-in-out; -o-transition: all 0.4s ease-in-out;
+}
+input:focus {
+    outline: none;
+}

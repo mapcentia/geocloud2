@@ -1,0 +1,122 @@
+.top-menu
+{
+background: transparent	url(../images/menubg.png) top left no-repeat;
+height:44px;
+position:absolute;
+margin-right:12px;
+margin-top:20px;
+z-index:100	; 
+}
+
+.rightcorner 
+{
+background:	transparent url(../images/menubg.png) no-repeat scroll right bottom;
+height:44px;
+position:absolute;
+width:12px;
+}
+
+/*** ESSENTIAL STYLES ***/
+.sf-menu, .sf-menu * {
+	margin:			0;
+	padding:		0;
+	list-style:		none;
+}
+.sf-menu {
+	line-height:	1.0;
+position:relative; z-index:100	;
+}
+.sf-menu ul {
+	position:		absolute;
+	top:			-999em;
+	width:			14em; /* left offset of submenus need to match (see below) */
+	z-index:100	;
+}
+.sf-menu ul li {
+	width:			100%;
+}
+.sf-menu li:hover {
+	visibility:		inherit; /* fixes IE7 'sticky bug' */
+	
+}
+.sf-menu li {
+	float:			left;
+	position:		relative;
+}
+.sf-menu a {
+	display:		block;
+	position:		relative;
+}
+.sf-menu li:hover ul,
+.sf-menu li.sfHover ul {
+	left:			0;
+	top:			2.9em; /* match top ul list item height */
+}
+ul.sf-menu li:hover li ul,
+ul.sf-menu li.sfHover li ul {
+	top:			-999em;
+}
+ul.sf-menu li li:hover ul,
+ul.sf-menu li li.sfHover ul {
+	left:			14em; /* match ul width */
+	top:			0;
+}
+ul.sf-menu li li:hover li ul,
+ul.sf-menu li li.sfHover li ul {
+	top:			-999em;
+}
+ul.sf-menu li li li:hover ul,
+ul.sf-menu li li li.sfHover ul {
+	left:			14em; /* match ul width */
+	bottom: 10em;
+	top:			0;
+}
+
+/*** DEMO SKIN ***/
+.sf-menu {
+	float:			left; padding-top:1px;
+	padding-left:15px;
+	margin-bottom:	1em;
+}
+.sf-menu a {
+	border-left:	0px solid #ddd;
+	border-top:		0px solid #eee;
+	padding: 		.90em 1.6em;
+	text-decoration:none;
+}
+.sf-menu a, .sf-menu a:visited  { /* visited pseudo selector so IE6 applies text colour*/
+	color:			#777;
+font:normal 11px Verdana, Arial, Helvetica, sans-serif;
+}
+.sf-menu li UL {
+}
+.sf-menu li li {
+	background:		#f0f0f0;
+	border:	1px solid #ddd;
+	border-top:	1px solid #fff;
+}
+.sf-menu li li li {
+	background:		#f0f0f0;
+	border:	1px solid #ddd;
+	border-top:	1px solid #fff;
+}
+.sf-menu li:hover, .sf-menu li.sfHover,
+.sf-menu a:focus, .sf-menu a:hover, .sf-menu a:active {
+	color:#000;	background:		#fff;
+	outline:		0;
+}
+
+.sf-menu li ul {
+	border-top:	1px solid #eee;
+	}
+	
+.sf-menu li ul li ul {
+	border-top:	1px solid #eee;
+	}
+	
+	
+.sf-menu li.current a:visited
+{
+color:#00919f;
+font-weight:bold;
+}

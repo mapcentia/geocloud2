@@ -1,0 +1,191 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/!svn/ver/11965/trunk/openlayers/lib/OpenLayers
+END
+Map.js
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/!svn/ver/11848/trunk/openlayers/lib/OpenLayers/Map.js
+END
+Handler.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Handler.js
+END
+Control.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11631/trunk/openlayers/lib/OpenLayers/Control.js
+END
+Lang.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Lang.js
+END
+SingleFile.js
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/SingleFile.js
+END
+Style2.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Style2.js
+END
+Ajax.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Ajax.js
+END
+Filter.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Filter.js
+END
+Kinetic.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11309/trunk/openlayers/lib/OpenLayers/Kinetic.js
+END
+Tile.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Tile.js
+END
+StyleMap.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/StyleMap.js
+END
+Symbolizer.js
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Symbolizer.js
+END
+BaseTypes.js
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/!svn/ver/11576/trunk/openlayers/lib/OpenLayers/BaseTypes.js
+END
+Popup.js
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/11573/trunk/openlayers/lib/OpenLayers/Popup.js
+END
+Events.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/!svn/ver/11730/trunk/openlayers/lib/OpenLayers/Events.js
+END
+Renderer.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/!svn/ver/11849/trunk/openlayers/lib/OpenLayers/Renderer.js
+END
+Rule.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Rule.js
+END
+Projection.js
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/!svn/ver/11576/trunk/openlayers/lib/OpenLayers/Projection.js
+END
+Layer.js
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/11708/trunk/openlayers/lib/OpenLayers/Layer.js
+END
+Util.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11942/trunk/openlayers/lib/OpenLayers/Util.js
+END
+Marker.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Marker.js
+END
+Tween.js
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Tween.js
+END
+Request.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11711/trunk/openlayers/lib/OpenLayers/Request.js
+END
+Format.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Format.js
+END
+Icon.js
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Icon.js
+END
+Geometry.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Geometry.js
+END
+Feature.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11790/trunk/openlayers/lib/OpenLayers/Feature.js
+END
+Style.js
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/11886/trunk/openlayers/lib/OpenLayers/Style.js
+END
+Protocol.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Protocol.js
+END
+Strategy.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/!svn/ver/11007/trunk/openlayers/lib/OpenLayers/Strategy.js
+END
+Console.js
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/!svn/ver/11576/trunk/openlayers/lib/OpenLayers/Console.js
+END

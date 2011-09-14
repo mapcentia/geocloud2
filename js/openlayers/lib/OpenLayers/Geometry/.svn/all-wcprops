@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/11819/trunk/openlayers/lib/OpenLayers/Geometry
+END
+Curve.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/Curve.js
+END
+MultiPoint.js
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/MultiPoint.js
+END
+Rectangle.js
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/!svn/ver/11576/trunk/openlayers/lib/OpenLayers/Geometry/Rectangle.js
+END
+Polygon.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/Polygon.js
+END
+Surface.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/Surface.js
+END
+MultiLineString.js
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/MultiLineString.js
+END
+Point.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/Point.js
+END
+LinearRing.js
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/11819/trunk/openlayers/lib/OpenLayers/Geometry/LinearRing.js
+END
+Collection.js
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/Collection.js
+END
+LineString.js
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/11000/trunk/openlayers/lib/OpenLayers/Geometry/LineString.js
+END
+MultiPolygon.js
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Geometry/MultiPolygon.js
+END

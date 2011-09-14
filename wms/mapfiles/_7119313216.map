@@ -1,0 +1,448 @@
+	MAP
+	  # 
+	  # Start of map file
+	  #
+	  NAME "_7119313216"
+	  STATUS on
+	  	  #EXTENT -180 -90 180 90
+	  	  EXTENT -180 -90 180 90
+	  SIZE 2000 1500 
+	  #SYMBOLSET "../etc/symbols.sym"
+	  FONTSET "../fonts/fonts.txt"
+	  IMAGECOLOR 255 255 255
+	  TRANSPARENT ON
+	  UNITS METERS
+	  INTERLACE OFF
+	  IMAGETYPE PNG
+	  WEB
+		IMAGEPATH "/var/www/ms_tmp/"
+  		IMAGEURL "http://80.70.3.60/ms_tmp/"
+		METADATA
+		  "wms_title"    "_7119313216's awesome WMS"
+		  "wms_srs"    "EPSG:900913 EPSG:4326"
+		  "wms_name"    "_7119313216"
+		  "wms_format"    "image/png"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/_7119313216/"
+		  
+		END
+	  END
+	  #
+	  # Start of reference map
+	  #
+	  QUERYMAP
+		COLOR 255 255 0
+		STYLE normal
+	  END
+	  PROJECTION
+		"init=epsg:900913" 
+	  END
+	  # 
+	  # Start of legend
+	  #
+	  LEGEND
+		STATUS off
+		IMAGECOLOR 255 255 255
+		KEYSIZE 18 12 
+		LABEL
+		  TYPE truetype
+		  FONT "arial"
+		  SIZE 8
+		  COLOR 0 0 0
+		  #SHADOWSIZE 2 2 
+		  #BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  #
+	  # Start of scalebar
+	  #
+	  SCALEBAR
+		STATUS off
+		COLOR 255 255 255
+		OUTLINECOLOR 0 0 0
+		BACKGROUNDCOLOR 0 0 0
+		IMAGECOLOR 255 255 255
+		UNITS METERS
+		INTERVALS 3
+		SIZE 150 5 
+		LABEL
+		  FONT "courierb"
+		  SIZE SMALL
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  Symbol
+    Name 'triangle'
+    Type VECTOR
+    Filled TRUE
+    Points
+     0 1
+     .5 0
+     1 1
+     0 1
+     END
+    END
+	SYMBOL
+    NAME "circle"
+    TYPE ellipse
+    FILLED true
+    POINTS
+      1 1
+    END
+  END
+  Symbol
+  Name 'square'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 1
+  0 0
+  1 0
+  1 1
+  0 1
+  END
+ END
+ Symbol
+  Name 'star'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 .375
+  .35 .375
+  .5 0
+  .65 .375
+  1 .375
+  .75 .625
+  .875 1
+  .5 .75
+  .125 1
+  .25 .625
+  END
+END 
+	  
+	  #
+	  # Start of layers
+	  #
+		  
+	  LAYER
+		NAME "volcanx020"
+		STATUS off
+		DATA "the_geom from volcanx020"
+				TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=_7119313216"
+		
+		#CLASSITEM
+		CLASSITEM 'status'
+
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Volcanos"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "volcanx020"
+		  "wms_abstract"    "All volcanos in the world"
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Mygeocloud"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  "appformap_query_buffer" "1000"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Anthropology'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Anthropology'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 255 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Dendrochronology'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Dendrochronology'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 0 255 255
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Historical'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Historical'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 153 204 255
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Fumarolic'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Fumarolic'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 204 153
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Radiocarbon'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 153 204 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Holocene'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Holocene'
+		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 128 128 128
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'Tephrochronology'
+		  
+		  #EXPRESSION
+		  EXPRESSION 'Tephrochronology'
+		  
+		  STYLE
+			  #SYMBOL
+			  SYMBOL 'square'
+			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 153 51 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 10
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "world_countries_shp"
+		STATUS off
+		DATA "the_geom from world_countries_shp"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=_7119313216"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		LABELITEM 'name'
+
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Countries"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "world_countries_shp"
+		  "wms_abstract"    "World countries"
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Mygeocloud"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'Countries'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 2
+				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		  LABEL
+			TYPE truetype
+			FONT "arialbd"
+			SIZE 10
+			#MAXSIZE 10000
+			POSITION CC
+			#BUFFER 1
+			#MINFEATURESIZE 20
+			COLOR 1 1 1
+			OUTLINECOLOR 255 255 255
+			#SHADOWSIZE 2 2 
+			#BACKGROUNDCOLOR 233 246 224
+			#BACKGROUNDSHADOWSIZE 1 1 
+			ANTIALIAS false
+			FORCE false
+		  END #Label
+		  		END # Class
+			  END #Layer
+		END #MapFile

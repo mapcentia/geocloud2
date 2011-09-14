@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.7.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+ <name>Cache_Lite</name>
+ <channel>pear.php.net</channel>
+ <summary>Fast and Safe little cache system</summary>
+ <description>This package is a little cache system optimized for file containers. It is fast and safe (because it uses file locking and/or anti-corruption tests).</description>
+ <lead>
+  <name>Fabien MARTY</name>
+  <user>fab</user>
+  <email>fab@php.net</email>
+  <active>no</active>
+ </lead>
+ <developer>
+  <name>Markus Tacker</name>
+  <user>tacker</user>
+  <email>m@tacker.org</email>
+  <active>yes</active>
+ </developer>
+ <date>2008-04-14</date>
+ <time>13:28:26</time>
+ <version>
+  <release>1.7.3</release>
+  <api>1.7.2</api>
+ </version>
+ <stability>
+  <release>stable</release>
+  <api>stable</api>
+ </stability>
+ <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+ <notes>Bugs fixed :
+- #11224 Fixed improper use of strpos
+- #11260 Fixed improper use of internal property resulting in memory cache not beeing saved
+- #12750 Fxied internal cleaning routine</notes>
+ <contents>
+  <dir name="/">
+   <file baseinstalldir="Cache" md5sum="1eb8d968a8b40bebf9b580782fe0a3a7" name="docs/examples" role="doc" />
+   <file baseinstalldir="Cache" md5sum="934071f21c17611811e01396ca604c79" name="docs/technical" role="doc" />
+   <file baseinstalldir="Cache" md5sum="1b17bb07f86f724f24f58e0987f45585" name="Lite/File.php" role="php" />
+   <file baseinstalldir="Cache" md5sum="0aaaf33889734aff7a04092704824f0f" name="Lite/Function.php" role="php" />
+   <file baseinstalldir="Cache" md5sum="c41b74345fc8b619981af02d047df8c5" name="Lite/Output.php" role="php" />
+   <file baseinstalldir="Cache" md5sum="59e7508427cab7d47b1b62bc07936a93" name="tests/bench.php" role="test" />
+   <file baseinstalldir="Cache" md5sum="2b5c37b7a863a245a19fd90042b2f147" name="tests/bench2.php" role="test" />
+   <file baseinstalldir="Cache" md5sum="209c403db75cce49715f4b8e7f16969b" name="tests/bench3.php" role="test" />
+   <file baseinstalldir="Cache" md5sum="710f77b0ed753a42a49aad8b779ee18c" name="tests/Cache_Lite_automaticCleaning.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="4cfa4bd099dfb552bb6cbfad3e62f12e" name="tests/cache_lite_base.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="02a3c6ac536076fc77810b843e4a6212" name="tests/Cache_Lite_classical.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="005a0b4093a22454152b10c5b3a5531a" name="tests/Cache_Lite_error.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="1d7dc15b1621f98e920a0331ed01fb3c" name="tests/Cache_Lite_error2.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="554b773f3677d0a64e61e0e4c97ebab1" name="tests/Cache_Lite_error3.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="71d8c3bbeb65faff31ee6822391e2744" name="tests/Cache_Lite_eternal.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="198f6f9142051df39d9f70e6c9a0b635" name="tests/Cache_Lite_fatest.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="fc9d144785e80a4fca49e241c059de2f" name="tests/cache_lite_file_base.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="985482fedda364c2b4f166183e1dd9b4" name="tests/Cache_Lite_File_classical.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="38b9d571d4e216c79ba682f29e1e2d37" name="tests/cache_lite_function_base.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="58e15eced32aaed91afa7b8c2985e7aa" name="tests/Cache_Lite_Function_classical.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="5c8fbf9a55fe0e62c543ba537b51ba86" name="tests/Cache_Lite_Function_dontcache.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="5e796fdaf0a7b06e229bdc2057bbb459" name="tests/Cache_Lite_Function_drop.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="a744ad847aa90ab010217f36a4b02a73" name="tests/Cache_Lite_hashed.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="c0cebda77abb8bec1fcb8a9d66ae0742" name="tests/Cache_Lite_lifetime.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="0bbbee2deb4df646b16034ccf128ccbd" name="tests/Cache_Lite_memorycache.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="90e87442db22f9aae9cc987366616381" name="tests/cache_lite_output_base.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="912efc43bb996181572015e019802f03" name="tests/Cache_Lite_Output_classical.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="21d2f81e4eca52e62d6ff5d627279358" name="tests/Cache_Lite_serialization.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="1a49f54c490135ea472c831750458a92" name="tests/callcache.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="0055a5b3f32732ed93eb1d35da967d15" name="tests/pearbug513.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="ce290cff1c6d59f355af2fd24264fb3f" name="tests/pearbug7618.phpt" role="test" />
+   <file baseinstalldir="Cache" md5sum="f7a9487bf565e79860114dac982848c5" name="tests/readme" role="doc" />
+   <file baseinstalldir="Cache" md5sum="b59be5741e8f3ee07fc1d077c9018ae3" name="tests/tmpdir.inc" role="test" />
+   <file baseinstalldir="Cache" md5sum="085e7fb76fb3fa8ba9e9ed0ce95a43f9" name="LICENSE" role="doc" />
+   <file baseinstalldir="Cache" md5sum="2d8d1cd4feeb8251ec9cdc645407152a" name="Lite.php" role="php" />
+   <file baseinstalldir="Cache" md5sum="4c638b951a7c8a4dcb94f10abf1d818b" name="TODO" role="doc" />
+  </dir>
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>4.0.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.4.0b1</min>
+   </pearinstaller>
+   <package>
+    <name>PEAR</name>
+    <channel>pear.php.net</channel>
+   </package>
+  </required>
+ </dependencies>
+ <phprelease />
+ <changelog>
+  <release>
+   <version>
+    <release>1.7.2</release>
+    <api>1.7.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2006-06-03</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bugs fixed :
+            - #7799 : setToDebug() doesn&apos;t work
+            - #7732 (or #7598) : hashedDirectory refactoring to get rid of some warnings (in some particular cases)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.7.1</release>
+    <api>1.7.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2006-05-14</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bugs fixed :
+- #7618 : can&apos;t save cache correctly (in some particular cases)
+    (thanks to neta-master at ywcafe dot net)
+Other changes :
+- new unit test file (about bug #7618)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.7.0</release>
+    <api>1.7.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2006-02-21</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>No change (just some modifications into online documentation)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.7.0beta2</release>
+    <api>1.7.0beta2</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2006-02-04</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bugs fixed :
+- 3 unit test files was forgotten in beta1 package.xml    
+New features :
+- request #6681 : new extendLife() method (thanks to alex at vegagames dot net)
+- request #6617 : &quot;$this-&gt;method()&quot; calls are ok with Cache_Lite_Function without workaround 
+                                    (thanks to thomas dot nicolai at unisg dot ch)
+- request #6575 : new options &apos;dontCacheWhenTheOutputContainsNOCACHE&apos;, &apos;dontCacheWhenTheResultIsFalse&apos;, 
+                                    &apos;dontCacheWhenTheResultIsNull&apos; (thanks to thomas dot nicolai at unisg dot ch)
+- new debug option for Cache_Lite_Function                                 
+- new test files</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.7.0beta1</release>
+    <api>1.7.0beta1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2006-01-29</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- 3 new unit tests
+- a new option is available in the constructor &quot;errorHandlingAPIBreak&quot; (boolean, false by default) ; 
+    if set to true, it introduces a little API break but the error handling is better in CACHE_LITE_ERROR_RETURN
+    mode (specially with the save() method which can return a PEAR_Error object)
+Changes :
+- code refactoring for setToDebug() (thanks to moosh (at) php (dot) net)    
+- code refactoring (thanks to code analyzer)
+Bugs fixed :
+- #6388 : add an explicit dependancy on PEAR package (for error handling) (thanks to moosh (at) php (dot) net)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.6.0</release>
+    <api>1.6.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2005-12-03</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>No change (just some modifications into online documentation)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.6.0beta2</release>
+    <api>1.6.0beta2</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2005-11-25</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- a new phpt test script (eternal caching)
+- you can now call Cache_Lite constructor with any argument (thanks to ratibus at gmail dot com)
+Bug fixed :
+- bugfixes about eternal caching
+Other change : 
+- better code factoring (thanks to ratibus at gmail dot com)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.6.0beta1</release>
+    <api>1.6.0beta1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2005-11-17</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- phpt test scripts
+- add of drop() method to Cache_Lite_Function (thanks to 
+Hugo Morganho hjm at holos dot pt)    
+- request #5495 : a null lifetime give an eternal caching (need tests)
+Bug fixed :
+- bugfix #5921 : a variable was unused (no consequence for the end user), 
+thanks to moosh at php dot net
+- bugfix #5938 : little mistakes given by Zend Code Analyser 
+- little mistake in the example for Cache_Lite_File</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.5.2</release>
+    <api>1.5.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2005-07-18</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bug Fixed :
+- a &quot;package.xml&quot; problem (a file was forgotten)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.5.1</release>
+    <api>1.5.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2005-07-10</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Changes :
+- juste a little more docs since 1.5.0 (beta)
+- the state in &quot;stable&quot; now</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.5.0</release>
+    <api>1.5.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2005-06-18</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- add of a doNotTestCacheValidity in Output (like in Lite.php)
+- request #4502 : better control on cache cleaning condition (thanks to 
+vincent lascaux); introduce the idea of a user callback for the 
+cleaning process
+- new Cache_Lite_File module (for a cache controlled by a master file, 
+very usefull for templates or config caching)
+Bug fixed :
+- avoid a potential error message if cache doesn&apos;t exist
+- bug #4236 : fread PHP warning on zero length read (because of the change
+of fread() behaviour in PHP) (thanks to rick dot overman at gmail dot com)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.4.1</release>
+    <api>1.4.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2005-03-01</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bug fixed :
+- problem of non-ISO-8859-1 characters in package.xml (bug #3621)
+- problem of the returning value in clean() method (integer and not void)
+    (thanks to Demian Turner (demian (at) phpkitchen (dot) com))</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.4.0</release>
+    <api>1.4.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2005-01-21</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Changes :
+- juste a little more docs since 1.4.0beta1</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.4.0beta1</release>
+    <api>1.4.0beta1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2004-12-11</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- hashed cache directory structure with the choice of the level (thanks to Mike Benoit (ipso at snappymail dot ca))
+- new options for cleaning the cache (&quot;not in group&quot;, &quot;too old&quot;...) (thanks to dontilooksweetandinnocent@ambience.ru)
+- automatic cleaning of too old cache files based on a customisable &quot;random method&quot;</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.3.1</release>
+    <api>1.3.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2004-08-16</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bug fixed :
+- problem with clean() method with memoryCaching activated (thanks to Bojan Mihelac (bmihelac at mihelac dot org))
+- remove() method didn&apos;t deal with memoryCaching
+- bug fix #1758, thanks to Dave (djpenton at cs dot mu dot oz dot au)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.3</release>
+    <api>1.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2004-02-07</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Changes :
+- Add a warning in examples file because of http://pear.php.net/bugs/bug.php?id=660
+Bug fixed :
+- little warning fix in Cache_Lite_Function (fab)
+- little bug fix in lastModified() method (thanks to Yavor Shahpasov)
+- fix http://pear.php.net/bugs/bug.php?id=513 (thanks to alan@aardwolfweb.com)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.2</release>
+    <api>1.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2003-10-25</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Changes :
+- Rewrite of Cache_Lite constructor (thanks to Brian E. Lozier) 
+New Features :
+- Add of lastModified() method (for Cache_Lite hackers) (thanks to Harry Fuecks)
+- Introduce automatic serialization (false in default) (thanks to Dan Wilson)
+- Add of an url for a cache_lite tutorial (english (thanks to paj) and french)
+Bug fixed :
+- Change the Cache_Lite::raiseError calls in $this-&gt;raiseError (thanks to Holger Willenborg)
+- Set the default group for remove, since get and save both have it set (thanks to jellybob)
+- Little fix for caching binary data under Windows (thanks to Simeon Franklin)
+- little fix with fileNameProtection set to false (not the default (big thank to Harry Fuecks))</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.1</release>
+    <api>1.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2003-02-23</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Changes :
+- Move to usage of call_user_func_array() and call_user_func() as call_user_method() is depreciated (thanks to Sterling Hughes) 
+New Features :
+- Introduce memoryCaching (idea of Mike Benoit)
+- Add of a file name protection option (can be faster if set to off) (thanks to Brian Webb for the idea)
+Bug fixed :
+- Little fix : cache was inefficient if the output is only 0 (thanks to Brian Webb)
+- notice fix (thanks to Lorenzo Alberton, Pierre-Alain Joye and Jon Parise)
+- Little fix to avoid file names problems with an exotic group name (thanks to Brian Webb)
+- Fix a possible bug when resave a cache file after a succesfull get (thanks to Michael Caplan)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.0.1</release>
+    <api>1.0.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2002-11-12</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>Bug fixed :
+- clean() bug with group (Thanks to Ondrej Jombik)</notes>
+  </release>
+  <release>
+   <version>
+    <release>1.0</release>
+    <api>1.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2002-11-11</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>This is the first stable release of Cache_Lite. There is no big change since the
+0.4 beta release but two months of tests !
+Changes :
+- fix magic_q issue (Thanks to Moshe Doron)</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.4</release>
+    <api>0.4</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2002-09-25</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- Add setLifeTime() method to change the cache lifetime dynamicaly
+Changes :
+- changes in the directory layout and in file names to (better) respect PEAR standards
+    =&gt; incompatibility with 0.3 version even there is no incompatible change in the API</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.3</release>
+    <api>0.3</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2002-08-31</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- Add &apos;$doNotTestCacheValidity&apos; optional parameter for the get() method
+Changes :
+- raiseError() method becomes public
+- swap of two lines in _write() method (Thanks to Jean-Francois BUSTARRET)
+Bugs fixed :
+- remove blank spaces at the end of the class (Thanks to Jean-Francois BUSTARRET)
+- E_NOTICEs problems and maybe a minor bug of errors management (Thanks to Sebastian BERGMANN)</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.2.0</release>
+    <api>0.2.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2002-08-10</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>New features :
+- Adding Cache_Lite_Function (to cache the result and output of functions/methods)
+Bugs fixed :
+- In a few cases of cache corruption, it was possible to get some warnings (but the output was correct)
+- Cache_Lite_Output require_once (to load Cache_Lite) wasn&apos;t correct</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.1.1</release>
+    <api>0.1.1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2002-08-08</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>A little packaging fix</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.1</release>
+    <api>0.1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2002-08-08</date>
+   <license uri="http://www.gnu.org/copyleft/lesser.html">lgpl</license>
+   <notes>This is the first release.</notes>
+  </release>
+ </changelog>
+</package>

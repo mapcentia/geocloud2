@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/!svn/ver/11878/trunk/openlayers/lib/OpenLayers/Filter
+END
+Function.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/11712/trunk/openlayers/lib/OpenLayers/Filter/Function.js
+END
+FeatureId.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/11756/trunk/openlayers/lib/OpenLayers/Filter/FeatureId.js
+END
+Comparison.js
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/!svn/ver/11878/trunk/openlayers/lib/OpenLayers/Filter/Comparison.js
+END
+Logical.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Filter/Logical.js
+END
+Spatial.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/10995/trunk/openlayers/lib/OpenLayers/Filter/Spatial.js
+END
