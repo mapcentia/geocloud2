@@ -28,5 +28,25 @@ class databases extends postgis {
 			return false;
 		}
 	}
+	public function listAllDbs(){
+		$sql = "SELECT datname from pg_catalog.pg_database";
+		$sql = "SELECT * FROM {$this -> table}";
+		$result = $this -> execQuery($sql);
+		while ($row = $this->fetchRow($result,"assoc")) {
+			$arr = array();
+			foreach ($row as $key => $value) {
+				$arr = $this -> array_push_assoc($arr,$key,$value);
+			}
+			$response['data'][] = $arr;
+		}
+		if (!$this->PDOerror) {
+	 		$response['success'] = true;
+	 		$response['message'] = "Databaeses loaded";
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror;
+		}
+		return $response;
+	}
 }
-?>

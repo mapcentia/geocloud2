@@ -85,7 +85,12 @@ addShape.init = function () {
             buttonCfg: {
                 iconCls: 'upload-icon'
             }
-        }],
+        }, {
+        	xtype: 'checkbox',
+        	name: 'pdo',
+        	fieldLabel: 'Slow verbose load?'
+        }
+        ],
         buttons: [{
             text: 'Save',
             handler: function () {

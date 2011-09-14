@@ -70,7 +70,8 @@ class table extends postgis {
 			$response['data'][] = $arr;
 		}
 		return $response;
-	}function destroy() // Geometry columns
+	}
+	function destroy() // Geometry columns
 	{
 		$sql = "BEGIN;";
 		$sql.= "SELECT DropGeometryColumn('','{$this->table}','{$this->geomField}');";

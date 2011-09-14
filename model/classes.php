@@ -8,7 +8,7 @@ class _class extends postgis {
 		return $array;
 	}
 	public function getAll($table) {
-		$sql = "SELECT * FROM classes WHERE layer='{$table}'";
+		$sql = "SELECT * FROM settings.classes WHERE layer='{$table}'";
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -35,7 +35,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function get($id) {
-		$sql = "SELECT class FROM classes WHERE id='{$id}'";
+		$sql = "SELECT class FROM settings.classes WHERE id='{$id}'";
 		$row = $this->fetchRow($this->execQuery($sql),"assoc");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -63,7 +63,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function update($id,$data) {
-		$sql = "UPDATE classes SET class='{$data}' WHERE id='{$id}';";
+		$sql = "UPDATE settings.classes SET class='{$data}' WHERE id='{$id}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -76,7 +76,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function insert($table) {
-		$sql = "INSERT into classes (layer,class) VALUES('{$table}','{\"name\":\"New style\"}');";
+		$sql = "INSERT into settings.classes (layer,class) VALUES('{$table}','{\"name\":\"New style\"}');";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -90,7 +90,7 @@ class _class extends postgis {
 	}
 	function destroy($id) // Geometry columns
 	{
-		$sql.= "DELETE FROM classes WHERE id='{$id}';";
+		$sql.= "DELETE FROM settings.classes WHERE id='{$id}';";
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 	 		$response['success'] = true;

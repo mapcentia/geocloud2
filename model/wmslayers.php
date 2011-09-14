@@ -4,7 +4,7 @@ class wmslayers extends postgis {
 		parent::__construct();
 	}
 	public function get($id) {
-		$sql ="SELECT def FROM wmslayers WHERE layer='{$id}';";
+		$sql ="SELECT def FROM settings.wmslayers WHERE layer='{$id}';";
 		$row = $this->fetchRow($this->execQuery($sql),"assoc");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -24,14 +24,14 @@ class wmslayers extends postgis {
 		return $response;
 	}
 	public function update($id,$data) {
-		$sql ="SELECT * FROM wmslayers WHERE layer='{$id}';";
+		$sql ="SELECT * FROM settings.wmslayers WHERE layer='{$id}';";
 		$result = $this->execQuery($sql);
 		if (!$result->rowCount()){
-			$sql = "INSERT INTO wmslayers (layer,def) VALUES('{$id}','{$data}');";
+			$sql = "INSERT INTO settings.wmslayers (layer,def) VALUES('{$id}','{$data}');";
 			$this->execQuery($sql,"PDO","transaction");
 		}
 		else {
-			$sql = "UPDATE wmslayers SET def='{$data}' WHERE layer='{$id}';";
+			$sql = "UPDATE settings.wmslayers SET def='{$data}' WHERE layer='{$id}';";
 			$this->execQuery($sql,"PDO","transaction");
 		}
 		if (!$this->PDOerror) {

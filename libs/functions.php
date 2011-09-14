@@ -161,6 +161,7 @@ class postgis
 	function getGeometryColumns($table,$field)
 	{
 		$query = "select * from geometry_columns_view where f_table_name='$table'";
+	
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
 		if (!$row)

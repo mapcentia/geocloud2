@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteRule ^$ index 
+RewriteRule ^([a-z]*)/([\w'-]*)$ $1.php 
+RewriteRule ^([a-z]*)$ $1.php 

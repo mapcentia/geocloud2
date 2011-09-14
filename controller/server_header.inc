@@ -14,9 +14,12 @@ include '../../libs/FirePHPCore/FirePHP.class.php';
 include '../../libs/FirePHPCore/fb.php';
 include '../../model/tables.php';
 include '../../model/settings_viewer.php';
-include("../../wms/mapfile.php.map");
+include '../../wms/mapfile.php.map';
+include '../../model/shapefile.php';
 
 $postgisdb = $_SESSION['screen_name']; // We change the db to user
+//$postgisuser = "postgres"; // We change the db to user
+//$postgisuser = "user_".$_SESSION['screen_name']; // We change the user
 
 switch($_REQUEST['type'])
 {

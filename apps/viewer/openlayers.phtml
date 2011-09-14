@@ -4,8 +4,10 @@ include_once("functions.php");
 include("inc/uri_parts.php");
 $_SESSION['screen_name'] = $parts[4];
 $postgisdb = $_SESSION['screen_name'];
-$postgisObject = new postgis();
 
+
+include '../../libs/FirePHPCore/FirePHP.class.php';
+include '../../libs/FirePHPCore/fb.php';
 
 function microtime_float()
 {
@@ -19,6 +21,7 @@ include "../../libs/PEAR/XML/Parser.php";
 include "../../libs/PEAR/XML/Unserializer.php";
 include "../../libs/PEAR/XML/Serializer.php";
 $srs = "900913";
+$postgisObject = new postgis();
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -40,6 +43,7 @@ $srs = "900913";
                 padding: 0px;
                 position: absolute;
         }
+    
         
         </style>
         <?php
@@ -53,6 +57,8 @@ $srs = "900913";
 		?>
 		
         <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
+        <script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
+        <script type="text/javascript" src="/js/openlayers/defs/EPSG900913.js"></script>
 	<!--<script type="text/javascript" src="http://openlayers.org/dev/OpenLayers.js"></script>-->
 	
 	<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhS4p9AtMz66nyqFUaziGHLM44rOahQ1vHhpXeGXl_ifkSE8O1eT_foV2w"
@@ -66,6 +72,9 @@ $srs = "900913";
         <link rel="stylesheet" type="text/css" href="/styles/styles.css" />
 
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+ <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"
+      type="text/javascript"></script> 
+
 
 	
 
@@ -83,11 +92,13 @@ $srs = "900913";
 		var graphicLayer;
 		var renderGeometryArray;
 		var resultHtml = "";
-		var extentFromLayer;
 		var minxFromFilter=0;
 		var minyFromFilter=0;
 		var maxxFromFilter=0;
 		var maxyFromFilter=0;
+        var autocomplete; 
+        var placeMarkers;
+        var placePopup;
 		
 		function osm_getTileURL(bounds) {
             var res = this.map.getResolution();
@@ -104,6 +115,7 @@ $srs = "900913";
             }
         }
 		
+
 <?php
 $_REQUEST['signaturoff']="true";
 $width = 400;
@@ -188,16 +200,25 @@ $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
 $table = $response['data']['default_extent'];
 
-
 $geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
 if ($geomField) {
+
 $sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
 $result = $postgisObject->execQuery($sql);
 $row = $postgisObject->fetchRow($result);
-echo "extentFromLayer = '{$row['txmin']},{$row['tymin']},{$row['txmax']},{$row['tymax']}'\n";
+echo "minxFromFilter = ".($row[txmin]-$buffer).";\n";
+echo "maxxFromFilter = ".($row[txmax]+$buffer).";\n";
+echo "minyFromFilter = ".($row[tymin]-$buffer).";\n";
+echo "maxyFromFilter = ".($row[tymax]+$buffer).";\n";
+
 }
 else {
-echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
+
+echo "minxFromFilter = -20037508";
+echo "maxxFromFilter = 20037508";
+echo "minyFromFilter = -20037508";
+echo "maxyFromFilter = 20037508";
+
 }
 // End setting extent from layer
 
@@ -519,7 +540,6 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 	
 	
         </script>
-
 	</head>
 	<body class="">
 
@@ -536,7 +556,7 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 	<div id="mapel"></div>
 
 	<div
-		style="position: absolute; top: 5px; left: 110px; z-index: 1000; display: line;">
+		style="position: absolute; top: 5px; left: 110px; z-index: 500; display:none;">
 	<a id="popupButton"
 		href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">Åben
 	som pop-up</a></div>
@@ -544,13 +564,13 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 
 
 		<div id="legendContent"><img alt="" id="legend_img" src="" /></div>
+        <div style="padding:5px" id="searchContent">
+            <input style="width:270px" type='text' id='gAddress' name='gAddress' value=''/>
+            <p>Skriv adresse eller stednavn</p>
+        </div>
 
 
-	<div style="position: absolute; z-index: 2000; display: none"><textarea
-		id="gml" style="width: 100%" rows="30" cols=""></textarea></div>
 
-	<div style="position: absolute; z-index: 2000; display: none"><a
-		href="javascript:void(0);" onclick="insertFeatureInDb();">Indsaæt</a></div>
 
 	</body>
 
@@ -558,7 +578,8 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 
 	Ext.onReady(function(){
 	    
-		var win;
+		var legendWin;
+		var searchWin;
 
 
 	if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
@@ -569,14 +590,11 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 	var ctrl, toolbarItems = [], action, actions = {};
     ctrl = new OpenLayers.Control.NavigationHistory();
     map.addControl(ctrl);
-
-  
-
-    action = new GeoExt.Action({
+   action = new GeoExt.Action({
         text: "Legend",
 	 handler:function(objRef){
-		if(!win){
-		    win = new Ext.Window({
+		if(!legendWin){
+		    legendWin = new Ext.Window({
 			title: "Legend",
 			layout:'fit',
 			width:200,
@@ -588,9 +606,9 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
 		    });
 		}
 	    if(typeof(objRef)=="object"){
-            win.show(objRef);
+            legendWin.show(objRef);
         	}else{
-            	win.show();
+            	legendWin.show();
         	}//end if object reference was passed
 		
 	    },
@@ -606,7 +624,35 @@ echo "extentFromLayer = '-20037508, -20037508, 20037508, 20037508'\n";
     });
     actions["print"] = action;
     //toolbarItems.push(action);
-   
+   action = new GeoExt.Action({
+        text: "Search",
+	 handler:function(objRef){
+		if(!searchWin){
+            $(".pac-container").css("z-index","10000"); // We make sure that Google auto complete is shown on top
+		    searchWin = new Ext.Window({
+			title: "Search",
+			layout:'fit',
+			width:300,
+			height:300,
+            plain: true,
+			closeAction:'hide',
+			contentEl:searchContent,
+			x:5,
+			y:120
+		    });
+		}
+	    if(typeof(objRef)=="object"){
+            searchWin.show(objRef);
+        	}else{
+            	searchWin.show();
+        	}//end if object reference was passed
+		
+	    },
+        tooltip: "Search"
+    });
+    actions["legend"] = action;
+    toolbarItems.push(action);
+
     toolbarItems.push("->");
     action = new GeoExt.Action({
         text: "<<",
@@ -644,14 +690,56 @@ new Ext.Viewport({
 
 var mapPanel = Ext.getCmp("mappanel");
 
-if (minxFromFilter!==0) {
-	//alert();
+if (minxFromFilter!=0) {
+	//alert('test');
 	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
 }
-else {
-	map.zoomToExtent(new OpenLayers.Bounds.fromString(extentFromLayer));
-}
 
+
+    var p1 = transformPoint(minxFromFilter,minyFromFilter,"EPSG:900913","EPSG:4326");
+    var p2 = transformPoint(maxxFromFilter,maxyFromFilter,"EPSG:900913","EPSG:4326");
+var defaultBounds = new google.maps.LatLngBounds(
+  new google.maps.LatLng(p1.y,p1.x),
+  new google.maps.LatLng(p2.y,p2.x)
+);
+
+var input = document.getElementById('gAddress');
+var options = {
+  bounds: defaultBounds
+  //types: ['establishment']
+};
+var autocomplete = new google.maps.places.Autocomplete(input, options);
+    console.log(autocomplete.getBounds());
+
+google.maps.event.addListener(autocomplete, 'place_changed', function() {
+  var place = autocomplete.getPlace();
+  console.log(place);
+  var p = transformPoint(place.geometry.location.Qa,place.geometry.location.Pa,"EPSG:4326","EPSG:900913")
+ var point = new OpenLayers.LonLat(p.x,p.y);
+  map.setCenter(point,15);
+try {placeMarkers.destroy()} catch(e){};
+try {placePopup.destroy()} catch(e){};
+placeMarkers = new OpenLayers.Layer.Markers( "Markers" );
+map.addLayer(placeMarkers);
+
+var size = new OpenLayers.Size(21,25);
+var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
+placeMarkers.addMarker(new OpenLayers.Marker(point,icon));
+placeMarkers.addMarker(new OpenLayers.Marker(point,icon.clone()));
+
+placePopup = new OpenLayers.Popup.FramedCloud("place",point,null,"<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>",null, true);
+map.addPopup(placePopup)
+	
+  
+});
+function transformPoint(lat,lon,s,d) {
+    var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+    var dest = new Proj4js.Proj(d);
+    var p = new Proj4js.Point(lat,lon);
+    Proj4js.transform(source, dest, p);
+   return p;
+}
 
 });
 

@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^query http_db_query.phtml [L]
+RewriteRule ^legend http_legend.phtml [L]

@@ -1800,7 +1800,7 @@ class postgis extends control
 	}
 	function connect()
 	{
-		@ $db = pg_connect($this -> connectString());
+		$db = pg_connect($this -> connectString());
 		if (!$db)
 		return false;
 		elseif ($db)
@@ -1850,14 +1850,14 @@ class postgis extends control
 		global $theGeometry;
 		global $languageText;
 		$query = "select * from geometry_columns_view where f_table_name='$table'";
-		//echo $query;
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
-		if (!$row)
-		return $languageText[selectText];
+		if (!$row){}
 		elseif ($row) $this -> theGeometry = $row[type];
-		if ($field == 'f_geometry_column')
+		if ($field == 'f_geometry_column') {
+		
 		return $row[f_geometry_column];
+		}
 		if ($field == 'srid') {
 			//echo $query;
 			return $row[srid];

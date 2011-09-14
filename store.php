@@ -3,6 +3,7 @@ include("html_header.php");
 include("inc/oauthcheck.php");
 include("wms/mapfile.php.map");
 makeMapFile($_SESSION['screen_name']);
+
 ?>
 		<script type="text/javascript">var screenName='<?php echo $_SESSION['screen_name'];?>'</script>
 		<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js">
