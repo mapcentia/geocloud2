@@ -4,7 +4,6 @@ class users extends postgis {
 	var $screenName;
 	var $tok;
 	var $sec;
-	var $pw;
 	function __construct($screenName,$userId=NULL,$tok=NULL,$sec=NULL)
 	{
 		parent::__construct();
@@ -23,7 +22,6 @@ class users extends postgis {
 			$this->userId = $row['userid'];
 			$this->tok = $row['tok'];
 			$this->sec = $row['sec'];
-			$this->pw = $row['pw'];
 		}
 		elseif((!$row['screenname']) && (!$userId) && (!$tok) && (!$sec)) {
 			$sql = "INSERT INTO users(userid,screenname,tok,sec) VALUES(NULL,'{$screenName}','NULL','NULL')";
@@ -36,7 +34,6 @@ class users extends postgis {
 			$this->userId = NULL;
 			$this->tok = NULL;
 			$this->sec = NULL;
-			$this->pw = $row['pw'];
 		} 
 		else {
 			//die("Could not init user object");
@@ -69,23 +66,7 @@ class users extends postgis {
 		$pass=md5($pass);//encrypt password
 		return $pass;
 	}
-	public function updatePw($pass) {
-		$sql = "UPDATE users SET pw='".$this->encryptPw($pass)."' WHERE screenname='{$this->screenName}'";
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-	 		$response['success'] = true;
-	 		$response['message'] = "Password updated";
-
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
-		return $response;
-	}
-	public function getPw() {
-		return $this->pw;
-	}
+	
 	function is_valid_ipv4($ip)
 {
     return preg_match('/\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.

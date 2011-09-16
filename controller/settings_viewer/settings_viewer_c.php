@@ -18,5 +18,8 @@ switch ($parts[4]){
 		$response = $settings_viewer->update_extent($_POST['layer']);
 		makeMapFile($_SESSION['screen_name'],$_POST['layer']);
 	break;
+	case "updatepw": // All tables
+		$response = $settings_viewer->updatePw($_POST['pw']);
+	break;
 }
 include_once("../server_footer.inc");

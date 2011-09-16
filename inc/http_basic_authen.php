@@ -1,4 +1,7 @@
 <?php
+$settings_viewer = new Settings_viewer();
+$response = $settings_viewer->get();
+
 // mod_php
 if (isset($_SERVER['PHP_AUTH_USER'])) {
 	$username = $_SERVER['PHP_AUTH_USER'];
@@ -18,7 +21,7 @@ if (is_null($username)) {
 	// Text to send if user hits Cancel button
 	makeExceptionReport("Could not authenticate you 1");
 
-} elseif (md5($password)!=$user->getPw()) {
+} elseif (md5($password)!=$response['data']['pw']) {
 	header('WWW-Authenticate: Basic realm="My Realm"');
 	header('HTTP/1.0 401 Unauthorized');
 	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1

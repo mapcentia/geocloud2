@@ -12,6 +12,7 @@ include "../libs/functions.php";
 include "../model/users.php";
 include "../model/tables.php";
 include "../model/versions.php";
+include("../model/settings_viewer.php"); // we need to get pw for http authentication
 
 include "../libs/PEAR/XML/Unserializer.php";
 include "../libs/PEAR/XML/Serializer.php";

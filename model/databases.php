@@ -1,11 +1,24 @@
 <?php
 class databases extends postgis {
-	function createdb($screenName)
+    private function createUser($name)
+    {
+        $sql = "create user {$name} with password '1234'";
+        $this -> execQuery($sql);
+		if (!$this->PDOerror) {
+			return true;
+		}
+		else {
+			return false;
+		}
+    }
+    public function createdb($screenName)
 	{
+        //$this->createUser($screenName);
+
 		$sql = "CREATE DATABASE {$screenName}
 			WITH ENCODING='SQL_ASCII'
        			OWNER=postgres
-       			TEMPLATE=mygeocloudtest
+       			TEMPLATE=mhoegh
        			LC_CTYPE='C'
        			CONNECTION LIMIT=-1;
 			";

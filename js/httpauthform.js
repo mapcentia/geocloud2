@@ -26,7 +26,7 @@ httpAuth.form = new Ext.FormPanel({
 				"use strict";
                 if (httpAuth.form.getForm().isValid()) {
                     httpAuth.form.getForm().submit({
-                        url: '/controller/users/' + screenName + '/updatepw',
+                        url: '/controller/settings_viewer/' + screenName + '/updatepw',
                         waitMsg: 'Saving your password',
                         success: httpAuth.onSubmit,
                         failure: httpAuth.onSubmit
