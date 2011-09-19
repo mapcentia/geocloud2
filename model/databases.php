@@ -1,5 +1,9 @@
 <?php
 class databases extends postgis {
+	function __construct()
+	{
+		parent::__construct();
+	}
     private function createUser($name)
     {
         $sql = "create user {$name} with password '1234'";
@@ -43,18 +47,13 @@ class databases extends postgis {
 	}
 	public function listAllDbs(){
 		$sql = "SELECT datname from pg_catalog.pg_database";
-		$sql = "SELECT * FROM {$this -> table}";
-		$result = $this -> execQuery($sql);
-		while ($row = $this->fetchRow($result,"assoc")) {
-			$arr = array();
-			foreach ($row as $key => $value) {
-				$arr = $this -> array_push_assoc($arr,$key,$value);
-			}
-			$response['data'][] = $arr;
-		}
+		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
+			while ($row = $this->fetchRow($result,"assoc")) {
+				$arr[] = $row['datname'];
+	 		}
 	 		$response['success'] = true;
-	 		$response['message'] = "Databaeses loaded";
+	 		$response['data'] = $arr;
 		}
 		else {
 			$response['success'] = false;

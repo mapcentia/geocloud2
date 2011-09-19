@@ -201,12 +201,12 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "<?php echo $row['f_table_title'];?>"
+		  "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name']?>"
 		  "wms_srs"    "EPSG:<?php echo $row['srid'];?> EPSG:900913"
 		  "wms_name"    "<?php echo $row['f_table_name'];?>"
 		  "wms_abstract"    "<?php echo $row['f_table_abstract'];?>"
 		  "wms_format"    "image/png"
-                  "appformap_group"  "Mygeocloud"
+                  "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group"?>"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
 			  <?php if($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"".$layerArr['data'][0]['query_buffer']."\"\n";?>
@@ -282,7 +282,3 @@ $fh = fopen($newFile, 'w');
 fwrite($fh,$data);
 fclose($fh);
 }
-?>
-
-
- 

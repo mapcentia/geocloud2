@@ -103,14 +103,12 @@ wmsClasses.onAdd = function () {
     var requestCg = {
                     url: '/controller/classes/' + screenName + '/insert/' + wmsClasses.table,
                     method: 'post',
-                    timeout: 120000,
                     callback: function (options, success, http) {
                         var response = eval('(' + http.responseText + ')');
-                        //alert(response.success);
+                        wmsClasses.store.load();
                     }
                 };
-                Ext.Ajax.request(requestCg);
-				wmsClasses.store.load();
+                Ext.Ajax.request(requestCg);		
 	};
 wmsClasses.onDelete = function () {
     var record = wmsClasses.grid.getSelectionModel().getSelected();

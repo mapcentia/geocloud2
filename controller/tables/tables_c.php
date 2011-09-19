@@ -14,6 +14,9 @@ switch ($parts[4]){
 	case "getrecords": // All tables
 		$response = $table -> getRecords();
 	break;
+	case "getgroupby": // All tables
+		$response = $table -> getGroupBy("layergroup");
+	break;
 	case "updaterecord": // All tables
 		$response = $table -> updateRecord($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);

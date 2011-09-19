@@ -71,6 +71,23 @@ class table extends postgis {
 		}
 		return $response;
 	}
+	function getGroupBy($field) // All tables
+	{
+		$sql = "SELECT {$field} as {$field} FROM {$this -> table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
+		$result = $this->execQuery($sql);
+		if (!$this->PDOerror) {
+			while ($row = $this->fetchRow($result,"assoc")) {
+				$arr[] = $row[$field];
+	 		}
+	 		$response['success'] = true;
+	 		$response['data'] = $arr;
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror;
+		}
+		return $response;
+	}
 	function destroy() // Geometry columns
 	{
 		$sql = "BEGIN;";

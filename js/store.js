@@ -12,6 +12,7 @@ Ext.onReady(function () {
     var winWmsLayer;
     var fieldsForStore;
     var settings;
+    var groups;
     $.ajax({
         url: '/controller/tables/' + screenName + '/getcolumns/geometry_columns_view',
         async: false,
@@ -23,6 +24,22 @@ Ext.onReady(function () {
                     var response = eval('(' + http.responseText + ')');
                     // JSON
                     fieldsForStore = response.forStore;
+                }
+            }
+        }
+    });
+    
+    $.ajax({
+        url: '/controller/tables/' + screenName + '/getgroupby/geometry_columns_view',
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (data, textStatus, http) {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    var response = eval('(' + http.responseText + ')');
+                    // JSON
+                    groups = response.data;
                 }
             }
         }
@@ -556,9 +573,23 @@ Ext.onReady(function () {
                 xtype: 'textfield',
                 fieldLabel: 'Meta data URL',
                 name: 'meta_url',
-                value: r.data.meta_url,
+                value: r.data.meta_url
 
-            }],
+            },{
+            width: 200,
+            xtype: 'combo',
+            mode: 'local',
+            triggerAction: 'all',
+            forceSelection: false,
+            editable: true,
+            //fieldLabel: 'Type',
+            name: 'layergroup',
+            displayField: 'layergroup',
+            valueField: 'layergroup',
+            allowBlank: true,
+            store: groups,
+            value: r.data.layergroup
+        }],
             buttons: [{
                 iconCls: 'silk-add',
                 text: 'Update',
