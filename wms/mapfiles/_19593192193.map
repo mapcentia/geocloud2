@@ -4,7 +4,7 @@
 	  #
 	  NAME "_19593192193"
 	  STATUS on
-	  	  #EXTENT -1609457.7273485 -535671.03414795 -73379.2071435559 310639.74290771
+	  	  #EXTENT -180 -90 180 90
 	  	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"
@@ -126,9 +126,66 @@ END
 	  #
 		  
 	  LAYER
-		NAME "dsds"
+		NAME "massachusetts_natural"
 		STATUS off
-		DATA "the_geom from dsds"
+		DATA "the_geom from massachusetts_natural"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=_19593192193"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Massachusetts natural"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "massachusetts_natural"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "test"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 51 102 255
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "efrre"
+		STATUS off
+		DATA "the_geom from efrre"
 				TYPE LINE
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=_19593192193"
@@ -140,12 +197,12 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "dsds test"
+		  "wms_title"    "efrre"
 		  "wms_srs"    "EPSG:4326 EPSG:900913"
-		  "wms_name"    "dsds"
+		  "wms_name"    "efrre"
 		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
-                  "appformap_group"  "Mygeocloud"
+                  "appformap_group"  "Default group"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
 			  		END
@@ -165,7 +222,7 @@ END
 			  WIDTH 1
 				
 			  #COLOR
-			  COLOR 0 255 0
+			  COLOR 255 0 0
 			  
 			  #OUTLINECOLOR
 			  OUTLINECOLOR 255 0 0
@@ -184,10 +241,10 @@ END
 			  END #Layer
 		  
 	  LAYER
-		NAME "ewwew"
+		NAME "_19593192193_1316700989"
 		STATUS off
-		DATA "the_geom from ewwew"
-				TYPE LINE
+		DATA "wkb_geometry from _19593192193_1316700989"
+				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=_19593192193"
 		
@@ -198,18 +255,47 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "jkjkj"
-		  "wms_srs"    "EPSG:4326 EPSG:900913"
-		  "wms_name"    "ewwew"
-		  "wms_abstract"    "sdsd"
+		  "wms_title"    "_19593192193_1316700989"
+		  "wms_srs"    "EPSG:25832 EPSG:900913"
+		  "wms_name"    "_19593192193_1316700989"
+		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
-                  "appformap_group"  "Mygeocloud"
+                  "appformap_group"  "Default group"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
 			  		END
 		PROJECTION
-		  "init=epsg:4326" 
+		  "init=epsg:25832" 
 		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
 			  END #Layer
 		  
 	  LAYER
@@ -227,15 +313,16 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "Difficult alpine hiking"
+		  "wms_title"    "Hiking trails from OSM"
 		  "wms_srs"    "EPSG:4326 EPSG:900913"
 		  "wms_name"    "ways"
-		  "wms_abstract"    "sdsddjfhjdf n"
+		  "wms_abstract"    "From OSM"
 		  "wms_format"    "image/png"
-                  "appformap_group"  "Mygeocloud"
+                  "appformap_group"  "OSM"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
-			  		END
+			  "appformap_query_buffer" "100"
+		END
 		PROJECTION
 		  "init=epsg:4326" 
 		END
@@ -258,325 +345,6 @@ END
 			  			  
 			  #SIZE
 			  			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-			  END #Layer
-		  
-	  LAYER
-		NAME "daginstitutioner_point"
-		STATUS off
-		DATA "the_geom from daginstitutioner_point"
-				TYPE POINT
-		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_19593192193"
-		
-		#CLASSITEM
-		
-		#LABELITEM
-		
-		
-		#LABELMAXSCALE
-		METADATA
-		  "wms_title"    "sds"
-		  "wms_srs"    "EPSG:25832 EPSG:900913"
-		  "wms_name"    "daginstitutioner_point"
-		  "wms_abstract"    "sdsdfdsdsd"
-		  "wms_format"    "image/png"
-                  "appformap_group"  "Mygeocloud"
-		  "appformap_queryable"    "true"
-      		  "appformap_loader"    "true"
-			  		END
-		PROJECTION
-		  "init=epsg:25832" 
-		END
-				CLASS
-		  #NAME
-		  NAME 'hej'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 0 128 128
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
 			  #OVERLAYSYMBOL "circle"
 			  #OVERLAYOUTLINECOLOR 204 106 9
 			  #OVERLAYSIZE 3

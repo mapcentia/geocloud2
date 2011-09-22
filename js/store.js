@@ -268,7 +268,7 @@ Ext.onReady(function () {
             layout: 'fit',
             modal: true,
             width: 500,
-            height: 300,
+            height: 350,
             closeAction: 'close',
             plain: true,
             items: [p],
@@ -309,14 +309,13 @@ Ext.onReady(function () {
             },
             '-', {
                 text: 'MapInfo TAB',
-                disabled: true,
-                //iconCls: 'silk-add',
+                disabled: false,
                 tooltip: "Coming in beta",
                 handler: function () {
-                    addTab.init();
+                    addMapinfo.init();
                     var c = p.getComponent(0);
                     c.remove(0);
-                    c.add(addTab.form);
+                    c.add(addMapinfo.form);
                     c.doLayout();
                 }
             }]
@@ -652,19 +651,22 @@ Ext.onReady(function () {
     };
     Ext.namespace('viewerSettings');
     viewerSettings.form = new Ext.FormPanel({
-        //region: 'center',
+		title: "Map settings",
         frame: false,
         border: false,
-        title: 'Viewer settings',
-        autoHeight: true,
-        bodyStyle: 'padding: 10px 10px 0 10px;',
+        autoHeight: false,
         labelWidth: 1,
         defaults: {
             anchor: '95%',
             allowBlank: false,
             msgTarget: 'side'
         },
-        items: [{
+        items: [new Ext.Panel({
+				frame: false,
+        border: false,
+				bodyStyle: 'padding: 7px 7px 10px 7px;',
+				html: "hej"
+			}),{
             width: 20,
             xtype: 'combo',
             mode: 'local',
@@ -677,7 +679,8 @@ Ext.onReady(function () {
             valueField: 'f_table_name',
             allowBlank: true,
             store: store,
-            value: settings.default_extent
+            value: settings.default_extent,
+			
         }],
         buttons: [{
             text: 'Update',
@@ -692,7 +695,7 @@ Ext.onReady(function () {
                 }
             }
         }],
-        //html: "Which layer should be used for default extent"
+		
     });
     viewerSettings.onSubmit = function (form, action) {
         var result = action.result;
@@ -716,8 +719,9 @@ Ext.onReady(function () {
             animate: true
         },
         items: [
-			viewerSettings.form, 
-			httpAuth.form, 
+		httpAuth.form,
+		viewerSettings.form
+				,
 		{
             title: 'WFS stuff',
             border: false,

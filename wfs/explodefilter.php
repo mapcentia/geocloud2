@@ -9,6 +9,7 @@ function parseFilter($filter,$table,$operator="=") {
 	global $postgisObject;
 	//global $forUseInSpatialFilter;
 	global $srs;
+	$primeryKey = $postgisObject->getPrimeryKey($table);
 	$serializer_options = array ( 
 	   'indent' => '  ', 
 	); 
@@ -46,13 +47,13 @@ function parseFilter($filter,$table,$operator="=") {
 		}
 		if (is_array($arr['FeatureId'])) foreach ($arr['FeatureId'] as $value) {
 			$value['fid'] = preg_replace("/{$table}\./","",$value['fid']); // remove table name
-			$where[] = "gid=".$value['fid'];
+			$where[] = "{$primeryKey['attname']}=".$value['fid'];
 		}
 		// GmlObjectId
 		$arr['GmlObjectId'] = addDiminsionOnArray($arr['GmlObjectId']);
 		if (is_array($arr['GmlObjectId'])) foreach ($arr['GmlObjectId'] as $value) {
 			$value['id'] = preg_replace("/{$table}\./","",$value['id']); // remove table name
-			$where[] = "gid=".$value['id'];
+			$where[] = "{$primeryKey['attname']}=".$value['id'];
 		}
 		//Intersects
 		$arr['Intersects'] = addDiminsionOnArray($arr['Intersects']);

@@ -27,7 +27,7 @@ include 'explodefilter.php';
 //$userFromUri = "mhoegh"; // for testing
 
 logfile::write($userFromUri."\n\n");
-
+ 
 $gmlNameSpace = $userFromUri;
 $gmlNameSpaceUri = "http://twitter/{$userFromUri}";
 
@@ -214,8 +214,9 @@ if (!(empty($featureids[0]))) {
 	foreach ($featureids as $featureid) {
 		$__u=explode(".", $featureid);
 		foreach ($tables as $table) {
+			$primeryKey = $postgisObject->getPrimeryKey($table);
 			if ($table==$__u[0]) {
-				$wheresArr[$table][]="gid={$__u[1]}";
+				$wheresArr[$table][]="{$primeryKey['attname']}={$__u[1]}";
 			}
 			$wheres[$table] = implode(" OR ",$wheresArr[$table]);
 		}		
@@ -339,6 +340,7 @@ function doQuery($queryType) {
 	switch ($queryType) {
 	case "Select":
 		foreach ($tables as $table) {
+			$primeryKey = $postgisObject->getPrimeryKey($table);
 			$sql="SELECT ";
 			$sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
 			$geomField = $postgisObject->getGeometryColumns($table, "f_geometry_column");
@@ -350,7 +352,7 @@ function doQuery($queryType) {
 			}
 			else {
 				foreach($postgisObject -> getMetaData($table) as $key=>$value) {
-					if ($key!="gid") {
+					if ($key!=$primeryKey['attname']) {
 						$fieldsArr[$table][] = $key;
 					}
 				}
@@ -359,7 +361,7 @@ function doQuery($queryType) {
 			foreach($fieldsArr[$table] as $key=>$value) {
 					$fieldsArr[$table][$key] = "\"{$value}\"";
 				}
-			$sql = $sql.implode(",",$fieldsArr[$table]).",gid as fid";
+			$sql = $sql.implode(",",$fieldsArr[$table]).",{$primeryKey['attname']} as fid";
 			if ($srs=="") $srs=$sridOfTable;
 
 			if (!$gmlGeomFieldName[$table]) $gmlGeomFieldName[$table] = $postgisObject->getGeometryColumns($table, "f_geometry_column");
@@ -726,16 +728,17 @@ function doParse($arr)
 						foreach ($hey as $typeName => $feature)
 						{
 							if (is_array($feature)) {// Skip handles
+							$the_geom = $postgisObject->getGeometryColumns($typeName, "f_geometry_column");
 							foreach ($feature as $field => $value)
 							{
 								$fields[] = $field;
-								if (is_array($value)) { // Must be the_geom
+								if (is_array($value)) { // Must be geom if array
 									// We serialize the geometry back to XML for parsing
 									$status = $Serializer->serialize($value);
 									logfile::write($Serializer->getSerializedData()."\n\n");	
 									$gmlCon = new gmlConverter();
 									$wktArr = $gmlCon -> gmlToWKT($Serializer->getSerializedData(),array());
-									$values[] = array("the_geom" => $wktArr[0][0],"srid" => $wktArr[1][0]);
+									$values[] = array("{$the_geom}" => $wktArr[0][0],"srid" => $wktArr[1][0]);
 									unset($gmlCon);
 									unset($wktArr);
 									//logfile::write($Serializer->getSerializedData()."\n\n");
@@ -769,21 +772,22 @@ function doParse($arr)
 					$featureMember = array(0 => $featureMember);
 				}
 				$fid = 0; 
-				foreach($featureMember as $hey){ 
+				foreach($featureMember as $hey){
+					$the_geom = $postgisObject->getGeometryColumns($hey['typeName'], "f_geometry_column");
 					if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
 						$hey['Property'] = array(0 => $hey['Property']);
 					}
 					foreach ($hey['Property'] as $pair)
 					{
 						$fields[$fid][] = $pair['Name'];
-						if ($pair['Name'] == "the_geom") {
+						if ($pair['Name'] == $the_geom) {
 							// We serialize the geometry back to XML for parsing
 							$status = $Serializer->serialize($pair['Value']);
 							logfile::write($Serializer->getSerializedData()."\n\n");	
 							
 							$gmlCon = new gmlConverter();
 							$wktArr = $gmlCon -> gmlToWKT($Serializer->getSerializedData(),array());
-							$values[$fid][] = (array("the_geom" => current($wktArr[0]),"srid" => current($wktArr[1])));
+							$values[$fid][] = (array("{$the_geom }" => current($wktArr[0]),"srid" => current($wktArr[1])));
 
 							unset($gmlCon);
 							unset($wktArr);
@@ -838,6 +842,8 @@ function doParse($arr)
 	// First we loop through inserts
 	if (sizeof($forSql['tables'])>0) for($i=0;$i<sizeof($forSql['tables']);$i++) {
 		if ($postgisObject->getGeometryColumns($forSql['tables'][$i],"editable")) {
+			$the_geom = $postgisObject->getGeometryColumns($forSql['tables'][$i], "f_geometry_column");
+			$primeryKey = $postgisObject->getPrimeryKey($forSql['tables'][$i]);
 			//$metaData = $postgisObject -> getMetaData($forSql['tables'][$i]);
 			$sql = "INSERT into {$forSql['tables'][$i]} (";
 			foreach($forSql['fields'][$i] as $field){
@@ -859,7 +865,7 @@ function doParse($arr)
 			}
 			$sql.= implode(",",$values);
 			unset($values);
-			$sql.= ") RETURNING gid,astext(ST_Centroid(the_geom)) as the_geom;"; // The query will return the new gid
+			$sql.= ") RETURNING {$primeryKey['attname']} as gid,astext(ST_Centroid({$the_geom})) as {$the_geom};"; // The query will return the new key
 			$sqls['insert'][] = $sql;
 		}
 		else {
@@ -870,6 +876,8 @@ function doParse($arr)
 	if (sizeof($forSql2['tables'])>0) for($i=0;$i<sizeof($forSql2['tables']);$i++) {
 		//$metaData = $postgisObject -> getMetaData($forSql2['tables'][$i]);
 		if ($postgisObject->getGeometryColumns($forSql2['tables'][$i],"editable")) {
+		$the_geom = $postgisObject->getGeometryColumns($forSql2['tables'][$i], "f_geometry_column");
+		$primeryKey = $postgisObject->getPrimeryKey($forSql2['tables'][$i]);
 		$sql = "UPDATE {$forSql2['tables'][$i]} SET ";
 		foreach ($forSql2['fields'][$i] as $key=>$field) {
 		
@@ -891,7 +899,7 @@ function doParse($arr)
 			}
 		}
 		$sql.= implode(",",$pairs);
-		$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING gid,astext(ST_Centroid(the_geom)) as the_geom;";
+		$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid,astext(ST_Centroid({$the_geom})) as {$the_geom};";
 		unset($pairs);
 		$sqls['update'][] = $sql;
 		}
@@ -963,7 +971,7 @@ function doParse($arr)
 			$row = $postgisObject->fetchRow($res);
 			echo $row['gid'];
 			echo '"/>';
-			$version->set(current($forSql['tables']),"insert",$row['the_geom']); 
+			$version->set(current($forSql['tables']),"insert",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
 			next($forSql['tables']);
 		}
 		echo '</wfs:InsertResults>';
@@ -978,7 +986,7 @@ function doParse($arr)
 			$row = $postgisObject->fetchRow($res);
 			echo $row['gid'];
 			echo '" />';
-			$version->set(current($forSql2['tables']),"update",$row['the_geom']); 
+			$version->set(current($forSql2['tables']),"update",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
 			next($forSql2['tables']);
 		}
 		echo '</wfs:UpdateResult>';

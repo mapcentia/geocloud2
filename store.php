@@ -22,6 +22,8 @@ makeMapFile($_SESSION['screen_name']);
 		</script>
 		<script type="text/javascript" src="/js/addshapeform.js">
 		</script>
+		<script type="text/javascript" src="/js/addmapinfoform.js">
+		</script>
 		<script type="text/javascript" src="/js/addgmlform.js">
 		</script>
 		<script type="text/javascript" src="/js/addfromscratch.js">

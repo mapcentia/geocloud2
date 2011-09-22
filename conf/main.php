@@ -1,5 +1,5 @@
 <?php
-ini_set("display_errors", "On");
+ini_set("display_errors", "Off");
 error_reporting(3);
 
 $hostName = "http://127.0.0.1";

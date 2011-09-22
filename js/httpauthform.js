@@ -1,18 +1,22 @@
 Ext.namespace('httpAuth');
 httpAuth.form = new Ext.FormPanel({
-        //region: 'center',
+		title: "Authentication stuff",
         frame: false,
 		border: false,
-        title: 'Authentication stuff',
-        autoHeight: true,
-        bodyStyle: 'padding: 10px 10px 0 10px;',
+        autoHeight: false,
+        //bodyStyle: 'padding: 10px 10px 0 10px;',
         labelWidth: 1,
         defaults: {
             anchor: '95%',
             allowBlank: false,
             msgTarget: 'side'
         },
-        items: [ {
+        items: [ new Ext.Panel({
+				frame: false,
+        border: false,
+				bodyStyle: 'padding: 7px 7px 10px 7px;',
+				html: "hej"
+			}),{
             xtype: 'textfield',
 			inputType:'password',
             id: 'httpAuthForm',

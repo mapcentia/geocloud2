@@ -31,9 +31,10 @@ foreach($tables as $table)
 {
 	$tableObj = new table($table);
 	$tableArr = (array)$tableObj;
+	$primeryKey = $postgisObject->getPrimeryKey($table);
 
 	foreach($postgisObject -> getMetaData($table) as $key=>$value) {
-	 	if ($key!="gid") {
+	 	if ($key!=$primeryKey['attname']) {
 			$fieldsArr[$table][] = $key;
 		}
 	}
@@ -105,7 +106,7 @@ foreach($tables as $table)
 		$atts["minOccurs"]="0";
 		writeTag("open","xs","element",$atts,True,True);
 		if($atts["name"] != $postgisObject -> getGeometryColumns($table, "f_geometry_column")) {
-			echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"><xs:maxLength value="60" /></xs:restriction></xs:simpleType>';
+			echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"></xs:restriction></xs:simpleType>';
 		}
 		writeTag("close","xs","element",NULL,False,True);
 		$atts=Null;

@@ -140,7 +140,8 @@ Ext.onReady(function() {
 			version: "1.0.0",
 			featureType: getvars['layer'],
 			featureNS: "http://twitter/" + screenName,
-			srsName: "EPSG:900913"
+			srsName: "EPSG:900913",
+			geometryName: "the_geom" // must be dynamamic
 		}),
 			styleMap: styleMap
 	});

@@ -2078,6 +2078,11 @@ class postgis extends control
 		}
 		return $_array;
 	}
+	function getPrimeryKey($table)
+	{
+		$query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary";
+		return($this->fetchRow($this->execQuery($query)));
+	}
 	function postgisquery($NewPointArray,$layer,$fields,$pg_query_type,$function,$buffer,$where=0)
 	{
 		global $HTTP_FORM_VARS;
@@ -2093,6 +2098,8 @@ class postgis extends control
 		$subLayer=$this->substituteQueryLayer($layer);
 		// check if specific fields are set in conf
 		$fields=$this->substituteQueryFields($layer,$fields);
+		$the_geom = $this->getGeometryColumns($layer, "f_geometry_column");
+		$primeryKey = $this->getPrimeryKey($layer);
 		if ($pg_query_type == "rectangle"
 		&& ($RubberWidth != NaN
 		&& $RubberWidth != 0
@@ -2176,26 +2183,26 @@ class postgis extends control
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"select asText(the_geom) as geometry,gid,"
+			"select asText({$the_geom}) as geometry,{$primeryKey['attname']} as gid,"
 			.$fields
 			." from "
 			.$subLayer
 			." where "
-			."GeometryFromText('".$__geoObj->getWKT()."',-1) && the_geom"
+			."GeometryFromText('".$__geoObj->getWKT()."',-1) && {$the_geom}"
 			." and "
 			.$function
 			."(GeometryFromText('".$__geoObj->getWKT()."',"
 			."-1"
-			."),the_geom)"
+			."),{$the_geom})"
 			.$whereStr;
 
 
 		} else
 		{
 			$query =
-			"select asText(transform(the_geom,"
+			"select asText(transform({$the_geom},"
 			.$this -> control -> proj
-			.")) as geometry,gid,"
+			.")) as geometry,{$primeryKey['attname']} as gid,"
 			.$fields
 			." from "
 			.$subLayer
@@ -2204,14 +2211,14 @@ class postgis extends control
 			.$this -> control -> proj
 			."),".$__bufferStr2
 			.$this -> getGeometryColumns($layer, srid)
-			.") && the_geom"
+			.") && {$the_geom}"
 			." and "
 			.$function
 			."(transform(".$__bufferStr1."GeometryFromText('".$__geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."),".$__bufferStr2
 			.$this -> getGeometryColumns($layer, srid)
-			."),the_geom)"
+			."),{$the_geom})"
 			.$whereStr;
 			
 			//echo $query;

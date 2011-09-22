@@ -18,6 +18,7 @@ class table extends postgis {
 			$this->metaData = $this -> getMetaData($this->table);
 			$this->geomField = $this -> getGeometryColumns($this->table, "f_geometry_column");
 			$this->geomType = $this -> getGeometryColumns($this->table, "type");
+			$this->primeryKey = $this->getPrimeryKey($this->table);
 			$this->setType();
 			$this->exits = true;
 		}
@@ -184,7 +185,7 @@ class table extends postgis {
 			$multi = false;
 		}
 		foreach($this->metaData as $key=>$value){
-			if ($key!=$this->geomField && $key!="gid") {
+			if ($key!=$this->geomField && $key!=$this->primeryKey['attname']) {
 				$fieldsForStore[]  = array("name"=>$key,"type"=>$value['type']);
 				$columnsForGrid[]  =  array("header"=>$key,"dataIndex"=>$key,"type"=>$value['type'],"typeObj"=>$value['typeObj']);
 			}
@@ -206,7 +207,7 @@ class table extends postgis {
 		$arr = array();
 		$fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table,"fieldconf"));
 		foreach($this->metaData as $key=>$value){
-			if ($key!=$this->geomField && $key!="gid") {
+			if ($key!=$this->geomField && $key!=$this->primeryKey['attname']) {
 				$arr = $this -> array_push_assoc($arr,"id",$key);
 				$arr = $this -> array_push_assoc($arr,"column",$key);
 				$arr = $this -> array_push_assoc($arr,"querable",$fieldconfArr[$key]->querable);

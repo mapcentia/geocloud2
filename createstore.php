@@ -13,6 +13,7 @@ if ($_SESSION['screen_name']) { // User already signed
 elseif ($parts[2]) {
 	$_SESSION['screen_name'] = $parts[2];
 	$user = new users($_SESSION['screen_name']);
+	$_SESSION["oauth_token"] = true; // We set to true, so it will pass tests
 }
 else { //User not signed. Use IP signin.
 	$_SESSION['screen_name'] = "_".postgis::toAscii($_SERVER['REMOTE_ADDR']);
