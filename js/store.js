@@ -2,6 +2,7 @@
 var form;
 var store;
 var onEditWMSLayer;
+Ext.Ajax.disableCaching = false;
 Ext.onReady(function () {
 	"use strict";
     Ext.Container.prototype.bufferResize = false;

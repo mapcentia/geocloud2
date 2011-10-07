@@ -219,6 +219,7 @@ END
 		END
 		<?php
 		$classArr = $classObj -> getAll($row['f_table_name']);
+		if (is_array($classArr['data'])) {
 		foreach ($classArr['data'] as $class) {
 		$class = $classObj -> get($class['id']);
 		//print_r($class);
@@ -272,14 +273,14 @@ END
 		  END #Label
 		  <?php }?>
 		END # Class
-		<?php }
+		<?php }}
 		?>
 	  END #Layer
 	<?php }?>
 	END #MapFile
 <?php 
 $data = ob_get_clean();
-unlink("{$basePath}wms/mapfiles/{$user}.map");
+@unlink("{$basePath}wms/mapfiles/{$user}.map");
 $newFile = "{$basePath}wms/mapfiles/{$user}.map";
 $fh = fopen($newFile, 'w');
 fwrite($fh,$data);

@@ -41,8 +41,8 @@ $postgisdb = $userFromUri;
 $srs=$srsFromUri;
 
 $postgisObject = new postgis();
-$user = new users($userFromUri);
-$version = new version($user);
+//$user = new users($userFromUri);
+//$version = new version($user);
 
 function microtime_float()
 {
@@ -971,7 +971,7 @@ function doParse($arr)
 			$row = $postgisObject->fetchRow($res);
 			echo $row['gid'];
 			echo '"/>';
-			$version->set(current($forSql['tables']),"insert",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
+			//$version->set(current($forSql['tables']),"insert",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
 			next($forSql['tables']);
 		}
 		echo '</wfs:InsertResults>';
@@ -986,7 +986,7 @@ function doParse($arr)
 			$row = $postgisObject->fetchRow($res);
 			echo $row['gid'];
 			echo '" />';
-			$version->set(current($forSql2['tables']),"update",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
+			//$version->set(current($forSql2['tables']),"update",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]); 
 			next($forSql2['tables']);
 		}
 		echo '</wfs:UpdateResult>';

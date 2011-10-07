@@ -3,11 +3,14 @@ include("../conf/main.php");
 include("../libs/functions.php");
 include("../model/databases.php");
 include("sql.php");
-//echo "test";
 $dbList = new databases();
+echo "test";
 $arr = $dbList->listAllDbs();
+
+
 foreach($arr['data'] as $db) {
-	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template" AND $db!="mhoegh" AND $db!="mygeocloud") {
+	echo $db."<br/>";
+	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template" AND $db!="mhoegh" AND $db!="mygeocloud" AND ($db==$_REQUEST['db1'])) {
 		$postgisdb = $db;
 		$conn = new postgis();
 		foreach($sqls as $sql) {

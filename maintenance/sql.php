@@ -1,35 +1,20 @@
 <?php
 
 $sqls[] = " 
---
--- PostgreSQL database dump
---
-
 SET statement_timeout = 0;
-SET client_encoding = 'SQL_ASCII';
+SET client_encoding = 'UTF8';
 SET standard_conforming_strings = off;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET escape_string_warning = off;
 
---
--- Name: settings; Type: SCHEMA; Schema: -; Owner: postgres
---
-
 CREATE SCHEMA settings;
-
-
-ALTER SCHEMA settings OWNER TO postgres;
 
 SET search_path = settings, pg_catalog;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
-
---
--- Name: geometry_columns_join; Type: TABLE; Schema: settings; Owner: postgres; Tablespace:
---
 
 CREATE TABLE geometry_columns_join (
     f_table_name character varying(256),
@@ -45,25 +30,11 @@ CREATE TABLE geometry_columns_join (
     layergroup character varying(255)
 );
 
-
-ALTER TABLE settings.geometry_columns_join OWNER TO postgres;
-
---
--- Name: classes; Type: TABLE; Schema: settings; Owner: postgres; Tablespace:
---
-
 CREATE TABLE classes (
     id integer NOT NULL,
     layer character varying,
     class text
 );
-
-
-ALTER TABLE settings.classes OWNER TO postgres;
-
---
--- Name: classes_id_seq; Type: SEQUENCE; Schema: settings; Owner: postgres
---
 
 CREATE SEQUENCE classes_id_seq
     START WITH 1
@@ -72,102 +43,28 @@ CREATE SEQUENCE classes_id_seq
     NO MINVALUE
     CACHE 1;
 
-
-ALTER TABLE settings.classes_id_seq OWNER TO postgres;
-
---
--- Name: classes_id_seq; Type: SEQUENCE OWNED BY; Schema: settings; Owner: postgres
---
-
 ALTER SEQUENCE classes_id_seq OWNED BY classes.id;
 
-
---
--- Name: viewer; Type: TABLE; Schema: settings; Owner: postgres; Tablespace:
---
+SELECT pg_catalog.setval('classes_id_seq', 2, true);
 
 CREATE TABLE viewer (
     viewer text
 );
-
-
-ALTER TABLE settings.viewer OWNER TO postgres;
-
---
--- Name: wmslayers; Type: TABLE; Schema: settings; Owner: postgres; Tablespace:
---
 
 CREATE TABLE wmslayers (
     layer character varying,
     def text
 );
 
-
-ALTER TABLE settings.wmslayers OWNER TO postgres;
-
---
--- Name: id; Type: DEFAULT; Schema: settings; Owner: postgres
---
-
 ALTER TABLE classes ALTER COLUMN id SET DEFAULT nextval('classes_id_seq'::regclass);
 
+INSERT INTO viewer VALUES ('{\"pw\":\"81dc9bdb52d04dc20036dbd8313ed055\"}');
 
---
--- Name: settings; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE ALL ON SCHEMA settings FROM PUBLIC;
-REVOKE ALL ON SCHEMA settings FROM postgres;
-GRANT ALL ON SCHEMA settings TO postgres;
-GRANT ALL ON SCHEMA settings TO user_mhoegh;
-
-
---
--- Name: geometry_columns_join; Type: ACL; Schema: settings; Owner: postgres
---
-
-REVOKE ALL ON TABLE geometry_columns_join FROM PUBLIC;
-REVOKE ALL ON TABLE geometry_columns_join FROM postgres;
-GRANT ALL ON TABLE geometry_columns_join TO postgres;
-GRANT ALL ON TABLE geometry_columns_join TO user_mhoegh;
-
-
---
--- Name: classes; Type: ACL; Schema: settings; Owner: postgres
---
-
-REVOKE ALL ON TABLE classes FROM PUBLIC;
-REVOKE ALL ON TABLE classes FROM postgres;
-GRANT ALL ON TABLE classes TO postgres;
-GRANT ALL ON TABLE classes TO user_mhoegh;
-
-
---
--- Name: viewer; Type: ACL; Schema: settings; Owner: postgres
---
-
-REVOKE ALL ON TABLE viewer FROM PUBLIC;
-REVOKE ALL ON TABLE viewer FROM postgres;
-GRANT ALL ON TABLE viewer TO postgres;
-GRANT ALL ON TABLE viewer TO user_mhoegh;
-
-
---
--- Name: wmslayers; Type: ACL; Schema: settings; Owner: postgres
---
-
-REVOKE ALL ON TABLE wmslayers FROM PUBLIC;
-REVOKE ALL ON TABLE wmslayers FROM postgres;
-GRANT ALL ON TABLE wmslayers TO postgres;
-GRANT ALL ON TABLE wmslayers TO user_mhoegh;
-
-
---
--- PostgreSQL database dump complete
---
+SET search_path = public, pg_catalog;
 ";
+
 $sqls[] = "
-SELECT geometry_columns.f_table_schema, geometry_columns.f_table_name, geometry_columns.f_geometry_column, geometry_columns.coord_dimension, geometry_columns.srid, geometry_columns.type, geometry_columns_join.f_table_abstract, geometry_columns_join.f_table_title, geometry_columns_join.tweet, geometry_columns_join.editable, geometry_columns_join.created, geometry_columns_join.lastmodified, geometry_columns_join.authentication, geometry_columns_join.fieldconf, geometry_columns_join.meta_url, geometry_columns_join.layergroup
+CREATE VIEW geometry_columns_view AS SELECT geometry_columns.f_table_schema, geometry_columns.f_table_name, geometry_columns.f_geometry_column, geometry_columns.coord_dimension, geometry_columns.srid, geometry_columns.type, geometry_columns_join.f_table_abstract, geometry_columns_join.f_table_title, geometry_columns_join.tweet, geometry_columns_join.editable, geometry_columns_join.created, geometry_columns_join.lastmodified, geometry_columns_join.authentication, geometry_columns_join.fieldconf, geometry_columns_join.meta_url, geometry_columns_join.layergroup
    FROM geometry_columns
    LEFT JOIN settings.geometry_columns_join ON geometry_columns.f_table_name::text = geometry_columns_join.f_table_name::text;
 ";

@@ -1,2 +1,2 @@
 <?php
-$parts = explode("/", $_SERVER['REDIRECT_URL']);
+$parts = explode("/", str_replace("?".$_SERVER['QUERY_STRING'],"",$_SERVER['REQUEST_URI']));

@@ -1,5 +1,6 @@
 <?php
-$parts = $parts = explode("/", $_SERVER['REDIRECT_URL']);
+$parts = explode("/", str_replace("?".$_SERVER['QUERY_STRING'],"",$_SERVER['REQUEST_URI']));
+//$parts = $parts = explode("/", $_SERVER['REDIRECT_URL']);
 
 $userFromUri = $parts[2];
 $srsFromUri = $parts[3];

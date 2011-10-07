@@ -94,6 +94,10 @@ class postgis
 			case "PDO":
 				if (!$this->db) {
 					 $this -> connect("PDO");
+					if (!$this->db) {
+						 die($query);
+						 
+					}	 
 				}
 				try {
 						$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -216,7 +220,7 @@ class logfile {
 	 * @return unknown
 	 */
 	function write($the_string) {
-
+/*
 		if ( $fh = fopen("log.txt", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
@@ -225,7 +229,7 @@ class logfile {
 		else {
 			return false;
 		}
-
+*/
 	}
 }
 class color {

@@ -1,4 +1,5 @@
 <?php
+//god dav
 include("html_header.php");
 include("wms/mapfile.php.map");
 makeMapFile($_SESSION['screen_name']);

@@ -4,7 +4,7 @@ error_reporting(3);
 
 $hostName = "http://127.0.0.1";
 
-$basePath = "/var/www/mygeocloud/";
+$basePath = $_SERVER["DOCUMENT_ROOT"]."/";
 set_include_path(get_include_path() . PATH_SEPARATOR . $basePath . PATH_SEPARATOR . $basePath."libs" . PATH_SEPARATOR . $basePath."inc" . PATH_SEPARATOR . $basePath."libs/PEAR" . PATH_SEPARATOR . $basePath."conf");
 
 // PostGIS connection
