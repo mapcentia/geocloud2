@@ -141,7 +141,7 @@ Ext.onReady(function() {
 			featureType: getvars['layer'],
 			featureNS: "http://twitter/" + screenName,
 			srsName: "EPSG:900913",
-			geometryName: "the_geom" // must be dynamamic
+			geometryName: getvars['gf'] // must be dynamamic
 		}),
 			styleMap: styleMap
 	});

@@ -321,7 +321,8 @@ END
                   "appformap_group"  "OSM"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
-			  		END
+			  "appformap_query_buffer" "100"
+		END
 		PROJECTION
 		  "init=epsg:4326" 
 		END

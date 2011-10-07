@@ -33,7 +33,7 @@ class shapefile extends postgis {
 		$this->connect("PDO");
 		$table = new table($this->safeFile);
 		if ($this->pdo) {
-			$cmd = "shp2pgsql -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
+			$cmd = "shp2pgsql -I -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
 			$result = exec($cmd, $output);
 
 			$sql_total = implode("", $output);
@@ -71,7 +71,7 @@ class shapefile extends postgis {
 			if ($table->exits) {
 				$table->destroy();
 			}
-			$cmd = "shp2pgsql -D -c -s {$this->srid} {$this->file}.shp {$this->safeFile}|psql {$this->postgisdb} postgres";
+			$cmd = "shp2pgsql -I -D -c -s {$this->srid} {$this->file}.shp {$this->safeFile}|psql {$this->postgisdb} postgres";
 			$result = exec($cmd);
 			if ($result=="COMMIT") {
 				if (!$table->exits) { // no need to re-init table object if table exits

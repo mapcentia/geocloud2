@@ -18,7 +18,7 @@ $_SESSION['screen_name'] = $parts[2];
 		</script>
 			<script type="text/javascript" src="/js/attributeform.js">
 		</script>
-		<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhS4p9AtMz66nyqFUaziGHLM44rOahQ1vHhpXeGXl_ifkSE8O1eT_foV2w"
+		<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"
 		type="text/javascript">
 		</script>
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>

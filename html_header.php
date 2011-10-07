@@ -13,6 +13,9 @@ include 'model/wmslayers.php';
 include("model/settings_viewer.php"); // we need to get pw for http authentication
 include 'libs/FirePHPCore/FirePHP.class.php';
 include 'libs/FirePHPCore/fb.php';
+if ($parts[1]=="store" || $parts[1]=="editor") {
+	include("inc/oauthcheck.php");
+}
 ?>
 <!DOCTYPE html>
 <html >

@@ -186,6 +186,9 @@ END
 					case "MULTIPOLYGON":
 					$type = "POLYGON";
 					break;
+					case "GEOMETRY":
+					$type = "LINE";
+					break;
 				}
 		?>
 		TYPE <?php echo $type."\n";?>

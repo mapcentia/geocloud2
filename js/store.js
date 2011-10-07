@@ -336,7 +336,7 @@ Ext.onReady(function () {
             return false;
         }
 
-        var url = "/editor/" + screenName + "?layer=" + record.get("f_table_name");
+        var url = "/editor/" + screenName + "?layer=" + record.get("f_table_name") + "&gf=" + record.get("f_geometry_column");
         window.open(url, 'editor', 'width=1000,height=800');
 
     }

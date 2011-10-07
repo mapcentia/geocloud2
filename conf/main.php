@@ -1,5 +1,5 @@
 <?php
-ini_set("display_errors", "Off");
+ini_set("display_errors", "On");
 error_reporting(3);
 
 $hostName = "http://127.0.0.1";
@@ -16,5 +16,6 @@ if (!$postgispw) $postgispw="";
 
 $useWktToGmlInPHP = false;
 
+$gMapsApiKey = "ABQIAAAAixUaqWcOE1cqF2LJyDYCdhS4p9AtMz66nyqFUaziGHLM44rOahQ1vHhpXeGXl_ifkSE8O1eT_foV2w";
 
 $cacheDir = $basePath."tmp/cache/";

@@ -59,7 +59,13 @@ class postgis
 	function getPrimeryKey($table)
 	{
 		$query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary";
-		return($this->fetchRow($this->execQuery($query)));
+		$result = $this->execQuery($query);
+		if ($this->PDOerror) {
+			return NULL;
+		} 
+		else {
+			return($this->fetchRow($result));
+		}
 	}
 	function begin()
 	{

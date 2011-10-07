@@ -101,14 +101,6 @@ tableStructure.init = function (table,screenName) {
 					editable: false,
 					allowBlank: false,
 					readOnly: true,
-					store: new Ext.data.ArrayStore({
-						id: 0,
-						fields: ['type'],
-						data: [
-							['int'],
-							['string']
-						]
-					}),
 					valueField: 'type',
 					displayField: 'type'
 				})

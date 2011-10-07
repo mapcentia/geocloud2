@@ -30,9 +30,23 @@ if(move_uploaded_file($_FILES['dat']['tmp_name'], $file.".dat")) {
 
  
 if ($response['uploaded']) {
+
+	switch ($_REQUEST['type']) {
+		case "Point":
+		$type = "point";
+		break;
+		case "Polygon":
+		$type = "multipolygon";
+		break;
+		case "Line":
+		$type = "multilinestring";
+		break;
+	}
 	
-	$cmd = "ogr2ogr -nlt 'POLYGON' -a_srs 'EPSG:{$_REQUEST['srid']}' -skipfailures -f 'PostgreSQL' PG:'user=postgres dbname={$postgisdb}' {$file}.tab";
-	$result = exec($cmd, $output);
+	$cmd = "ogr2ogr  -nlt '{$type}' -a_srs 'EPSG:{$_REQUEST['srid']}' -f 'PostgreSQL' PG:'user=postgres dbname={$postgisdb}' {$file}.tab -nln ".$SafeFile."_".$type;
+	$result = exec($cmd);
+	$response['success'] = true;
+	$response['message'] = $result;
 	/*
 	$cmd = "ogr2ogr -skipfailures -f 'ESRI Shapefile' '{$file}_arc.shp' -lco 'SHPT=ARC' '{$file}.tab'";
 	$result = exec($cmd, $output);

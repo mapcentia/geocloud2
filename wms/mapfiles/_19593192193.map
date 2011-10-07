@@ -183,26 +183,27 @@ END
 			  END #Layer
 		  
 	  LAYER
-		NAME "efrre"
+		NAME "planet_osm_line"
 		STATUS off
-		DATA "the_geom from efrre"
+		DATA "way from planet_osm_line"
 				TYPE LINE
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=_19593192193"
 		
 		#CLASSITEM
-		
+		CLASSITEM 'tourism'
+
 		#LABELITEM
 		
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "efrre"
+		  "wms_title"    "sdffsdf"
 		  "wms_srs"    "EPSG:4326 EPSG:900913"
-		  "wms_name"    "efrre"
+		  "wms_name"    "planet_osm_line"
 		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
-                  "appformap_group"  "Default group"
+                  "appformap_group"  "frgfgdf"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
 			  		END
@@ -238,35 +239,6 @@ END
 		  
 		  #LABEL
 		  		END # Class
-			  END #Layer
-		  
-	  LAYER
-		NAME "_19593192193_1316700989"
-		STATUS off
-		DATA "wkb_geometry from _19593192193_1316700989"
-				TYPE POLYGON
-		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_19593192193"
-		
-		#CLASSITEM
-		
-		#LABELITEM
-		
-		
-		#LABELMAXSCALE
-		METADATA
-		  "wms_title"    "_19593192193_1316700989"
-		  "wms_srs"    "EPSG:25832 EPSG:900913"
-		  "wms_name"    "_19593192193_1316700989"
-		  "wms_abstract"    ""
-		  "wms_format"    "image/png"
-                  "appformap_group"  "Default group"
-		  "appformap_queryable"    "true"
-      		  "appformap_loader"    "true"
-			  		END
-		PROJECTION
-		  "init=epsg:25832" 
-		END
 				CLASS
 		  #NAME
 		  NAME 'New style'
@@ -296,39 +268,9 @@ END
 		  
 		  #LABEL
 		  		END # Class
-			  END #Layer
-		  
-	  LAYER
-		NAME "ways"
-		STATUS off
-		DATA "linestring from ways"
-				TYPE LINE
-		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_19593192193"
-		
-		#CLASSITEM
-		
-		#LABELITEM
-		
-		
-		#LABELMAXSCALE
-		METADATA
-		  "wms_title"    "Hiking trails from OSM"
-		  "wms_srs"    "EPSG:4326 EPSG:900913"
-		  "wms_name"    "ways"
-		  "wms_abstract"    "From OSM"
-		  "wms_format"    "image/png"
-                  "appformap_group"  "OSM"
-		  "appformap_queryable"    "true"
-      		  "appformap_loader"    "true"
-			  "appformap_query_buffer" "100"
-		END
-		PROJECTION
-		  "init=epsg:4326" 
-		END
 				CLASS
 		  #NAME
-		  NAME 'Difficult alpine hiking'
+		  NAME 'New style'
 		  
 		  #EXPRESSION
 		  		  
@@ -336,15 +278,46 @@ END
 			  #SYMBOL
 			  			  
 			  #WIDTH
-			  WIDTH 3
+			  WIDTH 1
 				
 			  #COLOR
-			  COLOR 153 51 0
+			  COLOR 255 0 0
 			  
 			  #OUTLINECOLOR
-			  			  
+			  OUTLINECOLOR 255 0 0
+			  
 			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
 			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
 			  #OVERLAYSYMBOL "circle"
 			  #OVERLAYOUTLINECOLOR 204 106 9
 			  #OVERLAYSIZE 3

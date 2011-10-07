@@ -19,14 +19,14 @@ if (is_null($username)) {
 	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 	// Text to send if user hits Cancel button
-	makeExceptionReport("Could not authenticate you 1");
+	die("Could not authenticate you 1");
 
 } elseif (md5($password)!=$response['data']['pw']) {
 	header('WWW-Authenticate: Basic realm="My Realm"');
 	header('HTTP/1.0 401 Unauthorized');
 	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
-	makeExceptionReport("Could not authenticate you 2");
+	die("Could not authenticate you 2");
 }
 else {
 

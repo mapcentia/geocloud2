@@ -1,6 +1,5 @@
 <?php
 include("html_header.php");
-include("inc/oauthcheck.php");
 include("wms/mapfile.php.map");
 makeMapFile($_SESSION['screen_name']);
 

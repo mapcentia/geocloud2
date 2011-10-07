@@ -28,8 +28,13 @@ include 'explodefilter.php';
 
 logfile::write($userFromUri."\n\n");
  
-$gmlNameSpace = $userFromUri;
-$gmlNameSpaceUri = "http://twitter/{$userFromUri}";
+if (!$gmlNameSpace) {
+	$gmlNameSpace = $userFromUri;
+}
+if (!$gmlNameSpaceUri) {
+	$gmlNameSpaceUri = "http://twitter/{$userFromUri}";
+}
+
 
 // We connect to the users db
 $postgisdb = $userFromUri; 
@@ -38,8 +43,6 @@ $srs=$srsFromUri;
 $postgisObject = new postgis();
 $user = new users($userFromUri);
 $version = new version($user);
-
-
 
 function microtime_float()
 {
@@ -466,9 +469,6 @@ function doSelect($table, $sql, $sql2, $from) {
 	global $thePath;
 	global $HTTP_FORM_VARS;
 
-		
-	
-
 	if (!$gmlFeature[$table]) {
 		$gmlFeature[$table] =$table;
 	}
@@ -541,7 +541,7 @@ function doSelect($table, $sql, $sql2, $from) {
 				//$FieldValue = htmlentities($FieldValue);
 				$FieldValue = altUseCdataOnStrings($FieldValue);
 
-				if ($FieldValue && $FieldName!="fid") {
+				if ($FieldValue && ($FieldName!="fid" && $FieldName!="FID")) {
 					writeTag("open", $gmlNameSpace, $FieldName, null, True, False);
 					//$FieldType = pg_field_type($result, $i);
 					echo $FieldValue;
