@@ -2,9 +2,9 @@
 	  # 
 	  # Start of map file
 	  #
-	  NAME "_621073135"
+	  NAME "cluetrust"
 	  STATUS on
-	  	  #EXTENT 1290362.28360836 7546303.12723241 1344607.30221898 7562422.99003768
+	  	  #EXTENT -180 -90 180 90
 	  	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"
@@ -18,11 +18,11 @@
 		IMAGEPATH "/var/www/ms_tmp/"
   		IMAGEURL "http://80.70.3.60/ms_tmp/"
 		METADATA
-		  "wms_title"    "_621073135's awesome WMS"
+		  "wms_title"    "cluetrust's awesome WMS"
 		  "wms_srs"    "EPSG:900913 EPSG:4326"
-		  "wms_name"    "_621073135"
+		  "wms_name"    "cluetrust"
 		  "wms_format"    "image/png"
-		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/_621073135/"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/cluetrust/"
 		  
 		END
 	  END
@@ -131,7 +131,7 @@ END
 		DATA "the_geom from massachusetts_natural"
 				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_621073135"
+		CONNECTION "user=postgres dbname=cluetrust"
 		
 		#CLASSITEM
 		
@@ -152,35 +152,6 @@ END
 		PROJECTION
 		  "init=epsg:4326" 
 		END
-				CLASS
-		  #NAME
-		  NAME 'New style'
-		  
-		  #EXPRESSION
-		  		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 1
-				
-			  #COLOR
-			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
 				CLASS
 		  #NAME
 		  NAME 'New style'
@@ -217,7 +188,7 @@ END
 		DATA "wkb_geometry from mhoegh_1316692772"
 				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_621073135"
+		CONNECTION "user=postgres dbname=cluetrust"
 		
 		#CLASSITEM
 		
@@ -231,7 +202,7 @@ END
 		  "wms_name"    "mhoegh_1316692772"
 		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
-                  "appformap_group"  "OSM"
+                  "appformap_group"  "Default group"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
 			  		END
@@ -270,12 +241,70 @@ END
 			  END #Layer
 		  
 	  LAYER
+		NAME "sgdh"
+		STATUS off
+		DATA "the_geom from sgdh"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=cluetrust"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "sgdh"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "sgdh"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
 		NAME "ways"
 		STATUS off
 		DATA "linestring from ways"
 				TYPE LINE
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_621073135"
+		CONNECTION "user=postgres dbname=cluetrust"
 		
 		#CLASSITEM
 		

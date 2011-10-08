@@ -1,5 +1,5 @@
-arial	/var/www/alphamygeocloud/wms/fonts/arial.ttf
-arialbd	/var/www/alphamygeocloud/wms/fonts/arialbd.ttf
-arialbi	/var/www/alphamygeocloud/wms/fonts/arialbi.ttf
-ariali	/var/www/alphamygeocloud/wms/fonts/ariali.ttf
+arial	arial.ttf
+arialbd	arialbd.ttf
+arialbi arialbi.ttf
+ariali	ariali.ttf
 

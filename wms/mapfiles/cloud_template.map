@@ -1,0 +1,185 @@
+	MAP
+	  # 
+	  # Start of map file
+	  #
+	  NAME "cloud_template"
+	  STATUS on
+	  	  #EXTENT -180 -90 180 90
+	  	  EXTENT -180 -90 180 90
+	  SIZE 2000 1500 
+	  #SYMBOLSET "../etc/symbols.sym"
+	  FONTSET "../fonts/fonts.txt"
+	  IMAGECOLOR 255 255 255
+	  TRANSPARENT ON
+	  UNITS METERS
+	  INTERLACE OFF
+	  IMAGETYPE PNG
+	  WEB
+		IMAGEPATH "/var/www/ms_tmp/"
+  		IMAGEURL "http://80.70.3.60/ms_tmp/"
+		METADATA
+		  "wms_title"    "cloud_template's awesome WMS"
+		  "wms_srs"    "EPSG:900913 EPSG:4326"
+		  "wms_name"    "cloud_template"
+		  "wms_format"    "image/png"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/cloud_template/"
+		  
+		END
+	  END
+	  #
+	  # Start of reference map
+	  #
+	  QUERYMAP
+		COLOR 255 255 0
+		STYLE normal
+	  END
+	  PROJECTION
+		"init=epsg:900913" 
+	  END
+	  # 
+	  # Start of legend
+	  #
+	  LEGEND
+		STATUS off
+		IMAGECOLOR 255 255 255
+		KEYSIZE 18 12 
+		LABEL
+		  TYPE truetype
+		  FONT "arial"
+		  SIZE 8
+		  COLOR 0 0 0
+		  #SHADOWSIZE 2 2 
+		  #BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  #
+	  # Start of scalebar
+	  #
+	  SCALEBAR
+		STATUS off
+		COLOR 255 255 255
+		OUTLINECOLOR 0 0 0
+		BACKGROUNDCOLOR 0 0 0
+		IMAGECOLOR 255 255 255
+		UNITS METERS
+		INTERVALS 3
+		SIZE 150 5 
+		LABEL
+		  FONT "courierb"
+		  SIZE SMALL
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  Symbol
+    Name 'triangle'
+    Type VECTOR
+    Filled TRUE
+    Points
+     0 1
+     .5 0
+     1 1
+     0 1
+     END
+    END
+	SYMBOL
+    NAME "circle"
+    TYPE ellipse
+    FILLED true
+    POINTS
+      1 1
+    END
+  END
+  Symbol
+  Name 'square'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 1
+  0 0
+  1 0
+  1 1
+  0 1
+  END
+ END
+ Symbol
+  Name 'star'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 .375
+  .35 .375
+  .5 0
+  .65 .375
+  1 .375
+  .75 .625
+  .875 1
+  .5 .75
+  .125 1
+  .25 .625
+  END
+END 
+	  
+	  #
+	  # Start of layers
+	  #
+		  
+	  LAYER
+		NAME "massachusetts_natural"
+		STATUS off
+		DATA "the_geom from massachusetts_natural"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=cloud_template"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "Massachusetts natural"
+		  "wms_srs"    "EPSG:4326 EPSG:900913"
+		  "wms_name"    "massachusetts_natural"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "OSM"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		END #MapFile
