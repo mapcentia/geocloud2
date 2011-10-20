@@ -26,6 +26,7 @@ CREATE TABLE geometry_columns_join (
     authentication text DEFAULT 'Write'::text,
     fieldconf text,
     meta_url text,
+    class text,
     layergroup character varying(255)
 );
 

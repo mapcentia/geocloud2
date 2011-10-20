@@ -2,7 +2,9 @@
 function makeMapFile($user,$extentLayer=NULL) {
 	global $basePath;
 	global $postgisdb;
-	global $hostName;
+     global $postgishost;
+     global $postgispw;
+     global $hostName;;
 	$postgisdb = $user;
 	
 	 
@@ -37,10 +39,13 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  #SYMBOLSET "../etc/symbols.sym"
 	  FONTSET "../fonts/fonts.txt"
 	  IMAGECOLOR 255 255 255
-	  TRANSPARENT ON
 	  UNITS METERS
 	  INTERLACE OFF
-	  IMAGETYPE PNG
+	  OUTPUTFORMAT
+	  	NAME "AGG"
+	  	DRIVER AGG/PNG
+	  	IMAGEMODE RGB
+	  END
 	  WEB
 		IMAGEPATH "<?php echo $_SERVER["DOCUMENT_ROOT"]."/tmp";?>"
   		IMAGEURL "<?php echo $hostName;?>/tmp"
@@ -194,7 +199,7 @@ END
 		?>
 		TYPE <?php echo $type."\n";?>
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?>"
+		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?>"
 		
 		#CLASSITEM
 		<?php if($layerArr['data'][0]['theme_column']) echo "CLASSITEM '".$layerArr['data'][0]['theme_column']."'\n";?>
