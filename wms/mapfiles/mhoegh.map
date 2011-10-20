@@ -144,7 +144,7 @@ END
 		  "wms_title"    "Hiking trails from OSM"
 		  "wms_srs"    "EPSG:4326 EPSG:900913"
 		  "wms_name"    "ways"
-		  "wms_abstract"    "From OSMsds"
+		  "wms_abstract"    "From OSM"
 		  "wms_format"    "image/png"
                   "appformap_group"  "OSM"
 		  "appformap_queryable"    "true"
@@ -156,11 +156,10 @@ END
 		END
 				CLASS
 		  #NAME
-		  NAME 'Hiking'
+		  NAME 'Hiking trails'
 		  
 		  #EXPRESSION
-		  EXPRESSION 'hiking'
-		  
+		  		  
 		  STYLE
 			  #SYMBOL
 			  			  
@@ -169,154 +168,6 @@ END
 				
 			  #COLOR
 			  COLOR 255 0 0
-			  
-			  #OUTLINECOLOR
-			  			  
-			  #SIZE
-			  			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'Alpine hiking'
-		  
-		  #EXPRESSION
-		  EXPRESSION 'alpine_hiking'
-		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 3
-				
-			  #COLOR
-			  COLOR 255 153 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'Difficult alpine hiking'
-		  
-		  #EXPRESSION
-		  EXPRESSION 'difficult_alpine_hiking'
-		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 3
-				
-			  #COLOR
-			  COLOR 153 51 0
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'Mountain hiking'
-		  
-		  #EXPRESSION
-		  EXPRESSION 'mountain_hiking'
-		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 3
-				
-			  #COLOR
-			  COLOR 128 0 128
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'Demanding alpine hiking'
-		  
-		  #EXPRESSION
-		  EXPRESSION 'demanding_alpine_hiking'
-		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 3
-				
-			  #COLOR
-			  COLOR 51 204 204
-			  
-			  #OUTLINECOLOR
-			  OUTLINECOLOR 255 0 0
-			  
-			  #SIZE
-			  SIZE 2
-			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
-		  END # style
-		  #TEMPLATE "ttt"
-		  
-		  #LABEL
-		  		END # Class
-				CLASS
-		  #NAME
-		  NAME 'Demanding mountain hiking'
-		  
-		  #EXPRESSION
-		  EXPRESSION 'demanding_mountain_hiking'
-		  
-		  STYLE
-			  #SYMBOL
-			  			  
-			  #WIDTH
-			  WIDTH 3
-				
-			  #COLOR
-			  COLOR 0 0 0
 			  
 			  #OUTLINECOLOR
 			  OUTLINECOLOR 255 0 0

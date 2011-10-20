@@ -37,7 +37,7 @@ wmsClasses.init = function (table, screenName) {
                         width: 400,
                         height: 300,
                         icon: Ext.MessageBox.ERROR
-                    })
+                    });
                 }
             }
         }
@@ -72,12 +72,12 @@ wmsClasses.init = function (table, screenName) {
                 id: "name",
                 header: "Name",
                 dataIndex: "name",
-                sortable: true,
+                sortable: true
                 },{
                 id: "expression",
                 header: "Expression",
                 dataIndex: "expression",
-                sortable: true,
+                sortable: true
                 }]
         }),
         tbar: [{
@@ -98,7 +98,7 @@ wmsClasses.init = function (table, screenName) {
             rowdblclick: onSelectClass
         }
     });
-}
+};
 wmsClasses.onAdd = function () {
     var requestCg = {
                     url: '/controller/classes/' + screenName + '/insert/' + wmsClasses.table,
@@ -143,7 +143,7 @@ function test() {
         width: 400,
         height: 300,
         icon: Ext.MessageBox.ERROR
-    })
+    });
 }
 Ext.namespace('wmsClass');
 wmsClass.init = function (id) {
@@ -151,7 +151,7 @@ wmsClass.init = function (id) {
     wmsClass.store = new Ext.data.JsonStore({
         // store config
         autoLoad: true,
-        url: '/controller/classes/' + screenName + '/get/' + id,
+        url: '/controller/classes/' + screenName + '/get/' + wmsClasses.table + '/' + id,
         baseParams: {
             xaction: 'read'
         },
@@ -233,10 +233,12 @@ wmsClass.init = function (id) {
                 var grid = Ext.getCmp("propGrid");
                 var id = Ext.getCmp("configStore");
                 var source = grid.getSource();
+                source.id  = wmsClass.classId;
                 var jsonDataStr = null;
                 jsonDataStr = Ext.encode(source);
+                
                 var requestCg = {
-                    url: '/controller/classes/' + screenName + '/update/' + wmsClass.classId,
+                    url: '/controller/classes/' + screenName + '/update/' + wmsClasses.table + '/' + wmsClass.classId,
                     method: 'post',
                     params: {
                         data: jsonDataStr
@@ -252,7 +254,7 @@ wmsClass.init = function (id) {
             }
         }]
     });
-}
+};
 
 function onSelectClass(btn, ev) {
     var record = wmsClasses.grid.getSelectionModel().getSelected();
@@ -295,7 +297,7 @@ wmsClasses.onSubmit = function (response) {
                         buttons: Ext.MessageBox.OK,
                         width: 300,
                         height: 300
-                    })
+                    });
 
         } else {
             message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
@@ -305,6 +307,6 @@ wmsClasses.onSubmit = function (response) {
                         buttons: Ext.MessageBox.OK,
                         width: 300,
                         height: 300
-                    })
+                    });
         }
     };

@@ -2,17 +2,15 @@
 function makeMapFile($user,$extentLayer=NULL) {
 	global $basePath;
 	global $postgisdb;
-	global $postgishost;
-	global $postgispw;
 	global $hostName;
 	$postgisdb = $user;
 	
-	
+	 
 		$table = $extentLayer;
 		$postgisObject = new postgis();
 		$srs = "900913";
 		$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
-		$classObj = new _class();
+		
 	if ($extentLayer) {
 		$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
 		$result = $postgisObject->execQuery($sql);
@@ -196,7 +194,7 @@ END
 		?>
 		TYPE <?php echo $type."\n";?>
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?>"
+		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?>"
 		
 		#CLASSITEM
 		<?php if($layerArr['data'][0]['theme_column']) echo "CLASSITEM '".$layerArr['data'][0]['theme_column']."'\n";?>
@@ -221,34 +219,36 @@ END
 		  "init=epsg:<?php echo $row['srid'];?>" 
 		END
 		<?php
-		$classArr = $classObj -> getAll($row['f_table_name']);
+		$classObj = new _class($row['f_table_name']);
+		$classArr = $classObj->getAll();
+		//print_r($classArr);
 		if (is_array($classArr['data'])) {
 		foreach ($classArr['data'] as $class) {
-		$class = $classObj -> get($class['id']);
-		//print_r($class);
+	
+		
 		?>
 		CLASS
 		  #NAME
-		  <?php if($class['data'][0]['name']) echo "NAME '".$class['data'][0]['name']."'\n";?>
+		  <?php if($class['name']) echo "NAME '".$class['name']."'\n";?>
 		  
 		  #EXPRESSION
-		  <?php if($class['data'][0]['expression']) echo "EXPRESSION '".$class['data'][0]['expression']."'\n";?>
+		  <?php if($class['expression']) echo "EXPRESSION '".$class['expression']."'\n";?>
 		  
 		  STYLE
 			  #SYMBOL
-			  <?php if($class['data'][0]['symbol']) echo "SYMBOL '".$class['data'][0]['symbol']."'\n";?>
+			  <?php if($class['symbol']) echo "SYMBOL '".$class['symbol']."'\n";?>
 			  
 			  #WIDTH
-			  <?php if($class['data'][0]['width']) echo "WIDTH ".$class['data'][0]['width']."\n";?>
+			  <?php if($class['width']) echo "WIDTH ".$class['width']."\n";?>
 				
 			  #COLOR
-			  <?php if($class['data'][0]['color']) echo "COLOR ". color::hex2RGB($class['data'][0]['color'],true," ")."\n";?>
+			  <?php if($class['color']) echo "COLOR ". color::hex2RGB($class['color'],true," ")."\n";?>
 			  
 			  #OUTLINECOLOR
-			  <?php if($class['data'][0]['outlinecolor']) echo "OUTLINECOLOR ". color::hex2RGB($class['data'][0]['outlinecolor'],true," ")."\n";?>
+			  <?php if($class['outlinecolor']) echo "OUTLINECOLOR ". color::hex2RGB($class['outlinecolor'],true," ")."\n";?>
 			  
 			  #SIZE
-			  <?php if($class['data'][0]['size']) echo "SIZE ".$class['data'][0]['size']."\n";?>
+			  <?php if($class['size']) echo "SIZE ".$class['size']."\n";?>
 			  
 			  #OVERLAYSYMBOL "circle"
 			  #OVERLAYOUTLINECOLOR 204 106 9
@@ -257,7 +257,7 @@ END
 		  #TEMPLATE "ttt"
 		  
 		  #LABEL
-		  <?php if($class['data'][0]['label']) { ?>
+		  <?php if($class['label']) { ?>
 		  LABEL
 			TYPE truetype
 			FONT "arialbd"
