@@ -359,7 +359,7 @@ echo "maxyFromFilter = 20037508";
         }
         addLegend(layerStr);
         
-        //Start på url zoom sdsd
+        //Start pï¿½ url zoom sdsd
 		<?php
 		if ($_REQUEST['bounds']) {
 			$boundsArr = explode(",",$_REQUEST['bounds']); 
@@ -369,7 +369,7 @@ echo "maxyFromFilter = 20037508";
 			var maxxFromFilter = <?php echo $boundsArr[2];?>;
 			var maxyFromFilter = <?php echo $boundsArr[3];?>;
 		<?php } ?> 
-		//End på url zoom
+		//End pï¿½ url zoom
 
        // map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
         
@@ -558,7 +558,7 @@ echo "maxyFromFilter = 20037508";
 	<div
 		style="position: absolute; top: 5px; left: 110px; z-index: 500; display:none;">
 	<a id="popupButton"
-		href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">Åben
+		href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">ï¿½ben
 	som pop-up</a></div>
 
 
@@ -693,28 +693,28 @@ var mapPanel = Ext.getCmp("mappanel");
 if (minxFromFilter!=0) {
 	//alert('test');
 	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
-}
+
 
 
     var p1 = transformPoint(minxFromFilter,minyFromFilter,"EPSG:900913","EPSG:4326");
     var p2 = transformPoint(maxxFromFilter,maxyFromFilter,"EPSG:900913","EPSG:4326");
-var defaultBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(p1.y,p1.x),
-  new google.maps.LatLng(p2.y,p2.x)
-);
-
+	var defaultBounds = new google.maps.LatLngBounds(
+		new google.maps.LatLng(p1.y,p1.x),
+		new google.maps.LatLng(p2.y,p2.x)
+	);
+}
 var input = document.getElementById('gAddress');
 var options = {
   bounds: defaultBounds
   //types: ['establishment']
 };
 var autocomplete = new google.maps.places.Autocomplete(input, options);
-    console.log(autocomplete.getBounds());
+    //console.log(autocomplete.getBounds());
 
 google.maps.event.addListener(autocomplete, 'place_changed', function() {
   var place = autocomplete.getPlace();
-  console.log(place);
-  var p = transformPoint(place.geometry.location.Qa,place.geometry.location.Pa,"EPSG:4326","EPSG:900913")
+  //console.log(place);
+  var p = transformPoint(place.geometry.location.Na,place.geometry.location.Ma,"EPSG:4326","EPSG:900913")
  var point = new OpenLayers.LonLat(p.x,p.y);
   map.setCenter(point,15);
 try {placeMarkers.destroy()} catch(e){};
@@ -734,6 +734,7 @@ map.addPopup(placePopup)
   
 });
 function transformPoint(lat,lon,s,d) {
+	//console.log(lat + " " + lon);
     var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
     var dest = new Proj4js.Proj(d);
     var p = new Proj4js.Point(lat,lon);

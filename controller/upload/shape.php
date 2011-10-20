@@ -1,6 +1,6 @@
 <?php
 include("../server_header.inc");
-$targetPath = "/var/www/mygeocloud/tmp/shape/";
+$targetPath = "{$_SERVER["DOCUMENT_ROOT"]}/tmp/";
 $fileName = $_SESSION['screen_name']."_".time();
 $file = $targetPath.$fileName;
 

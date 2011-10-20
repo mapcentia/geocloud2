@@ -30,19 +30,19 @@ class table extends postgis {
 	private function getType($field)
 	{
 		if (preg_match("/smallint/",$field['type']) ||
-			preg_match("/integer/",$field['type']) ||
-			preg_match("/bigint/",$field['type']) ||
-			preg_match("/int2/",$field['type']) ||
-			preg_match("/int4/",$field['type']) ||
-			preg_match("/int8/",$field['type'])
+		preg_match("/integer/",$field['type']) ||
+		preg_match("/bigint/",$field['type']) ||
+		preg_match("/int2/",$field['type']) ||
+		preg_match("/int4/",$field['type']) ||
+		preg_match("/int8/",$field['type'])
 		){
 			$field['typeObj'] = array("type"=>"int");
 			$field['type'] = "int";
 		}
 		elseif (preg_match("/numeric/",$field['type']) ||
-				preg_match("/real/",$field['type']) ||
-				preg_match("/double/",$field['type']) ||
-				preg_match("/float/",$field['type'])
+		preg_match("/real/",$field['type']) ||
+		preg_match("/double/",$field['type']) ||
+		preg_match("/float/",$field['type'])
 		){
 			$field['typeObj'] = array("type"=>"decimal","precision"=>3,"scale"=>10);
 			$field['type'] = "number"; // SKAL ændres
@@ -79,9 +79,9 @@ class table extends postgis {
 		if (!$this->PDOerror) {
 			while ($row = $this->fetchRow($result,"assoc")) {
 				$arr[] = $row[$field];
-	 		}
-	 		$response['success'] = true;
-	 		$response['data'] = $arr;
+			}
+			$response['success'] = true;
+			$response['data'] = $arr;
 		}
 		else {
 			$response['success'] = false;
@@ -98,7 +98,7 @@ class table extends postgis {
 		//echo $sql;
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
-	 		$response['success'] = true;
+			$response['success'] = true;
 		}
 		else {
 			$response['success'] = false;
@@ -115,7 +115,7 @@ class table extends postgis {
 		//echo $sql;
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
-	 		$response['success'] = true;
+			$response['success'] = true;
 		}
 		else {
 			$response['success'] = false;
@@ -129,19 +129,19 @@ class table extends postgis {
 		foreach ($data as $table) {
 			foreach($table as $key=>$value){
 				//if ($this->metaData[$key]['type']=="string"){
-					$value = $this->db->quote($value);
+				$value = $this->db->quote($value);
 				//}
 				if ($key!=$keyName) {
 					$pairArr[] = "{$key}={$value}";
 					$keyArr[] = $key;
 					$valueArr[] = $value;
-				} 
+				}
 				else {
 					$where = "{$key}={$value}";
 					$keyValue = $value;
-				}	
+				}
 			}
-			$sql.= "UPDATE {$this -> table} SET ";
+			$sql = "UPDATE {$this -> table} SET ";
 			$sql.= implode(",",$pairArr);
 			$sql.= " WHERE {$where};";
 			fb($sql);
@@ -156,6 +156,9 @@ class table extends postgis {
 			else {
 				$response['operation'] = "updated";
 			}
+			unset($pairArr);
+			unset($keyArr);
+			unset($valueArr);
 		}
 		if ($result) {
 			$response['success'] = true;
@@ -163,7 +166,7 @@ class table extends postgis {
 		}
 		else {
 			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
+			$response['message'] = $sql;
 		}
 		return $response;
 	}
@@ -195,9 +198,9 @@ class table extends postgis {
 		$response["type"] = $type;
 		$response["multi"] = $multi;
 		/*ob_start();
-		print_r($this->metaData);
-		$output = ob_get_clean();
-		fb($output);*/
+		 print_r($this->metaData);
+		 $output = ob_get_clean();
+		 fb($output);*/
 		return $response;
 	}
 	function getTableStructure() // All tables
@@ -230,7 +233,7 @@ class table extends postgis {
 		foreach ($data as $value) {
 			$safeColumn = $this->toAscii($value->column,array(),"_");
 			if ($value->id != $value->column && ($value->column) && ($value->id)) {
-				
+
 				if ($safeColumn=="state") {
 					$safeColumn = "_state";
 				}
@@ -288,14 +291,14 @@ class table extends postgis {
 		// We set the data type
 		switch ($data['type']) {
 			case "Integer":
-			$type = "integer";
-			break;
+				$type = "integer";
+				break;
 			case "Decimal":
-			$type = "double precision";
-			break;
+				$type = "double precision";
+				break;
 			case "String":
-			$type = "varchar(255)";
-			break;
+				$type = "varchar(255)";
+				break;
 		}
 		$sql.= "ALTER TABLE {$this -> table} ADD COLUMN {$safeColumn} {$type};";
 		$this -> execQuery($sql,"PDO","transaction");
@@ -338,12 +341,12 @@ class table extends postgis {
 		return $response;
 	}
 	function makeArray($notArray) {
-	if (!is_array($notArray)) {
-			 $nowArray = array(0 => $notArray);
+		if (!is_array($notArray)) {
+			$nowArray = array(0 => $notArray);
+		}
+		else {
+			$nowArray = $notArray; // Input was array. Return it unaltered
+		}
+		return $nowArray;
 	}
-	else {
-		$nowArray = $notArray; // Input was array. Return it unaltered
-	}
-	return $nowArray;
-}
 }

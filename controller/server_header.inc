@@ -17,6 +17,7 @@ include '../../model/settings_viewer.php';
 include '../../wms/mapfile.php.map';
 include '../../model/shapefile.php';
 
+
 $postgisdb = $_SESSION['screen_name']; // We change the db to user
 //$postgisuser = "postgres"; // We change the db to user
 //$postgisuser = $_SESSION['screen_name']; // We change the user

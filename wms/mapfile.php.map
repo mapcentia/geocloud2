@@ -2,6 +2,7 @@
 function makeMapFile($user,$extentLayer=NULL) {
 	global $basePath;
 	global $postgisdb;
+	global $hostName;
 	$postgisdb = $user;
 	
 	
@@ -41,8 +42,8 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  INTERLACE OFF
 	  IMAGETYPE PNG
 	  WEB
-		IMAGEPATH "/var/www/ms_tmp/"
-  		IMAGEURL "http://<?php echo $_SERVER['SERVER_ADDR'];?>/ms_tmp/"
+		IMAGEPATH "<?php echo $_SERVER["DOCUMENT_ROOT"]."/tmp";?>"
+  		IMAGEURL "<?php echo $hostName;?>/tmp"
 		METADATA
 		  "wms_title"    "<?php echo $user;?>'s awesome WMS"
 		  "wms_srs"    "EPSG:<?php echo $srs;?> EPSG:4326"

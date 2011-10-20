@@ -9,6 +9,7 @@ class postgis
 	var $connectString;
 	var $PDOerror;
 	var $db;
+	var $postgisschema;
 	function postgis() //constructor
 	{
 		global $postgishost;
@@ -21,6 +22,7 @@ class postgis
 		$this -> postgisuser = trim($postgisuser);
 		$this -> postgisdb = trim($postgisdb);
 		$this -> postgispw = trim($postgispw);
+		$this -> postgisschema = trim($postgisschema);
 	}
 	function fetchRow(& $result,$result_type="assoc")
 	{
@@ -93,20 +95,16 @@ class postgis
 				break;
 			case "PDO":
 				if (!$this->db) {
-					 $this -> connect("PDO");
-					if (!$this->db) {
-						 die($query);
-						 
-					}	 
+					 $this -> connect("PDO"); 
 				}
 				try {
 						$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 						switch ($queryType){
 							case "select":
-								$result = $this->db->query($query); // PDOStatement object
+								$result = $this->db->query($query); // Return PDOStatement object
 								break;
 							case "transaction":
-								$result = $this->db->exec($query); // Interger
+								$result = $this->db->exec($query); // Return interger
 						}
 						//$db = NULL;
 				}
@@ -139,7 +137,7 @@ class postgis
 		$connectString = $connectString." dbname=".$this -> postgisdb;
 		return ($connectString);
 	}
-	function connect($type)
+	function connect($type="PDO")
 	{
 		switch ($type){
 			case "PG":
@@ -152,6 +150,7 @@ class postgis
 				catch(PDOException $e)
 				{
 					$this->db=NULL;
+					throw new Exception("Could not connect to database {$this->postgisdb}");
 				}
 				break;
 		}		

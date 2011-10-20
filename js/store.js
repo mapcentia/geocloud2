@@ -1,4 +1,3 @@
-
 var form;
 var store;
 var onEditWMSLayer;
@@ -13,7 +12,7 @@ Ext.onReady(function () {
     var winWmsLayer;
     var fieldsForStore;
     var settings;
-    var groups;
+    var groups;	
     $.ajax({
         url: '/controller/tables/' + screenName + '/getcolumns/geometry_columns_view',
         async: false,
@@ -615,7 +614,7 @@ Ext.onReady(function () {
                                     width: 300,
                                     height: 300
                                 });
-                            },
+                            }
                             //failure: test
                         });
                     } else {
@@ -680,7 +679,7 @@ Ext.onReady(function () {
             valueField: 'f_table_name',
             allowBlank: true,
             store: store,
-            value: settings.default_extent,
+            value: settings.default_extent
 			
         }],
         buttons: [{
@@ -695,7 +694,7 @@ Ext.onReady(function () {
                     });
                 }
             }
-        }],
+        }]
 		
     });
     viewerSettings.onSubmit = function (form, action) {

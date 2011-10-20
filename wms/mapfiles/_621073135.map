@@ -4,7 +4,7 @@
 	  #
 	  NAME "_621073135"
 	  STATUS on
-	  	  #EXTENT 1290362.28360836 7546303.12723241 1344607.30221898 7562422.99003768
+	  	  #EXTENT -180 -90 180 90
 	  	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"
@@ -15,8 +15,8 @@
 	  INTERLACE OFF
 	  IMAGETYPE PNG
 	  WEB
-		IMAGEPATH "/var/www/ms_tmp/"
-  		IMAGEURL "http://80.70.3.60/ms_tmp/"
+		IMAGEPATH "/var/www/mygeocloud/tmp"
+  		IMAGEURL "http://beta.mygeocloud.com/tmp"
 		METADATA
 		  "wms_title"    "_621073135's awesome WMS"
 		  "wms_srs"    "EPSG:900913 EPSG:4326"

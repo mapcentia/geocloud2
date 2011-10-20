@@ -2,7 +2,6 @@
 include("../server_header.inc");
 //include("../../inc/oauthcheck.php");
 
-
 $table = new table($parts[5]);
 
 if ($HTTP_RAW_POST_DATA) {
@@ -13,24 +12,24 @@ if ($HTTP_RAW_POST_DATA) {
 switch ($parts[4]){
 	case "getrecords": // All tables
 		$response = $table -> getRecords();
-	break;
+		break;
 	case "getgroupby": // All tables
 		$response = $table -> getGroupBy("layergroup");
-	break;
+		break;
 	case "updaterecord": // All tables
 		$response = $table -> updateRecord($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);
-	break;
+		break;
 	case "destroyrecord": // Geometry columns
 		$response = $table -> destroyRecord($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);
-	break;
+		break;
 	case 'getcolumns': // All tables
 		$response = $table -> getColumnsForExtGridAndStore();
-	break;
+		break;
 	case 'getstructure': // All tables
 		$response = $table -> getTableStructure();
-	break;
+		break;
 	case 'updatecolumn':
 		$response = $table -> updateColumn($obj->data);
 		makeMapFile($_SESSION['screen_name']);
