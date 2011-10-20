@@ -25,7 +25,8 @@ class table extends postgis {
 	}
 	private function setType()
 	{
-		$this->metaData = array_map(array($this,"getType"),$this->metaData);
+		if ($this->table!="settings.geometry_columns") // Ugly hack! pg_meta_data does not support schemas
+			$this->metaData = array_map(array($this,"getType"),$this->metaData);
 	}
 	private function getType($field)
 	{

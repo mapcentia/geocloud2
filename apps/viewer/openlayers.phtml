@@ -385,7 +385,7 @@ echo "maxyFromFilter = 20037508";
     function addLayer(name,title,opacity,connectionString,notVisible) {
         if (notVisible) var visible = false;
         else var visible = true;
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:true,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
         map.addLayer(layerArr[name]);
     }
    

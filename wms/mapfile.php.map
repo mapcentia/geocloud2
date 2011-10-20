@@ -2,6 +2,8 @@
 function makeMapFile($user,$extentLayer=NULL) {
 	global $basePath;
 	global $postgisdb;
+	global $postgishost;
+	global $postgispw;
 	global $hostName;
 	$postgisdb = $user;
 	
@@ -194,7 +196,7 @@ END
 		?>
 		TYPE <?php echo $type."\n";?>
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?>"
+		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?>"
 		
 		#CLASSITEM
 		<?php if($layerArr['data'][0]['theme_column']) echo "CLASSITEM '".$layerArr['data'][0]['theme_column']."'\n";?>

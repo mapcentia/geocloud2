@@ -131,7 +131,7 @@ END
 		DATA "the_geom from massachusetts_natural"
 				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=_19593192193"
+		CONNECTION "user=postgres dbname=_19593192193 host=127.0.0.1"
 		
 		#CLASSITEM
 		
@@ -143,7 +143,7 @@ END
 		  "wms_title"    "Massachusetts natural"
 		  "wms_srs"    "EPSG:4326 EPSG:900913"
 		  "wms_name"    "massachusetts_natural"
-		  "wms_abstract"    ""
+		  "wms_abstract"    "sdd"
 		  "wms_format"    "image/png"
                   "appformap_group"  "test"
 		  "appformap_queryable"    "true"
