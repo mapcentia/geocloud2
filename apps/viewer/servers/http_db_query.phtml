@@ -17,7 +17,7 @@ $controlObject = new control(true);
 $controlObject -> doNotUseWMS = true;
 $postgisObject -> setControlObject($controlObject);
 
-$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}.map",$controlObject);
+$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}_{$_SESSION['schema']}.map",$controlObject);
 $controlObject -> setMapscriptObject($mapscriptObject);
 
 $controlObject -> viewRegion($_REQUEST['extent']);

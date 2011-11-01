@@ -69,7 +69,7 @@ function parseFilter($filter,$table,$operator="=") {
 			if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
 
 			$where[] = "intersects"
-				."(transform(GeometryFromText('".$wktArr[0][0]."',"
+				."(public.transform(public.GeometryFromText('".$wktArr[0][0]."',"
 				.$sridOfFilter
 				."),$sridOfTable),"
 				.$value['PropertyName'].")";
@@ -101,7 +101,7 @@ function parseFilter($filter,$table,$operator="=") {
 			 */
 
 			$where[] = "intersects"
-				."(transform(GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
+				."(public.transform(public.GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
 				.$sridOfFilter
 				."),$sridOfTable),"
 				.$arr['BBOX']['PropertyName'].")";

@@ -5,6 +5,7 @@ $_SESSION['screen_name'] = $parts[2];
 ?>
 
 		<script type="text/javascript">var screenName='<?php echo $_SESSION['screen_name'];?>'</script>
+		<script type="text/javascript">var schema='<?php echo $schemaFromUri;?>'</script>
 		<script type="text/javascript" src="/js/openlayers/lib/OpenLayers.js?mobile"></script>
 		<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js">
 		</script>
@@ -12,7 +13,7 @@ $_SESSION['screen_name'] = $parts[2];
 		</script>
 		<script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js">
 		</script>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js">
+		<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js">
 		</script>
 		<script type="text/javascript" src="/js/wfseditor.js">
 		</script>

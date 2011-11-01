@@ -1,4 +1,4 @@
 RewriteEngine On
-RewriteRule ^([\w'-]*)/([\w'-]*)$ ../cgi-bin/mapserv?map=%{DOCUMENT_ROOT}/wms/mapfiles/$1.map [QSA,L]
+RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ ../cgi-bin/mapserv?map=%{DOCUMENT_ROOT}/wms/mapfiles/$1_$2.map [QSA,L]
 #RewriteRule ^([\w'-]*)/([\w'-]*)$ ../proxies/mapserv_wrapper.php?map=%{DOCUMENT_ROOT}/wms/mapfiles/$1.map [QSA,L]
 #RewriteRule ^([\w'-]*)/([\w'-]*)$ ../cgi-bin/tilecache.cgi? [QSA,L]

@@ -7,7 +7,7 @@ include("../server_header.inc");
 if ($HTTP_RAW_POST_DATA) {
 	$obj = json_decode($HTTP_RAW_POST_DATA);
 }
-$class = new _class($parts[5]);
+$class = new _class($parts[5],$postgisschema);
 //print_r($obj);
 
 switch ($parts[4]){

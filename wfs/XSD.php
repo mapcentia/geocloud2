@@ -17,7 +17,7 @@ writeTag("selfclose","xs","import",$atts,True,True);
 $atts=null;
 if (!$tables[0]){
     $tables = array();
-    $sql="SELECT f_table_name,f_geometry_column,srid FROM geometry_columns";
+    $sql="SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns";
     $result = $postgisObject->execQuery($sql);
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);

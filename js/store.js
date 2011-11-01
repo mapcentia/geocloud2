@@ -14,7 +14,7 @@ Ext.onReady(function () {
     var settings;
     var groups;	
     $.ajax({
-        url: '/controller/tables/' + screenName + '/getcolumns/geometry_columns_view',
+        url: '/controller/tables/' + screenName + '/getcolumns/settings.geometry_columns_view',
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -30,7 +30,7 @@ Ext.onReady(function () {
     });
     
     $.ajax({
-        url: '/controller/tables/' + screenName + '/getgroupby/geometry_columns_view',
+        url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view',
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -75,7 +75,7 @@ Ext.onReady(function () {
     fieldsForStore);
     var proxy = new Ext.data.HttpProxy({
         api: {
-            read: '/controller/tables/' + screenName + '/getrecords/geometry_columns_view',
+            read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
             update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/f_table_name',
             destroy: '/controller/tables/' + screenName + '/destroyrecord/geometry_columns/f_table_name'
         },
@@ -336,12 +336,12 @@ Ext.onReady(function () {
             return false;
         }
 
-        var url = "/editor/" + screenName + "?layer=" + record.get("f_table_name") + "&gf=" + record.get("f_geometry_column");
+        var url = "/editor/" + screenName + "/" + schema + "?layer=" + record.get("f_table_name") + "&gf=" + record.get("f_geometry_column");
         window.open(url, 'editor', 'width=1000,height=800');
 
     }
     function onView(btn, ev) {
-        var url = "/apps/viewer/map_list_frame/" + screenName;
+        var url = "/apps/viewer/map_list_frame/" + screenName + "/" + schema;
         window.open(url, 'viewer', 'width=1000,height=800');
     }
 

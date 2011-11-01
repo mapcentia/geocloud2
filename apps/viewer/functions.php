@@ -1849,7 +1849,7 @@ class postgis extends control
 	{
 		global $theGeometry;
 		global $languageText;
-		$query = "select * from geometry_columns_view where f_table_name='$table'";
+		$query = "select * from settings.geometry_columns_view where f_table_name='$table'";
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
 		if (!$row){}
@@ -3533,12 +3533,12 @@ class htmlSpecialChars
 {
 	function ConvertDanishChars($string)
 	{
-		$string = str_replace("æ","&aelig;",$string);
-		$string = str_replace("ø","&oslash;",$string);
-		$string = str_replace("å","&aring;",$string);
-		$string = str_replace("Æ","&AElig;",$string);
-		$string = str_replace("Ø","&Oslash;",$string);
-		$string = str_replace("Å","&Aring;",$string);
+		$string = str_replace("ï¿½","&aelig;",$string);
+		$string = str_replace("ï¿½","&oslash;",$string);
+		$string = str_replace("ï¿½","&aring;",$string);
+		$string = str_replace("ï¿½","&AElig;",$string);
+		$string = str_replace("ï¿½","&Oslash;",$string);
+		$string = str_replace("ï¿½","&Aring;",$string);
 		return($string);
 	}
 }

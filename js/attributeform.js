@@ -4,7 +4,7 @@ attributeForm.init = function (layer) {
 	Ext.QuickTips.init();
     // create attributes store
     attributeForm.attributeStore = new GeoExt.data.AttributeStore({
-        url: '/wfs/' + screenName + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer
+        url: '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer
     });
 
     attributeForm.form = new Ext.form.FormPanel({

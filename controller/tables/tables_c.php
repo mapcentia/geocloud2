@@ -11,13 +11,13 @@ if ($HTTP_RAW_POST_DATA) {
 
 switch ($parts[4]){
 	case "getrecords": // All tables
-		$response = $table -> getRecords();
+		$response = $table -> getRecords("f_table_schema='{$postgisschema}'");
 		break;
 	case "getgroupby": // All tables
 		$response = $table -> getGroupBy("layergroup");
 		break;
 	case "updaterecord": // All tables
-		$response = $table -> updateRecord($obj->data,$parts[6]);
+		$response = $table -> updateRecord($obj->data,$parts[6],"f_table_schema='{$postgisschema}'");
 		makeMapFile($_SESSION['screen_name']);
 		break;
 	case "destroyrecord": // Geometry columns
@@ -31,7 +31,7 @@ switch ($parts[4]){
 		$response = $table -> getTableStructure();
 		break;
 	case 'updatecolumn':
-		$response = $table -> updateColumn($obj->data);
+		$response = $table -> updateColumn($obj->data,"f_table_schema='{$postgisschema}'");
 		makeMapFile($_SESSION['screen_name']);
 		break;
 	case 'createcolumn':

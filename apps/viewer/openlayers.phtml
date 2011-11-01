@@ -3,6 +3,7 @@ session_start();
 include_once("functions.php");
 include("inc/uri_parts.php");
 $_SESSION['screen_name'] = $parts[4];
+$_SESSION['schema'] = $parts[5];
 $postgisdb = $_SESSION['screen_name'];
 
 
@@ -11,74 +12,77 @@ include '../../libs/FirePHPCore/fb.php';
 
 function microtime_float()
 {
-    list($utime, $time) = explode(" ", microtime());
-    return ((float)$utime + (float)$time);
+	list($utime, $time) = explode(" ", microtime());
+	return ((float)$utime + (float)$time);
 }
 $startTime = microtime_float();
 include_once("../../conf/main.php");
 include_once("../../wfs/explodefilter.php");
-//include "../../libs/PEAR/XML/Parser.php";
+include "../../libs/PEAR/XML/Parser.php";
 include "../../libs/PEAR/XML/Unserializer.php";
 include "../../libs/PEAR/XML/Serializer.php";
 $srs = "900913";
 $postgisObject = new postgis();
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <style type="text/css">
-	 #map {
-                width: 100%;
-                height: 100%;
-                position: absolute;
-                top:0px;
-                left:0px;
-                z-index:1;
-            }
+<head>
+<style type="text/css">
+#map {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	z-index: 1;
+}
 
-        body {
-                margin: 0px;
-                padding: 0px;
-	} 
-	#legend {
-                padding: 0px;
-                position: absolute;
-        }
-    
-        
-        </style>
-        <?php
-		include_once("../../libs/yui/phploader/phploader/loader.php");
-		$loader = new YAHOO_util_Loader("2.8.0");
-		$loader->allowRollups = false;
-		$loader->combine = true;
-		$loader->load("yahoo", "dom", "event", "utilities", "resize", "fonts", "button", "container");
-		echo $loader->tags();
-		//$_REQUEST['popup'] = "false";
-		?>
-		
-        <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
-        <script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
-        <script type="text/javascript" src="/js/openlayers/defs/EPSG900913.js"></script>
-	<!--<script type="text/javascript" src="http://openlayers.org/dev/OpenLayers.js"></script>-->
-	
-	<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"
-		type="text/javascript">
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+#legend {
+	padding: 0px;
+	position: absolute;
+}
+</style>
+<?php
+include_once("../../libs/yui/phploader/phploader/loader.php");
+$loader = new YAHOO_util_Loader("2.8.0");
+$loader->allowRollups = false;
+$loader->combine = true;
+$loader->load("yahoo", "dom", "event", "utilities", "resize", "fonts", "button", "container");
+echo $loader->tags();
+//$_REQUEST['popup'] = "false";
+?>
+
+<script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
+<script type="text/javascript" src="/js/openlayers/defs/EPSG900913.js"></script>
+<!--<script type="text/javascript" src="http://openlayers.org/dev/OpenLayers.js"></script>-->
+
+<script
+	src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"
+	type="text/javascript">
 	</script>
-	
-	<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
-        <script type="text/javascript" src="/js/ext/ext-all.js"></script>
-        <script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js"></script>
-        <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
-        <link rel="stylesheet" type="text/css" href="/styles/styles.css" />
 
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
- <script src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"
-      type="text/javascript"></script> 
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/js/ext/ext-all.js"></script>
+<script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js"></script>
+<link rel="stylesheet" type="text/css"
+	href="/js/ext/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="/styles/styles.css" />
+
+<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js">
+		</script>
+<script
+	src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"
+	type="text/javascript"></script>
 
 
-	
 
-        <script type="text/javascript">
+
+<script type="text/javascript">
 		var layer;
 		var newLayerStrArr = [];
 		var map,layer,popup,markers;
@@ -214,10 +218,10 @@ echo "maxyFromFilter = ".($row[tymax]+$buffer).";\n";
 }
 else {
 
-echo "minxFromFilter = -20037508";
-echo "maxxFromFilter = 20037508";
-echo "minyFromFilter = -20037508";
-echo "maxyFromFilter = 20037508";
+echo "minxFromFilter = -20037508;";
+echo "maxxFromFilter = 20037508;";
+echo "minyFromFilter = -20037508;";
+echo "maxyFromFilter = 20037508;";
 
 }
 // End setting extent from layer
@@ -328,6 +332,7 @@ echo "maxyFromFilter = 20037508";
                 }
             )
 	);
+	/*
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
 		sphericalMercator: true
@@ -344,7 +349,7 @@ echo "maxyFromFilter = 20037508";
 		type: G_NORMAL_MAP,
 		sphericalMercator: true
 	}));
-	
+	*/
 	vectors = new OpenLayers.Layer.Vector("Vector Layer");
  
             map.addLayers([vectors]);
@@ -540,41 +545,41 @@ echo "maxyFromFilter = 20037508";
 	
 	
         </script>
-	</head>
-	<body class="">
+</head>
+<body class="">
 
-	<form name="printForm" id="printForm" method="post" action=""><input
-		type="hidden" name="extent" value="" /> <input type="hidden"
-		name="width" value="" /> <input type="hidden" name="height" value="" />
-	<input type="hidden" name="renderGeometryArray" value="" /> <input
-		type="hidden" name="layer" value="" /> <input type="hidden"
-		name="resultHtml" value="" /> <input type="hidden" name="bgMap"
-		value="" /> <input type="hidden" name="location" value="" /> <input
-		type="hidden" name="lan" value="" /> <input type="hidden" name="type"
-		value="json" /></form>
+<form name="printForm" id="printForm" method="post" action=""><input
+	type="hidden" name="extent" value="" /> <input type="hidden"
+	name="width" value="" /> <input type="hidden" name="height" value="" />
+<input type="hidden" name="renderGeometryArray" value="" /> <input
+	type="hidden" name="layer" value="" /> <input type="hidden"
+	name="resultHtml" value="" /> <input type="hidden" name="bgMap"
+	value="" /> <input type="hidden" name="location" value="" /> <input
+	type="hidden" name="lan" value="" /> <input type="hidden" name="type"
+	value="json" /></form>
 
-	<div id="mapel"></div>
+<div id="mapel"></div>
 
-	<div
-		style="position: absolute; top: 5px; left: 110px; z-index: 500; display:none;">
-	<a id="popupButton"
-		href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">�ben
-	som pop-up</a></div>
-
-
-
-		<div id="legendContent"><img alt="" id="legend_img" src="" /></div>
-        <div style="padding:5px" id="searchContent">
-            <input style="width:270px" type='text' id='gAddress' name='gAddress' value=''/>
-            <p>Skriv adresse eller stednavn</p>
-        </div>
+<div
+	style="position: absolute; top: 5px; left: 110px; z-index: 500; display: none;">
+<a id="popupButton"
+	href="javascript:openMapWin('&lt;?= $popupPage ?&gt;?&lt;?= $_SERVER['QUERY_STRING'] ?&gt;',&lt;?= $openLayers['popupSize']['x'] ?&gt;,&lt;?= $openLayers['popupSize']['y'] ?&gt;)">�ben
+som pop-up</a></div>
 
 
 
+<div id="legendContent"><img alt="" id="legend_img" src="" /></div>
+<div style="padding: 5px" id="searchContent"><input style="width: 270px"
+	type='text' id='gAddress' name='gAddress' value='' />
+<p>Skriv adresse eller stednavn</p>
+</div>
 
-	</body>
 
-	<script>
+
+
+</body>
+
+<script>
 
 	Ext.onReady(function(){
 	    
@@ -693,28 +698,28 @@ var mapPanel = Ext.getCmp("mappanel");
 if (minxFromFilter!=0) {
 	//alert('test');
 	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
-
+}
 
 
     var p1 = transformPoint(minxFromFilter,minyFromFilter,"EPSG:900913","EPSG:4326");
     var p2 = transformPoint(maxxFromFilter,maxyFromFilter,"EPSG:900913","EPSG:4326");
-	var defaultBounds = new google.maps.LatLngBounds(
-		new google.maps.LatLng(p1.y,p1.x),
-		new google.maps.LatLng(p2.y,p2.x)
-	);
-}
+var defaultBounds = new google.maps.LatLngBounds(
+  new google.maps.LatLng(p1.y,p1.x),
+  new google.maps.LatLng(p2.y,p2.x)
+);
+
 var input = document.getElementById('gAddress');
 var options = {
   bounds: defaultBounds
   //types: ['establishment']
 };
 var autocomplete = new google.maps.places.Autocomplete(input, options);
-    //console.log(autocomplete.getBounds());
+    console.log(autocomplete.getBounds());
 
 google.maps.event.addListener(autocomplete, 'place_changed', function() {
   var place = autocomplete.getPlace();
-  //console.log(place);
-  var p = transformPoint(place.geometry.location.Na,place.geometry.location.Ma,"EPSG:4326","EPSG:900913")
+  console.log(place);
+  var p = transformPoint(place.geometry.location.Qa,place.geometry.location.Pa,"EPSG:4326","EPSG:900913")
  var point = new OpenLayers.LonLat(p.x,p.y);
   map.setCenter(point,15);
 try {placeMarkers.destroy()} catch(e){};
@@ -734,7 +739,6 @@ map.addPopup(placePopup)
   
 });
 function transformPoint(lat,lon,s,d) {
-	//console.log(lat + " " + lon);
     var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
     var dest = new Proj4js.Proj(d);
     var p = new Proj4js.Point(lat,lon);
@@ -749,6 +753,6 @@ function transformPoint(lat,lon,s,d) {
 	</script>
 
 
-	</html>
+</html>
 
-	       
+

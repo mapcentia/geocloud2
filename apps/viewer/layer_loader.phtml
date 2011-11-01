@@ -1,36 +1,37 @@
 <html>
 <head>
 <style>
-
 .layer_text {
-        font-weight: normal;
-        color: #545454;
-        text-align: left;  
-} 
+	font-weight: normal;
+	color: #545454;
+	text-align: left;
+}
+
 a:link {
 	color: #545454;
 }
+
 a:visited {
 	color: #545454;
 }
+
 body {
 	font-family: verdana, arial, helvetica, sans-serif;
 	font-size: 11;
-	margin:0px;
-	padding:0px;
+	margin: 0px;
+	padding: 0px;
 }
-
-
 </style>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-
+<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js">
+		</script>
 
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
-<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css"
+	href="/js/ext/resources/css/ext-all.css" />
 
-	
+
 <script>
 	
 
@@ -107,7 +108,9 @@ include_once("functions.php");
 $controlObject = new control(TRUE,FALSE);
 $controlObject->doNotUseWMS=true;
 //$mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
-$mapscriptObject = new mapscript(NULL,"{$basePath}wms/mapfiles/{$parts[4]}.map",$controlObject);
+
+$mapscriptObject = new mapscript(NULL,"{$basePath}wms/mapfiles/{$parts[4]}_{$parts[5]}.map",$controlObject);
+
 $controlObject -> setMapscriptObject($mapscriptObject);
 $layerArr = $mapscriptObject -> map -> getAllLayerNames();
 //asort($layerArr);
@@ -185,35 +188,38 @@ new Ext.Viewport({
 </script>
 <?php
 /*
-$i = 0;
-$temp = "server_$i";
-global $$temp;
-while ($$temp != "")
-{
-	$temp = "server_$i";
-	global $$temp;
-	$serviceObject[$i] = & new service($i,$$temp,$controlObject);
-	$i ++;
-}
-$controlObject -> serverCount = $i-2;
+ $i = 0;
+ $temp = "server_$i";
+ global $$temp;
+ while ($$temp != "")
+ {
+ $temp = "server_$i";
+ global $$temp;
+ $serviceObject[$i] = & new service($i,$$temp,$controlObject);
+ $i ++;
+ }
+ $controlObject -> serverCount = $i-2;
 
-for ($i = 0; $i <= $controlObject->serverCount; $i ++)
-{
+ for ($i = 0; $i <= $controlObject->serverCount; $i ++)
+ {
 
-	echo $serviceObject[$i] -> layercontrol();
-	
-}
-*/
+ echo $serviceObject[$i] -> layercontrol();
+
+ }
+ */
 ?>
-<br/>
-<br/>
+<br />
+<br />
 <div style="bottom:0px;display:<?php if ($_REQUEST['showcodebox']) {echo "inline";} else {echo "none";}?>;">
 <form id="theForm" name="theForm">
 <div>Interaktivt- og statisk kort</div>
-<input type="text" size="30" id="embed_area1" name="embed_area1" onclick="javascript:document.theForm.embed_area1.focus();document.theForm.embed_area1.select();" readonly='readonly' />
+<input type="text" size="30" id="embed_area1" name="embed_area1"
+	onclick="javascript:document.theForm.embed_area1.focus();document.theForm.embed_area1.select();"
+	readonly='readonly' />
 <div>Url til kort</div>
-<input type="text" size="30" id="embed_area4" name="embed_area4" onclick="javascript:document.theForm.embed_area4.focus();document.theForm.embed_area4.select();" readonly='readonly' />
-<br/>
+<input type="text" size="30" id="embed_area4" name="embed_area4"
+	onclick="javascript:document.theForm.embed_area4.focus();document.theForm.embed_area4.select();"
+	readonly='readonly' /> <br />
 <a href="#" id="codeButton">Se kode</a><br />
 </form>
 </div>

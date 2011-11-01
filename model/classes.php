@@ -1,16 +1,18 @@
 <?php
 class _class extends postgis {
 	var $table;
-	function __construct($table) {
+	var $schema;
+	function __construct($table,$schema) {
 		parent::__construct();
 		$this->table = $table;
+		$this->schema = $schema;
 	}
 	private function array_push_assoc($array, $key, $value){
 		$array[$key] = $value;
 		return $array;
 	}
 	public function getAll() {
-		$sql = "SELECT class FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}'";
+		$sql = "SELECT class FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -33,7 +35,10 @@ class _class extends postgis {
 		$classes = $this->getAll();
 		if (!$this->PDOerror) {
 			$response['success'] = true;
-			$arr = $classes['data'][$id]; // Cast stdclass to array
+			$arr = $classes['data'][$id];
+			unset($arr['id']);
+			//print_r($arr);
+			
 			$props = array(	"name"=>"New style",
 							"expression"=>"",
 							"label"=>false,
@@ -44,16 +49,16 @@ class _class extends postgis {
 							"width"=>"1"
 							);
 							foreach ($classes['data'][$id] as $key => $value) {
-								if ($key=="id" && $value==$id) {
+						
 									foreach($props as $key2=>$value2){
 										if (!isset($arr[$key2])){
 											$arr[$key2] = $value2;
 										}
 									}
-									$arr['id'] = $id;
-								};
+									
+							
 							}
-								
+
 							$response['data'] = array($arr);
 		}
 		else {
@@ -63,7 +68,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function store($data) {
-		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}';";
+		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -76,7 +81,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function insert() {
-		$classes = $this->getAll();
+		//$classes = $this->getAll();
 		$classes['data'][] = array("name"=>"New style");
 		$response = $this->store(json_encode($classes['data']));
 		return $response;

@@ -20,12 +20,12 @@ include("inc/uri_parts.php");
 
 		<!--<iframe name="locationframe" scrolling="no" frameborder="0" style="WIDTH: 100%; HEIGHT:30px" src="/apps/viewer/includes/location_select.php?lan=da&location=<?php echo $_REQUEST["location"];?>&showcodebox=<?php echo $_REQUEST["showcodebox"];?>"></iframe><br/>-->
 
-		<iframe scrolling="no" id="layerframe" frameborder="0" style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/layer_loader/<?php echo $parts[4];?>?lan=da&<?php echo $_SERVER['QUERY_STRING'];?>"></iframe>
+		<iframe scrolling="no" id="layerframe" frameborder="0" style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/layer_loader/<?php echo $parts[4];?>/<?php echo $parts[5];?>?lan=da&<?php echo $_SERVER['QUERY_STRING'];?>"></iframe>
 
 	</div>
 	<div id="main">
 
-		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>?lan=da&usepopup=false&popup=true&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
+		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>/<?php echo $parts[5];?>?lan=da&usepopup=false&popup=true&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
 	</div>
 </body>
 <script type="text/javascript">

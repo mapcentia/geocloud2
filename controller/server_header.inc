@@ -19,6 +19,7 @@ include '../../model/shapefile.php';
 
 
 $postgisdb = $_SESSION['screen_name']; // We change the db to user
+$postgisschema = $_SESSION['schema'];
 //$postgisuser = "postgres"; // We change the db to user
 //$postgisuser = $_SESSION['screen_name']; // We change the user
 

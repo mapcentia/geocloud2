@@ -1,16 +1,20 @@
 <?php
 //god dav
 include("html_header.php");
+$_SESSION['schema'] = $schemaFromUri;
+$postgisschema = $schemaFromUri;
+
 include("wms/mapfile.php.map");
 makeMapFile($_SESSION['screen_name']);
 
 ?>
 		<script type="text/javascript">var screenName='<?php echo $_SESSION['screen_name'];?>'</script>
+		<script type="text/javascript">var schema='<?php echo $_SESSION['schema'];?>'</script>
 		<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js">
 		</script>
 		<script type="text/javascript" src="/js/ext/ext-all.js">
 		</script>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js">
+		<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js">
 		</script>
 		<script type="text/javascript" src="/js/store.js">
 		</script>

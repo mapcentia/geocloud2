@@ -17,6 +17,7 @@ class postgis
 		global $postgisuser;
 		global $postgisdb;
 		global $postgispw;
+		global $postgisschema;
 		$this -> postgishost = trim($postgishost);
 		$this -> postgisport = trim($postgisport);
 		$this -> postgisuser = trim($postgisuser);
@@ -90,7 +91,7 @@ class postgis
 				if (!$this->db) {
 					 $this -> connect("PG");
 				}
-				$result = pg_exec($this->db, $query);
+				$result = pg_query($this->db,$query);
 				return ($result);
 				break;
 			case "PDO":
@@ -110,6 +111,7 @@ class postgis
 				}
 				catch(PDOException $e)
 				{
+					//throw new Exception($e->getMessage());
 					$this->PDOerror[] = $e->getMessage();
 				}
 				return($result);
@@ -119,7 +121,12 @@ class postgis
 	function getMetaData($table)
 	{
 		$this->connect("PG");
-		$arr = pg_meta_data($this->db, $table);
+		if ($this->table!="settings.geometry_columns_join" AND $this->table!="settings.geometry_columns_view") {
+			$arr = pg_meta_data($this->db, $this->postgisschema.".".$table);
+		}
+		else {
+			$arr = pg_meta_data($this->db, $table);
+		}
 		$this->close();
 		return ($arr);
 	}
@@ -142,10 +149,12 @@ class postgis
 		switch ($type){
 			case "PG":
 				$this->db = pg_connect($this -> connectString());
+				if ($this->postgisschema) $this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
 				break;
 			case "PDO":
 				try {
 					$this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
+					if ($this->postgisschema) $this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
 				}
 				catch(PDOException $e)
 				{
@@ -169,7 +178,7 @@ class postgis
 	}
 	function getGeometryColumns($table,$field)
 	{
-		$query = "select * from geometry_columns_view where f_table_name='$table'";
+		$query = "select * from settings.geometry_columns_view where f_table_name='$table'";
 	
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);

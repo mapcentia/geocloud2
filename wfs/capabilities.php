@@ -157,7 +157,7 @@ xsi:schemaLocation="http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geose
       
 
 if ($row['f_geometry_column']) {
-	  $sql2 = "SELECT xmin(EXTENT(transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMin,xmax(EXTENT(transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMax, ymin(EXTENT(transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMin,ymax(EXTENT(transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMax  FROM ".$TableName;
+	  $sql2 = "SELECT xmin(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMin,xmax(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMax, ymin(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMin,ymax(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMax  FROM ".$TableName;
 	  $result2 = $postgisObject->execQuery($sql2);
 	  
 	  

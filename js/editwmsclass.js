@@ -158,7 +158,7 @@ wmsClass.init = function (id) {
         storeId: 'configStore',
         // reader config
         successProperty: 'success',
-        idProperty: 'id',
+        //idProperty: 'id',
         root: 'data',
         //fields: 'fields',
         fields: [{
@@ -233,7 +233,7 @@ wmsClass.init = function (id) {
                 var grid = Ext.getCmp("propGrid");
                 var id = Ext.getCmp("configStore");
                 var source = grid.getSource();
-                source.id  = wmsClass.classId;
+                //source.id  = wmsClass.classId;
                 var jsonDataStr = null;
                 jsonDataStr = Ext.encode(source);
                 
