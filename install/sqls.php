@@ -31,23 +31,6 @@ CREATE TABLE geometry_columns_join (
     layergroup character varying(255)
 );
 
-CREATE TABLE classes (
-    id integer NOT NULL,
-    layer character varying,
-    class text
-);
-
-CREATE SEQUENCE classes_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-ALTER SEQUENCE classes_id_seq OWNED BY classes.id;
-
-SELECT pg_catalog.setval('classes_id_seq', 2, true);
-
 CREATE TABLE viewer (
     viewer text
 );
@@ -56,8 +39,6 @@ CREATE TABLE wmslayers (
     layer character varying,
     def text
 );
-
-ALTER TABLE classes ALTER COLUMN id SET DEFAULT nextval('classes_id_seq'::regclass);
 
 INSERT INTO viewer VALUES ('{\"pw\":\"81dc9bdb52d04dc20036dbd8313ed055\"}');
 

@@ -292,6 +292,7 @@ function getCapabilities($postgisObject) {
 	global $gmlNameSpace;
 	global $gmlNameSpaceUri;
 	global $cacheDir;
+	global $postgisschema;
 	include 'capabilities.php';
 }
 

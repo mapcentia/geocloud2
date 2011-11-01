@@ -81,7 +81,7 @@ class _class extends postgis {
 		return $response;
 	}
 	public function insert() {
-		//$classes = $this->getAll();
+		$classes = $this->getAll();
 		$classes['data'][] = array("name"=>"New style");
 		$response = $this->store(json_encode($classes['data']));
 		return $response;
