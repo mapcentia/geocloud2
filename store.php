@@ -5,7 +5,7 @@ $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
 
 include("wms/mapfile.php.map");
-//makeMapFile($_SESSION['screen_name']);
+makeMapFile($_SESSION['screen_name']);
 
 ?>
 		<script type="text/javascript">var screenName='<?php echo $_SESSION['screen_name'];?>'</script>

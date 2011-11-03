@@ -22,7 +22,7 @@ wmsClasses.init = function (table, screenName) {
         api: {
             read: '/controller/classes/' + screenName + '/getall/' + table,
             create: '/controller/classes/' + screenName + '/createcolumn/' + table,
-            destroy: '/controller/classes/' + screenName + '/destroy/'
+            destroy: '/controller/classes/' + screenName + '/destroy/' + table
         },
         listeners: {
             //write: wmsClasses.onWrite,
@@ -118,6 +118,7 @@ wmsClasses.onDelete = function () {
     Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
         if (btn === "yes") {
             wmsClasses.grid.store.remove(record);
+			wmsClasses.store.load();
         } else {
             return false;
         }

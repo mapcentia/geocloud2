@@ -1,10 +1,14 @@
 <?php
 class wmslayers extends postgis {
-	function __construct() {
+	var $table;
+	var $schema;
+	function __construct($table,$schema) {
 		parent::__construct();
+		$this->table = $table;
+		$this->schema = $schema;
 	}
-	public function get($id) {
-		$sql ="SELECT def FROM settings.wmslayers WHERE layer='{$id}';";
+	public function get() {
+		$sql = "SELECT def FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
 		$row = $this->fetchRow($this->execQuery($sql),"assoc");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -23,17 +27,13 @@ class wmslayers extends postgis {
 		}
 		return $response;
 	}
-	public function update($id,$data) {
-		$sql ="SELECT * FROM settings.wmslayers WHERE layer='{$id}';";
-		$result = $this->execQuery($sql);
-		if (!$result->rowCount()){
-			$sql = "INSERT INTO settings.wmslayers (layer,def) VALUES('{$id}','{$data}');";
-			$this->execQuery($sql,"PDO","transaction");
-		}
-		else {
-			$sql = "UPDATE settings.wmslayers SET def='{$data}' WHERE layer='{$id}';";
-			$this->execQuery($sql,"PDO","transaction");
-		}
+	public function update($data) {
+		//$def = $this->get();
+		//print_r($def);
+		
+		$sql = "UPDATE settings.geometry_columns_join SET def='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
+		$this->execQuery($sql,"PDO","transaction");
+		
 		if (!$this->PDOerror) {
 			$response['success'] = true;
 			$response['message'] = "Def updated";

@@ -158,14 +158,15 @@ END
 	  # Start of layers
 	  #
 	<?php
-	$sql="SELECT * FROM settings.geometry_columns_view";
+	$sql="SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}'";
+	//echo $sql;
 		$result = $postgisObject->execQuery($sql);
 		if($postgisObject->PDOerror){
 			makeExceptionReport($postgisObject->PDOerror);
 		}
 		while ($row = $postgisObject->fetchRow($result)) {
-		$wmslayerObj = new wmslayers();
-		$layerArr = $wmslayerObj->get($row['f_table_name']);
+		$wmslayerObj = new wmslayers($row['f_table_name'],$row['f_table_schema']);
+		$layerArr = $wmslayerObj->get();
 		//print_r($layerArr);
 	?>
 	  

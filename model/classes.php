@@ -23,7 +23,6 @@ class _class extends postgis {
 				$arrNew[$i]['id'] = $i;
 			}
 			$response['data'] = $arrNew; 
-
 		}
 		else {
 			$response['success'] = false;
@@ -38,7 +37,6 @@ class _class extends postgis {
 			$arr = $classes['data'][$id];
 			unset($arr['id']);
 			//print_r($arr);
-			
 			$props = array(	"name"=>"New style",
 							"expression"=>"",
 							"label"=>false,
@@ -88,25 +86,22 @@ class _class extends postgis {
 	}
 	public function update($id,$data) {
 		$classes = $this->getAll();
-		
 		$classes['data'][$id] = json_decode($data);
 		//print_r($classes['data']);
-		
-
 		$response = $this->store(json_encode($classes['data']));
 		return $response;
 	}
-	function destroy($id) // Geometry columns
+	public function destroy($id) // Geometry columns
 	{
-		$sql.= "DELETE FROM settings.classes WHERE id='{$id}';";
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-			$response['success'] = true;
+		$classes = $this->getAll();
+		unset($classes['data'][$id]);
+		foreach($classes['data'] as $key=>$value){ // Reindex array
+			unset($value['id']);
+			$arr[] = $value;
 		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
+		$classes['data'] = $arr;
+		//print_r($classes);
+		$response = $this->store(json_encode($classes['data']));
 		return $response;
 	}
 }

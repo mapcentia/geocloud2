@@ -28,16 +28,12 @@ CREATE TABLE geometry_columns_join (
     fieldconf text,
     meta_url text,
     class text,
+	def text,
     layergroup character varying(255)
 );
 
 CREATE TABLE viewer (
     viewer text
-);
-
-CREATE TABLE wmslayers (
-    layer character varying,
-    def text
 );
 
 INSERT INTO viewer VALUES ('{\"pw\":\"81dc9bdb52d04dc20036dbd8313ed055\"}');
@@ -46,7 +42,7 @@ SET search_path = public, pg_catalog;
 ";
 
 $sqls['view'] = "
-CREATE VIEW settings.geometry_columns_view AS SELECT geometry_columns.f_table_schema, geometry_columns.f_table_name, geometry_columns.f_geometry_column, geometry_columns.coord_dimension, geometry_columns.srid, geometry_columns.type, geometry_columns_join.f_table_abstract, geometry_columns_join.f_table_title, geometry_columns_join.tweet, geometry_columns_join.editable, geometry_columns_join.created, geometry_columns_join.lastmodified, geometry_columns_join.authentication, geometry_columns_join.fieldconf, geometry_columns_join.meta_url, geometry_columns_join.layergroup
+CREATE VIEW settings.geometry_columns_view AS SELECT geometry_columns.f_table_schema, geometry_columns.f_table_name, geometry_columns.f_geometry_column, geometry_columns.coord_dimension, geometry_columns.srid, geometry_columns.type, geometry_columns_join.f_table_abstract, geometry_columns_join.f_table_title, geometry_columns_join.tweet, geometry_columns_join.editable, geometry_columns_join.created, geometry_columns_join.lastmodified, geometry_columns_join.authentication, geometry_columns_join.fieldconf, geometry_columns_join.meta_url, geometry_columns_join.layergroup,geometry_columns_join.def,geometry_columns_join.class
    FROM geometry_columns
    LEFT JOIN settings.geometry_columns_join ON geometry_columns.f_table_name::text = geometry_columns_join.f_table_name::text AND geometry_columns.f_table_schema::text = geometry_columns_join.f_table_schema::text;
 ";

@@ -27,7 +27,7 @@ switch ($parts[4]){
 	break;
 	case "destroy":
 		$response = $class -> destroy($obj->data);
-		makeMapFile($_SESSION['screen_name']);
+		//makeMapFile($_SESSION['screen_name']);
 	break;
 }
 include_once("../server_footer.inc");
