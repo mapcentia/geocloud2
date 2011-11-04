@@ -106,6 +106,7 @@ foreach($tables as $table)
 		$atts["minOccurs"]="0";
 		writeTag("open","xs","element",$atts,True,True);
 		if($atts["name"] != $postgisObject -> getGeometryColumns($table, "f_geometry_column")) {
+			if ($tableArr['metaData'][$hello]['type']=="number") $tableArr['metaData'][$hello]['type']="decimal";
 			echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"></xs:restriction></xs:simpleType>';
 		}
 		writeTag("close","xs","element",NULL,False,True);
