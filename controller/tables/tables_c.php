@@ -14,7 +14,7 @@ switch ($parts[4]){
 		$response = $table -> getRecords("f_table_schema='{$postgisschema}'");
 		break;
 	case "getgroupby": // All tables
-		$response = $table -> getGroupBy("layergroup");
+		$response = $table -> getGroupBy($parts[6]);
 		break;
 	case "updaterecord": // All tables
 		$response = $table -> updateRecord($obj->data,$parts[6],"f_table_schema='{$postgisschema}'");

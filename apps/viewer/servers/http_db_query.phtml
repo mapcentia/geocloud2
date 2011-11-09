@@ -37,15 +37,18 @@ for ($i = 0; $i < sizeof($layers); $i++)
 
 		
 		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
+		
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) {
 				$strs[]= strtoupper($value->column);
 			}
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 		}
+		if (is_array($strs)) {
 		sort($strs);
 		$str = implode(",",$strs);
 		$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
+		}
 		
 		$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
 		$queryTable = $layerObj -> getMetaData("appformap_query_table");

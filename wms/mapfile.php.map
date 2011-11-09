@@ -158,7 +158,7 @@ END
 	  # Start of layers
 	  #
 	<?php
-	$sql="SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}'";
+	$sql="SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}' OR f_table_schema='public'";
 	//echo $sql;
 		$result = $postgisObject->execQuery($sql);
 		if($postgisObject->PDOerror){
@@ -171,9 +171,9 @@ END
 	?>
 	  
 	  LAYER
-		NAME "<?php echo $row['f_table_name'];?>"
+		NAME "<?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>"
 		STATUS off
-		DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_name'];?>"
+		DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>"
 		<?php
 		switch ($row['type']) {
 					case "POINT":
@@ -226,7 +226,7 @@ END
 		  "init=epsg:<?php echo $row['srid'];?>" 
 		END
 		<?php
-		$classObj = new _class($row['f_table_name'],$postgisschema);
+		$classObj = new _class($row['f_table_name'],$row['f_table_schema']);
 		$classArr = $classObj->getAll();
 		//print_r($classArr);
 		if (is_array($classArr['data'])) {

@@ -1697,6 +1697,7 @@ class postgis extends control
 	var $postgisuser;
 	var $postgisdb;
 	var $postgispw;
+	var $postgisschema;
 	var $theGeometry;
 	var $connected;
 	var $function;
@@ -1718,6 +1719,7 @@ class postgis extends control
 		global $postgisuser;
 		global $postgisdb;
 		global $postgispw;
+		global $postgisschema;
 		global $snapTolerance;
 		$this -> pg_snap_layer = $HTTP_FORM_VARS["pg_snap_layer"];
 		$this -> pg_search_layer = $HTTP_FORM_VARS["pg_search_layer"];
@@ -1734,6 +1736,7 @@ class postgis extends control
 		$this -> postgisuser = trim($postgisuser);
 		$this -> postgisdb = trim($postgisdb);
 		$this -> postgispw = trim($postgispw);
+		$this -> postgisschema = trim($postgisschema);
 		$this -> pg_digi_snapTolerance = $HTTP_FORM_VARS["snapTolerance"];
 
 		if ($this -> pg_digi_layer) $this -> digiGeom = $this -> getGeometryColumns($this -> pg_digi_layer,type);
@@ -1845,30 +1848,53 @@ class postgis extends control
 		."'</td></tr></table>";
 		//echo "<p><img SRC ='images/icon_redraw.gif' WIDTH ='19' HEIGHT =19 NAME ='redraw' BORDER ='0' onClick='update();' style='cursor:hand'></p>";
 	}
-	function getGeometryColumns($table, $field)
-	{
-		global $theGeometry;
-		global $languageText;
-		$query = "select * from settings.geometry_columns_view where f_table_name='$table'";
-		$result = $this -> execQuery($query);
-		$row = $this -> fetchRow($result);
-		if (!$row){}
-		elseif ($row) $this -> theGeometry = $row[type];
-		if ($field == 'f_geometry_column') {
-		
-		return $row[f_geometry_column];
-		}
-		if ($field == 'srid') {
-			//echo $query;
-			return $row[srid];
-		}
-		if ($field == 'type')
-		return $row[type];
-		if ($field == 'fieldconf')
-		return $row[fieldconf];
-		if ($field == 'f_table_title')
-		return $row[f_table_title];
-	}
+	function getGeometryColumns($table,$field)
+        {
+                preg_match ("/^[\w'-]*\./",$table,$matches);
+                $_schema = $matches[0];
+
+                preg_match ("/[\w'-]*$/",$table,$matches);
+                $_table = $matches[0];
+
+                if (!$_schema) {
+                        $_schema = $this->postgisschema;
+                }
+                else {
+                        $_schema = str_replace(".","",$_schema);
+                }
+                $query = "select * from settings.geometry_columns_view where f_table_name='$_table' AND f_table_schema='$_schema'";
+
+                $result = $this -> execQuery($query);
+                $row = $this -> fetchRow($result);
+                if (!$row)
+                return $languageText[selectText];
+                elseif ($row) $this -> theGeometry = $row[type];
+                if ($field == 'f_geometry_column')
+                return $row[f_geometry_column];
+                if ($field == 'srid') {
+                        return $row['srid'];
+                }
+                if ($field == 'type') {
+                        return $row['type'];
+                }
+                if ($field == 'tweet') {
+                        return $row['tweet'];
+                }
+                if ($field == 'editable') {
+                        return $row['editable'];
+                }
+                if ($field == 'authentication') {
+                        return $row['authentication'];
+                }
+                if ($field == 'fieldconf') {
+                        return $row['fieldconf'];
+                }
+				if ($field == 'f_table_title') {
+                        return $row['f_table_title'];
+                }
+				
+				
+        }
 	function insertfeature($geoCoordStr)
 	{
 

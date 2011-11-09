@@ -3,7 +3,7 @@ session_start();
 include_once("functions.php");
 include("inc/uri_parts.php");
 $_SESSION['screen_name'] = $parts[4];
-$_SESSION['schema'] = $parts[5];
+$postgisschema = $parts[5];
 $postgisdb = $_SESSION['screen_name'];
 
 
@@ -204,7 +204,7 @@ $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
 $table = $response['data']['default_extent'];
 
-$geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
+$geomField = $postgisObject->getGeometryColumns("public.".$table,"f_geometry_column");
 if ($geomField) {
 
 $sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;

@@ -1,18 +1,20 @@
 var form;
 var store;
-var onEditWMSLayer;
+//var onEditWMSLayer;
 Ext.Ajax.disableCaching = false;
 Ext.onReady(function () {
 	"use strict";
     Ext.Container.prototype.bufferResize = false;
     Ext.QuickTips.init();
     var winAdd;
+	var winAddSchema;
     var winEdit;
     var winClasses;
     var winWmsLayer;
     var fieldsForStore;
     var settings;
-    var groups;	
+	var groups;
+
     $.ajax({
         url: '/controller/tables/' + screenName + '/getcolumns/settings.geometry_columns_view',
         async: false,
@@ -29,22 +31,6 @@ Ext.onReady(function () {
         }
     });
     
-    $.ajax({
-        url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view',
-        async: false,
-        dataType: 'json',
-        type: 'GET',
-        success: function (data, textStatus, http) {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
-                    var response = eval('(' + http.responseText + ')');
-                    // JSON
-                    groups = response.data;
-                }
-            }
-        }
-    });
-
     $.ajax({
         url: '/controller/settings_viewer/' + screenName + '/get',
         async: false,
@@ -77,7 +63,7 @@ Ext.onReady(function () {
         api: {
             read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
             update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/f_table_name',
-            destroy: '/controller/tables/' + screenName + '/destroyrecord/geometry_columns/f_table_name'
+            destroy: '/controller/tables/' + screenName + '/destroyrecord/public.geometry_columns/f_table_name'
         },
         listeners: {
             //write: tableStructure.onWrite,
@@ -85,7 +71,7 @@ Ext.onReady(function () {
                 if (type === 'remote') {
                     // success is false
                     //alert(response.message);
-                    message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                    var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
                     Ext.MessageBox.show({
                         title: 'Failure',
                         msg: message,
@@ -105,7 +91,25 @@ Ext.onReady(function () {
         autoSave: true
     });
     store.load();
+	
+	var groupsStore = new Ext.data.Store({
+		reader: new Ext.data.JsonReader({
+			successProperty: 'success',
+			root: 'data'
+		},[{"name":"group"}]),
+			url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view/layergroup'
+		});
+	groupsStore.load();
+	var schemasStore = new Ext.data.Store({
+		reader: new Ext.data.JsonReader({
+			successProperty: 'success',
+			root: 'data'
+		},[{"name":"schema"}]),
+			url: '/controller/databases/' + screenName + '/getschemas'
+		});
+	schemasStore.load();
 
+   
     // create a grid to display records from the store
     var grid = new Ext.grid.EditorGridPanel({
         title: "Layers in your geocloud",
@@ -198,7 +202,7 @@ Ext.onReady(function () {
         }),
         tbar: [{
             text: 'Edit layer',
-            iconCls: 'silk-application-view-list',
+            iconCls: 'silk-pencil',
             handler: onSpatialEdit
         },
         '-', {
@@ -211,26 +215,57 @@ Ext.onReady(function () {
             iconCls: 'silk-add',
             handler: onAdd
         },
-        '-', {
+		'-',{
+            text: 'Delete layer',
+            iconCls: 'silk-delete',
+            handler: onDelete
+        },
+        '-',{
+            text:'Layers',
+            iconCls: 'silk-layers',  // <-- icon
+            menu: new Ext.menu.Menu({
+			id: 'mainMenu',
+			style: {
+				overflow: 'visible'     // For the Combo popup
+			},
+			items: [
+		{
+			text: 'Layer definition',
+			iconCls: 'silk-cog',
+			handler: onEditWMSLayer
+		},
+            {
             text: 'Styles',
             iconCls: 'silk-palette',
             handler: onEditWMSClasses
-        },
-        '-', {
+        },{
             text: 'Structure',
-            iconCls: 'silk-cog',
+            iconCls: 'silk-table',
             handler: onEdit
-        },
-        '->', {
-            text: 'Delete',
-            iconCls: 'silk-delete',
-            handler: onDelete
+        }
+        ]
+    })
+        },'->',new Ext.form.ComboBox({
+		id: "schemabox",
+        store: schemasStore,
+        displayField: 'schema',
+        editable: false,
+        mode: 'local',
+        triggerAction: 'all',
+        emptyText:'Select a cloud...',
+		value: schema,
+        width:135
+    }),
+        '-', {
+            text: 'Add new schema',
+            iconCls: 'silk-add',
+            handler: onAddSchema
         }],
         listeners: {
             // rowdblclick: mapPreview
         }
     });
-
+	Ext.getCmp("schemabox").on('select', function(e){window.location="/store/" + screenName + "/" + e.value});
     function onDelete() {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
@@ -322,6 +357,93 @@ Ext.onReady(function () {
         });
 
         winAdd.show(this);
+    }
+	var schemaForm = new Ext.FormPanel({
+            labelWidth: 100,
+            // label settings here cascade unless overridden
+            frame: false,
+            border: false,
+            region: 'center',
+            //title: 'More layer settings',
+            id: "schemaform",
+            bodyStyle: 'padding: 10px 10px 0 10px;',
+            items: [
+            {
+                width: 300,
+                xtype: 'textfield',
+                fieldLabel: 'New schema',
+                name: 'schema'
+            }],
+            buttons: [{
+                iconCls: 'silk-add',
+                text: 'Add',
+                handler: function () {
+                    if (schemaForm.form.isValid()) {
+                        
+                     
+                        schemaForm.getForm().submit({
+                            url: '/controller/databases/' + screenName + '/addschema',
+							waitMsg: 'Saving Data...',
+                            submitEmptyText: false,
+                            success: function () {
+                                schemasStore.reload();
+								Ext.MessageBox.show({
+                                    title: 'Success!',
+                                    msg: 'Settings updated',
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 300,
+                                    height: 300
+                                });
+                            },
+                            failure: function(form, action) {
+								var result = action.result;
+								 Ext.MessageBox.show({
+                        title: 'Failure',
+                        msg: result.message,
+                        buttons: Ext.MessageBox.OK,
+                        width: 300,
+                        height: 300
+                    });
+							
+								}
+                        });
+                    } else {
+                        var s = '';
+                        Ext.iterate(schemaForm.form.getValues(), function (key, value) {
+                            s += String.format("{0} = {1}<br />", key, value);
+                        },
+                        this);
+                        //Ext.example.msg('Form Values', s);
+                    }
+                }
+            }]
+        });
+	function onAddSchema(btn, ev) {
+        winAddSchema = null;
+        var p = new Ext.Panel({
+            id: "newschemapanel",
+            frame: false,
+            //width: 500,
+            //height: 400,
+            layout: 'border',
+            items: [new Ext.Panel({
+                region: "center"
+            })]
+        });
+
+        winAddSchema = new Ext.Window({
+            title: 'Add new schema',
+            layout: 'fit',
+            modal: true,
+            width: 500,
+            height: 350,
+            closeAction: 'close',
+            plain: true,
+            items: [schemaForm]
+            
+        });
+
+        winAddSchema.show(this);
     }
 
     function onSpatialEdit(btn, ev) {
@@ -488,7 +610,7 @@ Ext.onReady(function () {
         });
         winClasses.show(this);
     }
-    onEditWMSLayer = function (btn, ev) {
+     function onEditWMSLayer(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
             Ext.MessageBox.show({
@@ -583,10 +705,10 @@ Ext.onReady(function () {
             editable: true,
             //fieldLabel: 'Type',
             name: 'layergroup',
-            displayField: 'layergroup',
-            valueField: 'layergroup',
+            displayField: 'group',
+            valueField: 'group',
             allowBlank: true,
-            store: groups,
+            store: groupsStore,
             value: r.data.layergroup
         }],
             buttons: [{
@@ -607,6 +729,7 @@ Ext.onReady(function () {
                             params: param,
                             success: function () {
                                 store.reload();
+								groupsStore.load();
                                 Ext.MessageBox.show({
                                     title: 'Success!',
                                     msg: 'Settings updated',

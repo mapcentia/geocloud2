@@ -15,6 +15,20 @@ class databases extends postgis {
 			return false;
 		}
     }
+	public function createSchema($name)
+	{
+		$sql = "CREATE SCHEMA ".$this->toAscii($name,NULL,"_");
+		$this -> execQuery($sql);
+		if (!$this->PDOerror) {
+			$response['success'] = true;
+			$response['message'] = "Schema created";
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror[0];
+		}
+		return $response;
+	}
     public function createdb($screenName)
 	{
         //$this->createUser($screenName);
@@ -51,6 +65,22 @@ class databases extends postgis {
 		if (!$this->PDOerror) {
 			while ($row = $this->fetchRow($result,"assoc")) {
 				$arr[] = $row['datname'];
+	 		}
+	 		$response['success'] = true;
+	 		$response['data'] = $arr;
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror;
+		}
+		return $response;
+	}
+	public function listAllSchemas(){
+		$sql = "SELECT schema_name from information_schema.schemata WHERE schema_name not like 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema'";
+		$result = $this->execQuery($sql);
+		if (!$this->PDOerror) {
+			while ($row = $this->fetchRow($result,"assoc")) {
+				$arr[] = array("schema"=>$row['schema_name']);
 	 		}
 	 		$response['success'] = true;
 	 		$response['data'] = $arr;

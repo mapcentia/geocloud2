@@ -81,7 +81,7 @@ class table extends postgis {
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			while ($row = $this->fetchRow($result,"assoc")) {
-				$arr[] = $row[$field];
+				$arr[] = array("group"=>$row[$field]);
 			}
 			$response['success'] = true;
 			$response['data'] = $arr;
@@ -112,7 +112,7 @@ class table extends postgis {
 	function destroyRecord($recordId,$keyName) // Geometry columns
 	{
 		$sql = "BEGIN;";
-		$sql.= "DELETE FROM \"{$this -> table}\" WHERE {$keyName}='{$recordId}';";
+		$sql.= "DELETE FROM {$this -> table} WHERE {$keyName}='{$recordId}';";
 		$sql.= "DROP TABLE {$recordId} CASCADE;"; // Also drop table
 		$sql.= "COMMIT;";
 		//echo $sql;
@@ -122,7 +122,7 @@ class table extends postgis {
 		}
 		else {
 			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
+			$response['message'] = $sql;
 		}
 		return $response;
 	}
@@ -147,33 +147,32 @@ class table extends postgis {
 			$sql.= " WHERE {$where}";
 			if ($whereClause) {
 				$sql.=" AND {$whereClause}";
+				// Explode whereClause for insert
 				$tmp = explode("=",$whereClause);// We asume that whereClause is key=value;
 				$keyArr[] = $tmp[0];
 				$valueArr[] = $tmp[1];
 			}
 			$result = $this -> execQuery($sql,"PDO","transaction");
 			// If row does not exits, insert instead
-			if (!$result){
+			if ((!$result) && (!$this->PDOerror)){
 				$sql = "INSERT INTO {$this -> table} ({$keyName},".implode(",",$keyArr).") VALUES({$keyValue},".implode(",",$valueArr).")";
 				$result = $this -> execQuery($sql,"PDO","transaction");
-				$response['operation'] = "inserted";
-				//fb($sql);
+				$response['operation'] = "Row inserted";
+			}
+			if (!$this->PDOerror) {
+				$response['success'] = true;
+				$response['message'] = "Row updated";
 			}
 			else {
-				$response['operation'] = "updated";
+				$response['success'] = false;
+				$response['message'] = $sql;
 			}
 			unset($pairArr);
 			unset($keyArr);
 			unset($valueArr);
 		}
-		if ($result) {
-			$response['success'] = true;
-			$response['message'] = "Row updated";
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $sql;
-		}
+		
+		
 		return $response;
 	}
 	function getColumnsForExtGridAndStore() // All tables

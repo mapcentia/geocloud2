@@ -124,7 +124,6 @@ class postgis
 	}
 	function getMetaData($table)
 	{
-		// Earlier version of php5 can't handle schemas in  pg_meta_data. We set SEARCH_PATH instead
 		$this->connect("PG");
 
 		preg_match ("/^[\w'-]*\./",$table,$matches);
@@ -134,17 +133,14 @@ class postgis
 		$_table = $matches[0];
 
 		if (!$_schema) {
-			$this->execQuery("SET SEARCH_PATH TO ".$this->postgisschema,"PG");
-			$arr = pg_meta_data($this->db,$table);
+			$_schema = $this->postgisschema;
 		}
-		else {
-			if(version_compare(PHP_VERSION, '5.3.0') >= 0) { // If running 5.3 then use schema.table
-				$arr = pg_meta_data($this->db,$table);
-			}
-			else { // if running below 5.3 then set SEARCH_PATH and use just table without schema
-				$this->execQuery("SET SEARCH_PATH TO ".str_replace(".","",$_schema),"PG");
-				$arr = pg_meta_data($this->db,$_table);
-			}
+		if (version_compare(PHP_VERSION, '5.3.0') >= 0) { // If running 5.3 then use schema.table
+			$arr = pg_meta_data($this->db,str_replace(".","",$_schema).".".$_table);
+		}
+		else { // if running below 5.3 then set SEARCH_PATH and use just table without schema
+			$this->execQuery("SET SEARCH_PATH TO ".str_replace(".","",$_schema),"PG");
+			$arr = pg_meta_data($this->db,$_table);
 		}
 		$this->close();
 		return ($arr);
@@ -168,15 +164,19 @@ class postgis
 		switch ($type){
 			case "PG":
 				$this->db = pg_connect($this -> connectString());
-				if ($this->postgisschema) $this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
+				if ($this->postgisschema) {
+					$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
+				}
 				break;
 			case "PDO":
 				try {
 					$this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
-					if ($this->postgisschema) $this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
+					if ($this->postgisschema) {
+						$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
+					}
+					$this->execQuery("set client_encoding='utf8'","PDO");
 				}
-				catch(PDOException $e)
-				{
+				catch(PDOException $e) {
 					$this->db=NULL;
 					throw new Exception("Could not connect to database {$this->postgisdb}");
 				}
@@ -197,7 +197,19 @@ class postgis
 	}
 	function getGeometryColumns($table,$field)
 	{
-		$query = "select * from settings.geometry_columns_view where f_table_name='$table'";
+		preg_match ("/^[\w'-]*\./",$table,$matches);
+		$_schema = $matches[0];
+
+		preg_match ("/[\w'-]*$/",$table,$matches);
+		$_table = $matches[0];
+
+		if (!$_schema) {
+			$_schema = $this->postgisschema;
+		}
+		else {
+			$_schema = str_replace(".","",$_schema);
+		}
+		$query = "select * from settings.geometry_columns_view where f_table_name='$table' AND f_table_schema='$_schema'";
 	
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);

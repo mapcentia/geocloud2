@@ -88,12 +88,7 @@ wmsClasses.init = function (table, screenName) {
             text: 'Add',
             iconCls: 'silk-add',
             handler: wmsClasses.onAdd
-        }, '->',
-		{
-			text: 'Theme column and stuff',
-			iconCls: 'silk-save',
-			handler: onEditWMSLayer
-		}],
+        }],
         listeners: {
             rowdblclick: onSelectClass
         }
