@@ -8,7 +8,7 @@ header("Content-type: image/png");
 
 	$controlObject = & new control(TRUE,FALSE);
 
-	$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}.map",$controlObject);
+	$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}_{$_SESSION['schema']}.map",$controlObject);
 	$controlObject -> setMapscriptObject($mapscriptObject);
 
 	if ($_REQUEST['layer']) $_REQUEST['layers'] = $_REQUEST['layer'];

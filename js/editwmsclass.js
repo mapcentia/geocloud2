@@ -230,16 +230,19 @@ wmsClass.init = function (id) {
                 var id = Ext.getCmp("configStore");
                 var source = grid.getSource();
                 //source.id  = wmsClass.classId;
-                var jsonDataStr = null;
-                jsonDataStr = Ext.encode(source);
+                //var jsonDataStr = null;
+                //jsonDataStr = Ext.encode(source);
+				var param = {
+                            data: source
+                        };
+				param = Ext.util.JSON.encode(param);
                 
                 var requestCg = {
                     url: '/controller/classes/' + screenName + '/update/' + wmsClasses.table + '/' + wmsClass.classId,
-                    method: 'post',
-                    params: {
-                        data: jsonDataStr
-                    },
-                    timeout: 120000,
+                    params: param,
+					headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
                     callback: function (options, success, http) {
                         var response = eval('(' + http.responseText + ')');
 						wmsClasses.store.load();

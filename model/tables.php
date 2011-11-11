@@ -152,6 +152,7 @@ class table extends postgis {
 				$keyArr[] = $tmp[0];
 				$valueArr[] = $tmp[1];
 			}
+
 			$result = $this -> execQuery($sql,"PDO","transaction");
 			// If row does not exits, insert instead
 			if ((!$result) && (!$this->PDOerror)){

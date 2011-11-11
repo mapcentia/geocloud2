@@ -37,7 +37,7 @@ httpAuth.form = new Ext.FormPanel({
                     });
                 }
             }
-        }],
+        }]
         //html: "Set password for WFS http authentication"
     });
 httpAuth.onSubmit = function (form, action) {

@@ -54,7 +54,7 @@ addShape.init = function () {
             xtype: 'numberfield',
             name: 'srid',
             fieldLabel: 'Projection',
-            emptyText: 'Choose EPSG number',
+            emptyText: 'Choose EPSG number'
         }, {
             xtype: 'fileuploadfield',
             id: 'form-shp',

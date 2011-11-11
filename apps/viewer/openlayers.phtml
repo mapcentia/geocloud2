@@ -4,6 +4,7 @@ include_once("functions.php");
 include("inc/uri_parts.php");
 $_SESSION['screen_name'] = $parts[4];
 $postgisschema = $parts[5];
+//$_SESSION['schema'] = $parts[5];
 $postgisdb = $_SESSION['screen_name'];
 
 
@@ -18,7 +19,7 @@ function microtime_float()
 $startTime = microtime_float();
 include_once("../../conf/main.php");
 include_once("../../wfs/explodefilter.php");
-include "../../libs/PEAR/XML/Parser.php";
+//include "../../libs/PEAR/XML/Parser.php";
 include "../../libs/PEAR/XML/Unserializer.php";
 include "../../libs/PEAR/XML/Serializer.php";
 $srs = "900913";
@@ -26,6 +27,8 @@ $postgisObject = new postgis();
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <style type="text/css">
 #map {
 	width: 100%;
@@ -332,7 +335,7 @@ echo "maxyFromFilter = 20037508;";
                 }
             )
 	);
-	/*
+	
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
 		sphericalMercator: true
@@ -349,7 +352,7 @@ echo "maxyFromFilter = 20037508;";
 		type: G_NORMAL_MAP,
 		sphericalMercator: true
 	}));
-	*/
+	
 	vectors = new OpenLayers.Layer.Vector("Vector Layer");
  
             map.addLayers([vectors]);
@@ -714,12 +717,14 @@ var options = {
   //types: ['establishment']
 };
 var autocomplete = new google.maps.places.Autocomplete(input, options);
-    console.log(autocomplete.getBounds());
+    //console.log(autocomplete.getBounds());
 
 google.maps.event.addListener(autocomplete, 'place_changed', function() {
   var place = autocomplete.getPlace();
-  console.log(place);
-  var p = transformPoint(place.geometry.location.Qa,place.geometry.location.Pa,"EPSG:4326","EPSG:900913")
+  //console.log(place);
+  //console.log(place.geometry.location.lat());
+ 
+  var p = transformPoint(place.geometry.location.lng(),place.geometry.location.lat(),"EPSG:4326","EPSG:900913")
  var point = new OpenLayers.LonLat(p.x,p.y);
   map.setCenter(point,15);
 try {placeMarkers.destroy()} catch(e){};

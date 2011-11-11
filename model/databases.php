@@ -34,10 +34,10 @@ class databases extends postgis {
         //$this->createUser($screenName);
 
 		$sql = "CREATE DATABASE {$screenName}
-			WITH ENCODING='SQL_ASCII'
+			WITH ENCODING='LATIN1'
        			OWNER=postgres
-       			TEMPLATE=mhoegh
-       			LC_CTYPE='C'
+       			TEMPLATE=webatlasodeumcom
+       			LC_CTYPE='en_DK.ISO-8859-1'
        			CONNECTION LIMIT=-1;
 			";
 		$this -> execQuery($sql);

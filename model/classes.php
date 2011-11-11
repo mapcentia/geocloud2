@@ -66,6 +66,8 @@ class _class extends postgis {
 		return $response;
 	}
 	public function store($data) {
+		// First we replace unicode escape sequence
+		$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
 		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
@@ -86,7 +88,7 @@ class _class extends postgis {
 	}
 	public function update($id,$data) {
 		$classes = $this->getAll();
-		$classes['data'][$id] = json_decode($data);
+		$classes['data'][$id] = $data;
 		//print_r($classes['data']);
 		$response = $this->store(json_encode($classes['data']));
 		return $response;
@@ -105,7 +107,11 @@ class _class extends postgis {
 		return $response;
 	}
 }
-   function casttoclass($class, $object)
+function casttoclass($class, $object)
     {
       return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
     }
+function replace_unicode_escape_sequence($match) {
+    return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
+}
+

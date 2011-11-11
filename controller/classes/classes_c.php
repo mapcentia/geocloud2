@@ -18,16 +18,16 @@ switch ($parts[4]){
 		$response = $class -> get($parts[6]);
 	break;
 	case "update":
-		$response = $class -> update($parts[6],$_POST['data']);
-		//makeMapFile($_SESSION['screen_name']);
+		$response = $class -> update($parts[6],$obj->data);
+		makeMapFile($_SESSION['screen_name']);
 	break;
 	case "insert":
 		$response = $class -> insert();
-		//makeMapFile($_SESSION['screen_name']);
+		makeMapFile($_SESSION['screen_name']);
 	break;
 	case "destroy":
 		$response = $class -> destroy($obj->data);
-		//makeMapFile($_SESSION['screen_name']);
+		makeMapFile($_SESSION['screen_name']);
 	break;
 }
 include_once("../server_footer.inc");

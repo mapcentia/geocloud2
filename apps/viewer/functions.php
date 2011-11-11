@@ -1773,6 +1773,7 @@ class postgis extends control
 		$__conn=$this -> connect();
 		if ($__conn)
 		{
+			pg_exec($__conn,"set client_encoding='utf8'");
 			$result = pg_exec($__conn, $query);
 			if (!$result) echo $query;
 			return ($result);
@@ -1786,7 +1787,7 @@ class postgis extends control
 			$arr = pg_meta_data($__conn, $table);
 			return ($arr);
 		}
-	}
+	} 
 	function connectString()
 	{
 		if ($this -> postgishost != "")
