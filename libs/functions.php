@@ -38,6 +38,9 @@ class postgis
 		}
 		return($row);
 		*/
+		if ($this->PDOerror){
+			throw new Exception($this->PDOerror[0]);
+		}
 		switch ($result_type) {
 			case "assoc":
 				$row = $result->fetch(PDO::FETCH_ASSOC);;
@@ -115,7 +118,7 @@ class postgis
 				}
 				catch(PDOException $e)
 				{
-					//throw new Exception($e->getMessage());
+					
 					$this->PDOerror[] = $e->getMessage();
 				}
 				return($result);

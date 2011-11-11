@@ -60,12 +60,24 @@ echo "<table>";
 $ourFileName = "../tmp/testFile.txt";
 $ourFileHandle = fopen($ourFileName, 'w');
 if ($ourFileHandle) {
-	echo "tmp dir is writeable";
+	echo "tmp dir is writeable<br/>";
 	fclose($ourFileHandle);
 	unlink($ourFileName);
 }
 else {
-	echo "tmp dir is not writeable. You must set permissions so the webserver can write in the tmp dir.";
+	echo "tmp dir is not writeable. You must set permissions so the webserver can write in the tmp dir.<br/>";
+}
+
+// We check if "wms/mapfiles" is writeable
+$ourFileName = "../wms/mapfiles/testFile.txt";
+$ourFileHandle = fopen($ourFileName, 'w');
+if ($ourFileHandle) {
+	echo "wms/mapfiles dir is writeable<br/>";
+	fclose($ourFileHandle);
+	unlink($ourFileName);
+}
+else {
+	echo "wms/mapfiles dir is not writeable. You must set permissions so the webserver can write in the wms/mapfiles dir.<br/>";
 }
 
 

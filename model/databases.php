@@ -34,10 +34,9 @@ class databases extends postgis {
         //$this->createUser($screenName);
 
 		$sql = "CREATE DATABASE {$screenName}
-			WITH ENCODING='LATIN1'
+			    WITH ENCODING='UTF8'
        			OWNER=postgres
-       			TEMPLATE=webatlasodeumcom
-       			LC_CTYPE='en_DK.ISO-8859-1'
+       			TEMPLATE=template_mygeocloud
        			CONNECTION LIMIT=-1;
 			";
 		$this -> execQuery($sql);
