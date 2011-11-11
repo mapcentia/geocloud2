@@ -1,7 +1,7 @@
 <?php 
 include_once("server_header.inc");
 
-$postgisdb = $_SESSION['screen_name'];
+
 
 $width = $_REQUEST['width'];
 $height = $_REQUEST['height'];
@@ -17,7 +17,7 @@ $controlObject = new control(true);
 $controlObject -> doNotUseWMS = true;
 $postgisObject -> setControlObject($controlObject);
 
-$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$_SESSION['screen_name']}_{$_SESSION['schema']}.map",$controlObject);
+$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$postgisdb}_{$postgisschema}.map",$controlObject);
 $controlObject -> setMapscriptObject($mapscriptObject);
 
 $controlObject -> viewRegion($_REQUEST['extent']);

@@ -14,6 +14,18 @@ try {
 }
 
 $conn->begin();
+//Try to drop schema
+/*
+$result = $conn->execQuery("DROP SCHEMA settings CASCADE","PDO","transaction");
+if (!$conn->PDOerror[0]) {
+	echo "Schema dropped<br/>";
+}
+else {
+	echo "Something went wrong; {$conn->PDOerror[0]}";
+	$conn->rollback();
+}
+*/
+
 //Try to create schema
 $result = $conn->execQuery($sqls['schema'],"PDO","transaction");
 if (!$conn->PDOerror[0]) {

@@ -786,9 +786,9 @@ Ext.onReady(function () {
         },
         items: [new Ext.Panel({
 				frame: false,
-        border: false,
+        		border: false,
 				bodyStyle: 'padding: 7px 7px 10px 7px;',
-				html: "hej"
+				contentEl: "map-settings"
 			}),{
             width: 20,
             xtype: 'combo',
@@ -843,8 +843,8 @@ Ext.onReady(function () {
         },
         items: [
 		httpAuth.form,
-		viewerSettings.form
-				,
+		viewerSettings.form,
+				
 		{
             title: 'WFS stuff',
             border: false,
@@ -852,7 +852,7 @@ Ext.onReady(function () {
                 background: '#ffffff',
                 padding: '7px'
             },
-            html: '<table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://alpha.mygeocloud.com/wfs/' + screenName + '" size="55"/></td></tr></tbody></table><table border="0"><tbody><tr><td>If you want to use another projection than the default add an EPSG code to the url like:</td></tr><tr><td><input type="text" readonly="readonly" value="http://alpha.mygeocloud.com/wfs/' + screenName + '/4326" size="55"/></td></tr></tbody></table>'
+            contentEl: "wfs-dialog" 
         },
         {
             title: 'WMS stuff',
@@ -861,7 +861,7 @@ Ext.onReady(function () {
                 background: '#ffffff',
                 padding: '7px'
             },
-            html: '<table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://alpha.mygeocloud.com/wms/' + screenName + '/" size="55"/></td></tr></tbody></table>'
+            contentEl: "wms-dialog"
 
         }]
     });

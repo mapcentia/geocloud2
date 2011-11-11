@@ -2,7 +2,10 @@
 session_start();
 include_once("../../../conf/main.php");
 include("../inc/uri_parts.php");
-$_SESSION['screen_name'] = $parts[5];
+
+$postgisdb = $parts[5];
+$postgisschema = $parts[6];
+
 
 switch($_REQUEST['type'])
 {

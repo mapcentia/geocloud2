@@ -15,7 +15,7 @@ httpAuth.form = new Ext.FormPanel({
 				frame: false,
         border: false,
 				bodyStyle: 'padding: 7px 7px 10px 7px;',
-				html: "hej"
+				contentEl: document.getElementById("authentication")
 			}),{
             xtype: 'textfield',
 			inputType:'password',

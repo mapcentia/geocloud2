@@ -1,11 +1,9 @@
 <?php
-session_start();
+
 include_once("functions.php");
 include("inc/uri_parts.php");
-$_SESSION['screen_name'] = $parts[4];
 $postgisschema = $parts[5];
-//$_SESSION['schema'] = $parts[5];
-$postgisdb = $_SESSION['screen_name'];
+$postgisdb = $parts[4];
 
 
 include '../../libs/FirePHPCore/FirePHP.class.php';
@@ -273,7 +271,7 @@ echo "maxyFromFilter = 20037508;";
 				argument: "Ups"
 			};
 			var param = 'lan=<?php echo $_REQUEST["lan"];?>&proj=<?php echo $proj; ?>&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + layerStr + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
-			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/query/<?php echo $_SESSION['screen_name'];?>", callback, param);
+			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/query/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>", callback, param);
 		}
 	}
     })
@@ -437,7 +435,7 @@ echo "maxyFromFilter = 20037508;";
     }
     function addLegend(layers) {
 		var param = 'layers=' + layers + '&type=json&lan=<?php echo $_REQUEST["lan"];?>';
-		document.getElementById("legend_img").src = "/apps/viewer/servers/legend/<?php echo $_SESSION['screen_name'];?>?" + param;
+		document.getElementById("legend_img").src = "/apps/viewer/servers/legend/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>?" + param;
     }
    
     function trim(s) {

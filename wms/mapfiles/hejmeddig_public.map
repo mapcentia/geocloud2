@@ -4,7 +4,7 @@
 	  #
 	  NAME "hejmeddig"
 	  STATUS on
-	  	  #EXTENT -180 -90 180 90
+	  	  #EXTENT    
 	  	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"
@@ -129,10 +129,10 @@ END
 	  #
 		  
 	  LAYER
-		NAME "public.test"
+		NAME "public.hej"
 		STATUS off
-		DATA "the_geom from public.test"
-				TYPE LINE
+		DATA "the_geom from public.hej"
+				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=hejmeddig host=127.0.0.1"
 		
@@ -143,22 +143,21 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "test"
+		  "wms_title"    "hej"
 		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
-		  "wms_name"    "test"
+		  "wms_name"    "hej"
 		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
                   "appformap_group"  "Default group"
 		  "appformap_queryable"    "true"
       		  "appformap_loader"    "true"
-			  "appformap_query_buffer" "100"
-		END
+			  		END
 		PROJECTION
 		  "init=epsg:4326" 
 		END
 				CLASS
 		  #NAME
-		  NAME 'New style'
+		  NAME 'ÆØå'
 		  
 		  #EXPRESSION
 		  		  
@@ -166,7 +165,7 @@ END
 			  #SYMBOL
 			  			  
 			  #WIDTH
-			  WIDTH 3
+			  WIDTH 1
 				
 			  #COLOR
 			  COLOR 255 0 0

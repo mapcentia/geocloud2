@@ -129,10 +129,10 @@ END
 	  #
 		  
 	  LAYER
-		NAME "public.test"
+		NAME "sdghgsd.hovss"
 		STATUS off
-		DATA "the_geom from public.test"
-				TYPE LINE
+		DATA "the_geom from sdghgsd.hovss"
+				TYPE POLYGON
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=hejmeddig host=127.0.0.1"
 		
@@ -143,9 +143,9 @@ END
 		
 		#LABELMAXSCALE
 		METADATA
-		  "wms_title"    "test"
+		  "wms_title"    "hovss"
 		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
-		  "wms_name"    "test"
+		  "wms_name"    "hovss"
 		  "wms_abstract"    ""
 		  "wms_format"    "image/png"
                   "appformap_group"  "Default group"
@@ -155,5 +155,92 @@ END
 		PROJECTION
 		  "init=epsg:4326" 
 		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "public.hej"
+		STATUS off
+		DATA "the_geom from public.hej"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=hejmeddig host=127.0.0.1"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "hej"
+		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
+		  "wms_name"    "hej"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'ÆØå'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
 			  END #Layer
 		END #MapFile
