@@ -1,4 +1,21 @@
 Ext.namespace('tableStructure');
+Ext.namespace('Ext.ux.grid');
+Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
+    processEvent : function(name, e, grid, rowIndex, colIndex){
+        if (name == 'click'/*'mousedown'*/) {
+            var record = grid.store.getAt(rowIndex);
+            record.set(this.dataIndex, !record.data[this.dataIndex]);
+            return false;
+        } else {
+            return Ext.ux.grid.CheckColumn/*Ext.grid.ActionColumn*/.superclass.processEvent.apply(this, arguments);
+        }
+    },
+    renderer : function(v, p, record){
+        p.css += ' x-grid3-check-col-td'; 
+        return String.format('<div class="x-grid3-check-col{0}"> </div>', v ? '-on' : '');
+    },
+    init: Ext.emptyFn
+});
 tableStructure.init = function (table,screenName) {
 	tableStructure.reader = new Ext.data.JsonReader({
 		totalProperty: 'total',
@@ -67,6 +84,8 @@ tableStructure.init = function (table,screenName) {
 		//autoExpandColumn: "desc",
 		height: 345,
 		//width: 750,
+		ddGroup:'mygridDD',
+		enableDragDrop: true,
 		viewConfig: {
 			forceFit: true
 		},
@@ -113,13 +132,64 @@ tableStructure.init = function (table,screenName) {
 					allowBlank: true
 				})
 			},
-			{
-				            xtype: 'checkcolumn',
+			{				id: "querable",
+							//xtype: 'checkcolumn',
+							editor: new Ext.ux.grid.CheckColumn({}),
+				            
 				            header: 'querable',
 				            dataIndex: 'querable',
 				            width: 55
 				}]
 		}),
+		listeners: {
+		
+"render": {
+  scope: this,
+		fn: function(grid) {
+
+      // Enable sorting Rows via Drag & Drop
+      // this drop target listens for a row drop
+      //  and handles rearranging the rows
+
+              var ddrow = new Ext.dd.DropTarget(grid.container, {
+                  ddGroup : 'mygridDD',
+                  copy:false,
+                  notifyDrop : function(dd, e, data){
+
+                      var ds = grid.store;
+
+                      // NOTE:
+                      // you may need to make an ajax call here
+                      // to send the new order
+              // and then reload the store
+
+
+                      // alternatively, you can handle the changes
+                      // in the order of the row as demonstrated below
+
+                        // ***************************************
+						
+                        var sm = grid.getSelectionModel();
+                        var rows = sm.getSelections();
+                        if(dd.getDragData(e)) {
+                            var cindex=dd.getDragData(e).rowIndex;
+                            if(typeof(cindex) != "undefined") {
+                                for(i = 0; i <  rows.length; i++) {
+                                ds.remove(ds.getById(rows[i].id));
+                                }
+                                ds.insert(cindex,data.selections);
+                                sm.clearSelections();
+                             }
+                         }
+						
+                        // ************************************
+                      }
+                   }) 
+
+                   // load the grid store
+                  //  after the grid has been rendered
+                  //store.load();
+       }}},
 		tbar: [
 		{
 			text: 'Delete',

@@ -66,12 +66,16 @@ class table extends postgis {
 				$sql.=" WHERE {$whereClause}";
 		}
 		$result = $this -> execQuery($sql);
+		$check = array();
 		while ($row = $this->fetchRow($result,"assoc")) {
 			$arr = array();
-			foreach ($row as $key => $value) {
-				$arr = $this -> array_push_assoc($arr,$key,$value);
+			if(!in_array($row['f_table_name'],$check)){ // If more geometry columns we only return the first one.
+				foreach ($row as $key => $value) {
+					$arr = $this -> array_push_assoc($arr,$key,$value);
+				}
+				$check[] = $row['f_table_name'];
+				$response['data'][] = $arr;
 			}
-			$response['data'][] = $arr;
 		}
 		return $response;
 	}

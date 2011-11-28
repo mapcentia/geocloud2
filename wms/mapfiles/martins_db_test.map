@@ -25,7 +25,7 @@
 		  "wms_srs"    "EPSG:900913 EPSG:4326"
 		  "wms_name"    "martins_db"
 		  "wms_format"    "image/png"
-		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/martins_db/public/"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/martins_db/test/"
 		  
 		END
 	  END
@@ -127,4 +127,62 @@ END
 	  #
 	  # Start of layers
 	  #
+		  
+	  LAYER
+		NAME "test.silke"
+		STATUS off
+		DATA "the_geom from test.silke"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=martins_db host=127.0.0.1"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "silke"
+		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
+		  "wms_name"    "silke"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
 		END #MapFile

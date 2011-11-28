@@ -2,7 +2,7 @@
 	  # 
 	  # Start of map file
 	  #
-	  NAME "martins_db"
+	  NAME "_17815520686"
 	  STATUS on
 	  	  #EXTENT -180 -90 180 90
 	  	  EXTENT -180 -90 180 90
@@ -21,11 +21,11 @@
 		IMAGEPATH "/var/www/mygeocloud/tmp"
   		IMAGEURL "http://beta.mygeocloud.com/tmp"
 		METADATA
-		  "wms_title"    "martins_db's awesome WMS"
+		  "wms_title"    "_17815520686's awesome WMS"
 		  "wms_srs"    "EPSG:900913 EPSG:4326"
-		  "wms_name"    "martins_db"
+		  "wms_name"    "_17815520686"
 		  "wms_format"    "image/png"
-		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/martins_db/public/"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/_17815520686/xzcz/"
 		  
 		END
 	  END
@@ -127,4 +127,63 @@ END
 	  #
 	  # Start of layers
 	  #
+		  
+	  LAYER
+		NAME "public.ways"
+		STATUS off
+		DATA "linestring from public.ways"
+				TYPE LINE
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=_17815520686 host=127.0.0.1"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "OSM"
+		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
+		  "wms_name"    "ways"
+		  "wms_abstract"    "sddfdf"
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  "appformap_query_buffer" "100"
+		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'OSM'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 3
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
 		END #MapFile

@@ -39,7 +39,7 @@ class postgis
 		return($row);
 		*/
 		if ($this->PDOerror){
-			throw new Exception($this->PDOerror[0]);
+			//throw new Exception($this->PDOerror[0]);
 		}
 		switch ($result_type) {
 			case "assoc":
@@ -57,7 +57,7 @@ class postgis
 		$num = sizeof($result);
 		return ($num);
 	}
-	function free(& $result)
+	function free($result)
 	{
 		//$test=pg_free_result($result);
 		$result = NULL; //PDO
@@ -219,8 +219,9 @@ class postgis
 		if (!$row)
 		return $languageText[selectText];
 		elseif ($row) $this -> theGeometry = $row[type];
-		if ($field == 'f_geometry_column')
-		return $row[f_geometry_column];
+		if ($field == 'f_geometry_column') {
+			return $row[f_geometry_column];
+		}
 		if ($field == 'srid') {
 			return $row['srid'];
 		}
@@ -272,6 +273,7 @@ class logfile {
 			return false;
 		}
 */
+
 	}
 }
 class color {

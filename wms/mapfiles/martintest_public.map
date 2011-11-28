@@ -2,9 +2,9 @@
 	  # 
 	  # Start of map file
 	  #
-	  NAME "martins_db"
+	  NAME "martintest"
 	  STATUS on
-	  	  #EXTENT -180 -90 180 90
+	  	  #EXTENT 793723.11917108 7530575.0077067 1249899.3038953 7857113.9924824
 	  	  EXTENT -180 -90 180 90
 	  SIZE 2000 1500 
 	  #SYMBOLSET "../etc/symbols.sym"
@@ -21,11 +21,11 @@
 		IMAGEPATH "/var/www/mygeocloud/tmp"
   		IMAGEURL "http://beta.mygeocloud.com/tmp"
 		METADATA
-		  "wms_title"    "martins_db's awesome WMS"
+		  "wms_title"    "martintest's awesome WMS"
 		  "wms_srs"    "EPSG:900913 EPSG:4326"
-		  "wms_name"    "martins_db"
+		  "wms_name"    "martintest"
 		  "wms_format"    "image/png"
-		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/martins_db/public/"
+		  "wms_onlineresource"	"http://beta.mygeocloud.com/wms/martintest/public/"
 		  
 		END
 	  END
@@ -127,4 +127,62 @@ END
 	  #
 	  # Start of layers
 	  #
+		  
+	  LAYER
+		NAME "public.test"
+		STATUS off
+		DATA "the_geom from public.test"
+				TYPE POLYGON
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=martintest host=127.0.0.1"
+		
+		#CLASSITEM
+		
+		#LABELITEM
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "test"
+		  "wms_srs"    "EPSG:4326 EPSG:EPSG:900913"
+		  "wms_name"    "test"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  WIDTH 1
+				
+			  #COLOR
+			  COLOR 255 0 0
+			  
+			  #OUTLINECOLOR
+			  OUTLINECOLOR 255 0 0
+			  
+			  #SIZE
+			  SIZE 2
+			  
+			  #OVERLAYSYMBOL "circle"
+			  #OVERLAYOUTLINECOLOR 204 106 9
+			  #OVERLAYSIZE 3
+		  END # style
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
 		END #MapFile

@@ -2,6 +2,7 @@ var form;
 var store;
 //var onEditWMSLayer;
 Ext.Ajax.disableCaching = false;
+
 Ext.onReady(function () {
 	"use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -331,7 +332,7 @@ Ext.onReady(function () {
             },
             '-', {
                 text: 'GML',
-                disabled: true,
+                disabled: false,
                 //iconCls: 'silk-add',
                 tooltip: "Coming in beta",
                 handler: function () {

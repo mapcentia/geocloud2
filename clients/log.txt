@@ -1,138 +1,24 @@
 ******* START: *******
-Monday 28th of February 2011 09:11:38 PM GML fetched. Monday 28th of February 2011 09:11:38 PM GML serialized
-Monday 28th of February 2011 09:11:38 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Error in #1
-ROLLBACK
-insert into martin (test,the_geom) values('hej2','SRID=25832;MULTIPOLYGON(((800525 500025,500550 500050,500575 500025,500525 500025)),((900525 500050,500525 500075,500550 500075,500550 500050,500525 500050)))')
-Script terminated
-******* START: *******
-Monday 28th of February 2011 09:16:53 PM GML fetched. Monday 28th of February 2011 09:16:53 PM GML serialized
-Monday 28th of February 2011 09:16:53 PM GML geometry converted to WKT geometry (MULTIPOINT)
-Error in #0
-ROLLBACK
-insert into martin (fid,gid,id,the_geom) values('1','1','1','SRID=25832;MULTIPOINT((2123134.155844486318529 9842354.767754117026925),(2175716.492588635999709 9797515.314921298995614))')
-Script terminated
-******* START: *******
-Monday 28th of February 2011 09:18:22 PM GML fetched. Monday 28th of February 2011 09:18:22 PM GML serialized
-Monday 28th of February 2011 09:18:22 PM GML geometry converted to WKT geometry (MULTIPOINT)
-Monday 28th of February 2011 09:18:22 PM 2 features loaded in table 'martin'
-Memory used: 2,018,536 bytes
+Saturday 26th of November 2011 03:58:14 PM GML fetched. Saturday 26th of November 2011 03:58:14 PM GML serialized
+Saturday 26th of November 2011 03:58:14 PM 0 features loaded in table 'martin'
+Memory used: 1,257,000 bytes
 ******** END:martin ********
 
 ******* START: *******
-Monday 28th of February 2011 09:18:23 PM GML fetched. Monday 28th of February 2011 09:18:23 PM GML serialized
-Monday 28th of February 2011 09:18:23 PM GML geometry converted to WKT geometry (MULTIPOINT)
-Monday 28th of February 2011 09:18:23 PM 2 features loaded in table 'martin'
-Memory used: 2,018,536 bytes
+Saturday 26th of November 2011 04:00:07 PM GML fetched. Saturday 26th of November 2011 04:00:07 PM GML serialized
+Saturday 26th of November 2011 04:00:07 PM 0 features loaded in table 'martin'
+Memory used: 1,257,000 bytes
 ******** END:martin ********
 
 ******* START: *******
-Monday 28th of February 2011 09:20:35 PM GML fetched. Monday 28th of February 2011 09:20:35 PM GML serialized
-Monday 28th of February 2011 09:20:35 PM GML geometry converted to WKT geometry (MULTIPOINT)
-Monday 28th of February 2011 09:20:35 PM 2 features loaded in table 'martin'
-Memory used: 2,018,396 bytes
+Saturday 26th of November 2011 04:00:22 PM GML fetched. Saturday 26th of November 2011 04:00:22 PM GML serialized
+Saturday 26th of November 2011 04:00:22 PM 0 features loaded in table 'martin'
+Memory used: 1,257,000 bytes
 ******** END:martin ********
 
 ******* START: *******
-Monday 28th of February 2011 09:21:51 PM GML fetched. Monday 28th of February 2011 09:21:51 PM GML serialized
-Monday 28th of February 2011 09:21:51 PM 0 features loaded in table 'martin'
-Memory used: 2,010,748 bytes
-******** END:martin ********
-
-******* START: *******
-Monday 28th of February 2011 09:21:53 PM GML fetched. Monday 28th of February 2011 09:21:53 PM GML serialized
-Monday 28th of February 2011 09:21:53 PM 0 features loaded in table 'martin'
-Memory used: 2,010,712 bytes
-******** END:martin ********
-
-******* START: *******
-Monday 28th of February 2011 09:22:00 PM GML fetched. Monday 28th of February 2011 09:22:00 PM GML serialized
-Monday 28th of February 2011 09:22:01 PM 0 features loaded in table 'martin'
-Memory used: 2,010,748 bytes
-******** END:martin ********
-
-******* START: *******
-Monday 28th of February 2011 09:22:59 PM GML fetched. Monday 28th of February 2011 09:22:59 PM GML serialized
-Monday 28th of February 2011 09:22:59 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Monday 28th of February 2011 09:22:59 PM 246 features loaded in table 'martin'
-Memory used: 4,574,332 bytes
-******** END:martin ********
-
-******* START: *******
-Monday 28th of February 2011 11:05:07 PM GML fetched. Monday 28th of February 2011 11:05:07 PM GML serialized
-Monday 28th of February 2011 11:05:07 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Monday 28th of February 2011 11:05:08 PM 247 features loaded in table 'martin'
-Memory used: 4,646,604 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:41:48 PM GML fetched. Tuesday 1st of March 2011 09:41:48 PM GML serialized
-Tuesday 1st of March 2011 09:41:48 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Error in #0
-ROLLBACK
-insert into martin (fid,planid,the_geom) values('3','1117573','SRID=25832;MULTIPOLYGON(((1119117.959693500772119 7554328.09879491198808,1119140.587816552259028 7554324.526232214644551,1119182.01982283918187 7554342.41336367931217,1119206.764502934645861 7554333.373292407020926,1119229.679558285279199 7554303.173731311224401,1119236.811350030824542 7554230.447734294459224,1118991.514852525433525 7554134.760190251283348,1118957.531706281937659 7554114.697647398337722,1118903.837016238830984 7554351.09752200730145,1118948.970636485144496 7554355.243751671165228,1119027.39044334855862 7554368.6094761332497,1119105.810516673605889 7554381.974420880898833,1119117.959693500772119 7554328.09879491198808)))')
-Script terminated
-******* START: *******
-Tuesday 1st of March 2011 09:42:07 PM GML fetched. Tuesday 1st of March 2011 09:42:07 PM GML serialized
-Tuesday 1st of March 2011 09:42:07 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Error in #0
-ROLLBACK
-insert into martin (fid,planid,the_geom) values('3','1117573','SRID=25832;MULTIPOLYGON(((1119117.959693500772119 7554328.09879491198808,1119140.587816552259028 7554324.526232214644551,1119182.01982283918187 7554342.41336367931217,1119206.764502934645861 7554333.373292407020926,1119229.679558285279199 7554303.173731311224401,1119236.811350030824542 7554230.447734294459224,1118991.514852525433525 7554134.760190251283348,1118957.531706281937659 7554114.697647398337722,1118903.837016238830984 7554351.09752200730145,1118948.970636485144496 7554355.243751671165228,1119027.39044334855862 7554368.6094761332497,1119105.810516673605889 7554381.974420880898833,1119117.959693500772119 7554328.09879491198808)))')
-Script terminated
-******* START: *******
-Tuesday 1st of March 2011 09:42:14 PM GML fetched. Tuesday 1st of March 2011 09:42:14 PM GML serialized
-Tuesday 1st of March 2011 09:42:15 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Error in #0
-ROLLBACK
-insert into martin (fid,planid,the_geom) values('3','1117573','SRID=25832;MULTIPOLYGON(((1119117.959693500772119 7554328.09879491198808,1119140.587816552259028 7554324.526232214644551,1119182.01982283918187 7554342.41336367931217,1119206.764502934645861 7554333.373292407020926,1119229.679558285279199 7554303.173731311224401,1119236.811350030824542 7554230.447734294459224,1118991.514852525433525 7554134.760190251283348,1118957.531706281937659 7554114.697647398337722,1118903.837016238830984 7554351.09752200730145,1118948.970636485144496 7554355.243751671165228,1119027.39044334855862 7554368.6094761332497,1119105.810516673605889 7554381.974420880898833,1119117.959693500772119 7554328.09879491198808)))')
-Script terminated
-******* START: *******
-Tuesday 1st of March 2011 09:43:43 PM GML fetched. Tuesday 1st of March 2011 09:43:43 PM GML serialized
-Tuesday 1st of March 2011 09:43:43 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Error in #0
-ROLLBACK
-insert into martin (fid,planid,the_geom) values('3','1117573','SRID=25832;MULTIPOLYGON(((1119117.959693500772119 7554328.09879491198808,1119140.587816552259028 7554324.526232214644551,1119182.01982283918187 7554342.41336367931217,1119206.764502934645861 7554333.373292407020926,1119229.679558285279199 7554303.173731311224401,1119236.811350030824542 7554230.447734294459224,1118991.514852525433525 7554134.760190251283348,1118957.531706281937659 7554114.697647398337722,1118903.837016238830984 7554351.09752200730145,1118948.970636485144496 7554355.243751671165228,1119027.39044334855862 7554368.6094761332497,1119105.810516673605889 7554381.974420880898833,1119117.959693500772119 7554328.09879491198808)))')
-Script terminated
-******* START: *******
-Tuesday 1st of March 2011 09:44:43 PM GML fetched. Tuesday 1st of March 2011 09:44:43 PM GML serialized
-Tuesday 1st of March 2011 09:44:43 PM 0 features loaded in table 'martin'
-Memory used: 745,992 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:45:07 PM GML fetched. Tuesday 1st of March 2011 09:45:07 PM GML serialized
-Tuesday 1st of March 2011 09:45:07 PM 0 features loaded in table 'martin'
-Memory used: 739,672 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:45:13 PM GML fetched. Tuesday 1st of March 2011 09:45:13 PM GML serialized
-Tuesday 1st of March 2011 09:45:13 PM 0 features loaded in table 'martin'
-Memory used: 739,672 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:45:48 PM GML fetched. Tuesday 1st of March 2011 09:45:48 PM GML serialized
-Tuesday 1st of March 2011 09:45:48 PM 0 features loaded in table 'martin'
-Memory used: 740,764 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:45:52 PM GML fetched. Tuesday 1st of March 2011 09:45:52 PM GML serialized
-Tuesday 1st of March 2011 09:45:52 PM 0 features loaded in table 'martin'
-Memory used: 740,764 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:46:20 PM GML fetched. Tuesday 1st of March 2011 09:46:20 PM GML serialized
-Tuesday 1st of March 2011 09:46:20 PM 0 features loaded in table 'martin'
-Memory used: 740,764 bytes
-******** END:martin ********
-
-******* START: *******
-Tuesday 1st of March 2011 09:46:40 PM GML fetched. Tuesday 1st of March 2011 09:46:40 PM GML serialized
-Tuesday 1st of March 2011 09:46:40 PM GML geometry converted to WKT geometry (MULTIPOLYGON)
-Tuesday 1st of March 2011 09:46:40 PM 1 features loaded in table 'martin'
-Memory used: 759,112 bytes
+Saturday 26th of November 2011 04:01:31 PM GML fetched. Saturday 26th of November 2011 04:01:31 PM GML serialized
+Saturday 26th of November 2011 04:01:31 PM 0 features loaded in table 'martin'
+Memory used: 1,257,000 bytes
 ******** END:martin ********
 

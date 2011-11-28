@@ -26,8 +26,6 @@ if(move_uploaded_file($_FILES['dbf']['tmp_name'], $file.".dbf")) {
 if(move_uploaded_file($_FILES['shx']['tmp_name'], $file.".shx")) {
 } else{$response['uploaded'] = false;}
 
- 
-
 if ($response['uploaded']) {
 	$shapeFile = new shapefile($SafeFile,$_REQUEST['srid'],$file,$_REQUEST['pdo']);
 	$response = $shapeFile->loadInDb();

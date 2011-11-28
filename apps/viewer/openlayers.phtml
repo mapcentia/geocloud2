@@ -1,6 +1,5 @@
 <?php
-
-include_once("functions.php");
+include_once("../../libs/functions.php");
 include("inc/uri_parts.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
@@ -47,15 +46,7 @@ body {
 	position: absolute;
 }
 </style>
-<?php
-include_once("../../libs/yui/phploader/phploader/loader.php");
-$loader = new YAHOO_util_Loader("2.8.0");
-$loader->allowRollups = false;
-$loader->combine = true;
-$loader->load("yahoo", "dom", "event", "utilities", "resize", "fonts", "button", "container");
-echo $loader->tags();
-//$_REQUEST['popup'] = "false";
-?>
+
 
 <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
@@ -80,9 +71,6 @@ echo $loader->tags();
 	src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"
 	type="text/javascript"></script>
 
-
-
-
 <script type="text/javascript">
 		var layer;
 		var newLayerStrArr = [];
@@ -104,6 +92,7 @@ echo $loader->tags();
         var autocomplete; 
         var placeMarkers;
         var placePopup;
+		var restrictedBounds;
 		
 		function osm_getTileURL(bounds) {
             var res = this.map.getResolution();
@@ -123,12 +112,7 @@ echo $loader->tags();
 
 <?php
 $_REQUEST['signaturoff']="true";
-$width = 400;
-$height = 400;
-$controlObject = & new control(TRUE,FALSE);
-$controlObject->doNotUseWMS=true;
-if ($mapfileUrl) $mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
-$controlObject -> setMapscriptObject($mapscriptObject);
+
 if ($_REQUEST['popuppage']) {
     $popupPage = $_REQUEST['popuppage'];
 }
@@ -146,7 +130,7 @@ if ($_REQUEST['filter'])
 	$unserializer = new XML_Unserializer($unserializer_options);
 	$status = $unserializer->unserialize(urldecode($filterKeyValue[1]));
 	$filterArr = $unserializer->getUnserializedData();
-	$postgisObject = new postgis();
+	
 	$filter.= " AND ".parseFilter($filterArr,$filterKeyValue[0]);
 	$query = "SELECT xmin(extent(transform(the_geom,{$srs}))) as minx, ymin(extent(transform(the_geom,{$srs}))) as miny, xmax(extent(transform(the_geom,{$srs}))) as maxx, ymax(extent(transform(the_geom,{$srs}))) as maxy FROM {$filterKeyValue[0]} WHERE ".$filter;
 	//echo "<!-- TEST {$query} -->\n";
@@ -205,7 +189,7 @@ $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
 $table = $response['data']['default_extent'];
 
-$geomField = $postgisObject->getGeometryColumns("public.".$table,"f_geometry_column");
+$geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
 if ($geomField) {
 
 $sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
@@ -225,13 +209,12 @@ echo "minyFromFilter = -20037508;";
 echo "maxyFromFilter = 20037508;";
 
 }
+print_r($postgisObject->PDOerror);
 // End setting extent from layer
 
 ?>
+restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter);
     layerStr = trim(newLayerStrArr.join(";"));
-
-    //var restrictedBounds = new OpenLayers.Bounds.fromString('-20037508, -20037508, 20037508, 20037508');
-
     OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
         defaultHandlerOptions: {
             'single': true,
@@ -265,13 +248,36 @@ echo "maxyFromFilter = 20037508;";
 			popup = new OpenLayers.Popup.FramedCloud("result",coords,null,"<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>",null, true);
 			map.addPopup(popup)
 			mapSize = map.getSize();
-			var callback = {
-				success:handlerOpenlayersDbQuery,
-				failure:alert,
-				argument: "Ups"
-			};
-			var param = 'lan=<?php echo $_REQUEST["lan"];?>&proj=<?php echo $proj; ?>&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + layerStr + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h;
-			var request = YAHOO.util.Connect.asyncRequest('POST', "/apps/viewer/servers/query/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>", callback, param);
+			Ext.Ajax.request({
+                            url: '/apps/viewer/servers/query/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>',
+                            headers: {
+                                
+                                
+                                //'Content-Type': 'application/json; charset=utf-8'
+                            },
+                            params: 'lan=<?php echo $_REQUEST["lan"];?>&proj=<?php echo $proj; ?>&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + layerStr + '&type=json&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
+                            success: function(http) {
+		if (http.status == 200) {
+			var response = eval('(' + http.responseText + ')');// JSON
+			if (response.html!=false) {
+				document.getElementById("queryResult").innerHTML= response.html;
+				resultHtml = response.html; // Global var
+			}
+			else {
+				document.getElementById("queryResult").innerHTML= "Found nothing";
+			}
+			
+				//addGraphicLayer("Resultat",response.overlayMapimageUrl,response.extent);
+			vectors.removeAllFeatures();
+			map.raiseLayer(vectors,10);
+			for ( var i=0; i<response.renderGeometryArray.length; ++i ){
+				deserialize(response.renderGeometryArray[i][0]);
+				}
+			renderGeometryArray = response.renderGeometryArray; // Global var
+		}
+	}
+                            //failure: test
+                        });
 		}
 	}
     })
@@ -310,32 +316,28 @@ echo "maxyFromFilter = 20037508;";
 		new OpenLayers.Control.PanZoomBar(),
 		new OpenLayers.Control.Navigation({'zoomWheelEnabled': false}),
 		new OpenLayers.Control.LayerSwitcher()],
-                'numZoomLevels':20,
-		'projection': new OpenLayers.Projection("EPSG:900913"),
-		'maxResolution': 156543.0339,
-		'units': "m",
+                //numZoomLevels:10,
+		projection: new OpenLayers.Projection("EPSG:900913"),
+		maxResolution: 156543.0339,
+		units: "m",
+		maxExtent: restrictedBounds,
+		minResolution: "auto",
                  eventListeners: {"changelayer": mapLayerChanged}}
         );
         //map.projection="EPSG:<?= $proj ?>";
 	//map.maxResolution="auto";
         
-	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
+	//map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
+	
+	
 
 	var base = [];
-	base.push(
-	new OpenLayers.Layer.TMS(
-                "OpenStreetMap (Mapnik)",
-                "http://tile.openstreetmap.org/",
-                {
-                    type: 'png', getURL: osm_getTileURL,
-                    displayOutsideMaxExtent: true,
-                    attribution: '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
-                }
-            )
-	);
+	
 	
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
+		minZoomLevel: 1,
+		maxZoomLevel: 10,
 		sphericalMercator: true
 	}));
 	base.push(new OpenLayers.Layer.Google("Google Satellite", {
@@ -350,6 +352,17 @@ echo "maxyFromFilter = 20037508;";
 		type: G_NORMAL_MAP,
 		sphericalMercator: true
 	}));
+	base.push(
+	new OpenLayers.Layer.TMS(
+                "OpenStreetMap (Mapnik)",
+                "http://tile.openstreetmap.org/",
+                {
+                    type: 'png', getURL: osm_getTileURL,
+                    displayOutsideMaxExtent: true,
+                    attribution: '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
+                }
+            )
+	);
 	
 	vectors = new OpenLayers.Layer.Vector("Vector Layer");
  
@@ -365,7 +378,7 @@ echo "maxyFromFilter = 20037508;";
         }
         addLegend(layerStr);
         
-        //Start p� url zoom sdsd
+        //Start paa url zoom sdsd
 		<?php
 		if ($_REQUEST['bounds']) {
 			$boundsArr = explode(",",$_REQUEST['bounds']); 
@@ -379,12 +392,9 @@ echo "maxyFromFilter = 20037508;";
 
        // map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
         
- 
-	//map.restrictedExtent = restrictedBounds;
           var click = new OpenLayers.Control.Click();
         map.addControl(click);
         click.activate();
-        
         
     }
     var layerArr =[]
@@ -465,45 +475,6 @@ echo "maxyFromFilter = 20037508;";
         document.printForm.target="";
         document.printForm.action="<? echo $_SERVER['PHP_SELF']; ?>";
     }
-	handlerLegend = function(http)
-    {
-		if (http.status == 200) {
-			var response = eval('(' + http.responseText + ')');// JSON
-			if (response.url!=false) {
-				document.getElementById("legend_img").src= response.url;
-			}
-		}
-    }
-	handlerOpenlayersDbQuery = function(http)
-	{
-		if (http.status == 200) {
-			var response = eval('(' + http.responseText + ')');// JSON
-			if (response.html!=false) {
-				document.getElementById("queryResult").innerHTML= response.html;
-				resultHtml = response.html; // Global var
-			}
-			else {
-				document.getElementById("queryResult").innerHTML= "Found nothing";
-			}
-			
-				//addGraphicLayer("Resultat",response.overlayMapimageUrl,response.extent);
-			vectors.removeAllFeatures();
-			map.raiseLayer(vectors,10);
-			for ( var i=0; i<response.renderGeometryArray.length; ++i ){
-				deserialize(response.renderGeometryArray[i][0]);
-				}
-			renderGeometryArray = response.renderGeometryArray; // Global var
-		}
-	}
-	handlerLegend = function(http)
-	{
-		if (http.status == 200) {
-			var response = eval('(' + http.responseText + ')');// JSON
-			if (response.url!=false) {
-					document.getElementById("legend_img").src= response.url;
-			}
-		}
-	}
 	
 	function openMapWin(page,width,height)
 	{
@@ -696,9 +667,13 @@ new Ext.Viewport({
 
 var mapPanel = Ext.getCmp("mappanel");
 
+
 if (minxFromFilter!=0) {
 	//alert('test');
-	map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));
+	
+	//map.zoomToExtent(restrictedBounds);
+	map.restrictedExtent = restrictedBounds;
+	
 }
 
 
