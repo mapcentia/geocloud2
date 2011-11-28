@@ -85,7 +85,7 @@ tableStructure.init = function (table,screenName) {
 		height: 345,
 		//width: 750,
 		ddGroup:'mygridDD',
-		enableDragDrop: true,
+		enableDragDrop: false,
 		viewConfig: {
 			forceFit: true
 		},
@@ -133,8 +133,8 @@ tableStructure.init = function (table,screenName) {
 				})
 			},
 			{				id: "querable",
-							//xtype: 'checkcolumn',
-							editor: new Ext.ux.grid.CheckColumn({}),
+							xtype: 'checkcolumn',
+							//editor: new Ext.ux.grid.CheckColumn({}),
 				            
 				            header: 'querable',
 				            dataIndex: 'querable',

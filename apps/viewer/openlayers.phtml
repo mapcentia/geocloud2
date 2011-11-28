@@ -4,7 +4,6 @@ include("inc/uri_parts.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
 
-
 include '../../libs/FirePHPCore/FirePHP.class.php';
 include '../../libs/FirePHPCore/fb.php';
 
@@ -21,6 +20,7 @@ include "../../libs/PEAR/XML/Unserializer.php";
 include "../../libs/PEAR/XML/Serializer.php";
 $srs = "900913";
 $postgisObject = new postgis();
+$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$postgisschema}/";
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -161,26 +161,27 @@ if (!$_REQUEST['zoom'])
 $openLayers['bounds'] = str_replace(" ",",",$openLayers['bounds']);
 $openLayers['restricted'] = str_replace(" ",",",$openLayers['restricted']);
 
-$layers = explode(";",$_REQUEST['layers']);
-//for ($i = 0; $i < sizeof($layers); $i++)
-$u = 0;
-for ($i = 0; $i < sizeof($layers); $i++)
-{
-        $bits = explode(",",$layers[$i]);
 
-        if ($bits[0]) {
-                echo "conf[$u] = ['$bits[0]','$bits[1]']\n";
-                $mapscriptObject -> setStatus($bits[0],"on");
-                $layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
-                echo "conf[$u][2] ='".$layerObj -> getMetaData("appformap_opacity")."'\n";
-                echo "conf[$u][3] ='".$layerObj -> getMetaData("wms_title")."'\n";
-                echo "conf[$u][4] ='".$bits[1]."'\n";
-                $u++;
-                // Only default visible layers i layerStr
-                if (!$bits[1]) {
-                	echo "newLayerStrArr.push('$bits[0]');\n";
-                }
-	}
+include("../../model/tables.php");
+include("controller/wmslayers_c.php");
+$layers = explode(";",$_REQUEST['layers']);
+for($i = 0; $i < sizeof($layers); $i++){
+        $bits = explode(",",$layers[$i]);
+ 				foreach($response['data'] as $arr) {
+					if ($arr['f_table_name']==$bits[0]) {
+						$bits[0] = $postgisschema.".".$bits[0];
+						echo "conf[$u] = ['$bits[0]','$bits[1]']\n";
+						echo "conf[$u][2] ='".$arr['appformap_opacity']."'\n";
+						echo "conf[$u][3] ='".$arr['f_table_title']."'\n";
+						echo "conf[$u][4] ='".$bits[1]."'\n";
+						$u++;
+						
+						// Only default visible layers i layerStr
+						if (!$bits[1]) {
+							echo "newLayerStrArr.push('$bits[0]');\n";
+						}
+					}
+				}
 }
 
 // Set extent from layer
@@ -316,18 +317,16 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		new OpenLayers.Control.PanZoomBar(),
 		new OpenLayers.Control.Navigation({'zoomWheelEnabled': false}),
 		new OpenLayers.Control.LayerSwitcher()],
-                //numZoomLevels:10,
+                numZoomLevels:20,
 		projection: new OpenLayers.Projection("EPSG:900913"),
 		maxResolution: 156543.0339,
 		units: "m",
-		maxExtent: restrictedBounds,
-		minResolution: "auto",
-                 eventListeners: {"changelayer": mapLayerChanged}}
+		//maxExtent: restrictedBounds,
+		//minResolution: "auto",
+                eventListeners: {"changelayer": mapLayerChanged}}
         );
-        //map.projection="EPSG:<?= $proj ?>";
-	//map.maxResolution="auto";
         
-	//map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
+	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
 	
 	
 
@@ -336,8 +335,8 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
-		minZoomLevel: 1,
-		maxZoomLevel: 10,
+		//minZoomLevel: 1,
+		//maxZoomLevel: 10,
 		sphericalMercator: true
 	}));
 	base.push(new OpenLayers.Layer.Google("Google Satellite", {
@@ -670,9 +669,9 @@ var mapPanel = Ext.getCmp("mappanel");
 
 if (minxFromFilter!=0) {
 	//alert('test');
-	
+map.zoomToExtent(new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter));	
 	//map.zoomToExtent(restrictedBounds);
-	map.restrictedExtent = restrictedBounds;
+//	map.restrictedExtent = restrictedBounds;
 	
 }
 
@@ -732,5 +731,3 @@ function transformPoint(lat,lon,s,d) {
 
 
 </html>
-
-

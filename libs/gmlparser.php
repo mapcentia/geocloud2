@@ -89,7 +89,7 @@ class GmlParser extends postgis
 						$this -> arr['fields'][] = $fieldsStr;
 						$this -> arr['values'][] = $valuesStr;
 						$this -> arr['geom'][] = current($wktArr[0]);
-						$this -> arr['srid'][] = current($wktArr[1]);
+						$this -> arr['srid'][] = gmlConverter::parseEpsgCode(current($wktArr[1]));
 
 						// Reset vars
 						$fields = array();
@@ -138,7 +138,7 @@ class GmlParser extends postgis
 	}
 	function loadInDB($tableName)
 	{
-
+		//print_r($this -> arr);
 		if ($this -> arr) {
 			//print_r($this->arr);
 			//First we try to drop table
@@ -153,12 +153,13 @@ class GmlParser extends postgis
 			//Last we create the new table.Must use schema prefix cos search path include public
 			$createSql = "
 			CREATE TABLE ".$this->postgisschema.".".$tableName." (
-			gid serial NOT NULL,
+			gid serial NOT NULL PRIMARY KEY,
 			".$this -> strForSql."  character varying,
 			the_geom geometry,
 			CONSTRAINT \"$1\" CHECK ((srid(the_geom) = {$this->arr['srid'][0]})),
 			CONSTRAINT \"$2\" CHECK (((geometrytype(the_geom) = '".$this -> geomType."'::text) OR (the_geom IS NULL)))
-			);";
+			);
+			";
 			
 			//echo $createSql."\n";
 

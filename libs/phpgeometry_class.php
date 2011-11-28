@@ -1317,8 +1317,10 @@ class gmlConverter
 	}
 	function parseEpsgCode($epsg)
 	{
-		if (strtoupper(substr($epsg, 0, 5)=="EPSG:")) $epsg=substr($epsg, 5,strlen($epsg));
-		return $epsg;
+		//if (strtoupper(substr($epsg, 0, 5)=="EPSG:")) $epsg=substr($epsg, 5,strlen($epsg));
+		preg_match_all("/[0-9]*$/",$epsg,$arr);
+        $clean=$arr[0][0];
+		return $clean;
 	}
 	function oneLineXML($gml)
 	{
@@ -1330,4 +1332,3 @@ class gmlConverter
 		return($gml);
 	}
 }
-?>
