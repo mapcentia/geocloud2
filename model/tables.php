@@ -226,6 +226,7 @@ class table extends postgis {
 				$arr = $this -> array_push_assoc($arr,"column",$key);
 				$arr = $this -> array_push_assoc($arr,"querable",$fieldconfArr[$key]->querable);
 				$arr = $this -> array_push_assoc($arr,"alias",$fieldconfArr[$key]->alias);
+				$arr = $this -> array_push_assoc($arr,"link",$fieldconfArr[$key]->link);
 				if ($value['type']['type']=="decimal") {
 					$arr = $this -> array_push_assoc($arr,"type","{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
 				}

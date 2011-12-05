@@ -1036,5 +1036,5 @@ function makeExceptionReport($value)
 	die();
 }
 $data = ob_get_clean();
-//logfile::write($data);
+logfile::write($data);
 echo $data;

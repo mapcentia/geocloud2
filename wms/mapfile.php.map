@@ -43,9 +43,12 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  UNITS METERS
 	  INTERLACE OFF
 	  OUTPUTFORMAT
-	  	NAME "AGG"
-	  	DRIVER AGG/PNG
-	  	IMAGEMODE RGB
+		  NAME "png"
+		  DRIVER AGG/PNG
+		  MIMETYPE "image/png"
+		  IMAGEMODE RGB
+		  EXTENSION "png"
+		  FORMATOPTION "GAMMA=0.75"
 	  END
 	  WEB
 		IMAGEPATH "<?php echo $_SERVER["DOCUMENT_ROOT"]."/tmp";?>"
@@ -198,11 +201,17 @@ END
 					$type = "LINE";
 					break;
 				}
-		?>
+		if (!$row['wmssource']) { ?>
 		TYPE <?php echo $type."\n";?>
 		CONNECTIONTYPE POSTGIS
 		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?>"
-		
+		<?php } 
+		else {?>
+		TYPE RASTER
+		CONNECTIONTYPE WMS
+		CONNECTION "<?php echo $row['wmssource'];?>"
+		<?php }?>
+		 
 		#CLASSITEM
 		<?php if($layerArr['data'][0]['theme_column']) echo "CLASSITEM '".$layerArr['data'][0]['theme_column']."'\n";?>
 
@@ -213,7 +222,7 @@ END
 		#LABELMAXSCALE
 		METADATA
 		  "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name']?>"
-		  "wms_srs"    "EPSG:<?php echo $row['srid'];?> EPSG:EPSG:<?php echo $srs;?>"
+		  "wms_srs"    "EPSG:<?php echo $row['srid'];?>"
 		  "wms_name"    "<?php echo $row['f_table_name'];?>"
 		  "wms_abstract"    "<?php echo $row['f_table_abstract'];?>"
 		  "wms_format"    "image/png"

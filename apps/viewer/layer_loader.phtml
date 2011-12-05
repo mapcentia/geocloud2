@@ -42,13 +42,6 @@ var arr = str.split(";");
 var lat;
 var lon;
 var defaultLayers = "";
-$(top.mapframe.document).ready(function() 
-	{
-	//	str = top.mapframe.layerStr + ";";
-			//alert("Loaded");
-       // callback(this);
-    });
-
 function loadLayer(i,name,title,table,opacity,connectionString,e){
 	var newArr = [];
  	top.mapframe.popupOn = true;
@@ -61,17 +54,14 @@ function loadLayer(i,name,title,table,opacity,connectionString,e){
 		top.mapframe.removeLayer(name);
 		arr.splice(i,1,0);
 	}
-	
 	str = top.mapframe.trim(arr.join(";"));
 	top.mapframe.layerStr = str + defaultLayers;
 	top.mapframe.addLegend(str + defaultLayers);
 
 }
 function addEmbedStr() {
-	
-	var lonLat = top.mapframe.map.getCenter();
-
-	var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
+var lonLat = top.mapframe.map.getCenter();
+var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
 	
 	
 	var mapBounds = top.mapframe.map.getExtent();
@@ -99,33 +89,35 @@ include("inc/uri_parts.php");
 ini_set("display_errors", "On");
 error_reporting(3);
 
+include("inc/uri_parts.php");
+$postgisschema = $parts[5];
+$postgisdb = $parts[4];
+
+$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$postgisschema}/";
+
 $doNotLoadArr = array();
-$width = 400;
-$height = 400;
 
 include_once("../../conf/main.php");
-include_once("functions.php");
-//include_once("libs/phpgeometry_class.php");
+include_once("libs/functions.php");
+include("model/tables.php");
+include("controller/wmslayers_c.php");
 
-$controlObject = new control(TRUE,FALSE);
-$controlObject->doNotUseWMS=true;
-//$mapscriptObject = & new mapscript($layerXml,$mapfileUrl,$controlObject);
-
-$mapscriptObject = new mapscript(NULL,"{$basePath}wms/mapfiles/{$parts[4]}_{$parts[5]}.map",$controlObject);
-
-$controlObject -> setMapscriptObject($mapscriptObject);
-$layerArr = $mapscriptObject -> map -> getAllLayerNames();
-//asort($layerArr);
 $i = 0;
-foreach($layerArr as $layer)
-{
-	$layerObj = $mapscriptObject -> map -> getlayerbyname($layer);
-	if ($layerObj -> getMetaData("appformap_loader") == "true") {
-		$titles[$layer] = $layerObj -> getMetaData("wms_title");
-		$groups[$layer] = $layerObj -> getMetaData("appformap_group");
+foreach($responseWmsLayers['data'] as $arr) {
+	if ($arr['f_table_title']) {
+		$titles[$arr['f_table_name']] = $arr['f_table_title'];
+	}
+	else {
+		$titles[$arr['f_table_name']] = $arr['f_table_name'];
+	}
+	if ($arr['layergroup']) {
+		$groups[$arr['f_table_name']] = $arr['layergroup'];	
+	}
+	else {
+		$groups[$arr['f_table_name']] = "Default group";
 	}
 }
-
+//print_r($groups);
 asort($titles);
 ?>
 <script>
@@ -133,49 +125,53 @@ asort($titles);
 foreach (array_unique($groups) as $group)
 {?>
 items.push({
-        xtype: 'panel',
+	xtype: 'panel',
 	title: '<?php echo $group;?>',
-        bodyStyle: {padding: '5px'},
-        collapsible: true,
-        html: "<div><?php	
+	bodyStyle: {padding: '5px'},
+	collapsible: true,
+    html: "<div><?php	
 	echo "<div  title='{$group}'>";
 	foreach($titles as $layer=>$title)
 	{
-		$layerObj = $mapscriptObject -> map -> getlayerbyname($layer);
-		$table = $layerObj -> getMetaData("query_table");
-		$abstract = $layerObj -> getMetaData("wms_abstract");
-		$href = $layerObj -> getMetaData("wms_metadataurl_href");
-		$layerGroup = $layerObj -> getMetaData("appformap_group");
-		$opacity = $layerObj -> getMetaData("appformap_opacity");
-		$layerConnectionString = $mapscriptObject -> map -> getMetaData("wms_onlineresource");
-		if (!$table) $table = $layer;
-		if ($layerGroup == $group && ($layerGroup))
-		{
-			if (!(in_array($layer,$doNotLoadArr)) || ($_REQUEST['showcodebox']))
-			{
-				echo "<input class='layer' type='checkbox' name='$layer' id='$layer' onclick='javascript:loadLayer(".$i.",\\\"".$layer."\\\",\\\"".$title."\\\",\\\"".$table."\\\",\\\"".$opacity."\\\",\\\"".$layerConnectionString."\\\",this)'";
-				if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
-				echo "/>";
-				
-				if ($abstract) {
-					$class="class='tooltip' id='tt$layer'";
+		foreach($responseWmsLayers['data'] as $arr) {
+			if ($arr['f_table_name']==$layer) {
+				$layer = $postgisschema.".".$layer;
+				//$table = $layerObj -> getMetaData("query_table");
+				$abstract = $arr['f_table_abstract'];
+				$href = $arr['meta_url'];
+				if (!$arr['layergroup']) {
+					$arr['layergroup'] = "Default group";
 				}
-				else {
-					$class = "";
+				$layerGroup = $arr['layergroup'];
+				$opacity = 1;
+				if (!$_table) $_table = $layer;
+				if ($layerGroup == $group && ($layerGroup)) {
+					if ($arr['baselayer']!="t") {
+						echo "<input class='layer' type='checkbox' name='{$layer}' id='{$layer}' onclick='javascript:loadLayer({$i},\\\"{$layer}\\\",\\\"{$title}\\\",\\\"{$_table}\\\",\\\"{$opacity}\\\",\\\"{$layerConnectionString}\\\",this)'";
+						if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
+						echo "/>";
+						
+						if ($abstract) {
+							$class="class='tooltip' id='tt{$layer}'";
+						}
+						else {
+							$class = "";
+						}
+						$titleStr = "<span ".$class.">".$title."</span>";
+						if ($href) {
+							echo "<a target='_blank' href='".$href."'>".$titleStr."</a>";
+						}
+						else {
+							echo $titleStr;
+						}
+						echo "<br/>";
+					}
 				}
-				$titleStr = "<span ".$class.">".$title."</span>";
-				if ($href) {
-					echo "<a target='_blank' href='".$href."'>".$titleStr."</a>";
-				}
-				else {
-					echo $titleStr;
-				}
-				echo "<br/>";
+				$i++;
 			}
 		}
-		$i++;
 	}
-	echo "</div>";
+echo "</div>";
 echo "</div>\"})\n";
 }
 ?>
@@ -188,28 +184,6 @@ new Ext.Viewport({
 
 
 </script>
-<?php
-/*
- $i = 0;
- $temp = "server_$i";
- global $$temp;
- while ($$temp != "")
- {
- $temp = "server_$i";
- global $$temp;
- $serviceObject[$i] = & new service($i,$$temp,$controlObject);
- $i ++;
- }
- $controlObject -> serverCount = $i-2;
-
- for ($i = 0; $i <= $controlObject->serverCount; $i ++)
- {
-
- echo $serviceObject[$i] -> layercontrol();
-
- }
- */
-?>
 <br />
 <br />
 <div style="bottom:0px;display:<?php if ($_REQUEST['showcodebox']) {echo "inline";} else {echo "none";}?>;">

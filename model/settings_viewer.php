@@ -8,9 +8,17 @@ class Settings_viewer extends postgis {
 		$arr = $this->fetchRow($this->execQuery($sql),"assoc");
 		return (array)json_decode($arr['viewer']);
 	}
-	public function update_extent($layer){
+	public function update($post){
 		$arr = $this->getArray();
-		$arr['default_extent'] = $layer;
+		foreach($post as $key=>$value) {
+			if (!$value){
+				$value=false;
+			}
+			if (is_numeric($value)){
+				$value=(int)$value;
+			}
+			$arr[$key] = $value;
+		}
 		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
@@ -38,8 +46,11 @@ class Settings_viewer extends postgis {
 		}
 		return $response;
 	}
-	public function get() {
+	public function get($unsetPw=false) {
 		$arr = $this->getArray();
+		if ($unsetPw) {
+			unset($arr['pw']);
+		}
 		if (!$this->PDOerror) {
 	 		$response['success'] = true;
 	 		$response['data'] = $arr;
@@ -48,9 +59,7 @@ class Settings_viewer extends postgis {
 			$response['success'] = false;
 			$response['message'] = $this->PDOerror;
 		}
-		//print_r($response);
 		return $response;
-		
 	}	
 	public function encryptPw($pass) {
 		$pass=strip_tags($pass);

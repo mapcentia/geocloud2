@@ -1,14 +1,9 @@
 <?php 
 include_once("server_header.inc");
-
-
-
 $width = $_REQUEST['width'];
 $height = $_REQUEST['height'];
-
 $pg_query_function = "intersects";
-//$proj = $_REQUEST["proj"];
-$proj = "900913";
+$proj = $_REQUEST["proj"];
 
 $postgisObject = new postgis();
 $postgisObject -> pg_query_type = "point";
@@ -22,10 +17,7 @@ $controlObject -> setMapscriptObject($mapscriptObject);
 
 $controlObject -> viewRegion($_REQUEST['extent']);
 
-
 $layers = explode(";",$_REQUEST['layers']);
-
-
 
 for ($i = 0; $i < sizeof($layers); $i++)
 {
@@ -34,22 +26,23 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		
 		// We set the query vars
 		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"fieldconf"));
-
+		//print_r($fieldconfArr);
 		
 		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
-		
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) {
 				$strs[]= strtoupper($value->column);
 			}
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
+			if ($value->link) {
+				$postGisQueryContentLink[strtoupper($bits[0])]=strtoupper($value->column);
+			}
 		}
 		if (is_array($strs)) {
-		sort($strs);
-		$str = implode(",",$strs);
-		$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
+			sort($strs);
+			$str = implode(",",$strs);
+			$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
 		}
-		
 		$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
 		$queryTable = $layerObj -> getMetaData("appformap_query_table");
 		$queryable = $layerObj -> getMetaData("appformap_queryable");

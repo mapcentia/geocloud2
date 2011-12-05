@@ -262,9 +262,10 @@ class logfile {
 	 * @param unknown $the_string
 	 * @return unknown
 	 */
+
 	function write($the_string) {
-/*
-		if ( $fh = fopen("log.txt", "a+" ) ) {
+	/*
+		if ( $fh = fopen("/var/www/mygeocloud/log.txt", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
 			return true;
@@ -272,8 +273,7 @@ class logfile {
 		else {
 			return false;
 		}
-*/
-
+	*/
 	}
 }
 class color {

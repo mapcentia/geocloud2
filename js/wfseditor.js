@@ -3,7 +3,8 @@ var getvars = getUrlVars();
 var layer;
 var modifyControl;
 var grid;
-Ext.onReady(function() {
+// We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
+$(window).load(function() {
 	var map;
 	var fieldsForStore;
 	var columnsForGrid;

@@ -14,12 +14,12 @@ switch ($parts[4]){
 	case "get": // All tables
 		$response = $settings_viewer->get();
 	break;
-	case "update_extent": // All tables
-		$response = $settings_viewer->update_extent($_POST['layer']);
-		makeMapFile($_SESSION['screen_name'],$_POST['layer']);
+	case "update": // All tables
+		$response = $settings_viewer->update($_POST);
 	break;
 	case "updatepw": // All tables
 		$response = $settings_viewer->updatePw($_POST['pw']);
 	break;
+	
 }
 include_once("../server_footer.inc");

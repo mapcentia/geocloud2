@@ -45,14 +45,14 @@ include("inc/uri_parts.php");
                 layoutConfig:{
                     animate:true
                 },
-                contentEl:layers
+                contentEl:document.getElementById("layers")
             },{
                 region:'center',
                 margins:'5 5 5 0',
                 layout:'column',
                 autoScroll:false,
 		border: false,
-                contentEl:main
+                contentEl:document.getElementById("main")
                 }]
         });
     });

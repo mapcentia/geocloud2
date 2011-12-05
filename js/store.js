@@ -3,7 +3,8 @@ var store;
 //var onEditWMSLayer;
 Ext.Ajax.disableCaching = false;
 
-Ext.onReady(function () {
+// We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
+$(window).load(function () {
 	"use strict";
     Ext.Container.prototype.bufferResize = false;
     Ext.QuickTips.init();
@@ -704,14 +705,41 @@ Ext.onReady(function () {
             triggerAction: 'all',
             forceSelection: false,
             editable: true,
-            //fieldLabel: 'Type',
+            fieldLabel: 'Layer group',
             name: 'layergroup',
             displayField: 'group',
             valueField: 'group',
             allowBlank: true,
             store: groupsStore,
             value: r.data.layergroup
-        }],
+			},{
+                width: 300,
+                xtype: 'textfield',
+                fieldLabel: 'WMS source',
+                name: 'wmssource',
+                value: r.data.wmssource
+
+            }
+			, {
+        	xtype: 'combo',
+			store: new Ext.data.ArrayStore({
+				fields: ['abbr', 'action'],
+				data: [
+					[true, 'true'],
+					[false, 'false'],
+				   ]
+			}),
+			displayField: 'action',
+			valueField: 'abbr',
+			mode: 'local',
+			typeAhead: false,
+			editable: false,
+			triggerAction: 'all',
+        	name: 'baselayer',
+        	fieldLabel: 'Baselayer?',
+			value: r.data.baselayer
+        }
+		],
             buttons: [{
                 iconCls: 'silk-add',
                 text: 'Update',
@@ -779,7 +807,8 @@ Ext.onReady(function () {
         frame: false,
         border: false,
         autoHeight: false,
-        labelWidth: 1,
+        labelWidth: 100,
+		bodyStyle: 'padding: 7px 7px 10px 7px;',
         defaults: {
             anchor: '95%',
             allowBlank: false,
@@ -791,27 +820,44 @@ Ext.onReady(function () {
 				bodyStyle: 'padding: 7px 7px 10px 7px;',
 				contentEl: "map-settings"
 			}),{
-            width: 20,
+            width: 10,
             xtype: 'combo',
             mode: 'local',
             triggerAction: 'all',
             forceSelection: true,
             editable: false,
-            //fieldLabel: 'Type',
-            name: 'layer',
+            fieldLabel: 'Extent layer',
+            name: 'default_extent',
             displayField: 'f_table_name',
             valueField: 'f_table_name',
             allowBlank: true,
             store: store,
             value: settings.default_extent
 			
-        }],
+        },{
+            xtype: 'numberfield',
+            name: 'minzoomlevel',
+            fieldLabel: 'Min zoom level',
+			allowBlank: true,
+			minValue: 1,
+            maxValue: 20,
+            value: settings.minzoomlevel
+		},{
+            xtype: 'numberfield',
+            name: 'maxzoomlevel',
+            fieldLabel: 'Max zoom level',
+			allowBlank: true,
+			minValue: 1,
+            maxValue: 20,
+            value: settings.maxzoomlevel
+		}
+		],
         buttons: [{
             text: 'Update',
             handler: function () {
                 if (viewerSettings.form.getForm().isValid()) {
                     viewerSettings.form.getForm().submit({
-                        url: '/controller/settings_viewer/' + screenName + '/update_extent',
+                        url: '/controller/settings_viewer/' + screenName + '/update',
                         waitMsg: 'Saving your settings',
                         success: viewerSettings.onSubmit,
                         failure: viewerSettings.onSubmit

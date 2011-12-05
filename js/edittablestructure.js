@@ -37,6 +37,9 @@ tableStructure.init = function (table,screenName) {
 	{
 		name: 'alias',
 		allowBlank: true
+	},{
+		name: 'link',
+		allowBlank: true
 	}]);
 
 	tableStructure.writer = new Ext.data.JsonWriter({
@@ -132,14 +135,21 @@ tableStructure.init = function (table,screenName) {
 					allowBlank: true
 				})
 			},
-			{				id: "querable",
-							xtype: 'checkcolumn',
-							//editor: new Ext.ux.grid.CheckColumn({}),
-				            
-				            header: 'querable',
-				            dataIndex: 'querable',
-				            width: 55
-				}]
+			{		
+				id: "querable",
+				xtype: 'checkcolumn',
+				//editor: new Ext.ux.grid.CheckColumn({}),
+				header: 'Querable',
+				dataIndex: 'querable',
+				width: 35
+			},{		
+				id: "link",
+				xtype: 'checkcolumn',
+				//editor: new Ext.ux.grid.CheckColumn({}),
+				header: 'Link',
+				dataIndex: 'link',
+				width: 20
+			}]
 		}),
 		listeners: {
 		

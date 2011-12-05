@@ -15,9 +15,6 @@ switch($_REQUEST['type'])
 	break;
 	
 	default:
-		$status = $serializer->Serialize($response);
-		$xml=$serializer->getSerializedData();
-		echo $xml;
+		echo $json->encode($response);
 	break;
 }
-?>

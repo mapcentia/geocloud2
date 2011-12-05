@@ -167,7 +167,7 @@ if ($row['f_geometry_column']) {
 		$result2 = $postgisObject->execQuery($sql2);
 		//$srsTmp = $row['srid'];
 		$row["f_table_abstract"].= " CAN'T PROJECT LAYER";
-		//makeExceptionReport($postgisObject->PDOerror);
+		makeExceptionReport($postgisObject->PDOerror);
 		}
 
 	   
