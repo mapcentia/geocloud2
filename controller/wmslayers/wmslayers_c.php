@@ -3,7 +3,7 @@ include("../server_header.inc");
 //include("../../inc/oauthcheck.php");
 
 
-$wmslayer = new wmslayers($parts[5],$postgisschema);
+$wmslayer = new wmslayers($parts[5]);
 
 if ($HTTP_RAW_POST_DATA) {
 	$obj = json_decode($HTTP_RAW_POST_DATA);

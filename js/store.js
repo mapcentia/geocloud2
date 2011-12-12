@@ -65,7 +65,7 @@ $(window).load(function () {
         api: {
             read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
             update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/f_table_name',
-            destroy: '/controller/tables/' + screenName + '/destroyrecord/public.geometry_columns/f_table_name'
+            destroy: '/controller/tables/' + screenName + '/destroy'
         },
         listeners: {
             //write: tableStructure.onWrite,
@@ -281,6 +281,8 @@ $(window).load(function () {
         }
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
             if (btn == "yes") {
+				//console.log(record.data.f_table);
+				proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
                 return false;

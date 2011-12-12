@@ -1,18 +1,16 @@
 <?php
 class _class extends postgis {
 	var $table;
-	var $schema;
-	function __construct($table,$schema) {
+	function __construct($table) {
 		parent::__construct();
 		$this->table = $table;
-		$this->schema = $schema;
 	}
 	private function array_push_assoc($array, $key, $value){
 		$array[$key] = $value;
 		return $array;
 	}
 	public function getAll() {
-		$sql = "SELECT class FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
+		$sql = "SELECT class FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}'";
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -68,7 +66,7 @@ class _class extends postgis {
 	public function store($data) {
 		// First we replace unicode escape sequence
 		$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
-		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}';";
+		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 			$response['success'] = true;

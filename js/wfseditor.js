@@ -3,9 +3,11 @@ var getvars = getUrlVars();
 var layer;
 var modifyControl;
 var grid;
+var store;
+var map;
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function() {
-	var map;
+	
 	var fieldsForStore;
 	var columnsForGrid;
 	var type;
@@ -335,8 +337,17 @@ $(window).load(function() {
 				attributeForm.win.show();
 
 			}
-		} ];
-		var store = new GeoExt.data.FeatureStore( {
+		}, '-', {
+			text : "Feature filter",
+			handler : function() {
+				filter.win.show();
+
+			}
+		}  ];
+		store = new GeoExt.data.FeatureStore( {
+			proxy: new GeoExt.data.ProtocolProxy({
+                protocol: layer.protocol
+            }),
 			fields : fieldsForStore,
 			layer : layer,
 
@@ -377,10 +388,18 @@ $(window).load(function() {
 		});
 		if (!editable) {
 			wfsTools = [];
-		}
+		};
+		attributeForm.init(getvars['layer']);
+		
+		
+		
+		
+        
+		
 		var viewport = new Ext.Viewport( {
 			layout : 'border',
-			items : [ {
+			items : [ 
+			{
 				region : "center",
 				id : "mappanel",
 				title : "Map",
@@ -408,12 +427,13 @@ $(window).load(function() {
 		var gridPanel = Ext.getCmp("gridpanel");
 		south.doLayout();
 
-		attributeForm.init(getvars['layer']);
+		
 		attributeForm.win = new Ext.Window( {
 			title : "Update feature information",
 			modal : false,
 			layout : 'fit',
 			initCenter : false,
+			border: false,
 			x : 25,
 			y : 100,
 			width : 270,
@@ -427,7 +447,8 @@ $(window).load(function() {
 				items : [ attributeForm.form ]
 			}) ]
 		});
-		// attributeForm.win.show();
+		
+		//filter.win.show();
 		function osm_getTileURL(bounds) {
 			var res = this.map.getResolution();
 			var x = Math.round((bounds.left - this.maxExtent.left)

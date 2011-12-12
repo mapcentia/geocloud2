@@ -1,14 +1,12 @@
 <?php
 class wmslayers extends postgis {
 	var $table;
-	var $schema;
-	function __construct($table,$schema) {
+	function __construct($table) {
 		parent::__construct();
 		$this->table = $table;
-		$this->schema = $schema;
 	}
 	public function get() {
-		$sql = "SELECT def FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
+		$sql = "SELECT def FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}'";
 		$row = $this->fetchRow($this->execQuery($sql),"assoc");
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -28,10 +26,7 @@ class wmslayers extends postgis {
 		return $response;
 	}
 	public function update($data) {
-		//$def = $this->get();
-		//print_r($def);
-		
-		$sql = "UPDATE settings.geometry_columns_join SET def='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->schema}'";
+		$sql = "UPDATE settings.geometry_columns_join SET def='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}'";
 		$this->execQuery($sql,"PDO","transaction");
 		
 		if (!$this->PDOerror) {

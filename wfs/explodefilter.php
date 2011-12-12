@@ -7,9 +7,10 @@
  */
 function parseFilter($filter,$table,$operator="=") {
 	global $postgisObject;
+	global $postgisschema;
 	//global $forUseInSpatialFilter;
 	global $srs;
-	$primeryKey = $postgisObject->getPrimeryKey($table);
+	$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
 	$serializer_options = array ( 
 	   'indent' => '  ', 
 	); 

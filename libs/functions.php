@@ -93,6 +93,7 @@ class postgis
 	}
 	function execQuery($query,$conn="PDO",$queryType="select")
 	{
+		logfile::write($query."\n");
 		switch ($conn){
 			case "PG":
 				if (!$this->db) {
@@ -168,14 +169,14 @@ class postgis
 			case "PG":
 				$this->db = pg_connect($this -> connectString());
 				if ($this->postgisschema) {
-					$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
+					//$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
 				}
 				break;
 			case "PDO":
 				try {
 					$this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
 					if ($this->postgisschema) {
-						$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
+						//$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
 					}
 					$this->execQuery("set client_encoding='utf8'","PDO");
 				}
@@ -212,7 +213,7 @@ class postgis
 		else {
 			$_schema = str_replace(".","",$_schema);
 		}
-		$query = "select * from settings.geometry_columns_view where f_table_name='$table' AND f_table_schema='$_schema'";
+		$query = "select * from settings.geometry_columns_view where f_table_name='{$_table}' AND f_table_schema='{$_schema}'";
 	
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
@@ -264,7 +265,6 @@ class logfile {
 	 */
 
 	function write($the_string) {
-	/*
 		if ( $fh = fopen("/var/www/mygeocloud/log.txt", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
@@ -273,7 +273,6 @@ class logfile {
 		else {
 			return false;
 		}
-	*/
 	}
 }
 class color {

@@ -17,14 +17,20 @@ $_SESSION['screen_name'] = $parts[2];
 		</script>
 		<script type="text/javascript" src="/js/wfseditor.js">
 		</script>
-			<script type="text/javascript" src="/js/attributeform.js">
+		<script type="text/javascript" src="/js/attributeform.js">
 		</script>
+
+		<script type="text/javascript" src="/js/FilterField.js?format=txt"></script>
+		<script type="text/javascript" src="/js/FilterBuilder.js?format=txt"></script>
+		<script type="text/javascript" src="/js/ComparisonComboBox.js?format=txt"></script>
+		
 		<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"
 		type="text/javascript">
 		</script>
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 		<link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 		<link rel="stylesheet" type="text/css" href="/js/openlayers/examples/style.mobile.css"/>
+		<link rel="stylesheet" type="text/css" href="/js/extras.css?format=txt"/>
 </head>
 <body>
 	<div id="mb7"></div>

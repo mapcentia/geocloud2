@@ -24,6 +24,10 @@ switch ($parts[4]){
 		$response = $table -> destroyRecord($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);
 		break;
+	case "destroy": // Geometry columns
+		$response = $table -> destroy();
+		makeMapFile($_SESSION['screen_name']);
+		break;
 	case 'getcolumns': // All tables
 		$response = $table -> getColumnsForExtGridAndStore();
 		break;

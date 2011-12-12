@@ -25,10 +25,10 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		$bits = explode(",",$layers[$i]);
 		
 		// We set the query vars
-		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"fieldconf"));
+		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($postgisschema.".".$bits[0],"fieldconf"));
 		//print_r($fieldconfArr);
 		
-		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
+		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($postgisschema.".".$bits[0],"f_table_title");
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) {
 				$strs[]= strtoupper($value->column);

@@ -75,7 +75,7 @@ logfile::write($HTTP_RAW_POST_DATA."\n\n");
 
 $unserializer_options = array (
 	'parseAttributes' => TRUE,
-	'typeHints' => FALSE,
+	'typeHints' => FALSE
 );
 $unserializer = &new XML_Unserializer($unserializer_options);
 
@@ -185,7 +185,7 @@ $bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
 
 // Start HTTP basic authentication
 if(!$_SESSION["oauth_token"]) {
-	$auth = $postgisObject->getGeometryColumns($HTTP_FORM_VARS["TYPENAME"],"authentication");
+	$auth = $postgisObject->getGeometryColumns($postgisschema.".".$HTTP_FORM_VARS["TYPENAME"],"authentication");
 	if ($auth=="Read/write") {
 		include('../inc/http_basic_authen.php');
 	}
@@ -218,7 +218,7 @@ if (!(empty($featureids[0]))) {
 	foreach ($featureids as $featureid) {
 		$__u=explode(".", $featureid);
 		foreach ($tables as $table) {
-			$primeryKey = $postgisObject->getPrimeryKey($table);
+			$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
 			if ($table==$__u[0]) {
 				$wheresArr[$table][]="{$primeryKey['attname']}={$__u[1]}";
 			}
@@ -230,15 +230,17 @@ if (!(empty($bbox[0]))) {
 	if (!(empty($featureids[0]))) {
 		$wheres[$table].= " AND ";
 	}
-	if (!$bbox[4]) {
-		$bbox[4] = $postgisObject->getGeometryColumns($table, "srid");
-	}
-	$wheres[$table].= "intersects"
-				."(public.transform(public.GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
-				.gmlConverter::parseEpsgCode($bbox[4])
-				."),".$postgisObject->getGeometryColumns($table, "srid")."),"
-				.$postgisObject->getGeometryColumns($table, "f_geometry_column").")";
+	foreach ($tables as $table) {
+		if (!$bbox[4]) {
+			$bbox[4] = $postgisObject->getGeometryColumns($postgisschema.".".$table, "srid");
+		}
+		$wheres[$table].= "intersects"
+					."(public.transform(public.GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
+					.gmlConverter::parseEpsgCode($bbox[4])
+					."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
+					.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
 
+	}
 }
 //get the request
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
@@ -311,6 +313,7 @@ function getXSD($postgisObject) {
 	global $gmlNameSpace;
 	global $gmlNameSpaceUri;
 	global $cacheDir;
+	global $postgisschema;
 	include 'XSD.php';
 }
 
@@ -341,14 +344,15 @@ function doQuery($queryType) {
 	global $sridOfTable;
 	global $geomField;
 	global $useWktToGmlInPHP;
+	global $postgisschema;
 
 	switch ($queryType) {
 	case "Select":
 		foreach ($tables as $table) {
-			$primeryKey = $postgisObject->getPrimeryKey($table);
+			$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
 			$sql="SELECT ";
-			$sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
-			$geomField = $postgisObject->getGeometryColumns($table, "f_geometry_column");
+			$sridOfTable = $postgisObject->getGeometryColumns($postgisschema.".".$table, "srid");
+			$geomField = $postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column");
 			
 			if (!(empty($fields[$table]))) {
 				
@@ -369,7 +373,7 @@ function doQuery($queryType) {
 			$sql = $sql.implode(",",$fieldsArr[$table]).",{$primeryKey['attname']} as fid";
 			if ($srs=="") $srs=$sridOfTable;
 
-			if (!$gmlGeomFieldName[$table]) $gmlGeomFieldName[$table] = $postgisObject->getGeometryColumns($table, "f_geometry_column");
+			if (!$gmlGeomFieldName[$table]) $gmlGeomFieldName[$table] = $geomField;
 
 			if ($geomField) {
 				if ($useWktToGmlInPHP) {
@@ -381,7 +385,7 @@ function doQuery($queryType) {
 				}
 				$sql2 = "SELECT public.xmin(public.EXTENT(public.transform(".$geomField.",{$srs}))) AS TXMin,public.xmax(public.EXTENT(public.transform(".$geomField.",{$srs}))) AS TXMax, public.ymin(public.EXTENT(public.transform(".$geomField.",{$srs}))) AS TYMin,public.ymax(public.EXTENT(public.transform(".$geomField.",{$srs}))) AS TYMax ";
 			}
-			$from = " FROM ".$table;
+			$from = " FROM {$postgisschema}.{$table}";
 
 			if ((!(empty($BBox)))||(!(empty($wheres[$table])))||(!(empty($filters[$table])))) {
 				$from .= " WHERE ";
@@ -402,10 +406,6 @@ function doQuery($queryType) {
 			}
 			doSelect($table, $sql, $sql2, $from);
 		}
-		break;
-	case "Insert":
-		$sql="INSERT INTO " . $table;
-		//echo $sql;
 		break;
 	default:
 		break;
@@ -714,6 +714,7 @@ function doParse($arr)
 	global $postgisObject;
 	global $user;
 	global $version;
+	global $postgisschema;
 	//global $forUseInSpatialFilter;
 	
 	$serializer_options = array ( 
@@ -730,7 +731,7 @@ function doParse($arr)
 						foreach ($hey as $typeName => $feature)
 						{
 							if (is_array($feature)) {// Skip handles
-							$the_geom = $postgisObject->getGeometryColumns($typeName, "f_geometry_column");
+							$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$typeName, "f_geometry_column");
 							foreach ($feature as $field => $value)
 							{
 								$fields[] = $field;
@@ -759,7 +760,7 @@ function doParse($arr)
 							$value = "";
 							// Start HTTP basic authentication
 							if(!$_SESSION["oauth_token"]) {
-								$auth = $postgisObject->getGeometryColumns($typeName,"authentication");
+								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$typeName,"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
@@ -775,7 +776,7 @@ function doParse($arr)
 				}
 				$fid = 0; 
 				foreach($featureMember as $hey){
-					$the_geom = $postgisObject->getGeometryColumns($hey['typeName'], "f_geometry_column");
+					$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'], "f_geometry_column");
 					if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
 						$hey['Property'] = array(0 => $hey['Property']);
 					}
@@ -805,7 +806,7 @@ function doParse($arr)
 					$fid++;
 							// Start HTTP basic authentication
 							if(!$_SESSION["oauth_token"]) {
-								$auth = $postgisObject->getGeometryColumns($hey['typeName'],"authentication");
+								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'],"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
@@ -826,7 +827,7 @@ function doParse($arr)
 						$forSql3['wheres'][] = parseFilter($hey['Filter'],$hey['typeName']);
 						// Start HTTP basic authentication
 							if(!$_SESSION["oauth_token"]) {
-								$auth = $postgisObject->getGeometryColumns($hey['typeName'],"authentication");
+								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'],"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
@@ -843,11 +844,11 @@ function doParse($arr)
 	xmlns:ogc="http://www.opengis.net/ogc">';
 	// First we loop through inserts
 	if (sizeof($forSql['tables'])>0) for($i=0;$i<sizeof($forSql['tables']);$i++) {
-		if ($postgisObject->getGeometryColumns($forSql['tables'][$i],"editable")) {
-			$the_geom = $postgisObject->getGeometryColumns($forSql['tables'][$i], "f_geometry_column");
-			$primeryKey = $postgisObject->getPrimeryKey($forSql['tables'][$i]);
+		if ($postgisObject->getGeometryColumns($postgisschema.".".$forSql['tables'][$i],"editable")) {
+			$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$forSql['tables'][$i], "f_geometry_column");
+			$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$forSql['tables'][$i]);
 			//$metaData = $postgisObject -> getMetaData($forSql['tables'][$i]);
-			$sql = "INSERT into {$forSql['tables'][$i]} (";
+			$sql = "INSERT into {$postgisschema}.{$forSql['tables'][$i]} (";
 			foreach($forSql['fields'][$i] as $field){
 				$fields[] = "\"".$field."\"";
 			}
@@ -856,7 +857,7 @@ function doParse($arr)
 			$sql.= ") VALUES(";
 			foreach($forSql['values'][$i] as $key=>$value){
 				if (is_array($value)) {
-					$values[] = "public.transform(public.GeometryFromText('".current($value)."',".next($value)."),".$postgisObject -> getGeometryColumns($forSql['tables'][$i], "srid").")";
+					$values[] = "public.transform(public.GeometryFromText('".current($value)."',".next($value)."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql['tables'][$i], "srid").")";
 				}
 				elseif (!$value) {
 					$values[] = "NULL";
@@ -877,14 +878,14 @@ function doParse($arr)
 	// Second we loop through updates
 	if (sizeof($forSql2['tables'])>0) for($i=0;$i<sizeof($forSql2['tables']);$i++) {
 		//$metaData = $postgisObject -> getMetaData($forSql2['tables'][$i]);
-		if ($postgisObject->getGeometryColumns($forSql2['tables'][$i],"editable")) {
-		$the_geom = $postgisObject->getGeometryColumns($forSql2['tables'][$i], "f_geometry_column");
-		$primeryKey = $postgisObject->getPrimeryKey($forSql2['tables'][$i]);
-		$sql = "UPDATE {$forSql2['tables'][$i]} SET ";
+		if ($postgisObject->getGeometryColumns($postgisschema.".".$forSql2['tables'][$i],"editable")) {
+		$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$forSql2['tables'][$i], "f_geometry_column");
+		$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$forSql2['tables'][$i]);
+		$sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
 		foreach ($forSql2['fields'][$i] as $key=>$field) {
 		
 			if (is_array($forSql2['values'][$i][$key])) { // is geometry
-				$value = "public.transform(public.GeometryFromText('".current($forSql2['values'][$i][$key])."',".next($forSql2['values'][$i][$key])."),".$postgisObject -> getGeometryColumns($forSql2['tables'][$i], "srid").")";
+				$value = "public.transform(public.GeometryFromText('".current($forSql2['values'][$i][$key])."',".next($forSql2['values'][$i][$key])."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql2['tables'][$i], "srid").")";
 			}
 			elseif (!$forSql2['values'][$i][$key]) {
 				$value = "NULL";
@@ -911,8 +912,8 @@ function doParse($arr)
 	}
 	// Third we loop through deletes
 	if (sizeof($forSql3['tables'])>0) for($i=0;$i<sizeof($forSql3['tables']);$i++) {
-		if ($postgisObject->getGeometryColumns($forSql3['tables'][$i],"editable")) {
-			$sqls['delete'][]= "DELETE FROM {$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
+		if ($postgisObject->getGeometryColumns($postgisschema.".".$forSql3['tables'][$i],"editable")) {
+			$sqls['delete'][]= "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
 		}
 		else {
 			$notEditable[$forSql3['tables'][0]] = true;
@@ -1036,5 +1037,5 @@ function makeExceptionReport($value)
 	die();
 }
 $data = ob_get_clean();
-logfile::write($data);
+//logfile::write($data);
 echo $data;

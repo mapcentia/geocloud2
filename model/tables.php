@@ -1,13 +1,28 @@
 <?php
 class table extends postgis {
 	var $table;
+	var $tableWithOutSchema;
 	var $metaData;
 	var $geomField;
 	var $geomType;
 	var $exits;
 	function __construct($table)
 	{
+		logfile::write($table."\n");
 		parent::__construct();
+		
+		preg_match ("/^[\w'-]*\./",$table,$matches);
+		$_schema = $matches[0];
+
+		preg_match ("/[\w'-]*$/",$table,$matches);
+		$_table = $matches[0];
+
+		if (!$_schema) {
+			$table = $this->postgisschema.".".$table;
+		}
+		logfile::write($table."\n");
+		$this->tableWithOutSchema = $_table;
+		
 		$sql = "select 1 from {$table}";
 		$this -> execQuery($sql);
 		if ($this->PDOerror) {
@@ -99,7 +114,7 @@ class table extends postgis {
 	function destroy() // Geometry columns
 	{
 		$sql = "BEGIN;";
-		$sql.= "SELECT DropGeometryColumn('','{$this->table}','{$this->geomField}');";
+		$sql.= "SELECT DropGeometryColumn('{$this->postgisschema}','{$this->tableWithOutSchema}','{$this->geomField}');";
 		$sql.= "DROP TABLE {$this->table} CASCADE;"; // Also drop table
 		$sql.= "COMMIT;";
 		//echo $sql;
@@ -133,8 +148,8 @@ class table extends postgis {
 	function updateRecord($data,$keyName,$whereClause=NULL) // All tables
 	{
 		$data = $this->makeArray($data);
-		foreach ($data as $table) {
-			foreach($table as $key=>$value){
+		foreach ($data as $row) {
+			foreach($row as $key=>$value){
 				$value = $this->db->quote($value);
 				if ($key!=$keyName) {
 					$pairArr[] = "{$key}={$value}";
@@ -146,7 +161,7 @@ class table extends postgis {
 					$keyValue = $value;
 				}
 			}
-			$sql = "UPDATE {$this -> table} SET ";
+			$sql = "UPDATE {$this->table} SET ";
 			$sql.= implode(",",$pairArr);
 			$sql.= " WHERE {$where}";
 			if ($whereClause) {
@@ -155,15 +170,16 @@ class table extends postgis {
 				$tmp = explode("=",$whereClause);// We asume that whereClause is key=value;
 				$keyArr[] = $tmp[0];
 				$valueArr[] = $tmp[1];
+				//
 			}
-
 			$result = $this -> execQuery($sql,"PDO","transaction");
-			// If row does not exits, insert instead
+			// If row does not exits, insert instead. Move to an insert methos
 			if ((!$result) && (!$this->PDOerror)){
-				$sql = "INSERT INTO {$this -> table} ({$keyName},".implode(",",$keyArr).") VALUES({$keyValue},".implode(",",$valueArr).")";
+				$sql = "INSERT INTO {$this->table} ({$keyName},".implode(",",$keyArr).") VALUES({$keyValue},".implode(",",$valueArr).")";
 				$result = $this -> execQuery($sql,"PDO","transaction");
 				$response['operation'] = "Row inserted";
 			}
+			//
 			if (!$this->PDOerror) {
 				$response['success'] = true;
 				$response['message'] = "Row updated";
@@ -176,8 +192,6 @@ class table extends postgis {
 			unset($keyArr);
 			unset($valueArr);
 		}
-		
-		
 		return $response;
 	}
 	function getColumnsForExtGridAndStore() // All tables
@@ -256,7 +270,7 @@ class table extends postgis {
 			$fieldconfArr[$safeColumn] = $value;
 		}
 		$conf['fieldconf'] = json_encode($fieldconfArr);
-		$conf['f_table_name'] = $this->table;
+		$conf['f_table_name'] = $this->tableWithOutSchema;
 
 		$geometryColumnsObj = new table("settings.geometry_columns_join");
 		$geometryColumnsObj->updateRecord(json_decode(json_encode($conf)),"f_table_name",$whereClause);

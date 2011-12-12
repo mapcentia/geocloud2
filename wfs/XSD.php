@@ -17,7 +17,7 @@ writeTag("selfclose","xs","import",$atts,True,True);
 $atts=null;
 if (!$tables[0]){
     $tables = array();
-    $sql="SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns";
+    $sql="SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns WHERE f_table_schema='{$postgisschema}'";
     $result = $postgisObject->execQuery($sql);
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);
@@ -29,17 +29,17 @@ if (!$tables[0]){
 
 foreach($tables as $table)
 {
-	$tableObj = new table($table);
+	$tableObj = new table($postgisschema.".".$table);
 	$tableArr = (array)$tableObj;
-	$primeryKey = $postgisObject->getPrimeryKey($table);
+	$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
 
-	foreach($postgisObject -> getMetaData($table) as $key=>$value) {
+	foreach($postgisObject -> getMetaData($postgisschema.".".$table) as $key=>$value) {
 	 	if ($key!=$primeryKey['attname']) {
 			$fieldsArr[$table][] = $key;
 		}
 	}
 	$fields = implode(",",$fieldsArr[$table]);
-	$sql="SELECT '{$fields}' FROM " . $table;
+	$sql="SELECT '{$fields}' FROM " . $postgisschema.".".$table;
 	$result = $postgisObject->execQuery($sql);
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);
@@ -76,9 +76,9 @@ foreach($tables as $table)
 		//else{
 		//}
 		$selfclose=true;
-		if($atts["name"] == $postgisObject -> getGeometryColumns($table, "f_geometry_column"))
+		if($atts["name"] == $postgisObject -> getGeometryColumns($postgisschema.".".$table, "f_geometry_column"))
 		{
-			$geomType = $postgisObject -> getGeometryColumns($table, "type");
+			$geomType = $postgisObject -> getGeometryColumns($postgisschema.".".$table, "type");
 			switch ($geomType) {
 				case "POINT":
 				$atts["type"]="gml:PointPropertyType";
@@ -100,15 +100,15 @@ foreach($tables as $table)
 				break;
 			}
 		}
-		//else $atts["type"]="xs:string";
-		else unset($atts["type"]);
+		else $atts["type"]="xs:string";
+		//else unset($atts["type"]);
 		
 		$atts["minOccurs"]="0";
 		writeTag("open","xs","element",$atts,True,True);
-		if($atts["name"] != $postgisObject -> getGeometryColumns($table, "f_geometry_column")) {
-			if ($tableArr['metaData'][$hello]['type']=="number") $tableArr['metaData'][$hello]['type']="decimal";
-			echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"></xs:restriction></xs:simpleType>';
-		}
+		//if($atts["name"] != $postgisObject -> getGeometryColumns($postgisschema.".".$table, "f_geometry_column")) {
+			//if ($tableArr['metaData'][$hello]['type']=="number") $tableArr['metaData'][$hello]['type']="decimal";
+			//echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"></xs:restriction></xs:simpleType>';
+		//}
 		writeTag("close","xs","element",NULL,False,True);
 		$atts=Null;
 	}
