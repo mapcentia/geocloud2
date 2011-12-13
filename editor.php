@@ -20,9 +20,9 @@ $_SESSION['screen_name'] = $parts[2];
 		<script type="text/javascript" src="/js/attributeform.js">
 		</script>
 
-		<script type="text/javascript" src="/js/FilterField.js?format=txt"></script>
-		<script type="text/javascript" src="/js/FilterBuilder.js?format=txt"></script>
-		<script type="text/javascript" src="/js/ComparisonComboBox.js?format=txt"></script>
+		<script type="text/javascript" src="/js/filterfield.js?format=txt"></script>
+		<script type="text/javascript" src="/js/filterbuilder.js?format=txt"></script>
+		<script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
 		
 		<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"
 		type="text/javascript">
