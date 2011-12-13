@@ -17,7 +17,7 @@ include("../../wfs/explodefilter.php");
 include("../../libs/PEAR/XML/Unserializer.php");
 include("../../libs/PEAR/XML/Serializer.php");
 $srs = "900913";
-$postgisObject = new postgis();
+$postgisObject = new postgis(); 
 $layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$postgisschema}/";
 include '../../model/settings_viewer.php';
 $settingsViewer = new Settings_viewer();

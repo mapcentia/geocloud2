@@ -29,7 +29,9 @@ CREATE TABLE geometry_columns_join (
     meta_url text,
     class text,
 	def text,
-    layergroup character varying(255)
+    layergroup character varying(255),
+    wmssource character varying(255),
+    baselayer boolean
 );
 
 CREATE TABLE viewer (

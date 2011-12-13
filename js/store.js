@@ -675,7 +675,6 @@ $(window).load(function () {
     grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
         var detailPanel = Ext.getCmp('detailPanel');
         bookTpl.overwrite(detailPanel.body, r.data);
-
         var south = ct.getComponent(2);
         south.remove("detailform");
         var detailForm = new Ext.FormPanel({
@@ -725,14 +724,14 @@ $(window).load(function () {
 			, {
         	xtype: 'combo',
 			store: new Ext.data.ArrayStore({
-				fields: ['abbr', 'action'],
+				fields: ['name', 'value'],
 				data: [
-					[true, 'true'],
-					[false, 'false'],
+					['true', true],
+					['false', false]
 				   ]
 			}),
-			displayField: 'action',
-			valueField: 'abbr',
+			displayField: 'name',
+			valueField: 'value',
 			mode: 'local',
 			typeAhead: false,
 			editable: false,
@@ -782,7 +781,6 @@ $(window).load(function () {
                 }
             }]
         });
-
         south.add(detailForm);
         south.doLayout();
 
