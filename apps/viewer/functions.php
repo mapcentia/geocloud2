@@ -1787,7 +1787,20 @@ class postgis extends control
 			$arr = pg_meta_data($__conn, $table);
 			return ($arr);
 		}
-	} 
+	}
+	function explodeTableName($table){
+		preg_match ("/^[\w'-]*\./",$table,$matches);
+		$_schema = $matches[0];
+
+		preg_match ("/[\w'-]*$/",$table,$matches);
+		$_table = $matches[0];
+
+		if ($_schema) {
+			$_schema = str_replace(".","",$_schema);
+		}
+		return array("schema"=>$_schema,"table"=>$_table);
+		
+	}
 	function connectString()
 	{
 		if ($this -> postgishost != "")

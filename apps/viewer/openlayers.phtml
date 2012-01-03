@@ -18,7 +18,7 @@ include("../../libs/PEAR/XML/Unserializer.php");
 include("../../libs/PEAR/XML/Serializer.php");
 $srs = "900913";
 $postgisObject = new postgis(); 
-$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$postgisschema}/";
+
 include '../../model/settings_viewer.php';
 $settingsViewer = new Settings_viewer();
 $settingsViewer = $settingsViewer->get(true);// move to a controller
@@ -84,7 +84,7 @@ body {
 		var viewPortSize;
 		var settingsViewer = <?php echo json_encode($settingsViewer['data']); ?>;// JSON;
 		
-		console.log(settingsViewer);
+		//console.log(settingsViewer);
 		
 		if (!settingsViewer.minzoomlevel) {
 			settingsViewer.minzoomlevel = 1;
@@ -92,7 +92,7 @@ body {
 		if (!settingsViewer.maxzoomlevel) {
 			settingsViewer.maxzoomlevel = 20;
 		};
-		console.log(settingsViewer);
+		//console.log(settingsViewer);
 		function osm_getTileURL(bounds) {
             var res = this.map.getResolution();
             var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
@@ -125,26 +125,37 @@ else {
 
 /* SET FILTER */
 
-$filter = "1=1";
-if ($_REQUEST['filter'])
+function array_map_r($arr)
 {
-	$filterKeyValue = explode(":",$_REQUEST['filter']);
+    global $filterArr;
+    global $namedLayer;
+	//print_r($arr);
+    foreach( $arr as $key => $value )
+    {
+		if (is_array($value['Filter'])) $filterArr = $value['Filter']; 
+        if ( is_array( $value ))  array_map_r( $value );
+    }  
+}
+
+if ($_REQUEST['sld'])
+{
 	$unserializer_options = array ('parseAttributes' => TRUE,'typeHints' => FALSE);
 	$unserializer = new XML_Unserializer($unserializer_options);
-	$status = $unserializer->unserialize(urldecode($filterKeyValue[1]));
-	$filterArr = $unserializer->getUnserializedData();
-	
-	$filter.= " AND ".parseFilter($filterArr,$filterKeyValue[0]);
-	$query = "SELECT xmin(extent(transform(the_geom,{$srs}))) as minx, ymin(extent(transform(the_geom,{$srs}))) as miny, xmax(extent(transform(the_geom,{$srs}))) as maxx, ymax(extent(transform(the_geom,{$srs}))) as maxy FROM {$filterKeyValue[0]} WHERE ".$filter;
+	$status = $unserializer->unserialize(urldecode($_REQUEST['sld']));
+	$sldArr = $unserializer->getUnserializedData();
+	array_map_r($sldArr);
+	$filter = parseFilter($filterArr,$sldArr['NamedLayer']['Name']);
+	$query = "SELECT xmin(extent(transform(the_geom,{$srs}))) as minx, ymin(extent(transform(the_geom,{$srs}))) as miny, xmax(extent(transform(the_geom,{$srs}))) as maxx, ymax(extent(transform(the_geom,{$srs}))) as maxy FROM {$sldArr['NamedLayer']['Name']} WHERE ".$filter;
 	//echo "<!-- TEST {$query} -->\n";
 	$result = $postgisObject -> execQuery($query);
-	$row = pg_fetch_array($result);
-	$buffer = 1000;
+	$row = $postgisObject->fetchRow($result);
+	$buffer = 100;
 	if ($row[minx]) {
 		echo "minxFromFilter = ".($row[minx]-$buffer).";\n";
 		echo "maxxFromFilter = ".($row[maxx]+$buffer).";\n";
 		echo "minyFromFilter = ".($row[miny]-$buffer).";\n";
 		echo "maxyFromFilter = ".($row[maxy]+$buffer).";\n";
+		$extentSetFromFilter = true;
 	}
 }
 /* SET FILTER END */
@@ -168,36 +179,37 @@ $openLayers['restricted'] = str_replace(" ",",",$openLayers['restricted']);
 $layers = explode(";",$_REQUEST['layers']);
 $u=0;
 for($i = 0; $i < sizeof($layers); $i++){
-        $bits = explode(",",$layers[$i]);
- 				foreach($responseWmsLayers['data'] as $arr) {
-					if ($arr['f_table_name']==$bits[0]) {
-						$bits[0] = $postgisschema.".".$bits[0];
-						echo "conf[$u] = ['$bits[0]','$bits[1]']\n";
-						echo "conf[$u][2] ='".$arr['appformap_opacity']."'\n";
-						echo "conf[$u][3] ='".$arr['f_table_title']."'\n";
-						echo "conf[$u][4] ='".$bits[1]."'\n";
-						$u++;
-						
-						// Only default visible layers i layerStr
-						if (!$bits[1]) {
-							echo "newLayerStrArr.push('$bits[0]');\n";
-						}
-						$u++;
-					}
-				}
+	$bits = explode(",",$layers[$i]);
+	$st = postgis::explodeTableName($bits[0]);
+	foreach($responseWmsLayers['data'] as $arr) {
+		if ($arr['f_table_name']==$st['table'] && $arr['f_table_schema']==$st['schema']) {
+			echo "conf[$u] = ['{$bits[0]}','{$bits[1]}']\n";
+			echo "conf[$u][2] ='".$arr['appformap_opacity']."'\n";
+			echo "conf[$u][3] ='".$arr['f_table_title']."'\n";
+			echo "conf[$u][4] ='".$bits[1]."'\n";
+			echo "conf[$u][5] ='http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$st['schema']}/'\n";
+				// Only default visible layers i layerStr
+			if (!$bits[1]) {
+				echo "newLayerStrArr.push('{$bits[0]}');\n";
+			}
+			$u++;
+		}
+	}
 }
 // Set extent from layer
 
 $table = $settingsViewer['data']['default_extent'];
-$geomField = $postgisObject->getGeometryColumns($table,"f_geometry_column");
+$geomField = $postgisObject->getGeometryColumns("public.".$table,"f_geometry_column");
 if ($geomField) {
-	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
+	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM public.".$table;
 	$result = $postgisObject->execQuery($sql);
 	$row = $postgisObject->fetchRow($result);
-	echo "minxFromFilter = ".($row[txmin]-$buffer).";\n";
-	echo "maxxFromFilter = ".($row[txmax]+$buffer).";\n";
-	echo "minyFromFilter = ".($row[tymin]-$buffer).";\n";
-	echo "maxyFromFilter = ".($row[tymax]+$buffer).";\n";
+	if(!$extentSetFromFilter) {
+		echo "minxFromFilter = ".($row[txmin]-$buffer).";\n";
+		echo "maxxFromFilter = ".($row[txmax]+$buffer).";\n";
+		echo "minyFromFilter = ".($row[tymin]-$buffer).";\n";
+		echo "maxyFromFilter = ".($row[tymax]+$buffer).";\n";
+	}
 }
 else {
 	echo "minxFromFilter = -20037508;";
@@ -209,6 +221,7 @@ print_r($postgisObject->PDOerror);
 // End setting extent from layer
 
 ?>
+//console.log(conf);
 restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromFilter,maxyFromFilter);
     layerStr = trim(newLayerStrArr.join(";"));
     OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
@@ -279,7 +292,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
     function addLayer(name,title,opacity,connectionString,notVisible) {
         if (notVisible) var visible = false;
         else var visible = true;
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString,{layers:name,transparent:true},{singleTile:true,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:true,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
         map.addLayer(layerArr[name]);
     }
    
@@ -322,8 +335,9 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         }
     }
     function addLegend(layers) {
-		var param = 'layers=' + layers + '&amp;type=json&amp;lan=<?php echo $_REQUEST["lan"];?>';
-		document.getElementById("legend_img").src = "/apps/viewer/servers/legend/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>?" + param;
+		var param = 'layers=' + layers + '&amp;type=text&amp;lan=<?php echo $_REQUEST["lan"];?>';
+		$('#legendContent').load('/apps/viewer/servers/legend/<?php echo $postgisdb;?>?' + param);
+		//document.getElementById("legendContent").innerHTML = "/apps/viewer/servers/legend/<?php echo $postgisdb;?>?" + param;
     }
     function trim(s) {
         s = s.replace(/(^\;*)|(\;*$)/gi,"");
@@ -450,6 +464,12 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         
 	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
 	var base = [];
+	base.push(new OpenLayers.Layer.Google("Google Normal", {
+		type: G_NORMAL_MAP,
+		minZoomLevel: settingsViewer.minzoomlevel,
+		maxZoomLevel: settingsViewer.maxzoomlevel,
+		sphericalMercator: true
+	}));
 	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 		type: G_HYBRID_MAP,
 		minZoomLevel: settingsViewer.minzoomlevel,
@@ -468,14 +488,8 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		maxZoomLevel: settingsViewer.maxzoomlevel,
 		sphericalMercator: true
 	}));
-	base.push(new OpenLayers.Layer.Google("Google Normal", {
-		type: G_NORMAL_MAP,
-		minZoomLevel: settingsViewer.minzoomlevel,
-		maxZoomLevel: settingsViewer.maxzoomlevel,
-		sphericalMercator: true
-	}));
 	base.push(new OpenLayers.Layer.TMS(
-                "OpenStreetMap (Mapnik)",
+                "OpenStreetMap",
                 "http://tile.openstreetmap.org/",
                 {
                     type: 'png', getURL: osm_getTileURL,
@@ -484,14 +498,17 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
                 }
             )
 	);
+	/*
 		base.push(new OpenLayers.Layer.WMS("KMS", "http://kortforsyningen.kms.dk/service?login=Kommune550&password=Sdfghjkl10&servicename=topo_skaermkort&VERSION=1.1.0&format=image/png&styles=&",{layers:"dtk_skaermkort"},{projection:"EPSG:25832",maxResolution: "auto",singleTile:false,transitionEffect:"resize"}));
+	*/
 	// Add WMS baselayers
-	<?php 
+	<?php
+	if (isset($responseWmsLayers['data'])){
 	foreach($responseWmsLayers['data'] as $arr) {
 		if ($arr['baselayer']) {
 	?>
-	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $postgisschema;?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:true,isBaseLayer:true,wrapDateLine:false}));
-	<?php }}?>
+	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$arr['f_table_schema']}/";?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:true,isBaseLayer:true,wrapDateLine:false}));
+	<?php }}}?>
 
 	
 	vectors = new OpenLayers.Layer.Vector("Vector Layer");
@@ -503,7 +520,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         for (var i=0; i<conf.length; i++) {
             if (conf[i][1]) {popupOn=true}
             if (conf[i][0]) {
-		    addLayer(conf[i][0],conf[i][3],conf[i][2],"<?php echo $layerConnectionString;?>",conf[i][4]);
+		    addLayer(conf[i][0],conf[i][3],conf[i][2],conf[i][5],conf[i][4]);
             }
         }
         addLegend(layerStr);
@@ -531,7 +548,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
     ctrl = new OpenLayers.Control.NavigationHistory();
     map.addControl(ctrl);
    action = new GeoExt.Action({
-        text: "Legend",
+        text: "Signatur",
 	 handler:function(objRef){
 		if(!legendWin){
 		    legendWin = new Ext.Window({
@@ -565,7 +582,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
     actions["print"] = action;
     //toolbarItems.push(action);
    action = new GeoExt.Action({
-        text: "Search",
+        text: "Find",
 	 handler:function(objRef){
 		if(!searchWin){
             $(".pac-container").css("z-index","10000"); // We make sure that Google auto complete is shown on top
@@ -702,7 +719,7 @@ som pop-up</a></div>
 
 
 
-<div id="legendContent"><img alt="" id="legend_img" src="sd" /></div>
+<div id="legendContent"></div>
 <div style="padding: 5px" id="searchContent"><input style="width: 270px"
 	type='text' id='gAddress' name='gAddress' value='' />
 <p>Skriv adresse eller stednavn</p>

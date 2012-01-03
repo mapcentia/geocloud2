@@ -34,9 +34,9 @@ class databases extends postgis {
         //$this->createUser($screenName);
 
 		$sql = "CREATE DATABASE {$screenName}
-			    WITH ENCODING='UTF8'
+			    WITH ENCODING='LATIN1'
        			OWNER=postgres
-       			TEMPLATE=template_mygeocloud
+       			TEMPLATE=mygeocloud_template
        			CONNECTION LIMIT=-1;
 			";
 		$this -> execQuery($sql);

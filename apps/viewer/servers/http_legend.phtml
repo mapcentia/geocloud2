@@ -1,28 +1,15 @@
 <?php 
 include_once("server_header.inc");
-header("Content-type: image/png");
-	include_once("../functions.php");
+//header("Content-type: image/png");
 
-	$width = 400;
-	$height = 401;
-
-	$controlObject = & new control(TRUE,FALSE);
-
-	$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$postgisdb}_{$postgisschema}.map",$controlObject);
-	$controlObject -> setMapscriptObject($mapscriptObject);
 
 	if ($_REQUEST['layer']) $_REQUEST['layers'] = $_REQUEST['layer'];
 	$layers = explode(";",$_REQUEST['layers']);
 
 	for ($i = 0; $i < sizeof($layers); $i++)
 	{
-		$bits = explode(",",$layers[$i]);
-		if ($bits[0]) {
-			$mapscriptObject -> setStatus($bits[0],"on");
-		}
-		$response['url'] = $mapscriptObject->drawLegend();
+		$st = postgis::explodeTableName($layer);
+		$layerConnectionString = "/wms/{$postgisdb}/{$st["schema"]}";
+		$response = "<tr><td><img src='{$layerConnectionString}/?LAYER={$layers[$i]}&SERVICE=WMS&VERSION=1.1.1&REQUEST=getlegendgraphic&FORMAT=image/png'/></td></tr>";
 	}
-	$im=imagecreatefrompng($response['url']);
-	imagepng($im);
-	imagedestroy($im);
-echo $data;
+include_once("server_footer.inc");

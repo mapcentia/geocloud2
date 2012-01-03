@@ -225,7 +225,7 @@ $(window).load(function() {
 		var extent = new OpenLayers.Bounds(-20037508, -20037508, 20037508,
 				20037508);
 		map.maxExtent = extent;
-/*
+
 		base.push(new OpenLayers.Layer.Google("Google Hybrid", {
 			type : G_HYBRID_MAP,
 			sphericalMercator : true
@@ -242,7 +242,6 @@ $(window).load(function() {
 			type : G_NORMAL_MAP,
 			sphericalMercator : true
 		}));
-*/
 		base.push(new OpenLayers.Layer.TMS(
 						"OpenStreetMap (Mapnik)",
 						"http://tile.openstreetmap.org/",
@@ -390,12 +389,6 @@ $(window).load(function() {
 			wfsTools = [];
 		};
 		attributeForm.init(getvars['layer']);
-		
-		
-		
-		
-        
-		
 		var viewport = new Ext.Viewport( {
 			layout : 'border',
 			items : [ 

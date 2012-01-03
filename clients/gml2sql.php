@@ -7,17 +7,17 @@ include_once("../libs/gmlparser.php");
 include_once("../libs/phpgeometry_class.php");
 
 //$postgisdb = $_SESSION['screen_name'];
-$postgisdb = "mhoegh";
-$postgisschema = "test";
+$postgisdb = "samsoe";
+$postgisschema = "lokalplan";
 
 //foreach($wfs as $name=>$str){
 	print("******* START:".$name." *******\n");
 
-$str = "http://beta.mygeocloud.com/wfs/mhoegh?request=getfeature&typename=test";
+$str = "http://wfs.plansystem.dk/geoserver/wfs?service=WFS&REQUEST=GETFEATURE&TYPENAME=pdk:theme_pdk_lokalplan_vedtaget_v&propertyname=planid,geometri&filter=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Ekomnr%3C/PropertyName%3E%3CLiteral%3E741%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E";
 
 	$gml = file_get_contents($str);
 	//echo $gml;
-	$name = "martin";
+	$name = "lpplandk2";
 	print(date('l jS \of F Y h:i:s A')." GML fetched. ");
 	$gmlParserObj = new GmlParser($gml);
 	$gmlParserObj -> unserializeGml();

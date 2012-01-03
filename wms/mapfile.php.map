@@ -52,7 +52,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  FORMATOPTION "GAMMA=0.75"
 	  END
 	  WEB
-		IMAGEPATH "<?php echo $_SERVER["DOCUMENT_ROOT"]."/tmp";?>"
+		IMAGEPATH "<?php echo $basePath."/tmp";?>"
   		IMAGEURL "<?php echo $hostName;?>/tmp"
 		METADATA
 		  "wms_title"    "<?php echo $user;?>'s awesome WMS"

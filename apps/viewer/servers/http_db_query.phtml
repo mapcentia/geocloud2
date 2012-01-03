@@ -12,10 +12,10 @@ $controlObject = new control(true);
 $controlObject -> doNotUseWMS = true;
 $postgisObject -> setControlObject($controlObject);
 
-$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$postgisdb}_{$postgisschema}.map",$controlObject);
-$controlObject -> setMapscriptObject($mapscriptObject);
+//$mapscriptObject = & new mapscript(NULL,"{$basePath}wms/mapfiles/{$postgisdb}_{$postgisschema}.map",$controlObject);
+//$controlObject -> setMapscriptObject($mapscriptObject);
 
-$controlObject -> viewRegion($_REQUEST['extent']);
+//$controlObject -> viewRegion($_REQUEST['extent']);
 
 $layers = explode(";",$_REQUEST['layers']);
 
@@ -25,10 +25,10 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		$bits = explode(",",$layers[$i]);
 		
 		// We set the query vars
-		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($postgisschema.".".$bits[0],"fieldconf"));
+		$fieldconfArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"fieldconf"));
 		//print_r($fieldconfArr);
 		
-		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($postgisschema.".".$bits[0],"f_table_title");
+		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) {
 				$strs[]= strtoupper($value->column);
@@ -36,6 +36,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 			if ($value->link) {
 				$postGisQueryContentLink[strtoupper($bits[0])]=strtoupper($value->column);
+				$postGisQueryLinkTarget[strtoupper($bits[0])]="target='blank'";
 			}
 		}
 		if (is_array($strs)) {
@@ -43,13 +44,16 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			$str = implode(",",$strs);
 			$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
 		}
-		$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
-		$queryTable = $layerObj -> getMetaData("appformap_query_table");
-		$queryable = $layerObj -> getMetaData("appformap_queryable");
+		
+		//$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
+		//$queryTable = $layerObj -> getMetaData("appformap_query_table");
+		$queryTable = null;
+		//$queryable = $layerObj -> getMetaData("appformap_queryable");
+		$queryable = true;	
 		if (!$queryTable) {
 			$queryTable = $bits[0];
 		}
-		$queryBuffer = $layerObj -> getMetaData("appformap_query_buffer");
+		//$queryBuffer = $layerObj -> getMetaData("appformap_query_buffer");
 		if (!$queryBuffer) {
 			$queryBuffer = false;
 		}

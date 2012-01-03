@@ -10,7 +10,11 @@ function parseFilter($filter,$table,$operator="=") {
 	global $postgisschema;
 	//global $forUseInSpatialFilter;
 	global $srs;
-	$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
+	$st = postgis::explodeTableName($table);
+	if (!$st['schema']){
+		$st['schema'] = $postgisschema;
+	}
+	$primeryKey = $postgisObject->getPrimeryKey($st['schema'].".".$st['table']);
 	$serializer_options = array ( 
 	   'indent' => '  ', 
 	); 

@@ -254,6 +254,20 @@ class postgis
 
 		return $clean;
 	}
+	function explodeTableName($table){
+		preg_match ("/^[\w'-]*\./",$table,$matches);
+		$_schema = $matches[0];
+
+		preg_match ("/[\w'-]*$/",$table,$matches);
+		$_table = $matches[0];
+
+		if ($_schema) {
+			$_schema = str_replace(".","",$_schema);
+		}
+		return array("schema"=>$_schema,"table"=>$_table);
+		
+	}
+	
 }
 class logfile {
 

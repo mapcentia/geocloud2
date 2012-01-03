@@ -10,8 +10,11 @@ if ($HTTP_RAW_POST_DATA) {
 //print_r($obj);
 
 switch ($parts[4]){
-	case "getrecords": // All tables
-		$response = $table -> getRecords("f_table_schema='{$postgisschema}'");
+	case "getrecords": // only geometrycolumns table
+		$response = $table -> getRecords("f_table_schema='{$postgisschema}'",true);
+		break;
+	case "getallrecords": // All tables
+		$response = $table -> getRecords(NULL,NULL,"gid,plannr,plannavn,distrikt,anvendelsegenerel,zonestatus,doklink");
 		break;
 	case "getgroupby": // All tables
 		$response = $table -> getGroupBy($parts[6]);

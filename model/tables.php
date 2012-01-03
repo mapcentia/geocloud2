@@ -72,11 +72,11 @@ class table extends postgis {
 		$array[$key] = $value;
 		return $array;
 	}
-	function getRecords($whereClause=NULL) // All tables
+	function getRecords($whereClause=NULL,$doNotCheck_f_table_name=NULL,$fields="*") // All tables
 	{
 		$response['success'] = true;
 		$response['message'] = "Layers loaded";
-		$sql = "SELECT * FROM {$this -> table}";
+		$sql = "SELECT {$fields} FROM {$this -> table}";
 		if ($whereClause) {
 				$sql.=" WHERE {$whereClause}";
 		}
@@ -84,7 +84,7 @@ class table extends postgis {
 		$check = array();
 		while ($row = $this->fetchRow($result,"assoc")) {
 			$arr = array();
-			if(!in_array($row['f_table_name'],$check)){ // If more geometry columns we only return the first one.
+			if(!in_array($row['f_table_name'],$check) or (!$doNotCheck_f_table_name)){ // If more geometry columns we only return the first one.
 				foreach ($row as $key => $value) {
 					$arr = $this -> array_push_assoc($arr,$key,$value);
 				}
@@ -186,7 +186,7 @@ class table extends postgis {
 			}
 			else {
 				$response['success'] = false;
-				$response['message'] = $sql;
+				$response['message'] = $this->PDOerror;
 			}
 			unset($pairArr);
 			unset($keyArr);

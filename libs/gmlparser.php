@@ -161,7 +161,7 @@ class GmlParser extends postgis
 			);
 			";
 			
-			//echo $createSql."\n";
+			echo $createSql."\n";
 
 			// Check if table is already created
 			$checkSql = "select * FROM ".$tableName;

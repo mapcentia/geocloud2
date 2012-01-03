@@ -93,7 +93,7 @@ include("inc/uri_parts.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
 
-$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$postgisschema}/";
+
 
 $doNotLoadArr = array();
 
@@ -104,17 +104,19 @@ include("controller/wmslayers_c.php");
 
 $i = 0;
 foreach($responseWmsLayers['data'] as $arr) {
-	if ($arr['f_table_title']) {
-		$titles[$arr['f_table_name']] = $arr['f_table_title'];
-	}
-	else {
-		$titles[$arr['f_table_name']] = $arr['f_table_name'];
-	}
-	if ($arr['layergroup']) {
-		$groups[$arr['f_table_name']] = $arr['layergroup'];	
-	}
-	else {
-		$groups[$arr['f_table_name']] = "Default group";
+	if ($arr['f_table_schema']==$postgisschema) {
+		if ($arr['f_table_title']) {
+			$titles[$arr['f_table_name']] = $arr['f_table_title'];
+		}
+		else {
+			$titles[$arr['f_table_name']] = $arr['f_table_name'];
+		}
+		if ($arr['layergroup']) {
+			$groups[$arr['f_table_name']] = $arr['layergroup'];	
+		}
+		else {
+			$groups[$arr['f_table_name']] = "Default group";
+		}
 	}
 }
 //print_r($groups);
@@ -147,6 +149,8 @@ items.push({
 				if (!$_table) $_table = $layer;
 				if ($layerGroup == $group && ($layerGroup)) {
 					if ($arr['baselayer']!="t") {
+					    $st = postgis::explodeTableName($layer);
+						$layerConnectionString = "{$hostName}/wms/{$postgisdb}/{$st["schema"]}/";
 						echo "<input class='layer' type='checkbox' name='{$layer}' id='{$layer}' onclick='javascript:loadLayer({$i},\\\"{$layer}\\\",\\\"{$title}\\\",\\\"{$_table}\\\",\\\"{$opacity}\\\",\\\"{$layerConnectionString}\\\",this)'";
 						if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
 						echo "/>";
