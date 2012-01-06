@@ -1906,6 +1906,9 @@ class postgis extends control
 				if ($field == 'f_table_title') {
                         return $row['f_table_title'];
                 }
+        		if ($field == 'def') {
+                        return $row['def'];
+                }
 				
 				
         }

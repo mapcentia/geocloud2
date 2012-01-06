@@ -5,7 +5,7 @@ $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
 $postgisdb = $_SESSION['screen_name'];
 
-include("wms/mapfile.php.map");
+include("wms/mapfile.php.map"); 
 makeMapFile($postgisdb);
 ?>
 		<script type="text/javascript">var screenName='<?php echo $postgisdb;?>'</script>
@@ -62,13 +62,10 @@ makeMapFile($postgisdb);
 	</head>
 	<body>
 <div style="display:none">
-<div id="map-settings">Hellooo</div>
-<div id="authentication">Hellooo sdf</div>
-
-
-<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>" size="55"/></td></tr></tbody></table><table border="0"><tbody><tr><td>If you want to use another projection than the default add an EPSG code to the url like:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
-
-<div id="wms-dialog"><table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/" size="55"/></td></tr></tbody></table></div>
+	<div id="map-settings">Some settings</div>
+	<div id="authentication">Change the password</div>
+	<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>" size="55"/></td></tr></tbody></table><table border="0"><tbody><tr><td>If you want to use another projection than the default add an EPSG code to the url like:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
+	<div id="wms-dialog"><table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/" size="55"/></td></tr></tbody></table></div>
 </div>
 
 <?php include("html_footer.php");?>

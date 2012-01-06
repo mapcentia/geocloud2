@@ -1,13 +1,18 @@
-body{
+html,body{
 font-family:"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
+background: url(/theme/images/bg.jpg) no-repeat top left;
+margin: 0;
+padding: 0;
 }
+#outercontainer { position:absolute;height:100%;width:100% }
+#innercontainer { position:absolute; top:50%;left:50%;margin-top:-154px; margin-left:-254px }
 p, h1, form, button{border:0; margin:0; padding:0;}
 .spacer{clear:both; height:1px;}
 /* ----------- My Form ----------- */
 .myform{
-margin:0 auto;
 width:480px;
+height:180px;
 padding:14px;
 }
 
@@ -33,7 +38,7 @@ padding-bottom:10px;
 display:block;
 font-weight:bold;
 text-align:right;
-width:140px;
+width:145px;
 float:left;
 }
 #stylized .small{
@@ -42,7 +47,7 @@ display:block;
 font-size:11px;
 font-weight:normal;
 text-align:right;
-width:140px;
+width:145px;
 }
 #stylized input{
 float:left;
@@ -55,7 +60,7 @@ margin:2px 0 20px 10px;
 }
 #stylized button{
 clear:both;
-margin-left:150px;
+margin-left:155px;
 width:155px;
 height:31px;
 background:#aaa;

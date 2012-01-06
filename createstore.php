@@ -2,17 +2,20 @@
 // Start HTML doc
 include("html_header.php");
 ?>
+</head>
 <body>
+<div id="outercontainer">
+<div id="innercontainer">
+<div id='stylized' class="myform">
 <?php 
 if (!$_REQUEST['name']) {
-	die("Need a name!");
+	echo "<h1>Need a name!</h1>";
+	echo "<p></p>";
 }
 else {
 	$name = postgis::toAscii($_REQUEST['name'],NULL,"_");
-}
-$db = new databases;
+	$db = new databases;
 	$dbObj = $db -> createdb($name,$databaseTemplate); // databaseTemplate is set in conf/main.php
-	echo "<div id='stylized' class='myform'>";
 	if ($dbObj) {
 		
 		echo "<h1>Your geocloud \"{$name}\" was created!</h1>"; 
@@ -21,8 +24,12 @@ $db = new databases;
 	}
 	else {
 		echo "<h1>Sorry, something went wrong. Try again</h1>";
-		echo "<p> </p>";
 	}
-echo "<div class='spacer'></div>";
-echo "</div>";
+}
+?>
+<div class="spacer"></div>
+</div>
+</div>
+</div>
+<?php
 include("html_footer.php");

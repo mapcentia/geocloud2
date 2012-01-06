@@ -256,7 +256,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 			popup = new OpenLayers.Popup.FramedCloud("result",coords,null,"<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>",null, true);
 			map.addPopup(popup)
 			mapSize = map.getSize();
-			Ext.Ajax.requestrequest({
+			Ext.Ajax.request({
                             url: '/apps/viewer/servers/query/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>',
                             headers: {
                                 //'Content-Type': 'application/json; charset=utf-8'

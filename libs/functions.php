@@ -168,16 +168,10 @@ class postgis
 		switch ($type){
 			case "PG":
 				$this->db = pg_connect($this -> connectString());
-				if ($this->postgisschema) {
-					//$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PG");
-				}
 				break;
 			case "PDO":
 				try {
 					$this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
-					if ($this->postgisschema) {
-						//$this->execQuery("SET SEARCH_PATH TO public,".$this->postgisschema,"PDO");
-					}
 					$this->execQuery("set client_encoding='utf8'","PDO");
 				}
 				catch(PDOException $e) {

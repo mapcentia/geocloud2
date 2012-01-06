@@ -120,7 +120,7 @@ $(window).load(function () {
         autoExpandColumn: "desc",
         height: 400,
         split: true,
-        region: 'north',
+        region: 'center',
         frame: false,
         border: false,
         sm: new Ext.grid.RowSelectionModel({
@@ -272,7 +272,7 @@ $(window).load(function () {
             // rowdblclick: mapPreview
         }
     });
-	Ext.getCmp("schemabox").on('select', function(e){window.location="/store/" + screenName + "/" + e.value});
+	Ext.getCmp("schemabox").on('select', function(e){window.location="/store/" + screenName + "/" + e.value;});
     function onDelete() {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
@@ -340,7 +340,7 @@ $(window).load(function () {
             },
             '-', {
                 text: 'GML',
-                disabled: false,
+                disabled: true,
                 //iconCls: 'silk-add',
                 tooltip: "Coming in beta",
                 handler: function () {
@@ -353,7 +353,7 @@ $(window).load(function () {
             },
             '-', {
                 text: 'MapInfo TAB',
-                disabled: false,
+                disabled: true,
                 tooltip: "Coming in beta",
                 handler: function () {
                     addMapinfo.init();
@@ -404,10 +404,10 @@ $(window).load(function () {
 				},
 				items: [
 				{
-					width: 275,
+					//width: 275,
 					xtype: 'textfield',
 					name: 'schema',
-					emptyText:'Name of new schema',	
+					emptyText:'Name of new schema'	
 				}],
 				buttons: [{
 					iconCls: 'silk-add',
@@ -423,7 +423,7 @@ $(window).load(function () {
 									schemasStore.reload();
 									Ext.MessageBox.show({
 										title: 'Success!',
-										msg: 'Settings updated',
+										msg: 'New schema created',
 										buttons: Ext.MessageBox.OK,
 										width: 300,
 										height: 300
@@ -669,7 +669,7 @@ $(window).load(function () {
         winMoreSettings = null;
         wmsLayer.init(record.get("f_table_name"));
         winMoreSettings = new Ext.Window({
-            title: "Edit theme and label column + more on '" + record.get("f_table_name") + "'",
+            title: "More settings on '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 500,
@@ -724,7 +724,6 @@ $(window).load(function () {
                 fieldLabel: 'WMS source',
                 name: 'wmssource',
                 value: r.data.wmssource
-
             }
 			, {
         	xtype: 'combo',
@@ -804,20 +803,19 @@ $(window).load(function () {
         split: true,
         items: [grid, {
             id: 'detailPanel',
-            region: 'center',
+            region: 'south',
             border: false,
+            height: 50,
             bodyStyle: {
                 background: '#ffffff',
                 padding: '7px'
             },
             html: '<table><tr class="x-grid3-row"><td>When you click on a layer you can more details in this window.</td></tr></tr></table>'
-        },
-        {
-            region: "south",
-            height: 250,
-            border: false,
-            bodyStyle: {}
         }]
+    });
+    grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
+        var detailPanel = Ext.getCmp('detailPanel');
+        bookTpl.overwrite(detailPanel.body, r.data);
     });
     
     var onSubmit = function (form, action) {
@@ -899,8 +897,7 @@ $(window).load(function () {
                     });
                 }
             }
-        }]
-		
+        }]	
     });
     viewerSettings.onSubmit = function (form, action) {
         var result = action.result;

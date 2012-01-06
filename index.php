@@ -4,6 +4,8 @@ include("html_header.php");
 ?>
 </head>
 <body>
+<div id="outercontainer">
+<div id="innercontainer">
 <div id="stylized" class="myform">
 <form name="db" id="id" method="get" action="/createstore">
 <h1>Get your own geo cloud</h1>
@@ -15,6 +17,9 @@ include("html_header.php");
 <button type="submit">Get it now</button>
 <div class="spacer"></div>
 </form>
+</div>
+</div>
+</div>
 <?php
 // End HTML doc
 include("html_footer.php");

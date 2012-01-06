@@ -88,7 +88,7 @@ addShape.init = function () {
         }, {
         	xtype: 'checkbox',
         	name: 'pdo',
-        	fieldLabel: 'Slow verbose load?'
+        	fieldLabel: 'Direct load'
         }
         ],
         buttons: [{

@@ -44,18 +44,21 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			$str = implode(",",$strs);
 			$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
 		}
-		
-		//$layerObj = $mapscriptObject -> map -> getlayerbyname($bits[0]);
+		$layerDefArr = (array)json_decode($postgisObject->getGeometryColumns($bits[0],"def"));
+		//print_r($layerDefArr);
+
 		//$queryTable = $layerObj -> getMetaData("appformap_query_table");
 		$queryTable = null;
+		
 		//$queryable = $layerObj -> getMetaData("appformap_queryable");
-		$queryable = true;	
+		$queryable = true;
+		
 		if (!$queryTable) {
 			$queryTable = $bits[0];
 		}
-		//$queryBuffer = $layerObj -> getMetaData("appformap_query_buffer");
+		$queryBuffer = $layerDefArr['query_buffer'];
 		if (!$queryBuffer) {
-			$queryBuffer = false;
+			$queryBuffer = null;
 		}
 
 		if ($bits[1] || $queryable == true) { 
