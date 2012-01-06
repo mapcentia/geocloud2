@@ -256,7 +256,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 			popup = new OpenLayers.Popup.FramedCloud("result",coords,null,"<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>",null, true);
 			map.addPopup(popup)
 			mapSize = map.getSize();
-			Ext.Ajax.request({
+			Ext.Ajax.requestrequest({
                             url: '/apps/viewer/servers/query/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>',
                             headers: {
                                 //'Content-Type': 'application/json; charset=utf-8'
@@ -336,7 +336,24 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
     }
     function addLegend(layers) {
 		var param = 'layers=' + layers + '&amp;type=text&amp;lan=<?php echo $_REQUEST["lan"];?>';
-		$('#legendContent').load('/apps/viewer/servers/legend/<?php echo $postgisdb;?>?' + param);
+		$.ajax({
+        url: '/apps/viewer/servers/legend/<?php echo $postgisdb;?>?' + param,
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (data, textStatus, http) {
+				if (http.readyState == 4) {
+					if (http.status == 200) {
+						var response = eval('(' + http.responseText + ')');
+						// JSON
+						//alert(response.html);
+						$('#legendContent').empty();
+						$('#legendContent').append(response.html);
+					}
+				}
+			}
+		});
+		//$('#legendContent').load('/apps/viewer/servers/legend/<?php echo $postgisdb;?>?' + param);
 		//document.getElementById("legendContent").innerHTML = "/apps/viewer/servers/legend/<?php echo $postgisdb;?>?" + param;
     }
     function trim(s) {

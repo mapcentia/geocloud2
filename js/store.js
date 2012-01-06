@@ -13,6 +13,7 @@ $(window).load(function () {
     var winEdit;
     var winClasses;
     var winWmsLayer;
+    var winMoreSettings;
     var fieldsForStore;
     var settings;
 	var groups;
@@ -231,20 +232,24 @@ $(window).load(function () {
 				overflow: 'visible'     // For the Combo popup
 			},
 			items: [
-		{
-			text: 'Layer definition',
-			iconCls: 'silk-cog',
-			handler: onEditWMSLayer
-		},
-            {
-            text: 'Styles',
-            iconCls: 'silk-palette',
-            handler: onEditWMSClasses
-        },{
-            text: 'Structure',
-            iconCls: 'silk-table',
-            handler: onEdit
-        }
+				{
+					text: 'Layer definition',
+					iconCls: 'silk-cog',
+					handler: onEditWMSLayer
+				},
+					{
+					text: 'Styles',
+					iconCls: 'silk-palette',
+					handler: onEditWMSClasses
+				},{
+					text: 'Structure',
+					iconCls: 'silk-table',
+					handler: onEdit
+				},{
+					text: 'More settings',
+					iconCls: 'silk-table',
+					handler: onEditMoreSettings
+				}
         ]
     })
         },'->',new Ext.form.ComboBox({
@@ -362,68 +367,8 @@ $(window).load(function () {
 
         winAdd.show(this);
     }
-	var schemaForm = new Ext.FormPanel({
-            labelWidth: 100,
-            // label settings here cascade unless overridden
-            frame: false,
-            border: false,
-            region: 'center',
-            //title: 'More layer settings',
-            id: "schemaform",
-            bodyStyle: 'padding: 10px 10px 0 10px;',
-            items: [
-            {
-                width: 300,
-                xtype: 'textfield',
-                fieldLabel: 'New schema',
-                name: 'schema'
-            }],
-            buttons: [{
-                iconCls: 'silk-add',
-                text: 'Add',
-                handler: function () {
-                    if (schemaForm.form.isValid()) {
-                        
-                     
-                        schemaForm.getForm().submit({
-                            url: '/controller/databases/' + screenName + '/addschema',
-							waitMsg: 'Saving Data...',
-                            submitEmptyText: false,
-                            success: function () {
-                                schemasStore.reload();
-								Ext.MessageBox.show({
-                                    title: 'Success!',
-                                    msg: 'Settings updated',
-                                    buttons: Ext.MessageBox.OK,
-                                    width: 300,
-                                    height: 300
-                                });
-                            },
-                            failure: function(form, action) {
-								var result = action.result;
-								 Ext.MessageBox.show({
-                        title: 'Failure',
-                        msg: result.message,
-                        buttons: Ext.MessageBox.OK,
-                        width: 300,
-                        height: 300
-                    });
-							
-								}
-                        });
-                    } else {
-                        var s = '';
-                        Ext.iterate(schemaForm.form.getValues(), function (key, value) {
-                            s += String.format("{0} = {1}<br />", key, value);
-                        },
-                        this);
-                        //Ext.example.msg('Form Values', s);
-                    }
-                }
-            }]
-        });
 	function onAddSchema(btn, ev) {
-        winAddSchema = null;
+        //winAddSchema = null; 
         var p = new Ext.Panel({
             id: "newschemapanel",
             frame: false,
@@ -439,11 +384,74 @@ $(window).load(function () {
             title: 'Add new schema',
             layout: 'fit',
             modal: true,
-            width: 500,
-            height: 350,
+            width: 320,
+            height: 150,
             closeAction: 'close',
-            plain: true,
-            items: [schemaForm]
+            plain: false,
+            items: [
+				new Ext.FormPanel({
+				labelWidth: 1,
+				frame: true,
+				border: false,
+				region: 'center',
+				id: "schemaform",
+				bodyStyle: {
+					padding: '7px'
+				},
+				defaults: {
+					allowBlank: false
+					//msgTarget: 'side'
+				},
+				items: [
+				{
+					width: 275,
+					xtype: 'textfield',
+					name: 'schema',
+					emptyText:'Name of new schema',	
+				}],
+				buttons: [{
+					iconCls: 'silk-add',
+					text: 'Add',
+					handler: function () {
+						var f = Ext.getCmp('schemaform');
+						if (f.form.isValid()) {
+							f.getForm().submit({
+								url: '/controller/databases/' + screenName + '/addschema',
+								waitMsg: 'Saving Data...',
+								submitEmptyText: false,
+								success: function () {
+									schemasStore.reload();
+									Ext.MessageBox.show({
+										title: 'Success!',
+										msg: 'Settings updated',
+										buttons: Ext.MessageBox.OK,
+										width: 300,
+										height: 300
+									});
+								},
+								failure: function(form, action) {
+									var result = action.result;
+									 Ext.MessageBox.show({
+							title: 'Failure',
+							msg: result.message,
+							buttons: Ext.MessageBox.OK,
+							width: 300,
+							height: 300
+						});
+								
+									}
+							});
+						} else {
+							var s = '';
+							Ext.iterate(schemaForm.form.getValues(), function (key, value) {
+								s += String.format("{0} = {1}<br />", key, value);
+							},
+							this);
+							//Ext.example.msg('Form Values', s);
+						}
+					}
+				}]
+			})]
             
         });
 
@@ -614,7 +622,7 @@ $(window).load(function () {
         });
         winClasses.show(this);
     }
-     function onEditWMSLayer(btn, ev) {
+    function onEditWMSLayer(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
             Ext.MessageBox.show({
@@ -646,38 +654,35 @@ $(window).load(function () {
         });
         winWmsLayer.show(this);
     };
-    // define a template to use for the detail view
-    var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
-    var bookTpl = new Ext.Template(bookTplMarkup);
-    var ct = new Ext.Panel({
-        frame: false,
-        layout: 'border',
-        region: 'center',
-        border: true,
-        split: true,
-        items: [grid, {
-            id: 'detailPanel',
-            region: 'center',
-            border: false,
-            bodyStyle: {
-                background: '#ffffff',
-                padding: '7px'
-            },
-            html: '<table><tr class="x-grid3-row"><td>When you click on a layer you can more details in this window.</td></tr></tr></table>'
-        },
-        {
-            region: "south",
-            height: 250,
-            border: false,
-            bodyStyle: {}
-        }]
-    });
-    grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
-        var detailPanel = Ext.getCmp('detailPanel');
-        bookTpl.overwrite(detailPanel.body, r.data);
-        var south = ct.getComponent(2);
-        south.remove("detailform");
-        var detailForm = new Ext.FormPanel({
+	function onEditMoreSettings(btn, ev) {
+        var record = grid.getSelectionModel().getSelected();
+        if (!record) {
+            Ext.MessageBox.show({
+                title: 'Hi',
+                msg: 'You\'ve to select a layer',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.INFO
+            });
+            return false;
+        }
+		var r = record;
+        winMoreSettings = null;
+        wmsLayer.init(record.get("f_table_name"));
+        winMoreSettings = new Ext.Window({
+            title: "Edit theme and label column + more on '" + record.get("f_table_name") + "'",
+            modal: true,
+            layout: 'fit',
+            width: 500,
+            height: 400,
+            closeAction: 'close',
+            plain: true,
+            items: [new Ext.Panel({
+                frame: false,
+                width: 500,
+                height: 400,
+                layout: 'border',
+                items: [
+				new Ext.FormPanel({
             labelWidth: 100,
             // label settings here cascade unless overridden
             frame: false,
@@ -745,8 +750,9 @@ $(window).load(function () {
                 iconCls: 'silk-add',
                 text: 'Update',
                 handler: function () {
-                    if (detailForm.form.isValid()) {
-                        var values = detailForm.form.getValues();
+					var f = Ext.getCmp('detailform');
+                    if (f.form.isValid()) {
+                        var values = f.form.getValues();
                         var param = {
                             data: values
                         };
@@ -772,7 +778,7 @@ $(window).load(function () {
                         });
                     } else {
                         var s = '';
-                        Ext.iterate(detailForm.form.getValues(), function (key, value) {
+                        Ext.iterate(f.form.getValues(), function (key, value) {
                             s += String.format("{0} = {1}<br />", key, value);
                         },
                         this);
@@ -780,11 +786,40 @@ $(window).load(function () {
                     }
                 }
             }]
+        })
+					
+				]
+            })]
         });
-        south.add(detailForm);
-        south.doLayout();
-
+        winMoreSettings.show(this);
+    };
+    // define a template to use for the detail view
+    var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
+    var bookTpl = new Ext.Template(bookTplMarkup);
+    var ct = new Ext.Panel({
+        frame: false,
+        layout: 'border',
+        region: 'center',
+        border: true,
+        split: true,
+        items: [grid, {
+            id: 'detailPanel',
+            region: 'center',
+            border: false,
+            bodyStyle: {
+                background: '#ffffff',
+                padding: '7px'
+            },
+            html: '<table><tr class="x-grid3-row"><td>When you click on a layer you can more details in this window.</td></tr></tr></table>'
+        },
+        {
+            region: "south",
+            height: 250,
+            border: false,
+            bodyStyle: {}
+        }]
     });
+    
     var onSubmit = function (form, action) {
         var result = action.result;
         if (result.success) {

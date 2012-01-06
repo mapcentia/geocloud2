@@ -169,7 +169,7 @@ END
 			makeExceptionReport($postgisObject->PDOerror);
 		}
 		while ($row = $postgisObject->fetchRow($result)) {
-		$wmslayerObj = new wmslayers($row['f_table_name'],$row['f_table_schema']);
+		$wmslayerObj = new wmslayers($row['f_table_name']);
 		$layerArr = $wmslayerObj->get();
 		//print_r($layerArr);
 	?>

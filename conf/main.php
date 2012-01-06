@@ -11,10 +11,12 @@ set_include_path(get_include_path() . PATH_SEPARATOR . $basePath . PATH_SEPARATO
 
 // PostGIS connection
 if (!$postgishost) $postgishost="127.0.0.1";
-if (!$postgisdb) $postgisdb="mygeocloud";
+if (!$postgisdb) $postgisdb="postgres";
 if (!$postgisuser) $postgisuser="postgres";
 if (!$postgisport) $postgisport="";
 if (!$postgispw) $postgispw="";
+
+$databaseTemplate = "template_mygeocloud";
 
 $useWktToGmlInPHP = false;
 

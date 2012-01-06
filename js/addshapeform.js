@@ -19,7 +19,7 @@ addShape.init = function () {
 		border: false,
         title: 'ESRI Shape file upload',
         autoHeight: true,
-        bodyStyle: 'padding: 10px 10px 0 10px;',
+        bodyStyle: 'padding: 10px 10px 0 10px',
         labelWidth: 60,
         defaults: {
             anchor: '95%',

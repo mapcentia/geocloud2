@@ -1,15 +1,14 @@
 <?php 
 include_once("server_header.inc");
-//header("Content-type: image/png");
-
-
-	if ($_REQUEST['layer']) $_REQUEST['layers'] = $_REQUEST['layer'];
-	$layers = explode(";",$_REQUEST['layers']);
-
-	for ($i = 0; $i < sizeof($layers); $i++)
-	{
-		$st = postgis::explodeTableName($layer);
+if ($_REQUEST['layer']) $_REQUEST['layers'] = $_REQUEST['layer'];
+$layers = explode(";",$_REQUEST['layers']);
+$response['html'].= "<table>";
+for ($i = 0; $i < sizeof($layers); $i++) {
+	if ($layers[$i]) {
+		$st = postgis::explodeTableName($layers[$i]);
 		$layerConnectionString = "/wms/{$postgisdb}/{$st["schema"]}";
-		$response = "<tr><td><img src='{$layerConnectionString}/?LAYER={$layers[$i]}&SERVICE=WMS&VERSION=1.1.1&REQUEST=getlegendgraphic&FORMAT=image/png'/></td></tr>";
+		$response['html'].= "<tr><td><img src='{$layerConnectionString}/?LAYER={$layers[$i]}&SERVICE=WMS&VERSION=1.1.1&REQUEST=getlegendgraphic&FORMAT=image/png'/></td></tr>";
 	}
+}
+$response['html'].= "</table>";
 include_once("server_footer.inc");

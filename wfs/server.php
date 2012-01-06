@@ -184,12 +184,12 @@ $featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
 $bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
 
 // Start HTTP basic authentication
-if(!$_SESSION["oauth_token"]) {
+//if(!$_SESSION["oauth_token"]) {
 	$auth = $postgisObject->getGeometryColumns($postgisschema.".".$HTTP_FORM_VARS["TYPENAME"],"authentication");
 	if ($auth=="Read/write") {
 		include('../inc/http_basic_authen.php');
 	}
-}
+//}
 // End HTTP basic authentication
 print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 ob_start();
@@ -715,7 +715,7 @@ function doParse($arr)
 	global $user;
 	global $version;
 	global $postgisschema;
-	//global $forUseInSpatialFilter;
+	global $parts;
 	
 	$serializer_options = array ( 
 	   'indent' => '  ', 
@@ -759,12 +759,12 @@ function doParse($arr)
 							$field = "";
 							$value = "";
 							// Start HTTP basic authentication
-							if(!$_SESSION["oauth_token"]) {
+							//if(!$_SESSION["oauth_token"]) {
 								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$typeName,"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
-								}
+							//	}
 							// End HTTP basic authentication
 							}
 						}
@@ -805,12 +805,12 @@ function doParse($arr)
 					$forSql2['wheres'][$fid] = parseFilter($hey['Filter'],$hey['typeName']);
 					$fid++;
 							// Start HTTP basic authentication
-							if(!$_SESSION["oauth_token"]) {
+							//if(!$_SESSION["oauth_token"]) {
 								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'],"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
-								}
+							//	}
 							// End HTTP basic authentication
 				}
 				$pair = array();
@@ -826,12 +826,12 @@ function doParse($arr)
 						$forSql3['tables'][] = $hey['typeName'];
 						$forSql3['wheres'][] = parseFilter($hey['Filter'],$hey['typeName']);
 						// Start HTTP basic authentication
-							if(!$_SESSION["oauth_token"]) {
+							//if(!$_SESSION["oauth_token"]) {
 								$auth = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'],"authentication");
 								if ($auth=="Write" OR $auth=="Read/write") {
 									include('../inc/http_basic_authen.php');
 									}
-								}
+							//	}
 							// End HTTP basic authentication
 				}
 			}

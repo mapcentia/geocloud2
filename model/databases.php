@@ -29,14 +29,14 @@ class databases extends postgis {
 		}
 		return $response;
 	}
-    public function createdb($screenName)
+    public function createdb($screenName,$template,$encoding="UTF8")
 	{
         //$this->createUser($screenName);
 
 		$sql = "CREATE DATABASE {$screenName}
-			    WITH ENCODING='LATIN1'
+			    WITH ENCODING='{$encoding}'
        			OWNER=postgres
-       			TEMPLATE=mygeocloud_template
+       			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
 		$this -> execQuery($sql);

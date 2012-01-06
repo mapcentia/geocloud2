@@ -7,7 +7,6 @@ $postgisdb = $_SESSION['screen_name'];
 
 include("wms/mapfile.php.map");
 makeMapFile($postgisdb);
-
 ?>
 		<script type="text/javascript">var screenName='<?php echo $postgisdb;?>'</script>
 		<script type="text/javascript">var schema='<?php echo $postgisschema;?>'</script>
@@ -37,7 +36,6 @@ makeMapFile($postgisdb);
 		</script>
 		<script type="text/javascript" src="/js/httpauthform.js">
 		</script>
-	
 		
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"
 		/>
