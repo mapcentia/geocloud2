@@ -2,6 +2,7 @@
 // Start HTML doc
 include("html_header.php");
 ?>
+<link rel="stylesheet" href="/css/style.css" type="text/css" media="screen" />
 </head>
 <body>
 <div id="outercontainer">

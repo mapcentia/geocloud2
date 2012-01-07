@@ -28,7 +28,6 @@ if ($parts[1]=="store" || $parts[1]=="editor") {
 	<meta name="description" content="Store geographical data and make online maps" />
 	<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
 	<meta name="author" content="Martin Hoegh" />
-	<link rel="stylesheet" href="/css/style.css" type="text/css" media="screen" />
 	<script type="text/javascript">
 
 	  var _gaq = _gaq || [];
