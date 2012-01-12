@@ -17,8 +17,8 @@ $SafeFile = str_replace("*", "", $SafeFile);
 $SafeFile = str_replace("?", "", $SafeFile); 
 $SafeFile = str_replace(".shp", "", $SafeFile);
 $SafeFile = strtolower($SafeFile);
-$SafeFile = $postgisschema.".".$SafeFile;
 $SafeFile = postgis::toAscii($SafeFile,array(),"_");
+$SafeFile = $postgisschema.".".$SafeFile;
 
 if(move_uploaded_file($_FILES['shp']['tmp_name'], $file.".shp")) {
 } else{$response['uploaded'] = false;}
