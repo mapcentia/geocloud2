@@ -529,14 +529,14 @@ function doSelect($table, $sql, $sql2, $from) {
 			$FieldValue=$myrow[$FieldName];
 			if (($FieldName!=$geomField) && ($FieldName!="txmin")&&($FieldName!="tymin") && ($FieldName!="txmax") && ($FieldName!="tymax") && ($FieldName!="tymax") && ($FieldName!="oid")) {
 
-				if ($gmlUseAltFunctions[$table]['altFieldValue']) {
+				if ($gmlUseAltFunctions['altFieldValue']) {
 					$FieldValue = altFieldValue($FieldName, $FieldValue);
 				}
 
-				if ($gmlUseAltFunctions[$table]['altFieldNameToUpper']) {
+				if ($gmlUseAltFunctions['altFieldNameToUpper']) {
 					$FieldName = altFieldNameToUpper($FieldName);
 				}
-				if ($gmlUseAltFunctions[$table]['changeFieldName']) {
+				if ($gmlUseAltFunctions['changeFieldName']) {
 					$FieldName = changeFieldName($FieldName);
 				}
 

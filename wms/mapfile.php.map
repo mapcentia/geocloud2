@@ -156,7 +156,28 @@ function makeMapFile($user,$extentLayer=NULL) {
   .125 1
   .25 .625
   END
-END 
+END
+SYMBOL
+    NAME "hatch1"
+    TYPE VECTOR
+    POINTS
+       0 1 1 0
+    END
+  END
+SYMBOL
+    NAME "dashed1"
+    TYPE ELLIPSE
+    FILLED true
+    POINTS
+       1 1
+    END
+    STYLE
+      
+      7
+      7
+    END
+  END
+
 	  
 	  #
 	  # Start of layers
@@ -218,6 +239,15 @@ END
 
 		#LABELITEM
 		<?php if($layerArr['data'][0]['label_column']) echo "LABELITEM '".$layerArr['data'][0]['label_column']."'\n";?>
+		
+		#LABELMAXSCALEDENOM
+		<?php if($layerArr['data'][0]['label_max_scale']) echo "LABELMAXSCALEDENOM ".$layerArr['data'][0]['label_max_scale']."\n";?>
+		
+		#LABELMINSCALEDENOM
+		<?php if($layerArr['data'][0]['label_min_scale']) echo "LABELMINSCALEDENOM ".$layerArr['data'][0]['label_min_scale']."\n";?>
+		
+		#OPACITY
+		<?php if($layerArr['data'][0]['opacity']) echo "OPACITY  ".$layerArr['data'][0]['opacity']."\n";?>
 
 		
 		#LABELMAXSCALE
@@ -278,9 +308,18 @@ END
 		  LABEL
 			TYPE truetype
 			FONT "arialbd"
-			SIZE 11
+			SIZE
+			<?php 
+			if($class['label_size']) {
+					echo $class['label_size'];
+				}
+				else {
+					echo "11";
+				}
+				echo "\n";
+			?>
 			#MAXSIZE 10000
-			POSITION UC
+			POSITION AUTO
 			#BUFFER 1
 			#MINFEATURESIZE 20
 			COLOR 1 1 1
@@ -290,6 +329,7 @@ END
 			#BACKGROUNDSHADOWSIZE 1 1 
 			ANTIALIAS false
 			FORCE false
+			PARTIALS false
 		  END #Label
 		  <?php }?>
 		END # Class

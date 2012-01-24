@@ -173,6 +173,8 @@ wmsClass.init = function (id) {
             name: 'size'
         }, {
             name: 'width'
+        }, {
+            name: 'label_size'
         }],
         listeners: {
             load: {
@@ -197,6 +199,7 @@ wmsClass.init = function (id) {
         propertyNames: {
             name: 'Name',
             size: 'Symbol size',
+            label_size: 'Label size',
             width: 'Line width'
         },
 		customEditors: {
@@ -205,7 +208,7 @@ wmsClass.init = function (id) {
         'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({
         }), {}),
         'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-            store: ['','circle', 'square', 'triangle'],
+            store: ['','circle', 'square', 'triangle','hatch1','dashed1'],
             editable: false,
             triggerAction: 'all'
         }), {}),
@@ -214,6 +217,10 @@ wmsClass.init = function (id) {
         		decimalSeparator:'¤'// Some strange char nobody is using							
         		}),{}),
 		'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
+        		decimalPrecision:0,
+        		decimalSeparator:'¤'// Some strange char nobody is using							
+        		}),{}),
+		'label_size': new Ext.grid.GridEditor(new Ext.form.NumberField({
         		decimalPrecision:0,
         		decimalSeparator:'¤'// Some strange char nobody is using							
         		}),{})

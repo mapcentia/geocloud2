@@ -169,10 +169,16 @@ $(window).load(function () {
                 tooltip: ""
             },
             {
-                xtype: 'checkcolumn',
-                header: 'Tweet?',
-                dataIndex: 'tweet',
-                width: 55
+                header: 'Sort id',
+                dataIndex: 'sort_id',
+				sortable: true,
+                editable: true,
+                width: 65,
+				editor: new Ext.form.NumberField( {
+						decimalPrecision : 0,
+						decimalSeparator : '¤'// Some strange char nobody is
+												// using
+					})
             },
             {
                 xtype: 'checkcolumn',

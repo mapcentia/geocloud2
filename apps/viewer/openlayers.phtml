@@ -28,6 +28,8 @@ include("controller/wmslayers_c.php");
 <html>
 <head>
 <title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
 <style type="text/css">
 #map {
 	width: 100%;
@@ -146,7 +148,7 @@ if ($_REQUEST['sld'])
 	array_map_r($sldArr);
 	$filter = parseFilter($filterArr,$sldArr['NamedLayer']['Name']);
 	$query = "SELECT xmin(extent(transform(the_geom,{$srs}))) as minx, ymin(extent(transform(the_geom,{$srs}))) as miny, xmax(extent(transform(the_geom,{$srs}))) as maxx, ymax(extent(transform(the_geom,{$srs}))) as maxy FROM {$sldArr['NamedLayer']['Name']} WHERE ".$filter;
-	//echo "<!-- TEST {$query} -->\n";
+	echo "<!-- TEST {$query} -->\n";
 	$result = $postgisObject -> execQuery($query);
 	$row = $postgisObject->fetchRow($result);
 	$buffer = 100;
@@ -292,7 +294,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
     function addLayer(name,title,opacity,connectionString,notVisible) {
         if (notVisible) var visible = false;
         else var visible = true;
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:true,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
         map.addLayer(layerArr[name]);
     }
    
@@ -415,6 +417,11 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	{
 		return ( top != self );
 	}
+	function checkFrameId()
+	{
+		return (window.parent.getElementById('mapframe'));
+	}
+	//alert(checkFrameId());
 	function createPointFromStr(str){
 		var coordArr = str.split(" ");
 		var point = new OpenLayers.Marker(new OpenLayers.LonLat(points1[0],points1[1]));
@@ -427,7 +434,6 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		var legendWin;
 		var searchWin;
 
-	//if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
 	function mapLayerChanged(event) {
             var newlayerArr =[];
             layerStrArr = layerStr.split(";");
@@ -476,7 +482,9 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		maxResolution: 156543.0339,
 		units: "m",
 		//minResolution: "auto",
-        eventListeners: {"changelayer": mapLayerChanged}}
+        eventListeners: {"changelayer": mapLayerChanged},
+		tileSize: new OpenLayers.Size(512,512)
+		}
         );
         
 	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
@@ -499,6 +507,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		maxZoomLevel: settingsViewer.maxzoomlevel,
 		sphericalMercator: true
 	}));
+	/*
 	base.push(new OpenLayers.Layer.Google("Google Terrain", {
 		type: G_PHYSICAL_MAP,
 		minZoomLevel: settingsViewer.minzoomlevel,
@@ -515,6 +524,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
                 }
             )
 	);
+	*/
 	/*
 		base.push(new OpenLayers.Layer.WMS("KMS", "http://kortforsyningen.kms.dk/service?login=Kommune550&password=Sdfghjkl10&servicename=topo_skaermkort&VERSION=1.1.0&format=image/png&styles=&",{layers:"dtk_skaermkort"},{projection:"EPSG:25832",maxResolution: "auto",singleTile:false,transitionEffect:"resize"}));
 	*/
@@ -524,11 +534,11 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	foreach($responseWmsLayers['data'] as $arr) {
 		if ($arr['baselayer']) {
 	?>
-	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$arr['f_table_schema']}/";?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:true,isBaseLayer:true,wrapDateLine:false}));
+	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$arr['f_table_schema']}/";?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:false,isBaseLayer:true,wrapDateLine:false}));
 	<?php }}}?>
 
 	
-	vectors = new OpenLayers.Layer.Vector("Vector Layer");
+	vectors = new OpenLayers.Layer.Vector("Markering");
  
             map.addLayers([vectors]);
 			
@@ -607,7 +617,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 			title: "Search",
 			layout:'fit',
 			width:300,
-			height:300,
+			height:70,
             plain: true,
 			closeAction:'hide',
 			contentEl:searchContent,
@@ -624,8 +634,23 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	    },
         tooltip: "Search"
     });
+	
+	
+	
     actions["legend"] = action;
     toolbarItems.push(action);
+	
+	action = new GeoExt.Action({
+        text: "Stort kort",
+		handler:function(objRef){
+		openMapWin('/apps/viewer/openlayers/<?php echo $postgisdb;?>?<?php echo $_SERVER['QUERY_STRING'];?>&layers='+layerStr,800,600)
+		
+	    },
+        tooltip: "Stort kort"
+    });
+	
+	actions["legend"] = action;
+    if ((inFrames())) toolbarItems.push(action);
 
     toolbarItems.push("->");
     action = new GeoExt.Action({
@@ -728,18 +753,13 @@ function transformPoint(lat,lon,s,d) {
 	<input type="hidden" name="type" value="json" />
 </form>
 <div id="mapel"></div>
-<div
-	style="position: absolute; top: 5px; left: 110px; z-index: 500; display: none;">
-<a id="popupButton"
-	href="javascript:openMapWin('<?php echo $popupPage;?>?<?php echo urlencode($_SERVER['QUERY_STRING']);?>',<?php echo $openLayers['popupSize']['x'];?>100,<?php echo $openLayers['popupSize']['y'];?>100)">aaben
-som pop-up</a></div>
+
 
 
 
 <div id="legendContent"></div>
 <div style="padding: 5px" id="searchContent"><input style="width: 270px"
 	type='text' id='gAddress' name='gAddress' value='' />
-<p>Skriv adresse eller stednavn</p>
 </div>
 </body>
 </html>

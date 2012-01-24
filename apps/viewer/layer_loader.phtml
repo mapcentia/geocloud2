@@ -44,36 +44,36 @@ var lon;
 var defaultLayers = "";
 function loadLayer(i,name,title,table,opacity,connectionString,e){
 	var newArr = [];
- 	top.mapframe.popupOn = true;
+ 	//parent.mapframe.popupOn = true;
 	//alert (e.checked);
 	if (e.checked) {
-		top.mapframe.addLayer(name,title,opacity,connectionString);
+		parent.mapframe.addLayer(name,title,opacity,connectionString);
 		arr[i] = name;
 	}
 	else {
-		top.mapframe.removeLayer(name);
+		parent.mapframe.removeLayer(name);
 		arr.splice(i,1,0);
 	}
-	str = top.mapframe.trim(arr.join(";"));
-	top.mapframe.layerStr = str + defaultLayers;
-	top.mapframe.addLegend(str + defaultLayers);
+	str = parent.mapframe.trim(arr.join(";"));
+	parent.mapframe.layerStr = str + defaultLayers;
+	parent.mapframe.addLegend(str + defaultLayers);
 
 }
 function addEmbedStr() {
-var lonLat = top.mapframe.map.getCenter();
-var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
+var lonLat = parent.mapframe.map.getCenter();
+var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + parent.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
 	
 	
-	var mapBounds = top.mapframe.map.getExtent();
+	var mapBounds = parent.mapframe.map.getExtent();
 	var boundsArr =  mapBounds.toArray();
 	var boundsStr =  boundsArr.join(",");
-	var mapSize = top.mapframe.map.getSize();
+	var mapSize = parent.mapframe.map.getSize();
 	
-	var embedStr2 = '<div class="mapdivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/client_image.phtml?extent='+boundsStr+'&width='+mapSize.w+'&height='+mapSize.h+'&layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val() + '"/></div>';
+	var embedStr2 = '<div class="mapdivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/client_image.phtml?extent='+boundsStr+'&width='+mapSize.w+'&height='+mapSize.h+'&layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val() + '"/></div>';
 	
 	var embedStr3 = '<div class="legenddivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/legend_img.phtml?layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>"/></div>';
 	
-	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + top.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + top.locationframe.$('#locationSelector').val();
+	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + parent.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val();
 	
 	document.getElementById('embed_area1').value = embedStr1+embedStr2+embedStr3;
 	document.getElementById('embed_area4').value = embedStr4;
@@ -120,7 +120,7 @@ foreach($responseWmsLayers['data'] as $arr) {
 	}
 }
 //print_r($groups);
-asort($titles);
+//asort($titles);
 ?>
 <script>
 <?php

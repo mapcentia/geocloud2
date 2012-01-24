@@ -2124,7 +2124,17 @@ class postgis extends control
 	function getPrimeryKey($table)
 	{
 		$query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary";
-		return($this->fetchRow($this->execQuery($query)));
+		$result = $this->execQuery($query);
+		
+		if ($this->PDOerror) {
+			return NULL;
+		}
+		if (!is_array($row=$this->fetchRow($result))) { // If $table is view we bet on there is a gid field
+			return array("attname"=>"gid");
+		}
+		else {
+			return($row);
+		}
 	}
 	function postgisquery($NewPointArray,$layer,$fields,$pg_query_type,$function,$buffer,$where=0)
 	{

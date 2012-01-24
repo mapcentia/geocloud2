@@ -138,6 +138,7 @@ class GmlParser extends postgis
 	}
 	function loadInDB($tableName)
 	{
+		$st=$this->explodeTableName($tableName);
 		//print_r($this -> arr);
 		if ($this -> arr) {
 			//print_r($this->arr);
@@ -145,14 +146,14 @@ class GmlParser extends postgis
 			$dropSql = "DROP TABLE ".$tableName." CASCADE";
 
 			//When we try to delete row from geometry_columns
-			$deleteFromGeometryColumns = "DELETE FROM geometry_columns WHERE f_table_schema='".$this->postgisschema."' AND f_table_name='".$tableName."'";
+			$deleteFromGeometryColumns = "DELETE FROM geometry_columns WHERE f_table_schema='".$st['schema']."' AND f_table_name='".$st['table']."'";
 
 			//When we insert new row in geometry_columns
-			$sqlInsert = "INSERT INTO geometry_columns VALUES ('', '".$this->postgisschema."', '".$tableName."', 'the_geom', 2, {$this->arr['srid'][0]}, '".$this -> geomType."')";
+			$sqlInsert = "INSERT INTO geometry_columns VALUES ('', '".$st['schema']."', '".$st['table']."', 'the_geom', 2, {$this->arr['srid'][0]}, '".$this -> geomType."')";
 
 			//Last we create the new table.Must use schema prefix cos search path include public
 			$createSql = "
-			CREATE TABLE ".$this->postgisschema.".".$tableName." (
+			CREATE TABLE ".$tableName." (
 			gid serial NOT NULL PRIMARY KEY,
 			".$this -> strForSql."  character varying,
 			the_geom geometry,
@@ -161,7 +162,7 @@ class GmlParser extends postgis
 			);
 			";
 			
-			echo $createSql."\n";
+			//echo $createSql."\n";
 
 			// Check if table is already created
 			$checkSql = "select * FROM ".$tableName;

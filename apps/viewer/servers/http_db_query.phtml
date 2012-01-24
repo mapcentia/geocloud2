@@ -1,5 +1,7 @@
-<?php 
+<?php
 include_once("server_header.inc");
+ini_set("display_errors", "Off");
+error_reporting(3);
 $width = $_REQUEST['width'];
 $height = $_REQUEST['height'];
 $pg_query_function = "intersects";

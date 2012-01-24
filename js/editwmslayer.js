@@ -38,6 +38,12 @@ $.ajax({
             name: 'label_column'
         },{
             name: 'query_buffer'
+        },{
+            name: 'opacity'
+        },{
+            name: 'label_max_scale'
+        },{
+            name: 'label_min_scale'
         }],
         listeners: {
             load: {
@@ -63,7 +69,10 @@ $.ajax({
         propertyNames: {
             label_column: 'Label field',
             theme_column: 'Theme field',
-            query_buffer: 'Query buffer'
+            query_buffer: 'Query buffer',
+            opacity: 'Opacity',
+            label_max_scale: 'Label max scale',
+            label_min_scale: 'Label min scale'
         },
         customEditors: {
       
@@ -80,7 +89,19 @@ $.ajax({
 		'query_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
         		decimalPrecision:0,
         		decimalSeparator:'¤'// Some strange char nobody is using							
-        		}),{})
+        }), {}),
+		'opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
+        		decimalPrecision:0,
+        		decimalSeparator:'¤'// Some strange char nobody is using							
+        }),{}),
+		'label_max_scale': new Ext.grid.GridEditor(new Ext.form.NumberField({
+        		decimalPrecision:0,
+        		decimalSeparator:'¤'// Some strange char nobody is using							
+        }),{}),
+		'label_min_scale': new Ext.grid.GridEditor(new Ext.form.NumberField({
+        		decimalPrecision:0,
+        		decimalSeparator:'¤'// Some strange char nobody is using							
+        }),{})
         
             },
         viewConfig: {

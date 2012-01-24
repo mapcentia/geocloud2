@@ -9,13 +9,13 @@ include("html_header.php");
 <div id="innercontainer">
 <div id="stylized" class="myform">
 <form name="db" id="id" method="get" action="/createstore">
-<h1>Get your own geo cloud</h1>
-<p>The geo cloud will be ready in a second!</p>
+<h1>Create a geo cloud</h1>
+<p>The cloud will be ready in a second!</p>
 <label>Name
 <span class="small">Add name for the cloud</span>
 </label>
 <input type="text" name="name" id="name" />
-<button type="submit">Get it now</button>
+<button type="submit">Create it now</button>
 <div class="spacer"></div>
 </form>
 </div>

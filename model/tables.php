@@ -351,7 +351,7 @@ class table extends postgis {
 		$this->PDOerror = NULL;
 		$table = $this->toAscii($table,array(),"_");
 		$sql = "BEGIN;";
-		$sql.= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int);";
+		$sql.= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int) WITH OIDS;";
 		$sql.= "SELECT AddGeometryColumn('".$this->postgisschema."','{$table}','the_geom',{$srid},'{$type}',2);";// Must use schema prefix cos search path include public
 		$sql.= "COMMIT;";
 		$this -> execQuery($sql,"PDO","transaction");
