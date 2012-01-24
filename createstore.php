@@ -16,7 +16,7 @@ if (!$_REQUEST['name']) {
 else {
 	$name = postgis::toAscii($_REQUEST['name'],NULL,"_");
 	$db = new databases;
-	$dbObj = $db -> createdb($name,$databaseTemplate,"LATIN1"); // databaseTemplate is set in conf/main.php
+	$dbObj = $db -> createdb($name,$databaseTemplate); // databaseTemplate is set in conf/main.php
 	if ($dbObj) {
 		
 		echo "<h1>Your geocloud \"{$name}\" was created!</h1>"; 
