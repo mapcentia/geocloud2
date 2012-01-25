@@ -48,7 +48,6 @@ attributeForm.init = function (layer) {
             query: function () {
                 var protocol = store.proxy.protocol;
                 protocol.defaultFilter = filter.filterBuilder.getFilter();
-				//console.log(protocol);
                 store.load();
             layer},
             items: [filter.filterBuilder]

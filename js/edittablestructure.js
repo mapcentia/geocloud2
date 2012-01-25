@@ -16,7 +16,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
     },
     init: Ext.emptyFn
 });
-tableStructure.init = function (table,screenName) {
+tableStructure.init = function (record,screenName) {
 	tableStructure.reader = new Ext.data.JsonReader({
 		totalProperty: 'total',
 		successProperty: 'success',
@@ -48,10 +48,10 @@ tableStructure.init = function (table,screenName) {
 	});
 	tableStructure.proxy = new Ext.data.HttpProxy({
 		api: {
-			read: '/controller/tables/' + screenName + '/getstructure/' + table,
-			create: '/controller/tables/' + screenName + '/createcolumn/' + table,
-			update: '/controller/tables/' + screenName + '/updatecolumn/' + table,
-			destroy: '/controller/tables/' + screenName + '/destroycolumn/' + table
+			read: '/controller/tables/' + screenName + '/getstructure/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
+			create: '/controller/tables/' + screenName + '/createcolumn/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
+			update: '/controller/tables/' + screenName + '/updatecolumn/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
+			destroy: '/controller/tables/' + screenName + '/destroycolumn/' + record.get("f_table_schema") + '.' + record.get("f_table_name")
 		},
 		listeners: {
 			write: tableStructure.onWrite,

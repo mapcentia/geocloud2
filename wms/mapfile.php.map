@@ -190,7 +190,7 @@ SYMBOL
 			makeExceptionReport($postgisObject->PDOerror);
 		}
 		while ($row = $postgisObject->fetchRow($result)) {
-		$wmslayerObj = new wmslayers($row['f_table_name']);
+		$wmslayerObj = new wmslayers("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
 		$layerArr = $wmslayerObj->get();
 		//print_r($layerArr);
 	?>
@@ -266,7 +266,7 @@ SYMBOL
 		  "init=epsg:<?php echo $row['srid'];?>" 
 		END
 		<?php
-		$classObj = new _class($row['f_table_name'],$row['f_table_schema']);
+		$classObj = new _class("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
 		$classArr = $classObj->getAll();
 		//print_r($classArr);
 		if (is_array($classArr['data'])) {

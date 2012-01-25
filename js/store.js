@@ -19,7 +19,7 @@ $(window).load(function () {
 	var groups;
 
     $.ajax({
-        url: '/controller/tables/' + screenName + '/getcolumns/settings.geometry_columns_view',
+        url: '/controller/tables/' + screenName + '/getcolumnswithkey/settings.geometry_columns_view',
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -56,7 +56,7 @@ $(window).load(function () {
     var reader = new Ext.data.JsonReader({
         //totalProperty: 'total',
         successProperty: 'success',
-        idProperty: 'f_table_name',
+        idProperty: '_key_',
         root: 'data',
         messageProperty: 'message'
         // <-- New "messageProperty" meta-data
@@ -65,7 +65,7 @@ $(window).load(function () {
     var proxy = new Ext.data.HttpProxy({
         api: {
             read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
-            update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/f_table_name',
+            update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
             destroy: '/controller/tables/' + screenName + '/destroy'
         },
         listeners: {
@@ -133,7 +133,15 @@ $(window).load(function () {
                     xtype: "textfield"
                 }
             },
-            columns: [{
+            columns: [
+            /*{
+                header: "_Key_",
+                dataIndex: "_key_",
+                sortable: true,
+                editable: false,
+                width: 150
+            },*/
+            {
                 header: "Title",
                 dataIndex: "f_table_title",
                 sortable: true,
@@ -499,7 +507,7 @@ $(window).load(function () {
 
         tableStructure.grid = null;
         winEdit = null;
-        tableStructure.init(record.get("f_table_name"), screenName);
+        tableStructure.init(record, screenName);
         form = new Ext.FormPanel({
             labelWidth: 100,
             // label settings here cascade unless overridden
@@ -602,7 +610,7 @@ $(window).load(function () {
         }
 
         wmsClasses.grid = null;
-        wmsClasses.init(record.get("f_table_name"), screenName);
+        wmsClasses.init(record);
 
         //wmsLayer.grid = null;
         //wmsLayer.init(record.get("f_table_name"));
@@ -641,7 +649,7 @@ $(window).load(function () {
         }
         wmsLayer.grid = null;
         winWmsLayer = null;
-        wmsLayer.init(record.get("f_table_name"));
+        wmsLayer.init(record);
         winWmsLayer = new Ext.Window({
             title: "Edit theme and label column + more on '" + record.get("f_table_name") + "'",
             modal: true,
@@ -673,7 +681,7 @@ $(window).load(function () {
         }
 		var r = record;
         winMoreSettings = null;
-        wmsLayer.init(record.get("f_table_name"));
+        //wmsLayer.init(record.get("f_table_name"));
         winMoreSettings = new Ext.Window({
             title: "More settings on '" + record.get("f_table_name") + "'",
             modal: true,
@@ -698,9 +706,9 @@ $(window).load(function () {
             id: "detailform",
             bodyStyle: 'padding: 10px 10px 0 10px;',
             items: [{
-                name: 'f_table_name',
+                name: '_key_',
                 xtype: 'hidden',
-                value: r.data.f_table_name
+                value: r.data._key_
 
             },
             {
@@ -763,7 +771,7 @@ $(window).load(function () {
                         };
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({
-                            url: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/f_table_name',
+                            url: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
                             headers: {
                                 'Content-Type': 'application/json; charset=utf-8'
                             },

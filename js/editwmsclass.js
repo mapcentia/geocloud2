@@ -1,6 +1,6 @@
 Ext.namespace('wmsClasses');
-wmsClasses.init = function (table, screenName) {
-	wmsClasses.table = table;
+wmsClasses.init = function (record) {
+	wmsClasses.table = record.get("_key_");
     wmsClasses.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -20,9 +20,9 @@ wmsClasses.init = function (table, screenName) {
     });
     wmsClasses.proxy = new Ext.data.HttpProxy({
         api: {
-            read: '/controller/classes/' + screenName + '/getall/' + table,
-            create: '/controller/classes/' + screenName + '/createcolumn/' + table,
-            destroy: '/controller/classes/' + screenName + '/destroy/' + table
+            read: '/controller/classes/' + screenName + '/getall/' + wmsClasses.table,
+            create: '/controller/classes/' + screenName + '/createcolumn/' + wmsClasses.table,
+            destroy: '/controller/classes/' + screenName + '/destroy/' + wmsClasses.table
         },
         listeners: {
             //write: wmsClasses.onWrite,

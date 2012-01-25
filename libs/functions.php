@@ -235,6 +235,12 @@ class postgis
 		if ($field == 'fieldconf') {
 			return $row['fieldconf'];
 		}
+		if ($field == 'def') {
+				return $row['def'];
+			}
+		if ($field == 'id') {
+			return $row['id'];
+		}
 	}
 	function toAscii($str, $replace=array(), $delimiter='-') {
 		if( !empty($replace) ) {

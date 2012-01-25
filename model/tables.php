@@ -6,6 +6,7 @@ class table extends postgis {
 	var $geomField;
 	var $geomType;
 	var $exits;
+	var $id;
 	function __construct($table)
 	{
 		logfile::write($table."\n");
@@ -34,6 +35,7 @@ class table extends postgis {
 			$this->geomField = $this -> getGeometryColumns($this->table, "f_geometry_column");
 			$this->geomType = $this -> getGeometryColumns($this->table, "type");
 			$this->primeryKey = $this->getPrimeryKey($this->table);
+			$this->id = $this->getGeometryColumns($this->table, "id");
 			$this->setType();
 			$this->exits = true;
 		}
@@ -72,7 +74,7 @@ class table extends postgis {
 		$array[$key] = $value;
 		return $array;
 	}
-	function getRecords($whereClause=NULL,$doNotCheck_f_table_name=NULL,$fields="*") // All tables
+	function getRecords($createKeyFrom=NULL,$fields="*",$whereClause) // All tables
 	{
 		$response['success'] = true;
 		$response['message'] = "Layers loaded";
@@ -84,13 +86,13 @@ class table extends postgis {
 		$check = array();
 		while ($row = $this->fetchRow($result,"assoc")) {
 			$arr = array();
-			if(!in_array($row['f_table_name'],$check) or (!$doNotCheck_f_table_name)){ // If more geometry columns we only return the first one.
-				foreach ($row as $key => $value) {
-					$arr = $this -> array_push_assoc($arr,$key,$value);
-				}
-				$check[] = $row['f_table_name'];
-				$response['data'][] = $arr;
+			foreach ($row as $key => $value) {
+				$arr = $this -> array_push_assoc($arr,$key,$value);
 			}
+			if ($createKeyFrom) {
+				$arr = $this -> array_push_assoc($arr,"_key_","{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+			}
+			$response['data'][] = $arr;
 		}
 		return $response;
 	}
@@ -145,7 +147,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	function updateRecord($data,$keyName,$whereClause=NULL) // All tables
+	function updateRecord($data,$keyName) // All tables
 	{
 		$data = $this->makeArray($data);
 		foreach ($data as $row) {
@@ -164,14 +166,7 @@ class table extends postgis {
 			$sql = "UPDATE {$this->table} SET ";
 			$sql.= implode(",",$pairArr);
 			$sql.= " WHERE {$where}";
-			if ($whereClause) {
-				$sql.=" AND {$whereClause}";
-				// Explode whereClause for insert
-				$tmp = explode("=",$whereClause);// We asume that whereClause is key=value;
-				$keyArr[] = $tmp[0];
-				$valueArr[] = $tmp[1];
-				//
-			}
+			
 			$result = $this -> execQuery($sql,"PDO","transaction");
 			// If row does not exits, insert instead. Move to an insert methos
 			if ((!$result) && (!$this->PDOerror)){
@@ -194,7 +189,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	function getColumnsForExtGridAndStore() // All tables
+	function getColumnsForExtGridAndStore($createKeyFrom=NULL) // All tables
 	{
 		if ($this->geomType=="POLYGON" || $this->geomType=="MULTIPOLYGON") {
 			$type = "Polygon";
@@ -217,6 +212,9 @@ class table extends postgis {
 				$fieldsForStore[]  = array("name"=>$key,"type"=>$value['type']);
 				$columnsForGrid[]  =  array("header"=>$key,"dataIndex"=>$key,"type"=>$value['type'],"typeObj"=>$value['typeObj']);
 			}
+		}
+		if ($createKeyFrom) {
+			$fieldsForStore[]  = array("name"=>"_key_","type"=>"string");
 		}
 		$response["forStore"] = $fieldsForStore;
 		$response["forGrid"] = $columnsForGrid;
@@ -252,7 +250,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	function updateColumn($data,$whereClause=NULL) // All tables
+	function updateColumn($data,$key) // All tables
 	{
 		$data = $this->makeArray($data);
 		$fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table,"fieldconf"));
@@ -270,10 +268,10 @@ class table extends postgis {
 			$fieldconfArr[$safeColumn] = $value;
 		}
 		$conf['fieldconf'] = json_encode($fieldconfArr);
-		$conf['f_table_name'] = $this->tableWithOutSchema;
+		$conf['_key_'] = $key;
 
 		$geometryColumnsObj = new table("settings.geometry_columns_join");
-		$geometryColumnsObj->updateRecord(json_decode(json_encode($conf)),"f_table_name",$whereClause);
+		$geometryColumnsObj->updateRecord(json_decode(json_encode($conf)),"_key_");
 		$this->execQuery($sql,"PDO","transaction");
 		if ((!$this->PDOerror) || (!$sql)) {
 			$response['success'] = true;
@@ -351,7 +349,7 @@ class table extends postgis {
 		$this->PDOerror = NULL;
 		$table = $this->toAscii($table,array(),"_");
 		$sql = "BEGIN;";
-		$sql.= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int) WITH OIDS;";
+		$sql.= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int);";
 		$sql.= "SELECT AddGeometryColumn('".$this->postgisschema."','{$table}','the_geom',{$srid},'{$type}',2);";// Must use schema prefix cos search path include public
 		$sql.= "COMMIT;";
 		$this -> execQuery($sql,"PDO","transaction");

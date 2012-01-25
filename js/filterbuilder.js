@@ -229,7 +229,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
 			
 			
         }
-		return filter;
+        return filter;
     },
     
     /** private: method[cleanFilter]

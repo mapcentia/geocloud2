@@ -3,8 +3,8 @@ ini_set("display_errors", "On");
 error_reporting(3);
 
 // URL and path information. Must be the web root folder! 
-$hostName = "http://beta.mygeocloud.com";
-$basePath = "/var/www/mygeocloud/";
+$hostName = "http://test.mygeocloud.com";
+$basePath = "/var/www/mygeocloud_rc1/";
 
 
 // PostGreSQL connection

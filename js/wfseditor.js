@@ -349,6 +349,7 @@ $(window).load(function() {
             }),
 			fields : fieldsForStore,
 			layer : layer,
+
 			featureFilter : new OpenLayers.Filter( {
 				evaluate : function(feature) {
 					return feature.state !== OpenLayers.State.DELETE;

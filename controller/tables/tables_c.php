@@ -11,7 +11,7 @@ if ($HTTP_RAW_POST_DATA) {
 
 switch ($parts[4]){
 	case "getrecords": // only geometrycolumns table
-		$response = $table -> getRecords("f_table_schema='{$postgisschema}'",true);
+		$response = $table -> getRecords(true,"*",$whereClause="f_table_schema='{$postgisschema}'");
 		break;
 	case "getallrecords": // All tables
 		$response = $table -> getRecords(NULL,NULL,"gid,plannr,plannavn,distrikt,anvendelsegenerel,zonestatus,doklink");
@@ -20,7 +20,7 @@ switch ($parts[4]){
 		$response = $table -> getGroupBy($parts[6]);
 		break;
 	case "updaterecord": // All tables
-		$response = $table -> updateRecord($obj->data,$parts[6],"f_table_schema='{$postgisschema}'");
+		$response = $table -> updateRecord($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);
 		break;
 	case "destroyrecord": // Geometry columns
@@ -34,11 +34,14 @@ switch ($parts[4]){
 	case 'getcolumns': // All tables
 		$response = $table -> getColumnsForExtGridAndStore();
 		break;
+	case 'getcolumnswithkey': // All tables
+		$response = $table -> getColumnsForExtGridAndStore(true);
+		break;
 	case 'getstructure': // All tables
 		$response = $table -> getTableStructure();
 		break;
 	case 'updatecolumn':
-		$response = $table -> updateColumn($obj->data,"f_table_schema='{$postgisschema}'");
+		$response = $table -> updateColumn($obj->data,$parts[6]);
 		makeMapFile($_SESSION['screen_name']);
 		break;
 	case 'createcolumn':

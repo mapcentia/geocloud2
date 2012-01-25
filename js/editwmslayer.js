@@ -1,8 +1,8 @@
 Ext.namespace('wmsLayer');
-wmsLayer.init = function (id) {
+wmsLayer.init = function (record) {
 var fieldsForStore = [];
 $.ajax({
-        url: '/controller/tables/' + screenName + '/getcolumns/' + id,
+        url: '/controller/tables/' + screenName + '/getcolumns/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -13,17 +13,17 @@ $.ajax({
                     var forStore = response.forStore;
 					fieldsForStore.push("");
                     for (var i in forStore) {
-                    	fieldsForStore.push(forStore[i].name)
+                    	fieldsForStore.push(forStore[i].name);
                     }
                 }
             }
         }
     });
-	wmsLayer.classId = id; 
+	wmsLayer.classId = record.get("_key_"); 
     wmsLayer.store = new Ext.data.JsonStore({
         // store config
         autoLoad: true,
-        url: '/controller/wmslayers/' + screenName + '/get/' + id,
+        url: '/controller/wmslayers/' + screenName + '/get/' + record.get("_key_"),
         baseParams: {
             xaction: 'read'
         },

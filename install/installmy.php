@@ -26,6 +26,7 @@ else {
 }
 */
 
+
 //Try to create schema
 $result = $conn->execQuery($sqls['schema'],"PDO","transaction");
 if (!$conn->PDOerror[0]) {

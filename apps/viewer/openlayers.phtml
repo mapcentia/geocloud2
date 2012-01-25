@@ -434,6 +434,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		var legendWin;
 		var searchWin;
 
+	//if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
 	function mapLayerChanged(event) {
             var newlayerArr =[];
             layerStrArr = layerStr.split(";");
@@ -753,13 +754,10 @@ function transformPoint(lat,lon,s,d) {
 	<input type="hidden" name="type" value="json" />
 </form>
 <div id="mapel"></div>
-
-
-
-
 <div id="legendContent"></div>
 <div style="padding: 5px" id="searchContent"><input style="width: 270px"
 	type='text' id='gAddress' name='gAddress' value='' />
+<p>Skriv adresse eller stednavn</p>
 </div>
 </body>
 </html>

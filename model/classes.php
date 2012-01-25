@@ -10,7 +10,7 @@ class _class extends postgis {
 		return $array;
 	}
 	public function getAll() {
-		$sql = "SELECT class FROM settings.geometry_columns_join WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}'";
+		$sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->table}'";
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			$response['success'] = true;
@@ -66,7 +66,7 @@ class _class extends postgis {
 	public function store($data) {
 		// First we replace unicode escape sequence
 		$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
-		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE f_table_name='{$this->table}' AND f_table_schema='{$this->postgisschema}';";
+		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE _key_='{$this->table}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 			$response['success'] = true;

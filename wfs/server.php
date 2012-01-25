@@ -551,7 +551,7 @@ function doSelect($table, $sql, $sql2, $from) {
 				}
 			}
 			elseif (strtolower($FieldName)==strtolower($geomField) && (!$checkIfGeomHasPassed)) {
-				$checkIfGeomHasPassed = true;
+				//$checkIfGeomHasPassed = true;
 				// Check if the geometry field use another name space
 				if ($gmlNameSpaceGeom) {
 					$tmpNameSpace = $gmlNameSpaceGeom;
@@ -731,7 +731,7 @@ function doParse($arr)
 						foreach ($hey as $typeName => $feature)
 						{
 							if (is_array($feature)) {// Skip handles
-							$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$typeName, "f_geometry_column");
+							//$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$typeName, "f_geometry_column");
 							foreach ($feature as $field => $value)
 							{
 								$fields[] = $field;
@@ -741,7 +741,7 @@ function doParse($arr)
 									logfile::write($Serializer->getSerializedData()."\n\n");	
 									$gmlCon = new gmlConverter();
 									$wktArr = $gmlCon -> gmlToWKT($Serializer->getSerializedData(),array());
-									$values[] = array("{$the_geom}" => $wktArr[0][0],"srid" => $wktArr[1][0]);
+									$values[] = array("{$field}" => $wktArr[0][0],"srid" => $wktArr[1][0]);
 									unset($gmlCon);
 									unset($wktArr);
 									//logfile::write($Serializer->getSerializedData()."\n\n");
@@ -790,7 +790,7 @@ function doParse($arr)
 							
 							$gmlCon = new gmlConverter();
 							$wktArr = $gmlCon -> gmlToWKT($Serializer->getSerializedData(),array());
-							$values[$fid][] = (array("{$the_geom }" => current($wktArr[0]),"srid" => current($wktArr[1])));
+							$values[$fid][] = (array("{$pair['Name']}" => current($wktArr[0]),"srid" => current($wktArr[1])));
 
 							unset($gmlCon);
 							unset($wktArr);
