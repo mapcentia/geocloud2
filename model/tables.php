@@ -226,7 +226,7 @@ class table extends postgis {
 		 fb($output);*/
 		return $response;
 	}
-	function getTableStructure() // All tables
+	function getTableStructure() // Only geometry tables
 	{
 		$response['success'] = true;
 		$response['message'] = "Structure loaded";
@@ -236,6 +236,7 @@ class table extends postgis {
 			if ($key!=$this->geomField && $key!=$this->primeryKey['attname']) {
 				$arr = $this -> array_push_assoc($arr,"id",$key);
 				$arr = $this -> array_push_assoc($arr,"column",$key);
+				$arr = $this -> array_push_assoc($arr,"sort_id",(int)$fieldconfArr[$key]->sort_id);
 				$arr = $this -> array_push_assoc($arr,"querable",$fieldconfArr[$key]->querable);
 				$arr = $this -> array_push_assoc($arr,"alias",$fieldconfArr[$key]->alias);
 				$arr = $this -> array_push_assoc($arr,"link",$fieldconfArr[$key]->link);
@@ -250,7 +251,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	function updateColumn($data,$key) // All tables
+	function updateColumn($data,$key) // Only geometry tables
 	{
 		$data = $this->makeArray($data);
 		$fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table,"fieldconf"));
@@ -283,7 +284,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	function deleteColumn($data,$whereClause=NULL) // All tables
+	function deleteColumn($data,$whereClause=NULL) // Only geometry tables
 	{
 		$data = $this->makeArray($data);
 		$fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table,"fieldconf"));

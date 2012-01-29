@@ -49,6 +49,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  MIMETYPE "image/png"
 		  IMAGEMODE RGB
 		  EXTENSION "png"
+		  TRANSPARENT ON
 		  FORMATOPTION "GAMMA=0.75"
 	  END
 	  WEB
@@ -167,16 +168,71 @@ SYMBOL
 SYMBOL
     NAME "dashed1"
     TYPE ELLIPSE
-    FILLED true
-    POINTS
-       1 1
-    END
-    STYLE
-      
-      7
-      7
-    END
-  END
+  	FILLED TRUE
+  	POINTS 1 1 END
+  	STYLE 4 2 END
+ END
+ 
+# ============================================================================ 
+# Vector Line Types
+# ============================================================================ 
+
+SYMBOL 
+  NAME "continue"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dashed-line-short"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 5 5 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dashed-line-long"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 10 10 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dash-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 20 6 2 6 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dash-dot-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 10 6 2 6 2 6 END
+END
+ 
+# --------------------
+
+SYMBOL 
+  NAME "dot-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 2 2 END
+END
 
 	  
 	  #
@@ -297,10 +353,26 @@ SYMBOL
 			  #SIZE
 			  <?php if($class['size']) echo "SIZE ".$class['size']."\n";?>
 			  
-			  #OVERLAYSYMBOL "circle"
-			  #OVERLAYOUTLINECOLOR 204 106 9
-			  #OVERLAYSIZE 3
 		  END # style
+		  
+		  STYLE
+			  #SYMBOL
+			  <?php if($class['overlaysymbol']) echo "SYMBOL '".$class['overlaysymbol']."'\n";?>
+			  
+			  #WIDTH
+			  <?php if($class['overlaywidth']) echo "WIDTH ".$class['overlaywidth']."\n";?>
+				
+			  #COLOR
+			  <?php if($class['overlaycolor']) echo "COLOR ". color::hex2RGB($class['overlaycolor'],true," ")."\n";?>
+			  
+			  #OUTLINECOLOR
+			  <?php if($class['overlayoutlinecolor']) echo "OUTLINECOLOR ". color::hex2RGB($class['overlayoutlinecolor'],true," ")."\n";?>
+			  
+			  #SIZE
+			  <?php if($class['overlaysize']) echo "SIZE ".$class['overlaysize']."\n";?>
+			  
+		  END # style
+		  
 		  #TEMPLATE "ttt"
 		  
 		  #LABEL

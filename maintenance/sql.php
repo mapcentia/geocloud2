@@ -1,10 +1,11 @@
 <?php
 $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
 
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN sort_id int";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN _key_ varchar(255)";
+//$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN sort_id int";
+//$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN _key_ varchar(255)";
+$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tilecache bool";
 
-$sqls[] = "UPDATE settings.geometry_columns_join SET _key_ = f_table_schema || '.' || f_table_name || '.the_geom'";
+//$sqls[] = "UPDATE settings.geometry_columns_join SET _key_ = f_table_schema || '.' || f_table_name || '.the_geom'";
 
 $sqls[] = "
 CREATE VIEW settings.geometry_columns_view AS 
@@ -30,7 +31,8 @@ CREATE VIEW settings.geometry_columns_view AS
 		geometry_columns_join.class,
 		geometry_columns_join.wmssource,
 		geometry_columns_join.baselayer,
-		geometry_columns_join.sort_id
+		geometry_columns_join.sort_id,
+		geometry_columns_join.tilecache
    FROM geometry_columns
    LEFT JOIN 
    		settings.geometry_columns_join ON

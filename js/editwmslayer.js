@@ -52,9 +52,13 @@ $.ajax({
                     var propGrid = Ext.getCmp('propGrid');
                     // make sure the property grid exists
                     if (propGrid) {
-                        // populate the property grid with store data
-                        propGrid.setSource(store.getAt(0).data);
-                    }
+                		// Remove default sorting
+                		delete propGrid.getStore().sortInfo;
+                		// set sorting of first column to false
+                		propGrid.getColumnModel().getColumnById('name').sortable = false;
+                		// populate the property grid with store data
+                		propGrid.setSource(store.getAt(0).data);
+                	}
                 }
             }
         }
@@ -66,6 +70,8 @@ $.ajax({
         autoHeight: true,
         modal: false,
         region: 'center',
+        frame : false,
+		border : false,
         propertyNames: {
             label_column: 'Label field',
             theme_column: 'Theme field',

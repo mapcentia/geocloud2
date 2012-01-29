@@ -151,6 +151,9 @@ items.push({
 					if ($arr['baselayer']!="t") {
 					    $st = postgis::explodeTableName($layer);
 						$layerConnectionString = "{$hostName}/wms/{$postgisdb}/{$st["schema"]}/";
+						if ($arr['tilecache']) {
+							$layerConnectionString.="tilecache/"; 
+						}
 						echo "<input class='layer' type='checkbox' name='{$layer}' id='{$layer}' onclick='javascript:loadLayer({$i},\\\"{$layer}\\\",\\\"{$title}\\\",\\\"{$_table}\\\",\\\"{$opacity}\\\",\\\"{$layerConnectionString}\\\",this)'";
 						if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
 						echo "/>";

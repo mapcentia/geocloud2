@@ -33,7 +33,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 		$postGisQueryName[strtoupper($bits[0])] = $postgisObject->getGeometryColumns($bits[0],"f_table_title");
 		foreach($fieldconfArr as $key=>$value){
 			if ($value->querable) {
-				$strs[]= strtoupper($value->column);
+				$strs[$value->sort_id]= strtoupper($value->column);
 			}
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 			if ($value->link) {
@@ -42,7 +42,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			}
 		}
 		if (is_array($strs)) {
-			sort($strs);
+			ksort($strs);
 			$str = implode(",",$strs);
 			$postGisQueryFieldRow[strtoupper($bits[0])]= $str;
 		}

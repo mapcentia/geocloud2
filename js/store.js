@@ -386,6 +386,7 @@ $(window).load(function () {
         var p = new Ext.Panel({
             id: "newschemapanel",
             frame: false,
+            border: false,
             //width: 500,
             //height: 400,
             layout: 'border',
@@ -402,6 +403,7 @@ $(window).load(function () {
             height: 150,
             closeAction: 'close',
             plain: false,
+            border: false,
             items: [
 				new Ext.FormPanel({
 				labelWidth: 1,
@@ -583,8 +585,11 @@ $(window).load(function () {
             y: 100,
             closeAction: 'close',
             plain: true,
+            frame : true,
+			border : false,
             items: [new Ext.Panel({
                 frame: false,
+                border : false,
                 width: 500,
                 height: 400,
                 layout: 'border',
@@ -626,13 +631,9 @@ $(window).load(function () {
             y: 100,
             closeAction: 'close',
             plain: true,
-            items: [new Ext.Panel({
-                frame: false,
-                width: 500,
-                height: 400,
-                layout: 'border',
-                items: [wmsClasses.grid]
-            })]
+            border: false,
+            items: [wmsClasses.grid]
+        
         });
         winClasses.show(this);
     }
@@ -658,13 +659,8 @@ $(window).load(function () {
             height: 400,
             closeAction: 'close',
             plain: true,
-            items: [new Ext.Panel({
-                frame: false,
-                width: 500,
-                height: 400,
-                layout: 'border',
-                items: [wmsLayer.grid]
-            })]
+			border : true,
+            items:[wmsLayer.grid]
         });
         winWmsLayer.show(this);
     };
@@ -683,7 +679,7 @@ $(window).load(function () {
         winMoreSettings = null;
         //wmsLayer.init(record.get("f_table_name"));
         winMoreSettings = new Ext.Window({
-            title: "More settings on '" + record.get("f_table_name") + "'",
+            title : "More settings on '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 500,
@@ -755,8 +751,26 @@ $(window).load(function () {
 			editable: false,
 			triggerAction: 'all',
         	name: 'baselayer',
-        	fieldLabel: 'Baselayer?',
+        	fieldLabel: 'Is baselayer',
 			value: r.data.baselayer
+        },{
+        	xtype: 'combo',
+			store: new Ext.data.ArrayStore({
+				fields: ['name', 'value'],
+				data: [
+					['true', true],
+					['false', false]
+				   ]
+			}),
+			displayField: 'name',
+			valueField: 'value',
+			mode: 'local',
+			typeAhead: false,
+			editable: false,
+			triggerAction: 'all',
+        	name: 'tilecache',
+        	fieldLabel: 'Use tilecache',
+			value: r.data.tilecache
         }
 		],
             buttons: [{
