@@ -308,7 +308,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         if (enableTileCache) {
         	connectionString = connectionString + "tilecache/";
         }
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false,transitionEffect: 'resize'});
         map.addLayer(layerArr[name]);
     }
    
@@ -504,6 +504,19 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         
 	map.maxExtent = new OpenLayers.Bounds.fromString("-20037508, -20037508, 20037508, 20037508");
 	var base = [];
+	// Add WMS baselayers
+	<?php
+	if (isset($responseWmsLayers['data'])){
+	foreach($responseWmsLayers['data'] as $arr) {
+		if ($arr['baselayer']) {
+			$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$arr['f_table_schema']}/";
+			if ($arr['tilecache']) {
+				$layerConnectionString.="tilecache/"; 
+			}
+	?>
+	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
+	<?php }}}?>
+/*
 	base.push(new OpenLayers.Layer.TMS(
             "OpenStreetMap",
             "http://tile.openstreetmap.org/",
@@ -514,6 +527,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
             }
         )
 	);
+*/
 	base.push(new OpenLayers.Layer.Google("Google Normal", {
 		type: G_NORMAL_MAP,
 		minZoomLevel: settingsViewer.minzoomlevel,
@@ -526,35 +540,25 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		maxZoomLevel: settingsViewer.maxzoomlevel,
 		sphericalMercator: true
 	}));
+/*
 	base.push(new OpenLayers.Layer.Google("Google Satellite", {
 		type: G_SATELLITE_MAP,
 		minZoomLevel: settingsViewer.minzoomlevel,
 		maxZoomLevel: settingsViewer.maxzoomlevel,
 		sphericalMercator: true
 	}));
+
 	base.push(new OpenLayers.Layer.Google("Google Terrain", {
 		type: G_PHYSICAL_MAP,
 		minZoomLevel: settingsViewer.minzoomlevel,
 		maxZoomLevel: settingsViewer.maxzoomlevel,
 		sphericalMercator: true
 	}));
-	
+*/
 	/*
 		base.push(new OpenLayers.Layer.WMS("KMS", "http://kortforsyningen.kms.dk/service?login=Kommune550&password=Sdfghjkl10&servicename=topo_skaermkort&VERSION=1.1.0&format=image/png&styles=&",{layers:"dtk_skaermkort"},{projection:"EPSG:25832",maxResolution: "auto",singleTile:false,transitionEffect:"resize"}));
 	*/
-	// Add WMS baselayers
-	<?php
-	if (isset($responseWmsLayers['data'])){
-	foreach($responseWmsLayers['data'] as $arr) {
-		if ($arr['baselayer']) {
-			$layerConnectionString = "http://{$_SERVER['HTTP_HOST']}/wms/{$postgisdb}/{$arr['f_table_schema']}/";
-			if ($arr['tilecache']) {
-				$layerConnectionString.="tilecache/"; 
-			}
-	?>
-	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:false,isBaseLayer:true,wrapDateLine:false}));
-	<?php }}}?>
-
+	
 	
 	vectors = new OpenLayers.Layer.Vector("Markering");
  

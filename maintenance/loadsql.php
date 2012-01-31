@@ -4,14 +4,13 @@ include("../libs/functions.php");
 include("../model/databases.php");
 include("sql.php");
 $dbList = new databases();
-echo "test";
 $arr = $dbList->listAllDbs();
 
 
 foreach($arr['data'] as $db) {
 	echo $db."<br/>";
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
-		//if ($db=="mydb") {
+		//if ($db=="norddjurs") { 
 			$postgisdb = $db;
 			$conn = new postgis();
 			foreach($sqls as $sql) {
