@@ -6,7 +6,7 @@ $_SESSION['screen_name'] = $parts[2];
 
 		<script type="text/javascript">var screenName='<?php echo $_SESSION['screen_name'];?>'</script>
 		<script type="text/javascript">var schema='<?php echo $schemaFromUri;?>'</script>
-		<script type="text/javascript" src="/js/openlayers/lib/OpenLayers.js?mobile"></script>
+		<script type="text/javascript" src="/js/openlayers/lib/OpenLayers.js"></script>
 		<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js">
 		</script>
 		<script type="text/javascript" src="/js/ext/ext-all.js">

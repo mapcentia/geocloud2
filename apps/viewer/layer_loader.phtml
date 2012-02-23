@@ -32,6 +32,7 @@ body {
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
 <link rel="stylesheet" type="text/css"
 	href="/js/ext/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css" />
 
 
 <script>
@@ -59,25 +60,7 @@ function loadLayer(i,name,title,table,opacity,connectionString,e){
 	parent.mapframe.addLegend(str + defaultLayers);
 
 }
-function addEmbedStr() {
-var lonLat = parent.mapframe.map.getCenter();
-var embedStr1 = '<div class="mapdivopen"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + parent.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val() + '" frameborder="0"></iframe></div>';
-	
-	
-	var mapBounds = parent.mapframe.map.getExtent();
-	var boundsArr =  mapBounds.toArray();
-	var boundsStr =  boundsArr.join(",");
-	var mapSize = parent.mapframe.map.getSize();
-	
-	var embedStr2 = '<div class="mapdivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/client_image.phtml?extent='+boundsStr+'&width='+mapSize.w+'&height='+mapSize.h+'&layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val() + '"/></div>';
-	
-	var embedStr3 = '<div class="legenddivstat" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/legend_img.phtml?layer='+str+defaultLayers+'&lan=<?php echo $_REQUEST["lan"];?>"/></div>';
-	
-	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/openlayers.phtml?layers=' + str + defaultLayers  + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + parent.mapframe.map.getZoom() + '&lan=<?php echo $_REQUEST["lan"];?>&location=' + parent.locationframe.$('#locationSelector').val();
-	
-	document.getElementById('embed_area1').value = embedStr1+embedStr2+embedStr3;
-	document.getElementById('embed_area4').value = embedStr4;
-}
+
 var items = [];
 
 </script>
@@ -85,11 +68,10 @@ var items = [];
 <body class="claro">
 
 <?php
-include("inc/uri_parts.php");
 ini_set("display_errors", "On");
 error_reporting(3);
 
-include("inc/uri_parts.php");
+include("../../inc/user_name_from_uri.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
 
@@ -191,20 +173,5 @@ new Ext.Viewport({
 
 
 </script>
-<br />
-<br />
-<div style="bottom:0px;display:<?php if ($_REQUEST['showcodebox']) {echo "inline";} else {echo "none";}?>;">
-<form id="theForm" name="theForm">
-<div>Interaktivt- og statisk kort</div>
-<input type="text" size="30" id="embed_area1" name="embed_area1"
-	onclick="javascript:document.theForm.embed_area1.focus();document.theForm.embed_area1.select();"
-	readonly='readonly' />
-<div>Url til kort</div>
-<input type="text" size="30" id="embed_area4" name="embed_area4"
-	onclick="javascript:document.theForm.embed_area4.focus();document.theForm.embed_area4.select();"
-	readonly='readonly' /> <br />
-<a href="#" id="codeButton">Se kode</a><br />
-</form>
-</div>
 </body>
 </html>

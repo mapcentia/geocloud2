@@ -1,7 +1,7 @@
 <?php
 session_start();
 include_once("../../../conf/main.php");
-include("../inc/uri_parts.php");
+include("../../../inc/user_name_from_uri.php");
 
 $postgisdb = $parts[5];
 $postgisschema = $parts[6];

@@ -18,9 +18,13 @@ $(window).load(function() {
 	var editable = true;
 	var sm;
 	// allow testing of specific renderers via "?renderer=Canvas", etc
+	/*
 		var renderer = OpenLayers.Util.getParameters(window.location.href).renderer;
+
 		renderer = (renderer) ? [ renderer ]
 				: OpenLayers.Layer.Vector.prototype.renderers;
+	*/
+		OpenLayers.Layer.Vector.prototype.renderers = ["SVG2","Canvas","VML"];
 		$.ajax( {
 			url : '/controller/tables/' + screenName + '/getcolumns/'
 					+ getvars['layer'],
@@ -67,12 +71,12 @@ $(window).load(function() {
 		map = new OpenLayers.Map("mapel", {
 			controls : [ new OpenLayers.Control.Navigation(),
 					new OpenLayers.Control.PanZoomBar(),
-					new OpenLayers.Control.LayerSwitcher(),
+					new OpenLayers.Control.LayerSwitcher() /*,
 					new OpenLayers.Control.TouchNavigation( {
 						dragPanOptions : {
 							interval : 100
 						}
-					}) ],
+					})*/ ],
 			'numZoomLevels' : 20,
 			'projection' : new OpenLayers.Projection("EPSG:900913"),
 			'maxResolution' : 156543.0339,
@@ -193,7 +197,7 @@ $(window).load(function() {
 			}, OpenLayers.Feature.Vector.style.temporary)
 		});
 		layer = new OpenLayers.Layer.Vector("vector", {
-			renderers : renderer,
+			//renderers : renderer,
 			strategies : [ new OpenLayers.Strategy.Fixed(), saveStrategy ],
 			protocol : new OpenLayers.Protocol.WFS.v1_0_0( {
 				url : "/wfs/" + screenName + "/" + schema + "/900913?",
@@ -405,10 +409,13 @@ $(window).load(function() {
 				tbar : wfsTools
 			}, {
 				region : "south",
+				title: "Attribut table",
 				split : true,
 				frame : false,
 				layout : 'fit',
-				height : 300
+				height : 300,
+				collapsible: true,
+				collapsed: false
 			} ]
 		});
 

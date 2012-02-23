@@ -159,7 +159,7 @@ class GmlParser extends postgis
 			the_geom geometry,
 			CONSTRAINT \"$1\" CHECK ((srid(the_geom) = {$this->arr['srid'][0]})),
 			CONSTRAINT \"$2\" CHECK (((geometrytype(the_geom) = '".$this -> geomType."'::text) OR (the_geom IS NULL)))
-			);
+			) WITH OIDS;
 			";
 			
 			//echo $createSql."\n";

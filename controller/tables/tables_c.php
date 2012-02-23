@@ -14,7 +14,7 @@ switch ($parts[4]){
 		$response = $table -> getRecords(true,"*",$whereClause="f_table_schema='{$postgisschema}'");
 		break;
 	case "getallrecords": // All tables
-		$response = $table -> getRecords(NULL,NULL,"gid,plannr,plannavn,distrikt,anvendelsegenerel,zonestatus,doklink");
+		$response = $table -> getRecords(false,"gid,plannr,plannavn,distrikt,anvendelsegenerel,zonestatus,doklink",null);
 		break;
 	case "getgroupby": // All tables
 		$response = $table -> getGroupBy($parts[6]);

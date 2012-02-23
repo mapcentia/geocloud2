@@ -2,7 +2,7 @@
 include("../server_header.inc");
 
 $table = new table(NULL);
-$response = $table->create($_REQUEST['name'],$_REQUEST['type'],4326);
+$response = $table->create($_REQUEST['name'],$_REQUEST['type'],$_REQUEST['srid']);
 
 $table = new table('settings.geometry_columns_join');
 $obj = json_decode('{"data":{"f_table_name":"'.$response['tableName'].'","f_table_title":""}}');

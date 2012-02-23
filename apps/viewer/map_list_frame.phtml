@@ -1,6 +1,6 @@
 <?php
 include("../../conf/main.php");
-include("inc/uri_parts.php");
+include("../../inc/user_name_from_uri.php");
 if (!$parts[5]) die ("Please state a schema in the url");
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -9,11 +9,10 @@ if (!$parts[5]) die ("Please state a schema in the url");
     html, body { width: 100%; height: 100%; margin: 0; overflow:hidden; }
     #borderContainer { width: 100%; height: 100%; }
 </style>
-
-	<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
         <script type="text/javascript" src="/js/ext/ext-all.js"></script>
         <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
-
+		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css" />
 </head>
 <body>
 
@@ -21,12 +20,12 @@ if (!$parts[5]) die ("Please state a schema in the url");
 
 		<!--<iframe name="locationframe" scrolling="no" frameborder="0" style="WIDTH: 100%; HEIGHT:30px" src="/apps/viewer/includes/location_select.php?lan=da&location=<?php echo $_REQUEST["location"];?>&showcodebox=<?php echo $_REQUEST["showcodebox"];?>"></iframe><br/>-->
 
-		<iframe scrolling="no" id="layerframe" frameborder="0" style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/layer_loader/<?php echo $parts[4];?>/<?php echo $parts[5];?>?lan=da&<?php echo $_SERVER['QUERY_STRING'];?>"></iframe>
+		<iframe scrolling="no" id="layerframe" frameborder="0" style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/layer_loader/<?php echo $parts[4];?>/<?php echo $parts[5];?>?<?php echo $_SERVER['QUERY_STRING'];?>"></iframe>
 
 	</div>
 	<div id="main">
 
-		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>?lan=da&usepopup=false&<?php echo $_SERVER['QUERY_STRING'];?>&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
+		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>?<?php echo $_SERVER['QUERY_STRING'];?>&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
 	</div>
 </body>
 <script type="text/javascript">
@@ -46,7 +45,8 @@ if (!$parts[5]) die ("Please state a schema in the url");
                 layoutConfig:{
                     animate:true
                 },
-                contentEl:document.getElementById("layers")
+                contentEl:document.getElementById("layers"),
+				collapsible: true
             },{
                 region:'center',
                 margins:'5 5 5 0',

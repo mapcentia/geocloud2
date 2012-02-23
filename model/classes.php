@@ -66,6 +66,8 @@ class _class extends postgis {
 	public function store($data) {
 		// First we replace unicode escape sequence
 		$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
+		//$data = $this->quote($data);
+		$data = str_replace("'","\'",$data);
 		$sql = "UPDATE settings.geometry_columns_join SET class='{$data}' WHERE _key_='{$this->table}';";
 		$this->execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {

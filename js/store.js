@@ -940,6 +940,8 @@ $(window).load(function () {
         title: 'Settings and stuff',
         layout: 'accordion',
         region: 'east',
+		collapsible: true,
+		collapsed: true,
         width: 300,
         frame: false,
         plain: true,

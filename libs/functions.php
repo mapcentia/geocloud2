@@ -39,7 +39,7 @@ class postgis
 		return($row);
 		*/
 		if ($this->PDOerror){
-			//throw new Exception($this->PDOerror[0]);
+			throw new Exception($this->PDOerror[0]);
 		}
 		switch ($result_type) {
 			case "assoc":
@@ -125,6 +125,38 @@ class postgis
 				return($result);
 				break;
 		}
+	}
+	function sql($q) // All tables
+	{
+		$result = $this -> execQuery($q);
+		$data = array();
+		while ($row = $this->fetchRow($result,"assoc")) {
+			$arr = array();
+			foreach ($row as $key => $value) {
+				$arr = $this -> array_push_assoc($arr,$key,$value);
+			}
+			$data[] = $arr;
+			
+		}
+		foreach ($data[0] as $key => $value) {
+			$fieldsForStore[]  = array("name"=>$key,"type"=>"string");
+			$columnsForGrid[]  = array("header"=>$key,"dataIndex"=>$key,"type"=>"string","typeObj"=>array("type"=>"string"));
+		}
+		if (!$this->PDOerror) {
+			$response['success'] = true;
+			$response['data'] = $data;
+			$response['forStore'] = $fieldsForStore;
+			$response['forGrid'] = $columnsForGrid;
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror;
+		}
+		return $response;
+	}
+	private function array_push_assoc($array, $key, $value){
+		$array[$key] = $value;
+		return $array;
 	}
 	function getMetaData($table)
 	{

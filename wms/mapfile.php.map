@@ -52,6 +52,8 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  TRANSPARENT ON
 		  FORMATOPTION "GAMMA=0.75"
 	  END
+	  CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
+	  DEBUG 5
 	  WEB
 		IMAGEPATH "<?php echo $basePath."/tmp";?>"
   		IMAGEURL "<?php echo $hostName;?>/tmp"
@@ -335,7 +337,11 @@ END
 		  <?php if($class['name']) echo "NAME '".$class['name']."'\n";?>
 		  
 		  #EXPRESSION
-		  <?php if($class['expression']) echo "EXPRESSION '".$class['expression']."'\n";?>
+		  <?php if($class['expression']) {
+			if($layerArr['data'][0]['theme_column']) echo "EXPRESSION '".$class['expression']."'\n";
+			else echo "EXPRESSION (".$class['expression'].")\n";
+		  }
+		  ?>
 		  
 		  STYLE
 			  #SYMBOL

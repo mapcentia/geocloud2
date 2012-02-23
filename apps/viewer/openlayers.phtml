@@ -7,7 +7,7 @@ function microtime_float()
 $startTime = microtime_float();
 
 include("../../libs/functions.php");
-include("inc/uri_parts.php");
+include("../../inc/user_name_from_uri.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
 include("../../libs/FirePHPCore/FirePHP.class.php");
@@ -49,17 +49,17 @@ body {
 }
 </style>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css" />
 <link rel="stylesheet" type="text/css" href="/styles/styles.css" />
+
+
+
+
 <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
-<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
-<script type="text/javascript" src="/js/openlayers/defs/EPSG900913.js"></script>
-<!--<script type="text/javascript" src="http://openlayers.org/dev/OpenLayers.js"></script>-->
-<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"></script>
-<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" src="/js/ext/ext-all.js"></script>
-<script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js"></script>
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
-<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
+
+
+
 <script type="text/javascript">
 //<![CDATA[
 		var layer;
@@ -85,8 +85,8 @@ body {
 		var restrictedBounds;
 		var viewPortSize;
 		var settingsViewer = <?php echo json_encode($settingsViewer['data']); ?>;// JSON;
-		
-		//console.log(settingsViewer);
+		 
+		//OpenLayers.ImgPath = "/js/openlayers/theme/dark/";
 		
 		if (!settingsViewer.minzoomlevel) {
 			settingsViewer.minzoomlevel = 1;
@@ -205,25 +205,26 @@ for($i = 0; $i < sizeof($layers); $i++){
 	}
 }
 // Set extent from layer
-
+if(!$extentSetFromFilter) {
 $table = $settingsViewer['data']['default_extent'];
 $geomField = $postgisObject->getGeometryColumns("public.".$table,"f_geometry_column");
 if ($geomField) {
 	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM public.".$table;
 	$result = $postgisObject->execQuery($sql);
 	$row = $postgisObject->fetchRow($result);
-	if(!$extentSetFromFilter) {
+	
 		echo "minxFromFilter = ".($row[txmin]-$buffer).";\n";
 		echo "maxxFromFilter = ".($row[txmax]+$buffer).";\n";
 		echo "minyFromFilter = ".($row[tymin]-$buffer).";\n";
 		echo "maxyFromFilter = ".($row[tymax]+$buffer).";\n";
-	}
+	
 }
 else {
 	echo "minxFromFilter = -20037508;";
 	echo "maxxFromFilter = 20037508;";
 	echo "minyFromFilter = -20037508;";
 	echo "maxyFromFilter = 20037508;";
+}
 }
 print_r($postgisObject->PDOerror);
 // End setting extent from layer
@@ -308,7 +309,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         if (enableTileCache) {
         	connectionString = connectionString + "tilecache/";
         }
-        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false,transitionEffect: 'resize'});
+        layerArr[name] = new OpenLayers.Layer.WMS(title,connectionString + "?SLD_BODY=<?php echo urlencode($_REQUEST['sld'])?>&",{layers:name,transparent:true},{buffer:0,singleTile:false,opacity:opacity,isBaseLayer:false,visibility:visible,wrapDateLine:false});
         map.addLayer(layerArr[name]);
     }
    
@@ -447,6 +448,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	   
 		var legendWin;
 		var searchWin;
+		var embedWin;
 
 	//if ((!inFrames()) || (doNotUsePopUp=='false')) document.getElementById("popupButton").style.display = "none";
 	function mapLayerChanged(event) {
@@ -478,7 +480,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		if (viewPortSize=="big"){
 			var mapControls = [
 				new OpenLayers.Control.PanZoomBar(),
-				new OpenLayers.Control.ScaleLine(),
+				//new OpenLayers.Control.ScaleLine(),
 				new OpenLayers.Control.LayerSwitcher(),
 				new OpenLayers.Control.Navigation({'zoomWheelEnabled': false})
 			];
@@ -497,7 +499,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 		maxResolution: 156543.0339,
 		units: "m",
 		//minResolution: "auto",
-        eventListeners: {"changelayer": mapLayerChanged},
+        eventListeners: {"changelayer": mapLayerChanged}
 		//tileSize: new OpenLayers.Size(512,512)
 		}
         );
@@ -514,7 +516,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 				$layerConnectionString.="tilecache/"; 
 			}
 	?>
-	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
+	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{buffer:0,singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
 	<?php }}}?>
 /*
 	base.push(new OpenLayers.Layer.TMS(
@@ -584,9 +586,8 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 			var maxxFromFilter = <?php echo $boundsArr[2];?>;
 			var maxyFromFilter = <?php echo $boundsArr[3];?>;
 		<?php } ?> 
-		//End p� url zoom
+		//End paa url zoom
 
-       // map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
         
           var click = new OpenLayers.Control.Click();
         map.addControl(click);
@@ -620,7 +621,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	    },
         tooltip: "Vis signatur"
     });
-    actions["legend"] = action;
+
     toolbarItems.push(action);
 
     action = new GeoExt.Action({
@@ -628,8 +629,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         handler: printVersion,
         tooltip: "Print kortet"
     });
-    actions["print"] = action;
-    //toolbarItems.push(action);
+
    action = new GeoExt.Action({
         text: "Find",
 	 handler:function(objRef){
@@ -656,12 +656,35 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
 	    },
         tooltip: "Search"
     });
+	toolbarItems.push(action);
 	
-	
-	
-    actions["legend"] = action;
+	action = new GeoExt.Action({
+        text: "Embed",
+	 handler:function(objRef){
+		if(!embedWin){
+		    embedWin = new Ext.Window({
+			title: "Embed",
+			layout:'fit',
+			width:300,
+			height:300,
+            plain: true,
+			closeAction:'hide',
+			contentEl:embedEl,
+			x:5,
+			y:120
+		    });
+		}
+	    if(typeof(objRef)=="object"){
+            embedWin.show(objRef);
+        	}else{
+            	embedWin.show();
+        	}//end if object reference was passed
+		
+	    },
+        tooltip: "Embed"
+    });
     toolbarItems.push(action);
-	
+
 	action = new GeoExt.Action({
         text: "Stort kort",
 		handler:function(objRef){
@@ -671,7 +694,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         tooltip: "Stort kort"
     });
 	
-	actions["legend"] = action;
+
     if ((inFrames())) toolbarItems.push(action);
 
     toolbarItems.push("->");
@@ -681,7 +704,7 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         disabled: true,
         tooltip: "previous in history"
     });
-    actions["previous"] = action;
+
     toolbarItems.push(action);
 
     action = new GeoExt.Action({
@@ -690,7 +713,6 @@ restrictedBounds = new OpenLayers.Bounds(minxFromFilter,minyFromFilter,maxxFromF
         disabled: true,
         tooltip: "next in history"
     });
-    actions["next"] = action;
     toolbarItems.push(action);
 
 new Ext.Viewport({
@@ -704,17 +726,20 @@ new Ext.Viewport({
         }
     });
 
-var mapPanel = Ext.getCmp("mappanel");
+	var mapPanel = Ext.getCmp("mappanel");
 
-if (minxFromFilter!=0) {
-	map.zoomToExtent(restrictedBounds);
-	map.restrictedExtent = restrictedBounds;
-};
-    var p1 = transformPoint(minxFromFilter,minyFromFilter,"EPSG:<?php echo $srs;?>","EPSG:4326");
-    var p2 = transformPoint(maxxFromFilter,maxyFromFilter,"EPSG:<?php echo $srs;?>","EPSG:4326");
-var defaultBounds = new google.maps.LatLngBounds(
-  new google.maps.LatLng(p1.y,p1.x),
-  new google.maps.LatLng(p2.y,p2.x)
+	if (minxFromFilter!=0) {
+		map.zoomToExtent(restrictedBounds);
+		map.restrictedExtent = restrictedBounds;
+	};
+	<?php if ($_REQUEST['lon'] && $_REQUEST['lat'] && $_REQUEST['zoom'] ) { ?>
+	map.setCenter(new OpenLayers.LonLat(<?= $_REQUEST['lon'] ?>,<?= $_REQUEST['lat'] ?>), <?= $_REQUEST['zoom'] ?>);
+	<?php }?>
+	var p1 = transformPoint(minxFromFilter,minyFromFilter,"EPSG:<?php echo $srs;?>","EPSG:4326");
+	var p2 = transformPoint(maxxFromFilter,maxyFromFilter,"EPSG:<?php echo $srs;?>","EPSG:4326");
+	var defaultBounds = new google.maps.LatLngBounds(
+	new google.maps.LatLng(p1.y,p1.x),
+	new google.maps.LatLng(p2.y,p2.x)
 );
 
 var input = document.getElementById('gAddress');
@@ -749,6 +774,8 @@ map.addPopup(placePopup)
 	
   
 });
+
+});
 function transformPoint(lat,lon,s,d) {
     var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
     var dest = new Proj4js.Proj(d);
@@ -756,8 +783,28 @@ function transformPoint(lat,lon,s,d) {
     Proj4js.transform(source, dest, p);
    return p;
 }
+function addEmbedStr() {
+	var lonLat = map.getCenter();
+	var embedStr1 = '<div class="mygeocloud_frame"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom() + '" frameborder="0"></iframe></div>';
+	
+	
+	var mapBounds = map.getExtent();
+	var boundsArr =  mapBounds.toArray();
+	var boundsStr =  boundsArr.join(",");
 
-});
+
+
+	var mapSize = map.getSize();
+	
+	var embedStr2 = '<div class="mygeocloud_img" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/client_image.phtml?extent='+boundsStr+'&width='+mapSize.w+'&height='+mapSize.h+'&layer='+layerStr+'"/>';
+	
+	var embedStr3 = '<div class="mygeocloud_legend" style="display:none"><img src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/kortbrowser/appformap/legend_img.phtml?layer='+layerStr+'"/></div>';
+	
+	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom();
+	
+	document.getElementById('embed_area1').value = embedStr1+embedStr2+embedStr3;
+	document.getElementById('embed_area4').value = embedStr4;
+};
 //]]>
 </script>
 </head>
@@ -779,5 +826,25 @@ function transformPoint(lat,lon,s,d) {
 <div style="padding: 5px" id="searchContent"><input style="width: 270px"
 	type='text' id='gAddress' name='gAddress' value='' />
 </div>
+<div id="embedEl">
+<a href="javascript:void(0);" onclick="javascript:addEmbedStr();">Se kode</a><br />
+<form id="theForm" name="theForm">
+<div>Interaktivt- og statisk kort</div>
+<input type="text" size="30" id="embed_area1" name="embed_area1" onclick="javascript:document.theForm.embed_area1.focus();document.theForm.embed_area1.select();" readonly='readonly' />
+<div>Interaktivt kort</div>
+<input type="text" size="30" id="embed_area2" name="embed_area2" onclick="javascript:document.theForm.embed_area2.focus();document.theForm.embed_area2.select();" readonly='readonly' />
+<div>Statisk kort</div>
+<input type="text" size="30" id="embed_area3" name="embed_area3" onclick="javascript:document.theForm.embed_area3.focus();document.theForm.embed_area3.select();" readonly='readonly' />
+<div>Url til kort</div>
+<input type="text" size="30" id="embed_area4" name="embed_area4" onclick="javascript:document.theForm.embed_area4.focus();document.theForm.embed_area4.select();" readonly='readonly' />
+</form>
+</div>
 </body>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
+<script type="text/javascript" src="/js/openlayers/defs/EPSG900913.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=<?php echo $gMapsApiKey;?>"></script>
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/js/ext/ext-all.js"></script>
+<script type="text/javascript" src="/js/GeoExt/script/GeoExt.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
 </html>

@@ -25,18 +25,16 @@ addScratch.init = function () {
             allowBlank: false,
             msgTarget: 'side'
         },
-        items: [ /*{
-           
-			xtype: 'textfield',
-            name: 'srid',
-            fieldLabel: 'Projection',
-            emptyText: 'Choose EPSG number',
-			value: '4326',
-			editable: false
-        },*/{
+        items: [ {
             xtype: 'textfield',
             emptyText: 'layer name',
             name: 'name'
+        },{
+           
+			xtype: 'textfield',
+            name: 'srid',
+            emptyText: 'EPSG number',
+			//value: '4326'
         },{
                 width: 100,
                 xtype: 'combo',
