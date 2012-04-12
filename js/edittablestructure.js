@@ -48,6 +48,9 @@ tableStructure.init = function(record, screenName) {
 	}, {
 		name : 'link',
 		allowBlank : true
+	}, {
+		name : 'linkprefix',
+		allowBlank : true
 	} ]);
 
 	tableStructure.writer = new Ext.data.JsonWriter( {
@@ -129,6 +132,7 @@ tableStructure.init = function(record, screenName) {
 				header : "Sort id",
 				dataIndex : "sort_id",
 				sortable : true,
+				width : 50,
 				editor : new Ext.grid.GridEditor(new Ext.form.NumberField({
 	        		decimalPrecision:0,
 	        		decimalSeparator:'¤'// Some strange char nobody is using							
@@ -146,6 +150,7 @@ tableStructure.init = function(record, screenName) {
 				header : "Type",
 				dataIndex : "type",
 				sortable : true,
+				width : 60,
 				editor : new Ext.form.ComboBox( {
 					typeAhead : false,
 					triggerAction : 'all',
@@ -178,7 +183,16 @@ tableStructure.init = function(record, screenName) {
 				header : 'Link',
 				dataIndex : 'link',
 				width : 20
-			} ]
+			}, {
+				id : "linkprefix",
+				header : "Link prefix",
+				dataIndex : "linkprefix",
+				sortable : true,
+				width : 60,
+				editor : new Ext.form.TextField( {
+					allowBlank : true
+				})
+			}, ]
 		}),
 		listeners : {
 

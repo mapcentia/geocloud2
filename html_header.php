@@ -13,10 +13,22 @@ include 'model/wmslayers.php';
 include 'model/settings_viewer.php'; // we need to get pw for http authentication
 include 'libs/FirePHPCore/FirePHP.class.php';
 include 'libs/FirePHPCore/fb.php';
-
+ 
 $_SESSION['screen_name'] = $parts[2];
 
 if ($parts[1]=="store" || $parts[1]=="editor") {
+	$db = new databases();
+	if (!$parts[2]) {
+		die("<script>window.location='/?db=false'</script>");
+	}
+	if (!$db->doesDbExist($parts[2])) {
+		if ($db->doesDbExist(postgis::toAscii($parts[2],NULL,"_"))) {
+			die("<script>window.location='/store/".postgis::toAscii($parts[2])."'</script>");
+		}
+		else{
+			die("<script>window.location='/?db=false'</script>");
+		}
+	}
 	include("inc/oauthcheck.php");
 }
 ?>

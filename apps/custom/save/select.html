@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="author" content="Martin Hoegh" />
+		<script type="text/javascript" src="/api/v1/js/api.js"></script>
+		<script type="text/javascript" src="http://geodemo2.odeum.com/js/forms.js"></script>
+		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
+		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css" />
+	</head>
+	<body>
+		<div class="span6">
+			<script>
+			var irowid;
+			var selectControl = {
+				onSelect: function (feature) {
+					$("#start").show();
+					irowid = feature.attributes.irowid;
+					//console.log(feature.attributes.city);
+				},
+				onUnselect: function() {
+					$("#start").hide();
+				}
+			}
+			$(window).load(function() {
+				var cloud = new mygeocloud_ol.map(null,"mobreg");
+				var store = new mygeocloud_ol.geoJsonStore("mobreg");
+				cloud.addGeoJsonStore(store);
+				store.sql = "SELECT irowid,registrator,rudersdal.regpunkter.the_geom FROM rudersdal.tforms115770000058272_join,rudersdal.regpunkter WHERE rudersdal.tforms115770000058272_join.id::text=rudersdal.regpunkter.id::text LIMIT 20";
+				//store.sql = "SELECT * FROM rudersdal.regpunkter limit 5";
+				store.load();
+				store.onLoad = function(){
+					cloud.zoomToExtentOfgeoJsonStore(store);
+					var grid = new mygeocloud_ol.grid(null,store,selectControl);
+					var south = viewport.getComponent(1);
+					south.add(grid.grid);
+					south.doLayout();
+					
+				};
+				cloud.addTileLayers(["rudersdal.regpunkter"]);
+				var viewport = new Ext.Viewport( {
+				layout : 'border',
+				items : [ 
+				{
+					region : "center",
+					id : "mappanel",
+					//title : "Map",
+					xtype : "gx_mappanel",
+					map : cloud.map,
+					zoom : 5,
+					split : true
+				}, {
+					region : "south",
+					//title: "Attribut table",
+					split : true,
+					frame : false,
+					layout : 'fit',
+					height : 300,
+					collapsible: true,
+					collapsed: false
+				} ]
+				});
+			});
+			
+			
+			</script>
+			<div id="start" style="position: absolute; top: 10px; right: 10px; z-index:1000; display: none"><form>
+<input type="button" onclick="editRegistration(irowid);" value="Rediger registrering"> <br> <input type="button" onclick="viewRegistration(irowid);" value="Vis Registrering"> </form>
+</div>
+		</div>
+	</body>
+</html>

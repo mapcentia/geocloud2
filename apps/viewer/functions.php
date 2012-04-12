@@ -1909,6 +1909,9 @@ class postgis extends control
         		if ($field == 'def') {
                         return $row['def'];
                 }
+        		if ($field == 'not_querable') {
+                        return $row['not_querable'];
+                }
 				
 				
         }

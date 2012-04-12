@@ -5,6 +5,7 @@ $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
 $postgisdb = $_SESSION['screen_name'];
 
+include 'model/tables.php';
 include("wms/mapfile.php.map");
 include("wms/tilecache.cfg.php");
 makeMapFile($postgisdb);

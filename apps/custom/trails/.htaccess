@@ -1,0 +1,4 @@
+RewriteEngine On
+#RewriteRule ^([\w'-]*)/([\w'-]*)$ $1.phtml
+#RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ $1.phtml
+RewriteRule ^([\w'-]*)$ index.php

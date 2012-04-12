@@ -49,7 +49,7 @@ attributeForm.init = function (layer) {
                 var protocol = store.proxy.protocol;
                 protocol.defaultFilter = filter.filterBuilder.getFilter();
                 store.load();
-            layer},
+            layer;},
             items: [filter.filterBuilder]
         });
 		filter.win = new Ext.Window( {

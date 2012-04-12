@@ -1,0 +1,57 @@
+<?php
+header("Content-type: image/png");
+function microtime_float()
+{
+    list($utime, $time) = explode(" ", microtime());
+    return ((float)$utime + (float)$time);
+}
+include("../../inc/user_name_from_uri.php");
+$postgisschema = $parts[5];
+$postgisdb = $parts[4];
+
+$startTime = microtime_float();
+include_once("../../conf/main.php"); 
+include_once '../../libs/PEAR/Cache_Lite/Lite.php';
+$id = $_SERVER['SCRIPT_FILENAME'].$_SERVER['PHP_SELF'].$_SERVER['QUERY_STRING'];
+$options = array('cacheDir' => "{$basePath}/tmp/", 'lifeTime' => 0);
+$Cache_Lite = new Cache_Lite($options);
+if ($data = $Cache_Lite->get($id)) {} 
+else {
+	ob_start();
+	include ("functions.php");
+	
+	if($_REQUEST['usedimfromurl'])
+	{
+		$width = $_REQUEST['width'];
+		$height = $_REQUEST['height'];
+	
+	}
+	else {
+		$width = 500;
+		$height = 500;
+	}
+	
+	
+	$layerArr = explode(";",$_REQUEST['layer']);
+
+	foreach ($layerArr as $layer) {
+		$bits = explode(",",$layer);
+		if ($layer) {
+			$wmsLayersArr[] = $bits[0];
+		}
+	}
+	$wmsLayersStr = implode(",",$wmsLayersArr);
+	
+	$mapUrl="{$hostName}/wms/{$postgisdb}/{$postgisschema}/?LAYERS=public.kms,{$wmsLayersStr}&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A900913&BBOX={$_REQUEST['extent']}&WIDTH=500&HEIGHT=500";
+	
+	$im=imagecreatefrompng($mapUrl);
+	imagepng($im);
+	imagedestroy($im);
+	
+	// Cache script
+	$data = ob_get_contents();
+	$Cache_Lite->save($data, $id);
+	ob_get_clean();
+}
+echo $data;
+

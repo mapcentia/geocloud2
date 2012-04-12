@@ -43,12 +43,13 @@ var arr = str.split(";");
 var lat;
 var lon;
 var defaultLayers = "";
-function loadLayer(i,name,title,table,opacity,connectionString,e){
+function loadLayer(i,name,title,table,opacity,connectionString,e,singleTile){
+	//alert(singleTile);
 	var newArr = [];
  	//parent.mapframe.popupOn = true;
 	//alert (e.checked);
 	if (e.checked) {
-		parent.mapframe.addLayer(name,title,opacity,connectionString);
+		parent.mapframe.addLayer(name,title,opacity,connectionString,false,singleTile);
 		arr[i] = name;
 	}
 	else {
@@ -122,6 +123,7 @@ items.push({
 				$layer = $postgisschema.".".$layer;
 				//$table = $layerObj -> getMetaData("query_table");
 				$abstract = $arr['f_table_abstract'];
+				$singleTile = $arr['single_tile'];
 				$href = $arr['meta_url'];
 				if (!$arr['layergroup']) {
 					$arr['layergroup'] = "Default group";
@@ -136,7 +138,7 @@ items.push({
 						if ($arr['tilecache']) {
 							$layerConnectionString.="tilecache/"; 
 						}
-						echo "<input class='layer' type='checkbox' name='{$layer}' id='{$layer}' onclick='javascript:loadLayer({$i},\\\"{$layer}\\\",\\\"{$title}\\\",\\\"{$_table}\\\",\\\"{$opacity}\\\",\\\"{$layerConnectionString}\\\",this)'";
+						echo "<input class='layer' type='checkbox' name='{$layer}' id='{$layer}' onclick='javascript:loadLayer({$i},\\\"{$layer}\\\",\\\"{$title}\\\",\\\"{$_table}\\\",\\\"{$opacity}\\\",\\\"{$layerConnectionString}\\\",this,\\\"{$singleTile}\\\")'";
 						if (in_array($layer,explode(";",$_REQUEST["layers"]))) echo " CHECKED";		
 						echo "/>";
 						

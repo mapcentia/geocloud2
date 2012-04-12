@@ -1,3 +1,4 @@
 RewriteEngine On
-RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ ../cgi-bin/mapserv?map=%{DOCUMENT_ROOT}/wms/mapfiles/$1_$2.map [QSA,L]
-RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)/([\w'-]*)$ tilecache/tilecache.fcgi?cfg=$1 [QSA,L]
+#RewriteRule ^([\w'-]*)/([\w'-]*)/$ ../cgi/mapserv.fcgi?map=%{DOCUMENT_ROOT}/wms/mapfiles/$1_$2.map [QSA,L]
+RewriteRule ^([\w'-]*)/([\w'-]*)/$ wrapper.php?mapfile=$1_$2.map [QSA,L]
+RewriteRule ^([\w'-]*)/([\w'-]*)/tilecache/$ ../cgi/tilecache.fcgi?cfg=$1 [QSA,L]

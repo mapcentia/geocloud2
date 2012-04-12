@@ -1,0 +1,49 @@
+<?php
+$lp_fields =array(
+"hjemmel"=>"Hjemmel",
+"formaal"=>"Lokalplanens formål",
+"omraade"=>"Område",
+"omraade_zonestatus"=>"Område og zonestatus",
+"bonusvirkning"=>"Område, zonestatus og bonusvirkning",
+"omraadets_anvendelse"=>"Anvendelse",
+"detailhandel"=>"Detailhandel",
+"udstykninger_og_sammenlaegninger"=>"Udstykninger",
+"vej_sti_og_parkeringsforhold"=>"Vej, sti og parkeringsforhold",
+"vej"=>"Vejforhold",
+"vej_sti"=>"Vej- og stiforhold",
+"vej_parkering"=>"Vej- og parkeringsforhold",
+"sti"=>"Stiforhold",
+"sti_parkering"=>"Sti- og parkeringsforhold",
+"parkering"=>"Parkeringsforhold",
+"tekniske_anlaeg"=>"Ledningsanlæg",
+"bebyggelsens_omfang_og_placering"=>"Bebyggelsens omfang og placering",
+"byfornyelse"=>"Byfornyelse",
+"bebyggelsens_ydre_fremtraeden"=>"Bebyggelsens ydre fremtræden",
+"nedrivning"=>"Nedrivning af bebyggelse",
+"bevaring_af_bebyggelse"=>"Bevaring af bebyggelse",
+"ubebyggede_arealer"=>"Ubebyggede arealer",
+"beplantning"=>"Beplantning",
+"hegn"=>"Hegn",
+"skiltning"=>"Skiltning og reklamering",
+"lavenergi"=>"Lavenergibebyggelse",
+"energiklasse"=>"Energiklasse",
+"saerlige_bem"=>"Særlige bestemmelser",
+"miljoe"=>"Miljø",
+"klima"=>"Klima",
+"forudsaetninger_for_ibrugtagen"=>"Forudsætninger for ibrugtagen",
+"frivillige_udbygaftaler"=>"Frivillige udbygningsaftaler",
+"grundejerforening"=>"Grundejerforening",
+"haveforening"=>"Haveforening",
+"servitutter"=>"Aflysning af servitutter",
+"ophaevelse_lokalplan"=>"Ophævelse af lokalplan",
+"ophaevelse_byplanvedt"=>"Ophævelse af byplanvedtægt",
+"ophaevelse_lp_vedt"=>"Ophævelse af lokalplan og byplanvedtægt",
+"vedtagelsespaategnelse"=>"Vedtagelsespåtegnelse"
+);
+
+$lp_ref =  array(
+//"ANVGEN"=>"anvgen_plandk2"
+//"ANVSPEC"=>"Anvendelse specifik",
+//"ANVKONKRET"=>"Anvendelse konkret",
+//"ZONE"=>"Zonestatus"
+);

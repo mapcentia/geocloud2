@@ -52,8 +52,8 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  TRANSPARENT ON
 		  FORMATOPTION "GAMMA=0.75"
 	  END
-	  CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
-	  DEBUG 5
+	  #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
+	  #DEBUG 5
 	  WEB
 		IMAGEPATH "<?php echo $basePath."/tmp";?>"
   		IMAGEURL "<?php echo $hostName;?>/tmp"
@@ -250,13 +250,19 @@ END
 		while ($row = $postgisObject->fetchRow($result)) {
 		$wmslayerObj = new wmslayers("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
 		$layerArr = $wmslayerObj->get();
+		$primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
 		//print_r($layerArr);
 	?>
 	  
 	  LAYER
 		NAME "<?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>"
 		STATUS off
-		DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>"
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		<?php if ($row['data']) {?>
+			DATA "<?php echo $row['data'];?>"
+		<?php } else {?> 
+			DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>  using unique <?php echo $primeryKey['attname'] ?> using srid=<?php echo $row['srid'] ?>"
+		<?php } ?>
 		<?php
 		switch ($row['type']) {
 					case "POINT":

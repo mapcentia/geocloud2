@@ -30,10 +30,10 @@ if (!$tables[0]){
 foreach($tables as $table)
 {
 	$tableObj = new table($postgisschema.".".$table);
-	$tableArr = (array)$tableObj;
-	$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$table);
 
-	foreach($postgisObject -> getMetaData($postgisschema.".".$table) as $key=>$value) {
+	$primeryKey = $tableObj->primeryKey;
+
+	foreach($tableObj->metaData as $key=>$value) {
 	 	if ($key!=$primeryKey['attname']) {
 			$fieldsArr[$table][] = $key;
 		}
@@ -76,9 +76,11 @@ foreach($tables as $table)
 		//else{
 		//}
 		$selfclose=true;
-		if($atts["name"] == $postgisObject -> getGeometryColumns($postgisschema.".".$table, "f_geometry_column"))
+		if($tableObj->metaData[$atts["name"]]['type']=="geometry")
 		{
-			$geomType = $postgisObject -> getGeometryColumns($postgisschema.".".$table, "type");
+			//$geomType = $postgisObject -> getGeometryColumns($postgisschema.".".$table, "type");
+			$geomType = $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","type");
+			fb($geomType);
 			switch ($geomType) {
 				case "POINT":
 				$atts["type"]="gml:PointPropertyType";
@@ -100,15 +102,17 @@ foreach($tables as $table)
 				break;
 			}
 		}
-		else $atts["type"]="xs:string";
-		//else unset($atts["type"]);
+		//else $atts["type"]="xs:string";
+		else unset($atts["type"]);
 		
 		$atts["minOccurs"]="0";
 		writeTag("open","xs","element",$atts,True,True);
-		//if($atts["name"] != $postgisObject -> getGeometryColumns($postgisschema.".".$table, "f_geometry_column")) {
-			//if ($tableArr['metaData'][$hello]['type']=="number") $tableArr['metaData'][$hello]['type']="decimal";
-			//echo '<xs:simpleType><xs:restriction base="xs:'.$tableArr['metaData'][$hello]['type'].'"></xs:restriction></xs:simpleType>';
-		//}
+		if($atts["name"] != $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","f_geometry_column")) {
+			if ($tableObj->metaData[$atts["name"]]['type']=="number") {
+					$tableObj->metaData[$atts["name"]]['type']="decimal";
+			}
+			echo '<xs:simpleType><xs:restriction base="xs:'.$tableObj->metaData[$atts["name"]]['type'].'"></xs:restriction></xs:simpleType>';
+		}
 		writeTag("close","xs","element",NULL,False,True);
 		$atts=Null;
 	}

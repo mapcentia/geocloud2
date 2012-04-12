@@ -62,6 +62,12 @@ $(window).load(function () {
         // <-- New "messageProperty" meta-data
     },
     fieldsForStore);
+    var onWrite = function(store, action, result, transaction, rs) {
+    	// console.log('onwrite', store, action, result, transaction, rs);
+    	if (transaction.success) {
+    		groupsStore.load();
+    	}
+    };
     var proxy = new Ext.data.HttpProxy({
         api: {
             read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
@@ -69,7 +75,7 @@ $(window).load(function () {
             destroy: '/controller/tables/' + screenName + '/destroy'
         },
         listeners: {
-            //write: tableStructure.onWrite,
+            write: onWrite,
             exception: function (proxy, type, action, options, response, arg) {
                 if (type === 'remote') {
                     // success is false
@@ -86,7 +92,7 @@ $(window).load(function () {
             }
         }
     });
-
+    
     store = new Ext.data.Store({
         writer: writer,
         reader: reader,
@@ -115,7 +121,7 @@ $(window).load(function () {
    
     // create a grid to display records from the store
     var grid = new Ext.grid.EditorGridPanel({
-        title: "Layers in your geocloud",
+        //title: "Layers in your geocloud",
         store: store,
         autoExpandColumn: "desc",
         height: 400,
@@ -131,6 +137,7 @@ $(window).load(function () {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
+                    	
                 }
             },
             columns: [
@@ -142,31 +149,26 @@ $(window).load(function () {
                 width: 150
             },*/
             {
-                header: "Title",
-                dataIndex: "f_table_title",
-                sortable: true,
-                width: 150
-            },
-            {
                 header: "Name",
                 dataIndex: "f_table_name",
                 sortable: true,
                 editable: false,
-                tooltip: "This can't be changed"
-            },
-            {
-                header: "SRS",
-                dataIndex: "srid",
-                sortable: true,
-                editable: false,
-                tooltip: "This can't be changed"
+                tooltip: "This can't be changed",
+                width: 150
             },
             {
                 header: "Type",
                 dataIndex: "type",
                 sortable: true,
                 editable: false,
-                tooltip: "This can't be changed"
+                tooltip: "This can't be changed",
+                width: 150
+            },
+            {
+                header: "Title",
+                dataIndex: "f_table_title",
+                sortable: true,
+                width: 150
             },
             {
                 id: "desc",
@@ -177,11 +179,28 @@ $(window).load(function () {
                 tooltip: ""
             },
             {
+                header: 'Layer group',
+                dataIndex: 'layergroup',
+				sortable: true,
+                editable: true,
+                width: 150,
+				editor: {
+		            xtype: 'combo',
+		            mode: 'local',
+		            triggerAction: 'all',
+		            forceSelection: false,
+		            displayField: 'group',
+		            valueField: 'group',
+		            allowBlank: true,
+		            store: groupsStore
+					}
+            },
+            {
                 header: 'Sort id',
                 dataIndex: 'sort_id',
 				sortable: true,
                 editable: true,
-                width: 65,
+                width: 55,
 				editor: new Ext.form.NumberField( {
 						decimalPrecision : 0,
 						decimalSeparator : '¤'// Some strange char nobody is
@@ -190,12 +209,20 @@ $(window).load(function () {
             },
             {
                 xtype: 'checkcolumn',
-                header: 'Editable?',
+                header: 'Editable',
                 dataIndex: 'editable',
                 width: 55
             },
+            
             {
-                header: 'Authentication for?',
+                xtype: 'checkcolumn',
+                header: 'Tilecached',
+                dataIndex: 'tilecache',
+                width: 70
+            },
+            
+            {
+                header: 'Authentication',
                 dataIndex: 'authentication',
                 width: 120,
                 tooltip: 'When accessing your layer from external clients, which level of authentication do you want?',
@@ -578,7 +605,7 @@ $(window).load(function () {
             title: "Edit layer '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
-            width: 600,
+            width: 800,
             height: 500,
             initCenter: false,
             x: 100,
@@ -590,8 +617,6 @@ $(window).load(function () {
             items: [new Ext.Panel({
                 frame: false,
                 border : false,
-                width: 500,
-                height: 400,
                 layout: 'border',
                 items: [tableStructure.grid, form]
             })]
@@ -688,6 +713,7 @@ $(window).load(function () {
             plain: true,
             items: [new Ext.Panel({
                 frame: false,
+                border: false,
                 width: 500,
                 height: 400,
                 layout: 'border',
@@ -715,20 +741,6 @@ $(window).load(function () {
                 value: r.data.meta_url
 
             },{
-            width: 200,
-            xtype: 'combo',
-            mode: 'local',
-            triggerAction: 'all',
-            forceSelection: false,
-            editable: true,
-            fieldLabel: 'Layer group',
-            name: 'layergroup',
-            displayField: 'group',
-            valueField: 'group',
-            allowBlank: true,
-            store: groupsStore,
-            value: r.data.layergroup
-			},{
                 width: 300,
                 xtype: 'textfield',
                 fieldLabel: 'WMS source',
@@ -753,7 +765,7 @@ $(window).load(function () {
         	name: 'baselayer',
         	fieldLabel: 'Is baselayer',
 			value: r.data.baselayer
-        },{
+        }, {
         	xtype: 'combo',
 			store: new Ext.data.ArrayStore({
 				fields: ['name', 'value'],
@@ -768,9 +780,36 @@ $(window).load(function () {
 			typeAhead: false,
 			editable: false,
 			triggerAction: 'all',
-        	name: 'tilecache',
-        	fieldLabel: 'Use tilecache',
-			value: r.data.tilecache
+        	name: 'not_querable',
+        	fieldLabel: 'Not querable',
+			value: r.data.not_querable
+        },
+        {
+        	xtype: 'combo',
+			store: new Ext.data.ArrayStore({
+				fields: ['name', 'value'],
+				data: [
+					['true', true],
+					['false', false]
+				   ]
+			}),
+			displayField: 'name',
+			valueField: 'value',
+			mode: 'local',
+			typeAhead: false,
+			editable: false,
+			triggerAction: 'all',
+        	name: 'single_tile',
+        	fieldLabel: 'Single tile',
+			value: r.data.single_tile
+        },
+        {
+            width: 300,
+            xtype: 'textfield',
+            fieldLabel: 'Local data source',
+            name: 'data',
+            value: r.data.data
+
         }
 		],
             buttons: [{

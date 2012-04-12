@@ -1,0 +1,2 @@
+[20-Oct-2011 22:19:53] PHP Warning:  sort() expects parameter 1 to be array, null given in /var/www/apps/viewer/servers/http_db_query.phtml on line 46
+[20-Oct-2011 22:19:53] PHP Warning:  implode(): Invalid arguments passed in /var/www/apps/viewer/servers/http_db_query.phtml on line 47

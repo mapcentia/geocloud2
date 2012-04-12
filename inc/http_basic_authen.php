@@ -1,26 +1,17 @@
 <?php
 $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
-/*
-if ($_SESSION['Basic_realm'] && $_SESSION['Basic_realm']!=$parts[2]) {
-	$_SESSION['Basic_realm'] = $parts[2];
-	$_SERVER['PHP_AUTH_USER'] = "logout";
-	$_SERVER['PHP_AUTH_PW'] = "logout";
-	$_SERVER['HTTP_AUTHORIZATION'] = "logout";
-}
-*/
 // mod_php
 if (isset($_SERVER['PHP_AUTH_USER'])) {
 	$username = $_SERVER['PHP_AUTH_USER'];
 	$password = $_SERVER['PHP_AUTH_PW'];
-
+	
 	// most other servers
 } elseif (isset($_SERVER['HTTP_AUTHENTICATION'])) {
 
 	if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic')===0)
 		list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
 }
-
 if (is_null($username)) {
 	header('WWW-Authenticate: Basic realm="'.$parts[2].'"');
 	header('HTTP/1.0 401 Unauthorized');
@@ -45,5 +36,5 @@ if (is_null($username)) {
 	die("Could not authenticate you 3");
 }
 else {
-	//$_SESSION['Basic_realm']=$parts[2];
+	$_SESSION['auth'] = true;
 }

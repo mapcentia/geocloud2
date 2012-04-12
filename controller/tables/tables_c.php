@@ -13,6 +13,9 @@ switch ($parts[4]){
 	case "getrecords": // only geometrycolumns table
 		$response = $table -> getRecords(true,"*",$whereClause="f_table_schema='{$postgisschema}'");
 		break;
+	case "getgeojson": // only geometrycolumns table
+		$response = $table -> getGeoJson();
+		break;
 	case "getallrecords": // All tables
 		$response = $table -> getRecords(false,"gid,plannr,plannavn,distrikt,anvendelsegenerel,zonestatus,doklink",null);
 		break;

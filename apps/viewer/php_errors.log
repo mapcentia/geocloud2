@@ -1,0 +1,19 @@
+[17-Oct-2011 22:53:47] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[17-Oct-2011 22:53:48] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 21:07:29] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 21:07:29] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:18:23] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:18:23] PHP Warning:  pg_fetch_array(): Unable to jump to row 0 on PostgreSQL result index 19 in /var/www/apps/viewer/functions.php on line 1744
+[20-Oct-2011 22:18:23] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:18:23] PHP Warning:  pg_fetch_array(): Unable to jump to row 0 on PostgreSQL result index 19 in /var/www/apps/viewer/functions.php on line 1744
+[20-Oct-2011 22:18:24] PHP Warning:  pg_fetch_array(): Unable to jump to row 0 on PostgreSQL result index 19 in /var/www/apps/viewer/functions.php on line 1744
+[20-Oct-2011 22:18:41] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:18:41] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:19:41] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:19:42] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:22:10] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:22:10] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:47:30] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 22:47:30] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 23:09:19] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37
+[20-Oct-2011 23:09:19] PHP Notice:  Undefined index: layers in /var/www/apps/viewer/layer_loader.phtml on line 37

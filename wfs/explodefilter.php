@@ -39,7 +39,7 @@ function parseFilter($filter,$table,$operator="=") {
 		// PropertyIsEqualTo
 		$arr['PropertyIsEqualTo'] = addDiminsionOnArray($arr['PropertyIsEqualTo']);
 		if (is_array($arr['PropertyIsEqualTo'])) foreach ($arr['PropertyIsEqualTo'] as $value) {
-			$where[] = $value['PropertyName']."='".$value['Literal']."'";
+			$where[] = $value['PropertyName']."=".$postgisObject->quote($value['Literal']);
 		}
 		// PropertyIsNotEqualTo
 		$arr['PropertyIsNotEqualTo'] = addDiminsionOnArray($arr['PropertyIsNotEqualTo']);

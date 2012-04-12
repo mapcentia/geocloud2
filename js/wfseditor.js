@@ -5,15 +5,19 @@ var modifyControl;
 var grid;
 var store;
 var map;
+var wfsTools;
+var viewport;
+var drawControl;
+var gridPanel;
+var modifyControl;
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
-$(window).load(function() {
+function startWfsEdition(layerName) {
 	
 	var fieldsForStore;
 	var columnsForGrid;
 	var type;
 	var multi;
 	var handlerType;
-	var base = [];
 	var loadMessage = Ext.MessageBox;
 	var editable = true;
 	var sm;
@@ -24,10 +28,19 @@ $(window).load(function() {
 		renderer = (renderer) ? [ renderer ]
 				: OpenLayers.Layer.Vector.prototype.renderers;
 	*/
-		OpenLayers.Layer.Vector.prototype.renderers = ["SVG2","Canvas","VML"];
+	
+	try {
+		layer.removeAllFeatures();
+		map.removeLayer(layer);
+	} catch (e) {
+		// TODO: handle exception
+	}
+	var south = viewport.getComponent(1);
+	south.remove(grid);
+		
 		$.ajax( {
 			url : '/controller/tables/' + screenName + '/getcolumns/'
-					+ getvars['layer'],
+					+ layerName,
 			async : false,
 			dataType : 'json',
 			type : 'GET',
@@ -68,129 +81,9 @@ $(window).load(function() {
 
 }
 		});
-		map = new OpenLayers.Map("mapel", {
-			controls : [ new OpenLayers.Control.Navigation(),
-					new OpenLayers.Control.PanZoomBar(),
-					new OpenLayers.Control.LayerSwitcher() /*,
-					new OpenLayers.Control.TouchNavigation( {
-						dragPanOptions : {
-							interval : 100
-						}
-					})*/ ],
-			'numZoomLevels' : 20,
-			'projection' : new OpenLayers.Projection("EPSG:900913"),
-			'maxResolution' : 156543.0339,
-			'units' : "m"
-		});
+		
 
-		var saveStrategy = new OpenLayers.Strategy.Save(
-				{
-					onCommit : function(response) {
-						if (response.success()) {
-							saveStrategy.layer.refresh();
-							format = new OpenLayers.Format.XML();
-							var doc = format.read(response.priv.responseText);
-							try {
-								var inserted = doc
-										.getElementsByTagName('wfs:totalInserted')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var deleted = doc
-										.getElementsByTagName('wfs:totalDeleted')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var updated = doc
-										.getElementsByTagName('wfs:totalUpdated')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var updated = doc
-										.getElementsByTagName('wfs:Message')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-
-							// For webkit
-							try {
-								var inserted = doc
-										.getElementsByTagName('totalInserted')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var deleted = doc
-										.getElementsByTagName('totalDeleted')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var updated = doc
-										.getElementsByTagName('totalUpdated')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var updated = doc
-										.getElementsByTagName('Message')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-
-							var message = "";
-							if (inserted) {
-								message += "<p>Inserted: " + inserted + "</p>";
-							}
-							if (updated) {
-								message += "<p>Updated: " + updated + "</p>";
-							}
-							if (deleted) {
-								message += "<p>Deleted: " + deleted + "</p>";
-							}
-							// message+="<textarea rows='5'
-							// cols='31'>"+error+"</textarea>"
-
-							// Ext.fly('info').dom.value = Ext.MessageBox.INFO;
-							Ext.MessageBox.show( {
-								title : 'Success!',
-								msg : message,
-								buttons : Ext.MessageBox.OK,
-								width : 200,
-								icon : Ext.MessageBox.INFO
-							});
-						} else {
-							format = new OpenLayers.Format.XML();
-							var doc = format.read(response.priv.responseText);
-							try {
-								var error = doc
-										.getElementsByTagName('ServiceException')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							try {
-								var error = doc
-										.getElementsByTagName('wfs:ServiceException')[0].firstChild.data;
-							} catch (e) {
-							}
-							;
-							message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows='5' cols='31'>"
-									+ error + "</textarea>";
-							Ext.MessageBox.show( {
-								title : 'Failure',
-								msg : message,
-								buttons : Ext.MessageBox.OK,
-								width : 400,
-								height : 300,
-								icon : Ext.MessageBox.ERROR
-							});
-						}
-
-					}
-				});
+		
 		var styleMap = new OpenLayers.StyleMap( {
 			temporary : OpenLayers.Util.applyDefaults( {
 				pointRadius : 15
@@ -202,14 +95,17 @@ $(window).load(function() {
 			protocol : new OpenLayers.Protocol.WFS.v1_0_0( {
 				url : "/wfs/" + screenName + "/" + schema + "/900913?",
 				version : "1.0.0",
-				featureType : getvars['layer'],
+				featureType : layerName,
 				featureNS : "http://twitter/" + screenName,
 				srsName : "EPSG:900913",
-				geometryName : getvars['gf']
-			// must be dynamamic
-					}),
+				geometryName : getvars['gf']// must be dynamamic
+				// Only load features in map extent
+				//defaultFilter : new OpenLayers.Filter.Spatial({type: OpenLayers.Filter.Spatial.BBOX, value: map.getExtent() })
+			}),
 			styleMap : styleMap
 		});
+		
+		map.addLayers([layer]);
 		layer.events.register("loadend", layer, function() {
 			map.zoomToExtent(layer.getDataExtent());
 
@@ -226,39 +122,7 @@ $(window).load(function() {
 
 		});
 
-		var extent = new OpenLayers.Bounds(-20037508, -20037508, 20037508,
-				20037508);
-		map.maxExtent = extent;
-
-		base.push(new OpenLayers.Layer.Google("Google Hybrid", {
-			type : G_HYBRID_MAP,
-			sphericalMercator : true
-		}));
-		base.push(new OpenLayers.Layer.Google("Google Satellite", {
-			type : G_SATELLITE_MAP,
-			sphericalMercator : true
-		}));
-		base.push(new OpenLayers.Layer.Google("Google Terrain", {
-			type : G_PHYSICAL_MAP,
-			sphericalMercator : true
-		}));
-		base.push(new OpenLayers.Layer.Google("Google Normal", {
-			type : G_NORMAL_MAP,
-			sphericalMercator : true
-		}));
-		base.push(new OpenLayers.Layer.TMS(
-						"OpenStreetMap (Mapnik)",
-						"http://tile.openstreetmap.org/",
-						{
-							type : 'png',
-							getURL : osm_getTileURL,
-							displayOutsideMaxExtent : true,
-							attribution : '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
-						})
-
-				);
-
-		map.addLayers(base);
+		
 
 		if (type == "Point") {
 			handlerType = OpenLayers.Handler.Point;
@@ -269,7 +133,7 @@ $(window).load(function() {
 		if (type == "Path") {
 			handlerType = OpenLayers.Handler.Path;
 		}
-		var drawControl = new OpenLayers.Control.DrawFeature(layer,
+		drawControl = new OpenLayers.Control.DrawFeature(layer,
 				handlerType, {
 					featureAdded : onInsert,
 					handlerOptions : {
@@ -281,6 +145,7 @@ $(window).load(function() {
 				});
 
 		if (editable) {
+			wfsTools[0].control=drawControl; // We set the control to the first button in wfsTools
 			map.addControl(drawControl);
 			modifyControl = new OpenLayers.Control.ModifyFeature(layer, {
 				vertexRenderIntent : 'temporary',
@@ -306,47 +171,7 @@ $(window).load(function() {
 			});
 		}
 
-		var wfsTools = [ new GeoExt.Action( {
-			control : drawControl,
-			text : "Create",
-			enableToggle : true
-		}), {
-			text : "Delete",
-			handler : function() {
-				gridPanel.getSelectionModel().each(function(rec) {
-					var feature = rec.get("feature");
-					modifyControl.unselectFeature(feature);
-					gridPanel.store.remove(rec);
-					if (feature.state !== OpenLayers.State.INSERT) {
-						feature.state = OpenLayers.State.DELETE;
-						layer.addFeatures( [ feature ]);
-					}
-
-				});
-			}
-		}, {
-			text : "Save",
-			handler : function() {
-				// alert(layer.features.length);
-			if (modifyControl.feature) {
-				modifyControl.selectControl.unselectAll();
-			}
-			store.commitChanges();
-			saveStrategy.save();
-		}
-		}, '->', {
-			text : "Feature info",
-			handler : function() {
-				attributeForm.win.show();
-
-			}
-		}, '-', {
-			text : "Feature filter",
-			handler : function() {
-				filter.win.show();
-
-			}
-		}  ];
+		
 		store = new GeoExt.data.FeatureStore( {
 			proxy: new GeoExt.data.ProtocolProxy({
                 protocol: layer.protocol
@@ -389,42 +214,12 @@ $(window).load(function() {
 				columns : columnsForGrid
 			})
 		});
-		if (!editable) {
-			wfsTools = [];
-		};
-		attributeForm.init(getvars['layer']);
-		var viewport = new Ext.Viewport( {
-			layout : 'border',
-			items : [ 
-			{
-				region : "center",
-				id : "mappanel",
-				title : "Map",
-				xtype : "gx_mappanel",
-				map : map,
-				// extent:extent,
-				zoom : 5,
-				split : true,
-				layers : [ layer ],
-				tbar : wfsTools
-			}, {
-				region : "south",
-				title: "Attribut table",
-				split : true,
-				frame : false,
-				layout : 'fit',
-				height : 300,
-				collapsible: true,
-				collapsed: false
-			} ]
-		});
-
-		var mapPanel = Ext.getCmp("mappanel");
-		// var north = viewport.getCompo
-		var south = viewport.getComponent(1);
-
+		
+		attributeForm.init(layerName);
+		
+		
 		south.add(grid);
-		var gridPanel = Ext.getCmp("gridpanel");
+		gridPanel = Ext.getCmp("gridpanel");
 		south.doLayout();
 
 		
@@ -448,24 +243,156 @@ $(window).load(function() {
 			}) ]
 		});
 		
-		//filter.win.show();
-		function osm_getTileURL(bounds) {
-			var res = this.map.getResolution();
-			var x = Math.round((bounds.left - this.maxExtent.left)
-					/ (res * this.tileSize.w));
-			var y = Math.round((this.maxExtent.top - bounds.top)
-					/ (res * this.tileSize.h));
-			var z = this.map.getZoom();
-			var limit = Math.pow(2, z);
+		
 
-			if (y < 0 || y >= limit) {
-				return OpenLayers.Util.getImagesLocation() + "404.png";
-			} else {
-				x = ((x % limit) + limit) % limit;
-				return this.url + z + "/" + x + "/" + y + "." + this.type;
-			}
-		}
+		
+	};
+	
+	
+$(window).load(function() {
+	var base = [];
+	/*
+	OpenLayers.Layer.Vector.prototype.renderers = ["SVG2","Canvas","VML"];
+	map = new OpenLayers.Map("mapel", {
+		controls : [ new OpenLayers.Control.Navigation(),
+				new OpenLayers.Control.PanZoomBar(),
+				new OpenLayers.Control.LayerSwitcher() ],
+		'numZoomLevels' : 20,
+		'projection' : new OpenLayers.Projection("EPSG:900913"),
+		'maxResolution' : 156543.0339,
+		'units' : "m"
 	});
+	*/
+
+	var cloud = new mygeocloud_ol.map("mapel",screenName);
+	//cloud.addTileLayers(["public.test2"]);
+	map = cloud.map;
+
+	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
+		type : G_HYBRID_MAP,
+		sphericalMercator : true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Satellite", {
+		type : G_SATELLITE_MAP,
+		sphericalMercator : true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Terrain", {
+		type : G_PHYSICAL_MAP,
+		sphericalMercator : true
+	}));
+	base.push(new OpenLayers.Layer.Google("Google Normal", {
+		type : G_NORMAL_MAP,
+		sphericalMercator : true
+	}));
+	base.push(new OpenLayers.Layer.TMS(
+					"OpenStreetMap (Mapnik)",
+					"http://tile.openstreetmap.org/",
+					{
+						type : 'png',
+						getURL : osm_getTileURL,
+						displayOutsideMaxExtent : true,
+						attribution : '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
+					})
+
+			);
+	
+	map.addLayers(base);
+	wfsTools = [ new GeoExt.Action( {
+		control : drawControl,
+		text : "Create",
+		enableToggle : true
+	}), {
+		text : "Delete",
+		handler : function() {
+			gridPanel.getSelectionModel().each(function(rec) {
+				var feature = rec.get("feature");
+				modifyControl.unselectFeature(feature);
+				gridPanel.store.remove(rec);
+				if (feature.state !== OpenLayers.State.INSERT) {
+					feature.state = OpenLayers.State.DELETE;
+					layer.addFeatures( [ feature ]);
+				}
+
+			});
+		}
+	}, {
+		text : "Save",
+		handler : function() {
+			// alert(layer.features.length);
+		if (modifyControl.feature) {
+			modifyControl.selectControl.unselectAll();
+		}
+		store.commitChanges();
+		saveStrategy.save();
+	}
+	}, '->', {
+		text : "Feature info",
+		handler : function() {
+			attributeForm.win.show();
+
+		}
+	}, '-', {
+		text : "Feature filter",
+		handler : function() {
+			filter.win.show();
+
+		}
+	} /*, '-', {
+		text : "test",
+		handler : function() {
+		startWfsEdition("test2");
+
+		}
+	}, '-', {
+		text : "test2",
+		handler : function() {
+		cloud.removeTileLayerByName("public.test2");
+
+		}
+	}  */];
+	
+	viewport = new Ext.Viewport( {
+		layout : 'border',
+		items : [ 
+		{
+			region : "center",
+			id : "mappanel",
+			title : "Map",
+			xtype : "gx_mappanel",
+			map : map,
+			zoom : 5,
+			split : true,
+			tbar : wfsTools
+		}, {
+			region : "south",
+			title: "Attribut table",
+			split : true,
+			frame : false,
+			layout : 'fit',
+			height : 300,
+			collapsible: true,
+			collapsed: false
+		} ]
+	});
+	startWfsEdition(getvars['layer']);
+});
+
+function osm_getTileURL(bounds) {
+	var res = this.map.getResolution();
+	var x = Math.round((bounds.left - this.maxExtent.left)
+			/ (res * this.tileSize.w));
+	var y = Math.round((this.maxExtent.top - bounds.top)
+			/ (res * this.tileSize.h));
+	var z = this.map.getZoom();
+	var limit = Math.pow(2, z);
+
+	if (y < 0 || y >= limit) {
+		return OpenLayers.Util.getImagesLocation() + "404.png";
+	} else {
+		x = ((x % limit) + limit) % limit;
+		return this.url + z + "/" + x + "/" + y + "." + this.type;
+	}
+}
 function getUrlVars() {
 	var mapvars = {};
 	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,
@@ -475,12 +402,118 @@ function getUrlVars() {
 	return mapvars;
 }
 function onInsert() {
-
 	var pos = grid.getStore().getCount() - 1;
 	grid.selModel.selectRow(pos);
-
 	attributeForm.win.show();
 }
 function test() {
 	alert('test');
 }
+var saveStrategy = new OpenLayers.Strategy.Save(
+		{
+			onCommit : function(response) {
+				if (response.success()) {
+					saveStrategy.layer.refresh();
+					format = new OpenLayers.Format.XML();
+					var doc = format.read(response.priv.responseText);
+					try {
+						var inserted = doc
+								.getElementsByTagName('wfs:totalInserted')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var deleted = doc
+								.getElementsByTagName('wfs:totalDeleted')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var updated = doc
+								.getElementsByTagName('wfs:totalUpdated')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var updated = doc
+								.getElementsByTagName('wfs:Message')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+
+					// For webkit
+					try {
+						var inserted = doc
+								.getElementsByTagName('totalInserted')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var deleted = doc
+								.getElementsByTagName('totalDeleted')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var updated = doc
+								.getElementsByTagName('totalUpdated')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var updated = doc
+								.getElementsByTagName('Message')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+
+					var message = "";
+					if (inserted) {
+						message += "<p>Inserted: " + inserted + "</p>";
+					}
+					if (updated) {
+						message += "<p>Updated: " + updated + "</p>";
+					}
+					if (deleted) {
+						message += "<p>Deleted: " + deleted + "</p>";
+					}
+					// message+="<textarea rows='5'
+					// cols='31'>"+error+"</textarea>"
+
+					// Ext.fly('info').dom.value = Ext.MessageBox.INFO;
+					Ext.MessageBox.show( {
+						title : 'Success!',
+						msg : message,
+						buttons : Ext.MessageBox.OK,
+						width : 200,
+						icon : Ext.MessageBox.INFO
+					});
+				} else {
+					format = new OpenLayers.Format.XML();
+					var doc = format.read(response.priv.responseText);
+					try {
+						var error = doc
+								.getElementsByTagName('ServiceException')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					try {
+						var error = doc
+								.getElementsByTagName('wfs:ServiceException')[0].firstChild.data;
+					} catch (e) {
+					}
+					;
+					message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows='5' cols='31'>"
+							+ error + "</textarea>";
+					Ext.MessageBox.show( {
+						title : 'Failure',
+						msg : message,
+						buttons : Ext.MessageBox.OK,
+						width : 400,
+						height : 300,
+						icon : Ext.MessageBox.ERROR
+					});
+				}
+
+			}
+		});

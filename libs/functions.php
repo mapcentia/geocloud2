@@ -28,26 +28,26 @@ class postgis
 	function fetchRow(& $result,$result_type="assoc")
 	{
 		/*
-		switch ($result_type) {
+		 switch ($result_type) {
 			case "assoc":
-				$row=pg_fetch_assoc($result);
+			$row=pg_fetch_assoc($result);
 			break;
 			case "both";
-				$row=pg_fetch_array($result);
+			$row=pg_fetch_array($result);
 			break;
-		}
-		return($row);
-		*/
+			}
+			return($row);
+			*/
 		if ($this->PDOerror){
 			throw new Exception($this->PDOerror[0]);
 		}
 		switch ($result_type) {
 			case "assoc":
 				$row = $result->fetch(PDO::FETCH_ASSOC);;
-			break;
+				break;
 			case "both":
 				//$row=pg_fetch_array($result);
-			break;
+				break;
 		}
 		return($row);
 	}
@@ -66,7 +66,7 @@ class postgis
 	{
 		$query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary";
 		$result = $this->execQuery($query);
-		
+
 		if ($this->PDOerror) {
 			return NULL;
 		}
@@ -97,66 +97,54 @@ class postgis
 		switch ($conn){
 			case "PG":
 				if (!$this->db) {
-					 $this -> connect("PG");
+					$this -> connect("PG");
 				}
 				$result = pg_query($this->db,$query);
 				return ($result);
 				break;
 			case "PDO":
 				if (!$this->db) {
-					 $this -> connect("PDO"); 
+					$this -> connect("PDO");
 				}
 				try {
-						$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-						switch ($queryType){
-							case "select":
-								$result = $this->db->query($query); // Return PDOStatement object
-								break;
-							case "transaction":
-								$result = $this->db->exec($query); // Return interger
-						}
-						//$db = NULL;
+					$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+					switch ($queryType){
+						case "select":
+							$result = $this->db->query($query); // Return PDOStatement object
+							break;
+						case "transaction":
+							$result = $this->db->exec($query); // Return interger
+					}
+					//$db = NULL;
 				}
 				catch(PDOException $e)
 				{
-					
+						
 					$this->PDOerror[] = $e->getMessage();
 				}
 				return($result);
 				break;
 		}
 	}
-	function sql($q) // All tables
-	{
-		$result = $this -> execQuery($q);
-		$data = array();
+	function sql($q) {
+		$result = $this->execQuery($q);
 		while ($row = $this->fetchRow($result,"assoc")) {
+			if (!$firstRow) {
+				$firstRow = $row;
+			}
 			$arr = array();
 			foreach ($row as $key => $value) {
 				$arr = $this -> array_push_assoc($arr,$key,$value);
 			}
-			$data[] = $arr;
-			
+			$response['data'][] = $arr;
 		}
-		foreach ($data[0] as $key => $value) {
+		foreach($firstRow as $key=>$value){
 			$fieldsForStore[]  = array("name"=>$key,"type"=>"string");
-			$columnsForGrid[]  = array("header"=>$key,"dataIndex"=>$key,"type"=>"string","typeObj"=>array("type"=>"string"));
+			$columnsForGrid[]  =  array("header"=>$key,"dataIndex"=>$key,"type"=>"string","typeObj"=> array("type"=>"string"));		
 		}
-		if (!$this->PDOerror) {
-			$response['success'] = true;
-			$response['data'] = $data;
-			$response['forStore'] = $fieldsForStore;
-			$response['forGrid'] = $columnsForGrid;
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
+		$response["forStore"] = $fieldsForStore;
+		$response["forGrid"] = $columnsForGrid;
 		return $response;
-	}
-	private function array_push_assoc($array, $key, $value){
-		$array[$key] = $value;
-		return $array;
 	}
 	function getMetaData($table)
 	{
@@ -211,7 +199,7 @@ class postgis
 					throw new Exception("Could not connect to database {$this->postgisdb}");
 				}
 				break;
-		}		
+		}
 	}
 	function close()
 	{
@@ -240,7 +228,7 @@ class postgis
 			$_schema = str_replace(".","",$_schema);
 		}
 		$query = "select * from settings.geometry_columns_view where f_table_name='{$_table}' AND f_table_schema='{$_schema}'";
-	
+
 		$result = $this -> execQuery($query);
 		$row = $this -> fetchRow($result);
 		if (!$row)
@@ -268,8 +256,8 @@ class postgis
 			return $row['fieldconf'];
 		}
 		if ($field == 'def') {
-				return $row['def'];
-			}
+			return $row['def'];
+		}
 		if ($field == 'id') {
 			return $row['id'];
 		}
@@ -297,9 +285,13 @@ class postgis
 			$_schema = str_replace(".","",$_schema);
 		}
 		return array("schema"=>$_schema,"table"=>$_table);
-		
+
 	}
-	
+	private function array_push_assoc($array, $key, $value){
+		$array[$key] = $value;
+		return $array;
+	}
+
 }
 class logfile {
 
@@ -311,34 +303,34 @@ class logfile {
 	 */
 
 	function write($the_string) {
-	/*
-		if ( $fh = fopen("/var/www/mygeocloud/log.txt", "a+" ) ) {
+		/*
+		 if ( $fh = fopen("/var/www/log.txt", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
 			return true;
-		}
-		else {
+			}
+			else {
 			return false;
-		}
-	*/
+			}
+			*/
 	}
 }
 class color {
 	public function hex2RGB($hexStr, $returnAsString = false, $seperator = ',') {
-    $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr); // Gets a proper hex string
-    $rgbArray = array();
-    if (strlen($hexStr) == 6) { //If a proper hex code, convert using bitwise operation. No overhead... faster
-        $colorVal = hexdec($hexStr);
-        $rgbArray['red'] = 0xFF & ($colorVal >> 0x10);
-        $rgbArray['green'] = 0xFF & ($colorVal >> 0x8);
-        $rgbArray['blue'] = 0xFF & $colorVal;
-    } elseif (strlen($hexStr) == 3) { //if shorthand notation, need some string manipulations
-        $rgbArray['red'] = hexdec(str_repeat(substr($hexStr, 0, 1), 2));
-        $rgbArray['green'] = hexdec(str_repeat(substr($hexStr, 1, 1), 2));
-        $rgbArray['blue'] = hexdec(str_repeat(substr($hexStr, 2, 1), 2));
-    } else {
-        return false; //Invalid hex color code
-    }
-    return $returnAsString ? implode($seperator, $rgbArray) : $rgbArray; // returns the rgb string or the associative array
-}
+		$hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr); // Gets a proper hex string
+		$rgbArray = array();
+		if (strlen($hexStr) == 6) { //If a proper hex code, convert using bitwise operation. No overhead... faster
+			$colorVal = hexdec($hexStr);
+			$rgbArray['red'] = 0xFF & ($colorVal >> 0x10);
+			$rgbArray['green'] = 0xFF & ($colorVal >> 0x8);
+			$rgbArray['blue'] = 0xFF & $colorVal;
+		} elseif (strlen($hexStr) == 3) { //if shorthand notation, need some string manipulations
+			$rgbArray['red'] = hexdec(str_repeat(substr($hexStr, 0, 1), 2));
+			$rgbArray['green'] = hexdec(str_repeat(substr($hexStr, 1, 1), 2));
+			$rgbArray['blue'] = hexdec(str_repeat(substr($hexStr, 2, 1), 2));
+		} else {
+			return false; //Invalid hex color code
+		}
+		return $returnAsString ? implode($seperator, $rgbArray) : $rgbArray; // returns the rgb string or the associative array
+	}
 }

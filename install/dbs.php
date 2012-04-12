@@ -12,13 +12,13 @@ try {
 	die();
 }
 
-
+$i=1;
 echo "<table border='1'>";
 echo "<tr><td></td><td>PostGIS</td><td>MyGeoCloud</td></tr>";
 foreach($arr['data'] as $db) {
 
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
-		echo "<tr><td>{$db}</td>";
+		echo "<tr><td>{$i} {$db}</td>";
 		$postgisdb = $db;
 		$dbc = new dbcheck();
 
@@ -53,7 +53,7 @@ foreach($arr['data'] as $db) {
 
 
 	}
-
+$i++;
 }
 echo "<table>";
 // We check if "tmp" is writeable
