@@ -55,8 +55,6 @@ $postgisObject = new postgis();
 
 $geometryColumnsObj = new GeometryColumns();
 
-
-
 function microtime_float()
 {
 	list($utime, $time) = explode(" ", microtime());
@@ -91,10 +89,8 @@ $unserializer_options = array (
 );
 $unserializer = &new XML_Unserializer($unserializer_options);
 
-/*$HTTP_RAW_POST_DATA = '<Transaction service="WFS" version="1.0.0">
- <Insert><plannr_planid><the_geom><MultiPolygon srsName="900913"><polygonMember><Polygon><outerBoundaryIs><LinearRing><coordinates>1097259.127828,7544536.183181 1086252.1957569,7543313.1907287 1090226.9212271,7538574.0949759 1097259.127828,7544536.183181</coordinates></LinearRing></outerBoundaryIs></Polygon></polygonMember></MultiPolygon></the_geom><planid></planid><plannr></plannr></plannr_planid></Insert>
- <Insert><martin><the_geom><MultiPolygon srsName="900913"><polygonMember><Polygon><outerBoundaryIs><LinearRing><coordinates>1097259.127828,7544536.183181 1086252.1957569,7543313.1907287 1090226.9212271,7538574.0949759 1097259.127828,7544536.183181</coordinates></LinearRing></outerBoundaryIs></Polygon></polygonMember></MultiPolygon></the_geom><planid></planid><plannr></plannr></martin></Insert>
- </Transaction>';*/
+/*$HTTP_RAW_POST_DATA = '<?xml version="1.0" encoding="utf-8"?><wfs:Transaction service="WFS" version="1.0.0" xmlns="http://www.opengis.net/wfs" xmlns:mrhg="http://twitter/mrhg" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><wfs:Insert idgen="GenerateNew"><mrhg:hej><the_geom><gml:MultiPolygon srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><gml:polygonMember><gml:Polygon><gml:exterior><gml:LinearRing><gml:coordinates>5.0657329559,-41.1107215881 8.4824724197,-39.3435783386 4.3241734505,-34.6001853943 5.0657329559,-41.1107215881 </gml:coordinates></gml:LinearRing></gml:exterior></gml:Polygon></gml:polygonMember></gml:MultiPolygon></the_geom></mrhg:hej></wfs:Insert></wfs:Transaction>';*/
+
 
 /*$HTTP_RAW_POST_DATA = '<?xml version="1.0"?><DescribeFeatureType  version="1.1.0"  service="WFS"  xmlns="http://www.opengis.net/wfs"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">    <TypeName>california_coastline</TypeName></DescribeFeatureType>';
  */
@@ -170,7 +166,9 @@ else {
 	if (sizeof($_GET) > 0) {
 		logfile::write($_SERVER['QUERY_STRING']."\n\n");
 		$HTTP_FORM_VARS = $_GET;
-		$HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS,CASE_UPPER);// Make keys case
+		$HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS,CASE_UPPER);// Make keys case insensative
+		$HTTP_FORM_VARS["TYPENAME"] = dropNameSpace($HTTP_FORM_VARS["TYPENAME"]);// We remove name space, so $where will get key without it.
+
 		if ($HTTP_FORM_VARS['FILTER']) {
 			@$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
 			if($checkXml===FALSE) {
@@ -241,15 +239,27 @@ if (!(empty($bbox[0]))) {
 	if (!(empty($featureids[0]))) {
 		$wheres[$table].= " AND ";
 	}
+	
 	foreach ($tables as $table) {
 		if (!$bbox[4]) {
 			$bbox[4] = $postgisObject->getGeometryColumns($postgisschema.".".$table, "srid");
 		}
-		$wheres[$table].= "intersects"
-		."(public.transform(public.GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
-		.gmlConverter::parseEpsgCode($bbox[4])
-		."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
-		.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
+		$axisOrder = gmlConverter::getAxisOrderFromEpsg($bbox[4]);
+		if ($axisOrder=="longitude") {
+			$wheres[$table].= "intersects"
+			."(public.transform(public.GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
+			.gmlConverter::parseEpsgCode($bbox[4])
+			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
+			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
+		}
+		else {
+			$wheres[$table].= "intersects"
+			."(public.transform(public.GeometryFromText('POLYGON((".$bbox[1]." ".$bbox[0].",".$bbox[3]." ".$bbox[0].",".$bbox[3]." ".$bbox[2].",".$bbox[1]." ".$bbox[2].",".$bbox[1]." ".$bbox[0]."))',"
+			.gmlConverter::parseEpsgCode($bbox[4])
+			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
+			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
+	
+		}
 
 	}
 }
@@ -355,6 +365,8 @@ function doQuery($queryType) {
 	global $useWktToGmlInPHP;
 	global $postgisschema;
 	global $tableObj;
+	global $fieldConfArr;
+	global $geometryColumnsObj;
 	
 	if (!$srs){
 		makeExceptionReport("You need to specify a srid in the URL.");
@@ -365,6 +377,8 @@ function doQuery($queryType) {
 			foreach ($tables as $table) {
 				$tableObj = new table($postgisschema.".".$table);
 				$primeryKey = $tableObj->getPrimeryKey($postgisschema.".".$table);
+				$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
+
 				$sql="SELECT ";
 					
 				if (!(empty($fields[$table]))) {
@@ -374,9 +388,9 @@ function doQuery($queryType) {
 				}
 				else {
 					foreach($postgisObject -> getMetaData($table) as $key=>$value) {
-						if ($key!=$primeryKey['attname']) {
+						//if ($key!=$primeryKey['attname']) {
 							$fieldsArr[$table][] = $key;
-						}
+						//}
 					}
 				}
 				// We add "" around field names in sql, so sql keywords don't mess things up
@@ -481,6 +495,8 @@ function doSelect($table, $sql, $sql2, $from) {
 	global $thePath;
 	global $HTTP_FORM_VARS;
 	global $tableObj;
+	global $postgisschema;
+	global $fieldConfArr;
 
 	if (!$gmlFeature[$table]) {
 		$gmlFeature[$table] =$table;
@@ -550,9 +566,17 @@ function doSelect($table, $sql, $sql2, $from) {
 				if ($gmlUseAltFunctions['changeFieldName']) {
 					$FieldName = changeFieldName($FieldName);
 				}
-
+			
+				$fieldProperties = ((array)json_decode($fieldConfArr[$FieldName]->properties));
+				if ($fieldProperties['cartomobilePictureUrl']) {
+					//if ($myrow[$fieldProperties['cartomobilePictureUrl']]) {
+						$FieldValue = getCartoMobilePictureUrl($table,$FieldName,$fieldProperties['cartomobilePictureUrl'],$myrow["fid"]);
+					//}
+				}
+				
 				//$FieldValue = htmlentities($FieldValue);
 				$FieldValue = altUseCdataOnStrings($FieldValue);
+				
 
 				if ($FieldValue && ($FieldName!="fid" && $FieldName!="FID")) {
 					writeTag("open", $gmlNameSpace, $FieldName, null, True, False);
@@ -639,9 +663,13 @@ function dropNameSpace($tag) {
 	$tag = preg_replace('/ cs(?:.*?)?=\".*?\"/',"",$tag);  //
 	$tag = preg_replace('/ cs(?:.*?)?=\'.*?\'/',"",$tag);
 	$tag = preg_replace('/ ts(?:.*?)?=\".*?\"/',"",$tag);
-	$tag = preg_replace('/ ts(?:.*?)?=\'.*?\'/',"",$tag);
 	$tag = preg_replace('/ decimal(?:.*?)?=\".*?\"/',"",$tag);
 	$tag = preg_replace('/ decimal(?:.*?)?=\'.*?\'/',"",$tag);
+	$tag = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $tag);// remove any namespaces
+	return ($tag);
+}
+function dropAllNameSpaces($tag) {
+
 	$tag = preg_replace("/[\w-]*:/", "", $tag);// remove any namespaces
 	return ($tag);
 }
@@ -674,6 +702,7 @@ function changeFieldName($field) {
  * @param unknown $value
  * @return unknown
  */
+
 function altFieldValue($field, $value) {
 	global $ODEUMhostName;
 	if ($value==-1 || $value==-3600)
@@ -716,6 +745,15 @@ function altUseCdataOnStrings($value) {
 	return $result;
 }
 
+function getCartoMobilePictureUrl($table,$fieldName,$cartomobilePictureField,$fid) {
+	global $postgisdb;
+	global $postgisschema;
+	$str = "http://{$_SERVER['SERVER_NAME']}/apps/getimage/{$postgisdb}/{$postgisschema}/{$table}/{$cartomobilePictureField}/{$fid}";
+	//$str  = "<![CDATA[".$str."]]>";
+	return $str;
+	//return "";
+}
+
 $totalTime = microtime_float()-$startTime;
 logfile::write("\nTotal time {$totalTime}\n");
 logfile::write("==================\n");
@@ -750,7 +788,7 @@ function doParse($arr)
 							if (is_array($value)) { // Must be geom if array
 								// We serialize the geometry back to XML for parsing
 								$status = $Serializer->serialize($value);
-								logfile::write($Serializer->getSerializedData()."\n\n");
+								logfile::write("GML ".$Serializer->getSerializedData()."\n\n");
 								$gmlCon = new gmlConverter();
 								$wktArr = $gmlCon -> gmlToWKT($Serializer->getSerializedData(),array());
 								$values[] = array("{$field}" => $wktArr[0][0],"srid" => $wktArr[1][0]);

@@ -41,7 +41,7 @@ include ("inc/lp_fields.php");
 include ("inc/lp_ref.php");
 $table = new table("lokalplaner.lpplandk2_join");
 $table->execQuery("set client_encoding='latin1'","PDO");
-$response = $table->getRecords("planid='{$_REQUEST['planid']}'");
+$response = $table->getRecords(null,"*","planid='{$_REQUEST['planid']}'","");
 //print_r($response['data'][0]);
 $row = $response['data'][0];
 
@@ -59,19 +59,24 @@ $result=$postgisObject-> execQuery($query,"PG");
 $rowsLpDel = pg_fetch_all($result);
 if (!is_array($rowsLpDel)) $rowsLpDel = array();
 
-$i = 1;
+$i = 0;
 ?>
 <table border="0" cellspacing="0" width="100%"><tr>
 <td width="100%" valign="top">
 <table border="0" cellspacing="10" width="100%"><tr>
 <td width="0" valign="top">
-<p alt="Åbn kort i nyt vindue"  title="Åbn kort i nyt vindue" href="javascript:void(0)" onclick="javascript:openMapWin('http://mygeocloud.cowi.webhouse.dk/apps/viewer/openlayers/<?php echo $postgisdb;?>/?lan=da&usepopup=false&popup=true&filter=&layers=lokalplaner.lpplandk2_view;lokalplaner.lpdelplandk2_view&sld=<?php echo urlencode("<StyledLayerDescriptor version='1.1.0'><NamedLayer><Name>lokalplaner.lpplandk2_view</Name><UserStyle><Title>xxx</Title><FeatureTypeStyle><Rule><Filter><PropertyIsEqualTo><PropertyName>planid</PropertyName><Literal>{$_REQUEST["planid"]}</Literal></PropertyIsEqualTo></Filter><LineSymbolizer><Stroke><CssParameter name='stroke'>#000000</CssParameter><CssParameter name='stroke-width'>3</CssParameter></Stroke></LineSymbolizer></Rule></FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>");?>',600,500)">Se interaktivt kort over lokalplanomr&aring;det</p>
+<!--<p alt="Åbn kort i nyt vindue"  title="Åbn kort i nyt vindue" href="javascript:void(0)" onclick="javascript:openMapWin('http://mygeocloud.cowi.webhouse.dk/apps/viewer/openlayers/<?php echo $postgisdb;?>/?lan=da&usepopup=false&popup=true&filter=&layers=lokalplaner.lpplandk2_view;lokalplaner.lpdelplandk2_view&sld=<?php echo urlencode("<StyledLayerDescriptor version='1.1.0'><NamedLayer><Name>lokalplaner.lpplandk2_view</Name><UserStyle><Title>xxx</Title><FeatureTypeStyle><Rule><Filter><PropertyIsEqualTo><PropertyName>planid</PropertyName><Literal>{$_REQUEST["planid"]}</Literal></PropertyIsEqualTo></Filter><LineSymbolizer><Stroke><CssParameter name='stroke'>#000000</CssParameter><CssParameter name='stroke-width'>3</CssParameter></Stroke></LineSymbolizer></Rule></FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>");?>',600,500)">Se interaktivt kort over lokalplanomr&aring;det</p>-->
 <h1 class="h1"><?php echo "{$row['plannr']} {$row['plannavn']}";?></h1>
 <?php
 $open = "true";
 foreach($lp_fields as $key=>$value){
 	if ($row[$key] && substr($key,0,5)!="bilag"){?>
-		<div dojoType="dijit.TitlePane" open="<?php echo $open;?>" title="<?php echo "{$i} {$lp_fields[$key]}";?>">
+		<div dojoType="dijit.TitlePane" open="<?php echo $open;?>" title="&sect;
+		<?php if ($i==0) $overSkrift = "{$lp_fields[$key]}";
+			else $overSkrift ="{$i} {$lp_fields[$key]}";
+			echo $overSkrift;
+			?>">
+		<div class="mygeocloud_img" style="margin-top:10px"><h2>&sect; <?php echo $overSkrift; ?></h2></div>
 		<?php
 		if ($open=="true") $open = "false";
 		if ($lp_ref[$key]){

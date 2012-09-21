@@ -16,6 +16,7 @@ $lp_fields =array(
 "sti_parkering"=>"Sti- og parkeringsforhold",
 "parkering"=>"Parkeringsforhold",
 "tekniske_anlaeg"=>"Ledningsanlæg",
+"lednings_og_antenneanlaeg"=>"Lednings- og antenneanlæg",
 "bebyggelsens_omfang_og_placering"=>"Bebyggelsens omfang og placering",
 "byfornyelse"=>"Byfornyelse",
 "bebyggelsens_ydre_fremtraeden"=>"Bebyggelsens ydre fremtræden",
@@ -38,7 +39,8 @@ $lp_fields =array(
 "ophaevelse_lokalplan"=>"Ophævelse af lokalplan",
 "ophaevelse_byplanvedt"=>"Ophævelse af byplanvedtægt",
 "ophaevelse_lp_vedt"=>"Ophævelse af lokalplan og byplanvedtægt",
-"vedtagelsespaategnelse"=>"Vedtagelsespåtegnelse"
+"vedtagelsespaategnelse"=>"Vedtagelsespåtegnelse",
+"permanente_retsvirkninger"=>"Permanente retsvirkninger"
 );
 
 $lp_ref =  array(

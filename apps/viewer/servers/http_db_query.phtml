@@ -48,7 +48,7 @@ for ($i = 0; $i < sizeof($layers); $i++)
 			$postGisQueryFieldName[strtoupper($bits[0])][strtoupper($value->column)]=$value->alias;
 			if ($value->link) {
 				$postGisQueryContentLink[strtoupper($bits[0])]=strtoupper($value->column);
-				$postGisQueryLinkTarget[strtoupper($bits[0])]="target='_parent'";
+				$postGisQueryLinkTarget[strtoupper($bits[0])]="target='_blank'";
 			}
 			if ($value->linkprefix) {
 				$postGisQueryDataPrefix[strtoupper($bits[0])]=$value->linkprefix;

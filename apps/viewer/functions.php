@@ -1025,7 +1025,7 @@ class control
 			{
 				$check2 = true;
 				//$check3 = false; // no increase in $index
-				if ($check != true && $currentTag != "GID") {
+				if ($check != true && ($currentTag != "GID" && $currentTag != "FID") ) {
 					if ($postGisQueryFieldName[$table_title][$currentTag]!="") $currentTagNewName = $postGisQueryFieldName[$table_title][$currentTag];
 					else $currentTagNewName = $currentTag;
 					$title_row =
@@ -1070,9 +1070,10 @@ class control
 		global $the_geom;
 		global $iLangID;
 		global $postgisObject;
+
 		if ($currentTag == "GID")
 		$gid = $data;
-		if ($check2 == true && $currentTag != "GID" )
+		if ($check2 == true && ($currentTag != "GID" && $currentTag != "FID"))
 		{
 			if ($postGisQueryCustomFunction[$table_title][$currentTag])
 			{
@@ -2031,8 +2032,7 @@ class postgis extends control
 		elseif ($this -> control -> units == "degrees") $border = 0.01 * $zoom;
 		if (sizeof($row) > 0)
 		{
-
-
+			//echo $query; 
 			$this -> control -> setMinx($row[minx] - $border);
 			$this -> control -> setMiny($row[miny] - $border);
 			$this -> control -> setMaxx($row[maxx] + $border);
@@ -2494,16 +2494,16 @@ class postgis extends control
 
 		global $postGisQuerySubstitute;
 		// check if a sunstitute layer is set in conf
-		$subLayer=$this->substituteQueryLayer($pg_query_layer);
+		$subLayer=$pg_query_layer;
 		// check if specific fields are set in conf
 		$fields=$this->substituteQueryFields($pg_query_layer,$fields);
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"select asText(the_geom) as geometry,gid,"
+			"select asText(".$subLayer.".the_geom) as geometry,gid,"
 			.$fields
 			." from "
-			.$subLayer
+			.$subLayer.",".$pg_select_layer
 			." where "
 			.$pg_select_layer
 			.".gid="
@@ -2523,13 +2523,18 @@ class postgis extends control
 		else
 		{
 			$query =
-			"select asText(transform(the_geom,"
+			"select asText(transform(".$pg_query_layer.".the_geom,"
 			.$this -> control -> proj
-			.")) as geometry,gid,"
+			.")) as geometry,".$subLayer.".gid as fid,"
 			.$fields
-			." from "
-			.$subLayer
-			." where "
+			." from ";
+			
+			if ($subLayer!=$pg_select_layer)
+			$query.= $subLayer.",".$pg_select_layer;
+			else
+			$query.= $pg_select_layer;
+			
+			$query.=" where "
 			.$pg_select_layer
 			.".gid="
 			.$GID
@@ -2548,6 +2553,7 @@ class postgis extends control
 			if ($buffer) $query.=",".$buffer.")";
 			$query.=")";
 		}
+		//echo $query."<br><br>";
 		$result = pg_exec($this -> connect(), $query);
 		return ($result);
 	}

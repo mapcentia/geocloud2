@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -43,12 +43,16 @@ OpenLayers.Handler.Box = OpenLayers.Class(OpenLayers.Handler, {
      *
      * Parameters:
      * control - {<OpenLayers.Control>} 
-     * callbacks - {Object} An object with a "done" property whose value is a
-     *     callback to be called when the box drag operation is finished.  
-     *     The callback should expect to recieve a single argument, the box 
+     * callbacks - {Object} An object with a properties whose values are
+     *     functions.  Various callbacks described below.
+     * options - {Object} 
+     *
+     * Named callbacks:
+     * start - Called when the box drag operation starts.
+     * done - Called when the box drag operation is finished.
+     *     The callback should expect to receive a single argument, the box 
      *     bounds or a pixel. If the box dragging didn't span more than a 5 
      *     pixel distance, a pixel will be returned instead of a bounds object.
-     * options - {Object} 
      */
     initialize: function(control, callbacks, options) {
         OpenLayers.Handler.prototype.initialize.apply(this, arguments);
@@ -89,18 +93,20 @@ OpenLayers.Handler.Box = OpenLayers.Class(OpenLayers.Handler, {
     * Method: startBox
     *
     * Parameters:
-    * evt - {Event} 
+    * xy - {<OpenLayers.Pixel>}
     */
     startBox: function (xy) {
-        this.zoomBox = OpenLayers.Util.createDiv('zoomBox',
-             new OpenLayers.Pixel(-9999, -9999));
+        this.callback("start", []);
+        this.zoomBox = OpenLayers.Util.createDiv('zoomBox', {
+            x: -9999, y: -9999
+        });
         this.zoomBox.className = this.boxDivClassName;                                         
         this.zoomBox.style.zIndex = this.map.Z_INDEX_BASE["Popup"] - 1;
         
-        this.map.eventsDiv.appendChild(this.zoomBox);
+        this.map.viewPortDiv.appendChild(this.zoomBox);
         
         OpenLayers.Element.addClass(
-            this.map.eventsDiv, "olDrawBox"
+            this.map.viewPortDiv, "olDrawBox"
         );
     },
 
@@ -148,11 +154,11 @@ OpenLayers.Handler.Box = OpenLayers.Class(OpenLayers.Handler, {
      * Remove the zoombox from the screen and nullify our reference to it.
      */
     removeBox: function() {
-        this.map.eventsDiv.removeChild(this.zoomBox);
+        this.map.viewPortDiv.removeChild(this.zoomBox);
         this.zoomBox = null;
         this.boxOffsets = null;
         OpenLayers.Element.removeClass(
-            this.map.eventsDiv, "olDrawBox"
+            this.map.viewPortDiv, "olDrawBox"
         );
 
     },

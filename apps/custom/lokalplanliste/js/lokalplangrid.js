@@ -52,7 +52,6 @@ $(window).load(function () {
 				}
 			}
 		}
-		;
 	}
 }
 
@@ -119,7 +118,7 @@ $(window).load(function () {
                 sortable: true,
                 editable: false,
 				width: 150
-            },]
+            }]
         }),
         listeners: {
             rowdblclick: function(btn, ev) {

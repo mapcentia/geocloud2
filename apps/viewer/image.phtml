@@ -6,7 +6,9 @@ function microtime_float()
     return ((float)$utime + (float)$time);
 }
 include("../../inc/user_name_from_uri.php");
-$postgisschema = $parts[5];
+include("inc/bgmaps.php");
+//$postgisschema = $parts[5];
+$postgisschema = "kommuneplan";
 $postgisdb = $parts[4];
 
 $startTime = microtime_float();
@@ -18,19 +20,31 @@ $Cache_Lite = new Cache_Lite($options);
 if ($data = $Cache_Lite->get($id)) {} 
 else {
 	ob_start();
-	include ("functions.php");
-	
-	if($_REQUEST['usedimfromurl'])
+	/*if($_REQUEST['width'] && $_REQUEST['height'])
 	{
 		$width = $_REQUEST['width'];
 		$height = $_REQUEST['height'];
 	
 	}
-	else {
-		$width = 500;
-		$height = 500;
-	}
+	else {*/
+		if (!empty($bgmapSizes[$postgisdb])) {
+			$width = $bgmapSizes[$postgisdb]['x'];
+			$height = $bgmapSizes[$postgisdb]['y'];
+		}
+	//}
+	//echo $_GET['extent']."<br>";
+	include ("functions.php");
+	$units = "xy";
+	$controlObject = new control(true,false);
+	$extentArr = explode(",",$_GET['extent']);
+	$controlObject->minx=$extentArr[0];
+	$controlObject->miny=$extentArr[1];
+	$controlObject->maxx=$extentArr[2];
+	$controlObject->maxy=$extentArr[3];
+	$controlObject->setproportion();
 	
+	$extent = $controlObject->getExtentAsStr();
+	//echo $extent;
 	
 	$layerArr = explode(";",$_REQUEST['layer']);
 
@@ -41,9 +55,11 @@ else {
 		}
 	}
 	$wmsLayersStr = implode(",",$wmsLayersArr);
-	
-	$mapUrl="{$hostName}/wms/{$postgisdb}/{$postgisschema}/?LAYERS=public.kms,{$wmsLayersStr}&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A900913&BBOX={$_REQUEST['extent']}&WIDTH=500&HEIGHT=500";
-	
+	$bgmap = $bgmaps[$postgisdb];
+	if (!$bgmap) {
+		$bgmap = "public.kms_skaermkort";
+	}
+	$mapUrl="{$hostName}/wms/{$postgisdb}/{$postgisschema}/?LAYERS={$bgmap},{$wmsLayersStr}&TRANSPARENT=false&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A900913&BBOX={$extent}&WIDTH={$width}&HEIGHT={$height}";
 	$im=imagecreatefrompng($mapUrl);
 	imagepng($im);
 	imagedestroy($im);

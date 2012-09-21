@@ -111,7 +111,7 @@ include("html_header.php");
 					$name = postgis::toAscii($_REQUEST['name'],NULL,"_");
 					$db = new databases;
 					echo "<div class='inner'>";
-					$dbObj = $db -> createdb($name,$databaseTemplate,"UTF8"); // databaseTemplate is set in conf/main.php
+					$dbObj = $db -> createdb($name,$databaseTemplate,"LATIN1"); // databaseTemplate is set in conf/main.php
 					echo "</div>";
 					if ($dbObj) {
 						

@@ -87,7 +87,7 @@ include("controller/wmslayers_c.php");
 
 $i = 0;
 foreach($responseWmsLayers['data'] as $arr) {
-	if ($arr['f_table_schema']==$postgisschema) {
+	if ($arr['f_table_schema']==$postgisschema || $arr['f_table_schema']=="public") {
 		if ($arr['f_table_title']) {
 			$titles[$arr['f_table_name']] = $arr['f_table_title'];
 		}
@@ -100,6 +100,7 @@ foreach($responseWmsLayers['data'] as $arr) {
 		else {
 			$groups[$arr['f_table_name']] = "Default group";
 		}
+		$schemas[$arr['f_table_name']] = $arr['f_table_schema'];
 	}
 }
 //print_r($groups);
@@ -114,13 +115,14 @@ items.push({
 	title: '<?php echo $group;?>',
 	bodyStyle: {padding: '5px'},
 	collapsible: true,
+	collapsed: true,
     html: "<div><?php	
 	echo "<div  title='{$group}'>";
 	foreach($titles as $layer=>$title)
 	{
 		foreach($responseWmsLayers['data'] as $arr) {
 			if ($arr['f_table_name']==$layer) {
-				$layer = $postgisschema.".".$layer;
+				$layer = $schemas[$layer].".".$layer;
 				//$table = $layerObj -> getMetaData("query_table");
 				$abstract = $arr['f_table_abstract'];
 				$singleTile = $arr['single_tile'];

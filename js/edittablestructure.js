@@ -1,10 +1,10 @@
 Ext.namespace('tableStructure');
 Ext.namespace('Ext.ux.grid');
-Ext.ux.grid.CheckColumn = Ext
-		.extend(
+Ext.ux.grid.CheckColumn = Ext.extend(
 				Ext.grid.Column,
 				{
 					processEvent : function(name, e, grid, rowIndex, colIndex) {
+					   'use strict'
 						if (name == 'click'/* 'mousedown' */) {
 							var record = grid.store.getAt(rowIndex);
 							record.set(this.dataIndex,
@@ -24,6 +24,8 @@ Ext.ux.grid.CheckColumn = Ext
 					init : Ext.emptyFn
 				});
 tableStructure.init = function(record, screenName) {
+   'use strict'
+
 	tableStructure.reader = new Ext.data.JsonReader( {
 		totalProperty : 'total',
 		successProperty : 'success',
@@ -51,7 +53,10 @@ tableStructure.init = function(record, screenName) {
 	}, {
 		name : 'linkprefix',
 		allowBlank : true
-	} ]);
+	} ,{
+		name : 'properties',
+		allowBlank : true
+	}]);
 
 	tableStructure.writer = new Ext.data.JsonWriter( {
 		writeAllFields : true,
@@ -132,7 +137,7 @@ tableStructure.init = function(record, screenName) {
 				header : "Sort id",
 				dataIndex : "sort_id",
 				sortable : true,
-				width : 50,
+				width : 30,
 				editor : new Ext.grid.GridEditor(new Ext.form.NumberField({
 	        		decimalPrecision:0,
 	        		decimalSeparator:'¤'// Some strange char nobody is using							
@@ -144,13 +149,14 @@ tableStructure.init = function(record, screenName) {
 				sortable : true,
 				editor : new Ext.form.TextField( {
 					allowBlank : false
-				})
+				}),
+				width : 60
 			}, {
 				id : "type",
 				header : "Type",
 				dataIndex : "type",
 				sortable : true,
-				width : 60,
+				width : 30,
 				editor : new Ext.form.ComboBox( {
 					typeAhead : false,
 					triggerAction : 'all',
@@ -192,7 +198,16 @@ tableStructure.init = function(record, screenName) {
 				editor : new Ext.form.TextField( {
 					allowBlank : true
 				})
-			}, ]
+			}, {
+				id : "properties",
+				header : "Properties",
+				dataIndex : "properties",
+				sortable : true,
+				width : 80,
+				editor : new Ext.form.TextField( {
+					allowBlank : true
+				})
+			}]
 		}),
 		listeners : {
 
@@ -250,6 +265,7 @@ tableStructure.init = function(record, screenName) {
 			handler : tableStructure.onDelete
 		} ]
 	});
+	 
 };
 tableStructure.onDelete = function() {
 	var record = tableStructure.grid.getSelectionModel().getSelected();

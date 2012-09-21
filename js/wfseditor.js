@@ -10,6 +10,8 @@ var viewport;
 var drawControl;
 var gridPanel;
 var modifyControl;
+var tree;
+var viewerSettings;
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 function startWfsEdition(layerName) {
 	
@@ -81,9 +83,6 @@ function startWfsEdition(layerName) {
 
 }
 		});
-		
-
-		
 		var styleMap = new OpenLayers.StyleMap( {
 			temporary : OpenLayers.Util.applyDefaults( {
 				pointRadius : 15
@@ -98,32 +97,27 @@ function startWfsEdition(layerName) {
 				featureType : layerName,
 				featureNS : "http://twitter/" + screenName,
 				srsName : "EPSG:900913",
-				geometryName : getvars['gf']// must be dynamamic
+				geometryName : getvars['gf'],// must be dynamamic
 				// Only load features in map extent
-				//defaultFilter : new OpenLayers.Filter.Spatial({type: OpenLayers.Filter.Spatial.BBOX, value: map.getExtent() })
+				defaultFilter : new OpenLayers.Filter.Spatial({type: OpenLayers.Filter.Spatial.BBOX, value: map.getExtent() })
 			}),
 			styleMap : styleMap
 		});
 		
 		map.addLayers([layer]);
 		layer.events.register("loadend", layer, function() {
-			map.zoomToExtent(layer.getDataExtent());
+			//map.zoomToExtent(layer.getDataExtent());
 
 			// loadMessage.hide();
 				// alert("");
 			});
 		layer.events.register("loadstart", layer, function() {
-
 			/*
 			 * loadMessage.show({ msg: 'Getting your data, please wait...',
 			 * progressText: 'Loading...', width:300, wait:true, waitConfig:
 			 * {interval:200} });
 			 */
-
 		});
-
-		
-
 		if (type == "Point") {
 			handlerType = OpenLayers.Handler.Point;
 		}
@@ -247,56 +241,170 @@ function startWfsEdition(layerName) {
 
 		
 	};
-	
-	
 $(window).load(function() {
-	var base = [];
-	/*
-	OpenLayers.Layer.Vector.prototype.renderers = ["SVG2","Canvas","VML"];
-	map = new OpenLayers.Map("mapel", {
-		controls : [ new OpenLayers.Control.Navigation(),
-				new OpenLayers.Control.PanZoomBar(),
-				new OpenLayers.Control.LayerSwitcher() ],
-		'numZoomLevels' : 20,
-		'projection' : new OpenLayers.Projection("EPSG:900913"),
-		'maxResolution' : 156543.0339,
-		'units' : "m"
-	});
-	*/
-
-	var cloud = new mygeocloud_ol.map("mapel",screenName);
-	//cloud.addTileLayers(["public.test2"]);
+	var cloud = new mygeocloud_ol.map(null,screenName);
 	map = cloud.map;
+	cloud.click.activate();
+	var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
+	var treeConfig = [{
+		id: "baselayers",
+        nodeType: "gx_baselayercontainer"
+    }];
+	var layers={};
+	$.ajax({
+        url: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (data, textStatus, http) {
+			var groups=[];
+            if (http.readyState == 4) {
+                if (http.status == 200) {	
+                    var response = eval('(' + http.responseText + ')');
+					//console.log(response);
+					for ( var i = 0; i < response.data.length; ++i) {
+						if(response.data[i].layergroup){
+							groups[i] = response.data[i].layergroup;
+						}
+						else{
+							//groups[i] = "Default group";
+						}
+					}
+					
+					var arr = array_unique(groups);
 
-	base.push(new OpenLayers.Layer.Google("Google Hybrid", {
-		type : G_HYBRID_MAP,
-		sphericalMercator : true
-	}));
-	base.push(new OpenLayers.Layer.Google("Google Satellite", {
-		type : G_SATELLITE_MAP,
-		sphericalMercator : true
-	}));
-	base.push(new OpenLayers.Layer.Google("Google Terrain", {
-		type : G_PHYSICAL_MAP,
-		sphericalMercator : true
-	}));
-	base.push(new OpenLayers.Layer.Google("Google Normal", {
-		type : G_NORMAL_MAP,
-		sphericalMercator : true
-	}));
-	base.push(new OpenLayers.Layer.TMS(
-					"OpenStreetMap (Mapnik)",
-					"http://tile.openstreetmap.org/",
-					{
-						type : 'png',
-						getURL : osm_getTileURL,
-						displayOutsideMaxExtent : true,
-						attribution : '<a href="http://www.openstreetmap.org/">OpenStreetMap</a>'
-					})
+				
+							for ( var u = 0; u < response.data.length; ++u) {
+								//console.log(response.data[u].baselayer);
+					
+								if (response.data[u].baselayer) {
+									var isBaseLayer = true;
+									}
+								else {
+									var isBaseLayer = false;
+								}
+								layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]]=cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name],
+										{
+											singleTile : false,
+											isBaseLayer : isBaseLayer,
+											visibility : false,
+											wrapDateLine : false,
+											tileCached: false,
+											displayInLayerSwitcher: true,
+											name: response.data[u].f_table_name
+										}
+									);
+								
+							}
+				
+						
+					
+					
+					
 
-			);
-	
-	map.addLayers(base);
+                    for (var i = 0; i < arr.length; ++i) {	
+						var l = [];
+							for ( var u = 0; u < response.data.length; ++u) {
+								//console.log(response.data[u].baselayer);
+								if (response.data[u].layergroup==arr[i]) {
+									l.push(
+										{
+	                                     text:  response.data[u].f_table_name,
+	                                     id:  response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+	                                     leaf: true,
+	                                     checked: false
+	                                 }
+									);
+								}
+						
+							}
+						treeConfig.push(
+							{
+							   //nodeType: "gx_layer",
+								text: arr[i],
+								isLeaf: false,
+								//id: arr[i],
+								expanded: true,
+								children: l
+							}
+						);
+						
+					}
+				}
+			}
+    }	});
+	console.log(layers);
+	$.ajax({
+        url: '/controller/settings_viewer/' + screenName + '/get',
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (data, textStatus, http) {
+			var groups=[];
+            if (http.readyState == 4) {
+                if (http.status == 200) {	
+                    var response = eval('(' + http.responseText + ')');
+					viewerSettings = response;
+				}
+			}
+    }	});
+    var extentStore = new mygeocloud_ol.geoJsonStore(screenName);
+    extentStore.sql = "SELECT ST_Envelope(ST_SetSRID(ST_Extent(the_geom),4326)) as the_geom FROM " + viewerSettings.data.default_extent;
+    extentStore.load();
+    extentStore.onLoad = function(){
+		// When the GeoJSON is loaded, zoom to its extent
+		cloud.zoomToExtentOfgeoJsonStore(extentStore);
+		//cloud.map.getLayersByName("test")[0].setVisibility(true);
+		//console.log(cloud.map.getLayersByName("test")[0]);
+		};
+    treeConfig = new OpenLayers.Format.JSON().write(treeConfig, true);
+    // create the tree with the configuration from above
+   
+    tree = new Ext.tree.TreePanel({
+		id: "martin",
+        border: true,
+        region: "center",
+        width: 200,
+        split: true,
+        //collapsible: true,
+        //collapseMode: "mini",
+        autoScroll: true,
+        root: {
+	        text: 'Ext JS',
+	        children: Ext.decode(treeConfig),
+	        id: 'source'
+
+        },
+        loader: new Ext.tree.TreeLoader({
+            applyLoader: false,
+            uiProviders: {
+                "layernodeui": LayerNodeUI
+            }
+        }),
+        listeners: {
+			click: {
+            fn:function(e) {
+				if (e.lastChild===null && e.parentNode.id!=="baselayers") {
+					Ext.getCmp('editlayerbutton').setDisabled(false);
+				}
+				else {
+					Ext.getCmp('editlayerbutton').setDisabled(true);
+				}
+			}
+        }
+        },
+        rootVisible: false,
+        lines: false
+    });
+    tree.on("checkchange", function(node, checked){
+    	if (node.lastChild===null && node.parentNode.id!=="baselayers") {
+    	 if(checked){
+             layers[node.id][0].setVisibility(true);
+         }else{
+        	 layers[node.id][0].setVisibility(false);
+         }
+    	}
+     });
 	wfsTools = [ new GeoExt.Action( {
 		control : drawControl,
 		text : "Create",
@@ -325,6 +433,28 @@ $(window).load(function() {
 		store.commitChanges();
 		saveStrategy.save();
 	}
+	},{
+		text : "Edit layer",
+		id : "editlayerbutton",
+		disabled: true,
+		handler : function(thisBtn,event) {
+			var node = tree.getSelectionModel().getSelectedNode();
+			//console.log(node.id);
+			var id = node.id.split(".");			
+			startWfsEdition(id[1]);
+		}
+	},{
+		text : "Embed",
+		id : "Embed",
+		disabled: false,
+		handler : function(thisBtn,event) {
+			
+			//console.log(tree.getNodeById("TEST"));
+			//console.log(tree); 
+			tree.getNodeById("aad.test").getUI().toggleCheck(true);
+			
+			
+		}
 	}, '->', {
 		text : "Feature info",
 		handler : function() {
@@ -337,23 +467,11 @@ $(window).load(function() {
 			filter.win.show();
 
 		}
-	} /*, '-', {
-		text : "test",
-		handler : function() {
-		startWfsEdition("test2");
-
-		}
-	}, '-', {
-		text : "test2",
-		handler : function() {
-		cloud.removeTileLayerByName("public.test2");
-
-		}
-	}  */];
+	}];
 	
 	viewport = new Ext.Viewport( {
 		layout : 'border',
-		items : [ 
+		items : [
 		{
 			region : "center",
 			id : "mappanel",
@@ -372,27 +490,20 @@ $(window).load(function() {
 			height : 300,
 			collapsible: true,
 			collapsed: false
-		} ]
+		},
+		new Ext.Panel( {
+			frame : false,
+			region : "west",
+			layout : 'border',
+			width:300,
+			items : [ tree ]
+		})]
 	});
-	startWfsEdition(getvars['layer']);
+	$('#martin').textWalk(function() {
+		this.data = this.data.replace('vandforsyning.vandvarksgranse_polygon','Peter');
+	});
 });
-
-function osm_getTileURL(bounds) {
-	var res = this.map.getResolution();
-	var x = Math.round((bounds.left - this.maxExtent.left)
-			/ (res * this.tileSize.w));
-	var y = Math.round((this.maxExtent.top - bounds.top)
-			/ (res * this.tileSize.h));
-	var z = this.map.getZoom();
-	var limit = Math.pow(2, z);
-
-	if (y < 0 || y >= limit) {
-		return OpenLayers.Util.getImagesLocation() + "404.png";
-	} else {
-		x = ((x % limit) + limit) % limit;
-		return this.url + z + "/" + x + "/" + y + "." + this.type;
-	}
-}
+ 
 function getUrlVars() {
 	var mapvars = {};
 	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,
@@ -408,6 +519,19 @@ function onInsert() {
 }
 function test() {
 	alert('test');
+}
+function array_unique(ar){
+if(ar.length && typeof ar!=='string'){
+var sorter = {};
+var out = [];
+for(var i=0,j=ar.length;i<j;i++){
+if(!sorter[ar[i]+typeof ar[i]]){
+out.push(ar[i]);
+sorter[ar[i]+typeof ar[i]]=true;
+}
+}
+}
+return out || ar;
 }
 var saveStrategy = new OpenLayers.Strategy.Save(
 		{
@@ -517,3 +641,16 @@ var saveStrategy = new OpenLayers.Strategy.Save(
 
 			}
 		});
+jQuery.fn.textWalk = function( fn ) {
+    this.contents().each( jwalk );
+    
+    function jwalk() {
+        var nn = this.nodeName.toLowerCase();
+        if( nn === '#text' ) {
+            fn.call( this );
+        } else if( this.nodeType === 1 && this.childNodes && this.childNodes[0] && nn !== 'script' && nn !== 'textarea' ) {
+            $(this).contents().each( jwalk );
+        }
+    }
+    return this;
+};

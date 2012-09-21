@@ -1,7 +1,7 @@
 <?php
 include("html_header.php");
 include("controller/lp_service_c.php");
-
+echo "<span style='font-size:18px'>{$plannr}</span>";
 if ($row['status']=='forslag') {?>
 <h1 class="byline"><?php echo $row['status'] ?></h1>
 <p><?php echo date('j/n/y',$row['datostart']) ?> - <?php echo  date('d/n/y',$row['datoslut']) ?></p>

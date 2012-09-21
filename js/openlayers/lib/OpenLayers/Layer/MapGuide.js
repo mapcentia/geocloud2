@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -27,10 +27,10 @@ OpenLayers.Layer.MapGuide = OpenLayers.Class(OpenLayers.Layer.Grid, {
     /**
      * APIProperty: useHttpTile
      * {Boolean} use a tile cache exposed directly via a webserver rather than the 
-	   *    via mapguide server. This does require extra configuration on the Mapguide Server,
-	   *    and will only work when singleTile is false. The url for the layer must be set to the
-	   *    webserver path rather than the Mapguide mapagent.	  
-	   *    See http://trac.osgeo.org/mapguide/wiki/CodeSamples/Tiles/ServingTilesViaHttp 
+     *    via mapguide server. This does require extra configuration on the Mapguide Server,
+     *    and will only work when singleTile is false. The url for the layer must be set to the
+     *    webserver path rather than the Mapguide mapagent.
+     *    See http://trac.osgeo.org/mapguide/wiki/CodeSamples/Tiles/ServingTilesViaHttp
      **/
     useHttpTile: false,
     
@@ -168,7 +168,7 @@ OpenLayers.Layer.MapGuide = OpenLayers.Class(OpenLayers.Layer.Grid, {
      *       groups to hide eg: 'cvc-xcv34,453-345-345sdf'
      *   - selectionXml - {String} A selection xml string Some server plumbing
      *       is required to read such a value.
-     * options - {Ojbect} Hashtable of extra options to tag onto the layer; 
+     * options - {Object} Hashtable of extra options to tag onto the layer; 
      *          will vary depending if tiled or untiled maps are being requested
      */
     initialize: function(name, url, params, options) {
@@ -449,7 +449,7 @@ OpenLayers.Layer.MapGuide = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * resolution - {Number}
      *
      * Returns:
-     * Object containing properties tilelon, tilelat, tileoffsetlat,
+     * {Object} Object containing properties tilelon, tilelat, tileoffsetlat,
      * tileoffsetlat, tileoffsetx, tileoffsety
      */
     calculateGridLayout: function(bounds, origin, resolution) {

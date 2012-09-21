@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -13,7 +13,7 @@
  * Read and write Web Map Context documents.
  *
  * Inherits from:
- *  - <OpenLayers.Format.XML>
+ *  - <OpenLayers.Format.Context>
  */
 OpenLayers.Format.WMC = OpenLayers.Class(OpenLayers.Format.Context, {
     
@@ -33,36 +33,11 @@ OpenLayers.Format.WMC = OpenLayers.Class(OpenLayers.Format.Context, {
      */
     
     /**
-     * Method: getParser
-     * Get the WMC parser given a version. Create a new parser if it does not
-     * already exist.
-     *
-     * Parameters:
-     * version - {String} The version of the parser.
-     *
-     * Returns:
-     * {<OpenLayers.Format.WMC.v1>} A WMC parser.
-     */
-    getParser: function(version) {
-        var v = version || this.version || this.defaultVersion;
-        if(!this.parser || this.parser.VERSION != v) {
-            var format = OpenLayers.Format.WMC[
-                "v" + v.replace(/\./g, "_")
-            ];
-            if(!format) {
-                throw "Can't find a WMC parser for version " + v;
-            }
-            this.parser = new format(this.options);
-        }
-        return this.parser;
-    },
-
-    /**
      * Method: layerToContext
      * Create a layer context object given a wms layer object.
      *
      * Parameters:
-     * obj - {<OpenLayers.Layer.WMS>} The layer.
+     * layer - {<OpenLayers.Layer.WMS>} The layer.
      *
      * Returns:
      * {Object} A layer context object.
@@ -86,7 +61,7 @@ OpenLayers.Format.WMC = OpenLayers.Class(OpenLayers.Format.Context, {
             numZoomLevels: layer.numZoomLevels,
             units: layer.units,
             isBaseLayer: layer.isBaseLayer,
-            opacity: layer.opacity,
+            opacity: layer.opacity == 1 ? undefined : layer.opacity,
             displayInLayerSwitcher: layer.displayInLayerSwitcher,
             singleTile: layer.singleTile,
             tileSize: (layer.singleTile || !layer.tileSize) ? 
@@ -191,7 +166,7 @@ OpenLayers.Format.WMC = OpenLayers.Class(OpenLayers.Format.Context, {
         }
 
         // let's convert layers into layersContext object (if any)
-        if (layers != undefined && layers instanceof Array) {
+        if (layers != undefined && OpenLayers.Util.isArray(layers)) {
             for (var i=0, len=layers.length; i<len; i++) {
                 var layer = layers[i];
                 if (layer instanceof OpenLayers.Layer.WMS) {

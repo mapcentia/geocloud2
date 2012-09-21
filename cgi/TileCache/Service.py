@@ -323,7 +323,7 @@ def wsgiHandler (environ, start_response, service):
             return [image]
 
     except TileCacheException, E:
-        start_response("404 Tile Not Found", [('Content-Type','text/plain')])
+        start_response("404 Tile Not Found"+str(E), [('Content-Type','text/plain')])
         return ["An error occurred: %s" % (str(E))]
     except Exception, E:
         start_response("500 Internal Server Error", [('Content-Type','text/plain')])
@@ -401,10 +401,10 @@ def wsgiApp (environ, start_response):
     global theService, myGeoCloudDB
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ)
     myGeoCloudDB = form['cfg'].value
-    cfgfiles = ("/etc/tilecache.cfg", os.path.join("..", "tilecache.cfg"), "../wms/cfgfiles/" + myGeoCloudDB + ".tilecache.cfg")
+    cfgfiles = ("","../wms/cfgfiles/" + myGeoCloudDB + ".tilecache.cfg")
     cfgs    = cfgfiles
-    if not theService:
-        theService = Service.load(*cfgs)
+    #if not theService: # We have to reload the cfg cos the different cfg files
+    theService = Service.load(*cfgs)
     return wsgiHandler(environ, start_response, theService)
 
 def binaryPrint(binary_data):

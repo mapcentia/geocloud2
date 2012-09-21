@@ -991,6 +991,7 @@ class gmlConverter
 	var $isPreviousIsland;
 	var $splitTag;
 	var $srid;
+	var $axisOrder;
 
 	function gmlConverter()
 	{
@@ -1011,7 +1012,8 @@ class gmlConverter
 	*/
 	function gmlToWKT($gml,$splitTag=array("FEATUREMEMBER"))
 	{
-		$gml = preg_replace("/[a-z|A-Z]*:/", "", $gml); // This strips name spaces
+		$gml = preg_replace("/^(?!urn:).+:/", "", $gml,1); // This strips name spaces except urn:x-ogc:def:crs:epsg
+		
 		global $count;
 		// Clean up messy gml. Remove spaces and tabs.
 		//$gml= oneLineGML($gml);
@@ -1039,7 +1041,10 @@ class gmlConverter
 
 		$currentTag = $name;
 		//echo $count;
-		if ($attrs['SRSNAME']!="") $this->srid[$count]=$this->parseEpsgCode($attrs['SRSNAME']);
+		if ($attrs['SRSNAME']!="") {
+			//$this->srid[$count]=$this->parseEpsgCode($attrs['SRSNAME']);
+			//$this->axisOrder = $this->getAxisOrderFromEpsg($attrs['SRSNAME']);
+		}
 		switch ($currentTag)
 		{
 			case "POINT" :
@@ -1288,18 +1293,39 @@ class gmlConverter
 			break;
 			case "SRSNAME"; // not normal. Used when serializing array to xml
 			$this->srid[$count]=$this->parseEpsgCode($data);
+			$this->axisOrder[$count] = $this->getAxisOrderFromEpsg($data);
 			break;
 		}
 	}
 	function convertCoordinatesToWKT($_str)
 	{
+		global $count;
+		ob_start();
+		print_r($this->axisOrder);
+		$data = ob_get_clean();
+		logfile::write($data);
 		$_str = str_replace(" ","&",$_str);
 		$_str = str_replace(","," ",$_str);
 		$_str = str_replace("&",",",$_str);
+		// If urn EPSG reverse the axixOrder
+		if ($this->axisOrder[$count]=="latitude") {
+			$split = explode(",",$_str);
+			foreach($split as $value){
+				$splitCoord = explode(" ",$value);
+				$reversedArr[]= $splitCoord[1]." ".$splitCoord[0];
+			}
+			$_str = implode(",",$reversedArr);
+
+		}
 		return ($_str);
 	}
 	function convertPostListToWKT($_str)
 	{
+		global $count;
+		ob_start();
+		print_r($this->axisOrder);
+		$data = ob_get_clean();
+		logfile::write($data);
 		$arr = explode(" ",trim($_str));
 		$i=1;
 		foreach($arr as $value){
@@ -1313,14 +1339,43 @@ class gmlConverter
 			$i++;
 		}
 		$newStr=substr($newStr, 0, strlen($newStr) - 1);
+		// If urn EPSG reverse the axixOrder
+		if ($this->axisOrder[$count]=="latitude") {
+			$split = explode(",",$newStr);
+			foreach($split as $value){
+				$splitCoord = explode(" ",$value);
+				$reversedArr[]= $splitCoord[1]." ".$splitCoord[0];
+			}
+			$newStr = implode(",",$reversedArr);
+
+		}
 		return ($newStr);
 	}
 	function parseEpsgCode($epsg)
 	{
 		//if (strtoupper(substr($epsg, 0, 5)=="EPSG:")) $epsg=substr($epsg, 5,strlen($epsg));
-		preg_match_all("/[0-9]*$/",$epsg,$arr);
-        $clean=$arr[0][0];
+		//preg_match_all("/[0-9]*$/",$epsg,$arr);
+                //$clean=$arr[0][0];
+
+		$split = explode(":",$epsg);
+		ob_start();
+		print_r($split);
+		$data = ob_get_clean();
+		logfile::write($data);
+		$clean = end($split);
+		$clean = preg_replace("/[\w]\./", "", $clean);
 		return $clean;
+	}
+	function getAxisOrderFromEpsg($epsg){
+		$split = explode(":",$epsg);
+		if ($split[0]=="urn") {
+			$first = "latitude";
+		}
+		else {
+			$first = "longitude";	
+		}
+
+		return($first);
 	}
 	function oneLineXML($gml)
 	{

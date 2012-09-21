@@ -115,6 +115,11 @@ function parseFilter($filter,$table,$operator="=") {
 		// End of filter parsing
 	$i++;
 	}
+	ob_start();
+	print_r($where);
+	$data = ob_get_clean();
+	
+	logfile::write($data);
 	if (!$BoolOperator) $BoolOperator = "OR";
 	return "(".implode(" ".$BoolOperator." " ,$where).")";
 }

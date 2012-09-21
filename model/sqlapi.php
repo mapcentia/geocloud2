@@ -1,21 +1,25 @@
 <?php
 class sqlapi extends postgis {
-	function __construct()
+	var $srs;
+	function __construct($srs="900913")
 	{
 		parent::__construct();
+		$this->srs = $srs;
 	}
 	function sql($q) {
+		$q = rawurldecode($q);
 		$name = "_".rand(1,999999999).microtime();
 		$name = $this->toAscii($name,null,"_");
 		$view = "public.{$name}";
 		$sqlView = "CREATE VIEW {$view} as {$q}";
+		//echo $sqlView ;
 		$result = $this->execQuery($sqlView);
 		if (!$this->PDOerror) {
 			$arrayWithFields = $this->getMetaData($view);
 
 			foreach($arrayWithFields as $key=>$arr) {
 				if ($arr['type']=="geometry"){
-					$fieldsArr[] = "ST_asGeoJson(transform(".$key.",900913)) as ".$key;
+					$fieldsArr[] = "ST_asGeoJson(transform(".$key.",".$this->srs.")) as ".$key;
 				}
 				else {
 					$fieldsArr[] = $key;
@@ -28,12 +32,20 @@ class sqlapi extends postgis {
 			while ($row = $this->fetchRow($result,"assoc")) {
 				$arr = array();
 				foreach ($row as $key => $value) {
-					$arr = $this -> array_push_assoc($arr,$key,$value);
+					
 					if ($arrayWithFields[$key]['type'] == "geometry") {
 						$geometries[] = json_decode($row[$key]);
 					}
+					else {
+						$arr = $this -> array_push_assoc($arr,$key,$value);
+					}
 				}
-				$features[] = array("geometry"=>array("type"=>"GeometryCollection","geometries"=>$geometries),"type"=>"Feature","properties"=>$arr);
+				if (sizeof($geometries)>1) {
+					$features[] = array("geometry"=>array("type"=>"GeometryCollection","geometries"=>$geometries),"type"=>"Feature","properties"=>$arr);
+				}
+				if (sizeof($geometries)==1) {
+					$features[] = array("geometry"=>$geometries[0],"type"=>"Feature","properties"=>$arr);
+				}	
 				unset($geometries);
 			}
 			foreach($arrayWithFields as $key=>$value){

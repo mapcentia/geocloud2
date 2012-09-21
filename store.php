@@ -4,7 +4,7 @@ include("html_header.php");
 $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
 $postgisdb = $_SESSION['screen_name'];
-
+ 
 include 'model/tables.php';
 include("wms/mapfile.php.map");
 include("wms/tilecache.cfg.php");
@@ -22,6 +22,8 @@ makeTileCacheFile($postgisdb);
 		<script type="text/javascript" src="/js/store.js">
 		</script>
 		<script type="text/javascript" src="/js/edittablestructure.js">
+		</script>
+		<script type="text/javascript" src="/js/cartomobilesetup.js">
 		</script>
 		<script type="text/javascript" src="/js/editwmsclass.js">
 		</script>
@@ -67,7 +69,7 @@ makeTileCacheFile($postgisdb);
 <div style="display:none">
 	<div id="map-settings">Some settings</div>
 	<div id="authentication">Change the password</div>
-	<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>" size="55"/></td></tr></tbody></table><table border="0"><tbody><tr><td>If you want to use another projection than the default add an EPSG code to the url like:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
+	<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
 	<div id="wms-dialog"><table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/" size="55"/></td></tr></tbody></table></div>
 </div>
 

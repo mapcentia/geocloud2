@@ -13,7 +13,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 		$table = $extentLayer;
 		$postgisObject = new postgis();
 		$srs = "900913";
-		$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
+		//$geomField = $postgisObject -> getGeometryColumns($table, "f_geometry_column");
 		
 	if ($extentLayer) {
 		$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM ".$table;
@@ -37,7 +37,8 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  #EXTENT -180 -90 180 90
 	  <?php } ?>
 	  EXTENT -180 -90 180 90
-	  SIZE 2000 1500 
+	  SIZE 2000 1500
+	  MAXSIZE 4096
 	  #SYMBOLSET "../etc/symbols.sym"
 	  FONTSET "../fonts/fonts.txt"
 	  IMAGECOLOR 255 255 255
@@ -52,8 +53,8 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  TRANSPARENT ON
 		  FORMATOPTION "GAMMA=0.75"
 	  END
-	  #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
-	  #DEBUG 5
+	  CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
+	  DEBUG 5
 	  WEB
 		IMAGEPATH "<?php echo $basePath."/tmp";?>"
   		IMAGEURL "<?php echo $hostName;?>/tmp"
@@ -82,8 +83,10 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  LEGEND
 		STATUS off
 		IMAGECOLOR 255 255 255
-		KEYSIZE 18 12 
+		KEYSIZE 18 12
+		
 		LABEL
+		  WRAP "#"
 		  TYPE truetype
 		  FONT "arial"
 		  SIZE 8
@@ -248,10 +251,28 @@ END
 			makeExceptionReport($postgisObject->PDOerror);
 		}
 		while ($row = $postgisObject->fetchRow($result)) {
-		$wmslayerObj = new wmslayers("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-		$layerArr = $wmslayerObj->get();
+		//$wmslayerObj = new //wmslayers("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+		//$layerArr = $wmslayerObj->get();
+		
+		$arr = (array)json_decode($row['def']); // Cast stdclass to array
+		$props = array("label_column","theme_column");
+		foreach($props as $field){
+			if (!$arr[$field]){
+				$arr[$field] = "";
+			}
+		}
+		$layerArr = array("data"=>array($arr));
+		
+		$arr = (array)json_decode($row['class']);
+		for ($i = 0; $i < sizeof($arr); $i++) {
+			$arrNew[$i] = (array)casttoclass('stdClass', $arr[$i]);
+			$arrNew[$i]['id'] = $i;
+		}
+		$classArr = array("data"=>$arrNew);
+		
 		$primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-		//print_r($layerArr);
+		//print_r($classArr);
+		unset($arrNew);
 	?>
 	  
 	  LAYER
@@ -290,7 +311,7 @@ END
 		if (!$row['wmssource']) { ?>
 		TYPE <?php echo $type."\n";?>
 		CONNECTIONTYPE POSTGIS
-		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?>"
+		CONNECTION "user=postgres dbname=<?php echo $postgisdb;?><?php if ($postgishost) echo " host=".$postgishost;?><?php if ($postgispw) echo " password=".$postgispw;?> options='-c client_encoding=UTF8'"
 		<?php } 
 		else {?>
 		TYPE RASTER
@@ -330,8 +351,8 @@ END
 		  "init=epsg:<?php echo $row['srid'];?>" 
 		END
 		<?php
-		$classObj = new _class("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-		$classArr = $classObj->getAll();
+		//$classObj = new _class("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+		//$classArr = $classObj->getAll();
 		//print_r($classArr);
 		if (is_array($classArr['data'])) {
 		foreach ($classArr['data'] as $class) {
@@ -344,9 +365,10 @@ END
 		  
 		  #EXPRESSION
 		  <?php if($class['expression']) {
-			if($layerArr['data'][0]['theme_column']) echo "EXPRESSION '".$class['expression']."'\n";
+			if($layerArr['data'][0]['theme_column']) echo "EXPRESSION \"".$class['expression']."\"\n";
 			else echo "EXPRESSION (".$class['expression'].")\n";
 		  }
+		  elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
 		  ?>
 		  
 		  STYLE

@@ -51,9 +51,13 @@ addShape.init = function () {
                 })
            
         },*/{
+            xtype: 'textfield',
+            name: 'name',
+            emptyText: 'Name of table',
+			allowBlank: false,
+        }, {
             xtype: 'numberfield',
             name: 'srid',
-            fieldLabel: 'Projection',
             emptyText: 'Choose EPSG number'
         }, {
             xtype: 'fileuploadfield',

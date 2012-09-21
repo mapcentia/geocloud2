@@ -57,6 +57,7 @@
 .silk-bricks { background-image: url(fam/bricks.png) !important; background-repeat: no-repeat; }
 .silk-brick { background-image: url(fam/brick.png) !important; background-repeat: no-repeat; }
 .silk-cog { background-image: url(fam/cog.png) !important; background-repeat: no-repeat; }
+.silk-cog-edit{ background-image: url(fam/cog_edit.png) !important; background-repeat: no-repeat; }
 .silk-calendar { background-image: url(fam/calendar.png) !important; background-repeat: no-repeat; }
 .silk-calculator { background-image: url(fam/calculator.png) !important; background-repeat: no-repeat; }
 .silk-calculator-edit { background-image: url(fam/calculator_edit.png) !important; background-repeat: no-repeat; }

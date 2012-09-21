@@ -19,6 +19,8 @@ $_SESSION['screen_name'] = $parts[2];
 		<link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 		<link rel="stylesheet" type="text/css" href="/js/openlayers/examples/style.mobile.css"/>
 		<link rel="stylesheet" type="text/css" href="/js/extras.css?format=txt"/>
+		<style>	html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,blockquote,th,td{margin:0;padding:0;}img,body,html{border:0;}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal;}ol,ul {list-style:none;}caption,th {text-align:left;}h1,h2,h3,h4,h5,h6{font-size:100%;}q:before,q:after{content:'';}
+		</style>
 </head>
 <body>
 	<div id="mb7"></div>

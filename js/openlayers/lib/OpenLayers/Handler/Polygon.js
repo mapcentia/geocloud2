@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -35,7 +35,7 @@ OpenLayers.Handler.Polygon = OpenLayers.Class(OpenLayers.Handler.Path, {
     drawingHole: false,
     
     /**
-     * Parameter: polygon
+     * Property: polygon
      * {<OpenLayers.Feature.Vector>}
      */
     polygon: null,
@@ -62,9 +62,6 @@ OpenLayers.Handler.Polygon = OpenLayers.Class(OpenLayers.Handler.Path, {
      * cancel - Called when the handler is deactivated while drawing.  The
      *     cancel callback will receive a geometry.
      */
-    initialize: function(control, callbacks, options) {
-        OpenLayers.Handler.Path.prototype.initialize.apply(this, arguments);
-    },
     
     /**
      * Method: createFeature
@@ -75,13 +72,10 @@ OpenLayers.Handler.Polygon = OpenLayers.Class(OpenLayers.Handler.Path, {
      *     feature.
      */
     createFeature: function(pixel) {
-        var geometry;
-        if(pixel) {
-            var lonlat = this.map.getLonLatFromPixel(pixel);
-            geometry = new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat);
-        } else {
-            geometry = new OpenLayers.Geometry.Point();
-        }
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel);
+        var geometry = new OpenLayers.Geometry.Point(
+            lonlat.lon, lonlat.lat
+        );
         this.point = new OpenLayers.Feature.Vector(geometry);
         this.line = new OpenLayers.Feature.Vector(
             new OpenLayers.Geometry.LinearRing([this.point.geometry])
@@ -130,7 +124,17 @@ OpenLayers.Handler.Polygon = OpenLayers.Class(OpenLayers.Handler.Path, {
         }
         OpenLayers.Handler.Path.prototype.addPoint.apply(this, arguments);
     },
-    
+
+    /**
+     * Method: getCurrentPointIndex
+     * 
+     * Returns:
+     * {Number} The index of the most recently drawn point.
+     */
+    getCurrentPointIndex: function() {
+        return this.line.geometry.components.length - 2;
+    },
+
     /**
      * Method: enforceTopology
      * Simple topology enforcement for drawing interior rings.  Ensures vertices
@@ -251,9 +255,13 @@ OpenLayers.Handler.Polygon = OpenLayers.Class(OpenLayers.Handler.Path, {
     /**
      * Method: destroyFeature
      * Destroy temporary geometries
+     *
+     * Parameters:
+     * force - {Boolean} Destroy even if persist is true.
      */
-    destroyFeature: function() {
-        OpenLayers.Handler.Path.prototype.destroyFeature.apply(this);
+    destroyFeature: function(force) {
+        OpenLayers.Handler.Path.prototype.destroyFeature.call(
+            this, force);
         this.polygon = null;
     },
 

@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -30,8 +30,7 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
      * APIProperty: maxVertices
      * {Number} The maximum number of vertices which can be drawn by this
      * handler. When the number of vertices reaches maxVertices, the
-     * geometry is automatically finalized. This property doesn't
-     * apply if freehand is set. Default is null.
+     * geometry is automatically finalized. Default is null.
      */
     maxVertices: null,
 
@@ -68,6 +67,12 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
     timerId: null,
 
     /**
+     * Property: redoStack
+     * {Array} Stack containing points removed with <undo>.
+     */
+    redoStack: null,
+
+    /**
      * Constructor: OpenLayers.Handler.Path
      * Create a new path hander
      *
@@ -89,10 +94,7 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
      * cancel - Called when the handler is deactivated while drawing.  The
      *     cancel callback will receive a geometry.
      */
-    initialize: function(control, callbacks, options) {
-        OpenLayers.Handler.Point.prototype.initialize.apply(this, arguments);
-    },
-        
+
     /**
      * Method: createFeature
      * Add temporary geometries
@@ -102,13 +104,10 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
      *     feature.
      */
     createFeature: function(pixel) {
-        var geometry;
-        if(pixel) {
-            var lonlat = this.map.getLonLatFromPixel(pixel);
-            geometry = new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat);
-        } else {
-            geometry = new OpenLayers.Geometry.Point();
-        }
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel); 
+        var geometry = new OpenLayers.Geometry.Point(
+            lonlat.lon, lonlat.lat
+        );
         this.point = new OpenLayers.Feature.Vector(geometry);
         this.line = new OpenLayers.Feature.Vector(
             new OpenLayers.Geometry.LineString([this.point.geometry])
@@ -121,9 +120,13 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
     /**
      * Method: destroyFeature
      * Destroy temporary geometries
+     *
+     * Parameters:
+     * force - {Boolean} Destroy even if persist is true.
      */
-    destroyFeature: function() {
-        OpenLayers.Handler.Point.prototype.destroyFeature.apply(this);
+    destroyFeature: function(force) {
+        OpenLayers.Handler.Point.prototype.destroyFeature.call(
+            this, force);
         this.line = null;
     },
 
@@ -158,7 +161,7 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
      */
     addPoint: function(pixel) {
         this.layer.removeFeatures([this.point]);
-        var lonlat = this.control.map.getLonLatFromPixel(pixel);
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel); 
         this.point = new OpenLayers.Feature.Vector(
             new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat)
         );
@@ -169,6 +172,129 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
         this.callback("point", [this.point.geometry, this.getGeometry()]);
         this.callback("modify", [this.point.geometry, this.getSketch()]);
         this.drawFeature();
+        delete this.redoStack;
+    },
+    
+    /**
+     * Method: insertXY
+     * Insert a point in the current sketch given x & y coordinates.  The new
+     *     point is inserted immediately before the most recently drawn point.
+     *
+     * Parameters:
+     * x - {Number} The x-coordinate of the point.
+     * y - {Number} The y-coordinate of the point.
+     */
+    insertXY: function(x, y) {
+        this.line.geometry.addComponent(
+            new OpenLayers.Geometry.Point(x, y), 
+            this.getCurrentPointIndex()
+        );
+        this.drawFeature();
+        delete this.redoStack;
+    },
+
+    /**
+     * Method: insertDeltaXY
+     * Insert a point given offsets from the previously inserted point.
+     *
+     * Parameters:
+     * dx - {Number} The x-coordinate offset of the point.
+     * dy - {Number} The y-coordinate offset of the point.
+     */
+    insertDeltaXY: function(dx, dy) {
+        var previousIndex = this.getCurrentPointIndex() - 1;
+        var p0 = this.line.geometry.components[previousIndex];
+        if (p0 && !isNaN(p0.x) && !isNaN(p0.y)) {
+            this.insertXY(p0.x + dx, p0.y + dy);
+        }
+    },
+
+    /**
+     * Method: insertDirectionLength
+     * Insert a point in the current sketch given a direction and a length.
+     *
+     * Parameters:
+     * direction - {Number} Degrees clockwise from the positive x-axis.
+     * length - {Number} Distance from the previously drawn point.
+     */
+    insertDirectionLength: function(direction, length) {
+        direction *= Math.PI / 180;
+        var dx = length * Math.cos(direction);
+        var dy = length * Math.sin(direction);
+        this.insertDeltaXY(dx, dy);
+    },
+
+    /**
+     * Method: insertDeflectionLength
+     * Insert a point in the current sketch given a deflection and a length.
+     *     The deflection should be degrees clockwise from the previously 
+     *     digitized segment.
+     *
+     * Parameters:
+     * deflection - {Number} Degrees clockwise from the previous segment.
+     * length - {Number} Distance from the previously drawn point.
+     */
+    insertDeflectionLength: function(deflection, length) {
+        var previousIndex = this.getCurrentPointIndex() - 1;
+        if (previousIndex > 0) {
+            var p1 = this.line.geometry.components[previousIndex];
+            var p0 = this.line.geometry.components[previousIndex-1];
+            var theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+            this.insertDirectionLength(
+                (theta * 180 / Math.PI) + deflection, length
+            );
+        }
+    },
+
+    /**
+     * Method: getCurrentPointIndex
+     * 
+     * Returns:
+     * {Number} The index of the most recently drawn point.
+     */
+    getCurrentPointIndex: function() {
+        return this.line.geometry.components.length - 1;
+    },
+    
+    
+    /**
+     * Method: undo
+     * Remove the most recently added point in the sketch geometry.
+     *
+     * Returns: 
+     * {Boolean} A point was removed.
+     */
+    undo: function() {
+        var geometry = this.line.geometry;
+        var components = geometry.components;
+        var index = this.getCurrentPointIndex() - 1;
+        var target = components[index];
+        var undone = geometry.removeComponent(target);
+        if (undone) {
+            if (!this.redoStack) {
+                this.redoStack = [];
+            }
+            this.redoStack.push(target);
+            this.drawFeature();
+        }
+        return undone;
+    },
+    
+    /**
+     * Method: redo
+     * Reinsert the most recently removed point resulting from an <undo> call.
+     *     The undo stack is deleted whenever a point is added by other means.
+     *
+     * Returns: 
+     * {Boolean} A point was added.
+     */
+    redo: function() {
+        var target = this.redoStack && this.redoStack.pop();
+        if (target) {
+            this.line.geometry.addComponent(target, this.getCurrentPointIndex());
+            this.drawFeature();
+        }
+        return !!target;
     },
     
     /**
@@ -193,7 +319,10 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
      * drawing - {Boolean} Indicate if we're currently drawing.
      */
     modifyFeature: function(pixel, drawing) {
-        var lonlat = this.control.map.getLonLatFromPixel(pixel);
+        if(!this.line) {
+            this.createFeature(pixel);
+        }
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel); 
         this.point.geometry.x = lonlat.lon;
         this.point.geometry.y = lonlat.lat;
         this.callback("modify", [this.point.geometry, this.getSketch(), drawing]);
@@ -284,6 +413,10 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
         var stopDown = this.stopDown;
         if(this.freehandMode(evt)) {
             stopDown = true;
+            if (this.touch) {
+                this.modifyFeature(evt.xy, !!this.lastUp);
+                OpenLayers.Event.stop(evt);
+            }
         }
         if (!this.touch && (!this.lastDown ||
                             !this.passesTolerance(this.lastDown, evt.xy,
@@ -312,7 +445,13 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
             if(this.persist) {
                 this.destroyPersistedFeature();
             }
-            this.addPoint(evt.xy);
+            if(this.maxVertices && this.line &&
+                    this.line.geometry.components.length === this.maxVertices) {
+                this.removePoint();
+                this.finalize();
+            } else {
+                this.addPoint(evt.xy);
+            }
             return false;
         }
         if (!this.touch && (!this.mouseDown || this.stoppedDown)) {
@@ -335,6 +474,9 @@ OpenLayers.Handler.Path = OpenLayers.Class(OpenLayers.Handler.Point, {
     up: function (evt) {
         if (this.mouseDown && (!this.lastUp || !this.lastUp.equals(evt.xy))) {
             if(this.stoppedDown && this.freehandMode(evt)) {
+                if (this.persist) {
+                    this.destroyPersistedFeature();
+                }
                 this.removePoint();
                 this.finalize();
             } else {

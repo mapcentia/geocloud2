@@ -10,7 +10,7 @@ $arr = $dbList->listAllDbs();
 foreach($arr['data'] as $db) {
 	echo $db."<br/>";
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
-		//if ($db=="norddjurs") { 
+		if ($db=="mobreg") { 
 			$postgisdb = $db;
 			$conn = new postgis();
 			foreach($sqls as $sql) {
@@ -22,7 +22,7 @@ foreach($arr['data'] as $db) {
 			echo "<p>---------------------</p>";
 			$conn->db=NULL;
 			$conn = NULL;
-		//}
+		}
 	}
 
 }

@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -41,6 +41,13 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
      *     layer.  Default is false.
      */
     multi: false,
+    
+    /**
+     * APIProperty: citeCompliant
+     * {Boolean} If set to true, coordinates of features drawn in a map extent
+     * crossing the date line won't exceed the world bounds. Default is false.
+     */
+    citeCompliant: false,
     
     /**
      * Property: mouseDown
@@ -164,11 +171,11 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
             // without this, resolution properties must be specified at the
             // map-level for this temporary layer to init its resolutions
             // correctly
-            calculateInRange: OpenLayers.Function.True
+            calculateInRange: OpenLayers.Function.True,
+            wrapDateLine: this.citeCompliant
         }, this.layerOptions);
         this.layer = new OpenLayers.Layer.Vector(this.CLASS_NAME, options);
         this.map.addLayer(this.layer);
-        this.createFeature();
         return true;
     },
     
@@ -180,13 +187,10 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
      * pixel - {<OpenLayers.Pixel>} A pixel location on the map.
      */
     createFeature: function(pixel) {
-        var geometry;
-        if(pixel) {
-            var lonlat = this.map.getLonLatFromPixel(pixel);
-            geometry = new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat);
-        } else {
-            geometry = new OpenLayers.Geometry.Point();
-        }
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel); 
+        var geometry = new OpenLayers.Geometry.Point(
+            lonlat.lon, lonlat.lat
+        );
         this.point = new OpenLayers.Feature.Vector(geometry);
         this.callback("create", [this.point.geometry, this.point]);
         this.point.geometry.clearBounds();
@@ -201,14 +205,14 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
         if(!OpenLayers.Handler.prototype.deactivate.apply(this, arguments)) {
             return false;
         }
-        this.cancel(true);
+        this.cancel();
         // If a layer's map property is set to null, it means that that layer
         // isn't added to the map. Since we ourself added the layer to the map
         // in activate(), we can assume that if this.layer.map is null it means
         // that the layer has been destroyed (as a result of map.destroy() for
         // example.
         if (this.layer.map != null) {
-            this.destroyFeature();
+            this.destroyFeature(true);
             this.layer.destroy(false);
         }
         this.layer = null;
@@ -219,9 +223,12 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
     /**
      * Method: destroyFeature
      * Destroy the temporary geometries
+     *
+     * Parameters:
+     * force - {Boolean} Destroy even if persist is true.
      */
-    destroyFeature: function() {
-        if(this.layer) {
+    destroyFeature: function(force) {
+        if(this.layer && (force || !this.persist)) {
             this.layer.destroyFeatures();
         }
         this.point = null;
@@ -243,37 +250,25 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
      * Finish the geometry and call the "done" callback.
      *
      * Parameters:
-     * cancel - {Boolean} Call cancel instead of done callback.  Default is
-     *     false.
-     * noNew - {Boolean} Do not create a new feature after
-     *     finalization.  Default is false.
+     * cancel - {Boolean} Call cancel instead of done callback.  Default
+     *          is false.
      */
-    finalize: function(cancel, noNew) {
+    finalize: function(cancel) {
         var key = cancel ? "cancel" : "done";
-        this.drawing = false;
         this.mouseDown = false;
         this.lastDown = null;
         this.lastUp = null;
         this.lastTouchPx = null;
         this.callback(key, [this.geometryClone()]);
-        if(cancel || !this.persist) {
-            this.destroyFeature();
-        }
-        if(!noNew && this.active) {
-            this.createFeature();
-        }
+        this.destroyFeature(cancel);
     },
 
     /**
      * APIMethod: cancel
      * Finish the geometry and call the "cancel" callback.
-     *
-     * Parameters:
-     * noNew - {Boolean} Do not create a new feature after
-     *     cancelation.  Default is false.
      */
-    cancel: function(noNew) {
-        this.finalize(true, noNew);
+    cancel: function() {
+        this.finalize(true);
     },
 
     /**
@@ -316,7 +311,10 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
      * pixel - {<OpenLayers.Pixel>} A pixel location on the map.
      */
     modifyFeature: function(pixel) {
-        var lonlat = this.map.getLonLatFromPixel(pixel);
+        if(!this.point) {
+            this.createFeature(pixel);
+        }
+        var lonlat = this.layer.getLonLatFromViewPortPx(pixel); 
         this.point.geometry.x = lonlat.lon;
         this.point.geometry.y = lonlat.lat;
         this.callback("modify", [this.point.geometry, this.point, false]);
@@ -547,7 +545,7 @@ OpenLayers.Handler.Point = OpenLayers.Class(OpenLayers.Handler, {
      * evt - {Event} The browser event
      */
     mouseout: function(evt) {
-        if(OpenLayers.Util.mouseLeft(evt, this.map.eventsDiv)) {
+        if(OpenLayers.Util.mouseLeft(evt, this.map.viewPortDiv)) {
             this.stoppedDown = this.stopDown;
             this.mouseDown = false;
         }

@@ -34,9 +34,9 @@ foreach($tables as $table)
 	$primeryKey = $tableObj->primeryKey;
 
 	foreach($tableObj->metaData as $key=>$value) {
-	 	if ($key!=$primeryKey['attname']) {
+	 	//if ($key!=$primeryKey['attname']) {
 			$fieldsArr[$table][] = $key;
-		}
+		//}
 	}
 	$fields = implode(",",$fieldsArr[$table]);
 	$sql="SELECT '{$fields}' FROM " . $postgisschema.".".$table;
@@ -109,9 +109,17 @@ foreach($tables as $table)
 		writeTag("open","xs","element",$atts,True,True);
 		if($atts["name"] != $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","f_geometry_column")) {
 			if ($tableObj->metaData[$atts["name"]]['type']=="number") {
-					$tableObj->metaData[$atts["name"]]['type']="decimal";
+				$tableObj->metaData[$atts["name"]]['type']="decimal";
 			}
-			echo '<xs:simpleType><xs:restriction base="xs:'.$tableObj->metaData[$atts["name"]]['type'].'"></xs:restriction></xs:simpleType>';
+			if ($tableObj->metaData[$atts["name"]]['type']=="text") {
+				$tableObj->metaData[$atts["name"]]['type']="string";
+			}
+			if ($atts["name"] == $primeryKey['attname']) {
+				$tableObj->metaData[$atts["name"]]['type']="string";
+			}
+			echo '<xs:simpleType><xs:restriction base="xs:'.$tableObj->metaData[$atts["name"]]['type'].'">
+			
+			</xs:restriction></xs:simpleType>';
 		}
 		writeTag("close","xs","element",NULL,False,True);
 		$atts=Null;

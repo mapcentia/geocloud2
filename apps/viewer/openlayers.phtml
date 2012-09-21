@@ -1,4 +1,5 @@
 <?php
+//print_r($_REQUEST);
 session_start();
 function microtime_float()
 {
@@ -11,6 +12,38 @@ include("../../libs/functions.php");
 include("../../inc/user_name_from_uri.php");
 $postgisschema = $parts[5];
 $postgisdb = $parts[4];
+
+if ($parts[4]=="rebild" /*&& (!$_GET['mapframe'])*/){
+	if (!$_GET['lon']){
+		$_GET['lon']=0;
+		$_GET['lat']=0;
+		
+	}
+	if (!$_GET['srs']) {
+		$_GET['srs'] = "EPSG:900913";
+	}
+	die("
+	    <script type=\"text/javascript\" src=\"http://mygeocloud.cowi.webhouse.dk/js/openlayers/proj4js-combined.js\"></script>
+		<script type=\"text/javascript\" src=\"http://mygeocloud.cowi.webhouse.dk/js/openlayers/defs/EPSG900913.js\"></script>
+		<script type=\"text/javascript\" src=\"http://mygeocloud.cowi.webhouse.dk/js/openlayers/defs/EPSG25832.js\"></script>
+		<script type=\"text/javascript\">
+		try{
+		function transformPoint(lat,lon,s,d) {
+			var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+			var dest = new Proj4js.Proj(d);
+			var p = new Proj4js.Point(lat,lon);
+			Proj4js.transform(source, dest, p);
+		   return p;
+		}
+		var p = transformPoint({$_GET['lon']},{$_GET['lat']},'{$_GET['srs']}','EPSG:25832');
+		//alert(p.y + ' ' +p.x);
+		window.location = \"http://mygeocloud.cowi.webhouse.dk/apps/viewer/openlayers_test/rebild?{$_SERVER['QUERY_STRING']}&lat=\"+p.y+\"&lon=\"+p.x;
+		}
+		catch(e){}
+		</script>
+	");
+};
+
 include("../../libs/FirePHPCore/FirePHP.class.php");
 include("../../libs/FirePHPCore/fb.php");
 include("../../conf/main.php");
@@ -107,7 +140,7 @@ body {
                 return this.url + z + "/" + x + "/" + y + "." + this.type;
             }
         }
-		if ($("html").width()>400) {
+		if ($("html").width()>300) {
 			viewPortSize = "big";
 		}
 		else {
@@ -516,6 +549,22 @@ print_r($postgisObject->PDOerror);
 	var base = [];
 	// Add WMS baselayers
 	<?php
+	if ($parts[4]=="toender"){
+		?>
+			base.push(new OpenLayers.Layer.Google("Google Normal", {
+			type: G_NORMAL_MAP,
+			minZoomLevel: settingsViewer.minzoomlevel,
+			maxZoomLevel: settingsViewer.maxzoomlevel,
+			sphericalMercator: true
+		}));
+		base.push(new OpenLayers.Layer.WMS("KMS Sk&aelig;rmkort","http://beta.mygeocloud.cowi.webhouse.dk/wms/toender/public/",{layers:"public.kms_skaermkort",transparent:true},{buffer:0,singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
+		
+		base.push(new OpenLayers.Layer.WMS("Ortofoto 2010","http://beta.mygeocloud.cowi.webhouse.dk/wms/toender/public/",{layers:"public.orto_2010",transparent:true},{buffer:0,singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
+
+
+		<?php
+	}
+	else{
 	if (isset($responseWmsLayers['data'])){
 	foreach($responseWmsLayers['data'] as $arr) {
 		if ($arr['baselayer']) {
@@ -524,6 +573,7 @@ print_r($postgisObject->PDOerror);
 				$layerConnectionString.="tilecache/"; 
 			}
 	?>
+	
 	base.push(new OpenLayers.Layer.WMS("<?php echo $arr['f_table_title'];?>","<?php echo $layerConnectionString;?>",{layers:"<?php echo $arr['f_table_schema'];?>.<?php echo $arr['f_table_name'];?>",transparent:true},{buffer:0,singleTile:false,isBaseLayer:true,wrapDateLine:false,transitionEffect:'resize'}));
 	<?php }}}?>
 	
@@ -565,8 +615,8 @@ print_r($postgisObject->PDOerror);
             }
         )
 	);
+	<?php } ?>
 
-	
 
 /*
 	base.push(new OpenLayers.Layer.Bing("Bing road", {
@@ -577,7 +627,9 @@ print_r($postgisObject->PDOerror);
 
 	
 	
-	vectors = new OpenLayers.Layer.Vector("Mark");
+	vectors = new OpenLayers.Layer.Vector("Mark",{
+			displayInLayerSwitcher: false
+		});
  
             map.addLayers([vectors]);
 			
@@ -607,7 +659,7 @@ print_r($postgisObject->PDOerror);
     ctrl = new OpenLayers.Control.NavigationHistory();
     map.addControl(ctrl);
    action = new GeoExt.Action({
-        text: "Legend",
+        text: "Signatur",
 	 handler:function(objRef){
 		if(!legendWin){
 		    legendWin = new Ext.Window({
@@ -617,6 +669,7 @@ print_r($postgisObject->PDOerror);
 			height:300,
 			closeAction:'hide',
 			contentEl:legendContent,
+			autoScroll: 'auto',
 			x:5,
 			y:120
 		    });
@@ -805,8 +858,8 @@ function transformPoint(lat,lon,s,d) {
 }
 function addEmbedStr() {
 	var lonLat = map.getCenter();
-	var embedStr1 = '<div class="mygeocloud_frame"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom() + '" frameborder="0"></iframe></div>';
-	
+	var embedStr1 = '<div class="mygeocloud_frame"><iframe scrolling="no" style="width: 100%; height: 100%;" src="http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom() + '&srs=' + map.projection + '" frameborder="0"></iframe></div>';
+	 
 	
 	var mapBounds = map.getExtent();
 	var boundsArr =  mapBounds.toArray();
@@ -820,7 +873,7 @@ function addEmbedStr() {
 	
 	var embedStr3 = '<div class="mygeocloud_legend" style="display:none">' + $('#legendContent').html() + '</div>';
 	
-	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom();
+	var embedStr4 = 'http://<?php echo $_SERVER['SERVER_NAME']; ?>/apps/viewer/openlayers/<?php echo $postgisdb;?>?layers=' + layerStr + '&lon=' + lonLat.lon + '&lat=' + lonLat.lat + '&zoom=' + map.getZoom() + '&srs=' + map.projection;
 	
 	document.getElementById('embed_area1').value = embedStr1+embedStr2+embedStr3;
 	document.getElementById('embed_area4').value = embedStr4;

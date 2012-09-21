@@ -72,6 +72,10 @@ class table extends postgis {
 			$field['typeObj'] = array("type"=>"geometry");
 			$field['type'] = "geometry";
 		}
+		elseif (preg_match("/text/",$field['type'])){
+			$field['typeObj'] = array("type"=>"text");
+			$field['type'] = "text";
+		}
 		else {
 			$field['typeObj'] = array("type"=>"string");
 			$field['type'] = "string";
@@ -282,6 +286,7 @@ class table extends postgis {
 				$arr = $this -> array_push_assoc($arr,"alias",$fieldconfArr[$key]->alias);
 				$arr = $this -> array_push_assoc($arr,"link",$fieldconfArr[$key]->link);
 				$arr = $this -> array_push_assoc($arr,"linkprefix",$fieldconfArr[$key]->linkprefix);
+				$arr = $this -> array_push_assoc($arr,"properties",$fieldconfArr[$key]->properties);
 				if ($value['type']['type']=="decimal") {
 					$arr = $this -> array_push_assoc($arr,"type","{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
 				}
@@ -365,6 +370,9 @@ class table extends postgis {
 				break;
 			case "String":
 				$type = "varchar(255)";
+				break;
+			case "Text":
+				$type = "text";
 				break;
 		}
 		$sql.= "ALTER TABLE {$this -> table} ADD COLUMN {$safeColumn} {$type};";

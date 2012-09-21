@@ -24,7 +24,7 @@ if (!$parts[5]) die ("Please state a schema in the url");
 	</div>
 	<div id="main">
 
-		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>/<?php echo $parts[5];?>?<?php echo $_SERVER['QUERY_STRING'];?>&filter=<?php echo urldecode($_REQUEST['filter']);?>"></iframe>
+		<iframe scrolling="no" frameborder="0" id="mapframe" name="mapframe"  style="WIDTH: 100%; HEIGHT: 100%" src="/apps/viewer/openlayers/<?php echo $parts[4];?>/<?php echo $parts[5];?>?<?php echo $_SERVER['QUERY_STRING'];?>&filter=<?php echo urldecode($_REQUEST['filter']);?>&mapframe=1"></iframe>
 	</div>
 </body>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
@@ -49,7 +49,7 @@ if (!$parts[5]) die ("Please state a schema in the url");
                 contentEl:document.getElementById("layers"),
 				collapsible: false
             },{
-                region:'center',
+				region:'center',
                 margins:'5 5 5 0',
                 layout:'column',
                 autoScroll:false,

@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -21,15 +21,23 @@
  */
 OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
 
-    /**
-     * Constant: EVENT_TYPES
+    /** 
+     * APIProperty: events
+     * {<OpenLayers.Events>} Events instance for listeners and triggering
+     *     control specific events.
      *
-     * Supported event types:
-     *  - *beforefeaturehighlighted* Triggered before a feature is highlighted
-     *  - *featurehighlighted* Triggered when a feature is highlighted
-     *  - *featureunhighlighted* Triggered when a feature is unhighlighted
+     * Register a listener for a particular event with the following syntax:
+     * (code)
+     * control.events.register(type, obj, listener);
+     * (end)
+     *
+     * Supported event types (in addition to those from <OpenLayers.Control.events>):
+     * beforefeaturehighlighted - Triggered before a feature is highlighted
+     * featurehighlighted - Triggered when a feature is highlighted
+     * featureunhighlighted - Triggered when a feature is unhighlighted
+     * boxselectionstart - Triggered before box selection starts
+     * boxselectionend - Triggered after box selection ends
      */
-    EVENT_TYPES: ["beforefeaturehighlighted", "featurehighlighted", "featureunhighlighted"],
     
     /**
      * Property: multipleKey
@@ -74,9 +82,9 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
 
     /**
      * APIProperty: highlightOnly
-     * {Boolean} If true do not actually select features (i.e. place them in the
-     * layer's selected features array), just highlight them. This property has
-     * no effect if hover is false. Defaults to false.
+     * {Boolean} If true do not actually select features (that is place them in 
+     * the layer's selected features array), just highlight them. This property
+     * has no effect if hover is false. Defaults to false.
      */
     highlightOnly: false,
     
@@ -173,11 +181,6 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
      * options - {Object} 
      */
     initialize: function(layers, options) {
-        // concatenate events specific to this control with those from the base
-        this.EVENT_TYPES =
-            OpenLayers.Control.SelectFeature.prototype.EVENT_TYPES.concat(
-            OpenLayers.Control.prototype.EVENT_TYPES
-        );
         OpenLayers.Control.prototype.initialize.apply(this, [options]);
         
         if(this.scope === null) {
@@ -218,7 +221,7 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
      * layers - {<OpenLayers.Layer.Vector>}, or an array of vector layers.
      */
     initLayer: function(layers) {
-        if(layers instanceof Array) {
+        if(OpenLayers.Util.isArray(layers)) {
             this.layers = layers;
             this.layer = new OpenLayers.Layer.Vector.RootContainer(
                 this.id + "_container", {
@@ -543,12 +546,14 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
      */
     selectBox: function(position) {
         if (position instanceof OpenLayers.Bounds) {
-            var minXY = this.map.getLonLatFromPixel(
-                new OpenLayers.Pixel(position.left, position.bottom)
-            );
-            var maxXY = this.map.getLonLatFromPixel(
-                new OpenLayers.Pixel(position.right, position.top)
-            );
+            var minXY = this.map.getLonLatFromPixel({
+                x: position.left,
+                y: position.bottom
+            });
+            var maxXY = this.map.getLonLatFromPixel({
+                x: position.right,
+                y: position.top
+            });
             var bounds = new OpenLayers.Bounds(
                 minXY.lon, minXY.lat, maxXY.lon, maxXY.lat
             );
@@ -562,6 +567,7 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
             var prevMultiple = this.multiple;
             this.multiple = true;
             var layers = this.layers || [this.layer];
+            this.events.triggerEvent("boxselectionstart", {layers: layers}); 
             var layer;
             for(var l=0; l<layers.length; ++l) {
                 layer = layers[l];
@@ -583,6 +589,7 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
                 }
             }
             this.multiple = prevMultiple;
+            this.events.triggerEvent("boxselectionend", {layers: layers}); 
         }
     },
 

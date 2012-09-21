@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -219,7 +219,7 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
         }
         var geometry, collection = false;
         if(obj.type == "GeometryCollection") {
-            if(!(obj.geometries instanceof Array)) {
+            if(!(OpenLayers.Util.isArray(obj.geometries))) {
                 throw "GeometryCollection must have geometries array: " + obj;
             }
             var numGeom = obj.geometries.length;
@@ -232,7 +232,7 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
             geometry = new OpenLayers.Geometry.Collection(components);
             collection = true;
         } else {
-            if(!(obj.coordinates instanceof Array)) {
+            if(!(OpenLayers.Util.isArray(obj.coordinates))) {
                 throw "Geometry must have coordinates array: " + obj;
             }
             if(!this.parseCoords[obj.type.toLowerCase()]) {
@@ -287,7 +287,7 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
          *     <OpenLayers.Geometry>.
          *
          * Parameters:
-         * array {Object} The coordinates array from the GeoJSON fragment.
+         * array - {Object} The coordinates array from the GeoJSON fragment.
          *
          * Returns:
          * {<OpenLayers.Geometry>} A geometry.
@@ -450,7 +450,7 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
         var geojson = {
             "type": null
         };
-        if(obj instanceof Array) {
+        if(OpenLayers.Util.isArray(obj)) {
             geojson.type = "FeatureCollection";
             var numFeatures = obj.length;
             geojson.features = new Array(numFeatures);
@@ -530,12 +530,15 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
          */
         'feature': function(feature) {
             var geom = this.extract.geometry.apply(this, [feature.geometry]);
-            return {
+            var json = {
                 "type": "Feature",
-                "id": feature.fid == null ? feature.id : feature.fid,
                 "properties": feature.attributes,
                 "geometry": geom
             };
+            if (feature.fid != null) {
+                json.id = feature.fid;
+            }
+            return json;
         },
         
         /**
@@ -632,7 +635,7 @@ OpenLayers.Format.GeoJSON = OpenLayers.Class(OpenLayers.Format.JSON, {
          * Return an array of linestring arrays from a linestring.
          * 
          * Parameters:
-         * linestring - {<OpenLayers.Geometry.MultiLineString>}
+         * multilinestring - {<OpenLayers.Geometry.MultiLineString>}
          * 
          * Returns:
          * {Array} An array of linestring arrays representing

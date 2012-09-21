@@ -21,7 +21,7 @@ $postgisdb = $parts[3];
 	<meta name="author" content="Martin Hoegh" />
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/dojo.xd.js" djConfig="parseOnLoad: true"></script>
-	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dijit/themes/claro/claro.css">
+	
 	<!--
 	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/ext/adapter/ext/ext-base.js"></script>
 	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/ext/ext-all.js"></script>

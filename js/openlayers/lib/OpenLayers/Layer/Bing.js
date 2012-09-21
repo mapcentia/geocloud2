@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -11,13 +11,37 @@
  * Class: OpenLayers.Layer.Bing
  * Bing layer using direct tile access as provided by Bing Maps REST Services.
  * See http://msdn.microsoft.com/en-us/library/ff701713.aspx for more
- * information.
+ * information. Note: Terms of Service compliant use requires the map to be
+ * configured with an <OpenLayers.Control.Attribution> control and the
+ * attribution placed on or near the map.
  * 
  * Inherits from:
  *  - <OpenLayers.Layer.XYZ>
  */
 OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
 
+    /**
+     * Property: key
+     * {String} API key for Bing maps, get your own key 
+     *     at http://bingmapsportal.com/ .
+     */
+    key: null,
+
+    /**
+     * Property: serverResolutions
+     * {Array} the resolutions provided by the Bing servers.
+     */
+    serverResolutions: [
+        156543.03390625, 78271.516953125, 39135.7584765625,
+        19567.87923828125, 9783.939619140625, 4891.9698095703125,
+        2445.9849047851562, 1222.9924523925781, 611.4962261962891,
+        305.74811309814453, 152.87405654907226, 76.43702827453613,
+        38.218514137268066, 19.109257068634033, 9.554628534317017,
+        4.777314267158508, 2.388657133579254, 1.194328566789627,
+        0.5971642833948135, 0.29858214169740677, 0.14929107084870338,
+        0.07464553542435169
+    ],
+    
     /**
      * Property: attributionTemplate
      * {String}
@@ -44,11 +68,28 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
     type: "Road",
     
     /**
+     * APIProperty: culture
+     * {String} The culture identifier.  See http://msdn.microsoft.com/en-us/library/ff701709.aspx
+     * for the definition and the possible values.  Default is "en-US".
+     */
+    culture: "en-US",
+    
+    /**
      * APIProperty: metadataParams
      * {Object} Optional url parameters for the Get Imagery Metadata request
      * as described here: http://msdn.microsoft.com/en-us/library/ff701716.aspx
      */
     metadataParams: null,
+
+    /** APIProperty: tileOptions
+     *  {Object} optional configuration options for <OpenLayers.Tile> instances
+     *  created by this Layer. Default is
+     *
+     *  (code)
+     *  {crossOriginKeyword: 'anonymous'}
+     *  (end)
+     */
+    tileOptions: null,
 
     /**
      * Constructor: OpenLayers.Layer.Bing
@@ -64,7 +105,7 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
      * (end)
      *
      * Parameters:
-     * config - {Object} Configuration properties for the layer.
+     * options - {Object} Configuration properties for the layer.
      *
      * Required configuration properties:
      * key - {String} Bing Maps API key for your application. Get one at
@@ -77,13 +118,15 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
      */
     initialize: function(options) {
         options = OpenLayers.Util.applyDefaults({
-            restrictedMinZoom: 1,
             sphericalMercator: true
         }, options);
         var name = options.name || "Bing " + (options.type || this.type);
         
         var newArgs = [name, null, options];
         OpenLayers.Layer.XYZ.prototype.initialize.apply(this, newArgs);
+        this.tileOptions = OpenLayers.Util.extend({
+            crossOriginKeyword: 'anonymous'
+        }, this.options.tileOptions);
         this.loadMetadata(); 
     },
 
@@ -119,17 +162,20 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
     initLayer: function() {
         var res = this.metadata.resourceSets[0].resources[0];
         var url = res.imageUrl.replace("{quadkey}", "${quadkey}");
+        url = url.replace("{culture}", this.culture);
         this.url = [];
         for (var i=0; i<res.imageUrlSubdomains.length; ++i) {
             this.url.push(url.replace("{subdomain}", res.imageUrlSubdomains[i]));
-        };
+        }
         this.addOptions({
-            restrictedMinZoom: res.zoomMin,
-            numZoomLevels: res.zoomMax + 1
-        });
-        this.updateAttribution();
-        // redraw to replace "blank.gif" tiles with real tiles
-        this.redraw();
+            maxResolution: Math.min(
+                this.serverResolutions[res.zoomMin],
+                this.maxResolution || Number.POSITIVE_INFINITY
+            ),
+            numZoomLevels: Math.min(
+                res.zoomMax + 1 - res.zoomMin, this.numZoomLevels
+            )
+        }, true);
     },
 
     /**
@@ -140,7 +186,7 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
      */
     getURL: function(bounds) {
         if (!this.url) {
-            return OpenLayers.Util.getImagesLocation() + "blank.gif";
+            return;
         }
         var xyz = this.getXYZ(bounds), x = xyz.x, y = xyz.y, z = xyz.z;
         var quadDigits = [];
@@ -169,7 +215,7 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
      */
     updateAttribution: function() {
         var metadata = this.metadata;
-        if (!metadata || !this.map || !this.map.center) {
+        if (!metadata.resourceSets || !this.map || !this.map.center) {
             return;
         }
         var res = metadata.resourceSets[0].resources[0];
@@ -177,13 +223,16 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
             this.map.getProjectionObject(),
             new OpenLayers.Projection("EPSG:4326")
         );
-        var providers = res.imageryProviders, zoom = this.map.getZoom() + 1,
+        var providers = res.imageryProviders,
+            zoom = OpenLayers.Util.indexOf(this.serverResolutions,
+                                           this.getServerResolution()),
             copyrights = "", provider, i, ii, j, jj, bbox, coverage;
         for (i=0,ii=providers.length; i<ii; ++i) {
             provider = providers[i];
             for (j=0,jj=provider.coverageAreas.length; j<jj; ++j) {
                 coverage = provider.coverageAreas[j];
-                bbox = OpenLayers.Bounds.fromArray(coverage.bbox);
+                // axis order provided is Y,X
+                bbox = OpenLayers.Bounds.fromArray(coverage.bbox, true);
                 if (extent.intersectsBounds(bbox) &&
                         zoom <= coverage.zoomMax && zoom >= coverage.zoomMin) {
                     copyrights += provider.attribution + " ";
@@ -195,7 +244,10 @@ OpenLayers.Layer.Bing = OpenLayers.Class(OpenLayers.Layer.XYZ, {
             logo: metadata.brandLogoUri,
             copyrights: copyrights
         });
-        this.map && this.map.events.triggerEvent("changelayer", {layer: this});
+        this.map && this.map.events.triggerEvent("changelayer", {
+            layer: this,
+            property: "attribution"
+        });
     },
     
     /**

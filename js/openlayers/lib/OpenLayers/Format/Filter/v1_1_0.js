@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -19,7 +19,8 @@
  *  - writes matchCase attribute from comparison filters of type EQUAL_TO,
  *        NOT_EQUAL_TO and LIKE.
  * 
- * Inherits from:
+ * Inherits from: 
+ *  - <OpenLayers.Format.GML.v3>
  *  - <OpenLayers.Format.Filter.v1>
  */
 OpenLayers.Format.Filter.v1_1_0 = OpenLayers.Class(
@@ -139,7 +140,8 @@ OpenLayers.Format.Filter.v1_1_0 = OpenLayers.Class(
             },
             "BBOX": function(filter) {
                 var node = this.createElementNSPlus("ogc:BBOX");
-                this.writeNode("PropertyName", filter, node);
+                // PropertyName is optional in 1.1.0
+                filter.property && this.writeNode("PropertyName", filter, node);
                 var box = this.writeNode("gml:Envelope", filter.value);
                 if(filter.projection) {
                     box.setAttribute("srsName", filter.projection);

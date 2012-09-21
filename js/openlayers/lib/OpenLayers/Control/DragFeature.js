@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -171,7 +171,7 @@ OpenLayers.Control.DragFeature = OpenLayers.Class(OpenLayers.Control, {
      * feature - {<OpenLayers.Feature.Vector>}
      */
     clickFeature: function(feature) {
-        if (!this.over && this.overFeature(feature)) {
+        if (this.handlers.feature.touch && !this.over && this.overFeature(feature)) {
             this.handlers.drag.dragstart(this.handlers.feature.evt);
             // to let the events propagate to the feature handler (click callback)
             this.handlers.drag.stopDown = false;
@@ -186,7 +186,7 @@ OpenLayers.Control.DragFeature = OpenLayers.Class(OpenLayers.Control, {
      * feature - {<OpenLayers.Feature.Vector>}
      */
     clickoutFeature: function(feature) {
-        if (this.over) {
+        if (this.handlers.feature.touch && this.over) {
             this.outFeature(feature);
             this.handlers.drag.stopDown = true;
         }

@@ -1,12 +1,8 @@
 <?php
 $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
 
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN sort_id int";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN _key_ varchar(255)";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tilecache bool";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN data varchar(255)";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN not_querable bool";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN single_tile bool";
+
+$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN cartomobile text";
 
 $sqls[] = "
 CREATE VIEW settings.geometry_columns_view AS 
@@ -37,11 +33,17 @@ CREATE VIEW settings.geometry_columns_view AS
 		geometry_columns_join.tilecache,
 		geometry_columns_join.data,
 		geometry_columns_join.not_querable,
-		geometry_columns_join.single_tile
+		geometry_columns_join.single_tile,
+		geometry_columns_join.cartomobile
    FROM geometry_columns
    LEFT JOIN 
    		settings.geometry_columns_join ON
    			geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text = 
    			geometry_columns_join._key_::text;
 ";
+/*
+foreach($sqls as $sql){
+	echo $sql.";\n";
+};
+*/
 	

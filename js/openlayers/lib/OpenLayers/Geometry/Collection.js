@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -22,7 +22,7 @@
  *
  * Create a new instance with the <OpenLayers.Geometry.Collection> constructor.
  *
- * Inerhits from:
+ * Inherits from:
  *  - <OpenLayers.Geometry> 
  */
 OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
@@ -131,7 +131,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      * components - {Array(<OpenLayers.Geometry>)} An array of geometries to add
      */
     addComponents: function(components){
-        if(!(components instanceof Array)) {
+        if(!(OpenLayers.Util.isArray(components))) {
             components = [components];
         }
         for(var i=0, len=components.length; i<len; i++) {
@@ -183,14 +183,20 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      *
      * Parameters:
      * components - {Array(<OpenLayers.Geometry>)} The components to be removed
+     *
+     * Returns: 
+     * {Boolean} A component was removed.
      */
     removeComponents: function(components) {
-        if(!(components instanceof Array)) {
+        var removed = false;
+
+        if(!(OpenLayers.Util.isArray(components))) {
             components = [components];
         }
         for(var i=components.length-1; i>=0; --i) {
-            this.removeComponent(components[i]);
+            removed = this.removeComponent(components[i]) || removed;
         }
+        return removed;
     },
     
     /**
@@ -199,6 +205,9 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      *
      * Parameters:
      * component - {<OpenLayers.Geometry>} 
+     *
+     * Returns: 
+     * {Boolean} The component was removed.
      */
     removeComponent: function(component) {
         
@@ -207,6 +216,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
         // clearBounds() so that it gets recalculated on the next call
         // to this.getBounds();
         this.clearBounds();
+        return true;
     },
 
     /**
@@ -397,7 +407,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      * ratio - {Float} Optional x:y ratio for resizing.  Default ratio is 1.
      * 
      * Returns:
-     * {OpenLayers.Geometry} - The current geometry. 
+     * {<OpenLayers.Geometry>} - The current geometry. 
      */
     resize: function(scale, origin, ratio) {
         for(var i=0; i<this.components.length; ++i) {
@@ -458,7 +468,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      *     are considered equivalent if all components have the same coordinates.
      * 
      * Parameters:
-     * geom - {<OpenLayers.Geometry>} The geometry to test. 
+     * geometry - {<OpenLayers.Geometry>} The geometry to test. 
      *
      * Returns:
      * {Boolean} The supplied geometry is equivalent to this geometry.
@@ -468,7 +478,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
         if(!geometry || !geometry.CLASS_NAME ||
            (this.CLASS_NAME != geometry.CLASS_NAME)) {
             equivalent = false;
-        } else if(!(geometry.components instanceof Array) ||
+        } else if(!(OpenLayers.Util.isArray(geometry.components)) ||
                   (geometry.components.length != this.components.length)) {
             equivalent = false;
         } else {

@@ -45,6 +45,9 @@ if ($_REQUEST['client'] == "plan") {
 	$gmlGeomFieldName['kpplandk2_join'] = "multiPolygonProperty";
 	$gmlFeature['kpplandk2_join'] = "KommunePlanRamme";
 	
+	$gmlGeomFieldName['komtildk2_join'] = "multiPolygonProperty";
+	$gmlFeature['komtildk2_join'] = "KommunePlanTillaeg";
+	
 	$gmlSchemaLocation = "http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd http://www.lifa.dk/PlanDK2 http://soap.plansystem.dk/pdk_schemas/PLANDK2.xsd";
 	$defaultBoundedBox =
 		'<gml:boundedBy>

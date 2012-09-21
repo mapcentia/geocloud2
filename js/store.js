@@ -11,6 +11,7 @@ $(window).load(function () {
     var winAdd;
 	var winAddSchema;
     var winEdit;
+    var winCartomobile;
     var winClasses;
     var winWmsLayer;
     var winMoreSettings;
@@ -287,8 +288,12 @@ $(window).load(function () {
 					iconCls: 'silk-table',
 					handler: onEdit
 				},{
-					text: 'More settings',
-					iconCls: 'silk-table',
+					text: 'CartoMobile settings',
+					iconCls: 'silk-phone',
+					handler: onEditCartomobile
+				},{
+					text: 'Advanced settings',
+					iconCls: 'silk-cog-edit',
 					handler: onEditMoreSettings
 				}
         ]
@@ -394,13 +399,13 @@ $(window).load(function () {
             },
             '-', {
                 text: 'MapInfo TAB',
-                disabled: true,
+                disabled: false,
                 tooltip: "Coming in beta",
                 handler: function () {
-                    addMapinfo.init();
+                    addMapInfo.init();
                     var c = p.getComponent(0);
                     c.remove(0);
-                    c.add(addMapinfo.form);
+                    c.add(addMapInfo.form);
                     c.doLayout();
                 }
             }]
@@ -575,6 +580,9 @@ $(window).load(function () {
                     {
                         name: 'Decimal',
                         value: 'float'
+                    },{
+                        name: 'Text',
+                        value: 'text'
                     }]
                 })
             }],
@@ -602,7 +610,7 @@ $(window).load(function () {
             }]
         });
         winEdit = new Ext.Window({
-            title: "Edit layer '" + record.get("f_table_name") + "'",
+            title: "Structure for the layer '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 800,
@@ -623,7 +631,43 @@ $(window).load(function () {
         });
         winEdit.show(this);
     }
+	function onEditCartomobile(btn, ev) {
+        var record = grid.getSelectionModel().getSelected();
+        if (!record) {
+            Ext.MessageBox.show({
+                title: 'Hi',
+                msg: 'You\'ve to select a layer',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.INFO
+            });
+            return false;
+        }
 
+        cartomobile.grid = null;
+        winCartomobile = null;
+        cartomobile.init(record, screenName);
+        winCartomobile = new Ext.Window({
+            title: "CartoMobile settings for the layer '" + record.get("f_table_name") + "'",
+            modal: true,
+            layout: 'fit',
+            width: 750,
+            height: 350,
+            initCenter: false,
+            x: 100,
+            y: 100,
+            closeAction: 'close',
+            plain: true,
+            frame : true,
+			border : false,
+            items: [new Ext.Panel({
+                frame: false,
+                border : false,
+                layout: 'border',
+                items: [cartomobile.grid]
+            })]
+        });
+        winCartomobile.show(this);
+    };
     function onSave() {
         store.save();
     }
@@ -860,7 +904,7 @@ $(window).load(function () {
         winMoreSettings.show(this);
     };
     // define a template to use for the detail view
-    var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
+    var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
         frame: false,

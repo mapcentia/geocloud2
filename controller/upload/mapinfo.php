@@ -6,7 +6,15 @@ $file = $targetPath.$fileName;
 
 $response['uploaded'] = true;
 
-$SafeFile = $_FILES['tab']['name']; 
+if ($_REQUEST['name']) {
+	$SafeFile =$_REQUEST['name'];
+}
+
+else {
+	$SafeFile = $_FILES['shp']['name'];
+}
+
+
 $SafeFile = str_replace("#", "No.", $SafeFile); 
 $SafeFile = str_replace("-", "_", $SafeFile); 
 $SafeFile = str_replace("$", "Dollar", $SafeFile); 
@@ -17,6 +25,9 @@ $SafeFile = str_replace("*", "", $SafeFile);
 $SafeFile = str_replace("?", "", $SafeFile); 
 $SafeFile = str_replace(".TAB", "", $SafeFile);
 $SafeFile = strtolower ($SafeFile);
+
+$SafeFile = postgis::toAscii($SafeFile,array(),"_");
+$SafeFile = $postgisschema.".".$SafeFile;
 
 
 if(move_uploaded_file($_FILES['tab']['tmp_name'], $file.".tab")) {
@@ -41,9 +52,12 @@ if ($response['uploaded']) {
 		case "Line":
 		$type = "multilinestring";
 		break;
+		case "Geometry":
+		$type = "geometry";
+		break;
 	}
 	
-	$cmd = "ogr2ogr  -nlt '{$type}' -a_srs 'EPSG:{$_REQUEST['srid']}' -f 'PostgreSQL' PG:'user=postgres dbname={$postgisdb}' {$file}.tab -nln ".$SafeFile."_".$type;
+	$cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr -skipfailures -overwrite -lco 'GEOMETRY_NAME=the_geom' -lco 'FID=gid' -nlt '{$type}' -a_srs 'EPSG:{$_REQUEST['srid']}' -f 'PostgreSQL' PG:'user=postgres dbname={$postgisdb}' {$file}.tab -nln ".$SafeFile;
 	$result = exec($cmd);
 	$response['success'] = true;
 	$response['message'] = $result;

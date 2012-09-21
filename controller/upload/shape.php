@@ -6,7 +6,15 @@ $file = $targetPath.$fileName;
 
 $response['uploaded'] = true;
 
-$SafeFile = $_FILES['shp']['name']; 
+if ($_REQUEST['name']) {
+	$SafeFile =$_REQUEST['name'];
+}
+
+else {
+	$SafeFile = $_FILES['shp']['name'];
+}
+
+
 $SafeFile = str_replace("#", "No.", $SafeFile); 
 $SafeFile = str_replace("-", "_", $SafeFile); 
 $SafeFile = str_replace("$", "Dollar", $SafeFile); 

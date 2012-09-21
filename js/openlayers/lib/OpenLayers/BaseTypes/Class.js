@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -17,13 +17,17 @@
  *     will be removed.
  * 
  * To create a new OpenLayers-style class, use the following syntax:
- * > var MyClass = OpenLayers.Class(prototype);
+ * (code)
+ *     var MyClass = OpenLayers.Class(prototype);
+ * (end)
  *
  * To create a new OpenLayers-style class with multiple inheritance, use the
  *     following syntax:
- * > var MyClass = OpenLayers.Class(Class1, Class2, prototype);
- * Note that instanceof reflection will only reveil Class1 as superclass.
- * Class2 ff are mixins.
+ * (code)
+ *     var MyClass = OpenLayers.Class(Class1, Class2, prototype);
+ * (end)
+ * 
+ * Note that instanceof reflection will only reveal Class1 as superclass.
  *
  */
 OpenLayers.Class = function() {
@@ -33,7 +37,7 @@ OpenLayers.Class = function() {
 
     var C = typeof F.initialize == "function" ?
         F.initialize :
-        function(){ P.apply(this, arguments); };
+        function(){ P.prototype.initialize.apply(this, arguments); };
 
     if (len > 1) {
         var newArgs = [C, P].concat(
@@ -43,48 +47,6 @@ OpenLayers.Class = function() {
         C.prototype = F;
     }
     return C;
-};
-
-/**
- * Property: isPrototype
- * *Deprecated*.  This is no longer needed and will be removed at 3.0.
- */
-OpenLayers.Class.isPrototype = function () {};
-
-/**
- * APIFunction: OpenLayers.create
- * *Deprecated*.  Old method to create an OpenLayers style class.  Use the
- *     <OpenLayers.Class> constructor instead.
- *
- * Returns:
- * An OpenLayers class
- */
-OpenLayers.Class.create = function() {
-    return function() {
-        if (arguments && arguments[0] != OpenLayers.Class.isPrototype) {
-            this.initialize.apply(this, arguments);
-        }
-    };
-};
-
-/**
- * APIFunction: inherit
- * *Deprecated*.  Old method to inherit from one or more OpenLayers style
- *     classes.  Use the <OpenLayers.Class> constructor instead.
- *
- * Parameters:
- * class - One or more classes can be provided as arguments
- *
- * Returns:
- * An object prototype
- */
-OpenLayers.Class.inherit = function (P) {
-    var C = function() {
-       P.call(this);
-    };
-    var newArgs = [C].concat(Array.prototype.slice.call(arguments));
-    OpenLayers.inherit.apply(null, newArgs);
-    return C.prototype;
 };
 
 /**

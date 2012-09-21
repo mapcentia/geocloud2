@@ -1,14 +1,19 @@
 <?php
+
 $oMap = ms_newMapobj("mapfiles/".$_GET['mapfile']);
 $request = ms_newowsrequestobj();
 foreach ($_GET as $k=>$v) {
 	$request->setParameter($k, $v);
+	//logfile::write($k."=".$v."\n");
 }
 
+//$request->setParameter("LAYERS","allans_test.fejlmeldinger");
+
 if ($_GET['sql_layer']) {
+include '../libs/functions.php';
 	include '../conf/main.php';
 	$postgisdb = "mydb";
-	include '../libs/functions.php';
+	
 	
 	$request->setParameter("SLD_BODY",
 "<StyledLayerDescriptor version='1.1.0'><NamedLayer><Name>sql</Name><UserStyle><Title>xxx</Title><FeatureTypeStyle><Rule><LineSymbolizer><Stroke><CssParameter name='stroke'>#FFFF00</CssParameter><CssParameter name='stroke-width'>15</CssParameter></Stroke></LineSymbolizer></Rule></FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>

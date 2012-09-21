@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -30,6 +30,7 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
         csw: "http://www.opengis.net/cat/csw/2.0.2",
         dc: "http://purl.org/dc/elements/1.1/",
         dct: "http://purl.org/dc/terms/",
+        gmd: "http://www.isotc211.org/2005/gmd",
         geonet: "http://www.fao.org/geonetwork",
         ogc: "http://www.opengis.net/ogc",
         ows: "http://www.opengis.net/ows",
@@ -253,8 +254,8 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
             // rightsHolder, source, subject, title, type, URI
             "*": function(node, obj) {
                 var name = node.localName || node.nodeName.split(":").pop();
-                if (!(obj[name] instanceof Array)) {
-                    obj[name] = new Array();
+                if (!(OpenLayers.Util.isArray(obj[name]))) {
+                    obj[name] = [];
                 }
                 var dc_element = {};
                 var attrs = node.attributes;
@@ -262,15 +263,17 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
                     dc_element[attrs[i].name] = attrs[i].nodeValue;
                 }
                 dc_element.value = this.getChildValue(node);
-                obj[name].push(dc_element);
+                if (dc_element.value != "") {
+                    obj[name].push(dc_element);
+                }
             }
         },
         "dct": {
             // abstract, modified, spatial
             "*": function(node, obj) {
                 var name = node.localName || node.nodeName.split(":").pop();
-                if (!(obj[name] instanceof Array)) {
-                    obj[name] = new Array();
+                if (!(OpenLayers.Util.isArray(obj[name]))) {
+                    obj[name] = [];
                 }
                 obj[name].push(this.getChildValue(node));
             }
@@ -307,6 +310,7 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
      */
     write: function(options) {
         var node = this.writeNode("csw:GetRecords", options);
+        node.setAttribute("xmlns:gmd", this.namespaces.gmd);
         return OpenLayers.Format.XML.prototype.write.apply(this, [node]);
     },
 
@@ -342,7 +346,7 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
                     );
                 }
                 var ResponseHandler = options.ResponseHandler || this.ResponseHandler;
-                if (ResponseHandler instanceof Array && ResponseHandler.length > 0) {
+                if (OpenLayers.Util.isArray(ResponseHandler) && ResponseHandler.length > 0) {
                     // ResponseHandler must be a non-empty array
                     for(var i=0, len=ResponseHandler.length; i<len; i++) {
                         this.writeNode(
@@ -379,7 +383,7 @@ OpenLayers.Format.CSWGetRecords.v2_0_2 = OpenLayers.Class(OpenLayers.Format.XML,
                     }
                 });
                 var ElementName = options.ElementName;
-                if (ElementName instanceof Array && ElementName.length > 0) {
+                if (OpenLayers.Util.isArray(ElementName) && ElementName.length > 0) {
                     // ElementName must be a non-empty array
                     for(var i=0, len=ElementName.length; i<len; i++) {
                         this.writeNode(

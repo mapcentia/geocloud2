@@ -43,13 +43,28 @@ class postgis
 		}
 		switch ($result_type) {
 			case "assoc":
-				$row = $result->fetch(PDO::FETCH_ASSOC);;
+				$row = $result->fetch(PDO::FETCH_ASSOC);
 				break;
 			case "both":
-				//$row=pg_fetch_array($result);
 				break;
 		}
 		return($row);
+	}
+	function fetchAll($result,$result_type="both")
+	{
+		if ($this->PDOerror){
+			//throw new Exception($this->PDOerror[0]);
+		}
+		switch ($result_type) {
+			case "assoc":
+				$rows = $result->fetchAll(PDO::FETCH_ASSOC);
+				break;
+			case "both":
+			    $rows = $result->fetchAll();
+				break;
+		}
+		
+		return($rows);
 	}
 	function numRows($result)
 	{
@@ -93,7 +108,7 @@ class postgis
 	}
 	function execQuery($query,$conn="PDO",$queryType="select")
 	{
-		logfile::write($query."\n");
+		//logfile::write($query."\n");
 		switch ($conn){
 			case "PG":
 				if (!$this->db) {
@@ -192,7 +207,7 @@ class postgis
 			case "PDO":
 				try {
 					$this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
-					$this->execQuery("set client_encoding='utf8'","PDO");
+					$this->execQuery("set client_encoding='UTF8'","PDO");
 				}
 				catch(PDOException $e) {
 					$this->db=NULL;
@@ -303,8 +318,8 @@ class logfile {
 	 */
 
 	function write($the_string) {
-		/*
-		 if ( $fh = fopen("/var/www/log.txt", "a+" ) ) {
+		
+		 if ( $fh = fopen("/var/log/mygeocloud.log", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
 			return true;
@@ -312,7 +327,8 @@ class logfile {
 			else {
 			return false;
 			}
-			*/
+		
+		
 	}
 }
 class color {

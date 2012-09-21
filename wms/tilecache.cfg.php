@@ -24,12 +24,10 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 
 	ob_start();
 
-
 	echo "[cache]\n";
 	echo "type=Disk\n";
 	echo "base={$basePath}/tmp/{$user}\n\n";
 	
-
 	//echo "type=AWSS3\n";
 	//echo "access_key=AKIAIZUYE3I462NPVANQ\n";
 	//echo "secret_access_key=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\n";
@@ -41,15 +39,15 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 		makeExceptionReport($postgisObject->PDOerror);
 	}
 	while ($row = $postgisObject->fetchRow($result)) {
-
 		echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
 		echo "type=WMS\n";
 		echo "url=http://127.0.0.1/cgi-bin/mapserv?map={$basePath}/wms/mapfiles/{$user}_{$row['f_table_schema']}.map\n";
 		echo "extension=png\n";
 		echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";
 		echo "maxResolution=156543.0339\n";
+		echo "metaTile=yes\n";
+		echo "metaSize=5,5\n";
 		echo "srs=EPSG:900913\n\n";
-
 	}
 	$data = ob_get_clean();
 	@unlink("{$basePath}wms/cfgfiles/{$user}.tilecache.cfg");

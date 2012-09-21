@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -124,7 +124,17 @@ OpenLayers.Format.Filter.v1_0_0 = OpenLayers.Class(
             },
             "BBOX": function(filter) {
                 var node = this.createElementNSPlus("ogc:BBOX");
-                this.writeNode("PropertyName", filter, node);
+                // PropertyName is mandatory in 1.0.0, but e.g. GeoServer also
+                // accepts filters without it. When this is used with
+                // OpenLayers.Protocol.WFS, OpenLayers.Format.WFST will set a
+                // missing filter.property to the geometryName that is
+                // configured with the protocol, which defaults to "the_geom".
+                // So the only way to omit this mandatory property is to not
+                // set the property on the filter and to set the geometryName
+                // on the WFS protocol to null. The latter also happens when
+                // the protocol is configured without a geometryName and a
+                // featureNS.
+                filter.property && this.writeNode("PropertyName", filter, node);
                 var box = this.writeNode("gml:Box", filter.value, node);
                 if(filter.projection) {
                     box.setAttribute("srsName", filter.projection);

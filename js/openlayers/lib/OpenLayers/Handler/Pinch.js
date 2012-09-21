@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for
- * full list of contributors). Published under the Clear BSD license.
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -74,9 +74,6 @@ OpenLayers.Handler.Pinch = OpenLayers.Class(OpenLayers.Handler, {
      *     information about scale, distance, and position of touch points.
      * options - {Object}
      */
-    initialize: function(control, callbacks, options) {
-        OpenLayers.Handler.prototype.initialize.apply(this, arguments);
-    },
 
     /**
      * Method: touchstart
@@ -194,6 +191,9 @@ OpenLayers.Handler.Pinch = OpenLayers.Class(OpenLayers.Handler, {
      *
      * Parameters:
      * touches - {Array(Object)}
+     *
+     * Returns:
+     * {Number} The distance in pixels.
      */
     getDistance: function(touches) {
         var t0 = touches[0];

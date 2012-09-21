@@ -1,6 +1,6 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for
- * full list of contributors). Published under the Clear BSD license.
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -14,6 +14,12 @@
  * The navigation control handles map browsing with touch events (dragging,
  *     double-tapping, tap with two fingers, and pinch zoom).  Create a new 
  *     control with the <OpenLayers.Control.TouchNavigation> constructor.
+ *
+ * If you’re only targeting touch enabled devices with your mapping application,
+ *     you can create a map with only a TouchNavigation control. The 
+ *     <OpenLayers.Control.Navigation> control is mobile ready by default, but 
+ *     you can generate a smaller build of the library by only including this
+ *     touch navigation control if you aren't concerned about mouse interaction.
  *
  * Inherits:
  *  - <OpenLayers.Control>
