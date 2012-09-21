@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="author" content="Martin Hoegh" />
+		<link href="http://beta.mygeocloud.cowi.webhouse.dk/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+		<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/bootstrap/js/jquery.js"></script>
+		<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/bootstrap/js/bootstrap.js"></script>
+		<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+		<script type="text/javascript" src="http://geodemo2.odeum.com/js/forms.js"></script>
+		<link rel="stylesheet" type="text/css" href="http://beta.mygeocloud.cowi.webhouse.dk/js/ext/resources/css/ext-all.css"/>
+		<link rel="stylesheet" type="text/css" href="http://beta.mygeocloud.cowi.webhouse.dk/js/ext/resources/css/xtheme-gray.css" />
+		<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhTww2B3bmOd5Of57BUV-HZKowzURRTDiOeJ4A8o-OZoiMfdrJzdG3POiw"></script>
+		<style>
+		img {
+			max-width: none;
+		}
+		</style>
+	</head>
+	<body>
+		<script>
+		var toggleControl;
+					var tool;
+
+		$(window).load(function() {
+			var cloud = new mygeocloud_ol.map("map","mydb");
+			cloud.zoomToExtent();
+			
+			store = new mygeocloud_ol.geoJsonStore("mobreg",{});
+			cloud.addGeoJsonStore(store);
+			
+			//store.pointControl.activate();
+			//store.lineControl.activate();
+			//store.polygonControl.activate();
+			store.modifyControl.activate();
+ 			
+			store.layer.events.on({
+				sketchcomplete: clearAllDraw,
+				featuremodified: serialize,
+				featureadded: serialize
+			 });
+			//store.layer.onFeatureInsert = serialize;
+			
+			function clearAllDraw(e) {
+				if (store.layer.features.length>0) {
+					alert ("Du har allerede udpeget et sted uden at gemme. Klik på 'Gem og tegn ny' for at gemme eller 'Slet alt' for at tegne forfra.'");
+					return false;
+				}
+			}
+			
+
+			toggleControl = function(e) {
+
+
+		                     if(e.id == "pointControl") {
+		                         store.pointControl.activate();
+		                         tool = "1";
+		                     } else {
+		                         store.pointControl.deactivate();
+		                     }
+		                     if(e.id == "lineControl") {
+					 store.lineControl.activate();
+					 tool = "2";
+				     } else {
+					 store.lineControl.deactivate();
+		                     }
+            }
+		});
+		var serialize = function(feature) {
+				console.log(feature);
+				var wkt;
+				var format = new OpenLayers.Format.WKT;
+				var g = new OpenLayers.Format.WKT;
+				try {
+					wkt = g.write(feature.feature);
+				}
+				catch (e) {}
+				try {
+					wkt = g.write(feature.layer.features);
+				}
+				catch (e) {}
+				try {
+					if (feature.features.length>0)
+					{
+						wkt = g.write(feature.features);
+					}
+					else wkt="";
+				}
+				catch (e) {}
+				alert(wkt);
+				//store.polygonControl.deactivate();
+				//store.lineControl.deactivate();
+				//modifyControl.activate();
+				//return wkt;
+		}
+		var clearDrawing = function(e) {
+			if (confirm("Er du sikker? Dette vil slette en allerede tegnet rute."))
+        	{
+				//parent.document.getElementById('geometry1_<?php echo $_GET['iFormID'];?>').value = "";
+				store.layer.destroyFeatures();
+			}
+			if (tool==1){
+					store.pointControl.deactivate();
+					store.pointControl.activate();
+				}
+			if (tool==2){
+				store.lineControl.deactivate();
+				store.lineControl.activate();
+			}
+		}
+		var save = function(e) {
+			parent.window.submitForm;
+		}
+		var finish = function(e) {
+			if (store.layer.features.length>0) {
+				if(confirm("Du har en ugemt tegning i kortet! Klik 'Annuller' hvis du gemme eller 'Ok' hvis du vil gå videre")) {
+					parent.window.location='tak_for_svar.htm';
+				}
+				else return false;
+			}
+			else {
+				parent.window.location='tak_for_svar.htm';
+			}
+		}
+
+		</script>
+		<div id="map" style="width: 100%;height: 200px"></div>
+		<span class="btn-group" data-toggle="buttons-radio">
+		  <button id="pointControl" class="btn" onclick="toggleControl(this)">Punkt</button>
+		  <button id="lineControl" class="btn" onclick="toggleControl(this)">Linje</button>
+		</span>
+		<button  class="btn" onclick="store.popFeatureInVector()">Slet sidste punkt</button>
+		<button  class="btn" onclick="clearDrawing()">Slet alt</button>
+		<button  class="btn" onclick="save()">Gem</button>
+		<button  class="btn" onclick="finish()">Videre</button>
+
+	</body>
+</html>

@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^[a-z]* getimage.php [L]

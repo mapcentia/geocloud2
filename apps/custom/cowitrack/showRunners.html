@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<title>Test</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	
+	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+    
+	
+	<script>
+	
+	var tid;         
+	var storeRunner;
+	
+	//Button click event handlers
+	jQuery(window).ready(function(){
+		
+		//Set interval for showing runners
+		tid = setInterval(get_runners, 5000);
+		
+	});
+	
+	function get_runners() 
+	{
+		
+		// Vi sætter sql'en
+		storeRunner.sql = "select f.gid, f.the_geom, f.mytime, f.id, f.speed, f.accuracy from (select id, max(mytime) as maxtime from dhl group by id) as x inner join dhl as f on f.id = x.id and f.mytime = x.maxtime";
+		storeRunner.load();
+		console.log(storeRunner);
+	
+	}
+	
+	//window.scrollTo(0, 1);
+	var	cloud;
+	$(window).load(function() {
+		cloud = new mygeocloud_ol.map("map","cowitrack");	
+		storeRunner = new mygeocloud_ol.geoJsonStore("cowitrack");
+		cloud.addGeoJsonStore(storeRunner);
+		storeRunner.onLoad = function(){
+		
+			var runHtml = "";
+			
+			for (var i = 0; i < storeRunner.geoJSON.features.length; i++) {
+				
+				
+					if(i%2!=0)
+					{
+						runHtml += "<div class=\"row-fluid\"><div class=\"span2\">" + storeRunner.geoJSON.features[i].properties.id + "</div><div class=\"span3\">" + new Date(parseInt(storeRunner.geoJSON.features[i].properties.mytime)) + "</div><div class=\"span3\">" + new Date(parseInt(storeRunner.geoJSON.features[i].properties.mytime)) + "</div><div class=\"span2\"></div><div class=\"span2\">" + storeRunner.geoJSON.features[i].properties.speed + "</div></div>";
+					}else
+					{
+						runHtml += "<div class=\"row-fluid\" style=\"background-color:#E0E0E0;\"><div class=\"span2\">" + storeRunner.geoJSON.features[i].properties.id + "</div><div class=\"span3\">" + new Date(parseInt(storeRunner.geoJSON.features[i].properties.mytime)) + "</div><div class=\"span3\">" + new Date(parseInt(storeRunner.geoJSON.features[i].properties.mytime)) + "</div><div class=\"span2\"></div><div class=\"span2\">" + storeRunner.geoJSON.features[i].properties.speed + "</div></div>";
+					}
+				
+			}
+			
+			$("#run_data").html(runHtml);
+			
+		
+		};
+			
+		var storeRoute = new mygeocloud_ol.geoJsonStore("cowitrack");
+		cloud.addGeoJsonStore(storeRoute);
+		storeRoute.sql = "SELECT * FROM route";
+			storeRoute.load();
+			storeRoute.onLoad = function(){
+				cloud.zoomToExtentOfgeoJsonStore(storeRoute);
+			};
+	});
+			
+
+    </script>
+
+
+	
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link href="css/bootstrap-responsive.css" rel="stylesheet">
+	
+    <style>
+		
+		
+		body{
+			padding:2%;
+		}
+		
+		img {
+		  max-width: none;
+		}
+		
+		#runners_head{
+			margin: 0px 0px 10px 0px;
+			font-weight:bold;
+			font-size:20px;
+		}
+		
+    </style>
+	
+  </head>
+  <body>
+	<img src="img/printlogo.png" style="margin:0 0 10px 0" />
+	<div id="container">
+		
+		<div class="row-fluid">	
+				<div class="span6">
+					<div id="map" style="background-color:grey;width:100%;height:800px">
+					</div>
+				</div>
+				<div class="span6">
+					<div id="runners_head">Runners</div>
+					<div id="runners">
+						<div class="row-fluid" style="font-weight:bold;">	
+							<div class="span2">Name</div>
+							<div class="span3">Start time</div>
+							<div class="span3">Current time</div>
+							<div class="span2">Elapsed</div>
+							<div class="span2">Speed</div>
+						</div>
+						<div id="run_data">
+						
+						
+						</div>
+					</div>
+				</div>
+		</div>
+		
+	</div>
+		
+		
+	
+
+	
+	
+  </body>
+</html>

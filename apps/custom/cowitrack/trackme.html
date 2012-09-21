@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<title>Test</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	
+	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+    <script>
+	
+	var tid;         
+	var isSending = 0;
+	var storeRunner;
+	var isConnected = 0;
+
+	//Button click event handlers
+	jQuery(window).ready(function(){
+        jQuery("#btnInit").click(start_sending);
+	    jQuery("#btnStop").click(stop_sending);
+    
+		//Establish Gps connection and set interval
+		tid = setInterval(initiate_geolocation, 2000);
+		
+	});
+	
+	function start_sending() 
+	{
+		if(isSending!=1)
+		{
+		if($("#id").val()!="" && $("#id").val()!="Insert initials...")
+		{
+			isSending = 1;
+		   
+			// Vi saetter sql'en
+			storeRunner.sql = "SELECT * FROM dhl WHERE id='" + $("#id").val().toLowerCase() + "' order by mytime desc limit 1";
+			//storeRunner.load();
+			console.log(storeRunner);
+		}
+		else
+		{
+			alert("You must provide your initials");
+		}
+		}else{
+			alert("Is tracking");
+		}
+	}
+	
+	function stop_sending() 
+	{
+	   isSending = 0;
+	}
+	
+	//Code to run each interval - the actual geo location
+	function initiate_geolocation() 
+	{
+	   navigator.geolocation.getCurrentPosition(handle_geolocation_query,errorGettingPosition,{'enableHighAccuracy':true});
+	   
+	}
+ 	
+	function errorGettingPosition(err)
+	{
+		isSending = 0;
+		isConnected = 0;
+		
+		$("#GPSstatus").html("ERROR!");
+		$("#GPSstatus").attr('class', 'alert alert-error');
+		
+	}
+	
+	//Do ajax call with coordinates
+	function handle_geolocation_query(position){
+		
+		if(isConnected == 0)
+		{
+			isConnected = 1;
+			$("#GPSstatus").html("Connected!");
+			$("#GPSstatus").attr('class', 'alert alert-success');
+		}
+		
+		if(isConnected == 1)
+		{
+			if(position.coords.accuracy<10)
+			{
+				$("#GPSstatus").html("GOOD <span class=\"label label-success\">&lt;10m</span>");
+			}
+			else if(position.coords.accuracy<50)
+			{
+				$("#GPSstatus").html("MEDIUM <span class=\"label label-warning\">&lt;50m</span>");
+			}
+			else
+			{
+				$("#GPSstatus").html("BAD <span class=\"label label-important\">&gt;50m</span>");
+			}
+		}
+				
+		if(isSending)
+		{
+			var aTime = new Date().getTime();            
+			var aId = $("#id").val();
+		   
+			$.ajax({
+				url: "http://beta.mygeocloud.cowi.webhouse.dk/apps/custom/cowitrack/trackme.php",
+					type: "POST",
+						data: {id : aId, lat : position.coords.latitude, lon : position.coords.longitude, speed : position.coords.speed, accuracy : position.coords.accuracy, mytime : aTime},
+						success: function(data) {
+							// Load af seneste data.
+							
+							alert(data);
+							storeRunner.reset();
+							storeRunner.load();
+						}
+			});
+		}
+	
+	}
+
+	//window.scrollTo(0, 1);
+	var	cloud;
+	$(window).load(function() {
+		cloud = new mygeocloud_ol.map("map","cowitrack");
+		storeRunner = new mygeocloud_ol.geoJsonStore("cowitrack");
+		cloud.addGeoJsonStore(storeRunner);
+		storeRunner.onLoad = function(){};
+			
+		var storeRoute = new mygeocloud_ol.geoJsonStore("cowitrack");
+		cloud.addGeoJsonStore(storeRoute);
+		storeRoute.sql = "SELECT * FROM route";
+			storeRoute.load();
+			storeRoute.onLoad = function(){
+				cloud.zoomToExtentOfgeoJsonStore(storeRoute);
+			};
+	});
+			
+
+    </script>
+
+
+	
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link href="css/bootstrap-responsive.css" rel="stylesheet">
+	
+    <style>
+		
+		
+		body{
+			padding:2%;
+		}
+		
+		img {
+		  max-width: none;
+		}
+		
+		#GPSstatus{
+			margin-bottom:6px !important;
+		}
+		
+		#initialer{
+			margin-bottom:6px !important;
+		}
+		
+		#knapper{
+			margin-bottom:6px !important;
+		}
+		
+		#id{
+			padding-left: 5px;
+			border-style: solid;
+			border-color: #707070;
+			color: #707070;
+			border-width: 1px;
+		}
+		
+    </style>
+	
+  </head>
+  <body>
+	
+	<div id="container">
+						
+		<div id="GPSstatus" class="alert alert-info" style="text-align:center">
+			Tilslutter gps...
+		</div>
+		
+		<div id="initialer">
+			<input id="id" value="Insert initials..." onclick="this.value='';" style="width: 100%;-moz-box-sizing: border-box;-webkit-box-sizing: border-box;box-sizing: border-box;" />
+		</div>
+		
+		<div id="knapper">
+			<button id="btnInit" class="btn btn-primary" style="width:49%;margin-right:1%;">Start tracking</button>
+			<button id="btnStop" class="btn btn-primary" style="width:49%;">Stop tracking</button>
+		</div>
+		
+		<div id="display">
+
+		</div>
+		
+		<div id="map" style="background-color:grey;width:100%;height:300px">
+		</div>
+		
+	</div>
+		
+		
+	
+
+	
+	
+  </body>
+</html>
