@@ -1000,7 +1000,7 @@ class gmlConverter
 	function xml()
 	{
 		$this -> parser = xml_parser_create();
-		xml_set_object($this -> parser, & $this);
+		xml_set_object($this -> parser, $this);
 		xml_set_element_handler($this -> parser, "startElement", "endElement");
 		xml_set_character_data_handler($this -> parser, "characterData");
 	}
