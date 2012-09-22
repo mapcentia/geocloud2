@@ -32,7 +32,7 @@ if ($parts[4]=="rebild" /*&& (!$_GET['mapframe'])*/){
 			var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
 			var dest = new Proj4js.Proj(d);
 			var p = new Proj4js.Point(lat,lon);
-			Proj4js.transform(source, dest, p);
+			Proj4js.ST_Transform(source, dest, p);
 		   return p;
 		}
 		var p = transformPoint({$_GET['lon']},{$_GET['lat']},'{$_GET['srs']}','EPSG:25832');
@@ -181,7 +181,7 @@ if ($_REQUEST['sld'])
 		$sldArr['NamedLayer']['Name'] = $_REQUEST['overRideNamedLayerWith'];
 	}
 	$filter = parseFilter($filterArr,$sldArr['NamedLayer']['Name']);
-	$query = "SELECT xmin(extent(transform(linestring,{$srs}))) as minx, ymin(extent(transform(linestring,{$srs}))) as miny, xmax(extent(transform(linestring,{$srs}))) as maxx, ymax(extent(transform(linestring,{$srs}))) as maxy FROM {$sldArr['NamedLayer']['Name']} WHERE ".$filter;
+	$query = "SELECT ST_Xmin(ST_Extent(ST_Transform(linestring,{$srs}))) as minx, ST_Ymin(ST_Extent(ST_Transform(linestring,{$srs}))) as miny, ST_Xmax(ST_Extent(ST_Transform(linestring,{$srs}))) as maxx, ST_Ymax(ST_Extent(ST_Transform(linestring,{$srs}))) as maxy FROM {$sldArr['NamedLayer']['Name']} WHERE ".$filter;
 	echo "<!-- TEST {$query} -->\n";
 	$result = $postgisObject -> execQuery($query);
 	$row = $postgisObject->fetchRow($result);
@@ -245,7 +245,7 @@ if(!$extentSetFromFilter) {
 $table = $settingsViewer['data']['default_extent'];
 $geomField = $postgisObject->getGeometryColumns("public.".$table,"f_geometry_column");
 if ($geomField) {
-	$sql = "SELECT xmin(EXTENT(transform(".$geomField.",$srs))) AS TXMin,xmax(EXTENT(transform(".$geomField.",$srs))) AS TXMax, ymin(EXTENT(transform(".$geomField.",$srs))) AS TYMin,ymax(EXTENT(transform(".$geomField.",$srs))) AS TYMax  FROM public.".$table;
+	$sql = "SELECT ST_Xmin(ST_Extent(ST_Transform(".$geomField.",$srs))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(".$geomField.",$srs))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(".$geomField.",$srs))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(".$geomField.",$srs))) AS TYMax  FROM public.".$table;
 	$result = $postgisObject->execQuery($sql);
 	$row = $postgisObject->fetchRow($result);
 	
@@ -853,7 +853,7 @@ function transformPoint(lat,lon,s,d) {
     var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
     var dest = new Proj4js.Proj(d);
     var p = new Proj4js.Point(lat,lon);
-    Proj4js.transform(source, dest, p);
+    Proj4js.ST_Transform(source, dest, p);
    return p;
 }
 function addEmbedStr() {
