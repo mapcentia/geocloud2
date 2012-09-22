@@ -160,14 +160,14 @@ mygeocloud_ol = (function() {
 						} catch (e) {
 						}
 						;
-						popup = new OpenLayers.Popup.FramedCloud(
+						var popup = new OpenLayers.Popup.FramedCloud(
 								"result",
 								coords,
 								null,
 								"<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>",
 								null, true);
 						this.map.addPopup(popup);
-						mapSize = this.map.getSize();
+						var mapSize = this.map.getSize();
 						$.ajax({
 					        dataType: 'jsonp',
 					        data: 'proj=900913&lon='
@@ -182,10 +182,8 @@ mygeocloud_ol = (function() {
 					        url: host + '/apps/viewer/servers/query/' + db,
 					        success: function(response) {
 				    		if (response.html != false) {
-				    			document
-				    					.getElementById("queryResult").innerHTML = response.html;
-				    			resultHtml = response.html; // Global
-				    			// var
+				    			document.getElementById("queryResult").innerHTML = response.html;
+				    			var resultHtml = response.html;
 				    		} else {
 				    			document
 				    					.getElementById("queryResult").innerHTML = "Found nothing";
