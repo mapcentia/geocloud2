@@ -1,4 +1,21 @@
-var mygeocloud_host = "http://beta.mygeocloud.cowi.webhouse.dk";
+var scriptSource = (function(scripts) {
+    "use strict";
+    scripts = document.getElementsByTagName('script');
+    var script = scripts[scripts.length - 1];
+    if (script.getAttribute.length !== undefined) {
+        return script.src;
+    }
+    return script.getAttribute('src', -1);
+}());
+//alert(scriptSource);
+var mygeocloud_host;
+if (scriptSource.charAt(0)==="/") {
+    mygeocloud_host="";
+}
+else {
+    mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+}
+
 document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 //document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");

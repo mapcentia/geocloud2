@@ -55,7 +55,7 @@ function startWfsEdition(layerName) {
 			type = response.type;
 			multi = response.multi;
 			// We add an editor to the fields
-			for ( var i in columnsForGrid) {
+			for (var i in columnsForGrid) {
 				columnsForGrid[i].editable = editable;
 				// alert(columnsForGrid[i].header+"
 			// "+columnsForGrid[i].typeObj.type);
@@ -333,7 +333,7 @@ $(window).load(function() {
 				}
 			}
     }	});
-	console.log(layers);
+	//console.log(layers);
 	$.ajax({
         url: '/controller/settings_viewer/' + screenName + '/get',
         async: false,
