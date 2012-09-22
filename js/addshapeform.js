@@ -1,5 +1,6 @@
 Ext.namespace('addShape');
 addShape.init = function () {
+    "use strict";
     Ext.QuickTips.init();
     var msg = function (title, msg) {
         Ext.Msg.show({
@@ -54,7 +55,7 @@ addShape.init = function () {
             xtype: 'textfield',
             name: 'name',
             emptyText: 'Name of table',
-			allowBlank: false,
+			allowBlank: false
         }, {
             xtype: 'numberfield',
             name: 'srid',
@@ -90,9 +91,9 @@ addShape.init = function () {
                 iconCls: 'upload-icon'
             }
         }, {
-        	xtype: 'checkbox',
-        	name: 'pdo',
-        	fieldLabel: 'Direct load'
+            xtype: 'checkbox',
+            name: 'pdo',
+            fieldLabel: 'Direct load'
         }
         ],
         buttons: [{
@@ -113,9 +114,10 @@ addShape.init = function () {
                 addShape.form.getForm().reset();
             }
         }]
-    })
+    });
 };
 addShape.onSubmit = function (form, action) {
+    "use strict";
     var result = action.result;
     if (result.success) {
 		store.load();
