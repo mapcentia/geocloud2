@@ -172,6 +172,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
+	/*
 	function destroyRecord($recordId,$keyName) // Geometry columns
 	{
 		$sql = "BEGIN;";
@@ -189,6 +190,7 @@ class table extends postgis {
 		}
 		return $response;
 	}
+	 */
 	function updateRecord($data,$keyName) // All tables
 	{
 		$data = $this->makeArray($data);
