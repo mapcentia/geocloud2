@@ -27,11 +27,14 @@ document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'
 
 var mygeocloud_ol;
 mygeocloud_ol = (function() {
-	var host = mygeocloud_host;
-	var parentThis = this;
-	var geoJsonStore = function(db,config) {
-			var parentThis = this;
-			var defaults = {
+    "use strict";
+    var map,
+	host = mygeocloud_host,
+	parentThis = this,
+	geoJsonStore = function(db,config) {
+			var prop,
+			parentThis = this,
+			defaults = {
 				styleMap: new OpenLayers.StyleMap({}),
 				projection: "900913"
 			};
@@ -60,7 +63,7 @@ mygeocloud_ol = (function() {
 			this.onLoad = function(){};
 			this.geoJSON = {};
 			this.featureStore = null;
-			this.sql;
+			this.sql = "";
 			this.load = function(){
 				$.ajax({
 			        dataType: 'jsonp',
@@ -68,7 +71,7 @@ mygeocloud_ol = (function() {
 			        jsonp: 'jsonp_callback',
 			        url: host + '/api/v1/sql/' + db,
 			        success: function (response) {
-						if (response.success==false) {
+						if (response.success===false) {
 							alert(response.message); 
 						}
 						parentThis.geoJSON = response;
@@ -89,8 +92,10 @@ mygeocloud_ol = (function() {
 		};
 			
 	};
-	var map = function(el,db,config) {
-		var defaults = {
+	map = function(el,db,config) {
+		var prop,
+		parentMap,
+		defaults = {
 			numZoomLevels : 20,
 			projection : "EPSG:900913"
 		};
@@ -99,12 +104,12 @@ mygeocloud_ol = (function() {
 				defaults[prop] = config[prop];
 			}
 		}
-		var parentMap = this;
-		this.layerStr;
+		parentMap = this;
+		this.layerStr = "";
 		this.db = db;
 		this.geoLocation = {x:1,y:2};
-		this.baseOSM;
-	    this.baseAerial;
+		//this.baseOSM;
+	    //this.baseAerial;
 		this.zoomToExtent = function() {
 			this.map.zoomToExtent(this.map.maxExtent);
 		};
