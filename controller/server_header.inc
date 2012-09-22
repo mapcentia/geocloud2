@@ -20,7 +20,6 @@ include '../../model/sqlapi.php';
 include '../../model/geometry_columns.php';
 
 
-
 //$postgisdb = $_SESSION['screen_name']; // We change the db to user
 $postgisdb = $parts[3]; // We change the db to user
 $postgisschema = $_SESSION['schema'];
@@ -46,8 +45,7 @@ switch($_REQUEST['type'])
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 
-include_once("libs/phpgeometry_class.php");
-include_once("functions.php");
+//include_once("libs/phpgeometry_class.php");
 include_once("libs/JSON.php");
 include_once("PEAR/XML/Serializer.php");
 
