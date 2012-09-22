@@ -904,7 +904,7 @@ class control
 	function gml()
 	{
 		$this -> parser = xml_parser_create();
-		xml_set_object($this -> parser, & $this);
+		xml_set_object($this -> parser, $this);
 		xml_set_element_handler($this -> parser, "startElement", "endElement");
 		xml_set_character_data_handler($this -> parser, "characterData");
 	}
@@ -1300,7 +1300,7 @@ class service
 	function xml()
 	{
 		$this -> parser = xml_parser_create();
-		xml_set_object($this -> parser, & $this);
+		xml_set_object($this -> parser, $this);
 		xml_set_element_handler($this -> parser, "startElement", "endElement");
 		xml_set_character_data_handler($this -> parser, "characterData");
 	}
@@ -1959,7 +1959,7 @@ class postgis extends control
 			$query =
 			"INSERT INTO "
 			.$this -> pg_digi_layer
-			." (".$keyValueArray['fields']." $geometryColumn) VALUES (".$keyValueArray['values']." GeometryFromText('".$__geoObj->getWKT()."',"
+			." (".$keyValueArray['fields']." $geometryColumn) VALUES (".$keyValueArray['values']." ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			."-1"
 			.")"
 			.")";
@@ -1968,7 +1968,7 @@ class postgis extends control
 			$query =
 			"INSERT INTO "
 			.$this -> pg_digi_layer
-			." (".$keyValueArray['fields']." $geometryColumn) VALUES (".$keyValueArray['values']." transform(GeometryFromText('".$__geoObj->getWKT()."',"
+			." (".$keyValueArray['fields']." $geometryColumn) VALUES (".$keyValueArray['values']." ST_Transform(ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."),"
 			.$this -> getGeometryColumns(
@@ -1987,13 +1987,13 @@ class postgis extends control
 		if ($this -> control -> proj != "")
 		{
 			$query =
-			"SELECT xmin(extent(transform(the_geom,"
+			"SELECT xmin(extent(ST_Transform(the_geom,"
 			.$this -> control -> proj
-			."))) as minx, ymin(extent(transform(the_geom,"
+			."))) as minx, ymin(extent(ST_Transform(the_geom,"
 			.$this -> control -> proj
-			."))) as miny, xmax(extent(transform(the_geom,"
+			."))) as miny, xmax(extent(ST_Transform(the_geom,"
 			.$this -> control -> proj
-			."))) as maxx, ymax(extent(transform(the_geom,"
+			."))) as maxx, ymax(extent(ST_Transform(the_geom,"
 			.$this -> control -> proj
 			."))) as maxy FROM "
 			.$table
@@ -2005,7 +2005,7 @@ class postgis extends control
 
 			// Get the WKT
 			$query2 =
-			"SELECT asText(transform(the_geom,"
+			"SELECT ST_AsText(ST_Transform(the_geom,"
 			.$this -> control -> proj
 			.")) as the_geom FROM "
 			.$table
@@ -2080,24 +2080,24 @@ class postgis extends control
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"SELECT asText($geometryColumn) as geom from "
+			"SELECT ST_AsText($geometryColumn) as geom from "
 			.$this -> pg_snap_layer
 			." WHERE distance($geometryColumn,"
-			." GeometryFromText('".$geoObj->getWKT()."',-1))<$__geoSnapTolerance";
+			." ST_GeometryFromText('".$geoObj->getWKT()."',-1))<$__geoSnapTolerance";
 
 		} else
 		{
 			$query =
-			"SELECT asText(transform($geometryColumn,"
+			"SELECT ST_AsText(ST_Transform($geometryColumn,"
 			.$this -> control -> proj
 			.")) as geom, gid from "
 			.$this -> pg_snap_layer
 			." WHERE "
 			.$geometryColumn
-			." && transform(Expand(GeometryFromText('".$geoObj->getWKT().")',".$this -> control -> proj."),".				$__geoSnapTolerance."),$srid) and "
-			." distance(transform($geometryColumn,"
+			." && ST_Transform(Expand(ST_GeometryFromText('".$geoObj->getWKT().")',".$this -> control -> proj."),".				$__geoSnapTolerance."),$srid) and "
+			." distance(ST_Transform($geometryColumn,"
 			.$this -> control -> proj
-			."), GeometryFromText('".$geoObj->getWKT()."',"
+			."), ST_GeometryFromText('".$geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."))<$__geoSnapTolerance";
 
@@ -2239,15 +2239,15 @@ class postgis extends control
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"select asText({$the_geom}) as geometry,{$primeryKey['attname']} as gid,"
+			"select ST_AsText({$the_geom}) as geometry,{$primeryKey['attname']} as gid,"
 			.$fields
 			." from "
 			.$subLayer
 			." where "
-			."GeometryFromText('".$__geoObj->getWKT()."',-1) && {$the_geom}"
+			."ST_GeometryFromText('".$__geoObj->getWKT()."',-1) && {$the_geom}"
 			." and "
-			.$function
-			."(GeometryFromText('".$__geoObj->getWKT()."',"
+			."ST_".ucfirst($function)
+			."(ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			."-1"
 			."),{$the_geom})"
 			.$whereStr;
@@ -2256,21 +2256,21 @@ class postgis extends control
 		} else
 		{
 			$query =
-			"select asText(transform({$the_geom},"
+			"select ST_AsText(ST_Transform({$the_geom},"
 			.$this -> control -> proj
 			.")) as geometry,{$primeryKey['attname']} as gid,"
 			.$fields
 			." from "
 			.$subLayer
 			." where "
-			."transform(".$__bufferStr1."GeometryFromText('".$__geoObj->getWKT()."',"
+			."ST_Transform(".$__bufferStr1."ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."),".$__bufferStr2
 			.$this -> getGeometryColumns($layer, srid)
 			.") && {$the_geom}"
 			." and "
-			.$function
-			."(transform(".$__bufferStr1."GeometryFromText('".$__geoObj->getWKT()."',"
+			."ST_".ucfirst($function)
+			."(ST_Transform(".$__bufferStr1."ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."),".$__bufferStr2
 			.$this -> getGeometryColumns($layer, srid)
@@ -2500,7 +2500,7 @@ class postgis extends control
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"select asText(".$subLayer.".the_geom) as geometry,gid,"
+			"select ST_AsText(".$subLayer.".the_geom) as geometry,gid,"
 			.$fields
 			." from "
 			.$subLayer.",".$pg_select_layer
@@ -2523,7 +2523,7 @@ class postgis extends control
 		else
 		{
 			$query =
-			"select asText(transform(".$pg_query_layer.".the_geom,"
+			"select ST_AsText(ST_Transform(".$pg_query_layer.".the_geom,"
 			.$this -> control -> proj
 			.")) as geometry,".$subLayer.".gid as fid,"
 			.$fields
@@ -2563,11 +2563,11 @@ class postgis extends control
 		$fields=$this->substituteQueryFields($pg_query_layer,$fields);
 		if (!$this -> control -> proj)
 		{
-			$query ="select asText(the_geom) as geometry,gid,$fields from $subLayer where gid=$value";
+			$query ="select ST_AsText(the_geom) as geometry,gid,$fields from $subLayer where gid=$value";
 		}
 		else
 		{
-			$query ="select asText(transform(the_geom,".$this -> control -> proj.")) as geometry,gid,$fields from $subLayer where gid=$value";
+			$query ="select ST_AsText(ST_Transform(the_geom,".$this -> control -> proj.")) as geometry,gid,$fields from $subLayer where gid=$value";
 		}
 		$result = pg_exec($this -> connect(), $query);
 		return ($result);
@@ -2588,14 +2588,14 @@ class postgis extends control
 		if (!$this -> control -> proj)
 		{
 			$query =
-			"SELECT asText($the_geom) as geometry from "
+			"SELECT ST_AsText($the_geom) as geometry from "
 			.$this -> pg_digi_layer
 			." WHERE $gkey="
 			.$gid;
 		} else
 		{
 			$query =
-			"SELECT asText(transform($the_geom,"
+			"SELECT ST_AsText(ST_Transform($the_geom,"
 			.$this -> control -> proj
 			.")) as geometry from "
 			.$this -> pg_digi_layer
@@ -2620,7 +2620,7 @@ class postgis extends control
 			." set "
 			.$the_geom
 			."="
-			."GeometryFromText('".$__geoObj->getWKT()."',-1)"
+			."ST_GeometryFromText('".$__geoObj->getWKT()."',-1)"
 			." WHERE $gkey ="
 			.$gid;
 		} else
@@ -2631,7 +2631,7 @@ class postgis extends control
 			." set "
 			.$the_geom
 			."="
-			."transform(GeometryFromText('".$__geoObj->getWKT()."',"
+			."ST_Transform(ST_GeometryFromText('".$__geoObj->getWKT()."',"
 			.$this -> control -> proj
 			."),"
 			.$this -> getGeometryColumns($this -> pg_digi_layer, srid)
@@ -2671,7 +2671,7 @@ class postgis extends control
 		foreach($featureArray as $value)
 		{
 			$the_geom = $this -> getGeometryColumns($value[1],f_geometry_column);
-			$query="SELECT asText(transform($the_geom,".$this -> control -> proj.")) as geometry from ".$value[1]." WHERE gid=".$value[0];
+			$query="SELECT ST_AsText(ST_Transform($the_geom,".$this -> control -> proj.")) as geometry from ".$value[1]." WHERE gid=".$value[0];
 			$result = $this -> execQuery($query);
 			$row = postgis::fetchRow($result);
 			if ($row['geometry']) {
@@ -2978,7 +2978,7 @@ class wfsclient
 	function xml()
 	{
 		$this -> parser = xml_parser_create();
-		xml_set_object($this -> parser, & $this);
+		xml_set_object($this -> parser, $this);
 		xml_set_element_handler($this -> parser, "startElement", "endElement");
 		xml_set_character_data_handler($this -> parser, "characterData");
 	}
