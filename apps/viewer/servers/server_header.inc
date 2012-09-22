@@ -33,4 +33,4 @@ include_once("../../../model/geometry_columns.php");
 
 $postgisObject = new postgis(); 
 
-$json = &new Services_JSON();
+$json = new Services_JSON();
