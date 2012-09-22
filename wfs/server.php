@@ -247,14 +247,14 @@ if (!(empty($bbox[0]))) {
 		$axisOrder = gmlConverter::getAxisOrderFromEpsg($bbox[4]);
 		if ($axisOrder=="longitude") {
 			$wheres[$table].= "intersects"
-			."(public.transform(public.GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
+			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
 			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
 		}
 		else {
 			$wheres[$table].= "intersects"
-			."(public.transform(public.GeometryFromText('POLYGON((".$bbox[1]." ".$bbox[0].",".$bbox[3]." ".$bbox[0].",".$bbox[3]." ".$bbox[2].",".$bbox[1]." ".$bbox[2].",".$bbox[1]." ".$bbox[0]."))',"
+			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[1]." ".$bbox[0].",".$bbox[3]." ".$bbox[0].",".$bbox[3]." ".$bbox[2].",".$bbox[1]." ".$bbox[2].",".$bbox[1]." ".$bbox[0]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
 			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
@@ -402,13 +402,13 @@ function doQuery($queryType) {
 				foreach ($tableObj->metaData as $key => $arr) {
 					if ($arr['type']=="geometry"){
 						if ($useWktToGmlInPHP) {
-							$sql = str_replace("\"{$key}\"","public.asText(public.transform(".$key.",".$srs.")) as ".$key, $sql);
+							$sql = str_replace("\"{$key}\"","public.ST_AsText(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
 						}
 						else {
-							$sql = str_replace("\"{$key}\"","asGml(public.transform(".$key.",".$srs.")) as ".$key, $sql);
+							$sql = str_replace("\"{$key}\"","ST_AsGml(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
 								
 						}
-						$sql2 = "SELECT public.xmin(public.EXTENT(public.transform(".$key.",{$srs}))) AS TXMin,public.xmax(public.EXTENT(public.transform(".$key.",{$srs}))) AS TXMax, public.ymin(public.EXTENT(public.transform(".$key.",{$srs}))) AS TYMin,public.ymax(public.EXTENT(public.transform(".$key.",{$srs}))) AS TYMax ";
+						$sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMax ";
 
 					}
 				}
@@ -531,7 +531,7 @@ function doSelect($table, $sql, $sql2, $from) {
 	$result = $postgisObject -> execQuery($sql.$from." LIMIT 100000");
 	if ($postgisObject->numRows($result)<1)
 	{
-		$sql = str_replace(",public.asText(public.transform(the_geom,25832)) as the_geom","",$sql);
+		$sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom","",$sql);
 		$from = str_replace("view","join",$from);
 		$result = $postgisObject->execQuery($sql.$from);
 	}
@@ -908,7 +908,7 @@ function doParse($arr)
 					foreach($forSql['values'][$i] as $key=>$value){
 						if (is_array($value)) {
 							fb($forSql['fields'][$i][$key]);
-							$values[] = "public.transform(public.GeometryFromText('".current($value)."',".next($value)."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql['tables'][$i], "srid").")";
+							$values[] = "public.ST_Transform(public.ST_GeometryFromText('".current($value)."',".next($value)."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql['tables'][$i], "srid").")";
 						}
 						elseif (!$value) {
 							$values[] = "NULL";
@@ -919,7 +919,7 @@ function doParse($arr)
 					}
 					$sql.= implode(",",$values);
 					unset($values);
-					$sql.= ") RETURNING {$primeryKey['attname']} as gid,public.asText(public.ST_Centroid({$the_geom})) as {$the_geom};"; // The query will return the new key
+					$sql.= ") RETURNING {$primeryKey['attname']} as gid,public.ST_AsText(public.ST_Centroid({$the_geom})) as {$the_geom};"; // The query will return the new key
 					$sqls['insert'][] = $sql;
 				}
 				else {
@@ -937,7 +937,7 @@ function doParse($arr)
 
 						if (is_array($forSql2['values'][$i][$key])) { // is geometry
 							fb($forSql2['fields'][$i][$key]);
-							$value = "public.transform(public.GeometryFromText('".current($forSql2['values'][$i][$key])."',".next($forSql2['values'][$i][$key])."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql2['tables'][$i], "srid").")";
+							$value = "public.ST_Transform(public.ST_GeometryFromText('".current($forSql2['values'][$i][$key])."',".next($forSql2['values'][$i][$key])."),".$postgisObject -> getGeometryColumns($postgisschema.".".$forSql2['tables'][$i], "srid").")";
 						}
 						elseif (!$forSql2['values'][$i][$key]) {
 							$value = "NULL";
@@ -954,7 +954,7 @@ function doParse($arr)
 						}
 					}
 					$sql.= implode(",",$pairs);
-					$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid,public.asText(public.ST_Centroid({$the_geom})) as {$the_geom};";
+					$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid,public.ST_AsText(public.ST_Centroid({$the_geom})) as {$the_geom};";
 					unset($pairs);
 					$sqls['update'][] = $sql;
 				}

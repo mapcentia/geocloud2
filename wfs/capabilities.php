@@ -157,13 +157,13 @@ xsi:schemaLocation="http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geose
       
 
 if ($row['f_geometry_column']) {
-	  $sql2 = "SELECT xmin(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMin,xmax(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMax, ymin(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMin,ymax(EXTENT(public.transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMax  FROM ".$postgisschema.".".$TableName;
+	  $sql2 = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMin,ST_Xmax(ST_Extent(public.ST_Transform(".$row['f_geometry_column'].",$srsTmp))) AS TXMax, ST_Ymin(ST_Extent(public.ST_Transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMin,ST_Ymax(ST_Extent(public.ST_Transform(".$row['f_geometry_column'].",$srsTmp))) AS TYMax  FROM ".$postgisschema.".".$TableName;
 	  $result2 = $postgisObject->execQuery($sql2);
 	  
 	  
 	  if($postgisObject->PDOerror){ // Can't project the layer to the requested EPSG
 		$postgisObject->PDOerror = NULL;
-		$sql2 = "SELECT xmin(EXTENT(".$row['f_geometry_column'].")) AS TXMin,xmax(EXTENT(".$row['f_geometry_column'].")) AS TXMax, ymin(EXTENT(".$row['f_geometry_column'].")) AS TYMin,ymax(EXTENT(".$row['f_geometry_column'].")) AS TYMax  FROM ".$postgisschema.".".$TableName;
+		$sql2 = "SELECT ST_Xmin(ST_Extent(".$row['f_geometry_column'].")) AS TXMin,ST_Xmax(ST_Extent(".$row['f_geometry_column'].")) AS TXMax, ST_Ymin(ST_Extent(".$row['f_geometry_column'].")) AS TYMin,ST_Ymax(ST_Extent(".$row['f_geometry_column'].")) AS TYMax  FROM ".$postgisschema.".".$TableName;
 		$result2 = $postgisObject->execQuery($sql2);
 		//$srsTmp = $row['srid'];
 		$row["f_table_abstract"].= " CAN'T PROJECT LAYER";

@@ -73,8 +73,8 @@ function parseFilter($filter,$table,$operator="=") {
 			if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
 			if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
 
-			$where[] = "intersects"
-				."(public.transform(public.GeometryFromText('".$wktArr[0][0]."',"
+			$where[] = "ST_Intersects"
+				."(public.ST_Transform(public.ST_GeometryFromText('".$wktArr[0][0]."',"
 				.$sridOfFilter
 				."),$sridOfTable),"
 				.$value['PropertyName'].")";
@@ -105,8 +105,8 @@ function parseFilter($filter,$table,$operator="=") {
 			$coordsArr[3] = ceil($coordsArr[3]/1000)*1000;
 			 */
 
-			$where[] = "intersects"
-				."(public.transform(public.GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
+			$where[] = "ST_Intersects"
+				."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
 				.$sridOfFilter
 				."),$sridOfTable),"
 				.$arr['BBOX']['PropertyName'].")";
