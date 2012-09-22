@@ -5,11 +5,11 @@ Ext.Ajax.disableCaching = false;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
-	"use strict";
+    "use strict";
     Ext.Container.prototype.bufferResize = false;
     Ext.QuickTips.init();
     var winAdd;
-	var winAddSchema;
+    var winAddSchema;
     var winEdit;
     var winCartomobile;
     var winClasses;
@@ -17,7 +17,7 @@ $(window).load(function () {
     var winMoreSettings;
     var fieldsForStore;
     var settings;
-	var groups;
+    var groups;
 
     $.ajax({
         url: '/controller/tables/' + screenName + '/getcolumnswithkey/settings.geometry_columns_view',
@@ -64,10 +64,10 @@ $(window).load(function () {
     },
     fieldsForStore);
     var onWrite = function(store, action, result, transaction, rs) {
-    	// console.log('onwrite', store, action, result, transaction, rs);
-    	if (transaction.success) {
-    		groupsStore.load();
-    	}
+        // console.log('onwrite', store, action, result, transaction, rs);
+        if (transaction.success) {
+            groupsStore.load();
+        }
     };
     var proxy = new Ext.data.HttpProxy({
         api: {
@@ -101,23 +101,23 @@ $(window).load(function () {
         autoSave: true
     });
     store.load();
-	
-	var groupsStore = new Ext.data.Store({
-		reader: new Ext.data.JsonReader({
-			successProperty: 'success',
-			root: 'data'
-		},[{"name":"group"}]),
-			url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view/layergroup'
-		});
-	groupsStore.load();
-	var schemasStore = new Ext.data.Store({
-		reader: new Ext.data.JsonReader({
-			successProperty: 'success',
-			root: 'data'
-		},[{"name":"schema"}]),
-			url: '/controller/databases/' + screenName + '/getschemas'
-		});
-	schemasStore.load();
+    
+    var groupsStore = new Ext.data.Store({
+        reader: new Ext.data.JsonReader({
+            successProperty: 'success',
+            root: 'data'
+        },[{"name":"group"}]),
+            url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view/layergroup'
+        });
+    groupsStore.load();
+    var schemasStore = new Ext.data.Store({
+        reader: new Ext.data.JsonReader({
+            successProperty: 'success',
+            root: 'data'
+        },[{"name":"schema"}]),
+            url: '/controller/databases/' + screenName + '/getschemas'
+        });
+    schemasStore.load();
 
    
     // create a grid to display records from the store
@@ -138,7 +138,7 @@ $(window).load(function () {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
-                    	
+                        
                 }
             },
             columns: [
@@ -182,31 +182,31 @@ $(window).load(function () {
             {
                 header: 'Layer group',
                 dataIndex: 'layergroup',
-				sortable: true,
+                sortable: true,
                 editable: true,
                 width: 150,
-				editor: {
-		            xtype: 'combo',
-		            mode: 'local',
-		            triggerAction: 'all',
-		            forceSelection: false,
-		            displayField: 'group',
-		            valueField: 'group',
-		            allowBlank: true,
-		            store: groupsStore
-					}
+                editor: {
+                    xtype: 'combo',
+                    mode: 'local',
+                    triggerAction: 'all',
+                    forceSelection: false,
+                    displayField: 'group',
+                    valueField: 'group',
+                    allowBlank: true,
+                    store: groupsStore
+                    }
             },
             {
                 header: 'Sort id',
                 dataIndex: 'sort_id',
-				sortable: true,
+                sortable: true,
                 editable: true,
                 width: 55,
-				editor: new Ext.form.NumberField( {
-						decimalPrecision : 0,
-						decimalSeparator : '¤'// Some strange char nobody is
-												// using
-					})
+                editor: new Ext.form.NumberField( {
+                        decimalPrecision : 0,
+                        decimalSeparator : '¤'// Some strange char nobody is
+                                                // using
+                    })
             },
             {
                 xtype: 'checkcolumn',
@@ -260,7 +260,7 @@ $(window).load(function () {
             iconCls: 'silk-add',
             handler: onAdd
         },
-		'-',{
+        '-',{
             text: 'Delete layer',
             iconCls: 'silk-delete',
             handler: onDelete
@@ -269,44 +269,44 @@ $(window).load(function () {
             text:'Layers',
             iconCls: 'silk-layers',  // <-- icon
             menu: new Ext.menu.Menu({
-			id: 'mainMenu',
-			style: {
-				overflow: 'visible'     // For the Combo popup
-			},
-			items: [
-				{
-					text: 'Layer definition',
-					iconCls: 'silk-cog',
-					handler: onEditWMSLayer
-				},
-					{
-					text: 'Styles',
-					iconCls: 'silk-palette',
-					handler: onEditWMSClasses
-				},{
-					text: 'Structure',
-					iconCls: 'silk-table',
-					handler: onEdit
-				},{
-					text: 'CartoMobile settings',
-					iconCls: 'silk-phone',
-					handler: onEditCartomobile
-				},{
-					text: 'Advanced settings',
-					iconCls: 'silk-cog-edit',
-					handler: onEditMoreSettings
-				}
+            id: 'mainMenu',
+            style: {
+                overflow: 'visible'     // For the Combo popup
+            },
+            items: [
+                {
+                    text: 'Layer definition',
+                    iconCls: 'silk-cog',
+                    handler: onEditWMSLayer
+                },
+                    {
+                    text: 'Styles',
+                    iconCls: 'silk-palette',
+                    handler: onEditWMSClasses
+                },{
+                    text: 'Structure',
+                    iconCls: 'silk-table',
+                    handler: onEdit
+                },{
+                    text: 'CartoMobile settings',
+                    iconCls: 'silk-phone',
+                    handler: onEditCartomobile
+                },{
+                    text: 'Advanced settings',
+                    iconCls: 'silk-cog-edit',
+                    handler: onEditMoreSettings
+                }
         ]
     })
         },'->',new Ext.form.ComboBox({
-		id: "schemabox",
+        id: "schemabox",
         store: schemasStore,
         displayField: 'schema',
         editable: false,
         mode: 'local',
         triggerAction: 'all',
         emptyText:'Select a cloud...',
-		value: schema,
+        value: schema,
         width:135
     }),
         '-', {
@@ -318,7 +318,7 @@ $(window).load(function () {
             // rowdblclick: mapPreview
         }
     });
-	Ext.getCmp("schemabox").on('select', function(e){window.location="/store/" + screenName + "/" + e.value;});
+    Ext.getCmp("schemabox").on('select', function(e){window.location="/store/" + screenName + "/" + e.value;});
     function onDelete() {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
@@ -332,8 +332,8 @@ $(window).load(function () {
         }
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
             if (btn == "yes") {
-				//console.log(record.data.f_table);
-				proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + record.data.f_table_name;
+                //console.log(record.data.f_table);
+                proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
                 return false;
@@ -413,7 +413,7 @@ $(window).load(function () {
 
         winAdd.show(this);
     }
-	function onAddSchema(btn, ev) {
+    function onAddSchema(btn, ev) {
         //winAddSchema = null; 
         var p = new Ext.Panel({
             id: "newschemapanel",
@@ -437,69 +437,69 @@ $(window).load(function () {
             plain: false,
             border: false,
             items: [
-				new Ext.FormPanel({
-				labelWidth: 1,
-				frame: true,
-				border: false,
-				region: 'center',
-				id: "schemaform",
-				bodyStyle: {
-					padding: '7px'
-				},
-				defaults: {
-					allowBlank: false
-					//msgTarget: 'side'
-				},
-				items: [
-				{
-					//width: 275,
-					xtype: 'textfield',
-					name: 'schema',
-					emptyText:'Name of new schema'	
-				}],
-				buttons: [{
-					iconCls: 'silk-add',
-					text: 'Add',
-					handler: function () {
-						var f = Ext.getCmp('schemaform');
-						if (f.form.isValid()) {
-							f.getForm().submit({
-								url: '/controller/databases/' + screenName + '/addschema',
-								waitMsg: 'Saving Data...',
-								submitEmptyText: false,
-								success: function () {
-									schemasStore.reload();
-									Ext.MessageBox.show({
-										title: 'Success!',
-										msg: 'New schema created',
-										buttons: Ext.MessageBox.OK,
-										width: 300,
-										height: 300
-									});
-								},
-								failure: function(form, action) {
-									var result = action.result;
-									 Ext.MessageBox.show({
-							title: 'Failure',
-							msg: result.message,
-							buttons: Ext.MessageBox.OK,
-							width: 300,
-							height: 300
-						});
-								
-									}
-							});
-						} else {
-							var s = '';
-							Ext.iterate(schemaForm.form.getValues(), function (key, value) {
-								s += String.format("{0} = {1}<br />", key, value);
-							},
-							this);
-							//Ext.example.msg('Form Values', s);
-						}
-					}
-				}]
-			})]
+                new Ext.FormPanel({
+                labelWidth: 1,
+                frame: true,
+                border: false,
+                region: 'center',
+                id: "schemaform",
+                bodyStyle: {
+                    padding: '7px'
+                },
+                defaults: {
+                    allowBlank: false
+                    //msgTarget: 'side'
+                },
+                items: [
+                {
+                    //width: 275,
+                    xtype: 'textfield',
+                    name: 'schema',
+                    emptyText:'Name of new schema'  
+                }],
+                buttons: [{
+                    iconCls: 'silk-add',
+                    text: 'Add',
+                    handler: function () {
+                        var f = Ext.getCmp('schemaform');
+                        if (f.form.isValid()) {
+                            f.getForm().submit({
+                                url: '/controller/databases/' + screenName + '/addschema',
+                                waitMsg: 'Saving Data...',
+                                submitEmptyText: false,
+                                success: function () {
+                                    schemasStore.reload();
+                                    Ext.MessageBox.show({
+                                        title: 'Success!',
+                                        msg: 'New schema created',
+                                        buttons: Ext.MessageBox.OK,
+                                        width: 300,
+                                        height: 300
+                                    });
+                                },
+                                failure: function(form, action) {
+                                    var result = action.result;
+                                     Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: result.message,
+                            buttons: Ext.MessageBox.OK,
+                            width: 300,
+                            height: 300
+                        });
+                                
+                                    }
+                            });
+                        } else {
+                            var s = '';
+                            Ext.iterate(schemaForm.form.getValues(), function (key, value) {
+                                s += String.format("{0} = {1}<br />", key, value);
+                            },
+                            this);
+                            //Ext.example.msg('Form Values', s);
+                        }
+                    }
+                }]
+            })]
             
         });
 
@@ -621,7 +621,7 @@ $(window).load(function () {
             closeAction: 'close',
             plain: true,
             frame : true,
-			border : false,
+            border : false,
             items: [new Ext.Panel({
                 frame: false,
                 border : false,
@@ -631,7 +631,7 @@ $(window).load(function () {
         });
         winEdit.show(this);
     }
-	function onEditCartomobile(btn, ev) {
+    function onEditCartomobile(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
             Ext.MessageBox.show({
@@ -658,7 +658,7 @@ $(window).load(function () {
             closeAction: 'close',
             plain: true,
             frame : true,
-			border : false,
+            border : false,
             items: [new Ext.Panel({
                 frame: false,
                 border : false,
@@ -728,12 +728,12 @@ $(window).load(function () {
             height: 400,
             closeAction: 'close',
             plain: true,
-			border : true,
+            border : true,
             items:[wmsLayer.grid]
         });
         winWmsLayer.show(this);
     };
-	function onEditMoreSettings(btn, ev) {
+    function onEditMoreSettings(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
             Ext.MessageBox.show({
@@ -744,7 +744,7 @@ $(window).load(function () {
             });
             return false;
         }
-		var r = record;
+        var r = record;
         winMoreSettings = null;
         //wmsLayer.init(record.get("f_table_name"));
         winMoreSettings = new Ext.Window({
@@ -762,7 +762,7 @@ $(window).load(function () {
                 height: 400,
                 layout: 'border',
                 items: [
-				new Ext.FormPanel({
+                new Ext.FormPanel({
             labelWidth: 100,
             // label settings here cascade unless overridden
             frame: false,
@@ -791,61 +791,61 @@ $(window).load(function () {
                 name: 'wmssource',
                 value: r.data.wmssource
             }
-			, {
-        	xtype: 'combo',
-			store: new Ext.data.ArrayStore({
-				fields: ['name', 'value'],
-				data: [
-					['true', true],
-					['false', false]
-				   ]
-			}),
-			displayField: 'name',
-			valueField: 'value',
-			mode: 'local',
-			typeAhead: false,
-			editable: false,
-			triggerAction: 'all',
-        	name: 'baselayer',
-        	fieldLabel: 'Is baselayer',
-			value: r.data.baselayer
+            , {
+            xtype: 'combo',
+            store: new Ext.data.ArrayStore({
+                fields: ['name', 'value'],
+                data: [
+                    ['true', true],
+                    ['false', false]
+                   ]
+            }),
+            displayField: 'name',
+            valueField: 'value',
+            mode: 'local',
+            typeAhead: false,
+            editable: false,
+            triggerAction: 'all',
+            name: 'baselayer',
+            fieldLabel: 'Is baselayer',
+            value: r.data.baselayer
         }, {
-        	xtype: 'combo',
-			store: new Ext.data.ArrayStore({
-				fields: ['name', 'value'],
-				data: [
-					['true', true],
-					['false', false]
-				   ]
-			}),
-			displayField: 'name',
-			valueField: 'value',
-			mode: 'local',
-			typeAhead: false,
-			editable: false,
-			triggerAction: 'all',
-        	name: 'not_querable',
-        	fieldLabel: 'Not querable',
-			value: r.data.not_querable
+            xtype: 'combo',
+            store: new Ext.data.ArrayStore({
+                fields: ['name', 'value'],
+                data: [
+                    ['true', true],
+                    ['false', false]
+                   ]
+            }),
+            displayField: 'name',
+            valueField: 'value',
+            mode: 'local',
+            typeAhead: false,
+            editable: false,
+            triggerAction: 'all',
+            name: 'not_querable',
+            fieldLabel: 'Not querable',
+            value: r.data.not_querable
         },
         {
-        	xtype: 'combo',
-			store: new Ext.data.ArrayStore({
-				fields: ['name', 'value'],
-				data: [
-					['true', true],
-					['false', false]
-				   ]
-			}),
-			displayField: 'name',
-			valueField: 'value',
-			mode: 'local',
-			typeAhead: false,
-			editable: false,
-			triggerAction: 'all',
-        	name: 'single_tile',
-        	fieldLabel: 'Single tile',
-			value: r.data.single_tile
+            xtype: 'combo',
+            store: new Ext.data.ArrayStore({
+                fields: ['name', 'value'],
+                data: [
+                    ['true', true],
+                    ['false', false]
+                   ]
+            }),
+            displayField: 'name',
+            valueField: 'value',
+            mode: 'local',
+            typeAhead: false,
+            editable: false,
+            triggerAction: 'all',
+            name: 'single_tile',
+            fieldLabel: 'Single tile',
+            value: r.data.single_tile
         },
         {
             width: 300,
@@ -855,12 +855,12 @@ $(window).load(function () {
             value: r.data.data
 
         }
-		],
+        ],
             buttons: [{
                 iconCls: 'silk-add',
                 text: 'Update',
                 handler: function () {
-					var f = Ext.getCmp('detailform');
+                    var f = Ext.getCmp('detailform');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
                         var param = {
@@ -875,7 +875,7 @@ $(window).load(function () {
                             params: param,
                             success: function () {
                                 store.reload();
-								groupsStore.load();
+                                groupsStore.load();
                                 Ext.MessageBox.show({
                                     title: 'Success!',
                                     msg: 'Settings updated',
@@ -897,8 +897,8 @@ $(window).load(function () {
                 }
             }]
         })
-					
-				]
+                    
+                ]
             })]
         });
         winMoreSettings.show(this);
@@ -947,23 +947,23 @@ $(window).load(function () {
     };
     Ext.namespace('viewerSettings');
     viewerSettings.form = new Ext.FormPanel({
-		title: "Map settings",
+        title: "Map settings",
         frame: false,
         border: false,
         autoHeight: false,
         labelWidth: 100,
-		bodyStyle: 'padding: 7px 7px 10px 7px;',
+        bodyStyle: 'padding: 7px 7px 10px 7px;',
         defaults: {
             anchor: '95%',
             allowBlank: false,
             msgTarget: 'side'
         },
         items: [new Ext.Panel({
-				frame: false,
-        		border: false,
-				bodyStyle: 'padding: 7px 7px 10px 7px;',
-				contentEl: "map-settings"
-			}),{
+                frame: false,
+                border: false,
+                bodyStyle: 'padding: 7px 7px 10px 7px;',
+                contentEl: "map-settings"
+            }),{
             width: 10,
             xtype: 'combo',
             mode: 'local',
@@ -977,25 +977,25 @@ $(window).load(function () {
             allowBlank: true,
             store: store,
             value: settings.default_extent
-			
+            
         },{
             xtype: 'numberfield',
             name: 'minzoomlevel',
             fieldLabel: 'Min zoom level',
-			allowBlank: true,
-			minValue: 1,
+            allowBlank: true,
+            minValue: 1,
             maxValue: 20,
             value: settings.minzoomlevel
-		},{
+        },{
             xtype: 'numberfield',
             name: 'maxzoomlevel',
             fieldLabel: 'Max zoom level',
-			allowBlank: true,
-			minValue: 1,
+            allowBlank: true,
+            minValue: 1,
             maxValue: 20,
             value: settings.maxzoomlevel
-		}
-		],
+        }
+        ],
         buttons: [{
             text: 'Update',
             handler: function () {
@@ -1008,7 +1008,7 @@ $(window).load(function () {
                     });
                 }
             }
-        }]	
+        }]  
     });
     viewerSettings.onSubmit = function (form, action) {
         var result = action.result;
@@ -1023,8 +1023,8 @@ $(window).load(function () {
         title: 'Settings and stuff',
         layout: 'accordion',
         region: 'east',
-		collapsible: true,
-		collapsed: true,
+        collapsible: true,
+        collapsed: true,
         width: 300,
         frame: false,
         plain: true,
@@ -1034,10 +1034,10 @@ $(window).load(function () {
             animate: true
         },
         items: [
-		httpAuth.form,
-		viewerSettings.form,
-				
-		{
+        httpAuth.form,
+        viewerSettings.form,
+                
+        {
             title: 'WFS stuff',
             border: false,
             bodyStyle: {

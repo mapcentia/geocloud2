@@ -37,7 +37,8 @@ CREATE TABLE geometry_columns_join (
     tilecache bool,
     data varchar(255),
     not_querable bool,
-    single_tile bool
+    single_tile bool,
+    cartomobile text
 );
 
 CREATE TABLE viewer (
@@ -78,7 +79,8 @@ CREATE VIEW settings.geometry_columns_view AS
 		geometry_columns_join.tilecache,
 		geometry_columns_join.data,
 		geometry_columns_join.not_querable,
-		geometry_columns_join.single_tile
+		geometry_columns_join.single_tile,
+		geometry_columns_join.cartomobile
    FROM geometry_columns
    LEFT JOIN 
    		settings.geometry_columns_join ON

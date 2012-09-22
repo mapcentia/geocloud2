@@ -1,6 +1,6 @@
 <?php
-
-$oMap = ms_newMapobj("mapfiles/".$_GET['mapfile']);
+include '../conf/main.php';
+$oMap = ms_newMapobj($basePath."/wms/mapfiles/".$_GET['mapfile']);
 $request = ms_newowsrequestobj();
 foreach ($_GET as $k=>$v) {
 	$request->setParameter($k, $v);
