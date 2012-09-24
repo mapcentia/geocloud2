@@ -9,6 +9,7 @@ var scriptSource = (function(scripts) {
 }());
 //alert(scriptSource);
 var mygeocloud_host;
+// In IE7 host name is missing if script url is relative 
 if (scriptSource.charAt(0)==="/") {
     mygeocloud_host="";
 }
@@ -25,8 +26,7 @@ document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'
 //document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/openlayers/theme/default/style.mobile.css'\/>");
 //document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
 
-var mygeocloud_ol;
-mygeocloud_ol = (function() {
+var mygeocloud_ol = (function() {
     "use strict";
     var map,
 	host = mygeocloud_host,
@@ -227,43 +227,80 @@ mygeocloud_ol = (function() {
 			displayInLayerSwitcher: false
 		});
         this.map.addLayers([vectors]);
-		this.addBaseLayer = function() {
-			var arrayOSM = ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-	                    "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-	                    "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-	                    "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"];
-	        var arrayAerial = ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
-	                        "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
-	                        "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
-	                        "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"];
-	       
-	        this.baseOSM = new OpenLayers.Layer.OSM("MapQuest-OSM Tiles", arrayOSM);
+		this.addMapQuestOSM = function() {
+	        this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM Tiles",
+	        ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+	        "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+	        "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+	        "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
+            this.mapQuestOSM.wrapDateLine = false;
+            this.map.addLayer(this.mapQuestOSM);
+        }
+        this.addMapQuestAerial = function() {        
+	        this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles",
+	           ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
+	           "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
+	           "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
+	           "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
+			this.mapQuestAerial.wrapDateLine = false;
+			this.map.addLayer(this.mapQuestAerial);
+		}
+	   this.addOSM = function() {
+			this.baseOSM = new OpenLayers.Layer.OSM();
 			this.baseOSM.wrapDateLine = false;
-	        this.baseAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", arrayAerial);
-			this.baseAerial.wrapDateLine = false;
-			
-			this.map.addLayer(this.baseOSM); 
-			//this.map.addLayer(this.baseAerial);
-            var osm = new OpenLayers.Layer.OSM();
-			//this.map.addLayer(osm);
-
-			
-			try {
-				this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {
-					type : G_NORMAL_MAP,
-					sphericalMercator : true
-				});
-				this.baseGNORMAL.wrapDateLine = false;
-				this.baseGHYBRID = new OpenLayers.Layer.Google("Google Hybrid", {
-					type : G_HYBRID_MAP,
-					sphericalMercator : true
-				});
-				this.baseGHYBRID.wrapDateLine = false;
-				this.map.addLayer(this.baseGNORMAL);
-				this.map.addLayer(this.baseGHYBRID);
-			}
-			catch(e) {};
-		};
+            this.map.addLayer(this.baseOSM);
+        }
+        this.addGoogleStreets = function() {
+            // v2
+    		try {
+    			this.baseGNORMAL = new OpenLayers.Layer.Google(
+    			    "Google Streets", {
+    		            type : G_NORMAL_MAP,
+    				    sphericalMercator : true,
+    				    wrapDateLine: false,
+    				    numZoomLevels: 20
+    				}
+    			);
+    			this.map.addLayer(this.baseGNORMAL);
+            }
+            catch(e) {alert(e.message)};
+            // v3
+            try {
+                var gmap = new OpenLayers.Layer.Google(
+                    "Google Streets", { // the default
+                        //wrapDateLine: false,
+                        numZoomLevels: 20
+                    }
+                );
+            }
+            catch(e){alert(e.message)}
+        }
+        this.addGoogleHybrid = function() {
+            // v2
+            try {
+                this.baseGHYBRID = new OpenLayers.Layer.Google(
+                    "Google Hybrid", {
+                        type : G_HYBRID_MAP,
+                        sphericalMercator : true,
+                        //wrapDateLine: false,
+                        numZoomLevels: 20
+                    }
+                );
+                this.map.addLayer(this.baseGHYBRID);
+            }
+            catch(e) {};
+            // v3
+            try {
+                var gmap = new OpenLayers.Layer.Google(
+                    "Google Hybrid", {
+                        type: google.maps.MapTypeId.HYBRID,
+                        //wrapDateLine: false,
+                        numZoomLevels: 20
+                    }
+                );
+            }
+            catch(e){}
+        }
 		this.addTileLayers = function(layers,config) {
 			var defaults = {
 				singleTile : false,
@@ -349,8 +386,8 @@ mygeocloud_ol = (function() {
 		};
 		
 		
-		this.addBaseLayer();
-		
+		//this.addMapQuestOSM();
+		this.addGoogleStreets();
 		this.getCenter = function() {
 			var point = this.map.center;
 			return  {

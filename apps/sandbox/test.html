@@ -1,0 +1,12 @@
+<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhS4p9AtMz66nyqFUaziGHLM44rOahQ1vHhpXeGXl_ifkSE8O1eT_foV2w"
+		type="text/javascript">
+		</script>
+<script type="text/javascript" src="/api/v1/js/api.js"></script>
+<script>
+    $(window).load(function() {
+        var cloud_example1 = new mygeocloud_ol.map("map", "postgis");
+        cloud_example1.zoomToExtent();
+        //cloud_example1.addTileLayers(["public.publicnuclear_facilities_update"]);
+    }); 
+</script>
+<div id="map" style="width: 100%;height: 500px"></div>
