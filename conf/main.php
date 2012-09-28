@@ -2,7 +2,7 @@
 ini_set("display_errors", "On");
 error_reporting(3);
 
-// URL and path information. Must be the web root folder! 
+// URL and path information. Must be the web root folder!! 
 $hostName = "http://beta.mygeocloud.cowi.webhouse.dk";
 $ODEUMhostName = "http://samsoe-lp.odeum.com";
 $basePath = "/srv/odeum/sites/betamygeocloud/";
