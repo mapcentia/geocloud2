@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+ <html> 
+  <head>
+    <title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description" content="Store geographical data and make online maps" />
+	<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
+	<meta name="author" content="Martin Hoegh" />
+	<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+ 	<!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+	<script type="text/javascript" src="/js/bootstrap/js/prettify.js"></script>
+	<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
+	<link rel="stylesheet" type="text/css" href="/js/bootstrap/js/prettify.css"/>
+	<script type="text/javascript" src="/api/v1/js/api.js"></script>
+	<!--<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;sensor=false&amp;key=ABQIAAAAixUaqWcOE1cqF2LJyDYCdhTww2B3bmOd5Of57BUV-HZKowzURRTDiOeJ4A8o-OZoiMfdrJzdG3POiw"></script>-->
+	<script src="http://maps.google.com/maps/api/js?v=3.2&sensor=false"></script>
+	 <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .row {
+      	background-color: white;
+      	margin-bottom: 15px;
+      }
+	  img {
+		max-width: none;
+	  }
+    </style>
+	<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-28178450-1']);
+	  _gaq.push(['_setDomainName', 'mygeocloud.com']);
+	  _gaq.push(['_trackPageview']);
+	
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	
+	</script>
+</head>
+<body>
+	<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">MyGeoCloud</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+          		<li><a href="/developers/index.html">Developers</a></li>
+          		<li><a href="/about.html">About</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+<div class="container">
+	<div class="row">
+		<div class="span5 offset2">

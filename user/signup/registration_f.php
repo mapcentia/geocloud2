@@ -1,47 +1,31 @@
-<?php include('../../libs/vdaemon/vdaemon.php'); ?>
-<html>
-<head>
-<title>Registration Form Sample</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link href="samples.css" rel="stylesheet" type="text/css">
-<!--<script type="text/JavaScript" src="../libs/vdaemon/vdaemon.js"></script>-->
-</head>
-<body>
-<h1>Registration Form Sample</h1>
+<?php
+include '../header.html'; 
+include('../../libs/vdaemon/vdaemon.php'); ?>
+
+<h1>Sign up</h1>
 <form id="Register" action="registration_p.php" method="POST" runat="vdaemon" disablebuttons="all">
-  <table cellpadding="2" cellspacing="0" border="0">
-    <tr>
-      <td width="130">
-        <vllabel validators="UserID,UserIDExist" errclass="error" for="UserID" cerrclass="controlerror">User ID:</vllabel>
-      </td>
-      <td width="140">
-        <input name="UserID" type="text" class="control" id="UserID" size="15">
-        <vlvalidator name="UserID" type="required" control="UserID" errmsg="User ID required">
-        <vlvalidator name="UserIDExist" type="custom" control="UserID" errmsg="User ID already exist" function="UserIDCheck">
-      </td>
-      <td width="300" rowspan="7" valign="top">
-        <vlsummary class="error" headertext="Error(s) found:" displaymode="bulletlist">
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <vllabel errclass="error" validators="Password,PassCmp" for="Password" cerrclass="controlerror">Password:</vllabel>
-      </td>
-      <td>
-        <input name="Password" type="password" class="control" id="Password" size="15">
-        <vlvalidator type="required" name="Password" control="Password" errmsg="Password required">
-        <vlvalidator name="PassCmp" type="compare" control="Password" comparecontrol="Password2"
-          operator="e" validtype="string" errmsg="Both Password fields must be equal">
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <vllabel validators="Password,PassCmp" errclass="error" for="Password2" cerrclass="controlerror">Confirm Password:</vllabel>
-      </td>
-      <td>
-        <input name="Password2" type="PASSWORD" class="control" id="Password2" size="15">
-      </td>
-    </tr>
+	<div class="control-group">
+		<div class="controls">
+			<vllabel validators="UserID,UserIDExist" errclass="error" for="UserID" cerrclass="controlerror">User ID</vllabel>
+			<vlvalidator name="UserID" type="required" control="UserID" errmsg="<span class='label label-warning'>User ID required</span>">
+		    <vlvalidator name="UserIDExist" type="custom" control="UserID" errmsg="<span class='label label-warning'>User ID already exist</span>" function="UserIDCheck">
+	        <input name="UserID" type="text" cladss="control" id="UserID" sizde="15">
+	        <span class="help-inline"></span>
+	    </div>    
+    
+	    <div class="controls">
+	        <vllabel errclass="error" validators="Password,PassCmp" for="Password" cerrclass="controlerror">Password</vllabel>
+	        <input name="Password" type="password" class="control" id="Password" size="15">
+	        <vlvalidator type="required" name="Password" control="Password" errmsg="<span class='label label-warning'>Password required</span>">
+	        <vlvalidator name="PassCmp" type="compare" control="Password" comparecontrol="Password2"
+	          operator="e" validtype="string" errmsg="<span class='label label-warning'>Both Password fields must be equal</span>">
+	    </div>
+    
+	    <div class="controls">
+	        <vllabel validators="Password,PassCmp" errclass="error" for="Password2" cerrclass="controlerror">Confirm Password</vllabel>
+	        <input name="Password2" type="PASSWORD" class="control" id="Password2" size="15">
+	    </div>
+ 
 	<!--
     <tr>
       <td>
@@ -71,14 +55,18 @@
       </td>
     </tr>
 	-->
-    <tr>
-      <td colspan="2">
-        <input type="submit" class="control" value="Register">
-        <input type="reset" class="control" value="Reset">
-      </td>
-    </tr>
-  </table>
+	 <div class="control-group">
+	 	<div class="controls">
+	        <input type="submit" class="btn" value="Register">
+	        <input type="reset" class="btn" value="Reset">
+		</div>
+       </div>
+      </div>
+  <div><vlsummary class="error" headertext="" displaymode="bulletlist"></div>
 </form>
+</div>
+</div>
+</div>
 </body>
 </html>
 <?php VDEnd(); ?>

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../../developers/header.html';
+include '../header.html';
 include("../../conf/main.php");
 include '../../libs/functions.php';
 include '../../model/settings_viewer.php';
@@ -52,28 +52,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid)
 }
 ?>
 
-<body>
-	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">MyGeoCloud</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-          		<li><a href="/developers/index.html">Developers</a></li>
-          		<li><a href="/about.html">About</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-<div class="container">
-	<div class="row">
-		<div class="span3 offset2">
+
 <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon">
   <table border="0" cellpadding="2" cellspacing="0">
     <tr>
