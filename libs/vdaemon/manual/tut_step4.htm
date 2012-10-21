@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Tutorial - Step 4</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Tutorial</span><br>
+Defining Validation Rules</h1>
+<p>It is a time  to add validation rules to the form. All validation is defined by
+  the <a href="ref_validator.htm">vlvalidator</a> and <a href="ref_group.htm">vlgroup</a> VDaemon
+  custom tags. These tags have many attributes which allow defining all of the common validation
+  types as well as creating custom validation logic. To learn all of the
+  validator features <a href="ref_validator.htm">see
+  the reference</a>.</p>
+<p>In this tutorial we will validate &quot;Name&quot; input field. We will check that visitor enters some value to it
+  and this value is valid name (we assume that name can contain only letters, spaces and apostrophe character).</p>
+<p> We will use &quot;required&quot;
+    validator to check that the &quot;Name&quot; is filled with some value. It is most common validator type.
+    Let's examine the code of the &quot;required&quot; validator:<br>
+  <b>&lt;vlvalidator name=&quot;NameReq&quot; type=&quot;required&quot; control=&quot;Name&quot; errmsg=&quot;Name
+  required&quot;&gt;</b><br>
+The validator attributes shown above are common to all of the types of validators. Each validator
+must have a unique
+name (name=&quot;NameReq&quot;). The validation type is defined by &quot;type&quot; attribute
+(type=&quot;required&quot;).
+The &quot;control&quot; attribute
+specifies the input element to validate (control=&quot;Name&quot;).
+Lastly, the &quot;errmsg&quot; attribute contains error message that will be displayed on the
+form page if validation
+test fails for this vaildator.</p>
+<p>To check for valid name we will use &quot;regexp&quot; validator. It validates entered value against regular
+  expression pattern. In our case this pattern is &quot;/^[a-z'\s]*$/i&quot;:<br>
+<b>&lt;vlvalidator name=&quot;NameRegExp&quot; type=&quot;regexp&quot; control=&quot;Name&quot; errmsg=&quot;Invalid
+Name&quot; regexp=&quot;/^[a-z'\s]*$/i&quot;&gt;</b></p>
+<p>After adding validation elements your page source code should look as shown below.</p>
+<pre class="sample">&lt;?php include('vdaemon/vdaemon.php'); ?&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello form.&lt;/p&gt;
+&lt;form method=&quot;POST&quot; action=&quot;hello.php&quot; id=&quot;Hello&quot; runat=&quot;vdaemon&quot;&gt;
+  &lt;table cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;&gt;
+    &lt;tr&gt;
+      &lt;td&gt;
+        Enter your Name:
+      &lt;/td&gt;
+      &lt;td&gt;
+        &lt;input name=&quot;Name&quot; type=&quot;text&quot; size=&quot;25&quot;&gt;
+        <b>&lt;vlvalidator name=&quot;NameReq&quot; type=&quot;required&quot; control=&quot;Name&quot; errmsg=&quot;Name required&quot;&gt;</b>
+        <b>&lt;vlvalidator name=&quot;NameRegExp&quot; <b>type=&quot;regexp&quot; </b>control=&quot;Name&quot;
+          errmsg=&quot;Invalid Name&quot; regexp=&quot;/^[a-z'\s]*$/i&quot;&gt;</b>
+      &lt;/td&gt;
+    &lt;tr&gt;
+      &lt;td colspan=&quot;2&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Send&quot;&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+&lt;?php VDEnd(); ?&gt;
+</pre>
+<p>Now if you run the form you will see that you can't submit empty string or value with digits or special characters.
+  Validation works, but we don't see any error messages yet. </p>
+<p>Continue to <a href="tut_step5.htm">Displaying Error Messages</a></p>
+<p>&nbsp;</p>
+</body>
+</html>

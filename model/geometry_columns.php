@@ -64,7 +64,7 @@ class GeometryColumns extends postgis {
 		$conf['cartomobile'] = json_encode($cartomobileArr);
 		$conf['_key_'] = $_key_;
 
-		
+		 
 		$table->updateRecord(json_decode(json_encode($conf)),"_key_");
 		$this->execQuery($sql,"PDO","transaction");
 		if ((!$this->PDOerror) || (!$sql)) {

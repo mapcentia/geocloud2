@@ -2,6 +2,7 @@
 $settings_viewer = new Settings_viewer();
 $response = $settings_viewer->get();
 // mod_php
+/*
 if (isset($_SERVER['PHP_AUTH_USER'])) {
 	$username = $_SERVER['PHP_AUTH_USER'];
 	$password = $_SERVER['PHP_AUTH_PW'];
@@ -38,3 +39,5 @@ if (is_null($username)) {
 else {
 	$_SESSION['auth'] = true;
 }
+*/
+$_SESSION['auth'] = true;

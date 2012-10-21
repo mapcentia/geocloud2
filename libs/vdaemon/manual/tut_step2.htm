@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Tutorial - Step 2</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Tutorial</span><br>
+  Including vdaemon.php</h1>
+<p>On the previous step we created functioning web form. Now we need  adding validation to it. But before we will
+  start  defining any validation rules we must  perform several preparation steps necessary for any pages
+   validated by VDaemon.</p>
+<p>All properly written VDaemon pages (both &quot;form&quot; and &quot;action&quot; pages) must begin from <b>include('vdaemon.php');</b> statement.
+  Of course you must specify  right server path to vdaemon.php file. If you placed tutorial pages to your server
+    document root and VDaemon is installed to &quot;&lt;document root&gt;/vdaemon/&quot; folder then path will be &quot;vdaemon/vdaemon.php&quot;.
+    This &quot;include&quot; statement must be the first code on your page. No blank lines or spaces allowed before &quot;&lt;?php&quot;.
+This is required because VDaemon uses sessions and redirection headers.</p>
+<p>Add <b>&lt;?php include('vdaemon/vdaemon.php'); ?&gt;</b> statement to the beggining of the name.php and the hello.php
+  pages.</p>
+<p> VDaemon &quot;form&quot; page also must
+  end with <b>VDEnd();</b> function call. This function is defined in the vdaemon.php file. Add it to the end of
+  the name.php page. </p>
+<p>Now your sourse code must looks like:</p>
+<p><b>name.php</b> source code: </p>
+<pre class="sample"><b>&lt;?php include('vdaemon/vdaemon.php'); ?&gt;</b>
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello form.&lt;/p&gt;
+&lt;form method=&quot;POST&quot; action=&quot;hello.php&quot;&gt;
+  &lt;table cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;&gt;
+    &lt;tr&gt;
+      &lt;td&gt;
+        Enter your Name:
+      &lt;/td&gt;
+      &lt;td&gt;
+        &lt;input name=&quot;Name&quot; type=&quot;text&quot; size=&quot;25&quot;&gt;
+      &lt;/td&gt;
+    &lt;tr&gt;
+      &lt;td colspan=&quot;2&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Send&quot;&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<b>&lt;?php VDEnd(); ?&gt;</b>
+</pre>
+<p><b>hello.php</b> source code: </p>
+<pre class="sample"><b>&lt;?php include('vdaemon/vdaemon.php'); ?&gt;</b>
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello &lt;?php echo $_POST['Name']; ?&gt;!&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>Try to run the name.php page from your browser. After submitting the form you most probably will see this error:<br>
+  <b>VDaemon Error:</b> Page is accessed using POST method, but validators information isn't defined.</p>
+<p>It is because VDaemon &quot;action&quot; pages can accept only VDaemon forms data, but our form is not yet VDaemon
+  form. If in the future you will need to submit several VDaemon and non-VDaemon forms to the same &quot;action&quot; page
+  you can set VDAEMON_POST_SECURITY opion to &quot;false&quot; in the config.php file. This will turn error message
+  off and &quot;action&quot;
+  page will continue executing. But in this case it is possible to take special malicious actions to avoid validation
+  process and VDaemon can't guaranty that validation occured for all form submissions. </p>
+<p>Our &quot;action&quot; page is complete now. Further we will not add any changes to the hello.php file in this
+  tutorial. </p>
+<p>Continue to <a href="tut_step3.htm">Setting Up Form Tag</a></p>
+<p>&nbsp;</p>
+</body>
+</html>

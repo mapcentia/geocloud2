@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^$ registration_f.php
+RewriteRule ^/registration_p$ registration_p.php

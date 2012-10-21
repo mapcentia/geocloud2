@@ -1,2 +1,2 @@
-RewriteEngine On
-RewriteRule ^[a-z]* trackme.php [L]
+#RewriteEngine On
+#RewriteRule ^[a-z]* trackme.php [L]
