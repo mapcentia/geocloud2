@@ -388,9 +388,9 @@ function doQuery($queryType) {
 				}
 				else {
 					foreach($postgisObject -> getMetaData($table) as $key=>$value) {
-						//if ($key!=$primeryKey['attname']) {
+						if ($key!=$primeryKey['attname']) {
 							$fieldsArr[$table][] = $key;
-						//}
+						}
 					}
 				}
 				// We add "" around field names in sql, so sql keywords don't mess things up

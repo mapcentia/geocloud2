@@ -39,7 +39,7 @@ class GeometryColumns extends postgis {
 				$arr = $this -> array_push_assoc($arr,"available",$cartomobileArr[$key]->available);
 				$arr = $this -> array_push_assoc($arr,"cartomobiletype",$cartomobileArr[$key]->cartomobiletype);
 				$arr = $this -> array_push_assoc($arr,"properties",$cartomobileArr[$key]->properties);
-				if ($value['type']['type']=="decimal") {
+				if ($value['typeObj']['type']=="decimal") {
 					$arr = $this -> array_push_assoc($arr,"type","{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
 				}
 				else {

@@ -2,8 +2,8 @@
 include '../header.html'; 
 include('../../libs/vdaemon/vdaemon.php'); ?>
 
-<h1>Sign up</h1>
 <form id="Register" action="registration_p.php" method="POST" runat="vdaemon" disablebuttons="all">
+	<div style="height: 2em"><vlsummary class="error" headertext="" displaymode="paragraph"></div>
 	<div class="control-group">
 		<div class="controls">
 			<vllabel validators="UserID,UserIDExist" errclass="error" for="UserID" cerrclass="controlerror">User ID</vllabel>
@@ -57,12 +57,11 @@ include('../../libs/vdaemon/vdaemon.php'); ?>
 	-->
 	 <div class="control-group">
 	 	<div class="controls">
-	        <input type="submit" class="btn" value="Register">
+	        <input type="submit" class="btn btn-info" value="Sign up">
 	        <input type="reset" class="btn" value="Reset">
 		</div>
        </div>
       </div>
-  <div><vlsummary class="error" headertext="" displaymode="bulletlist"></div>
 </form>
 </div>
 </div>

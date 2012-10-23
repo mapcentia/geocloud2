@@ -2,8 +2,6 @@
 include("../server_header.inc");
 //include("../../inc/oauthcheck.php");
 
-
-
 if ($HTTP_RAW_POST_DATA) {
 	$obj = json_decode($HTTP_RAW_POST_DATA);
 }

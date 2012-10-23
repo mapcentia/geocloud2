@@ -54,27 +54,13 @@ $_SESSION['auth'] = true;
 $_SESSION['screen_name'] = $sUserID;
 //print_r($_SESSION);
 ?>
-<p>Great! You are now a user.</p>
-<table cellpadding="0" cellspacing="0" border="0">
-  <tr>
-    <td width="100">User</td>
-    <td width="300"><?php echo $_POST['UserID']; ?></td>
-  </tr>
-  <tr>
-    <td>Password</td>
-    <td><?php echo $_POST['Password']; ?></td>
-  </tr>
-  <tr>
-    <td>Name</td>
-    <td><?php echo $_POST['Name']; ?></td>
-  </tr>
-  <tr>
-    <td>E-mail:</td>
-    <td><?php echo $_POST['Email']; ?></td>
-  </tr>
-</table>
+
 </div>
 </div>
 </div>
 </body>
 </html>
+<?php
+if ($_SESSION['auth'] && $_SESSION['screen_name']) {
+	die("<script>window.location='/user/login/p'</script>");
+}?>

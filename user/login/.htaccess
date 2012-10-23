@@ -1,4 +1,4 @@
 
 RewriteEngine On
 RewriteRule ^$ login_f.php
-RewriteRule ^login_p$ login_p.php
+RewriteRule ^p$ login_p.php

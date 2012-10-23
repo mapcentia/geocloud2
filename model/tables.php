@@ -289,7 +289,7 @@ class table extends postgis {
 				$arr = $this -> array_push_assoc($arr,"link",$fieldconfArr[$key]->link);
 				$arr = $this -> array_push_assoc($arr,"linkprefix",$fieldconfArr[$key]->linkprefix);
 				$arr = $this -> array_push_assoc($arr,"properties",$fieldconfArr[$key]->properties);
-				if ($value['type']['type']=="decimal") {
+				if ($value['typeObj']['type']=="decimal") {
 					$arr = $this -> array_push_assoc($arr,"type","{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
 				}
 				else {

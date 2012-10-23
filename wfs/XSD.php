@@ -34,9 +34,9 @@ foreach($tables as $table)
 	$primeryKey = $tableObj->primeryKey;
 
 	foreach($tableObj->metaData as $key=>$value) {
-	 	//if ($key!=$primeryKey['attname']) {
+	 	if ($key!=$primeryKey['attname']) {
 			$fieldsArr[$table][] = $key;
-		//}
+		}
 	}
 	$fields = implode(",",$fieldsArr[$table]);
 	$sql="SELECT '{$fields}' FROM " . $postgisschema.".".$table;

@@ -103,25 +103,25 @@ include("html_header.php");
 			<div class="span4">
 				<div class="box">
 				<?php 
-				if (!$_REQUEST['name']) {
+				if (!$_SESSION['screen_name']) {
 					echo "<h2>Need a name!</h2>";
 					echo "<div class='inner'><a href='/' class='btn btn-danger'>Go back</a></div>";
 				}
 				else {
-					$name = postgis::toAscii($_REQUEST['name'],NULL,"_");
+					$name = postgis::toAscii($_SESSION['screen_name'],NULL,"_");
 					$db = new databases;
 					echo "<div class='inner'>";
-					$dbObj = $db -> createdb($name,$databaseTemplate,"LATIN1"); // databaseTemplate is set in conf/main.php
+					$dbObj = $db -> createdb($name,$databaseTemplate,"UTF8"); // databaseTemplate is set in conf/main.php
 					echo "</div>";
 					if ($dbObj) {
 						
-						echo "<h2>Your geocloud \"{$name}\" was created!</h2>"; 
-						echo "<div class='inner'><p>When asked type in \"{$name}\" and use \"1234\" for password. Remember to change it!</p>"; 
+						echo "<h2>Your geocloud \"{$name}\" was created!</h2>";
+						echo "<div class='inner'><p> </p>"; 
 						echo "<p><button class='btn btn-warning' onclick=\"window.location.href='/store/{$name}'\">Take me to my cloud</button></p></div>";
 					} 
 					else {
 						echo "<h2>Sorry, something went wrong. Try again</h2>";
-						echo "<div class='inner'><a href='/' class='btn btn-danger'>Go back</a></div>";
+						echo "<div class='inner'><a href='/user/signup' class='btn btn-danger'>Go back</a></div>";
 					}
 				}
 				?>

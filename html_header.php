@@ -14,7 +14,7 @@ include 'model/settings_viewer.php'; // we need to get pw for http authenticatio
 include 'libs/FirePHPCore/FirePHP.class.php';
 include 'libs/FirePHPCore/fb.php';
  
-$_SESSION['screen_name'] = $parts[2];
+//$_SESSION['screen_name'] = $parts[2];
 
 if ($parts[1]=="store" || $parts[1]=="editor") {
 	$db = new databases();
