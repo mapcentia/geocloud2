@@ -94,6 +94,7 @@ var mygeocloud_ol = (function() {
 	};
 	map = function(el,db,config) {
 		var prop,
+		baseLayer, // baseLayer wrapper
 		parentMap,
 		defaults = {
 			numZoomLevels : 20,
@@ -108,8 +109,6 @@ var mygeocloud_ol = (function() {
 		this.layerStr = "";
 		this.db = db;
 		this.geoLocation = {x:1,y:2};
-		//this.baseOSM;
-	    //this.baseAerial;
 		this.zoomToExtent = function() {
 			this.map.zoomToExtent(this.map.maxExtent);
 		};

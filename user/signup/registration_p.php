@@ -9,7 +9,6 @@ $postgisdb = 'mygeocloud';
 $sTable    = 'users';
 $postgisObject = new postgis();
 
-
 define('VDAEMON_PARSE', false);
 include('../../libs/vdaemon/vdaemon.php'); 
 
@@ -37,9 +36,7 @@ function UserIDCheck($sValue, &$oStatus)
     }
     else {
     	$oStatus->bValid = 1;
-
     }
-
 }
 $sUserID = VDFormat($_POST['UserID'], true);
 $sPassword = VDFormat($_POST['Password'], true);

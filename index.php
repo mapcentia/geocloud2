@@ -26,6 +26,10 @@
 			p {
 				margin: 0 0 10px;
 			}
+			.jumbotron::after {
+background: none;
+}
+
 		</style>
 
 		<script type="text/javascript">
@@ -67,7 +71,7 @@
 			</div>
 		</div>
 		<div class="jumbotron masthead" style="box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-		backgroudnd: url(/theme/images/bkgd-fabric.png) repeat top left;
+		background: url(/theme/images/cartographer.png) repeat top left;
 		">
 			<div class="container">
 				<h1>MyGeoCloud</h1>

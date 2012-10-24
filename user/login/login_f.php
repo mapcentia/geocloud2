@@ -5,7 +5,7 @@ if ($_SESSION['auth'] && $_SESSION['screen_name']) {
 	die("<script>window.location='/user/login/p'</script>");
 }
 include '../header.html';
-include ("../../conf/main.php");
+include '../../conf/main.php';
 include '../../libs/functions.php';
 include '../../model/settings_viewer.php';
 $postgisdb = 'mygeocloud';
