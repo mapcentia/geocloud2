@@ -36,7 +36,8 @@ var mygeocloud_ol = (function() {
 			parentThis = this,
 			defaults = {
 				styleMap: new OpenLayers.StyleMap({}),
-				projection: "900913"
+				projection: "900913",
+				rendererOptions: {zIndexing: true}
 			};
 			if(config) {
 				for(prop in config){
@@ -44,7 +45,8 @@ var mygeocloud_ol = (function() {
 				}
 			}
 			this.layer = new OpenLayers.Layer.Vector("Vector",{
-					styleMap: defaults.styleMap
+					styleMap: defaults.styleMap,
+					rendererOptions: defaults.rendererOptions
 				}
 			);
 			this.pointControl = new OpenLayers.Control.DrawFeature(this.layer,OpenLayers.Handler.Point);
