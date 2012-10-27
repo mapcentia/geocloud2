@@ -7,7 +7,6 @@ var scriptSource = (function(scripts) {
     }
     return script.getAttribute('src', -1);
 }());
-//alert(scriptSource);
 var mygeocloud_host;
 // In IE7 host name is missing if script url is relative 
 if (scriptSource.charAt(0)==="/") {

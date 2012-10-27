@@ -1,134 +1,166 @@
 <!DOCTYPE html>
 <html >
-  <head>
-    <title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="description" content="Store geographical data and make online maps" />
-	<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
-	<meta name="author" content="Martin Hoegh" />
-	<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
- 	<!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+	<head>
+		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="description" content="Store geographical data and make online maps" />
+		<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
+		<meta name="author" content="Martin Hoegh" />
+		<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
 
-    <link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
-   	<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
 
-    
-    <style type="text/css">
-      strong {
-      	font-size: 100%;
-      	font-weight: normal;
-      	color: black;
-      }
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-        back/ground: url(/theme/images/linen.png) repeat top left;
-		}
-	 .box {
-	 	-webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px;
-	 	adding: 10px;
-	 	display: block;
-	 	background: white;
-		background: -webkit-gradient(linear,left top,left bottom,color-stop(0%,white),color-stop(100%,#DDD));
-		background: -webkit-linear-gradient(top,white 0,#DDD 100%);
-		background: -moz-linear-gradient(top,white 0,#DDD 100%);
-		background: -ms-linear-gradient(top,white 0,#DDD 100%);
-		background: -o-linear-gradient(top,white 0,#DDD 100%);
-		background: linear-gradient(top,white 0,#DDD 100%);
-		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',endColorstr='#dddddd',GradientType=0);
-		border-left: solid 1px #BBB;
-		border-right: solid 1px #CCC;
-		border-bottom: solid 1px #AAA;
-		border-top: solid 1px #DDD;
-		-webkit-box-shadow: 0 1px 0 rgba(0,0,0,.1);
-		-moz-box-shadow: 0 1px 0 rgba(0,0,0,.1);
-		box-shadow: 0 1px 0 rgba(0,0,0,.1);
-	 }
-	 h2 {
-		display: block;
-		padding: 10px 12px;
-		margin-bottom: 12px;
-		font-size: 16px;
-		font-weight: 300;
-		color: #777;
-		border-bottom: 1px solid #E2E2E2;
-		-webkit-box-shadow: 0 1px 0 #fff;
-		-moz-box-shadow: 0 1px 0 #fff;
-		box-shadow: 0 1px 0 #fff;
-		-webkit-text-shadow: 0 1px 0 rgba(255,255,255,.6);
-		-moz-text-shadow: 0 1px 0 rgba(255,255,255,.6);
-		text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-		line-height: 20px;
-		}
-	.round_border {
-		border-radius: 4px 4px 4px 4px;
-		}
-	.round_border_bottom {
-		border-radius: 0px 0px 4px 4px;
-		}
-	.carousel-caption {
-		background: rgba(100, 100, 100, 0.75);
-		text-shadow: black 0 1px 2px;
-		text-rendering: optimizeLegibility;
-	}
-	.input-box {
-		width:96%;
-	}
+		<style type="text/css">
+			strong {
+				font-size: 100%;
+				font-weight: normal;
+				color: black;
+			}
+			body {
+				padding-top: 60px;
+				padding-bottom: 40px;back/
+				ground: url(/theme/images/linen.png) repeat top left;
+			}
+			.box {
+				-webkit-border-radius: 4px;
+				-moz-border-radius: 4px;
+				border-radius: 4px;
+				adding: 10px;
+				display: block;
+				background: white;
+				background: -webkit-gradient(linear,left top,left bottom,color-stop(0%,white),color-stop(100%,#DDD));
+				background: -webkit-linear-gradient(top,white 0,#DDD 100%);
+				background: -moz-linear-gradient(top,white 0,#DDD 100%);
+				background: -ms-linear-gradient(top,white 0,#DDD 100%);
+				background: -o-linear-gradient(top,white 0,#DDD 100%);
+				background: linear-gradient(top,white 0,#DDD 100%);
+				filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',endColorstr='#dddddd',GradientType=0);
+				border-left: solid 1px #BBB;
+				border-right: solid 1px #CCC;
+				border-bottom: solid 1px #AAA;
+				border-top: solid 1px #DDD;
+				-webkit-box-shadow: 0 1px 0 rgba(0,0,0,.1);
+				-moz-box-shadow: 0 1px 0 rgba(0,0,0,.1);
+				box-shadow: 0 1px 0 rgba(0,0,0,.1);
+			}
+			h2 {
+				display: block;
+				padding: 10px 12px;
+				margin-bottom: 12px;
+				font-size: 16px;
+				font-weight: 300;
+				color: #777;
+				border-bottom: 1px solid #E2E2E2;
+				-webkit-box-shadow: 0 1px 0 #fff;
+				-moz-box-shadow: 0 1px 0 #fff;
+				box-shadow: 0 1px 0 #fff;
+				-webkit-text-shadow: 0 1px 0 rgba(255,255,255,.6);
+				-moz-text-shadow: 0 1px 0 rgba(255,255,255,.6);
+				text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+				line-height: 20px;
+			}
+			.round_border {
+				border-radius: 4px 4px 4px 4px;
+			}
+			.round_border_bottom {
+				border-radius: 0px 0px 4px 4px;
+			}
+			.carousel-caption {
+				background: rgba(100, 100, 100, 0.75);
+				text-shadow: black 0 1px 2px;
+				text-rendering: optimizeLegibility;
+			}
+			.input-box {
+				width: 96%;
+			}
+			.navbar .brand-dev:hover {
+				text-decoration: none;
+			}
+			.navbar .brand-dev {
+				float: left;
+				display: block;
+				padding: 8px 20px 12px;
+				margin-left: -20px;
+				font-size: 20px;
+				font-weight: 200;
+				line-height: 1;
+				color: #ffffff;
+			}
+		</style>
+		<script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-28178450-1']);
+            _gaq.push(['_setDomainName', 'mygeocloud.com']);
+            _gaq.push(['_trackPageview']);
 
-    </style>
-	<script type="text/javascript">
+            (function() {
+                var ga = document.createElement('script');
+                ga.type = 'text/javascript';
+                ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(ga, s);
+            })();
 
-	  var _gaq = _gaq || [];
-	  _gaq.push(['_setAccount', 'UA-28178450-1']);
-	  _gaq.push(['_setDomainName', 'mygeocloud.com']);
-	  _gaq.push(['_trackPageview']);
-	
-	  (function() {
-	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	  })();
-	
-	</script>
-</head>
-<body>
-	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">MyGeoCloud</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-          		<li><a href="/developers/index.html">Developers</a></li>
-          		<li class="active"><a href="/about.html">About</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-    <div class="container">
+		</script>
+	</head>
+	<body>
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+					<a class="brand-dev" href="about.html">About</a>
+					<a class="brand" href="/">MyGeoCloud</a>
+					<div class="nav-collapse">
+						<ul class="nav">
+
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+		<div class="container">
 			<div class="row">
 				<div class="span8">
 					<div>
 						<h2 style="padding: 10px 0px;">About MyGeoCloud.com</h2>
-						<p>Are you in need for maps and data storage for your web project? And you need not just pretty maps, but also to do some spatial operations?</p>
-						<p>MyGeoCloud is about providing you with the awesome power of cutting edge geographical server software in no time. Here you find PostGIS, MapServer, OpenLayers, GeoExt, TileCache and more put together in a all-in-one-place solution.</p>
-						<p>Here is what you get:</p>
-						<ul>	
-							<li>A PostGis database for your data</li>
-							<li>WFS-T for accessing and editing your data</li>
-							<li>WMS for rendering your data into great looking maps</li>
-							<li>API for SQL and spatial operations</li>
-							<li>API for OpenLayers and GeoExt, so you can get maps into your apps</li>
-							<li>An administration page for the whole thing</li>
-							<li>I'm sure there is more, but I can't remember right now...</li>
+						<p>
+							Are you in need for maps and data storage for your web project? And you need not just pretty maps, but also to do some spatial operations?
+						</p>
+						<p>
+							MyGeoCloud is about providing you with the awesome power of cutting edge geographical server software in no time. Here you find PostGIS, MapServer, OpenLayers, GeoExt, TileCache and more put together in a all-in-one-place solution.
+						</p>
+						<p>
+							Here is what you get:
+						</p>
 						<ul>
+							<li>
+								A PostGis database for your data
+							</li>
+							<li>
+								WFS-T for accessing and editing your data
+							</li>
+							<li>
+								WMS for rendering your data into great looking maps
+							</li>
+							<li>
+								API for SQL and spatial operations
+							</li>
+							<li>
+								API for OpenLayers and GeoExt, so you can get maps into your apps
+							</li>
+							<li>
+								An administration page for the whole thing
+							</li>
+							<li>
+								I'm sure there is more, but I can't remember right now...
+							</li>
+							<ul>
 					</div>
 				</div>
 			</div>
@@ -136,9 +168,13 @@
 				<div class="span8">
 					<div>
 						<h2 style="padding: 10px 0px;">About the OpenSource project MyGeoCloud</h2>
-						<p>MyGeoCloud is an OpenSource project started by Martin Høgh. So if you want to run MyGeoCloud on your own server, get the source from <a target="_blank" href="https://github.com/mhoegh/MyGeoCloud">github.com/mhoegh/MyGeoCloud</a></p>
-						<p>And if you want to contribute, don't hesitate to contact me.</p>
-						
+						<p>
+							MyGeoCloud is an OpenSource project started by Martin Høgh. So if you want to run MyGeoCloud on your own server, get the source from <a target="_blank" href="https://github.com/mhoegh/MyGeoCloud">github.com/mhoegh/MyGeoCloud</a>
+						</p>
+						<p>
+							And if you want to contribute, don't hesitate to contact me.
+						</p>
+
 					</div>
 				</div>
 			</div>
@@ -146,30 +182,49 @@
 				<div class="span8">
 					<div>
 						<h2 style="padding: 10px 0px;">About Martin Høgh</h2>
-						<p>I've worked with geographical information and urban planning for over 10 years. Currently I'm employed by cowi.com</p>
-						<p><a target="_blank" href="http://about.me/mhoegh">about.me/mhoegh</a></p>
+						<p>
+							I've worked with geographical information and urban planning for over 10 years. Currently I'm employed by cowi.com
+						</p>
+						<p>
+							<a target="_blank" href="http://about.me/mhoegh">about.me/mhoegh</a>
+						</p>
 					</div>
 				</div>
 			</div>
 			<hr/>
 			<footer>
-			<div style="margin-bottom: 15px">
-				<g:plusone size="medium"></g:plusone>
-				<script type="text/javascript">
-				  (function() {
-					var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-					po.src = 'https://apis.google.com/js/plusone.js';
-					var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-				  })();
-				</script>
-				<a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
-				<div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="450" data-show-faces="false" data-font="verdana"></div>
-				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-				
-         	</div>	
-         		<p>All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a></p>
-         	</footer>
-	
-	</div>
-</body>
+				<div style="margin-bottom: 15px">
+					<g:plusone size="medium"></g:plusone>
+					<script type="text/javascript">
+                        (function() {
+                            var po = document.createElement('script');
+                            po.type = 'text/javascript';
+                            po.async = true;
+                            po.src = 'https://apis.google.com/js/plusone.js';
+                            var s = document.getElementsByTagName('script')[0];
+                            s.parentNode.insertBefore(po, s);
+                        })();
+					</script>
+					<a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
+					<div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="450" data-show-faces="false" data-font="verdana"></div>
+					<script>
+                        ! function(d, s, id) {
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (!d.getElementById(id)) {
+                                js = d.createElement(s);
+                                js.id = id;
+                                js.src = "//platform.twitter.com/widgets.js";
+                                fjs.parentNode.insertBefore(js, fjs);
+                            }
+                        }(document, "script", "twitter-wjs");
+					</script>
+
+				</div>
+				<p>
+					All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
+				</p>
+			</footer>
+
+		</div>
+	</body>
 </html>

@@ -100,35 +100,31 @@ background: none;
 			<div class="row">
 				<div class="span4">
 					<div>
-						<h2 style="padding: 10px 0px;">Get all-in-one solution for your geospatial data</h2>
+						<h2 style="padding: 10px 0px;">Add maps to your own apps</h2>
 						<p>
-							We offer geospatial storage, WMS and WFS-T services for accessing data and transactions. Besides that we offer a built-in
-							web mapping client and online editing of data. But that's not all! MyGeoCloud is also a platform on which you can build your own location based web applications
-							using our rich JavaScript API.
+							Analyze and visualize your data. Use a power full API for adding maps to your own apps.
 						</p>
 					</div>
 				</div>
 				<div class="span4">
 					<div>
-						<h2 style="padding: 10px 0px;">Build entirely on open source software</h2>
+						<h2 style="padding: 10px 0px;">Build on open source software</h2>
 						<p>
-							The core component of MyGeoCloud is the rock solid PostGIS database software, which is used for storage and geospatial operations.
-							We are using MapServer for map rendering and TileCache for, yes you guessed it right, tile caching. OpenLayers is used for the web map clients.
+							The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities.
 						</p>
 					</div>
 				</div>
 				<div class="span4">
 					<div>
-						<h2 style="padding: 10px 0px;">Pricing and feedback</h2>
+						<h2 style="padding: 10px 0px;">Manage data</h2>
 						<p>
-							Right now we are in a beta period. So for now you can use this awesome service for free! Don't forget to give us feed back - if some
-							thing does not work properly or if you are missing some features.
+							With a powerful adminstration tool you can manage your data online. 
 						</p>
 					</div>
 				</div>
 			</div>
 			<div class="row" style="margin-top:50px">
-				<div class="span8">
+				<div class="span8 offset2">
 
 					<div id="myCarousel" class="carousel slide">
 						<div class="carousel-inner">
@@ -167,21 +163,6 @@ background: none;
 						<a class="right carousel-control" href="#myCarousel" data-slide="next">&rsaquo;</a>
 					</div>
 
-				</div>
-				<div class="span4">
-					<div>
-						<h2 style="padding: 10px 0px;">All ready have a cloud?</h2>
-
-						<?php
-						if ($_GET['db'] == "false") {echo "<div class='alert alert-error'><a class='close' data-dismiss='alert'>×</a>Cloud does not exist</div>";
-						}
-						?>
-						<input type="text" class="input-box" placeholder="Name of cloud…" name="xname" id="xname"/>
-						<br/>
-						<button onclick="window.location='/store/' + document.getElementById('xname').value" type="submit" class="btn btn-primary">
-							Take me to my cloud
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
