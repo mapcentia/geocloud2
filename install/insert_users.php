@@ -13,19 +13,26 @@ try {
 	die();
 }
 
+$postgisdb = "mygeocloud";
+$postgis = new postgis();
 $i=1;
 
 foreach($arr['data'] as $db) {
 
-	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
-		echo "{$i} {$db}<br/>";
+	if ($db!="mygeocloud" AND $db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
+		echo "{$i}<br/>";
 		$postgisdb = $db;
 		//$dbc = new dbcheck();
 		$viewer = new Settings_viewer();
 		$arr = $viewer->get();
-		print_r($arr);
+		//print_r($arr);
+		$sql = "INSERT INTO users(screenname,pw) VALUES('{$db}','{$arr['data']['pw']}')";
+		echo $sql."<br>";
+		$postgis->execQuery($sql);
+		$postgis->PDOerror[0];
+		$i++;
 	}
-$i++;
+//if ($i>10) die();
 }
 
 
