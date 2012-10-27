@@ -112,7 +112,7 @@ var mygeocloud_ol = (function() {
 		this.db = db;
 		this.geoLocation = {x:1,y:2};
 		this.zoomToExtent = function() {
-			//this.map.zoomToExtent(this.map.maxExtent);
+			this.map.zoomToExtent(this.map.maxExtent);
 		};
 		this.zoomToExtentOfgeoJsonStore = function(store) {
 			this.map.zoomToExtent(store.layer.getDataExtent());
@@ -294,7 +294,7 @@ var mygeocloud_ol = (function() {
                 this.baseGHYBRID = new OpenLayers.Layer.Google(
                     "Google Hybrid", {
                         type: google.maps.MapTypeId.HYBRID,
-                        //wrapDateLine: true,
+                        wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
