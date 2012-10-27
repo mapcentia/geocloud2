@@ -44,8 +44,17 @@ $sUserID = postgis::toAscii($sUserID,NULL,"_");
 $sPassword=Settings_viewer::encryptPw($sPassword);
 
 $sQuery = "INSERT INTO $sTable (screenname,pw) VALUES('{$sUserID}','{$sPassword}')";
-echo $sQuery;
+<<<<<<< HEAD
+//echo $sQuery;
 $postgisObject->execQuery($sQuery);
+=======
+//echo $sQuery;
+<<<<<<< HEAD
+$postgisObject->execQuery($sQuery);
+=======
+//$postgisObject->execQuery($sQuery);
+>>>>>>> 356c5f7460ef52f2232faf125b07e743dffbf5d9
+>>>>>>> bf30418eeadad7fc17955cf2cbae57d6a75a407a
 
 $_SESSION['auth'] = true;
 $_SESSION['screen_name'] = $sUserID;
