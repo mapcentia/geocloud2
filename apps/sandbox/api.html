@@ -3,11 +3,6 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>OpenLayers Basic Single WMS Example</title>
-<script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
-<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" src="/js/ext/ext-all.js"></script>
-<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
-<script type="text/javascript" src="/js/GeoExt/lib/GeoExt.js"></script>
 <script type="text/javascript" src="/api/v1/js/api.js"></script>
 
 
@@ -19,33 +14,25 @@
 <script type="text/javascript">
 var fireSql;
 var ogrid;
-function init() {
+$(window).load(function() {
 	var cloud = new mygeocloud_ol.map("map","mydb");
-	cloud.addBaseLayer();
 	cloud.map.zoomToMaxExtent();
 
 	var store1 = new mygeocloud_ol.geoJsonStore("mydb");
 	cloud.addGeoJsonStore(store1);
 	store1.sql = "select *,buffer(the_geom,5) from test2";
-	store1.load();
+	//store1.load();
 	store1.onLoad = function(){
 		$("#grid").empty();
 		ogrid = new mygeocloud_ol.grid("grid",store1);
 		cloud.zoomToExtentOfgeoJsonStore(store1);
 	};
 	
-	cloud.addTileLayers(["public.test2"]);
-
-	fireSql = function(){
-		var sql = $("#sql").val();
-		store1.sql = sql;
-		store1.reset();
-		store1.load();
-	}
-}
+	//cloud.addTileLayers(["public.test2"]);
+})
 </script>
 </head>
-<body onload="init()">
+<body>
 <div id="map" style="width: 500px;height: 500px"></div>
 <div id="grid" style="width: 500px;height: 500px"></div>
 <textarea id="sql">select the_geom from test2</textarea>

@@ -11,10 +11,8 @@ try {
 } catch (Exception $e) {
 	echo $e->getMessage()."\n";
 	die();
-}
-
+}AS<DFZGJK,  
 $i=1;
-
 foreach($arr['data'] as $db) {
 
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
@@ -30,3 +28,4 @@ $i++;
 
 
 
+ 

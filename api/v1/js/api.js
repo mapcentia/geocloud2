@@ -99,7 +99,8 @@ var mygeocloud_ol = (function() {
 		parentMap,
 		defaults = {
 			numZoomLevels : 20,
-			projection : "EPSG:900913"
+			projection : "EPSG:900913",
+			maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
 		};
 		if(config) {
 			for(prop in config){
@@ -111,7 +112,7 @@ var mygeocloud_ol = (function() {
 		this.db = db;
 		this.geoLocation = {x:1,y:2};
 		this.zoomToExtent = function() {
-			this.map.zoomToExtent(this.map.maxExtent);
+			//this.map.zoomToExtent(this.map.maxExtent);
 		};
 		this.zoomToExtentOfgeoJsonStore = function(store) {
 			this.map.zoomToExtent(store.layer.getDataExtent());
@@ -215,9 +216,8 @@ var mygeocloud_ol = (function() {
 			projection : defaults.projection,
 			maxResolution : defaults.maxResolution,
 			minResolution : defaults.minResolution,
-			maxExtent : defaults.maxExtent
+			maxExtent : defaults.maxExtent,
 			//units : "m"
-			//maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
 		});
 		
 		var _map = this.map;
@@ -233,7 +233,7 @@ var mygeocloud_ol = (function() {
 	        "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
 	        "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
 	        "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
-            this.mapQuestOSM.wrapDateLine = false;
+            //this.mapQuestOSM.wrapDateLine = false;
             this.map.addLayer(this.mapQuestOSM);
         }
         this.addMapQuestAerial = function() {        
@@ -242,12 +242,12 @@ var mygeocloud_ol = (function() {
 	           "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
 	           "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
 	           "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
-			this.mapQuestAerial.wrapDateLine = false;
+			this.mapQuestAerial.wrapDateLine = true;
 			this.map.addLayer(this.mapQuestAerial);
 		}
 	   this.addOSM = function() {
 			this.baseOSM = new OpenLayers.Layer.OSM();
-			this.baseOSM.wrapDateLine = false;
+			this.baseOSM.wrapDateLine = true;
             this.map.addLayer(this.baseOSM);
         }
         this.addGoogleStreets = function() {
@@ -257,7 +257,7 @@ var mygeocloud_ol = (function() {
     			    "Google Streets", {
     		            type : G_NORMAL_MAP,
     				    sphericalMercator : true,
-    				    wrapDateLine: false,
+    				    wrapDateLine: true,
     				    numZoomLevels: 20
     				}
     			);
@@ -268,7 +268,7 @@ var mygeocloud_ol = (function() {
             try {
                 var gmap = new OpenLayers.Layer.Google(
                     "Google Streets", { // the default
-                        //wrapDateLine: false,
+                        wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
@@ -282,7 +282,7 @@ var mygeocloud_ol = (function() {
                     "Google Hybrid", {
                         type : G_HYBRID_MAP,
                         sphericalMercator : true,
-                        //wrapDateLine: false,
+                        wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
@@ -294,7 +294,7 @@ var mygeocloud_ol = (function() {
                 var gmap = new OpenLayers.Layer.Google(
                     "Google Hybrid", {
                         type: google.maps.MapTypeId.HYBRID,
-                        //wrapDateLine: false,
+                        wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
@@ -307,7 +307,7 @@ var mygeocloud_ol = (function() {
 				opacity : 1,
 				isBaseLayer : false,
 				visibility : true,
-				wrapDateLine : false,
+				wrapDateLine : true,
 				tileCached: false,
 				displayInLayerSwitcher: true,
 				name: null
@@ -344,7 +344,7 @@ var mygeocloud_ol = (function() {
 				opacity : 1,
 				isBaseLayer : false,
 				visibility : true,
-				wrapDateLine : false,
+				//wrapDateLine : false,
 				name: null,
 				schema: null
 			};
