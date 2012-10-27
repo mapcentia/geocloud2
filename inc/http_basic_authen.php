@@ -33,7 +33,7 @@ if (is_null($username)) {
 	// Text to send if user hits Cancel button
 	die("Could not authenticate you 2");
 
-} elseif (md5($password) != $response['data']['pw']) {
+} elseif (Settings_viewer::encryptPw($password) != $response['data']['pw']) {
 	header('WWW-Authenticate: Basic realm="' . $parts[2] . '"');
 	header('HTTP/1.0 401 Unauthorized');
 	header("Cache-Control: no-cache, must-revalidate");
