@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<?php session_start();?>
 <html >
 	<head>
 		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
@@ -62,7 +63,11 @@ background: none;
 							</li>
 				
 							<li>
+								<?php if 	(!$_SESSION['auth'] || !$_SESSION['screen_name']) {?>
 								<a href="/user/login">Log in</a>
+								<?php } else { ?>
+								<a href="/user/logout">Log out</a>
+								<?php } ?>
 							</li>
 
 						</ul>

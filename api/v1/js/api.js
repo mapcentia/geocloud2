@@ -91,7 +91,6 @@ var mygeocloud_ol = (function() {
 		this.reset = function() {
 			this.layer.destroyFeatures();
 		};
-			
 	};
 	map = function(el,db,config) {
 		var prop,
@@ -203,7 +202,7 @@ var mygeocloud_ol = (function() {
 			//theme: null,
 			controls : [ //new OpenLayers.Control.Navigation(),
 					//new OpenLayers.Control.PanZoomBar(),
-					//new OpenLayers.Control.LayerSwitcher()
+					//new OpenLayers.Control.LayerSwitcher(),
 		            new OpenLayers.Control.Zoom(),
 		            //new OpenLayers.Control.PanZoom(),
 					new OpenLayers.Control.TouchNavigation({
@@ -242,12 +241,12 @@ var mygeocloud_ol = (function() {
 	           "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
 	           "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg",
 	           "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
-			this.mapQuestAerial.wrapDateLine = true;
+			this.mapQuestAerial.wrapDateLine = false;
 			this.map.addLayer(this.mapQuestAerial);
 		}
 	   this.addOSM = function() {
 			this.baseOSM = new OpenLayers.Layer.OSM();
-			this.baseOSM.wrapDateLine = true;
+			this.baseOSM.wrapDateLine = false;
             this.map.addLayer(this.baseOSM);
         }
         this.addGoogleStreets = function() {
@@ -256,7 +255,7 @@ var mygeocloud_ol = (function() {
     			this.baseGNORMAL = new OpenLayers.Layer.Google(
     			    "Google Streets", {
     		            type : G_NORMAL_MAP,
-    				    sphericalMercator : true,
+    				    sphericalMercator : false,
     				    wrapDateLine: true,
     				    numZoomLevels: 20
     				}
@@ -268,7 +267,7 @@ var mygeocloud_ol = (function() {
             try {
                this.baseGNORMAL = new OpenLayers.Layer.Google(
                     "Google Streets", { // the default
-                        wrapDateLine: true,
+                        wrapDateLine: false,
                         numZoomLevels: 20
                     }
                 );
@@ -385,9 +384,6 @@ var mygeocloud_ol = (function() {
 		this.removeGeoJsonStore = function(store) {
 			this.map.removeLayer(store.layer);//??????????????
 		};
-		
-		
-		//this.addMapQuestOSM();
 		this.addGoogleStreets();
 		this.getCenter = function() {
 			var point = this.map.center;
