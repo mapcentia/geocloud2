@@ -32,7 +32,7 @@ class shapefile extends postgis {
 	public function loadInDb() {
 		$this->connect("PDO");
 		$table = new table($this->safeFile);
-		if ($this->pdo) {
+		if (!$this->pdo) {
 			$cmd = "shp2pgsql -W 'WINDOWS-1252' -I -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
 			$result = exec($cmd, $output);
 
