@@ -11,12 +11,15 @@ try {
 } catch (Exception $e) {
 	echo $e->getMessage()."\n";
 	die();
+<<<<<<< HEAD
 }
 
 $postgisdb = "mygeocloud";
 $postgis = new postgis();
+=======
+}AS<DFZGJK,  
+>>>>>>> 356c5f7460ef52f2232faf125b07e743dffbf5d9
 $i=1;
-
 foreach($arr['data'] as $db) {
 
 	if ($db!="mygeocloud" AND $db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
@@ -37,3 +40,4 @@ foreach($arr['data'] as $db) {
 
 
 
+ 

@@ -350,7 +350,7 @@ $(window).load(function() {
     }	});
     var extentStore = new mygeocloud_ol.geoJsonStore(screenName);
     extentStore.sql = "SELECT ST_Envelope(ST_SetSRID(ST_Extent(transform(the_geom,900913)),900913)) as the_geom FROM " + viewerSettings.data.default_extent;
-    extentStore.load();
+    //extentStore.load();
     extentStore.onLoad = function(){
 		// When the GeoJSON is loaded, zoom to its extent
 		cloud.zoomToExtentOfgeoJsonStore(extentStore);
