@@ -68,7 +68,7 @@ makeTileCacheFile($postgisdb);
 	<body>
 <div style="display:none">
 	<div id="map-settings">Some settings</div>
-	<div id="authentication">Change the password</div>
+	<div id="authentication">Change the HTTP authentication password for WFS</div>
 	<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
 	<div id="wms-dialog"><table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/" size="55"/></td></tr></tbody></table></div>
 </div>

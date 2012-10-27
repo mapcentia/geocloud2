@@ -17,6 +17,7 @@ if ($db -> doesDbExist(postgis::toAscii($_SESSION['screen_name'], NULL, "_"))) {
 	echo "<a style='margin-top:40px' href='/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
 } else {
 	echo "<a style='margin-top:40px' href='/createstore' class='btn btn-large btn-info'>Create MyGeoCloud</a>";
+	echo "<p>It will take a minute.</p>";
 }
 ?>
 </div>
