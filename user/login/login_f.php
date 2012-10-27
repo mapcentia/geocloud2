@@ -18,7 +18,7 @@ function UserIDCheck($sValue, &$oStatus) {
 	global $sUserID;
 	$sUserID = postgis::toAscii($sValue, NULL, "_");
 	$sPassword = VDFormat($_POST['Password'], true);
-	$sPassword = md5($sPassword);
+	$sPassword = Settings_viewer::encryptPw($sPassword);
 	ings_viewerssword;
 
 	$oStatus -> bValid = false;

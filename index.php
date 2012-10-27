@@ -107,7 +107,7 @@ background: none;
 					<div>
 						<h2 style="padding: 10px 0px;">Add maps to your own apps</h2>
 						<p>
-							Analyze and visualize your data. Use a power full API for adding maps to your own apps.
+							Analyze and visualize your data. Use a powerful API for adding maps to your own apps.
 						</p>
 					</div>
 				</div>
