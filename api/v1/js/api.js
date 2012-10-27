@@ -261,19 +261,20 @@ var mygeocloud_ol = (function() {
     				    numZoomLevels: 20
     				}
     			);
-    			this.map.addLayer(this.baseGNORMAL);
+    			
             }
-            catch(e) {alert(e.message)};
+            catch(e) {};
             // v3
             try {
-                var gmap = new OpenLayers.Layer.Google(
+               this.baseGNORMAL = new OpenLayers.Layer.Google(
                     "Google Streets", { // the default
                         wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
             }
-            catch(e){alert(e.message)}
+            catch(e){}
+            this.map.addLayer(this.baseGNORMAL);
         }
         this.addGoogleHybrid = function() {
             // v2
@@ -286,20 +287,20 @@ var mygeocloud_ol = (function() {
                         numZoomLevels: 20
                     }
                 );
-                this.map.addLayer(this.baseGHYBRID);
             }
             catch(e) {};
             // v3
             try {
-                var gmap = new OpenLayers.Layer.Google(
+                this.baseGHYBRID = new OpenLayers.Layer.Google(
                     "Google Hybrid", {
                         type: google.maps.MapTypeId.HYBRID,
-                        wrapDateLine: true,
+                        //wrapDateLine: true,
                         numZoomLevels: 20
                     }
                 );
             }
-            catch(e){}
+            catch(e){alert(e.message)}
+            this.map.addLayer(this.baseGHYBRID);
         }
 		this.addTileLayers = function(layers,config) {
 			var defaults = {
