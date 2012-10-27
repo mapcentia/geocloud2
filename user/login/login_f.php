@@ -79,6 +79,9 @@ if ($oVDaemonStatus && $oVDaemonStatus -> bValid) {
 	Not using MyGeoCloud? <b><a href="/user/signup/">Sign up</a></b>
 </p>
 </div>
+<div class="span4" style="border-left:4px solid #F1F1F1;display: block;height: 250px;margin-top: 0px;padding-left: 40px;padding-top: 40px">
+	<h1>Log in to MyGeoCloud</h1>
+</div>
 </div>
 </div>
 

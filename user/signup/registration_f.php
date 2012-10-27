@@ -64,6 +64,9 @@ include('../../libs/vdaemon/vdaemon.php'); ?>
       </div>
 </form>
 </div>
+<div class="span4" style="border-left:4px solid #F1F1F1;display: block;height: 250px;margin-top: 0px;padding-left: 40px;padding-top: 40px">
+	<h1>Sign up to MyGeoCloud</h1>
+</div>
 </div>
 </div>
 </body>

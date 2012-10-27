@@ -318,7 +318,6 @@ class logfile {
 	 */
 
 	function write($the_string) {
-		/*
 		 if ( $fh = fopen("/var/log/mygeocloud.log", "a+" ) ) {
 			fputs( $fh, $the_string, strlen($the_string) );
 			fclose( $fh );
@@ -327,7 +326,7 @@ class logfile {
 			else {
 			return false;
 			}
-		*/
+
 		
 	}
 }
