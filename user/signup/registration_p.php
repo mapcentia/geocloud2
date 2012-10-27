@@ -40,10 +40,12 @@ function UserIDCheck($sValue, &$oStatus)
 }
 $sUserID = VDFormat($_POST['UserID'], true);
 $sPassword = VDFormat($_POST['Password'], true);
+$sEmail = VDFormat($_POST['Email'], true);
+
 $sUserID = postgis::toAscii($sUserID,NULL,"_");
 $sPassword=Settings_viewer::encryptPw($sPassword);
 
-$sQuery = "INSERT INTO $sTable (screenname,pw) VALUES('{$sUserID}','{$sPassword}')";
+$sQuery = "INSERT INTO $sTable (screenname,pw,email) VALUES('{$sUserID}','{$sPassword}','{$sEmail}')";
 $postgisObject->execQuery($sQuery);
 
 $_SESSION['auth'] = true;
