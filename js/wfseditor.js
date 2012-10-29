@@ -237,7 +237,9 @@ function startWfsEdition(layerName) {
 			}) ]
 		});
 		
-		
+		Ext.getCmp('editcreatebutton').setDisabled(false);
+		Ext.getCmp('editdeletebutton').setDisabled(false);
+		Ext.getCmp('editsavebutton').setDisabled(false);
 
 		
 	};
@@ -245,6 +247,10 @@ $(window).load(function() {
 	var cloud = new mygeocloud_ol.map(null,screenName);
 	map = cloud.map;
 	cloud.click.activate();
+	cloud.addGoogleHybrid();
+	cloud.addMapQuestOSM();
+	cloud.addMapQuestAerial();
+	cloud.addOSM();
 	var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 	var treeConfig = [{
 		id: "baselayers",
@@ -263,17 +269,9 @@ $(window).load(function() {
                     var response = eval('(' + http.responseText + ')');
 					//console.log(response);
 					for ( var i = 0; i < response.data.length; ++i) {
-						if(response.data[i].layergroup){
-							groups[i] = response.data[i].layergroup;
-						}
-						else{
-							//groups[i] = "Default group";
-						}
+					   groups[i] = response.data[i].layergroup;
 					}
-					
 					var arr = array_unique(groups);
-
-				
 							for ( var u = 0; u < response.data.length; ++u) {
 								//console.log(response.data[u].baselayer);
 					
@@ -296,20 +294,15 @@ $(window).load(function() {
 									);
 								
 							}
-				
-						
-					
-					
-					
-
                     for (var i = 0; i < arr.length; ++i) {	
 						var l = [];
 							for ( var u = 0; u < response.data.length; ++u) {
 								//console.log(response.data[u].baselayer);
+								console.log(response.data[u].f_table_title);
 								if (response.data[u].layergroup==arr[i]) {
 									l.push(
 										{
-	                                     text:  response.data[u].f_table_name,
+	                                     text: (response.data[u].f_table_title===null || response.data[u].f_table_title==="") ? response.data[u].f_table_name : response.data[u].f_table_title,
 	                                     id:  response.data[u].f_table_schema + "." + response.data[u].f_table_name,
 	                                     leaf: true,
 	                                     checked: false
@@ -349,13 +342,11 @@ $(window).load(function() {
 			}
     }	});
     var extentStore = new mygeocloud_ol.geoJsonStore(screenName);
-    extentStore.sql = "SELECT ST_Envelope(ST_SetSRID(ST_Extent(transform(the_geom,900913)),900913)) as the_geom FROM " + viewerSettings.data.default_extent;
-    //extentStore.load();
+    extentStore.sql = "SELECT ST_Envelope(ST_SetSRID(ST_Extent(ST_Transform(the_geom,900913)),900913)) as the_geom FROM " + viewerSettings.data.default_extent;
+    extentStore.load();
     extentStore.onLoad = function(){
 		// When the GeoJSON is loaded, zoom to its extent
 		cloud.zoomToExtentOfgeoJsonStore(extentStore);
-		//cloud.map.getLayersByName("test")[0].setVisibility(true);
-		//console.log(cloud.map.getLayersByName("test")[0]);
 		};
     treeConfig = new OpenLayers.Format.JSON().write(treeConfig, true);
     // create the tree with the configuration from above
@@ -405,12 +396,26 @@ $(window).load(function() {
          }
     	}
      });
-	wfsTools = [ new GeoExt.Action( {
+	wfsTools = [{
+        text : "Edit layer",
+        id : "editlayerbutton",
+        disabled: true,
+        handler : function(thisBtn,event) {
+            var node = tree.getSelectionModel().getSelectedNode();
+            //console.log(node.id);
+            var id = node.id.split(".");            
+            startWfsEdition(id[1]);
+        }
+    }, '-', new GeoExt.Action( {
 		control : drawControl,
 		text : "Create",
+		id: "editcreatebutton",
+		disabled: true,
 		enableToggle : true
 	}), {
 		text : "Delete",
+		id: "editdeletebutton",
+		disabled: true,
 		handler : function() {
 			gridPanel.getSelectionModel().each(function(rec) {
 				var feature = rec.get("feature");
@@ -425,6 +430,8 @@ $(window).load(function() {
 		}
 	}, {
 		text : "Save",
+		disabled: true,
+		id: "editsavebutton",
 		handler : function() {
 			// alert(layer.features.length);
 		if (modifyControl.feature) {
@@ -433,17 +440,7 @@ $(window).load(function() {
 		store.commitChanges();
 		saveStrategy.save();
 	}
-	},{
-		text : "Edit layer",
-		id : "editlayerbutton",
-		disabled: true,
-		handler : function(thisBtn,event) {
-			var node = tree.getSelectionModel().getSelectedNode();
-			//console.log(node.id);
-			var id = node.id.split(".");			
-			startWfsEdition(id[1]);
-		}
-	},{
+	}, '-',{
 		text : "Embed",
 		id : "Embed",
 		disabled: false,

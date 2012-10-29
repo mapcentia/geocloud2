@@ -227,7 +227,7 @@ var mygeocloud_ol = (function() {
 		});
         this.map.addLayers([vectors]);
 		this.addMapQuestOSM = function() {
-	        this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM Tiles",
+	        this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM",
 	        ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
 	        "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
 	        "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
@@ -245,7 +245,7 @@ var mygeocloud_ol = (function() {
 			this.map.addLayer(this.mapQuestAerial);
 		}
 	   this.addOSM = function() {
-			this.baseOSM = new OpenLayers.Layer.OSM();
+			this.baseOSM = new OpenLayers.Layer.OSM("OSM");
 			this.baseOSM.wrapDateLine = false;
             this.map.addLayer(this.baseOSM);
         }

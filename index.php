@@ -106,6 +106,22 @@ background: none;
 				<div class="span4">
 					<div>
 						<h2 style="padding: 10px 0px;">Add maps to your own apps</h2>
+					</div>
+				</div>
+				<div class="span4">
+					<div>
+						<h2 style="padding: 10px 0px;">Build on open source software</h2>
+					</div>
+				</div>
+				<div class="span4">
+					<div>
+						<h2 style="padding: 10px 0px;">Manage data</h2>
+						</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span4">
+					<div>
 						<p>
 							Analyze and visualize your data. Use a powerful API for adding maps to your own apps.
 						</p>
@@ -113,7 +129,6 @@ background: none;
 				</div>
 				<div class="span4">
 					<div>
-						<h2 style="padding: 10px 0px;">Build on open source software</h2>
 						<p>
 							The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities.
 						</p>
@@ -121,7 +136,6 @@ background: none;
 				</div>
 				<div class="span4">
 					<div>
-						<h2 style="padding: 10px 0px;">Manage data</h2>
 						<p>
 							With a powerful adminstration tool you can manage your data online. 
 						</p>
