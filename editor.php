@@ -4,8 +4,8 @@ include ("html_header.php");
 $_SESSION['screen_name'] = $parts[2];
 ?>
 
-<script type="text/javascript">var screenName = '<?php echo $_SESSION['screen_name']; ?>'</script>
-<script type="text/javascript">var schema = '<?php echo $schemaFromUri; ?>'</script>
+<script type="text/javascript">var screenName =  '<?php echo $_SESSION['screen_name']; ?>'</script>
+<script type="text/javascript">var schema =  '<?php echo $schemaFromUri; ?>'</script>
 <script type="text/javascript" src="/api/v1/js/api.js"></script>
 <script type="text/javascript" src="/js/wfseditor.js"></script>
 <script type="text/javascript" src="/js/attributeform.js"></script>
@@ -47,7 +47,14 @@ $_SESSION['screen_name'] = $parts[2];
 <body>
 	<div id="mb7"></div>
 	<div id="mapel" style=""></div>
-	<div id="instructions"><p style="padding: 10px">Make a layer name in the layer tree active and click 'Edit layer'. Only Features in the view port will be loaded. So on big layers zoom in before you start to edit.</p></div>
+	<div id="instructions">
+		<p style="padding: 10px">
+			Make a layer name in the layer tree active and click 'Edit layer'. Only Features in the view port will be loaded. So on big layers zoom in before you start to edit.
+		</p>
+		<p style="padding: 10px">
+			For loading of tiles check the box beside the layer name.
+		</p>
+	</div>
 	<?php
-		include ("html_footer.php");
+	include ("html_footer.php");
 	?>

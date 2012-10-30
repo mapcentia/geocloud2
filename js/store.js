@@ -977,7 +977,7 @@ $(window).load(function() {"use strict";
         }
     };
     var accordion = new Ext.Panel({
-        title : 'Settings and stuff',
+        title : 'Settings',
         layout : 'accordion',
         region : 'east',
         collapsible : true,
@@ -991,7 +991,7 @@ $(window).load(function() {"use strict";
             animate : true
         },
         items : [httpAuth.form, viewerSettings.form, {
-            title : 'WFS stuff',
+            title : 'WFS',
             border : false,
             bodyStyle : {
                 background : '#ffffff',
@@ -999,7 +999,7 @@ $(window).load(function() {"use strict";
             },
             contentEl : "wfs-dialog"
         }, {
-            title : 'WMS stuff',
+            title : 'WMS',
             border : false,
             bodyStyle : {
                 background : '#ffffff',
