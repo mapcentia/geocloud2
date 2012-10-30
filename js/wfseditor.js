@@ -480,13 +480,14 @@ $(window).load(function() {
 			tbar : wfsTools
 		}, {
 			region : "south",
-			title: "Attribut table",
+			title: "Attribute table",
 			split : true,
 			frame : false,
 			layout : 'fit',
 			height : 300,
 			collapsible: true,
-			collapsed: false
+			collapsed: false,
+			contentEl : "instructions"
 		},
 		new Ext.Panel( {
 			frame : false,

@@ -47,6 +47,7 @@ $_SESSION['screen_name'] = $parts[2];
 <body>
 	<div id="mb7"></div>
 	<div id="mapel" style=""></div>
+	<div id="instructions"><p style="padding: 10px">Make a layer name in the layer tree active and click 'Edit layer'. Only Features in the view port will be loaded. So on big layers zoom in before you start to edit.</p></div>
 	<?php
 		include ("html_footer.php");
 	?>
