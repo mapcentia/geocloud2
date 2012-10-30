@@ -58,6 +58,7 @@ var mygeocloud_ol = (function() {
 				renderIntent: "temporary"
 				//onSelect: function() {alert('')} 
 			});
+			this.selectFeatureControl.handlers.feature.stopDown = false;
 			this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {
 			
 			});
@@ -326,18 +327,23 @@ var mygeocloud_ol = (function() {
 			return layersArr;
 		};
 		this.createTileLayer = function(layer,defaults) {
-			var parts = [];
-			parts = layer.split(".");
-			var l = new OpenLayers.Layer.WMS(defaults.name,
-					host + "/wms/" + this.db + "/" + parts[0]
-							+ "/?", {
-						layers : layer,
-						transparent : true
-					}, defaults
-				);
-			l.id = layer;
-			return l;
-		};
+            var parts = [];
+            parts = layer.split(".");
+            if (!defaults.tileCached) {
+                var url = host + "/wms/" + this.db + "/" + parts[0] + "/?";
+            }
+            else {
+                var url = host + "/wms/" + this.db + "/" + parts[0] + "/tilecache/?";
+            }
+            var l = new OpenLayers.Layer.WMS(defaults.name,
+                    url, {
+                        layers : layer,
+                        transparent : true
+                    }, defaults
+                );
+            l.id = layer;
+            return l;
+        };
 		this.addTileLayerGroup = function(layers,config) {
 			var defaults = {
 				singleTile : false,
@@ -379,6 +385,7 @@ var mygeocloud_ol = (function() {
 		};
 		this.addControl = function(control) {
 			this.map.addControl(control);
+			control.handlers.feature.stopDown = false;
 			control.activate();
 		}; 
 		this.removeGeoJsonStore = function(store) {
