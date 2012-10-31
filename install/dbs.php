@@ -23,7 +23,7 @@ foreach($arr['data'] as $db) {
 		$dbc = new dbcheck();
 
 		// Check if postgis is installed
-		$checkPostGIS = $dbc->isPostGISInstalled();
+		//$checkPostGIS = $dbc->isPostGISInstalled();
 		if ($checkPostGIS['success']) {
 			echo "<td style='color:green'>V</td>";
 		}
@@ -32,7 +32,7 @@ foreach($arr['data'] as $db) {
 		}
 
 		// Check if schema "settings" is loaded
-		$checkMy = $dbc->isSchemaInstalled();
+		//$checkMy = $dbc->isSchemaInstalled();
 		if ($checkMy['success']) {
 			echo "<td style='color:green'>V";
 			$checkView = $dbc->isViewInstalled();
