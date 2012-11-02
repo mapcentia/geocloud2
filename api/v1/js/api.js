@@ -17,6 +17,7 @@ if (scriptSource.charAt(0) === "/") {
 document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 //document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
+document.write("<script src='https://raw.github.com/mhoegh/AnimatedCluster/master/AnimatedCluster.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
@@ -24,10 +25,14 @@ document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'
 //document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
 
 var mygeocloud_ol = (function() {"use strict";
-    var map, host = mygeocloud_host, parentThis = this, geoJsonStore = function(db, config) {
-        var prop, parentThis = this, defaults = {
-            styleMap : new OpenLayers.StyleMap({}),
+    var map, host = mygeocloud_host, parentThis = this;
+    var geoJsonStore = function(db, config) {
+        var prop, parentThis = this;
+        var defaults = {
+            styleMap : null,
             projection : "900913",
+            strategies : null,
+            visibility : true,
             rendererOptions : {
                 zIndexing : true
             }
@@ -36,11 +41,94 @@ var mygeocloud_ol = (function() {"use strict";
             for (prop in config) {
                 defaults[prop] = config[prop];
             }
-        }
+        };
+        // Map member for parent map obj. Set when store is added to a map
+        this.map = null;
+        // Layer Def
         this.layer = new OpenLayers.Layer.Vector("Vector", {
             styleMap : defaults.styleMap,
-            rendererOptions : defaults.rendererOptions
+            visibility : defaults.visibility,
+            renderers : ['Canvas', 'SVG', 'VML'],
+            rendererOptions : defaults.rendererOptions,
+            strategies : [new OpenLayers.Strategy.AnimatedCluster({
+                distance : 45,
+                animationMethod : OpenLayers.Easing.Expo.easeOut,
+                animationDuration : 10,
+                autoActivate : false
+            })]
         });
+        this.moved = function() {
+         
+        };
+        /*
+         this.layer.strategies[0].activate = function() {
+         var activated = OpenLayers.Strategy.prototype.activate.call(this);
+         if (activated) {
+         var features = [];
+         var clusters = this.layer.features;
+         for (var i = 0; i < clusters.length; i++) {
+         var cluster = clusters[i];
+         if (cluster.cluster) {
+         for (var j = 0; j < cluster.cluster.length; j++) {
+         features.push(cluster.cluster[j]);
+         }
+         } else {
+         features.push(cluster);
+         }
+         }
+         this.layer.removeAllFeatures();
+         this.layer.events.on({
+         "beforefeaturesadded" : this.cacheFeatures,
+         "moveend" : this.cluster,
+         scope : this
+         });
+         this.layer.addFeatures(features);
+         this.clearCache();
+         }
+         return activated;
+         }
+
+         this.layer.strategies[0].deactivate = function() {
+         var deactivated = OpenLayers.Strategy.prototype.deactivate.call(this);
+         if (deactivated) {
+         var features = [];
+         var clusters = this.layer.features;
+         for (var i = 0; i < clusters.length; i++) {
+         var cluster = clusters[i];
+         if (cluster.cluster) {
+         for (var j = 0; j < cluster.cluster.length; j++) {
+         features.push(cluster.cluster[j]);
+         }
+         } else {
+         features.push(cluster);
+         }
+         }
+         this.layer.removeAllFeatures();
+         this.layer.events.un({
+         "beforefeaturesadded" : this.cacheFeatures,
+         "moveend" : this.cluster,
+         scope : this
+         });
+         this.layer.addFeatures(features);
+         this.clearCache();
+         }
+         return deactivated;
+         };
+         */
+        this.clusterDeactivate = function() {
+            parentThis.layer.strategies[0].deactivate();
+            parentThis.layer.refresh({
+                forces : true
+            });
+        };
+        this.clusterActivate = function() {
+            parentThis.layer.strategies[0].activate();
+            parentThis.layer.refresh({
+                forces : true
+            });
+        };
+
+        //this.clusterDeactivate();
         this.pointControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Point);
         this.lineControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Path);
         this.polygonControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Polygon);
@@ -48,8 +136,10 @@ var mygeocloud_ol = (function() {"use strict";
             //hover: true,
             multiple : false,
             highlightOnly : true,
-            renderIntent : "temporary"
-            //onSelect: function() {alert('')}
+            renderIntent : "temporary",
+            onSelect : function() {
+                alert('')
+            }
         });
         //this.selectFeatureControl.handlers.feature.stopDown = false;
         this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {
@@ -61,6 +151,13 @@ var mygeocloud_ol = (function() {"use strict";
         this.featureStore = null;
         this.sql = "";
         this.load = function(doNotShowAlertOnError) {
+            try {
+                var map = parentThis.map;
+                console.log(map.getCenter().lat.toString());
+                this.sql = this.sql.replace("[centerX]", map.getCenter().lat.toString());
+                console.log(this.sql);
+            } catch(e) {
+            }
             $.ajax({
                 dataType : 'jsonp',
                 data : 'q=' + this.sql + '&srs=' + defaults.projection,
@@ -69,11 +166,10 @@ var mygeocloud_ol = (function() {"use strict";
                 success : function(response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
-                    } 
-                    if (response.success === true){
+                    }
+                    if (response.success === true) {
                         parentThis.geoJSON = response;
-                        var geojson_format = new OpenLayers.Format.GeoJSON();
-                        parentThis.layer.addFeatures(geojson_format.read(response));
+                        parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
                         parentThis.featureStore = new GeoExt.data.FeatureStore({
                             fields : response.forStore,
                             layer : parentThis.layer
@@ -108,8 +204,13 @@ var mygeocloud_ol = (function() {"use strict";
             x : 1,
             y : 2
         };
-        this.zoomToExtent = function() {
-            this.map.zoomToExtent(this.map.maxExtent);
+        this.zoomToExtent = function(extent,closest) {
+            if (!extent){
+                this.map.zoomToExtent(this.map.maxExtent);
+            }
+            else {
+                this.map.zoomToExtent(new OpenLayers.Bounds(extent),closest);
+            }
         };
         this.zoomToExtentOfgeoJsonStore = function(store) {
             this.map.zoomToExtent(store.layer.getDataExtent());
@@ -333,12 +434,16 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.removeLayer(arr[0]);
         };
         this.addGeoJsonStore = function(store) {
+            store.map = this.map;
+            // set the parent map obj
             this.map.addLayers([store.layer]);
             this.map.addControl(store.pointControl);
             this.map.addControl(store.lineControl);
             this.map.addControl(store.polygonControl);
             this.map.addControl(store.selectFeatureControl);
             this.map.addControl(store.modifyControl);
+            this.map.events.register("moveend", null, store.moved);
+
         };
         this.addControl = function(control) {
             this.map.addControl(control);
