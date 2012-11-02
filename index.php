@@ -94,7 +94,7 @@ background: none;
 						<a href="/about.html">About</a>
 					</li>
 					<li>
-						Beta
+						Test
 					</li>
 				</ul>
 			</div>
