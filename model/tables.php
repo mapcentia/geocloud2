@@ -172,25 +172,6 @@ class table extends postgis {
 		}
 		return $response;
 	}
-	/*
-	function destroyRecord($recordId,$keyName) // Geometry columns
-	{
-		$sql = "BEGIN;";
-		$sql.= "DELETE FROM {$this -> table} WHERE {$keyName}='{$recordId}';";
-		$sql.= "DROP TABLE {$recordId} CASCADE;"; // Also drop table
-		$sql.= "COMMIT;";
-		//echo $sql;
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-			$response['success'] = true;
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $sql;
-		}
-		return $response;
-	}
-	 */
 	function updateRecord($data,$keyName) // All tables
 	{
 		$data = $this->makeArray($data);

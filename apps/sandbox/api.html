@@ -92,20 +92,20 @@
 			var store1;
             $(window).load(function() {
                 var cloud = new mygeocloud_ol.map("map", "mh");
-                //cloud.zoomToExtent([1048024.7345447, 7787676.97359, 1080128.2864201, 7793409.7507106],true);
+                cloud.zoomToExtent([1048024.7345447, 7787676.97359, 1080128.2864201, 7793409.7507106],true);
                 
                 store1 = new mygeocloud_ol.geoJsonStore("mh",{visibility:false});
                 store2 = new mygeocloud_ol.geoJsonStore("mh",{styleMap:styleMap});
                 store1.moved = function() {
                 	console.log(cloud.getExtent());
-                  //store1.load();
+                    //store1.load();
                 }
                 store1.layer.setVisibility(true);
-                cloud.addGeoJsonStore(store2);
+               // cloud.addGeoJsonStore(store2);
                 cloud.addGeoJsonStore(store1);
-                store2.clusterActivate();
+                //store2.clusterActivate();
                 //store1.polygonControl.activate();
-                store1.sql = "select the_geom from public.adresser order by gid limit 10";
+                store1.sql = "select the_geom from public.adresser order by gid limit 10 ${bbox}";
                 store2.sql = "select the_geom from public.adresser order by gid limit 1000";
                 store1.load();
                 
@@ -114,7 +114,7 @@
                     $("#grid").empty();
                     //ogrid = new mygeocloud_ol.grid("grid",store1);
                     //cloud.zoomToExtentOfgeoJsonStore(store1);
-                    store2.load();
+                   // store2.load();
                     store1.onLoad = function() {};
                 };
 

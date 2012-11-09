@@ -51,6 +51,7 @@ var mygeocloud_ol = (function() {"use strict";
             renderers : ['Canvas', 'SVG', 'VML'],
             rendererOptions : defaults.rendererOptions,
             strategies : [new OpenLayers.Strategy.AnimatedCluster({
+            //strategies : [new OpenLayers.Strategy.Cluster({
                 distance : 45,
                 animationMethod : OpenLayers.Easing.Expo.easeOut,
                 animationDuration : 10,
@@ -142,6 +143,7 @@ var mygeocloud_ol = (function() {"use strict";
             }
         });
         //this.selectFeatureControl.handlers.feature.stopDown = false;
+       
         this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {
 
         });
@@ -153,14 +155,20 @@ var mygeocloud_ol = (function() {"use strict";
         this.load = function(doNotShowAlertOnError) {
             try {
                 var map = parentThis.map;
-                console.log(map.getCenter().lat.toString());
-                this.sql = this.sql.replace("[centerX]", map.getCenter().lat.toString());
+                this.sql = this.sql.replace("${centerX}", map.getCenter().lat.toString());
+                this.sql = this.sql.replace("${centerY}", map.getCenter().lon.toString());
+                this.sql = this.sql.replace("${minX}", map.getExtent().left);
+                this.sql = this.sql.replace("${maxX}", map.getExtent().right);
+                this.sql = this.sql.replace("${minY}", map.getExtent().bottom);
+                this.sql = this.sql.replace("${maxY}", map.getExtent().top);
+                this.sql = this.sql.replace("${bbox}", map.getExtent().toString());
+
                 console.log(this.sql);
             } catch(e) {
             }
             $.ajax({
                 dataType : 'jsonp',
-                data : 'q=' + this.sql + '&srs=' + defaults.projection,
+                data : 'q=' + encodeURIComponent(this.sql) + '&srs=' + defaults.projection,
                 jsonp : 'jsonp_callback',
                 url : host + '/api/v1/sql/' + db,
                 success : function(response) {
@@ -365,6 +373,10 @@ var mygeocloud_ol = (function() {"use strict";
                 alert(e.message)
             }
             this.map.addLayer(this.baseGHYBRID);
+            return(this.baseGHYBRID);
+        }
+        this.setBaseLayer = function(baseLayer){
+            this.map.setBaseLayer(baseLayer);
         }
         this.addTileLayers = function(layers, config) {
             var defaults = {
@@ -447,7 +459,7 @@ var mygeocloud_ol = (function() {"use strict";
         };
         this.addControl = function(control) {
             this.map.addControl(control);
-            //control.handlers.feature.stopDown = false;
+            control.handlers.feature.stopDown = false;
             control.activate();
         };
         this.removeGeoJsonStore = function(store) {
@@ -566,6 +578,7 @@ var mygeocloud_ol = (function() {"use strict";
     };
 
     var grid = function(el, store, config) {
+        var prop;
         var defaults = {
             height : 300,
             selectControl : {
@@ -613,6 +626,8 @@ var mygeocloud_ol = (function() {"use strict";
             height : defaults.height,
             items : [this.grid]
         });
+        this.grid.getSelectionModel().bind().handlers.feature.stopDown = false;
+        this.selectionModel=this.grid.getSelectionModel().bind();
     };
     return {
         geoJsonStore : geoJsonStore,

@@ -16,6 +16,7 @@ class sqlapi extends postgis {
 		$result = $this->execQuery($sqlView);
 		if (!$this->PDOerror) {
 			$arrayWithFields = $this->getMetaData($view);
+			//print_r($arrayWithFields);
 
 			foreach($arrayWithFields as $key=>$arr) {
 				if ($arr['type']=="geometry"){

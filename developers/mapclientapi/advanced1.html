@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+	<!--#include virtual="../header.html" -->
+	<body onload="prettyPrint()">
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+					<a class="brand-dev" href="/developers/index.html">Developers</a>
+					<a class="brand" href="/">MyGeoCloud</a>
+					<div class="nav-collapse">
+						<ul class="nav">
+							<li>
+								<a href="/developers/sqlapi/index.html">SQL API</a>
+							</li>
+							<!--<li><a href="/developers/wfsapi/index.html">WFS API</a></li>-->
+							<!--<li><a href="/developers/wmsapi/index.html">WMS API</a></li>-->
+							<ul class="nav">
+								<li class="dropdown">
+									<a href="#"
+									class="dropdown-toggle"
+									data-toggle="dropdown">Map API<b class="caret"></b> </a>
+									<ul class="dropdown-menu">
+										<li>
+											<a href="index.html">Basic examples</a>
+										</li>
+										<li class="active">
+											<a href="advanced1.html">Advanced examples 1</a>
+										</li>
+									</ul>
+								</li>
+							</ul>
+
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class="hero-unit">
+				<h1>Map API</h1>
+				<p>
+					The Map client API makes it very easy to add maps to your own web pages or apps. The API works with the SQL API and WMS API. Below are a bit more advanced examples.
+				</p>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<script>
+                        $(window).load(function() {
+                            var colors = {
+                                low : "rgb(181, 226, 140)",
+                                middle : "rgb(241, 211, 87)",
+                                high : "rgb(253, 156, 115)"
+                            };
+                            // Define three rules to style the cluster features.
+                            var lowRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.LESS_THAN,
+                                    property : "count",
+                                    value : 15
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.low,
+                                    fillOpacity : 0.9,
+                                    strokeColor : colors.low,
+                                    strokeOpacity : 0.5,
+                                    strokeWidth : 12,
+                                    pointRadius : 10,
+                                    label : "${count}",
+                                    labelOutlineWidth : 1,
+                                    fontColor : "#ffffff",
+                                    fontOpacity : 0.8,
+                                    fontSize : "12px"
+                                }
+                            });
+                            var middleRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.BETWEEN,
+                                    property : "count",
+                                    lowerBoundary : 15,
+                                    upperBoundary : 50
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.middle,
+                                    fillOpacity : 0.9,
+                                    strokeColor : colors.middle,
+                                    strokeOpacity : 0.5,
+                                    strokeWidth : 12,
+                                    pointRadius : 15,
+                                    label : "${count}",
+                                    labelOutlineWidth : 1,
+                                    fontColor : "#ffffff",
+                                    fontOpacity : 0.8,
+                                    fontSize : "12px"
+                                }
+                            });
+                            var highRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                                    property : "count",
+                                    value : 50
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.high,
+                                    fillOpacity : 0.9,
+                                    strokeColor : colors.high,
+                                    strokeOpacity : 0.5,
+                                    strokeWidth : 12,
+                                    pointRadius : 20,
+                                    label : "${count}",
+                                    labelOutlineWidth : 1,
+                                    fontColor : "#ffffff",
+                                    fontOpacity : 0.8,
+                                    fontSize : "12px"
+                                }
+                            });
+                            // Create a Style that uses the three previous rules
+                            var style = new OpenLayers.Style(null, {
+                                rules : [lowRule, middleRule, highRule]
+                            });
+                            var styleMap = new OpenLayers.StyleMap(style);
+                            // Create a new map object
+                            var cloud_example4 = new mygeocloud_ol.map("map_example4", "mydb");
+                            // Create a new GeoJSON store with a style map
+                            var store_example4 = new mygeocloud_ol.geoJsonStore("mydb", {
+                                styleMap : styleMap
+                            });
+                            // Activate clustering
+                            store_example4.clusterActivate();
+                            // Add Google Hybrid base map instead of the default base map
+                            cloud_example4.setBaseLayer(cloud_example4.addGoogleHybrid());
+                            // Zoom to an extent
+                            cloud_example4.zoomToExtent([-16378765.698287, 1927734.4957731, -4931556.3438927, 6819704.3053435], true);
+                            // Add the GeoJSON store to the map
+                            cloud_example4.addGeoJsonStore(store_example4);
+                            // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
+                            store_example4.sql = "select * FROM publicquksigx020";
+                            // Load the GeoJSON
+                            store_example4.load();
+                        });
+					</script>
+					<p>
+						A cluster map is a great way to show the density of geographical features. In this example earth quakes are clustered. Just call clusterActivate() on the JSON store. The default base map is replaced with Google Hybrid Map.
+					</p>
+					<div id="map_example4" style="width: 100%;height: 500px"></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<pre class="prettyprint"> 
+&lt;script&gt;
+$(window).load(function() {
+    // Create a new map object
+    var cloud_example4 = new mygeocloud_ol.map("map_example4", "mydb");
+    // Create a new GeoJSON store with a style map
+    var store_example4 = new mygeocloud_ol.geoJsonStore("mydb", {
+        styleMap : styleMap
+    });
+    // Activate clustering
+    store_example4.clusterActivate();
+    // Add Google Hybrid base map instead of the default base map
+    cloud_example4.setBaseLayer(cloud_example4.addGoogleHybrid());
+    // Zoom to an extent
+    cloud_example4.zoomToExtent([-16378765.698287, 1927734.4957731, -4931556.3438927, 6819704.3053435], true);
+    // Add the GeoJSON store to the map
+    cloud_example4.addGeoJsonStore(store_example4);
+    // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
+    store_example4.sql = "select * FROM publicquksigx020";
+    // Load the GeoJSON
+    store_example4.load();
+});
+&lt;/script&gt;
+&lt;div id=&quot;map_example4&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
+</pre>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<script>
+                        $(window).load(function() {
+                        	var colors = {
+                            low : "rgb(255, 140, 0)",
+                            middle : "rgb(255, 0, 0)",
+                            high : "rgb(178, 34, 34)"
+                        };
+                        // Define three rules to style the cluster features.
+                        var lowRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.LESS_THAN,
+                                property : "count",
+                                value : 500000
+                            }),
+                            symbolizer : {
+                                fillColor : colors.low,
+                                fillOpacity : 0.6,
+                                strokeColor : colors.low,
+                                strokeOpacity : 1,
+                            }
+                        });
+                        var middleRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.BETWEEN,
+                                property : "count",
+                                lowerBoundary : 500000,
+                                upperBoundary : 5000000
+                            }),
+                            symbolizer : {
+                                fillColor : colors.middle,
+                                fillOpacity : 0.6,
+                                strokeColor : colors.middle,
+                                strokeOpacity : 1,
+                            }
+                        });
+                        var highRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                                property : "count",
+                                value : 5000000
+                            }),
+                           symbolizer : {
+                                fillColor : colors.high,
+                                fillOpacity : 0.6,
+                                strokeColor : colors.high,
+                                strokeOpacity : 1,
+                            }
+                        });
+
+                        // Create a Style that uses the three previous rules
+                        var style = new OpenLayers.Style(null, {
+                            rules : [lowRule, middleRule, highRule]
+                        });
+                        var styleMap = new OpenLayers.StyleMap({"default":style,"select": new OpenLayers.Style({
+		fillColor: "#0000ff",
+		fillOpacity: 0.5,
+		strokeColor: "#000000",
+		strokeWidth: 0,
+		graphicZIndex: 1000
+		}
+        )
+});
+                        // Define a column model
+                        var columns = [{
+                            "header" : "Name of plant",
+                            "dataIndex" : "name",
+                            "type" : "varchar",
+                            "sortable" : true
+                        }, {
+                            "header" : "Population",
+                            "dataIndex" : "count",
+                            "type" : "int",
+                            "typeObj" : {
+                                "type" : "int"
+                            },
+                            "sortable" : true
+                        }];
+                            // Create a new map object
+                            var cloud_example5 = new mygeocloud_ol.map("map_example5", "mydb");
+                            // Create a new GeoJSON store
+                            var store_example5 = new mygeocloud_ol.geoJsonStore("mydb",{styleMap:styleMap});
+                            // Add the GeoJSON store to the map
+                            cloud_example5.addGeoJsonStore(store_example5);
+                            // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
+                            store_example5.sql = "select publicnuclear_facilities_update.name,sum(pop.pop_1990)::int as count,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) as buffer FROM pop,publicnuclear_facilities_update WHERE pop.the_geom && ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) AND St_Intersects(pop.the_geom,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000)) GROUP by buffer,publicnuclear_facilities_update.name ORDER by count"
+                            // Load the GeoJSON
+                            store_example5.load();
+                            // Defined a "onLoad" function
+                            store_example5.onLoad = function() {
+                                // When the GeoJSON is loaded, zoom to its extent
+                                cloud_example5.zoomToExtentOfgeoJsonStore(store_example5);
+                                // Add a grid with the GeoJSON
+                                var grid_example5 = new mygeocloud_ol.grid("grid_example5", store_example5, {
+                                    columns : columns
+                                });
+                            };
+                        });
+					</script>
+					<p>
+						This query shows the real power of PostGIS. We have two data set: Nuclear plants and populated places. The plant points are buffered with a 100 km zone and the populations within the zones are summerized and a style map is applied. The population layer with over 50.000 points are stored in the same projection as the wanted projection for the result set, so no tranformation is needed (which would slow down the query).
+					</p>
+					<div id="map_example5" style="width: 100%;height: 500px"></div>
+					<div id="grid_example5" style="width: 100%;height: 300px"></div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<pre class="prettyprint"> 
+&lt;script&gt;
+$(window).load(function() {
+	 // Define a column model
+	 var columns = [{
+        "header" : "Name of plant",
+        "dataIndex" : "name",
+        "type" : "varchar",
+        "sortable" : true
+    }, {
+        "header" : "Population",
+        "dataIndex" : "count",
+        "type" : "int",
+        "typeObj":{"type":"int"},
+        "sortable" : true
+    }];
+    // Create a new map object
+    var cloud_example5 = new mygeocloud_ol.map("map_example5", "mydb");
+    // Create a new GeoJSON store
+    var store_example5 = new mygeocloud_ol.geoJsonStore("mydb");
+    // Add the GeoJSON store to the map
+    cloud_example5.addGeoJsonStore(store_example5);
+    // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
+    store_example5.sql = "select publicnuclear_facilities_update.name,sum(pop.pop_1990)::int as count,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) as buffer FROM pop,publicnuclear_facilities_update WHERE pop.the_geom && ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) AND St_Intersects(pop.the_geom,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000)) GROUP by buffer,publicnuclear_facilities_update.name ORDER by count"
+    // Load the GeoJSON
+    store_example5.load();
+    // Defined a "onLoad" function
+    store_example5.onLoad = function() {
+        // When the GeoJSON is loaded, zoom to its extent
+        cloud_example5.zoomToExtentOfgeoJsonStore(store_example5);
+        // Add a grid with the GeoJSON
+        var grid_example5 = new mygeocloud_ol.grid("grid_example5", store_example5);
+    };
+});
+&lt;/script&gt;
+&lt;div id=&quot;map_example5&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;grid_example5&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
+</pre>
+				</div>
+			</div>
+			<!--#include virtual="../footer.html" -->
+		</div>
+	</body>
+</html>

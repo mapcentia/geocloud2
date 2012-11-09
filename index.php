@@ -4,6 +4,7 @@
 	<head>
 		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="UTF-8" />
 		<meta name="description" content="Store geographical data and make online maps" />
 		<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
 		<meta name="author" content="Martin Hoegh" />

@@ -1,56 +1,93 @@
 <!DOCTYPE html>
 <html>
-<!--#include virtual="../header.html" -->
-<body data-spy="scroll" data-target=".subnav" data-offset="50" onload="prettyPrint()"">
-	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-		  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-		  <a class="brand-dev" href="/developers/index.html">Developers</a>
-          <a class="brand" href="/">MyGeoCloud</a>          <div class="nav-collapse">
-            <ul class="nav">
-          		<li class="active"><a href="/developers/sqlapi/index.html">SQL API</a></li>
-          		<!--<li><a href="/developers/wfsapi/index.html">WFS API</a></li>-->
-         		<!--<li><a href="/developers/wmsapi/index.html">WMS API</a></li>-->
-         		<li><a href="/developers/mapclientapi/index.html">Map client API</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-    <div class="container">
-    	<div class="hero-unit">
-	        <h1>SQL API</h1>
-	        <p>The SQL API expose the power of PostGIS as a web service. You can fire any select query against the database and retrieve the result set as GeoJSON.</p>
-     	</div>
-     	<div class="row" style="">
-			<div class="span12">
-				<p>
-				Basically you call the API endpoint with q=select.... like this:<br/>
-				</p>
-				<p>
-				<code><a target="_blank" href="/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update">/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update</a></code>
-				</p>
-				<p>Where "mydb" is your MyGeoCloud database.</p>
-				<p>Some non-GeoJSON properties are included in the JSON:</p>
-				<p><code>forStore</code> Is an object that describes the structure of the result set.</p>
-				<p><code>forGrid</code> As above, but with column headings for use the a Extjs grid.</p>
-				<p><code>success</code> True or false</p>
-				<p><code>message</code> If above is false this will contain the error message.</p>
-				<p>
-				For use in cross browser scripting, you can "pad" the return JSON with a function (This is know as JSONP):<br/>
-				</p>
-				<p>
-				<code><a target="_blank" href="/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update&jsonp_callback=myfunction">/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update&jsonp_callback=myfunction</a></code>
-				</p>
-
+	<!--#include virtual="../header.html" -->
+	<body data-spy="scroll" data-target=".subnav" data-offset="50" onload="prettyPrint()">
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+					<a class="brand-dev" href="/developers/index.html">Developers</a>
+					<a class="brand" href="/">MyGeoCloud</a>
+					<div class="nav-collapse">
+						<ul class="nav">
+							<li class="active">
+								<a href="/developers/sqlapi/index.html">SQL API</a>
+							</li>
+							<!--<li><a href="/developers/wfsapi/index.html">WFS API</a></li>-->
+							<!--<li><a href="/developers/wmsapi/index.html">WMS API</a></li>-->
+							<ul class="nav">
+								<li class="dropdown">
+									<a href="#"
+									class="dropdown-toggle"
+									data-toggle="dropdown">Map API<b class="caret"></b> </a>
+									<ul class="dropdown-menu">
+										<li>
+											<a href="/developers/mapclientapi/index.html">Basic examples</a>
+										</li>
+										<li>
+											<a href="/developers/mapclientapi/advanced1.html">Advanced examples 1</a>
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
 			</div>
 		</div>
-		<!--#include virtual="../footer.html" -->
-	</div>
-</body>
+		<div class="container">
+			<div class="hero-unit">
+				<h1>SQL API</h1>
+				<p>
+					The SQL API expose the power of PostGIS as a web service. You can fire any select query against the database and retrieve the result set as GeoJSON.
+				</p>
+			</div>
+			<div class="row" style="">
+				<div class="span12">
+					<p>
+						Basically you call the API endpoint with q=select.... like this:
+						<br/>
+					</p>
+					<p>
+						<code><a target="_blank" href="/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update">/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update</a></code>
+					</p>
+					<p>
+						Where "mydb" is your MyGeoCloud database.
+					</p>
+					<p>
+						Some non-GeoJSON properties are included in the JSON:
+					</p>
+					<p>
+						<code>
+							forStore</code>
+						Is an object that describes the structure of the result set.
+					</p>
+					<p>
+						<code>
+							forGrid</code>
+						As above, but with column headings for use the a Extjs grid.
+					</p>
+					<p>
+						<code>
+							success</code>
+						True or false
+					</p>
+					<p>
+						<code>
+							message</code>
+						If above is false this will contain the error message.
+					</p>
+					<p>
+						For use in cross browser scripting, you can "pad" the return JSON with a function (This is know as JSONP):
+						<br/>
+					</p>
+					<p>
+						<code><a target="_blank" href="/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update&jsonp_callback=myfunction">/api/v1/sql/mydb?q=SELECT * FROM public.publicnuclear_facilities_update&jsonp_callback=myfunction</a></code>
+					</p>
+
+				</div>
+			</div>
+			<!--#include virtual="../footer.html" -->
+		</div>
+	</body>
 </html>
