@@ -153,7 +153,7 @@
 $(window).load(function() {
     // Create a new map object
     var cloud_example4 = new mygeocloud_ol.map("map_example4", "mydb");
-    // Create a new GeoJSON store with a style map
+    // Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
     var store_example4 = new mygeocloud_ol.geoJsonStore("mydb", {
         styleMap : styleMap,
         lifetime : 1000000
