@@ -35,7 +35,8 @@ var mygeocloud_ol = (function() {"use strict";
             visibility : true,
             rendererOptions : {
                 zIndexing : true
-            }
+            },
+            lifetime: 0
         };
         if (config) {
             for (prop in config) {
@@ -163,12 +164,12 @@ var mygeocloud_ol = (function() {"use strict";
                 this.sql = this.sql.replace("${maxY}", map.getExtent().top);
                 this.sql = this.sql.replace("${bbox}", map.getExtent().toString());
 
-                console.log(this.sql);
+                //console.log(this.sql);
             } catch(e) {
             }
             $.ajax({
                 dataType : 'jsonp',
-                data : 'q=' + encodeURIComponent(this.sql) + '&srs=' + defaults.projection,
+                data : 'q=' + encodeURIComponent(this.sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
                 jsonp : 'jsonp_callback',
                 url : host + '/api/v1/sql/' + db,
                 success : function(response) {

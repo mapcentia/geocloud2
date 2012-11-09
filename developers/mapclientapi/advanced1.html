@@ -121,9 +121,10 @@
                             var styleMap = new OpenLayers.StyleMap(style);
                             // Create a new map object
                             var cloud_example4 = new mygeocloud_ol.map("map_example4", "mydb");
-                            // Create a new GeoJSON store with a style map
+    						// Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
                             var store_example4 = new mygeocloud_ol.geoJsonStore("mydb", {
-                                styleMap : styleMap
+                                styleMap : styleMap,
+                                lifetime : 1000000
                             });
                             // Activate clustering
                             store_example4.clusterActivate();
@@ -178,85 +179,89 @@ $(window).load(function() {
 				<div class="span12">
 					<script>
                         $(window).load(function() {
-                        	var colors = {
-                            low : "rgb(255, 140, 0)",
-                            middle : "rgb(255, 0, 0)",
-                            high : "rgb(178, 34, 34)"
-                        };
-                        // Define three rules to style the cluster features.
-                        var lowRule = new OpenLayers.Rule({
-                            filter : new OpenLayers.Filter.Comparison({
-                                type : OpenLayers.Filter.Comparison.LESS_THAN,
-                                property : "count",
-                                value : 500000
-                            }),
-                            symbolizer : {
-                                fillColor : colors.low,
-                                fillOpacity : 0.6,
-                                strokeColor : colors.low,
-                                strokeOpacity : 1,
-                            }
-                        });
-                        var middleRule = new OpenLayers.Rule({
-                            filter : new OpenLayers.Filter.Comparison({
-                                type : OpenLayers.Filter.Comparison.BETWEEN,
-                                property : "count",
-                                lowerBoundary : 500000,
-                                upperBoundary : 5000000
-                            }),
-                            symbolizer : {
-                                fillColor : colors.middle,
-                                fillOpacity : 0.6,
-                                strokeColor : colors.middle,
-                                strokeOpacity : 1,
-                            }
-                        });
-                        var highRule = new OpenLayers.Rule({
-                            filter : new OpenLayers.Filter.Comparison({
-                                type : OpenLayers.Filter.Comparison.GREATER_THAN,
-                                property : "count",
-                                value : 5000000
-                            }),
-                           symbolizer : {
-                                fillColor : colors.high,
-                                fillOpacity : 0.6,
-                                strokeColor : colors.high,
-                                strokeOpacity : 1,
-                            }
-                        });
+                            var colors = {
+                                low : "rgb(255, 140, 0)",
+                                middle : "rgb(255, 0, 0)",
+                                high : "rgb(178, 34, 34)"
+                            };
+                            // Define three rules to style the cluster features.
+                            var lowRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.LESS_THAN,
+                                    property : "count",
+                                    value : 500000
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.low,
+                                    fillOpacity : 0.6,
+                                    strokeColor : colors.low,
+                                    strokeOpacity : 1,
+                                }
+                            });
+                            var middleRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.BETWEEN,
+                                    property : "count",
+                                    lowerBoundary : 500000,
+                                    upperBoundary : 5000000
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.middle,
+                                    fillOpacity : 0.6,
+                                    strokeColor : colors.middle,
+                                    strokeOpacity : 1,
+                                }
+                            });
+                            var highRule = new OpenLayers.Rule({
+                                filter : new OpenLayers.Filter.Comparison({
+                                    type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                                    property : "count",
+                                    value : 5000000
+                                }),
+                                symbolizer : {
+                                    fillColor : colors.high,
+                                    fillOpacity : 0.6,
+                                    strokeColor : colors.high,
+                                    strokeOpacity : 1,
+                                }
+                            });
 
-                        // Create a Style that uses the three previous rules
-                        var style = new OpenLayers.Style(null, {
-                            rules : [lowRule, middleRule, highRule]
-                        });
-                        var styleMap = new OpenLayers.StyleMap({"default":style,"select": new OpenLayers.Style({
-		fillColor: "#0000ff",
-		fillOpacity: 0.5,
-		strokeColor: "#000000",
-		strokeWidth: 0,
-		graphicZIndex: 1000
-		}
-        )
-});
-                        // Define a column model
-                        var columns = [{
-                            "header" : "Name of plant",
-                            "dataIndex" : "name",
-                            "type" : "varchar",
-                            "sortable" : true
-                        }, {
-                            "header" : "Population",
-                            "dataIndex" : "count",
-                            "type" : "int",
-                            "typeObj" : {
-                                "type" : "int"
-                            },
-                            "sortable" : true
-                        }];
+                            // Create a Style that uses the three previous rules
+                            var style = new OpenLayers.Style(null, {
+                                rules : [lowRule, middleRule, highRule]
+                            });
+                            var styleMap = new OpenLayers.StyleMap({
+                                "default" : style,
+                                "select" : new OpenLayers.Style({
+                                    fillColor : "#0000ff",
+                                    fillOpacity : 0.5,
+                                    strokeColor : "#000000",
+                                    strokeWidth : 0,
+                                    graphicZIndex : 1000
+                                })
+                            });
+                            // Define a column model
+                            var columns = [{
+                                "header" : "Name of plant",
+                                "dataIndex" : "name",
+                                "type" : "varchar",
+                                "sortable" : true
+                            }, {
+                                "header" : "Population",
+                                "dataIndex" : "count",
+                                "type" : "int",
+                                "typeObj" : {
+                                    "type" : "int"
+                                },
+                                "sortable" : true
+                            }];
                             // Create a new map object
                             var cloud_example5 = new mygeocloud_ol.map("map_example5", "mydb");
-                            // Create a new GeoJSON store
-                            var store_example5 = new mygeocloud_ol.geoJsonStore("mydb",{styleMap:styleMap});
+                            // Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
+                            var store_example5 = new mygeocloud_ol.geoJsonStore("mydb", {
+                                styleMap : styleMap,
+                                lifetime : 1000000
+                            });
                             // Add the GeoJSON store to the map
                             cloud_example5.addGeoJsonStore(store_example5);
                             // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
@@ -286,36 +291,39 @@ $(window).load(function() {
 					<pre class="prettyprint"> 
 &lt;script&gt;
 $(window).load(function() {
-	 // Define a column model
-	 var columns = [{
-        "header" : "Name of plant",
-        "dataIndex" : "name",
-        "type" : "varchar",
-        "sortable" : true
-    }, {
-        "header" : "Population",
-        "dataIndex" : "count",
-        "type" : "int",
-        "typeObj":{"type":"int"},
-        "sortable" : true
-    }];
-    // Create a new map object
-    var cloud_example5 = new mygeocloud_ol.map("map_example5", "mydb");
-    // Create a new GeoJSON store
-    var store_example5 = new mygeocloud_ol.geoJsonStore("mydb");
-    // Add the GeoJSON store to the map
-    cloud_example5.addGeoJsonStore(store_example5);
-    // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
-    store_example5.sql = "select publicnuclear_facilities_update.name,sum(pop.pop_1990)::int as count,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) as buffer FROM pop,publicnuclear_facilities_update WHERE pop.the_geom && ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) AND St_Intersects(pop.the_geom,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000)) GROUP by buffer,publicnuclear_facilities_update.name ORDER by count"
-    // Load the GeoJSON
-    store_example5.load();
-    // Defined a "onLoad" function
-    store_example5.onLoad = function() {
-        // When the GeoJSON is loaded, zoom to its extent
-        cloud_example5.zoomToExtentOfgeoJsonStore(store_example5);
-        // Add a grid with the GeoJSON
-        var grid_example5 = new mygeocloud_ol.grid("grid_example5", store_example5);
-    };
+	// Define a column model
+	var columns = [{
+	    "header" : "Name of plant",
+	    "dataIndex" : "name",
+	    "type" : "varchar",
+	    "sortable" : true
+	}, {
+	    "header" : "Population",
+	    "dataIndex" : "count",
+	    "type" : "int",
+	    "typeObj":{"type":"int"},
+	    "sortable" : true
+	}];
+	// Create a new map object
+	var cloud_example5 = new mygeocloud_ol.map("map_example5", "mydb");
+	// Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
+	var store_example5 = new mygeocloud_ol.geoJsonStore("mydb", {
+	    styleMap : styleMap,
+	    lifetime : 1000000
+	});
+	// Add the GeoJSON store to the map
+	cloud_example5.addGeoJsonStore(store_example5);
+	// Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
+	store_example5.sql = "select publicnuclear_facilities_update.name,sum(pop.pop_1990)::int as count,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) as buffer FROM pop,publicnuclear_facilities_update WHERE pop.the_geom && ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000) AND St_Intersects(pop.the_geom,ST_Buffer(ST_Transform(publicnuclear_facilities_update.the_geom,900913),100000)) GROUP by buffer,publicnuclear_facilities_update.name ORDER by count"
+	// Load the GeoJSON
+	store_example5.load();
+	// Defined a "onLoad" function
+	store_example5.onLoad = function() {
+	    // When the GeoJSON is loaded, zoom to its extent
+	    cloud_example5.zoomToExtentOfgeoJsonStore(store_example5);
+	    // Add a grid with the GeoJSON
+	    var grid_example5 = new mygeocloud_ol.grid("grid_example5", store_example5);
+	};
 });
 &lt;/script&gt;
 &lt;div id=&quot;map_example5&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
