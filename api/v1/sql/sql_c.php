@@ -35,5 +35,5 @@ if ($callback) {
 	echo $callback.'('.$data.');';
 }
 else {
-	echo $json->encode($data);
+	echo $data;
 }
