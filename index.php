@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<?php session_start();?>
+<?php session_start(); ?>
 <html >
 	<head>
 		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
@@ -29,8 +29,8 @@
 				margin: 0 0 10px;
 			}
 			.jumbotron::after {
-background: none;
-}
+				background: none;
+			}
 
 		</style>
 
@@ -52,7 +52,7 @@ background: none;
 		</script>
 	</head>
 	<body>
-		<div class="navbar navbar-fixed-top">
+		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
 					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
@@ -62,7 +62,7 @@ background: none;
 							<li>
 								<a href="/developers/index.html">Developers</a>
 							</li>
-				
+
 							<li>
 								<?php if 	(!$_SESSION['auth'] || !$_SESSION['screen_name']) {?>
 								<a href="/user/login">Log in</a>
@@ -79,6 +79,7 @@ background: none;
 		<div class="jumbotron masthead" style="box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
 		background: url(/theme/images/cartographer.png) repeat top left;
 		">
+		
 			<div class="container">
 				<h1>MyGeoCloud</h1>
 				<p>
@@ -95,102 +96,107 @@ background: none;
 						<a href="/about.html">About</a>
 					</li>
 					<li>
-						Test
+						Beta
 					</li>
 				</ul>
 			</div>
 
 		</div>
+		<div class="bs-docs-social">
+  <div class="container">
+    <ul class="bs-docs-social-buttons">
+    	 
+      <li>
+        <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
+      </li>
+      <li>
+        <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=fork&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="98px" height="20px"></iframe>
+      </li>
+      <li class="follow-btn">
+        <iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/follow_button.1352365724.html#_=1352840689739&amp;id=twitter-widget-1&amp;lang=en&amp;screen_name=mhoegh&amp;show_count=true&amp;show_screen_name=true&amp;size=m" class="twitter-follow-button" style="width: 242px; height: 20px;" title="Twitter Follow Button" data-twttr-rendered="true"></iframe>
+      </li>
+      <li class="tweet-btn">
+        <a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
+      </li>
+     <li>
+     					<g:plusone size="medium"></g:plusone>
+
+     	</li>
+     	<li>
+      <div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
+      </li>
+    </ul>
+  </div>
+</div>
 		<div class="container">
 			<div class="marketing">
-			<div class="row">
-				<div class="span4">
-					<div>
-						<h2 style="padding: 10px 0px;">Add maps to your own apps</h2>
-					</div>
-				</div>
-				<div class="span4">
-					<div>
-						<h2 style="padding: 10px 0px;">Build on open source software</h2>
-					</div>
-				</div>
-				<div class="span4">
-					<div>
-						<h2 style="padding: 10px 0px;">Manage data</h2>
+				<div class="row">
+					<div class="span4">
+						<div>
+							<h3 style="padding: 10px 0px;">Add maps to your own apps</h3>
+							<p>
+								Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site.
+							</p>
 						</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span4">
-					<div>
-						<p>
-							Analyze and visualize your data. Use a powerful API for adding maps to your own apps.
-						</p>
 					</div>
-				</div>
-				<div class="span4">
-					<div>
-						<p>
-							The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities.
-						</p>
-					</div>
-				</div>
-				<div class="span4">
-					<div>
-						<p>
-							With a powerful adminstration tool you can manage your data online. 
-						</p>
-					</div>
-				</div>
-			</div>
-			<div class="row" style="margin-top:50px">
-				<div class="span8 offset2">
-
-					<div id="myCarousel" class="carousel slide">
-						<div class="carousel-inner">
-							<div class="item active">
-								<img  src="/theme/images/c1.png" alt="">
-								<div class="carousel-caption round_border_bottom">
-									<h4>Administration of your geospatial data</h4>
-									<p>
-										Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
-										structures and setup layers and styles for map rendering.
-									</p>
-								</div>
-							</div>
-							<div class="item">
-								<img  src="/theme/images/c2.png" alt="">
-								<div class="carousel-caption round_border_bottom">
-									<h4>View, create, update and delete data online</h4>
-									<p>
-										Use the built-in WFS-T client to view and edit your geospatial data. You can also use desktop GIS software that
-										supports the WFS-T protocol. MyGeoCloud is tested with QGIS, MapInfo and ArcGIS (the latter only reading).
-									</p>
-								</div>
-							</div>
-							<div class="item">
-								<img  src="/theme/images/c3.png" alt="">
-								<div class="carousel-caption round_border_bottom">
-									<h4>Add maps to your own site</h4>
-									<p>
-										Is really easy to add maps to your own site. Embed the built-in web map on any page or use the JavaScript API to take full control over
-										the functionality and appearance.
-									</p>
-								</div>
-							</div>
+					<div class="span4">
+						<div>
+							<h3 style="padding: 10px 0px;">Build on open source software</h3>
+							<p>
+								The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities. If you can think the analysis you can do it.
+							</p>
 						</div>
-						<a class="left carousel-control" href="#myCarousel" data-slide="prev">&lsaquo;</a>
-						<a class="right carousel-control" href="#myCarousel" data-slide="next">&rsaquo;</a>
 					</div>
-
+					<div class="span4">
+						<div>
+							<h3 style="padding: 10px 0px;">Manage data</h3>
+							<p>
+								With a powerful adminstration tool you can manage your data online. Get full control from every where.
+							</p>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="span4">
+						<img src="/theme/images/code.png" class="img-rounded img-polaroid">
+					</div>
+					<div class="span4">
+						<img src="/theme/images/map.png" class="img-rounded img-polaroid">
+					</div>
+					<div class="span4">
+						<img src="/theme/images/admin.png" class="img-rounded img-polaroid">
+					</div>
+				</div>
+				<div class="row" style="display: none">
+					<div class="span4">
+						<h4>Use your web skills</h4>
+						<p>
+							sdsdds
+						</p>
+					</div>
+					<div class="span4">
+						<h4>Use spatial SQL</h4>
+						<p>
+							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
+							structures and setup layers and styles for map rendering.
+						</p>
+					</div>
+					<div class="span4">
+						<h4>Maintain your data</h4>
+						<p>
+							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
+							structures and setup layers and styles for map rendering.
+						</p>
+					</div>
 				</div>
 			</div>
+		</div>
+
 		</div>
 
 		<hr/>
 		<footer>
 			<div style="margin-bottom: 15px">
-				<g:plusone size="medium"></g:plusone>
 				<script type="text/javascript">
                     (function() {
                         var po = document.createElement('script');
@@ -201,8 +207,6 @@ background: none;
                         s.parentNode.insertBefore(po, s);
                     })();
 				</script>
-				<a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
-				<div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="450" data-show-faces="false" data-font="verdana"></div>
 				<script>
                     ! function(d, s, id) {
                         var js, fjs = d.getElementsByTagName(s)[0];
@@ -222,10 +226,7 @@ background: none;
 		</footer>
 
 		</div>
-		<script src="/js/bootstrap/js/jquery.js"></script>
-		<script src="/js/bootstrap/js/bootstrap.min.js"></script>
-		<script src="/js/bootstrap/js/bootstrap-carousel.js"></script>
-		<script src="/js/bootstrap/js/bootstrap-alert.js"></script>
+		<script src="/js/bootstrap/js/bootstrap.js"></script>
 		<script type="text/javascript">
             $('.carousel').carousel({
                 interval : 10000

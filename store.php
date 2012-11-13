@@ -44,6 +44,7 @@ makeTileCacheFile($postgisdb);
 		
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"
 		/>
+		
 		<link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"
 		/>
 		<!-- overrides to base library --> 
