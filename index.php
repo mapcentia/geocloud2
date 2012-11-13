@@ -8,6 +8,7 @@
 		<meta name="description" content="Store geographical data and make online maps" />
 		<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
 		<meta name="author" content="Martin Hoegh" />
+		<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
 		<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
@@ -30,9 +31,6 @@
 			.jumbotron::after {
 				background: none;
 			}
-			.fb-like span {
-				height: 23px !important;
-			}
 
 		</style>
 
@@ -54,14 +52,6 @@
 		</script>
 	</head>
 	<body>
-		<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/da_DK/all.js#xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
@@ -128,14 +118,13 @@
       <li class="tweet-btn">
         <a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
       </li>
-      <li>
-      <div  class="fb-like" data-href="http://beta.mygeocloud.com/" data-send="false" data-layout="button_count" data-width="55" data-show-faces="false"></div>
-      </li>
      <li>
      					<g:plusone size="medium"></g:plusone>
 
      	</li>
-     	
+     	<li>
+      <div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
+      </li>
     </ul>
   </div>
 </div>
@@ -198,6 +187,7 @@
 							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
 							structures and setup layers and styles for map rendering.
 						</p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -205,7 +195,7 @@
 		</div>
 
 		<hr/>
-		<footer>
+		<footer >
 			<div style="margin-bottom: 15px">
 				<script type="text/javascript">
                     (function() {
@@ -228,18 +218,16 @@
                         }
                     }(document, "script", "twitter-wjs");
 				</script>
-	<center>
-				All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
-			</center>
+
 			</div>
-			
+			<p>
+				All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
+			</p>
 		</footer>
 
+		</div>
+		<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
 		<script src="/js/bootstrap/js/bootstrap.js"></script>
-		<script type="text/javascript">
-            $('.carousel').carousel({
-                interval : 10000
-            })
-		</script>
+		
 	</body>
 </html>
