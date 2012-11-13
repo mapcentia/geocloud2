@@ -220,9 +220,9 @@
 				</script>
 
 			</div>
-			<p>
+			<center>
 				All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
-			</p>
+			</center>
 		</footer>
 
 		</div>
