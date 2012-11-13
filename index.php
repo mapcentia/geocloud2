@@ -30,6 +30,9 @@
 			.jumbotron::after {
 				background: none;
 			}
+			.fb-like span {
+				height: 23px !important;
+			}
 
 		</style>
 
@@ -125,12 +128,14 @@
       <li class="tweet-btn">
         <a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
       </li>
+      <li>
+      <div  class="fb-like" data-href="http://beta.mygeocloud.com/" data-send="false" data-layout="button_count" data-width="55" data-show-faces="false"></div>
+      </li>
      <li>
      					<g:plusone size="medium"></g:plusone>
 
      	</li>
-     	<li>
-      <div class="fb-like" data-href="http://beta.mygeocloud.com/" data-send="false" data-layout="button_count" data-width="55" data-show-faces="false"></div>
+     	
     </ul>
   </div>
 </div>
