@@ -187,7 +187,6 @@
 							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
 							structures and setup layers and styles for map rendering.
 						</p>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -218,14 +217,13 @@
                         }
                     }(document, "script", "twitter-wjs");
 				</script>
-
-			</div>
-			<p>
+	<center>
 				All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
-			</p>
+			</center>
+			</div>
+			
 		</footer>
 
-		</div>
 		<script src="/js/bootstrap/js/bootstrap.js"></script>
 		<script type="text/javascript">
             $('.carousel').carousel({
