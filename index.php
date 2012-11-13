@@ -8,7 +8,6 @@
 		<meta name="description" content="Store geographical data and make online maps" />
 		<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
 		<meta name="author" content="Martin Hoegh" />
-		<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
 		<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
@@ -52,6 +51,14 @@
 		</script>
 	</head>
 	<body>
+		<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/da_DK/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
@@ -123,8 +130,7 @@
 
      	</li>
      	<li>
-      <div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
-      </li>
+      <div class="fb-like" data-href="http://beta.mygeocloud.com/" data-send="false" data-layout="button_count" data-width="55" data-show-faces="false"></div>
     </ul>
   </div>
 </div>
