@@ -9,7 +9,7 @@
 		<meta name="description" content="Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site" />
 		<meta name="description" content="The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities. If you can think the analysis you can do it." />
 		<meta name="description" content="With a powerful adminstration tool you can manage your data online. Get full control from every where." />
-		<meta name="keywords" content="examples, openlayers, postgis, mapserver, tile cache, ogr2ogr, spatial, sql, cluster map, buffer map, map, geo, cloud, visualize, analyze, gis, geographical data, maps, web mapping, shape file, GPX, MapInfo, wms, wfs, wfs-t, ogc" />
+		<meta name="keywords" content="examples, openlayers, api, postgis, hosting, mapserver, tile cache, gdal, ogr2ogr, spatial, sql, cluster map, buffer map, map, geo, cloud, visualize, analyze, gis, geographical data, maps, web mapping, shape file, GPX, MapInfo, wms, wfs, wfs-t, ogc" />
 		<meta name="author" content="Martin Hoegh" />
 		<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
 		<!--[if lt IE 9]>
@@ -82,7 +82,7 @@
 		<div class="jumbotron masthead" style="box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
 		background: url(/theme/images/cartographer.png) repeat top left;
 		">
-		
+
 			<div class="container">
 				<h1>MyGeoCloud</h1>
 				<p>
@@ -106,31 +106,31 @@
 
 		</div>
 		<div class="bs-docs-social">
-  <div class="container">
-    <ul class="bs-docs-social-buttons">
-    	 
-      <li>
-        <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
-      </li>
-      <li>
-        <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=fork&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="98px" height="20px"></iframe>
-      </li>
-      <li class="follow-btn">
-        <iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/follow_button.1352365724.html#_=1352840689739&amp;id=twitter-widget-1&amp;lang=en&amp;screen_name=mhoegh&amp;show_count=true&amp;show_screen_name=true&amp;size=m" class="twitter-follow-button" style="width: 242px; height: 20px;" title="Twitter Follow Button" data-twttr-rendered="true"></iframe>
-      </li>
-      <li class="tweet-btn">
-        <a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
-      </li>
-     <li>
-     					<g:plusone size="medium"></g:plusone>
+			<div class="container">
+				<ul class="bs-docs-social-buttons">
 
-     	</li>
-     	<li>
-      <div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
-      </li>
-    </ul>
-  </div>
-</div>
+					<li>
+						<iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
+					</li>
+					<li>
+						<iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=fork&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="98px" height="20px"></iframe>
+					</li>
+					<li class="follow-btn">
+						<iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/follow_button.1352365724.html#_=1352840689739&amp;id=twitter-widget-1&amp;lang=en&amp;screen_name=mhoegh&amp;show_count=true&amp;show_screen_name=true&amp;size=m" class="twitter-follow-button" style="width: 242px; height: 20px;" title="Twitter Follow Button" data-twttr-rendered="true"></iframe>
+					</li>
+					<li class="tweet-btn">
+						<a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
+					</li>
+					<li>
+						<g:plusone size="medium"></g:plusone>
+
+					</li>
+					<li>
+						<div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
+					</li>
+				</ul>
+			</div>
+		</div>
 		<div class="container">
 			<div class="marketing">
 				<div class="row">
@@ -195,8 +195,6 @@
 			</div>
 		</div>
 
-		</div>
-
 		<hr/>
 		<footer >
 			<div style="margin-bottom: 15px">
@@ -228,9 +226,8 @@
 			</center>
 		</footer>
 
-		</div>
 		<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
 		<script src="/js/bootstrap/js/bootstrap.js"></script>
-		
+
 	</body>
 </html>
