@@ -2,11 +2,14 @@
 <?php session_start(); ?>
 <html >
 	<head>
-		<title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+		<title>MyGeoCloud - Analyze and map your data</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta charset="UTF-8" />
 		<meta name="description" content="Store geographical data and make online maps" />
-		<meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC" />
+		<meta name="description" content="Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site" />
+		<meta name="description" content="The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities. If you can think the analysis you can do it." />
+		<meta name="description" content="With a powerful adminstration tool you can manage your data online. Get full control from every where." />
+		<meta name="keywords" content="map, geo, cloud, visualize, analyze, gis, geographical, data, maps, web mapping, shape file, GPX, MapInfo, WMS, WFS, OGC" />
 		<meta name="author" content="Martin Hoegh" />
 		<script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
 		<!--[if lt IE 9]>
