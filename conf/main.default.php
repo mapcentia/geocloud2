@@ -15,7 +15,7 @@ $postgishost="127.0.0.1";
 $postgisdb="database";
 $postgisuser="user";
 $postgisport="";
-$postgispw="1234";
+$postgispw="password";
 
 // Database template for creating new databases
 $databaseTemplate = "postgis";
