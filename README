@@ -1,1 +1,1 @@
-Install in web root folder and edit conf/main.php
+Install in web root folder, rename conf/main.default.php to conf/main.php and edit
