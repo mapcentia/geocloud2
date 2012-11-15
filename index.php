@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <?php session_start(); ?>
-<html >
+<html lang="en">
 	<head>
 		<title>MyGeoCloud - Analyze and map your data</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta charset="UTF-8" />
 		<meta name="description" content="Store geographical data and make online maps" />
 		<meta name="description" content="Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site" />
