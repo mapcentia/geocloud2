@@ -194,7 +194,6 @@ class table extends postgis {
 			$sql = "UPDATE {$this->table} SET ";
 			$sql.= implode(",",$pairArr);
 			$sql.= " WHERE {$where}";
-			
 			$result = $this -> execQuery($sql,"PDO","transaction");
 			// If row does not exits, insert instead. Move to an insert method
 			if ((!$result) && (!$this->PDOerror)){
