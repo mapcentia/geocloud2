@@ -991,7 +991,7 @@ $(window).load(function() {"use strict";
                 padding : '7px'
             },
             contentEl : "wfs-dialog"
-        }, {
+        }, { 
             title : 'WMS',
             border : false,
             bodyStyle : {
