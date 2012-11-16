@@ -234,23 +234,12 @@ $(window).load(function() {"use strict";
             }]
         }),
         tbar : [{
-            text : 'Edit layer',
-            iconCls : 'silk-pencil',
-            handler : onSpatialEdit
-        }, '-', {
-            text : 'Map viewer',
+            text : 'Map',
+            //iconCls : 'silk-pencil',
             iconCls : 'silk-map',
-            handler : onView
-        }, '-', {
-            text : 'Add new layer',
-            iconCls : 'silk-add',
-            handler : onAdd
-        }, '-', {
-            text : 'Delete layer',
-            iconCls : 'silk-delete',
-            handler : onDelete
-        }, '-', {
-            text : 'Layers',
+            handler : onSpatialEdit
+        }, '-' ,{
+            text : 'Layer settings',
             iconCls : 'silk-layers', // <-- icon
             menu : new Ext.menu.Menu({
                 id : 'mainMenu',
@@ -279,6 +268,14 @@ $(window).load(function() {"use strict";
                     handler : onEditMoreSettings
                 }]
             })
+        },'-', {
+            text : 'Add new layer',
+            iconCls : 'silk-add',
+            handler : onAdd
+        }, '-', {
+            text : 'Delete layer',
+            iconCls : 'silk-delete',
+            handler : onDelete
         }, '->', new Ext.form.ComboBox({
             id : "schemabox",
             store : schemasStore,
@@ -394,21 +391,12 @@ $(window).load(function() {"use strict";
     }
 
     function onAddSchema(btn, ev) {
-        //winAddSchema = null;
-        var p = new Ext.Panel({
-            id : "newschemapanel",
-            frame : false,
-            border : false,
-            //width: 500,
-            //height: 400,
-            layout : 'border',
-            items : [new Ext.Panel({
-                region : "center"
-            })]
-        });
-
         winAddSchema = new Ext.Window({
-            title : 'Add new schema',
+                        title : 'Add new schema',
+                        height: 400,
+
+            items:[
+            new Ext.Panel({
             layout : 'fit',
             modal : true,
             width : 320,
@@ -420,6 +408,7 @@ $(window).load(function() {"use strict";
                 labelWidth : 1,
                 frame : true,
                 border : false,
+                //height: 100,
                 region : 'center',
                 id : "schemaform",
                 bodyStyle : {
@@ -430,7 +419,7 @@ $(window).load(function() {"use strict";
                     //msgTarget: 'side'
                 },
                 items : [{
-                    //width: 275,
+                    width: 268,
                     xtype : 'textfield',
                     name : 'schema',
                     emptyText : 'Name of new schema'
@@ -476,9 +465,14 @@ $(window).load(function() {"use strict";
                         }
                     }
                 }]
+            }),new Ext.Panel({
+                region : "south",
+                border : false,
+                height : 200,
+                html :"dsd"
             })]
 
-        });
+        })]});
 
         winAddSchema.show(this);
     }
