@@ -1,0 +1,1 @@
+                      1665214767{"success":false,"message":["SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at or near \"1051063.1064187\"\nLINE 1: ...e_geom from public.adresser order by gid limit 10 1051063.10...\n                                                             ^"]}

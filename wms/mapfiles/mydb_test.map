@@ -1,0 +1,472 @@
+	MAP
+	  # 
+	  # Start of map file
+	  #
+	  NAME "mydb"
+	  STATUS on
+	  	  #EXTENT -180 -90 180 90
+	  	  EXTENT -180 -90 180 90
+	  SIZE 2000 1500
+	  MAXSIZE 4096
+	  #SYMBOLSET "../etc/symbols.sym"
+	  FONTSET "../fonts/fonts.txt"
+	  IMAGECOLOR 255 255 255
+	  UNITS METERS
+	  INTERLACE OFF
+	  OUTPUTFORMAT
+		  NAME "png"
+		  DRIVER AGG/PNG
+		  MIMETYPE "image/png"
+		  IMAGEMODE RGBA
+		  EXTENSION "png"
+		  TRANSPARENT ON
+		  FORMATOPTION "GAMMA=0.75"
+	  END
+	  #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
+	  #DEBUG 5
+	  WEB
+		IMAGEPATH "C:\Program Files\ms4w\Apache\htdocs\/tmp"
+  		IMAGEURL "http://127.0.0.1/tmp"
+		METADATA
+		  "wms_title"    "mydb's awesome WMS"
+		  "wms_srs"    "EPSG:900913 EPSG:4326"
+		  "wms_name"    "mydb"
+		  "wms_format"    "image/png"
+		  "wms_onlineresource"	"http://127.0.0.1/wms/mydb/test/"
+		  
+		END
+	  END
+	  #
+	  # Start of reference map
+	  #
+	  QUERYMAP
+		COLOR 255 255 0
+		STYLE normal
+	  END
+	  PROJECTION
+		"init=epsg:900913" 
+	  END
+	  # 
+	  # Start of legend
+	  #
+	  LEGEND
+		STATUS off
+		IMAGECOLOR 255 255 255
+		KEYSIZE 18 12
+		
+		LABEL
+		  WRAP "#"
+		  TYPE truetype
+		  FONT "arial"
+		  SIZE 8
+		  COLOR 0 0 0
+		  #SHADOWSIZE 2 2 
+		  #BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  #
+	  # Start of scalebar
+	  #
+	  SCALEBAR
+		STATUS off
+		COLOR 255 255 255
+		OUTLINECOLOR 0 0 0
+		BACKGROUNDCOLOR 0 0 0
+		IMAGECOLOR 255 255 255
+		UNITS METERS
+		INTERVALS 3
+		SIZE 150 5 
+		LABEL
+		  FONT "courierb"
+		  SIZE SMALL
+		  COLOR 0 0 0
+		  SHADOWSIZE 2 2 
+		  BACKGROUNDSHADOWSIZE 1 1 
+		END
+	  END
+	  Symbol
+    Name 'triangle'
+    Type VECTOR
+    Filled TRUE
+    Points
+     0 1
+     .5 0
+     1 1
+     0 1
+     END
+    END
+	SYMBOL
+    NAME "circle"
+    TYPE ellipse
+    FILLED true
+    POINTS
+      1 1
+    END
+  END
+  Symbol
+  Name 'square'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 1
+  0 0
+  1 0
+  1 1
+  0 1
+  END
+ END
+ Symbol
+  Name 'star'
+  Type VECTOR
+  Filled TRUE
+  Points
+  0 .375
+  .35 .375
+  .5 0
+  .65 .375
+  1 .375
+  .75 .625
+  .875 1
+  .5 .75
+  .125 1
+  .25 .625
+  END
+END
+SYMBOL
+    NAME "hatch1"
+    TYPE VECTOR
+    POINTS
+       0 1 1 0
+    END
+  END
+SYMBOL
+    NAME "dashed1"
+    TYPE ELLIPSE
+  	FILLED TRUE
+  	POINTS 1 1 END
+  	STYLE 4 2 END
+ END
+ 
+# ============================================================================ 
+# Vector Line Types
+# ============================================================================ 
+
+SYMBOL 
+  NAME "continue"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dashed-line-short"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 5 5 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dashed-line-long"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 10 10 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dash-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 20 6 2 6 END
+END
+
+# --------------------
+
+SYMBOL 
+  NAME "dash-dot-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 10 6 2 6 2 6 END
+END
+ 
+# --------------------
+
+SYMBOL 
+  NAME "dot-dot"
+  TYPE ELLIPSE
+  FILLED TRUE
+  POINTS 1 1 END
+  STYLE 2 2 END
+END
+
+	  
+	  #
+	  # Start of layers
+	  #
+		  
+	  LAYER
+		NAME "public.pop3"
+		STATUS off
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		 
+			DATA "the_geom from public.pop3  using unique gid using srid=900913"
+						TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=mydb host=127.0.0.1 password=1234 options='-c client_encoding=UTF8'"
+				 
+		#CLASSITEM
+		
+		#LABELITEM
+				
+		#LABELMAXSCALEDENOM
+				
+		#LABELMINSCALEDENOM
+				
+		#OPACITY
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "pop3"
+		  "wms_srs"    "EPSG:900913"
+		  "wms_name"    "pop3"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:900913" 
+		END
+			  END #Layer
+		  
+	  LAYER
+		NAME "public.pop"
+		STATUS off
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		 
+			DATA "the_geom from public.pop  using unique gid using srid=900913"
+						TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=mydb host=127.0.0.1 password=1234 options='-c client_encoding=UTF8'"
+				 
+		#CLASSITEM
+		
+		#LABELITEM
+				
+		#LABELMAXSCALEDENOM
+				
+		#LABELMINSCALEDENOM
+				
+		#OPACITY
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "pop"
+		  "wms_srs"    "EPSG:900913"
+		  "wms_name"    "pop"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:900913" 
+		END
+			  END #Layer
+		  
+	  LAYER
+		NAME "test.fdf"
+		STATUS off
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		 
+			DATA "the_geom from test.fdf  using unique gid using srid=25832"
+						TYPE LINE
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=mydb host=127.0.0.1 password=1234 options='-c client_encoding=UTF8'"
+				 
+		#CLASSITEM
+		
+		#LABELITEM
+				
+		#LABELMAXSCALEDENOM
+				
+		#LABELMINSCALEDENOM
+				
+		#OPACITY
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "hygh"
+		  "wms_srs"    "EPSG:25832"
+		  "wms_name"    "fdf"
+		  "wms_abstract"    "dsddfdffgvc"
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:25832" 
+		END
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  			  
+			  #SIZE
+			  			  
+		  END # style
+		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  			  
+			  #SIZE
+			  			  
+		  END # style
+		  
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+				CLASS
+		  #NAME
+		  NAME 'New style'
+		  
+		  #EXPRESSION
+		  		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  			  
+			  #SIZE
+			  			  
+		  END # style
+		  
+		  STYLE
+			  #SYMBOL
+			  			  
+			  #WIDTH
+			  				
+			  #COLOR
+			  			  
+			  #OUTLINECOLOR
+			  			  
+			  #SIZE
+			  			  
+		  END # style
+		  
+		  #TEMPLATE "ttt"
+		  
+		  #LABEL
+		  		END # Class
+			  END #Layer
+		  
+	  LAYER
+		NAME "public.publicquksigx020"
+		STATUS off
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		 
+			DATA "the_geom from public.publicquksigx020  using unique gid using srid=4326"
+						TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=mydb host=127.0.0.1 password=1234 options='-c client_encoding=UTF8'"
+				 
+		#CLASSITEM
+		
+		#LABELITEM
+				
+		#LABELMAXSCALEDENOM
+				
+		#LABELMINSCALEDENOM
+				
+		#OPACITY
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "publicquksigx020"
+		  "wms_srs"    "EPSG:4326"
+		  "wms_name"    "publicquksigx020"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+			  END #Layer
+		  
+	  LAYER
+		NAME "public.publicnuclear_facilities_update"
+		STATUS off
+		PROCESSING "CLOSE_CONNECTION=DEFER"
+		 
+			DATA "the_geom from public.publicnuclear_facilities_update  using unique gid using srid=4326"
+						TYPE POINT
+		CONNECTIONTYPE POSTGIS
+		CONNECTION "user=postgres dbname=mydb host=127.0.0.1 password=1234 options='-c client_encoding=UTF8'"
+				 
+		#CLASSITEM
+		
+		#LABELITEM
+				
+		#LABELMAXSCALEDENOM
+				
+		#LABELMINSCALEDENOM
+				
+		#OPACITY
+		
+		
+		#LABELMAXSCALE
+		METADATA
+		  "wms_title"    "publicnuclear_facilities_update"
+		  "wms_srs"    "EPSG:4326"
+		  "wms_name"    "publicnuclear_facilities_update"
+		  "wms_abstract"    ""
+		  "wms_format"    "image/png"
+                  "appformap_group"  "Default group"
+		  "appformap_queryable"    "true"
+      		  "appformap_loader"    "true"
+			  		END
+		PROJECTION
+		  "init=epsg:4326" 
+		END
+			  END #Layer
+		END #MapFile

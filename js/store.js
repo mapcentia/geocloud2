@@ -238,7 +238,7 @@ $(window).load(function() {"use strict";
             //iconCls : 'silk-pencil',
             iconCls : 'silk-map',
             handler : onSpatialEdit
-        }, '-' ,{
+        }, '-', {
             text : 'Layer settings',
             iconCls : 'silk-layers', // <-- icon
             menu : new Ext.menu.Menu({
@@ -268,7 +268,7 @@ $(window).load(function() {"use strict";
                     handler : onEditMoreSettings
                 }]
             })
-        },'-', {
+        }, '-', {
             text : 'Add new layer',
             iconCls : 'silk-add',
             handler : onAdd
@@ -392,87 +392,86 @@ $(window).load(function() {"use strict";
 
     function onAddSchema(btn, ev) {
         winAddSchema = new Ext.Window({
-                        title : 'Add new schema',
-                        height: 400,
-
-            items:[
-            new Ext.Panel({
-            layout : 'fit',
+            title : 'Add new schema',
+            height : 170,
             modal : true,
-            width : 320,
-            height : 150,
-            closeAction : 'close',
-            plain : false,
-            border : false,
-            items : [new Ext.FormPanel({
-                labelWidth : 1,
+            items : [new Ext.Panel({
+                layout : 'border',
+                width : 320,
+                height : 150,
+                closeAction : 'close',
+                border : false,
                 frame : true,
-                border : false,
-                //height: 100,
-                region : 'center',
-                id : "schemaform",
-                bodyStyle : {
-                    padding : '7px'
-                },
-                defaults : {
-                    allowBlank : false
-                    //msgTarget: 'side'
-                },
-                items : [{
-                    width: 268,
-                    xtype : 'textfield',
-                    name : 'schema',
-                    emptyText : 'Name of new schema'
-                }],
-                buttons : [{
-                    iconCls : 'silk-add',
-                    text : 'Add',
-                    handler : function() {
-                        var f = Ext.getCmp('schemaform');
-                        if (f.form.isValid()) {
-                            f.getForm().submit({
-                                url : '/controller/databases/' + screenName + '/addschema',
-                                waitMsg : 'Saving Data...',
-                                submitEmptyText : false,
-                                success : function() {
-                                    schemasStore.reload();
-                                    Ext.MessageBox.show({
-                                        title : 'Success!',
-                                        msg : 'New schema created',
-                                        buttons : Ext.MessageBox.OK,
-                                        width : 300,
-                                        height : 300
-                                    });
-                                },
-                                failure : function(form, action) {
-                                    var result = action.result;
-                                    Ext.MessageBox.show({
-                                        title : 'Failure',
-                                        msg : result.message,
-                                        buttons : Ext.MessageBox.OK,
-                                        width : 300,
-                                        height : 300
-                                    });
+                items : [new Ext.FormPanel({
+                    labelWidth : 1,
+                    frame : false,
+                    border : false,
+                    autoHeight : false,
+                    region : 'center',
+                    id : "schemaform",
 
-                                }
-                            });
-                        } else {
-                            var s = '';
-                            Ext.iterate(schemaForm.form.getValues(), function(key, value) {
-                                s += String.format("{0} = {1}<br />", key, value);
-                            }, this);
-                            //Ext.example.msg('Form Values', s);
+                    defaults : {
+                        allowBlank : false
+                        //msgTarget: 'side'
+                    },
+                    items : [{
+                        width : 293,
+                        xtype : 'textfield',
+                        name : 'schema',
+                        emptyText : 'Name of new schema'
+                    }],
+                    buttons : [{
+                        iconCls : 'silk-add',
+                        text : 'Add',
+                        handler : function() {
+                            var f = Ext.getCmp('schemaform');
+                            if (f.form.isValid()) {
+                                f.getForm().submit({
+                                    url : '/controller/databases/' + screenName + '/addschema',
+                                    waitMsg : 'Saving Data...',
+                                    submitEmptyText : false,
+                                    success : function() {
+                                        schemasStore.reload();
+                                        Ext.MessageBox.show({
+                                            title : 'Success!',
+                                            msg : 'New schema created',
+                                            buttons : Ext.MessageBox.OK,
+                                            width : 300,
+                                            height : 300
+                                        });
+                                    },
+                                    failure : function(form, action) {
+                                        var result = action.result;
+                                        Ext.MessageBox.show({
+                                            title : 'Failure',
+                                            msg : result.message,
+                                            buttons : Ext.MessageBox.OK,
+                                            width : 300,
+                                            height : 300
+                                        });
+
+                                    }
+                                });
+                            } else {
+                                var s = '';
+                                Ext.iterate(schemaForm.form.getValues(), function(key, value) {
+                                    s += String.format("{0} = {1}<br />", key, value);
+                                }, this);
+                                //Ext.example.msg('Form Values', s);
+                            }
                         }
-                    }
-                }]
-            }),new Ext.Panel({
-                region : "south",
-                border : false,
-                height : 200,
-                html :"dsd"
-            })]
+                    }]
+                }), new Ext.Panel({
+                    region : "south",
+                    border : false,
+                    bodyStyle : "padding : 7px",
 
-        })]});
+                    height : 50,
+                    html : "Schemas are used to organize tables into logical groups to make them more manageable."
+                })]
+
+            })]
+        });
 
         winAddSchema.show(this);
     }
@@ -1007,4 +1006,4 @@ $(window).load(function() {"use strict";
         layout : 'border',
         items : [ct, accordion]
     });
-}); 
+});
