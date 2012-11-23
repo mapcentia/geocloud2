@@ -121,7 +121,7 @@
                             var styleMap = new OpenLayers.StyleMap(style);
                             // Create a new map object
                             var cloud_example4 = new mygeocloud_ol.map("map_example4", "mydb");
-    						// Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
+                            // Create a new GeoJSON store with a custom style map. The lifetime of the query cache is set to avoid strees on the server.
                             var store_example4 = new mygeocloud_ol.geoJsonStore("mydb", {
                                 styleMap : styleMap,
                                 lifetime : 1000000
@@ -331,6 +331,261 @@ $(window).load(function() {
 &lt;div id=&quot;grid_example5&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
 </pre>
 				</div>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<script>
+                        var colors = {
+                            low : "rgb(50, 50, 255)",
+                            middle : "rgb(50, 50, 255)",
+                            high : "rgb(50, 50, 255)"
+                        };
+                        // Define three rules to style the cluster features.
+                        var lowRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.LESS_THAN,
+                                property : "count",
+                                value : 15
+                            }),
+                            symbolizer : {
+                                fillColor : colors.low,
+                                fillOpacity : 0.9,
+                                strokeColor : colors.low,
+                                strokeOpacity : 0.5,
+                                strokeWidth : 12,
+                                pointRadius : 10,
+                                label : "${count}",
+                                labelOutlineWidth : 1,
+                                fontColor : "#ffffff",
+                                fontOpacity : 0.8,
+                                fontSize : "12px"
+                            }
+                        });
+                        var middleRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.BETWEEN,
+                                property : "count",
+                                lowerBoundary : 15,
+                                upperBoundary : 50
+                            }),
+                            symbolizer : {
+                                fillColor : colors.middle,
+                                fillOpacity : 0.9,
+                                strokeColor : colors.middle,
+                                strokeOpacity : 0.5,
+                                strokeWidth : 12,
+                                pointRadius : 15,
+                                label : "${count}",
+                                labelOutlineWidth : 1,
+                                fontColor : "#ffffff",
+                                fontOpacity : 0.8,
+                                fontSize : "12px"
+                            }
+                        });
+                        var highRule = new OpenLayers.Rule({
+                            filter : new OpenLayers.Filter.Comparison({
+                                type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                                property : "count",
+                                value : 50
+                            }),
+                            symbolizer : {
+                                fillColor : colors.high,
+                                fillOpacity : 0.9,
+                                strokeColor : colors.high,
+                                strokeOpacity : 0.5,
+                                strokeWidth : 12,
+                                pointRadius : 20,
+                                label : "${count}",
+                                labelOutlineWidth : 1,
+                                fontColor : "#ffffff",
+                                fontOpacity : 0.8,
+                                fontSize : "12px"
+                            }
+                        });
+                        // Create a Style that uses the three previous rules
+                        var style = new OpenLayers.Style(null, {
+                            rules : [lowRule, middleRule, highRule]
+                        });
+                        var styleMap = new OpenLayers.StyleMap(style);
+
+                        var styleMap2 = new OpenLayers.StyleMap({
+                            'default' : {
+                                pointRadius : 10,
+                                fillColor : "blue",
+                                fillOpacity : 0.5,
+                                strokeColor : "blue",
+                                strokeOpacity : 0.9,
+                                label : "${magnitude}",
+                                fontColor : "#ffffff",
+                                fontOpacity : 1,
+                                fontSize : "9px"
+                            },
+                            'temporary' : {
+                                pointRadius : 12,
+                                fillColor : "blue",
+                                fillOpacity : 0.5,
+                                strokeColor : "blue",
+                                strokeOpacity : 0.9,
+                                label : "${magnitude}",
+                                fontColor : "#ffffff",
+                                fontOpacity : 1,
+                                fontSize : "9px"
+                            }
+                        });
+
+                        $(window).load(function() {
+                            // Create a new map object
+                            var cloud_example6 = new mygeocloud_ol.map("map_example6", "mydb");
+                            // Zoom to an extent
+                            cloud_example6.zoomToExtent([-13823322.969013, 4248362.674188, -12997803.063649, 4554110.7872862], true);
+                            // Create a fixed store for the cluster map
+                            var store_fixed_example6 = new mygeocloud_ol.geoJsonStore("mydb", {
+                                sql : "SELECT * FROM public.publicquksigx020",
+                                // We use server side cache for the fxed store
+                                lifetime : 100000,
+                                styleMap : styleMap,
+                                selectControl : {
+                                    onSelect : function(feature) {
+                                    	cloud_example6.zoomToPoint(feature.geometry.x,feature.geometry.y,9);
+                                    }
+                                }
+                            });
+                            // Activate clustering on the fixed layer
+                            store_fixed_example6.clusterActivate();
+                            // Create a new GeoJSON store for dynamically loading of features
+                            var store_dynamic_example6 = new mygeocloud_ol.geoJsonStore("mydb", {
+                                // You can use {minX}, {minY}, {maxX}, {maxy}, {centerX}, {centerY} and {bbox} in the SQL.
+                                sql : "SELECT * FROM public.publicquksigx020 WHERE ST_SetSRID('BOX({minX} {minY},{maxX} {maxY})'::Box2d,900913) && ST_Transform(public.publicquksigx020.the_geom,900913)",
+                                // Callback that is fired when a map movement ends
+                                movedEnd : function() {
+                                    // If we are zoomed to level 9, reload the store.
+                                    if (cloud_example6.map.getZoom() >= 9) {
+                                        store_dynamic_example6.reset();
+                                        store_dynamic_example6.load();
+                                        store_fixed_example6.hide();
+                                        // Else reset the dynamic store and show the fixed one
+                                    } else {
+                                        store_dynamic_example6.reset();
+                                        store_fixed_example6.show();
+                                    }
+                                },
+                                styleMap : styleMap2,
+                                // Add a control that shows a label when hovering over feature
+                                selectControl : {
+                                    hover : true,
+                                    highlightOnly : true,
+                                    clickout : true,
+                                    renderIntent : "temporary",
+                                    eventListeners : {
+                                        featurehighlighted : function(e) {
+                                            var feature = e.feature;
+                                            var pixel = cloud_example6.getPixelCoord(feature.geometry.x, feature.geometry.y)
+                                            $("#label").css("top", pixel.y - 70);
+                                            $("#label").css("left", pixel.x - 78);
+                                            $("#label").fadeIn(250);
+                                            $("#label").html("<div style='font-size:.8em'>Magnitude: " + feature.attributes.magnitude + "<br/>Year:" + feature.attributes.year + "</div>");
+                                        },
+                                        featureunhighlighted : function(e) {
+                                            $("#label").fadeOut(250);
+                                        }
+                                    }
+                                }
+                            });
+                            // Add the GeoJSON stores to the map
+                            cloud_example6.addGeoJsonStore(store_fixed_example6);
+                            cloud_example6.addGeoJsonStore(store_dynamic_example6);
+                            // Activate the select controls
+                            store_fixed_example6.selectControl.activate();
+                            store_dynamic_example6.selectControl.activate()
+                            // The initial load of the fixed store
+                            store_fixed_example6.load();
+                        });
+					</script>
+					<a name="6"></a>  
+					<p>
+						Then you've a lot of features you want to map, you need an efficient strategy to visualized them. Here we use two stores tied to the same data source with earthquakes: One fixed and one dynamic. In the fixed store we load all features with server side caching and activate clustering. Then we get above zoom level 9 (zooming in) the fixed store is hidden and the dynamic is loaded. The dynamic store only loads features within the map and reloads then pan or zoom ends. This strategy is enabled by using the movedEnd callback function and dynamic SQL. Further more we add a control to each store: When feature click on the fixed store we center on the cluster and zoom to level 9. When hover on the dynamic store a pretty label with feature attributes is shown.
+					</p>
+					<div id="map_example6" style="width: 100%;height: 500px;position: relative">
+						<div class="alert alert-info" id="label" style="display:none;padding:3px;width:150px;z-index: 1000;position: absolute"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span12">
+					<pre class="prettyprint">
+&lt;script&gt;
+$(window).load(function() {
+    // Create a new map object
+    var cloud_example6 = new mygeocloud_ol.map(&quot;map_example6&quot;, &quot;mydb&quot;);
+    // Zoom to an extent
+    cloud_example6.zoomToExtent([-13823322.969013, 4248362.674188, -12997803.063649, 4554110.7872862], true);
+    // Create a fixed store for the cluster map
+    var store_fixed_example6 = new mygeocloud_ol.geoJsonStore(&quot;mydb&quot;, {
+        sql : &quot;SELECT * FROM public.publicquksigx020&quot;,
+        // We use server side cache for the fxed store
+        lifetime : 100000,
+        styleMap : styleMap,
+        selectControl : {
+            onSelect : function(feature) {
+            	cloud_example6.zoomToPoint(feature.geometry.x,feature.geometry.y,9);
+            }
+        }
+    });
+    // Activate clustering on the fixed layer
+    store_fixed_example6.clusterActivate();
+    // Create a new GeoJSON store for dynamically loading of features
+    var store_dynamic_example6 = new mygeocloud_ol.geoJsonStore(&quot;mydb&quot;, {
+        // You can use {minX}, {minY}, {maxX}, {maxy}, {centerX}, {centerY} and {bbox} in the SQL.
+        sql : &quot;SELECT * FROM public.publicquksigx020 WHERE ST_SetSRID('BOX({minX} {minY},{maxX} {maxY})'::Box2d,900913) &amp;&amp; ST_Transform(public.publicquksigx020.the_geom,900913)&quot;,
+        // Callback that is fired when a map movement ends
+        movedEnd : function() {
+            // If we are zoomed to level 9, reload the store.
+            if (cloud_example6.map.getZoom() &gt;= 9) {
+                store_dynamic_example6.reset();
+                store_dynamic_example6.load();
+                store_fixed_example6.hide();
+                // Else reset the dynamic store and show the fixed one
+            } else {
+                store_dynamic_example6.reset();
+                store_fixed_example6.show();
+            }
+        },
+        styleMap : styleMap2,
+        // Add a control that shows a label when hovering over feature
+        selectControl : {
+            hover : true,
+            highlightOnly : true,
+            clickout : true,
+            renderIntent : &quot;temporary&quot;,
+            eventListeners : {
+                featurehighlighted : function(e) {
+                    var feature = e.feature;
+                    var pixel = cloud_example6.getPixelCoord(feature.geometry.x, feature.geometry.y)
+                    $(&quot;#label&quot;).css(&quot;top&quot;, pixel.y - 70);
+                    $(&quot;#label&quot;).css(&quot;left&quot;, pixel.x - 78);
+                    $(&quot;#label&quot;).fadeIn(250);
+                    $(&quot;#label&quot;).html(&quot;&lt;div style='font-size:.8em'&gt;Magnitude: &quot; + feature.attributes.magnitude + &quot;&lt;br/&gt;Year:&quot; + feature.attributes.year + &quot;&lt;/div&gt;&quot;);
+                },
+                featureunhighlighted : function(e) {
+                    $(&quot;#label&quot;).fadeOut(250);
+                }
+            }
+        }
+    });
+    // Add the GeoJSON stores to the map
+    cloud_example6.addGeoJsonStore(store_fixed_example6);
+    cloud_example6.addGeoJsonStore(store_dynamic_example6);
+    // Activate the select controls
+    store_fixed_example6.selectControl.activate();
+    store_dynamic_example6.selectControl.activate()
+    // The initial load of the fixed store
+    store_fixed_example6.load();
+});
+&lt;/script&gt;
+&lt;div id=&quot;map_example6&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
+</pre>
+				</div>
+
 			</div>
 			<!--#include virtual="../footer.html" -->
 		</div>

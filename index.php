@@ -138,7 +138,7 @@
 						<div>
 							<h3 style="padding: 10px 0px;">Add maps to your own apps</h3>
 							<p>
-								Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site.
+								Visualize your data on maps. Just use HTML and JavaScript through a powerful API for adding maps to your own app or web site. <a href="/developers/mapclientapi/index.html">Learn more</a>.
 							</p>
 						</div>
 					</div>
@@ -146,7 +146,7 @@
 						<div>
 							<h3 style="padding: 10px 0px;">Build on open source software</h3>
 							<p>
-								The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities. If you can think the analysis you can do it.
+								The core component of MyGeoCloud is the rock solid PostGIS database with endless possibilities. If you can think the analysis you can do it. <a href="/developers/mapclientapi/advanced1.html">Learn more</a>.
 							</p>
 						</div>
 					</div>

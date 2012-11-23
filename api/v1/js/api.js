@@ -17,7 +17,7 @@ if (scriptSource.charAt(0) === "/") {
 document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 //document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='https://raw.github.com/mhoegh/AnimatedCluster/master/AnimatedCluster.js'><\/script>");
+document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
@@ -29,6 +29,8 @@ var mygeocloud_ol = (function() {"use strict";
     var geoJsonStore = function(db, config) {
         var prop, parentThis = this;
         var defaults = {
+            sql: null,
+            onLoad: function(){},
             styleMap : null,
             projection : "900913",
             strategies : null,
@@ -36,13 +38,18 @@ var mygeocloud_ol = (function() {"use strict";
             rendererOptions : {
                 zIndexing : true
             },
-            lifetime: 0
+            lifetime : 0,
+            movedEnd : function () {},
+            selectControl : {}
         };
         if (config) {
             for (prop in config) {
                 defaults[prop] = config[prop];
             }
         };
+        this.sql = defaults.sql;
+        this.onLoad = defaults.onLoad;
+        this.movedEnd = defaults.movedEnd;
         // Map member for parent map obj. Set when store is added to a map
         this.map = null;
         // Layer Def
@@ -52,16 +59,20 @@ var mygeocloud_ol = (function() {"use strict";
             renderers : ['Canvas', 'SVG', 'VML'],
             rendererOptions : defaults.rendererOptions,
             strategies : [new OpenLayers.Strategy.AnimatedCluster({
-            //strategies : [new OpenLayers.Strategy.Cluster({
+                //strategies : [new OpenLayers.Strategy.Cluster({
                 distance : 45,
                 animationMethod : OpenLayers.Easing.Expo.easeOut,
                 animationDuration : 10,
                 autoActivate : false
             })]
         });
-        this.moved = function() {
-         
+        this.hide = function(){
+            this.layer.setVisibility(false);   
         };
+        this.show = function(){
+            this.layer.setVisibility(true);   
+        };
+      
         /*
          this.layer.strategies[0].activate = function() {
          var activated = OpenLayers.Strategy.prototype.activate.call(this);
@@ -134,42 +145,31 @@ var mygeocloud_ol = (function() {"use strict";
         this.pointControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Point);
         this.lineControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Path);
         this.polygonControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Polygon);
-        this.selectFeatureControl = new OpenLayers.Control.SelectFeature(this.layer, {
-            //hover: true,
-            multiple : false,
-            highlightOnly : true,
-            renderIntent : "temporary",
-            onSelect : function() {
-                alert('')
-            }
-        });
-        //this.selectFeatureControl.handlers.feature.stopDown = false;
-       
-        this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {
+        this.selectControl = new OpenLayers.Control.SelectFeature(this.layer, defaults.selectControl);
+        this.selectControl.handlers.feature.stopDown = false;
 
-        });
-        this.onLoad = function() {
-        };
+        this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {});
+    
         this.geoJSON = {};
         this.featureStore = null;
-        this.sql = "";
         this.load = function(doNotShowAlertOnError) {
+            var sql = this.sql;
             try {
                 var map = parentThis.map;
-                this.sql = this.sql.replace("${centerX}", map.getCenter().lat.toString());
-                this.sql = this.sql.replace("${centerY}", map.getCenter().lon.toString());
-                this.sql = this.sql.replace("${minX}", map.getExtent().left);
-                this.sql = this.sql.replace("${maxX}", map.getExtent().right);
-                this.sql = this.sql.replace("${minY}", map.getExtent().bottom);
-                this.sql = this.sql.replace("${maxY}", map.getExtent().top);
-                this.sql = this.sql.replace("${bbox}", map.getExtent().toString());
-
-                //console.log(this.sql);
+                sql = sql.replace("{centerX}", map.getCenter().lat.toString());
+                sql = sql.replace("{centerY}", map.getCenter().lon.toString());
+                sql = sql.replace("{minX}", map.getExtent().left);
+                sql = sql.replace("{maxX}", map.getExtent().right);
+                sql = sql.replace("{minY}", map.getExtent().bottom);
+                sql = sql.replace("{maxY}", map.getExtent().top);
+                sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch(e) {
+                console.log(e.message);
             }
+            //console.log(sql);
             $.ajax({
                 dataType : 'jsonp',
-                data : 'q=' + encodeURIComponent(this.sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
+                data : 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
                 jsonp : 'jsonp_callback',
                 url : host + '/api/v1/sql/' + db,
                 success : function(response) {
@@ -213,12 +213,11 @@ var mygeocloud_ol = (function() {"use strict";
             x : 1,
             y : 2
         };
-        this.zoomToExtent = function(extent,closest) {
-            if (!extent){
+        this.zoomToExtent = function(extent, closest) {
+            if (!extent) {
                 this.map.zoomToExtent(this.map.maxExtent);
-            }
-            else {
-                this.map.zoomToExtent(new OpenLayers.Bounds(extent),closest);
+            } else {
+                this.map.zoomToExtent(new OpenLayers.Bounds(extent), closest);
             }
         };
         this.zoomToExtentOfgeoJsonStore = function(store) {
@@ -237,6 +236,19 @@ var mygeocloud_ol = (function() {"use strict";
             //console.log(layerArr);
             return layerArr.join(";");
         }
+        this.getZoom = function(){
+            return this.getZoom();
+        }
+        this.getPixelCoord = function(x,y){
+            var p={};
+            p.x = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x,y)).x;
+            p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x,y)).y;
+            return p;            
+        }
+        this.zoomToPoint = function(x,y,z){
+            this.map.setCenter(new OpenLayers.LonLat(x,y),z);
+        }
+        
         this.clickController = OpenLayers.Class(OpenLayers.Control, {
             defaultHandlerOptions : {
                 'single' : true,
@@ -319,16 +331,19 @@ var mygeocloud_ol = (function() {"use strict";
             this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
             //this.mapQuestOSM.wrapDateLine = false;
             this.map.addLayer(this.mapQuestOSM);
+            return (this.mapQuestOSM);
         }
         this.addMapQuestAerial = function() {
             this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
             this.mapQuestAerial.wrapDateLine = false;
             this.map.addLayer(this.mapQuestAerial);
+            return (this.mapQuestAerial);
         }
         this.addOSM = function() {
             this.baseOSM = new OpenLayers.Layer.OSM("OSM");
             this.baseOSM.wrapDateLine = false;
             this.map.addLayer(this.baseOSM);
+            return (this.baseOSM);
         }
         this.addGoogleStreets = function() {
             // v2
@@ -351,6 +366,7 @@ var mygeocloud_ol = (function() {"use strict";
             } catch(e) {
             }
             this.map.addLayer(this.baseGNORMAL);
+            return (this.baseGNORMAL);
         }
         this.addGoogleHybrid = function() {
             // v2
@@ -374,9 +390,9 @@ var mygeocloud_ol = (function() {"use strict";
                 alert(e.message)
             }
             this.map.addLayer(this.baseGHYBRID);
-            return(this.baseGHYBRID);
+            return (this.baseGHYBRID);
         }
-        this.setBaseLayer = function(baseLayer){
+        this.setBaseLayer = function(baseLayer) {
             this.map.setBaseLayer(baseLayer);
         }
         this.addTileLayers = function(layers, config) {
@@ -453,9 +469,9 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.addControl(store.pointControl);
             this.map.addControl(store.lineControl);
             this.map.addControl(store.polygonControl);
-            this.map.addControl(store.selectFeatureControl);
+            this.map.addControl(store.selectControl);
             this.map.addControl(store.modifyControl);
-            this.map.events.register("moveend", null, store.moved);
+            this.map.events.register("moveend", null, store.movedEnd);
 
         };
         this.addControl = function(control) {
@@ -628,11 +644,19 @@ var mygeocloud_ol = (function() {"use strict";
             items : [this.grid]
         });
         this.grid.getSelectionModel().bind().handlers.feature.stopDown = false;
-        this.selectionModel=this.grid.getSelectionModel().bind();
+        this.selectionModel = this.grid.getSelectionModel().bind();
     };
     return {
         geoJsonStore : geoJsonStore,
         map : map,
-        grid : grid
+        grid : grid,
+        urlVars : (function getUrlVars() {
+            var mapvars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, key, value) {
+                mapvars[key] = value;
+            });
+            return mapvars;
+        })(),
+        pathName : window.location.pathname.split("/")
     };
 })();

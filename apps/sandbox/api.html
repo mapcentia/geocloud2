@@ -10,128 +10,141 @@
 		</script>
 
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
-		<script type="text/javascript">
-            var fireSql;
-            var ogrid;
-            // Define three colors that will be used to style the cluster features
-            // depending on the number of features they contain.
-            var colors = {
-                low : "rgb(181, 226, 140)",
-                middle : "rgb(241, 211, 87)",
-                high : "rgb(253, 156, 115)"
-            };
-
-            // Define three rules to style the cluster features.
-            var lowRule = new OpenLayers.Rule({
-                filter : new OpenLayers.Filter.Comparison({
-                    type : OpenLayers.Filter.Comparison.LESS_THAN,
-                    property : "count",
-                    value : 15
-                }),
-                symbolizer : {
-                    fillColor : colors.low,
-                    fillOpacity : 0.9,
-                    strokeColor : colors.low,
-                    strokeOpacity : 0.5,
-                    strokeWidth : 12,
-                    pointRadius : 10,
-                    label : "${count}",
-                    labelOutlineWidth : 1,
-                    fontColor : "#ffffff",
-                    fontOpacity : 0.8,
-                    fontSize : "12px"
-                }
-            });
-            var middleRule = new OpenLayers.Rule({
-                filter : new OpenLayers.Filter.Comparison({
-                    type : OpenLayers.Filter.Comparison.BETWEEN,
-                    property : "count",
-                    lowerBoundary : 15,
-                    upperBoundary : 50
-                }),
-                symbolizer : {
-                    fillColor : colors.middle,
-                    fillOpacity : 0.9,
-                    strokeColor : colors.middle,
-                    strokeOpacity : 0.5,
-                    strokeWidth : 12,
-                    pointRadius : 15,
-                    label : "${count}",
-                    labelOutlineWidth : 1,
-                    fontColor : "#ffffff",
-                    fontOpacity : 0.8,
-                    fontSize : "12px"
-                }
-            });
-            var highRule = new OpenLayers.Rule({
-                filter : new OpenLayers.Filter.Comparison({
-                    type : OpenLayers.Filter.Comparison.GREATER_THAN,
-                    property : "count",
-                    value : 50
-                }),
-                symbolizer : {
-                    fillColor : colors.high,
-                    fillOpacity : 0.9,
-                    strokeColor : colors.high,
-                    strokeOpacity : 0.5,
-                    strokeWidth : 12,
-                    pointRadius : 20,
-                    label : "${count}",
-                    labelOutlineWidth : 1,
-                    fontColor : "#ffffff",
-                    fontOpacity : 0.8,
-                    fontSize : "12px"
-                }
-            });
-
-            // Create a Style that uses the three previous rules
-            var style = new OpenLayers.Style(null, {
-                rules : [lowRule, middleRule, highRule]
-            });
-            var styleMap = new OpenLayers.StyleMap(style);
-			var store1;
-            $(window).load(function() {
-                var cloud = new mygeocloud_ol.map("map", "mh");
-                cloud.zoomToExtent([1048024.7345447, 7787676.97359, 1080128.2864201, 7793409.7507106],true);
-                
-                store1 = new mygeocloud_ol.geoJsonStore("mh",{visibility:false});
-                store2 = new mygeocloud_ol.geoJsonStore("mh",{styleMap:styleMap});
-                store1.moved = function() {
-                	console.log(cloud.getExtent());
-                    //store1.load();
-                }
-                store1.layer.setVisibility(true);
-               // cloud.addGeoJsonStore(store2);
-                cloud.addGeoJsonStore(store1);
-                //store2.clusterActivate();
-                //store1.polygonControl.activate();
-                store1.sql = "select the_geom from public.adresser order by gid limit 10 ${bbox}";
-                store2.sql = "select the_geom from public.adresser order by gid limit 1000";
-                store1.load();
-                
-                
-                store1.onLoad = function() {
-                    $("#grid").empty();
-                    //ogrid = new mygeocloud_ol.grid("grid",store1);
-                    //cloud.zoomToExtentOfgeoJsonStore(store1);
-                   // store2.load();
-                    store1.onLoad = function() {};
-                };
-
-                //cloud.addTileLayers(["public.test2"]);
-            })
-		</script>
 	</head>
 	<body>
-		<div id="map" style="width: 100%;height: 300px"></div>
-		<div id="grid" style="width: 500px;height: 1px"></div>
-		<textarea id="sql">select the_geom from test2</textarea>
-		<button value"Click" onclick="store1.clusterActivate()">
-			Activate
-		</button>
-		<button value"Click" onclick="store1.clusterDeactivate()">
-			Deactivate
-		</button>
+		<div class="row">
+			<div class="span12">
+				<script>
+                    var colors = {
+                        low : "rgb(181, 226, 140)",
+                        middle : "rgb(241, 211, 87)",
+                        high : "rgb(253, 156, 115)"
+                    };
+                    // Define three rules to style the cluster features.
+                    var lowRule = new OpenLayers.Rule({
+                        filter : new OpenLayers.Filter.Comparison({
+                            type : OpenLayers.Filter.Comparison.LESS_THAN,
+                            property : "count",
+                            value : 15
+                        }),
+                        symbolizer : {
+                            fillColor : colors.low,
+                            fillOpacity : 0.9,
+                            strokeColor : colors.low,
+                            strokeOpacity : 0.5,
+                            strokeWidth : 12,
+                            pointRadius : 10,
+                            label : "${count}",
+                            labelOutlineWidth : 1,
+                            fontColor : "#ffffff",
+                            fontOpacity : 0.8,
+                            fontSize : "12px"
+                        }
+                    });
+                    var middleRule = new OpenLayers.Rule({
+                        filter : new OpenLayers.Filter.Comparison({
+                            type : OpenLayers.Filter.Comparison.BETWEEN,
+                            property : "count",
+                            lowerBoundary : 15,
+                            upperBoundary : 50
+                        }),
+                        symbolizer : {
+                            fillColor : colors.middle,
+                            fillOpacity : 0.9,
+                            strokeColor : colors.middle,
+                            strokeOpacity : 0.5,
+                            strokeWidth : 12,
+                            pointRadius : 15,
+                            label : "${count}",
+                            labelOutlineWidth : 1,
+                            fontColor : "#ffffff",
+                            fontOpacity : 0.8,
+                            fontSize : "12px"
+                        }
+                    });
+                    var highRule = new OpenLayers.Rule({
+                        filter : new OpenLayers.Filter.Comparison({
+                            type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                            property : "count",
+                            value : 50
+                        }),
+                        symbolizer : {
+                            fillColor : colors.high,
+                            fillOpacity : 0.9,
+                            strokeColor : colors.high,
+                            strokeOpacity : 0.5,
+                            strokeWidth : 12,
+                            pointRadius : 20,
+                            label : "${count}",
+                            labelOutlineWidth : 1,
+                            fontColor : "#ffffff",
+                            fontOpacity : 0.8,
+                            fontSize : "12px"
+                        }
+                    });
+                    // Create a Style that uses the three previous rules
+                    var style = new OpenLayers.Style(null, {
+                        rules : [lowRule, middleRule, highRule]
+                    });
+                    var styleMap = new OpenLayers.StyleMap(style);
+                    // Create a select control
+                    var selectControl = {
+                        multiple : false,
+                        highlightOnly : true,
+                        renderIntent : "temporary",
+                        onSelect : function() {
+                            alert('')
+                        }
+                    };
+                    $(window).load(function() {
+                        // Create a new map object
+                        var cloud_example6 = new mygeocloud_ol.map("map_example6", "mydb");
+                        // Zoom to an extent
+                        cloud_example6.zoomToExtent([-13823322.969013,4248362.674188,-12997803.063649,4554110.7872862], true);
+                        // Create a fixed store for the cluster map
+                        var store_fixed_example6 = new mygeocloud_ol.geoJsonStore("mydb", {
+                            sql : "SELECT * FROM public.publicquksigx020",
+                            // We use server side cache for the fxed store
+                            lifetime : 100000, 
+                            styleMap : styleMap,
+                            selectControl : selectControl
+                        });
+                        // Activate clustering on the fixed layer
+                        store_fixed_example6.clusterActivate();
+                        // Create a new GeoJSON store for dynamically loading of features
+                        var store_dynamic_example6 = new mygeocloud_ol.geoJsonStore("mydb", {
+                        	// You can use {minX}, {minY}, {maxX}, {maxy}, {centerX}, {centerY} and {bbox} in the SQL.
+                            sql : "SELECT * FROM public.publicquksigx020 WHERE ST_SetSRID('BOX({minX} {minY},{maxX} {maxY})'::Box2d,900913) && ST_Transform(public.publicquksigx020.the_geom,900913)",
+                            // Callback that is fired when a map movement ends
+                            movedEnd : function() {
+                                //console.log(cloud_example6.map.getZoom());
+                                // If we are zoomed to level 9, reload the store.
+                                if (cloud_example6.map.getZoom() >= 9) {
+                                    store_dynamic_example6.reset();
+                                    store_dynamic_example6.load();
+                                    store_fixed_example6.hide();
+                                // Else reset the dynamic store and show the fixed one
+                                } else {
+                                    store_dynamic_example6.reset();
+                                    store_fixed_example6.show();
+                                }
+                            }
+                        });
+                        // Add the GeoJSON stores to the map
+                        cloud_example6.addGeoJsonStore(store_fixed_example6);
+                        cloud_example6.addGeoJsonStore(store_dynamic_example6);
+                        // Activate the select control
+                        store_fixed_example6.selectControl.activate();
+                        // The initial load of the fixed store
+                        store_fixed_example6.load();
+                    });
+				</script>
+				<p>
+					This is a bit more advanced example. It shows how use the the SQL API to create a 100 km buffer around features. Both the features and the buffers is mapped. Because the features in this case are stored in projection EPSG:4326 they are transformed to webmercator before the buffering. The grid object is used to show the GeoJSON in a table grid.
+				</p>
+				<div id="map_example6" style="width: 100%;height: 500px"></div>
+			</div>
+		</div>
 	</body>
 
 </html>
