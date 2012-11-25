@@ -170,26 +170,35 @@
 						<img src="/theme/images/admin.png" class="img-rounded img-polaroid">
 					</div>
 				</div>
-				<div class="row" style="display: none">
+				<div class="row">
 					<div class="span4">
-						<h4>Use your web skills</h4>
+						<h3 style="padding: 10px 0px;">Maintain your data</h3>
 						<p>
-							sdsdds
+							You can edit your data sets from any application, which supports the WFS-Tstandard. We recommend the desktop application QGIS, which is OpenSource and runs on Linux, MacOSX and Windows.
 						</p>
 					</div>
 					<div class="span4">
-						<h4>Use spatial SQL</h4>
+						<h3 style="padding: 10px 0px;">Upload your data</h3>
 						<p>
-							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
-							structures and setup layers and styles for map rendering.
+							Upload your existing data to your MyGeoCloud database. At the moment you can upload Shape files and MapInfo Tab files, but soon we will add more like GeoJSON og GML.
 						</p>
 					</div>
 					<div class="span4">
-						<h4>Maintain your data</h4>
+						<h3 style="padding: 10px 0px;">Use spatial SQL</h3>
 						<p>
-							Get full administration of your geospatial database through a web browser. Upload new data by Shape or MapInfo files, alter table
-							structures and setup layers and styles for map rendering.
+							With the SQL API you can fire any SQL for accessing your data. You can use on web sites, in apps and on servers. And in any programming language. <a href="/developers/sqlapi/index.html">Learn more</a>
 						</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="span4">
+						<img src="/theme/images/qgis.png" class="img-rounded img-polaroid">
+					</div>
+					<div class="span4">
+						<img src="/theme/images/upload.png" class="img-rounded img-polaroid">
+					</div>
+					<div class="span4">
+						<img src="/theme/images/sql.png" class="img-rounded img-polaroid">
 					</div>
 				</div>
 			</div>

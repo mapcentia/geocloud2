@@ -478,6 +478,7 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.addControl(control);
             control.handlers.feature.stopDown = false;
             control.activate();
+            return control;
         };
         this.removeGeoJsonStore = function(store) {
             this.map.removeLayer(store.layer);
