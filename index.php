@@ -186,7 +186,7 @@
 					<div class="span4">
 						<h3 style="padding: 10px 0px;">Use spatial SQL</h3>
 						<p>
-							With the SQL API you can fire any SQL for accessing your data. You can use on web sites, in apps and on servers. And in any programming language. <a href="/developers/sqlapi/index.html">Learn more</a>
+							With the SQL API you can fire any SQL query for accessing your data. You can use the API on web sites, in apps and on servers. And in any programming language. <a href="/developers/sqlapi/index.html">Learn more</a>
 						</p>
 					</div>
 				</div>
