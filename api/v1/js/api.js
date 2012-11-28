@@ -29,8 +29,9 @@ var mygeocloud_ol = (function() {"use strict";
     var geoJsonStore = function(db, config) {
         var prop, parentThis = this;
         var defaults = {
-            sql: null,
-            onLoad: function(){},
+            sql : null,
+            onLoad : function() {
+            },
             styleMap : null,
             projection : "900913",
             strategies : null,
@@ -39,7 +40,8 @@ var mygeocloud_ol = (function() {"use strict";
                 zIndexing : true
             },
             lifetime : 0,
-            movedEnd : function () {},
+            movedEnd : function() {
+            },
             selectControl : {}
         };
         if (config) {
@@ -66,13 +68,13 @@ var mygeocloud_ol = (function() {"use strict";
                 autoActivate : false
             })]
         });
-        this.hide = function(){
-            this.layer.setVisibility(false);   
+        this.hide = function() {
+            this.layer.setVisibility(false);
         };
-        this.show = function(){
-            this.layer.setVisibility(true);   
+        this.show = function() {
+            this.layer.setVisibility(true);
         };
-      
+
         /*
          this.layer.strategies[0].activate = function() {
          var activated = OpenLayers.Strategy.prototype.activate.call(this);
@@ -149,7 +151,7 @@ var mygeocloud_ol = (function() {"use strict";
         this.selectControl.handlers.feature.stopDown = false;
 
         this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {});
-    
+
         this.geoJSON = {};
         this.featureStore = null;
         this.load = function(doNotShowAlertOnError) {
@@ -193,6 +195,9 @@ var mygeocloud_ol = (function() {"use strict";
         this.reset = function() {
             this.layer.destroyFeatures();
         };
+        this.getWKT = function () {
+          return new OpenLayers.Format.WKT().write(this.layer.features);
+        };
     };
     map = function(el, db, config) {
         var prop, baseLayer, // baseLayer wrapper
@@ -210,8 +215,9 @@ var mygeocloud_ol = (function() {"use strict";
         this.layerStr = "";
         this.db = db;
         this.geoLocation = {
-            x : 1,
-            y : 2
+            x : null,
+            y : null,
+            obj : {}
         };
         this.zoomToExtent = function(extent, closest) {
             if (!extent) {
@@ -236,19 +242,19 @@ var mygeocloud_ol = (function() {"use strict";
             //console.log(layerArr);
             return layerArr.join(";");
         }
-        this.getZoom = function(){
+        this.getZoom = function() {
             return this.getZoom();
         }
-        this.getPixelCoord = function(x,y){
-            var p={};
-            p.x = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x,y)).x;
-            p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x,y)).y;
-            return p;            
+        this.getPixelCoord = function(x, y) {
+            var p = {};
+            p.x = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).x;
+            p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).y;
+            return p;
         }
-        this.zoomToPoint = function(x,y,z){
-            this.map.setCenter(new OpenLayers.LonLat(x,y),z);
+        this.zoomToPoint = function(x, y, z) {
+            this.map.setCenter(new OpenLayers.LonLat(x, y), z);
         }
-        
+
         this.clickController = OpenLayers.Class(OpenLayers.Control, {
             defaultHandlerOptions : {
                 'single' : true,
@@ -508,22 +514,33 @@ var mygeocloud_ol = (function() {"use strict";
             strokeWidth : 0
         };
         this.map.addLayers([geolocation_layer]);
-        var locateCallBack = function() {
-        };
-        // A function that is fired when map is zoomed to geolocation
-        this.locate = function(callback) {
-            if (callback == null) {
-                callback = function() {
-                };
-            }
-            locateCallBack = callback;
+
+        var firstCallBack;
+        var trackCallBack;
+        this.locate = function(config) {
+            var defaults = {
+                firstCallBack : function() {
+                },
+                trackCallBack : function() {
+                }
+            };
+            if (config) {
+                for (prop in config) {
+                    defaults[prop] = config[prop];
+                }
+            };
+            firstCallBack = defaults.firstCallBack;
+            trackCallBack = defaults.trackCallBack;
             geolocation_layer.removeAllFeatures();
             geolocate.deactivate();
             //$('track').checked = false;
-            geolocate.watch = false;
+            geolocate.watch = true;
             firstGeolocation = true;
             geolocate.activate();
         };
+        this.stopLocate = function () {
+            geolocate.deactivate();
+        }
         var geolocate = new OpenLayers.Control.Geolocate({
             bind : false,
             geolocationOptions : {
@@ -543,18 +560,21 @@ var mygeocloud_ol = (function() {"use strict";
                 fillOpacity : 0,
                 pointRadius : 10
             }), circle]);
+            parentMap.geoLocation = {
+                x : e.point.x,
+                y : e.point.y,
+                obj : e
+            };
             if (firstGeolocation) {
                 this.map.zoomToExtent(geolocation_layer.getDataExtent());
                 pulsate(circle);
                 firstGeolocation = false;
                 this.bind = true;
-
-                parentMap.geoLocation = {
-                    x : e.point.x,
-                    y : e.point.y
-                };
-                locateCallBack();
+                firstCallBack();
+            } else {
+                trackCallBack();
             }
+            
         });
         geolocate.events.register("locationfailed", this, function() {
             alert("No location");

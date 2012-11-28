@@ -1,37 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html debug="false">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<title>OpenLayers Basic Single WMS Example</title>
-		<script type="text/javascript" src="/api/v1/js/api.js"></script>
+		<script src="/js/geo-location-javascript/js/geo_position_js_simulator.js" type="text/javascript" charset="utf-8"></script>
+		<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>		
+		<style>
+			#map {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				z-index: 1;
+			}
+			body {
+				margin: 0px;
+				padding: 0px;
+			}
+			.btn-group {
+				position: absolute;
+				top: 5px;
+				right: 5px;
+				z-index: 1000;
+			}
+		</style>
+		<script>
+			var mygeocloud_host = "";
+		    document.write("<script src='" + mygeocloud_host + "/api/v1/js/api.js'><\/script>");
+		    document.write("<script src='" + mygeocloud_host + "/js/bootstrap/js/bootstrap.js'><\/script>");
+		    document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/bootstrap/css/bootstrap.css'\/>");
+			document.write("<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'><\/script>");
 
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false">
-            ">
+            var points = [];
+            var store;
+            var cloud;
+            var activated = false;
+            var activate = function(arg) {
+                (arg) ? activated = true : activated = false;
+            }
+            var addFeatures = function() {
+                if (points.length > 1 && activated === true) {
+                    var lineString = new OpenLayers.Geometry.LineString(points);
+                    var feature = new OpenLayers.Feature.Vector(lineString);
+                    store.reset();
+                    store.layer.addFeatures([feature]);
+                    console.log(store.getWKT());
+                }
+            }
+            var options = {
+
+                firstCallBack : function() {
+                    points.push(cloud.geoLocation.obj.point);
+                    //console.log(cloud.geoLocation);
+                    addFeatures(cloud.geoLocation);
+                },
+                trackCallBack : function() {
+                    points.push(cloud.geoLocation.obj.point);
+                    if (cloud.geoLocation.x !== points[points.length - 2].x && cloud.geoLocation.y !== points[points.length - 2].y) {
+                       //console.log(cloud.geoLocation);
+                        addFeatures(cloud.geoLocation.obj);
+                    }
+                }
+            }
+
+            $(window).load(function() {
+                // Create a new map object
+                cloud = new mygeocloud_ol.map("map", "mydb");
+                store = new mygeocloud_ol.geoJsonStore("mobreg");
+                cloud.addGeoJsonStore(store);
+                cloud.locate(options);
+
+            });
 		</script>
-
-		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 	</head>
 	<body>
-		<div class="row">
-			<div class="span12">
-				<script>
-					var callBack = function () {
-					  console.log("Test");
-					}
-                    var cloud_example6;
-                    $(window).load(function() {
-                        // Create a new map object
-                        cloud_example6 = new mygeocloud_ol.map("map_example6", "mydb");
-                        
-                        
-                       
-                   
-                    });
-				</script>
-				<button onclick="cloud_example6.locate(callBack)">Track</button>
-				<div id="map_example6" style="width: 100%;height: 500px"></div>
+		<div id="map">
+			<div class="btn-group" data-toggle="buttons-radio">
+				<button type="button" class="btn" onclick="activate(true)">
+					Start
+				</button>
+				<button type="button" class="btn" onclick="activate(false)">
+					stop
+				</button>
 			</div>
 		</div>
 	</body>
-
 </html>
