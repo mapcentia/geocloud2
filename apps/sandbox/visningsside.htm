@@ -1,0 +1,409 @@
+<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'></script>
+
+<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+<style>
+	.attr-table1 {
+		background-color: silver;
+	}
+	.attr-table2 {
+		background-color: white;
+	}
+	.attr-table1 td, .attr-table2 td {
+		padding: 5px;
+	}
+	img {
+		max-width: none
+	}
+	.table tr td {
+		font-size: 8pt;
+		padding: 0px;
+		padding-right: 5px
+	}
+	.pict-table1 {
+		background-color: silver;
+	}
+	.pict-table2 {
+		background-color: white;
+	}
+	.pict-table1 td, .pict-table2 td {
+		padding: 5px;
+	}
+	img {
+		max-width: none
+	}
+	.table tr td {
+		font-size: 8pt;
+		padding: 0px;
+		padding-right: 5px
+	}
+</style>
+<script type="text/javascript" src="http://randers-kp.cowi.webhouse.dk/js/jquery.js"></script>
+<script type="text/javascript" src="http://alpha.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+
+<script type="text/html" id="template">
+	<table class="table table-striped">
+	<tr>
+	<h5>Oplysninger</h5>
+	</tr>
+	<%
+	for (var key in attributes) {
+	if (this.attributes[key]!==null && this.attributes[key]!==undefined) {
+
+	%>
+
+	<tr><td ><%= attributes[key] %></td><td><%= this.attributes[key] %></td></tr>
+
+	<%
+	}
+	}
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+	var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
+	}
+	else {
+	var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
+	}
+	%>
+
+	</table>
+</script>
+
+<script type="text/html" id="templatepict">
+	<table class="table table-striped">
+
+	<%
+	for (var key in attributes) {
+	if (this.attributes[key]!==null) {
+	%>
+
+	<%
+	}
+	}
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+	var folders = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
+	var imagePath = folders[0] + "/" + folders[1] + "/" + folders[2];
+	}
+	else {
+
+	}
+	%>
+
+	<tr>
+	<h5>Billeder fra offentlig vej</h5>
+	</tr>
+	<tr>
+		
+	<% 
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
+			var folder = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	
+	else {
+	
+	for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
+		var imagePath = this.attributes['assets3'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+		<%}
+	} %>
+		
+		
+		
+	</tr>
+	<tr><h5>Øvrige billeder</h5>
+	</tr>
+	<tr>
+
+	<%
+	if (this.attributes['assets4'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+			var folder = this.attributes['assets4'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	else{
+		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+		var imagePath = this.attributes['assets4'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+		
+		<%	}}%>
+		
+	<%
+	if (this.attributes['assets5']){
+	if (this.attributes['assets5'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+			var folder = this.attributes['assets5'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	else{
+		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+		var imagePath = this.attributes['assets5'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+		
+		<%	}}}%>
+	
+
+	</tr>
+
+	</table>
+</script>
+
+<script>
+    var attributespict = {
+        "adresse" : "Adresse",
+        "bevaring" : "Bevaringsværdi",
+        "bevaring_kommentar" : "Kommentar",
+        "bebyggelsesmiljoe_fritliggende" : "Miljø på fritliggende ejendom"
+    }
+
+    var attributes = {
+        "adresse" : "Adresse",
+        "bygn_stilart" : "Stilart:",
+        "opfoerelsesaar" : "Opførelsesår:",
+        "date" : "Registreringsdato:",
+        "registrering_kode" : "Registreringsnote",
+        "adresse" : "Adresse",
+        "bygn_stilart" : "Stilart",
+        "bygnr" : "Bygningsnr",
+        "byg_anv" : "Bygningsanvendelse",
+        "opfaar" : "Opførelsesår",
+        "ombaar" : "Ombygningsår",
+        "mat_vaeg" : "Vægmateriale",
+        "mat_tag" : "Tagmateriale",
+        "byg_areal" : "Bebygget areal",
+        "skemanummer" : "Skemanummer",
+        "registrator" : "Registrator",
+        "registrering_kode" : "Registreringsnote",
+        "man_billeder" : "Billednumre",
+        "aendret_opfoerelsesaar" : "Ændret opførelsesår",
+        "aendr_opf_praecision" : "Præcision",
+        "kilde_opfoerelse" : "Kilde til opførelsesår",
+        "anden_kilde_opfoerelse" : "Anden kilde til ændret opførelsesår",
+        "aendret_anvendelse" : "Ændret anvendelse",
+        "kilde_aendret_anvendelse" : "Kilde til ændret anvendelse",
+        "aendret_facademateriale" : "Ændret facademateriale",
+        "aendret_tagdaekning" : "Ændret tagdækning",
+        "betegnelse" : "Betegnelse",
+        "arkitektur" : "Arkitektur",
+        "arkitektur_kommentar" : "Kommentar",
+        "kulturhistorie" : "Kulturhistorie",
+        "kulturhistorie_kommentar" : "Kommentar",
+        "miljoevaerdi" : "Miljømæssig værdi",
+        "miljoevaerdi_kommentar" : "Kommentar",
+        "originalitet" : "Originalitet",
+        "originalitet_kommentar" : "Kommentar",
+        "tilstand" : "Tilstand",
+        "tilstand_kommentar" : "Kommentar",
+        "bevaring" : "Bevaringsværdi",
+        "bevaring_kommentar" : "Kommentar",
+        "bygningsbeskrivelse_folger" : "Bygningsbeskrivelse følger",
+        "bygningsbeskrivelse_side" : "Bygningsbeskrivelse",
+        "bygn_hovedplan" : "Hovedplan",
+        "bygn_sokkel" : "Sokkel",
+        "bygn_ydermur" : "Ydermur",
+        "bygn_tagkonstruktion" : "Tagkonstruktion",
+        "bygn_gavl" : "Gavlkonstruktion",
+        "bygn_kviste" : "Kviste",
+        "bygn_gesims" : "Gesims",
+        "bygn_doere" : "Døre/porte",
+        "bygn_vinduer" : "Vinduer",
+        "bygn_bygningsdele" : "Bygningsdele",
+        "bygn_udsmykning" : "Udsmykning",
+        "forhold_andre_bygn" : "Bem. vedr. forh. t. andre bygninger",
+        "omgivelser" : "Omgivelser af særlig interesse",
+        "omgivelser_smaabygninger" : "Småbygninger af interesse",
+        "omgivelser_bygningsvaerker" : "Bygningsværker af interesse",
+        "omgivelser_artefakter" : "Artefakter af interesse",
+        "omgivelser_natur" : "Natur af interesse",
+        "omgivelser_anlaeg" : "Anlæg af interesse",
+        "omgivelser_bemaerkninger" : "Bemærkninger vedr. omgivelser",
+        "oprindelig_anvendelse" : "Oprindelig anvendelse",
+        "bebyggelsesmiljoe" : "Bebyggelsesmiljø",
+        "bebyggelsesmiljoe_koebstad" : "Købstadsmiljø",
+        "bebyggelsesmiljoe_stationsby" : "Stationsbymiljø",
+        "bebyggelsesmiljoe_landevejsby" : "Landevejsbymiljø",
+        "bebyggelsesmiljoe_landsby" : "Landsbymiljø",
+        "bebyggelsesmiljoe_fiskerleje" : "Fiskerlejemiljø",
+        "bebyggelsesmiljoe_mindre_beb" : "Miljø i mindre bebyggelsesklynge",
+        "bebyggelsesmiljoe_fritliggende" : "Miljø på fritliggende ejendom"
+    }
+
+    var rules = {
+        rules : [new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '11'
+            }),
+            symbolizer : {
+                fillColor : "#c66100",
+                fillOpacity : 0.3,
+                strokeColor : "#c66100"
+            }
+        }), new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '21'
+            }),
+            symbolizer : {
+                fillColor : "#ff615a",
+                fillOpacity : 0.3,
+                strokeColor : "#ff615a"
+            }
+        }), new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '31'
+            }),
+            symbolizer : {
+                fillColor : "#6bffff",
+                fillOpacity : 0.3,
+                strokeColor : "#6bffff"
+            }
+        })]
+    };
+    var styleMap = new OpenLayers.StyleMap({
+        /*"default": new OpenLayers.Style({
+         fillColor: "#ffffff",
+         fillOpacity: 0.0,
+         strokeColor: "#FF0000",
+         strokeWidth: 2,
+         graphicZIndex: 3
+         },rules
+         ),*/
+        "default" : new OpenLayers.Style({
+
+            fillOpacity : 0.0,
+            strokeOpacity : 0.0
+
+        }),
+        "temporary" : new OpenLayers.Style({
+            fillColor : "#ffffff",
+            fillOpacity : 0.0,
+            strokeColor : "#FF0000",
+            strokeOpacity : 1.0,
+            strokeWidth : 2,
+            graphicZIndex : 3
+        }),
+        "select" : new OpenLayers.Style({
+            fillColor : "#ff0000",
+            fillOpacity : 0.5,
+            strokeColor : "#ff0000",
+            strokeOpacity : 1.0,
+            strokeWidth : 2,
+            zIndex : 10000
+        })
+    });
+    $(window).load(function() {
+
+        cloud = new mygeocloud_ol.map("map", "mobreg");
+        var href = "/dk/rudersdal/formular.htm?iFormID=115770005717361&irowid=" + mygeocloud_ol.urlVars.irowid;
+        console.log(href);
+        $("#editlink").attr("href", href);
+        //cloud.addTileLayers(["kommuneplan.kpplandk2_view"],{singleTile:true});
+        var store = new mygeocloud_ol.geoJsonStore("mobreg", {
+            lifetime : 10000
+            //$("#map").html("<button id="knapstortkort" class="btn btn-mini" type="button">Vis stort kort</button>");
+            //$("#map").html("<button class="btn btn-mini" type="button">Zoom til kommune</button>");
+        });
+        cloud.addGeoJsonStore(store);
+        cloud.addControl(
+        //definere at objektet kan vælges
+        new OpenLayers.Control.SelectFeature(store.layer, {
+            hover : true,
+            highlightOnly : true,
+            clickout : true,
+            renderIntent : "temporary",
+            //definere info boks
+            eventListeners : {
+                beforefeaturehighlighted : function(e) {
+                },
+                featurehighlighted : function(e) {
+                    feature = e.feature;
+                    $("#label").show();
+                    $("#label").html("<div style='font-size:.8em'>" + feature.attributes.adresse + "</div>");
+                },
+                featureunhighlighted : function(e) {
+                    feature = e.feature;
+                    //$("#label").hide();
+                }
+            }
+        }));
+        var ctrl = cloud.addControl(
+        //definere at der linkes videre
+        new OpenLayers.Control.SelectFeature(store.layer, {
+            hover : false,
+            renderIntent : "select",
+            onSelect : function(e) {
+                //console.log(e);
+                $('#pict').empty();
+                $('#attr').empty();
+                //console.log(e);
+                $('#attr').append($('#template').jqote(e));
+                $('#pict').append($('#templatepict').jqote(e));
+            },
+            onUnselect : function(feature) {
+            }
+        }));
+
+        //store.sql = "SELECT * FROM kommuneplan.kpplandk2_view";
+        store.sql = "select *,to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date from rudersdal_save.tforms115770005717361_join WHERE irowid=" + mygeocloud_ol.urlVars.irowid;
+        //store.sql = "select * from rudersdal_save.tforms115770005717361_join WHERE irowid=115770005724294";
+        store.load();
+        store.onLoad = function() {
+            console.log(store.geoJSON)
+            cloud.zoomToExtentOfgeoJsonStore(store);
+            ctrl.select(store.layer.features[0]);
+        }
+    }); 
+</script>
+
+<div class="row-fluid">
+	<div class="span10 offset1">
+
+		<div class="row-fluid">
+			<div class="span10">
+				<h3 style="color:#233978">Kulturmiljø</h3>
+				<a href="http://mobreg.cowi.webhouse.dk/dk/rudersdal/eksternvisning.htm" class="btn btn-mini btn-primary">Tilbage til oversigtskortet</a>
+				<a id="editlink" href="" class="btn btn-mini btn-primary">Ret i registrering</a>
+
+			</div>
+			<div class="span2">
+				<img style="width:160px;float:right" src="http://mobreg.cowi.webhouse.dk/images/save/logoRudersdal_Kommune.gif">
+			</div>
+		</div>
+
+		<div class="row-fluid">
+			<div id="map" class="span3" style="margin-bottom:20px;height:300px;border:0px solid #000000;">
+				<h5>Kort</h5>
+			</div>
+
+			<div id="attr" class="span5"></div>
+			<div id="pict" class="span4">
+
+			</div>
+		</div>
+		<div class="row-fluid">
+			<div  class="span12">
+				<p>
+					COWI A/S - ODEUM Eplan app
+				</p>
+				</br>
+			</div>
+		</div>
+
+	</div>
+
+</div>
+
+<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>

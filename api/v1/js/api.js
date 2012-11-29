@@ -13,7 +13,6 @@ if (scriptSource.charAt(0) === "/") {
 } else {
     mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 }
-alert(mygeocloud_host);
 document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 //document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
