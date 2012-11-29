@@ -165,7 +165,7 @@ var mygeocloud_ol = (function() {"use strict";
                 sql = sql.replace("{maxY}", map.getExtent().top);
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch(e) {
-                console.log(e.message);
+                //console.log(e.message);
             }
             //console.log(sql);
             $.ajax({
