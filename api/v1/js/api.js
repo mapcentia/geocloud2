@@ -13,7 +13,7 @@ if (scriptSource.charAt(0) === "/") {
 } else {
     mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 }
-
+alert(mygeocloud_host);
 document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 //document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
@@ -322,7 +322,7 @@ var mygeocloud_ol = (function() {"use strict";
             projection : defaults.projection,
             maxResolution : defaults.maxResolution,
             minResolution : defaults.minResolution,
-            maxExtent : defaults.maxExtent,
+            maxExtent : defaults.maxExtent
             //units : "m"
         });
 
@@ -502,6 +502,9 @@ var mygeocloud_ol = (function() {"use strict";
         this.getExtent = function() {
             var mapBounds = this.map.getExtent();
             return mapBounds.toArray();
+        }
+        this.getBbox = function() {
+            return this.map.getExtent().toString();
         }
         // Geolocation stuff starts here
         var geolocation_layer = new OpenLayers.Layer.Vector('geolocation_layer', {

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Rudersdal_save</title>
+		<meta name="Keywords" content="tryk,bygning,kortet,save">
+		<meta name="Description" content="Samlet save registering">
+		<meta name="Robot" content="ALL">
+		<meta name="Author" content="Odeum Administrator">
+		<meta name="OriginalPublicationDate" content="2012/11/22 11:15:28">
+		<meta name="dateofLastModification" content="2012/11/28 15:55:46">
+		<link rel="made" href="mailto:info@odeum.com">
+		<meta http-equiv="Reply-to" content="info@odeum.com">
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="Content-language" content="dk">
+		<meta name="ObjectType" content="Text.Homepage.Organizational">
+
+		<script type="text/javascript">
+            <!--
+            function getDoc() {
+                return document;
+            }
+
+            //-->
+		</script>
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		<link rel="StyleSheet" href="/css/default.php" type="text/css">
+		<link rel="StyleSheet" href="/css/colors.php" type="text/css">
+		<!--
+		© 1995-2012 WebHouse ApS
+		WebHouse ApS
+		Gasvaerksvej 40
+		DK-9000 Aalborg
+		Denmark
+		Tel: +45 98 12 70 04
+		Fax: +45 98 12 70 88
+		http://www.webhouse.dk/
+		info@webhouse.dk
+		-->
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<meta name="Generator" content="ODEUM 2.1">
+		<meta name="Copyright" content="© 1995-2012 WebHouse ApS (http://www.webhouse.dk/ - info@webhouse.dk)">
+
+	</head>
+
+	<body>
+
+		<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+		<style>
+			.table {
+				width: 100%;
+			}
+			.table tr td {
+				font-size: 8pt;
+				padding: 0px;
+				padding-right: 5px;
+			}
+		</style>
+		<script type="text/javascript" src="http://randers-kp.cowi.webhouse.dk/js/jquery.js"></script>
+		<script type="text/javascript" src="http://alpha.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+		<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'></script>
+		<script type="text/html" id="template">
+			<table class="table table-striped">
+			<%
+			for (var key in attributes) {
+			if (this.attributes[key]!==null) {
+			%>
+			<tr><td style="width:120px"><%= attributes[key] %></td><td><%= this.attributes[key] %></td></tr>
+			<%
+			}
+
+			}
+			if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+			}
+			else {
+			var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
+			}
+
+			%>
+			<tr><td style="width:120px">Billede</td><td><%= this.attributes['assets3'] %></td></tr>
+
+			</table>
+			<div><img style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[0] %>"/></div>
+		</script>
+
+		<script>
+            var attributes = {
+                "adresse" : "Adresse",
+                "bevaring" : "Bevaringsværdi",
+                "bevaring_kommentar" : "Kommentar",
+                "bygn_stilart" : "Stilart:",
+                "opfoerelsesaar" : "Opførelsesår:",
+                "registreringsdato" : "Registreringsdato:"
+            }
+
+            var colors = {
+                low : "rgb(50, 250, 255)",
+                middle : "rgb(50, 50, 255)",
+                high : "rgb(50, 50, 255)"
+            };
+            // Define three rules to style the cluster features.
+            var lowRule = new OpenLayers.Rule({
+                filter : new OpenLayers.Filter.Comparison({
+                    type : OpenLayers.Filter.Comparison.LESS_THAN,
+                    property : "bevaring",
+                    value : 4
+                }),
+                symbolizer : {
+                    fillColor : colors.low,
+                    fillOpacity : 0.9,
+                    strokeColor : colors.low,
+                    strokeOpacity : 0.5,
+                    strokeWidth : 2,
+                    pointRadius : 8,
+                    label : "${bevaring}",
+                    fontColor : "#000000",
+                    fontOpacity : 1,
+                    fontSize : "10px"
+                }
+            });
+            var middleRule = new OpenLayers.Rule({
+                filter : new OpenLayers.Filter.Comparison({
+                    type : OpenLayers.Filter.Comparison.BETWEEN,
+                    property : "bevaring",
+                    lowerBoundary : 4,
+                    upperBoundary : 7
+                }),
+                symbolizer : {
+                   fillColor : colors.middle,
+                    fillOpacity : 0.9,
+                    strokeColor : colors.middle,
+                    strokeOpacity : 0.5,
+                    strokeWidth : 2,
+                    pointRadius : 8,
+                    label : "${bevaring}",
+                    fontColor : "#000000",
+                    fontOpacity : 1,
+                    fontSize : "10px"
+                }
+            });
+            var highRule = new OpenLayers.Rule({
+                filter : new OpenLayers.Filter.Comparison({
+                    type : OpenLayers.Filter.Comparison.GREATER_THAN,
+                    property : "bevaring",
+                    value : 7
+                }),
+                symbolizer : {
+                    fillColor : colors.high,
+                    fillOpacity : 0.9,
+                    strokeColor : colors.high,
+                    strokeOpacity : 0.5,
+                    strokeWidth : 2,
+                    pointRadius : 8,
+                    label : "${bevaring}",
+                    fontColor : "#000000",
+                    fontOpacity : 1,
+                    fontSize : "10px"
+                }
+            });
+            // Create a Style that uses the three previous rules
+            var style = new OpenLayers.Style(null, {
+                rules : [lowRule, middleRule, highRule]
+            });
+            var styleMap = new OpenLayers.StyleMap(style);
+            $(window).load(function() {
+                cloud = new mygeocloud_ol.map("map", "mobreg");
+                cloud.zoomToExtent([1361396.2486302, 7502512.9048799, 1422316.560165, 7533087.7161897], true);
+                cloud.addTileLayers(["rudersdal_save.tforms115770005717361_join"]);
+                var store = new mygeocloud_ol.geoJsonStore("mobreg", {
+                   /* sql : "SELECT adresse,bevaring,the_geom FROM rudersdal_save.tforms115770005717361_join WHERE ST_SetSRID('BOX({minX} {minY},{maxX} {maxY})'::Box2d,900913) && ST_Transform(rudersdal_save.tforms115770005717361_join.the_geom,900913) LIMIT 1000",
+                    movedEnd : function() {
+                        //console.log(cloud.getExtent())
+                        store.reset();
+                        if (cloud.map.getZoom() >= 17) {
+                            store.load();
+                        }
+                    },*/
+                    styleMap: styleMap
+                });
+                cloud.addGeoJsonStore(store);
+                cloud.addControl(new OpenLayers.Control.SelectFeature(store.layer, {
+                    hover : true,
+                    highlightOnly : true,
+                    clickout : true,
+                    renderIntent : "temporary",
+                    eventListeners : {
+                        featurehighlighted : function(e) {
+                            var feature = e.feature;
+                            var pixel = cloud.getPixelCoord(feature.geometry.x, feature.geometry.y)
+                            $("#label").css("top", pixel.y - 70);
+                            $("#label").css("left", pixel.x - 78);
+                            $("#label").fadeIn(250);
+                            $("#label").html("<div style='font-size:.8em'>" + feature.attributes.adresse + "<br/>Bevaringsværdi:" + feature.attributes.bevaring + "</div>");
+                        },
+                        featureunhighlighted : function(e) {
+                            $("#label").fadeOut(250);
+                        }
+                    }
+                }));
+                cloud.addControl(
+                //definere at der linkes videre
+                new OpenLayers.Control.SelectFeature(store.layer, {
+                    hover : false,
+                    renderIntent : "select",
+                    onSelect : function(e) {
+                        //console.log(e);
+                        $('#attr').empty();
+                        //console.log(e);
+                        $('#attr').append($('#template').jqote(e));
+                    },
+                    onUnselect : function(feature) {
+                    }
+                }));
+
+                //store.sql = "SELECT * FROM kommuneplan.kpplandk2_view";
+                //store.load();
+                store.onLoad = function() {
+                    //console.log(store)
+                    //cloud.zoomToExtentOfgeoJsonStore(store);
+                }
+            });
+		</script>
+		<div class="container-fluid" style="padding: 0px">
+			<div class="row-fluid">
+				<div class="span8" id="map" style="height: 500px">
+					<div class="alert alert-block" style="display:none; z-index:1000;position:absolute;right:3px;top:3px;padding:5px;background-color:white;width: 180px" id="label"></div>
+
+				</div>
+				<div class="span4" style="margin-right: 0px ;margin-left:3px">
+					<div id="attr">
+						Tryk på en bygning i kortet for at se SAVE registreringen
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
+
+	</body>
+</html>
+<!-- content out: 0.115s -->
