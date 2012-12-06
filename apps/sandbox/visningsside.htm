@@ -91,27 +91,25 @@
 	<h5>Billeder fra offentlig vej</h5>
 	</tr>
 	<tr>
-		
-	<% 
+
+	<%
 	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
-		for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
-			var folder = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
-			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
-			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
-			
+	for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
+	var folder = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
+	var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+
 	<%	}
 	}
-	
+
 	else {
-	
+
 	for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
-		var imagePath = this.attributes['assets3'].split(",")[i].split("-")[1];%>
-		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
-		<%}
+	var imagePath = this.attributes['assets3'].split(",")[i].split("-")[1];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+	<%}
 	} %>
-		
-		
-		
+
 	</tr>
 	<tr><h5>Øvrige billeder</h5>
 	</tr>
@@ -119,37 +117,36 @@
 
 	<%
 	if (this.attributes['assets4'].split(",")[0].split("_").length>1){
-		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
-			var folder = this.attributes['assets4'].split(",")[0].split("-")[1].split("_");
-			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
-			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
-			
+	for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+	var folder = this.attributes['assets4'].split(",")[0].split("-")[1].split("_");
+	var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+
 	<%	}
 	}
 	else{
-		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
-		var imagePath = this.attributes['assets4'].split(",")[i].split("-")[1];%>
-		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
-		
-		<%	}}%>
-		
+	for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+	var imagePath = this.attributes['assets4'].split(",")[i].split("-")[1];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+
+	<%	}}%>
+
 	<%
 	if (this.attributes['assets5']){
 	if (this.attributes['assets5'].split(",")[0].split("_").length>1){
-		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
-			var folder = this.attributes['assets5'].split(",")[0].split("-")[1].split("_");
-			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
-			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
-			
+	for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+	var folder = this.attributes['assets5'].split(",")[0].split("-")[1].split("_");
+	var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+
 	<%	}
 	}
 	else{
-		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
-		var imagePath = this.attributes['assets5'].split(",")[i].split("-")[1];%>
-		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
-		
-		<%	}}}%>
-	
+	for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+	var imagePath = this.attributes['assets5'].split(",")[i].split("-")[1];%>
+	<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+
+	<%	}}}%>
 
 	</tr>
 
@@ -307,8 +304,8 @@
     $(window).load(function() {
 
         cloud = new mygeocloud_ol.map("map", "mobreg");
-        var href = "/dk/rudersdal/formular.htm?iFormID=115770005717361&irowid=" + mygeocloud_ol.urlVars.irowid;
-        console.log(href);
+        var href = "/dk/rudersdal/formular.htm?iFormID=115770005717361&rowid=" + mygeocloud_ol.urlVars.irowid;
+        //console.log(href);
         $("#editlink").attr("href", href);
         //cloud.addTileLayers(["kommuneplan.kpplandk2_view"],{singleTile:true});
         var store = new mygeocloud_ol.geoJsonStore("mobreg", {
@@ -361,7 +358,7 @@
         //store.sql = "select * from rudersdal_save.tforms115770005717361_join WHERE irowid=115770005724294";
         store.load();
         store.onLoad = function() {
-            console.log(store.geoJSON)
+            //console.log(store.geoJSON)
             cloud.zoomToExtentOfgeoJsonStore(store);
             ctrl.select(store.layer.features[0]);
         }
@@ -376,21 +373,17 @@
 				<h3 style="color:#233978">Kulturmiljø</h3>
 				<a href="http://mobreg.cowi.webhouse.dk/dk/rudersdal/eksternvisning.htm" class="btn btn-mini btn-primary">Tilbage til oversigtskortet</a>
 				<a id="editlink" href="" class="btn btn-mini btn-primary">Ret i registrering</a>
-
 			</div>
 			<div class="span2">
 				<img style="width:160px;float:right" src="http://mobreg.cowi.webhouse.dk/images/save/logoRudersdal_Kommune.gif">
 			</div>
 		</div>
-
 		<div class="row-fluid">
 			<div id="map" class="span3" style="margin-bottom:20px;height:300px;border:0px solid #000000;">
 				<h5>Kort</h5>
 			</div>
-
 			<div id="attr" class="span5"></div>
 			<div id="pict" class="span4">
-
 			</div>
 		</div>
 		<div class="row-fluid">
@@ -401,9 +394,7 @@
 				</br>
 			</div>
 		</div>
-
 	</div>
-
 </div>
 
 <script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>

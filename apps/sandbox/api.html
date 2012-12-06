@@ -1,89 +1,118 @@
-<!DOCTYPE html>
-<html debug="false">
+<html>
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>OpenLayers Basic Single WMS Example</title>
-		<script src="/js/geo-location-javascript/js/geo_position_js_simulator.js" type="text/javascript" charset="utf-8"></script>
-		<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>		
-		<style>
-			#map {
-				width: 100%;
-				height: 100%;
-				position: absolute;
-				top: 0px;
-				left: 0px;
-				z-index: 1;
-			}
-			body {
-				margin: 0px;
-				padding: 0px;
-			}
-			.btn-group {
-				position: absolute;
-				top: 5px;
-				right: 5px;
-				z-index: 1000;
-			}
-		</style>
+		<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 		<script>
-			var mygeocloud_host = "";
-		    document.write("<script src='" + mygeocloud_host + "/api/v1/js/api.js'><\/script>");
-		    document.write("<script src='" + mygeocloud_host + "/js/bootstrap/js/bootstrap.js'><\/script>");
-		    document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/bootstrap/css/bootstrap.css'\/>");
-			document.write("<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'><\/script>");
+            var mygeocloud_host = "";
+            document.write("<script src='" + mygeocloud_host + "cowi/js/openlayers/OpenLayers.js'><\/script>");
+            document.write("<script src='" + mygeocloud_host + "cowi/js/openlayers/AnimatedCluster.js'><\/script>");
+            document.write("<script src='" + mygeocloud_host + "cowi/js/mygeocloud/api.js'><\/script>");
+            document.write("<script src='" + mygeocloud_host + "cowi/js/bootstrap/bootstrap.js'><\/script>");
+            document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "cowi/css/bootstrap/bootstrap.css'\/>");
 
-            var points = [];
-            var store;
-            var cloud;
-            var activated = false;
-            var activate = function(arg) {
-                (arg) ? activated = true : activated = false;
-            }
-            var addFeatures = function() {
-                if (points.length > 1 && activated === true) {
+            $(document).ready(function() {
+
+                var points = [];
+                var store;
+                var cloud;
+                var activated = false;
+                var activate = function(arg) {
+                    (arg) ? activated = true : activated = false;
+                }
+                var setPoint = function () {
+                  console.log(cloud.geoLocation);
+                  var point = new OpenLayers.Geometry.Point(cloud.geoLocation.x,cloud.geoLocation.y);
+                  var feature = new OpenLayers.Feature.Vector(point);
+                  
+                  
+                  if (confirm("Er du sikker? Det vil slette evt. tidligere registreret punkt eller linje")) {
+                  	  activated = false;
+                  	  $("#startb").removeClass("active");
+	                  store.reset();
+	                  store.layer.addFeatures([feature]);
+	                  setGeoData('geometry1', store.getWKT());
+	                  console.log(store.getWKT());
+                  };
+                }
+                var addFeatures = function() {
+
                     var lineString = new OpenLayers.Geometry.LineString(points);
                     var feature = new OpenLayers.Feature.Vector(lineString);
                     store.reset();
                     store.layer.addFeatures([feature]);
-                    console.log(store.getWKT());
-                }
-            }
-            var options = {
-
-                firstCallBack : function() {
-                    points.push(cloud.geoLocation.obj.point);
-                    //console.log(cloud.geoLocation);
-                    addFeatures(cloud.geoLocation);
-                },
-                trackCallBack : function() {
-                    points.push(cloud.geoLocation.obj.point);
-                    if (cloud.geoLocation.x !== points[points.length - 2].x && cloud.geoLocation.y !== points[points.length - 2].y) {
-                       //console.log(cloud.geoLocation);
-                        addFeatures(cloud.geoLocation.obj);
+                    if (points.length > 1) {
+                    	console.log(store.getWKT());
+                        setGeoData('geometry1', store.getWKT());
                     }
                 }
-            }
+                var options = {
 
-            $(window).load(function() {
+                    firstCallBack : function() {
+                        if (activated === true) {
+                            points.push(cloud.geoLocation.obj.point);
+                            addFeatures(cloud.geoLocation);
+                        }
+
+                    },
+                    trackCallBack : function() {
+                        if (activated === true) {
+                            if (points.length === 0) {
+                                points.push(cloud.geoLocation.obj.point);
+                                addFeatures(cloud.geoLocation.obj);
+                            } else if (cloud.geoLocation.x !== points[points.length - 1].x && cloud.geoLocation.y !== points[points.length - 1].y) {
+                                points.push(cloud.geoLocation.obj.point);
+                                addFeatures(cloud.geoLocation.obj);
+                            }
+                        }
+                    }
+                }
+
+                $("#map").css("width", "100%");
+                $("#map").css("height", "400px");
+                $("#map").css("position", "relative");
                 // Create a new map object
-                cloud = new mygeocloud_ol.map("map", "mydb");
-                store = new mygeocloud_ol.geoJsonStore("mobreg");
-                cloud.addGeoJsonStore(store);
-                cloud.locate(options);
+                try {
+                    cloud = new mygeocloud_ol.map("map", "mobreg")
+                } catch(e) {
+                    alert(e.message)
+                };
+                try {
+                    store = new mygeocloud_ol.geoJsonStore("mobreg")
+                } catch(e) {
+                    alert("1" + e.message)
+                };
+                try {
+                    cloud.addGeoJsonStore(store)
+                } catch(e) {
+                    alert("2" + e.message)
+                };
+                try {
+                    cloud.locate(options)
+                } catch(e) {
+                    alert(e.message)
+                };
+
+                $("#map").append('<div style="z-index:1000;position:absolute;top:5px;right:5px"><button id="sletb" class="btn btn-danger btn-large">Slet alt i kort</button></div></div><div style="z-index:1000;position:absolute;bottom:30px;left:5px"><div><button id="punktb" class="btn btn-large">S&aelig;t punkt</button><br/><br/></div><div class="btn-group" data-toggle="buttons-radio"><button id="startb" type="button" class="btn btn-large">Start</button><button id ="stopb" type="button" class="btn btn-large active">stop</button></div></div>');
+                $("#startb").click(function() {
+                    activate(true)
+                });
+                $("#stopb").click(function() {
+                    activate(false)
+                });
+                $("#punktb").click(function() {
+                    setPoint()
+                });
+                $("#sletb").click(function() {
+                	if (confirm("Er du sikker?")) {
+                    store.reset();
+                    setGeoData('geometry1', "");
+                   }
+                });
+               
 
             });
 		</script>
 	</head>
 	<body>
 		<div id="map">
-			<div class="btn-group" data-toggle="buttons-radio">
-				<button type="button" class="btn" onclick="activate(true)">
-					Start
-				</button>
-				<button type="button" class="btn" onclick="activate(false)">
-					stop
-				</button>
-			</div>
-		</div>
 	</body>
 </html>

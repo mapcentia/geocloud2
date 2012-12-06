@@ -158,8 +158,8 @@ class table extends postgis {
 	function destroy() // Geometry columns
 	{
 		$sql = "BEGIN;";
-		$sql.= "SELECT DropGeometryColumn('{$this->postgisschema}','{$this->tableWithOutSchema}','{$this->geomField}');";
-		$sql.= "DROP TABLE {$this->table} CASCADE;"; // Also drop table
+        $sql.= "DELETE FROM geometry_columns WHERE f_table_schema='{$this->postgisschema}' AND f_table_name='{$this->tableWithOutSchema}';";
+		$sql.= "DROP TABLE {$this->table} CASCADE;";
 		$sql.= "COMMIT;";
 		//echo $sql;
 		$this -> execQuery($sql,"PDO","transaction");

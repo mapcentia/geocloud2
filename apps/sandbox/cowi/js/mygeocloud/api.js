@@ -13,15 +13,8 @@ if (scriptSource.charAt(0) === "/") {
 } else {
     mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 }
-document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-//document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/openlayers/theme/default/style.mobile.css'\/>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
+document.write("<script src='" + mygeocloud_host + "/js/OpenLayers.js'><\/script>");
+document.write("<script src='" + mygeocloud_host + "/js/AnimatedCluster.js'><\/script>");
 
 var mygeocloud_ol = (function() {"use strict";
     var map, host = mygeocloud_host, parentThis = this;
@@ -492,18 +485,7 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.removeLayer(store.layer);
             //??????????????
         };
-        this.hideLayer = function(name){
-            console.log(name);
-            this.map.getLayersByName(name)[0].setVisibility(false);
-            
-        }
-        this.showLayer = function(name){
-            console.log(name);
-            this.map.getLayersByName(name)[0].setVisibility(true);
-            
-        }
-      
-        this.addGoogleStreets();
+        this.addOSM();
         this.getCenter = function() {
             var point = this.map.center;
             return {

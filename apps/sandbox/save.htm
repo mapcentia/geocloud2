@@ -1,259 +1,419 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>Rudersdal_save</title>
-		<meta name="Keywords" content="tryk,bygning,kortet,save">
-		<meta name="Description" content="Samlet save registering">
-		<meta name="Robot" content="ALL">
-		<meta name="Author" content="Odeum Administrator">
-		<meta name="OriginalPublicationDate" content="2012/11/22 11:15:28">
-		<meta name="dateofLastModification" content="2012/11/28 15:55:46">
-		<link rel="made" href="mailto:info@odeum.com">
-		<meta http-equiv="Reply-to" content="info@odeum.com">
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="Content-language" content="dk">
-		<meta name="ObjectType" content="Text.Homepage.Organizational">
+<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'></script>
 
-		<script type="text/javascript">
-            <!--
-            function getDoc() {
-                return document;
+<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+<style>
+	.attr-table1 {
+		background-color: silver;
+	}
+	.attr-table2 {
+		background-color: white;
+	}
+	.attr-table1 td, .attr-table2 td {
+		padding: 5px;
+	}
+	img {
+		max-width: none
+	}
+	.table tr td {
+		font-size: 8pt;
+		padding: 0px;
+		padding-right: 5px
+	}
+	.pict-table1 {
+		background-color: silver;
+	}
+	.pict-table2 {
+		background-color: white;
+	}
+	.pict-table1 td, .pict-table2 td {
+		padding: 5px;
+	}
+	img {
+		max-width: none
+	}
+	.table tr td {
+		font-size: 8pt;
+		padding: 0px;
+		padding-right: 5px
+	}
+</style>
+<script type="text/javascript" src="http://randers-kp.cowi.webhouse.dk/js/jquery.js"></script>
+<script type="text/javascript" src="http://alpha.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
+
+<script type="text/html" id="template">
+	<table class="table table-striped">
+	<tr>
+	<h5>Oplysninger</h5>
+	</tr>
+	<%
+	for (var key in attributes) {
+	if (this.attributes[key]!==null && this.attributes[key]!==undefined) {
+
+	%>
+
+	<tr><td ><%= attributes[key] %></td><td><%= this.attributes[key] %></td></tr>
+
+	<%
+	}
+	}
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+	var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
+	}
+	else {
+	var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
+	}
+	%>
+
+	</table>
+</script>
+
+<script type="text/html" id="templatepict">
+	<table class="table table-striped">
+
+	<%
+	for (var key in attributes) {
+	if (this.attributes[key]!==null) {
+	%>
+
+	<%
+	}
+	}
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+	var folders = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
+	var imagePath = folders[0] + "/" + folders[1] + "/" + folders[2];
+	}
+	else {
+
+	}
+	%>
+
+	<tr>
+	<h5>Billeder fra offentlig vej</h5>
+	</tr>
+	<tr>
+		
+	<%
+	if (this.attributes['assets3']){
+	if (this.attributes['assets3'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
+			var folder = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	
+	else {
+	
+	for(i=0; i<this.attributes['assets3'].split(",").length;i++) {
+		var imagePath = this.attributes['assets3'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[i] %>"/></div>
+		<%}
+	} 
+	
+	}
+	else {}
+	%>
+		
+		
+		
+	</tr>
+	<tr><h5>Øvrige billeder</h5>
+	</tr>
+	<tr>
+
+	<%
+	
+	if (this.attributes['assets4']){
+	if (this.attributes['assets4'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+			var folder = this.attributes['assets4'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	else{
+		for(i=0; i<this.attributes['assets4'].split(",").length;i++) {
+		var imagePath = this.attributes['assets4'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets4'].split(",")[i] %>"/></div>
+		
+		<%	}}
+		}
+		else {}
+	if (this.attributes['assets5']){
+	if (this.attributes['assets5'].split(",")[0].split("_").length>1){
+		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+			var folder = this.attributes['assets5'].split(",")[0].split("-")[1].split("_");
+			var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];%>
+			<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+			
+	<%	}
+	}
+	else{
+		for(i=0; i<this.attributes['assets5'].split(",").length;i++) {
+		var imagePath = this.attributes['assets5'].split(",")[i].split("-")[1];%>
+		<div style="margin-top:10px"> <img class="img-rounded" style="width:450px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets5'].split(",")[i] %>"/></div>
+		
+		<%	}}}
+		
+		else {}
+		%>
+	
+
+	</tr>
+
+	</table>
+</script>
+
+<script>
+    var attributespict = {
+        "adresse" : "Adresse",
+        "bevaring" : "Bevaringsværdi",
+        "bevaring_kommentar" : "Kommentar",
+        "bebyggelsesmiljoe_fritliggende" : "Miljø på fritliggende ejendom"
+    }
+
+    var attributes = {
+        "adresse" : "Adresse",
+        "bygn_stilart" : "Stilart:",
+        "opfoerelsesaar" : "Opførelsesår:",
+        "date" : "Registreringsdato:",
+        "registrering_kode" : "Registreringsnote",
+        "adresse" : "Adresse",
+        "bygn_stilart" : "Stilart",
+        "bygnr" : "Bygningsnr",
+        "byg_anv" : "Bygningsanvendelse",
+        "opfaar" : "Opførelsesår",
+        "ombaar" : "Ombygningsår",
+        "mat_vaeg" : "Vægmateriale",
+        "mat_tag" : "Tagmateriale",
+        "byg_areal" : "Bebygget areal",
+        "skemanummer" : "Skemanummer",
+        "registrator" : "Registrator",
+        "registrering_kode" : "Registreringsnote",
+        "man_billeder" : "Billednumre",
+        "aendret_opfoerelsesaar" : "Ændret opførelsesår",
+        "aendr_opf_praecision" : "Præcision",
+        "kilde_opfoerelse" : "Kilde til opførelsesår",
+        "anden_kilde_opfoerelse" : "Anden kilde til ændret opførelsesår",
+        "aendret_anvendelse" : "Ændret anvendelse",
+        "kilde_aendret_anvendelse" : "Kilde til ændret anvendelse",
+        "aendret_facademateriale" : "Ændret facademateriale",
+        "aendret_tagdaekning" : "Ændret tagdækning",
+        "betegnelse" : "Betegnelse",
+        "arkitektur" : "Arkitektur",
+        "arkitektur_kommentar" : "Kommentar",
+        "kulturhistorie" : "Kulturhistorie",
+        "kulturhistorie_kommentar" : "Kommentar",
+        "miljoevaerdi" : "Miljømæssig værdi",
+        "miljoevaerdi_kommentar" : "Kommentar",
+        "originalitet" : "Originalitet",
+        "originalitet_kommentar" : "Kommentar",
+        "tilstand" : "Tilstand",
+        "tilstand_kommentar" : "Kommentar",
+        "bevaring" : "Bevaringsværdi",
+        "bevaring_kommentar" : "Kommentar",
+        "bygningsbeskrivelse_folger" : "Bygningsbeskrivelse følger",
+        "bygningsbeskrivelse_side" : "Bygningsbeskrivelse",
+        "bygn_hovedplan" : "Hovedplan",
+        "bygn_sokkel" : "Sokkel",
+        "bygn_ydermur" : "Ydermur",
+        "bygn_tagkonstruktion" : "Tagkonstruktion",
+        "bygn_gavl" : "Gavlkonstruktion",
+        "bygn_kviste" : "Kviste",
+        "bygn_gesims" : "Gesims",
+        "bygn_doere" : "Døre/porte",
+        "bygn_vinduer" : "Vinduer",
+        "bygn_bygningsdele" : "Bygningsdele",
+        "bygn_udsmykning" : "Udsmykning",
+        "forhold_andre_bygn" : "Bem. vedr. forh. t. andre bygninger",
+        "omgivelser" : "Omgivelser af særlig interesse",
+        "omgivelser_smaabygninger" : "Småbygninger af interesse",
+        "omgivelser_bygningsvaerker" : "Bygningsværker af interesse",
+        "omgivelser_artefakter" : "Artefakter af interesse",
+        "omgivelser_natur" : "Natur af interesse",
+        "omgivelser_anlaeg" : "Anlæg af interesse",
+        "omgivelser_bemaerkninger" : "Bemærkninger vedr. omgivelser",
+        "oprindelig_anvendelse" : "Oprindelig anvendelse",
+        "bebyggelsesmiljoe" : "Bebyggelsesmiljø",
+        "bebyggelsesmiljoe_koebstad" : "Købstadsmiljø",
+        "bebyggelsesmiljoe_stationsby" : "Stationsbymiljø",
+        "bebyggelsesmiljoe_landevejsby" : "Landevejsbymiljø",
+        "bebyggelsesmiljoe_landsby" : "Landsbymiljø",
+        "bebyggelsesmiljoe_fiskerleje" : "Fiskerlejemiljø",
+        "bebyggelsesmiljoe_mindre_beb" : "Miljø i mindre bebyggelsesklynge",
+        "bebyggelsesmiljoe_fritliggende" : "Miljø på fritliggende ejendom"
+    }
+
+    var rules = {
+        rules : [new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '11'
+            }),
+            symbolizer : {
+                fillColor : "#c66100",
+                fillOpacity : 0.3,
+                strokeColor : "#c66100"
             }
-
-            //-->
-		</script>
-		<!--[if lt IE 9]>
-		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-		<![endif]-->
-		<link rel="StyleSheet" href="/css/default.php" type="text/css">
-		<link rel="StyleSheet" href="/css/colors.php" type="text/css">
-		<!--
-		© 1995-2012 WebHouse ApS
-		WebHouse ApS
-		Gasvaerksvej 40
-		DK-9000 Aalborg
-		Denmark
-		Tel: +45 98 12 70 04
-		Fax: +45 98 12 70 88
-		http://www.webhouse.dk/
-		info@webhouse.dk
-		-->
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-		<meta name="Generator" content="ODEUM 2.1">
-		<meta name="Copyright" content="© 1995-2012 WebHouse ApS (http://www.webhouse.dk/ - info@webhouse.dk)">
-
-	</head>
-
-	<body>
-
-		<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
-		<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">
-
-		<script type="text/javascript" src="http://randers-kp.cowi.webhouse.dk/js/jquery.js"></script>
-		<script type="text/javascript" src="http://alpha.mygeocloud.cowi.webhouse.dk/api/v1/js/api.js"></script>
-		<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false'></script>
-		<script type="text/html" id="template">
-			<table class="table table-striped">
-			<%
-			for (var key in attributes) {
-			if (this.attributes[key]!==null) {
-			%>
-			<tr><td style="width:120px"><%= attributes[key] %></td><td><%= this.attributes[key] %></td></tr>
-			<%
-			}
-
-			}
-			if (this.attributes['assets3'].split(",")[0].split("_").length>1){
-				var folder = this.attributes['assets3'].split(",")[0].split("-")[1].split("_");
-				var imagePath = folder[0] + "/" + folder[1] + "/" + folder[2];
-			}
-			else {
-			var imagePath = this.attributes['assets3'].split(",")[0].split("-")[1];
-			}
-
-			%>
-			<!--<tr><td style="width:120px">Billede</td><td><%= this.attributes['assets3'] %></td></tr>-->
-
-			</table>
-			<div><img class="img-rounded" style="width:370px" src="http://mobreg.cowi.webhouse.dk/mobiledata/images/<%= imagePath %>/<%= this.attributes['assets3'].split(",")[0] %>"/></div>
-			<div><a target="blank" href="/dk/rudersdal/internvisning.htm?irowid=<%= this.attributes['irowid'] %>">Se alle informationer</a></div>
-		</script>
-		<style>
-			.table {
-				width: 100%;
-			}
-			.table tr td {
-				font-size: 8pt;
-				padding: 0px;
-				padding-right: 5px;
-			}
-			img {
-				max-width: none;
-			}
-			html, body {
-				height: 100%;
-			}
-
-			.fill {
-				height: 1000px;
-			}
-			#map {
-				width: 100%;
-				height: 100%;
-				position: relative;
-			}
-		</style>
-		<script>
-            var adresse;
-            var attributes = {
-                "adresse" : "Adresse",
-                "bevaring" : "Bevaringsværdi",
-                "bevaring_kommentar" : "Kommentar",
-                "bygn_stilart" : "Stilart:",
-                "opfoerelsesaar" : "Opførelsesår:",
-                "date" : "Registreringsdato:"
+        }), new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '21'
+            }),
+            symbolizer : {
+                fillColor : "#ff615a",
+                fillOpacity : 0.3,
+                strokeColor : "#ff615a"
             }
+        }), new OpenLayers.Rule({
+            filter : new OpenLayers.Filter.Comparison({
+                type : OpenLayers.Filter.Comparison.EQUAL_TO,
+                property : "anvgen",
+                value : '31'
+            }),
+            symbolizer : {
+                fillColor : "#6bffff",
+                fillOpacity : 0.3,
+                strokeColor : "#6bffff"
+            }
+        })]
+    };
+    var styleMap = new OpenLayers.StyleMap({
+        /*"default": new OpenLayers.Style({
+         fillColor: "#ffffff",
+         fillOpacity: 0.0,
+         strokeColor: "#FF0000",
+         strokeWidth: 2,
+         graphicZIndex: 3
+         },rules
+         ),*/
+        "default" : new OpenLayers.Style({
 
-            var styleMap = new OpenLayers.StyleMap({
-                'default' : {
+            fillOpacity : 0.0,
+            strokeOpacity : 0.0
 
+        }),
+        "temporary" : new OpenLayers.Style({
+            fillColor : "#ffffff",
+            fillOpacity : 0.0,
+            strokeColor : "#FF0000",
+            strokeOpacity : 1.0,
+            strokeWidth : 2,
+            graphicZIndex : 3
+        }),
+        "select" : new OpenLayers.Style({
+            fillColor : "#ff0000",
+            fillOpacity : 0.5,
+            strokeColor : "#ff0000",
+            strokeOpacity : 1.0,
+            strokeWidth : 2,
+            zIndex : 10000
+        })
+    });
+    $(window).load(function() {
+
+        cloud = new mygeocloud_ol.map("map", "mobreg");
+        var href = "/dk/rudersdal/formular.htm?iFormID=115770005717361&rowid=" + mygeocloud_ol.urlVars.irowid;
+        //console.log(href);
+        $("#editlink").attr("href", href);
+        //cloud.addTileLayers(["kommuneplan.kpplandk2_view"],{singleTile:true});
+        var store = new mygeocloud_ol.geoJsonStore("mobreg", {
+            lifetime : 10000
+            //$("#map").html("<button id="knapstortkort" class="btn btn-mini" type="button">Vis stort kort</button>");
+            //$("#map").html("<button class="btn btn-mini" type="button">Zoom til kommune</button>");
+        });
+        cloud.addGeoJsonStore(store);
+        cloud.addControl(
+        //definere at objektet kan vælges
+        new OpenLayers.Control.SelectFeature(store.layer, {
+            hover : true,
+            highlightOnly : true,
+            clickout : true,
+            renderIntent : "temporary",
+            //definere info boks
+            eventListeners : {
+                beforefeaturehighlighted : function(e) {
                 },
-                'temporary' : {},
-                'select' : {
-                    pointRadius : 8,
-                    fillColor : "blue",
-                    fillOpacity : 0,
-                    strokeColor : "blue",
-                    strokeOpacity : 0.7
+                featurehighlighted : function(e) {
+                    feature = e.feature;
+                    $("#label").show();
+                    $("#label").html("<div style='font-size:.8em'>" + feature.attributes.adresse + "</div>");
+                },
+                featureunhighlighted : function(e) {
+                    feature = e.feature;
+                    //$("#label").hide();
                 }
-            });
-            $(window).load(function() {
-                cloud = new mygeocloud_ol.map("map", "mobreg");
-                cloud.clickController = OpenLayers.Class(OpenLayers.Control, {
-                    defaultHandlerOptions : {
-                        'single' : true,
-                        'double' : false,
-                        'pixelTolerance' : 0,
-                        'stopSingle' : false,
-                        'stopDouble' : false
-                    },
-                    initialize : function(options) {
-                        this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-                        OpenLayers.Control.prototype.initialize.apply(this, arguments);
-                        this.handler = new OpenLayers.Handler.Click(this, {
-                            'click' : this.trigger
-                        }, this.handlerOptions);
-                    },
-                    trigger : function(e) {
+            }
+        }));
+        var ctrl = cloud.addControl(
+        //definere at der linkes videre
+        new OpenLayers.Control.SelectFeature(store.layer, {
+            hover : false,
+            renderIntent : "select",
+            onSelect : function(e) {
+                //console.log(e);
+                $('#pict').empty();
+                $('#attr').empty();
+                //console.log(e);
+                $('#attr').append($('#template').jqote(e));
+                $('#pict').append($('#templatepict').jqote(e));
+            },
+            onUnselect : function(feature) {
+            }
+        }));
 
-                        var coords = cloud.map.getLonLatFromViewPortPx(e.xy);
-                        console.log(coords);
-                        store.sql = "SELECT *, to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date,round(ST_Distance(transform(the_geom,900913), GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',900913))) as afstand FROM rudersdal_save.tforms115770005717361_join ORDER BY afstand LIMIT 1";
-                        store.reset()
-                        store.load()
-                        store.onLoad = function() {
-                            ctrl.select(store.layer.features[0]);
+        //store.sql = "SELECT * FROM kommuneplan.kpplandk2_view";
+        store.sql = "select *,to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date from rudersdal_save.tforms115770005717361_join WHERE irowid=" + mygeocloud_ol.urlVars.irowid;
+        //store.sql = "select * from rudersdal_save.tforms115770005717361_join WHERE irowid=115770005724294";
+        store.load();
+        store.onLoad = function() {
+            //console.log(store.geoJSON)
+            cloud.zoomToExtentOfgeoJsonStore(store);
+            ctrl.select(store.layer.features[0]);
+        }
+    }); 
+</script>
 
-                        }
-                    }
-                });
-                var click = new cloud.clickController();
-                cloud.map.addControl(click);
-                click.activate();
-                cloud.zoomToExtent([1373128.8011618, 7517855.7610163, 1402557.0570474, 7536965.0180849], true);
-                cloud.addTileLayers(["rudersdal_save.tforms115770005717361_join"]);
-                var store = new mygeocloud_ol.geoJsonStore("mobreg", {
-                    /* sql : "SELECT adresse,bevaring,the_geom FROM rudersdal_save.tforms115770005717361_join WHERE ST_SetSRID('BOX({minX} {minY},{maxX} {maxY})'::Box2d,900913) && ST_Transform(rudersdal_save.tforms115770005717361_join.the_geom,900913) LIMIT 1000",
-                     movedEnd : function() {
-                     console.log(cloud.getExtent())
-                     store.reset();
-                     if (cloud.map.getZoom() >= 17) {
-                     store.load();
-                     }
-                     },*/
-                    styleMap : styleMap
-                });
-                cloud.addGeoJsonStore(store);
+<div class="row-fluid">
+	<div class="span10 offset1">
 
-                /*cloud.addControl(new OpenLayers.Control.SelectFeature(store.layer, {
-                 hover : true,
-                 highlightOnly : true,
-                 clickout : true,
-                 renderIntent : "temporary",
-                 eventListeners : {
-                 featurehighlighted : function(e) {
-                 var feature = e.feature;
-                 var pixel = cloud.getPixelCoord(feature.geometry.x, feature.geometry.y)
-                 $("#label").css("top", pixel.y - 70);
-                 $("#label").css("left", pixel.x - 78);
-                 $("#label").fadeIn(250);
-                 $("#label").html("<div style='font-size:.8em'>" + feature.attributes.adresse + "<br/>Bevaringsværdi:" + feature.attributes.bevaring + "</div>");
-                 },
-                 featureunhighlighted : function(e) {
-                 $("#label").fadeOut(250);
-                 }
-                 }
-                 }));
-                 */
-                var ctrl = cloud.addControl(
-                //definere at der linkes videre
-                new OpenLayers.Control.SelectFeature(store.layer, {
-                    hover : false,
-                    renderIntent : "select",
-                    onSelect : function(e) {
-                        //console.log(e);
-                        $('#attr').empty();
-                        //console.log(e);
-                        $('#attr').append($('#template').jqote(e));
-                    },
-                    onUnselect : function(feature) {
-                    }
-                }));
+		<div class="row-fluid">
+			<div class="span10">
+				<h3 style="color:#233978">SAVE registrering</h3>
+				<a href="http://mobreg.cowi.webhouse.dk/dk/rudersdal/ekstern/eksternvisning.htm" class="btn btn-mini btn-primary">Tilbage til oversigtskortet</a>
+				<a id="editlink" href="" class="btn btn-mini btn-primary">Ret i registrering</a>
 
-                //store.sql = "SELECT * FROM kommuneplan.kpplandk2_view";
-                //store.load();
-                store.onLoad = function() {
-                    //console.log(store)
-                    //cloud.zoomToExtentOfgeoJsonStore(store);
-                }
-              
-                $('.typeahead').typeahead({
-                    source : function(typeahead, query) {
-                    	console.log(typeahead);
-                        return (["Alabama", "Alaska", "Arizona", "Arkansas", "California"]);
-                    }
-                });
-            });
-
-		</script>
-		<div class="container fill">
-			<div class="row-fluid">
-
-				<div class="span10">
-					<!--<input class="typeahead" type="text" data-provide="typeahread">-->
-				</div>
-
-				<div class="span2">
-					<img style="width:160px;float:right" src="http://mobreg.cowi.webhouse.dk/images/save/logoRudersdal_Kommune.gif">
-				</div>
 			</div>
-
-			<div class="row">
-				<div class="span8">
-					<div id="map" style="height:500px">
-						<div class="alert alert-block" style="display:none; z-index:1000;position:absolute;right:3px;top:3px;padding:5px;background-color:white;width: 180px" id="label"></div>
-					</div>
-				</div>
-				<div class="span4">
-					<div id="attr">
-						klik på en bygning i kortet for at se SAVE registreringen
-					</div>
-				</div>
+			<div class="span2">
+				<img style="width:160px;float:right" src="http://mobreg.cowi.webhouse.dk/images/save/logoRudersdal_Kommune.gif">
 			</div>
 		</div>
-		<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
-		<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-typeahead.js"></script>
 
-	</body>
-</html>
-<!-- content out: 0.115s -->
+		<div class="row-fluid">
+			<div id="map" class="span3" style="margin-bottom:20px;height:300px;border:0px solid #000000;">
+				<h5>Kort</h5>
+			</div>
+
+			<div id="attr" class="span5"></div>
+			<div id="pict" class="span4">
+
+			</div>
+		</div>
+		<div class="row-fluid">
+			<div  class="span12">
+				<p>
+					COWI A/S - ODEUM Eplan app
+				</p>
+				</br>
+			</div>
+		</div>
+
+	</div>
+
+</div>
+
+<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
