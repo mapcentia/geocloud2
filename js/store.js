@@ -45,6 +45,7 @@ $(window).load(function() {"use strict";
                     var response = eval('(' + http.responseText + ')');
                     // JSON
                     settings = response.data;
+                    $("#apikeyholder").html(settings.api_key)
                 }
             }
         }
@@ -983,7 +984,14 @@ $(window).load(function() {"use strict";
         layoutConfig : {
             animate : true
         },
-        items : [httpAuth.form, viewerSettings.form, {
+        items : [new Ext.Panel({
+            title: 'authentication',
+            width : 300,
+            frame : false,
+            plain : true,
+            border : true,
+            items : [httpAuth.form,apiKey.form]
+        }), viewerSettings.form, {
             title : 'WFS',
             border : false,
             bodyStyle : {
@@ -991,7 +999,7 @@ $(window).load(function() {"use strict";
                 padding : '7px'
             },
             contentEl : "wfs-dialog"
-        }, { 
+        }, {
             title : 'WMS',
             border : false,
             bodyStyle : {

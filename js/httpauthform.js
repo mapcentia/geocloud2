@@ -1,6 +1,5 @@
 Ext.namespace('httpAuth');
 httpAuth.form = new Ext.FormPanel({
-		title: "Authentication stuff",
         frame: false,
 		border: false,
         autoHeight: false,

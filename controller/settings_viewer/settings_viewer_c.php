@@ -20,6 +20,9 @@ switch ($parts[4]){
 	case "updatepw": // All tables
 		$response = $settings_viewer->updatePw($_POST['pw']);
 	break;
+	case "updateapikey": // All tables
+		$response = $settings_viewer->updateApiKey();
+	break;
 	
 }
 include_once("../server_footer.inc");

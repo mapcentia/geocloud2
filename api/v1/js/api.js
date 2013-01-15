@@ -199,7 +199,7 @@ var mygeocloud_ol = (function() {"use strict";
         };
     };
     map = function(el, db, config) {
-        var prop, baseLayer, // baseLayer wrapper
+        var prop, baseLayer, popup, // baseLayer wrapper
         parentMap, defaults = {
             numZoomLevels : 20,
             projection : "EPSG:900913",
@@ -280,7 +280,7 @@ var mygeocloud_ol = (function() {"use strict";
                 } catch (e) {
                 }
                 ;
-                var popup = new OpenLayers.Popup.FramedCloud("result", coords, null, "<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>", null, true);
+                popup = new OpenLayers.Popup.FramedCloud("result", coords, null, "<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>", null, true);
                 this.map.addPopup(popup);
                 var mapSize = this.map.getSize();
                 $.ajax({
@@ -493,14 +493,11 @@ var mygeocloud_ol = (function() {"use strict";
             //??????????????
         };
         this.hideLayer = function(name){
-            console.log(name);
             this.map.getLayersByName(name)[0].setVisibility(false);
             
         }
         this.showLayer = function(name){
-            console.log(name);
             this.map.getLayersByName(name)[0].setVisibility(true);
-            
         }
       
         this.addGoogleStreets();

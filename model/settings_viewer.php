@@ -31,7 +31,24 @@ class Settings_viewer extends postgis {
 		}
 		return $response;
     }
-    public function updatePw($pw){
+    public function updateApiKey(){
+    	$apiKey = md5(microtime().rand());
+		$arr = $this->getArray();
+		$arr['api_key'] = $apiKey;
+		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
+		$this -> execQuery($sql,"PDO","transaction");
+		if (!$this->PDOerror) {
+	 		$response['success'] = true;
+	 		$response['message'] = "API key updated";
+			$response['key'] = $apiKey;
+		}
+		else {
+			$response['success'] = false;
+			$response['message'] = $this->PDOerror;
+		}
+		return $response;
+	}
+	public function updatePw($pw){
 		$arr = $this->getArray();
 		$arr['pw'] = $this->encryptPw($pw);
 		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
@@ -60,7 +77,7 @@ class Settings_viewer extends postgis {
 			$response['message'] = $this->PDOerror;
 		}
 		return $response;
-	}	
+	}
 	public function encryptPw($pass) {
 		$pass=strip_tags($pass);
 		$pass=str_replace(" ","",$pass);//remove spaces from password

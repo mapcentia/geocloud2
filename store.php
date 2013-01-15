@@ -41,6 +41,8 @@ makeTileCacheFile($postgisdb);
 		</script>
 		<script type="text/javascript" src="/js/httpauthform.js">
 		</script>
+		<script type="text/javascript" src="/js/apikeyform.js">
+		</script>
 		
 		<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"
 		/>
@@ -69,7 +71,8 @@ makeTileCacheFile($postgisdb);
 	<body>
 <div style="display:none">
 	<div id="map-settings"> </div>
-	<div id="authentication">Change the HTTP authentication password for WFS</div>
+	<div id="authentication">HTTP authentication password for WMS and WFS</div>
+	<div id="apikey">API key. This is used for the SQP API. You can always change the key<br><br><b><span id='apikeyholder'></span></b></div>
 	<div id="wfs-dialog"><table border="0" class="pretty-tables"><tbody><tr><td>Use this string in GIS that supports WFS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wfs/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/4326" size="55"/></td></tr></tbody></table></div>
 	<div id="wms-dialog"><table border="0"><tbody><tr><td>Use this string in GIS that supports WMS:</td></tr><tr><td><input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $postgisdb;?>/<?php echo $postgisschema;?>/" size="55"/></td></tr></tbody></table></div>
 </div>
