@@ -5,36 +5,30 @@ include_once 'libs/PEAR/Cache_Lite/Lite.php';
 include_once 'libs/SQL_Tokenizer.php';
 
 $settings_viewer = new Settings_viewer();
-$response = $settings_viewer->get();
-$apiKey = $response['data']['api_key'];
+$res = $settings_viewer -> get();
+$apiKey = $res['data']['api_key'];
+$callback = $_GET['jsonp_callback'];
 
-$parsedSQL = SqlParser::ParseString($_REQUEST['q'])->getArray();
-if ($parsedSQL['drop']){
+$parsedSQL = SqlParser::ParseString($_REQUEST['q']) -> getArray();
+if ($parsedSQL['drop']) {
 	$response['success'] = false;
 	$response['message'] = "DROP is not allowed through the API";
-	echo json_encode($response);
-	die();
-}
-if ($parsedSQL['alter']){
+
+} elseif ($parsedSQL['alter']) {
 	$response['success'] = false;
 	$response['message'] = "ALTER is not allowed through the API";
-	echo json_encode($response);
-	die();
-}
-if ($parsedSQL['create']){
+	
+} elseif ($parsedSQL['create']) {
 	$response['success'] = false;
 	$response['message'] = "CREATE is not allowed through the API";
-	echo json_encode($response);
-	die();
-}
-if ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']){
+
+} elseif ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']) {
 	if ($apiKey == $_REQUEST['key']) {
 		echo "ja";
 	} else {
 		echo "nej";
 	}
-}
-if ($parsedSQL['select']) {
+} elseif ($parsedSQL['select']) {
 	parse_str(urldecode($_SERVER['QUERY_STRING']), $args);
 	$id = $args['q'];
 	if (!$args['lifetime']) {
@@ -54,16 +48,22 @@ if ($parsedSQL['select']) {
 		$api = new sqlapi($srs);
 		$api -> execQuery("set client_encoding='UTF8'", "PDO");
 		$response = $api -> sql($_REQUEST['q']);
-		echo $json -> encode($response);
+		echo json_encode($response);
 		// Cache script
 		$data = ob_get_contents();
 		$Cache_Lite -> save($data, $id);
 		ob_get_clean();
 	}
-	$callback = $_GET['jsonp_callback'];
-	if ($callback) {
-		echo $callback . '(' . $data . ');';
-	} else {
-		echo $data;
-	}
+} else {
+	$response['success'] = false;
+	$response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE";
+}
+// Check if $data is set in SELECT section
+if (!$data) {
+	$data = json_encode($response);
+}
+if ($callback) {
+	echo $callback . '(' . $data . ');';
+} else {
+	echo $data;
 }

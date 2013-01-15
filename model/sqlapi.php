@@ -55,8 +55,8 @@ class sqlapi extends postgis {
 			}
 
 			$response['success'] = true;
-			$response["forStore"] = $fieldsForStore;
-			$response["forGrid"] = $columnsForGrid;
+			$response['forStore'] = $fieldsForStore;
+			$response['forGrid'] = $columnsForGrid;
 			$response['type'] = "FeatureCollection";
 			$response['features'] = $features;
 		}
