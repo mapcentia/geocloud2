@@ -313,7 +313,7 @@ $(window).load(function() {"use strict";
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function(btn) {
             if (btn == "yes") {
                 //console.log(record.data.f_table);
-                proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + record.data.f_table_name;
+                proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + schema + "." + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
                 return false;
@@ -541,6 +541,9 @@ $(window).load(function() {"use strict";
                     }, {
                         name : 'Text',
                         value : 'text'
+                    }, {
+                        name : 'Geometry',
+                        value : 'geometry'
                     }]
                 })
             }],
@@ -550,7 +553,7 @@ $(window).load(function() {"use strict";
                 handler : function() {
                     if (form.form.isValid()) {
                         form.getForm().submit({
-                            url : '/controller/tables/' + screenName + '/createcolumn/' + record.get("f_table_name"),
+                            url : '/controller/tables/' + screenName + '/createcolumn/' + schema + '.' + record.get("f_table_name"),
                             waitMsg : 'Saving Data...',
                             submitEmptyText : false,
                             success : onSubmit,
@@ -813,7 +816,7 @@ $(window).load(function() {"use strict";
                                 };
                                 param = Ext.util.JSON.encode(param);
                                 Ext.Ajax.request({
-                                    url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
+                                   // url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
                                     headers : {
                                         'Content-Type' : 'application/json; charset=utf-8'
                                     },

@@ -235,7 +235,7 @@ class table extends postgis {
 		}
 		//print_r($this->metaData);
 		foreach($this->metaData as $key=>$value){
-			if ($key!=$this->geomField && $key!=$this->primeryKey['attname']) {
+			if ($value['type']!="geometry" && $key!=$this->primeryKey['attname']) {
 				$fieldsForStore[]  = array("name"=>$key,"type"=>$value['type']);
 				$columnsForGrid[]  =  array("header"=>$key,"dataIndex"=>$key,"type"=>$value['type'],"typeObj"=>$value['typeObj']);
 			}
@@ -260,7 +260,7 @@ class table extends postgis {
 		$arr = array();
 		$fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table,"fieldconf"));
 		foreach($this->metaData as $key=>$value){
-			if ($key!=$this->geomField /*&& $key!=$this->primeryKey['attname']*/) {
+			if ($key!=$this->primeryKey['attname']) {
 				$arr = $this -> array_push_assoc($arr,"id",$key);
 				$arr = $this -> array_push_assoc($arr,"column",$key);
 				$arr = $this -> array_push_assoc($arr,"sort_id",(int)$fieldconfArr[$key]->sort_id);
@@ -355,6 +355,9 @@ class table extends postgis {
 				break;
 			case "Text":
 				$type = "text";
+				break;
+			case "Geometry":
+				$type = "geometry";
 				break;
 		}
 		$sql.= "ALTER TABLE {$this -> table} ADD COLUMN {$safeColumn} {$type};";

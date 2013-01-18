@@ -97,7 +97,7 @@ function startWfsEdition(layerName) {
             featureType : layerName,
             featureNS : "http://twitter/" + screenName,
             srsName : "EPSG:900913",
-            geometryName : getvars['gf'], // must be dynamamic
+            geometryName : "the_geom", // must be dynamamic
             // Only load features in map extent
             defaultFilter : new OpenLayers.Filter.Spatial({
                 type : OpenLayers.Filter.Spatial.BBOX,

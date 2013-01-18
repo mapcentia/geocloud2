@@ -608,6 +608,7 @@ function doSelect($table, $sql, $sql2, $from) {
 				}
 				$depth--;
 				writeTag("close",  $tmpNameSpace, $gmlGeomFieldName[$table], null, True, True);
+				unset($gmlGeomFieldName[$table]);
 			}
 		}
 		$depth--;
@@ -826,14 +827,13 @@ function doParse($arr)
 			}
 			$fid = 0;
 			foreach($featureMember as $hey){
-				$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$hey['typeName'], "f_geometry_column");
 				if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
 					$hey['Property'] = array(0 => $hey['Property']);
 				}
 				foreach ($hey['Property'] as $pair)
 				{
 					$fields[$fid][] = $pair['Name'];
-					if ($pair['Name'] == $the_geom) {
+					if (is_array($pair['Value'])) { // Must be geom if array
 						// We serialize the geometry back to XML for parsing
 						$status = $Serializer->serialize($pair['Value']);
 						logfile::write($Serializer->getSerializedData()."\n\n");
@@ -895,7 +895,6 @@ function doParse($arr)
 			// First we loop through inserts
 			if (sizeof($forSql['tables'])>0) for($i=0;$i<sizeof($forSql['tables']);$i++) {
 				if ($postgisObject->getGeometryColumns($postgisschema.".".$forSql['tables'][$i],"editable")) {
-					$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$forSql['tables'][$i], "f_geometry_column");
 					$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$forSql['tables'][$i]);
 					//$metaData = $postgisObject -> getMetaData($forSql['tables'][$i]);
 					$sql = "INSERT into {$postgisschema}.{$forSql['tables'][$i]} (";
@@ -919,7 +918,7 @@ function doParse($arr)
 					}
 					$sql.= implode(",",$values);
 					unset($values);
-					$sql.= ") RETURNING {$primeryKey['attname']} as gid,public.ST_AsText(public.ST_Centroid({$the_geom})) as {$the_geom};"; // The query will return the new key
+					$sql.= ") RETURNING {$primeryKey['attname']} as gid"; // The query will return the new key
 					$sqls['insert'][] = $sql;
 				}
 				else {
@@ -930,7 +929,6 @@ function doParse($arr)
 			if (sizeof($forSql2['tables'])>0) for($i=0;$i<sizeof($forSql2['tables']);$i++) {
 				//$metaData = $postgisObject -> getMetaData($forSql2['tables'][$i]);
 				if ($postgisObject->getGeometryColumns($postgisschema.".".$forSql2['tables'][$i],"editable")) {
-					$the_geom = $postgisObject->getGeometryColumns($postgisschema.".".$forSql2['tables'][$i], "f_geometry_column");
 					$primeryKey = $postgisObject->getPrimeryKey($postgisschema.".".$forSql2['tables'][$i]);
 					$sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
 					foreach ($forSql2['fields'][$i] as $key=>$field) {
@@ -954,7 +952,7 @@ function doParse($arr)
 						}
 					}
 					$sql.= implode(",",$pairs);
-					$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid,public.ST_AsText(public.ST_Centroid({$the_geom})) as {$the_geom};";
+					$sql.= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
 					unset($pairs);
 					$sqls['update'][] = $sql;
 				}
@@ -1026,7 +1024,6 @@ function doParse($arr)
 					$row = $postgisObject->fetchRow($res);
 					echo $row['gid'];
 					echo '"/>';
-					//$version->set(current($forSql['tables']),"insert",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]);
 					next($forSql['tables']);
 				}
 				echo '</wfs:InsertResults>';
@@ -1041,7 +1038,6 @@ function doParse($arr)
 					$row = $postgisObject->fetchRow($res);
 					echo $row['gid'];
 					echo '" />';
-					//$version->set(current($forSql2['tables']),"update",$row[$postgisObject->getGeometryColumns(current($forSql['tables']), "f_geometry_column")]);
 					next($forSql2['tables']);
 				}
 				echo '</wfs:UpdateResult>';
