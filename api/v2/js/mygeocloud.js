@@ -1,30 +1,41 @@
-var scriptSource = ( function(scripts) {"use strict";
-        scripts = document.getElementsByTagName('script');
-        var script = scripts[scripts.length - 1];
-        if (script.getAttribute.length !== undefined) {
-            return script.src;
-        }
-        return script.getAttribute('src', -1);
-    }());
-var mygeocloud_host;
-// In IE7 host name is missing if script url is relative
-if (scriptSource.charAt(0) === "/") {
-    mygeocloud_host = "";
-} else {
-    mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
-}
-document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-//document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/openlayers/theme/default/style.mobile.css'\/>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
-
 var mygeocloud_ol = (function() {"use strict";
-    var map, host = mygeocloud_host, parentThis = this;
+    var scriptSource = ( function(scripts) {"use strict";
+            scripts = document.getElementsByTagName('script');
+            var script = scripts[scripts.length - 1];
+            if (script.getAttribute.length !== undefined) {
+                return script.src;
+            }
+            return script.getAttribute('src', -1);
+        }());
+    var mygeocloud_host;
+    // In IE7 host name is missing if script url is relative
+    if (scriptSource.charAt(0) === "/") {
+        mygeocloud_host = "";
+    } else {
+        mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+    }
+    document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
+
+    var map;
+    var host = mygeocloud_host;
+    var parentThis = this;
+    var mapLib;
+    if ( typeof (OpenLayers) == "object" && typeof (L) == "object") {
+        alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
+    }
+    if ( typeof (OpenLayers) != "object" && typeof (L) != "object") {
+        alert("You need to load neither OpenLayer.js or Leaflet.js");
+    }
+    if ( typeof (OpenLayers) == "object") {
+        mapLib = "ol";
+    }
+    if ( typeof (L) == "object") {
+        mapLib = "l";
+    }
     var geoJsonStore = function(db, config) {
         var prop, parentThis = this;
         var defaults = {
@@ -305,38 +316,60 @@ var mygeocloud_ol = (function() {"use strict";
                 });
             }
         });
-        this.map = new OpenLayers.Map(el, {
-            //theme: null,
-            controls : [//new OpenLayers.Control.Navigation(),
-            //new OpenLayers.Control.PanZoomBar(),
-            //new OpenLayers.Control.LayerSwitcher(),
-            new OpenLayers.Control.Zoom(),
-            //new OpenLayers.Control.PanZoom(),
-            new OpenLayers.Control.TouchNavigation({
-                dragPanOptions : {
-                    enableKinetic : true
-                }
-            })],
-            numZoomLevels : defaults.numZoomLevels,
-            projection : defaults.projection,
-            maxResolution : defaults.maxResolution,
-            minResolution : defaults.minResolution,
-            maxExtent : defaults.maxExtent
-            //units : "m"
-        });
-
+        switch (mapLib) {
+            case "ol":
+                this.map = new OpenLayers.Map(el, {
+                    //theme: null,
+                    controls : [//new OpenLayers.Control.Navigation(),
+                    //new OpenLayers.Control.PanZoomBar(),
+                    //new OpenLayers.Control.LayerSwitcher(),
+                    new OpenLayers.Control.Zoom(),
+                    //new OpenLayers.Control.PanZoom(),
+                    new OpenLayers.Control.TouchNavigation({
+                        dragPanOptions : {
+                            enableKinetic : true
+                        }
+                    })],
+                    numZoomLevels : defaults.numZoomLevels,
+                    projection : defaults.projection,
+                    maxResolution : defaults.maxResolution,
+                    minResolution : defaults.minResolution,
+                    maxExtent : defaults.maxExtent
+                    //units : "m"
+                });
+                this.click = new this.clickController();
+                this.map.addControl(this.click);
+                var vectors = new OpenLayers.Layer.Vector("Mark", {
+                    displayInLayerSwitcher : false
+                });
+                this.map.addLayers([vectors]);
+                break;
+            case "l":
+                this.map = new L.map(el).setView([51.505, -0.09], 13);
+                break;
+        }
+        /**
+         * 
+         */
         var _map = this.map;
-        this.click = new this.clickController();
-        this.map.addControl(this.click);
-        var vectors = new OpenLayers.Layer.Vector("Mark", {
-            displayInLayerSwitcher : false
-        });
-        this.map.addLayers([vectors]);
+        /**
+         * Creates a new Circle from a diameter.
+         *
+         * @return {Object} The new layer object.
+         */
         this.addMapQuestOSM = function() {
-            this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
-            //this.mapQuestOSM.wrapDateLine = false;
-            this.map.addLayer(this.mapQuestOSM);
-            return (this.mapQuestOSM);
+            switch (mapLib) {
+                case "ol":
+                    this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
+                    //this.mapQuestOSM.wrapDateLine = false;
+                    this.map.addLayer(this.mapQuestOSM);
+                    return (this.mapQuestOSM);
+                    break;
+                case "l":
+                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
+                    this.map.addLayer(this.mapQuestOSM);
+                    break;
+            }
         }
         this.addMapQuestAerial = function() {
             this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
@@ -397,6 +430,7 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.addLayer(this.baseGHYBRID);
             return (this.baseGHYBRID);
         }
+        this.addMapQuestOSM();
         this.setBaseLayer = function(baseLayer) {
             this.map.setBaseLayer(baseLayer);
         }
@@ -492,15 +526,14 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.removeLayer(store.layer);
             //??????????????
         };
-        this.hideLayer = function(name){
+        this.hideLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(false);
-            
+
         }
-        this.showLayer = function(name){
+        this.showLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(true);
         }
-      
-        this.addGoogleStreets();
+
         this.getCenter = function() {
             var point = this.map.center;
             return {
