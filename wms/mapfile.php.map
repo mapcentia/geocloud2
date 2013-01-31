@@ -60,7 +60,7 @@ function makeMapFile($user,$extentLayer=NULL) {
   		IMAGEURL "<?php echo $hostName;?>/tmp"
 		METADATA
 		  "wms_title"    "<?php echo $user;?>'s awesome WMS"
-		  "wms_srs"    "EPSG:<?php echo $srs;?> EPSG:4326"
+		  "wms_srs"    "EPSG:<?php echo $srs;?> EPSG:4326 EPSG:3857"
 		  "wms_name"    "<?php echo $user;?>"
 		  "wms_format"    "image/png"
 		  "wms_onlineresource"	"http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $user;?>/<?php echo $postgisschema;?>/"
@@ -70,10 +70,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  #
 	  # Start of reference map
 	  #
-	  QUERYMAP
-		COLOR 255 255 0
-		STYLE normal
-	  END
+	  
 	  PROJECTION
 		"init=epsg:<?php echo $srs;?>" 
 	  END

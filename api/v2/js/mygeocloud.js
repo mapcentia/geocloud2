@@ -368,6 +368,7 @@ var mygeocloud_ol = (function() {"use strict";
                 case "l":
                     this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
                     this.map.addLayer(this.mapQuestOSM);
+                    return (this.mapQuestOSM);
                     break;
             }
         }
