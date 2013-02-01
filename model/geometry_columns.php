@@ -5,7 +5,10 @@ class GeometryColumns extends postgis {
 		parent::__construct();
 		$sql = "SELECT * FROM settings.geometry_columns_view order by sort_id";
 		$result = $this -> execQuery($sql);
-		$this -> rows = $this -> fetchAll($result);
+		if (!$this -> connectionFailed) {
+
+			$this -> rows = $this -> fetchAll($result);
+		}
 
 		/*
 		 $geometryColumnsObj = new table("settings.geometry_columns_view");
@@ -28,15 +31,17 @@ class GeometryColumns extends postgis {
 		$sql = "SELECT * FROM settings.geometry_columns_view";
 		$result = $this -> execQuery($sql);
 		$check = array();
-		while ($row = $this -> fetchRow($result, "assoc")) {
-			$arr = array();
-			foreach ($row as $key => $value) {
-				$arr = $this -> array_push_assoc($arr, $key, $value);
+		if (!$this -> PDOerror) {
+			while ($row = $this -> fetchRow($result, "assoc")) {
+				$arr = array();
+				foreach ($row as $key => $value) {
+					$arr = $this -> array_push_assoc($arr, $key, $value);
+				}
+				if ($createKeyFrom) {
+					$arr = $this -> array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+				}
+				$response['data'][] = $arr;
 			}
-			if ($createKeyFrom) {
-				$arr = $this -> array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-			}
-			$response['data'][] = $arr;
 		}
 		if (!$this -> PDOerror) {
 			$response['success'] = true;
@@ -47,20 +52,20 @@ class GeometryColumns extends postgis {
 		}
 		return $response;
 	}
-	function getSchemas() // All tables
+
+	function getSchemas()// All tables
 	{
 		$sql = "SELECT f_table_schema as schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL GROUP BY f_table_schema";
-		$result = $this->execQuery($sql);
-		if (!$this->PDOerror) {
-			while ($row = $this->fetchRow($result,"assoc")) {
-				$arr[] = array("schema"=>$row["schemas"], "desc"=>null);
+		$result = $this -> execQuery($sql);
+		if (!$this -> PDOerror) {
+			while ($row = $this -> fetchRow($result, "assoc")) {
+				$arr[] = array("schema" => $row["schemas"], "desc" => null);
 			}
 			$response['success'] = true;
 			$response['data'] = $arr;
-		}
-		else {
+		} else {
 			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
+			$response['message'] = $this -> PDOerror;
 		}
 		return $response;
 	}

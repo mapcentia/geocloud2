@@ -9,6 +9,7 @@ class postgis {
 	var $PDOerror;
 	var $db;
 	var $postgisschema;
+	var $connectionFailed;
 	function postgis()//constructor
 	{
 		global $postgishost;
@@ -128,6 +129,9 @@ class postgis {
 				if (!$this -> db) {
 					$this -> connect("PDO");
 				}
+				if ($this->connectionFailed) {
+					return false;
+				}
 				try {
 					$this -> db -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 					switch ($queryType) {
@@ -215,7 +219,9 @@ class postgis {
 					$this -> execQuery("set client_encoding='UTF8'", "PDO");
 				} catch(PDOException $e) {
 					$this -> db = NULL;
-					throw new Exception("Could not connect to database {$this->postgisdb}");
+					$this -> connectionFailed=true;
+					$this->PDOerror[]="Could not connect to database";
+    				
 				}
 				break;
 		}
