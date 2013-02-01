@@ -280,7 +280,7 @@ var mygeocloud_ol = (function() {"use strict";
                 } catch (e) {
                 }
                 ;
-                popup = new OpenLayers.Popup.FramedCloud("result", coords, null, "<div id='queryResult' style='z-index:1000;width:300px;height:100px;overflow:auto'>Wait..</div>", null, true);
+                popup = new OpenLayers.Popup("result", coords, null, "<div id='queryResult' style='z-index:1000;'>Wait..</div>", null, true);
                 this.map.addPopup(popup);
                 var mapSize = this.map.getSize();
                 $.ajax({
