@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>MyGeoCloud - Analyze and map your data</title>
+		<meta charset="UTF-8" />
+		<script type="text/javascript" src="/api/v1/js/api.js"></script>
+		<script type="text/javascript" src="/js/common.js"></script>
+		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
+		<style>
+			.popover {
+				width: 300px;
+			}
+			.popover-inner {
+				overflow: auto;
+				max-height: 600px;
+			}
+			.right {
+				float: right !important;
+			}
+
+			#result {
+				height: auto !important;
+				width: auto !important
+				opacity: 1 !important;
+				background-color: transparent !important;
+				padding: 10px
+			}
+			#result_GroupDiv {
+				width: 150px !important;
+				height: 100px !important;
+				background: white;
+				box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+				padding: 1px;
+				text-align: left;
+				-webkit-border-radius: 20px;
+				border-radius: 20px;
+			}
+			#queryResult {
+				margin: 10px 15px;
+				line-height: 1.4;
+				font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+			}
+		</style>
+		<script>
+            var cloud, popup;
+            var hostname = "";
+            var db = "vmus";
+            var schema = "kulturarvstjenesten";
+            var switchLayer = function(id, visible) {
+                (visible) ? cloud.showLayer(id) : cloud.hideLayer(id);
+            }
+            $(window).load(function() {
+                cloud = new mygeocloud_ol.map("map", db);
+                cloud.zoomToExtent();
+                var store = new mygeocloud_ol.geoJsonStore("mydb");
+                // Add the GeoJSON store to the map
+                cloud.addGeoJsonStore(store);
+                /* Click controller */
+                cloud.clickController = OpenLayers.Class(OpenLayers.Control, {
+                    defaultHandlerOptions : {
+                        'single' : true,
+                        'double' : false,
+                        'pixelTolerance' : 0,
+                        'stopSingle' : false,
+                        'stopDouble' : false
+                    },
+                    initialize : function(options) {
+                        this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
+                        OpenLayers.Control.prototype.initialize.apply(this, arguments);
+                        this.handler = new OpenLayers.Handler.Click(this, {
+                            'click' : this.trigger
+                        }, this.handlerOptions);
+                    },
+                    trigger : function(e) {
+                        var coords = this.map.getLonLatFromViewPortPx(e.xy);
+                        //console.log(this.map.layers);
+                        try {
+                            popup.destroy();
+                        } catch (e) {
+                        };
+                        popup = new OpenLayers.Popup("result", coords, null, "<div id='queryResult' style='z-index:1000;'>Wait..</div>", null, true);
+                        cloud.map.addPopup(popup);
+                        store.sql = "SELECT *, to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date,vejnavn||' '||husnr||', '||postnummer as adr_husnr_postnr,round(ST_Distance(transform(the_geom,900913), GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',900913))) as afstand FROM rudersdal_save.tforms115770006299681_join_vis_view ORDER BY afstand LIMIT 1";
+                        store.reset();
+                        //store.load()
+						$("#queryResult").append('<a class="btn small" onclick="$(\'#myModal\').modal()">Se mere</a>')
+
+                        store.onLoad = function() {
+                            ctrl.select(store.layer.features[0]);
+
+                        }
+                    }
+                });
+                var click = new cloud.clickController();
+                cloud.map.addControl(click);
+                click.activate();
+
+                /* Control */
+                ctrl = cloud.addControl(new OpenLayers.Control.SelectFeature(store.layer, {
+                    hover : false,
+                    renderIntent : "select",
+                    onSelect : function(e) {
+                        //console.log(e);
+                        //$('#attr').empty();
+                        //console.log(e);
+                        //$('#attr').append($('#template').jqote(e));
+                    },
+                    onUnselect : function(feature) {
+                    }
+                }));
+
+                var layers = {};
+                $.ajax({
+                    url : hostname + '/controller/geometry_columns/' + db + '/getall/',
+                    async : false,
+                    dataType : 'jsonp',
+                    jsonp : 'jsonp_callback',
+                    success : function(response) {
+                        var groups = [];
+
+                        for (var i = 0; i < response.data.length; ++i) {
+                            groups[i] = response.data[i].layergroup;
+                        }
+                        var arr = array_unique(groups);
+                        for (var u = 0; u < response.data.length; ++u) {
+                            if (response.data[u].baselayer) {
+                                var isBaseLayer = true;
+                            } else {
+                                var isBaseLayer = false;
+                            }
+                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                                singleTile : false,
+                                isBaseLayer : isBaseLayer,
+                                visibility : false,
+                                wrapDateLine : false,
+                                tileCached : false,
+                                displayInLayerSwitcher : true,
+                                name : response.data[u].f_table_name
+                            });
+                        }
+                        var base64name;
+                        for (var i = 0; i < arr.length; ++i) {
+                            var l = [];
+                            base64name = Base64.encode(arr[i]).replace("=", "");
+                            $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '"> ' + arr[i] + ' </a></div></div>');
+                            $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
+                            for (var u = 0; u < response.data.length; ++u) {
+                                if (response.data[u].layergroup == arr[i]) {
+                                    var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
+                                    $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="switchLayer(this.id,this.checked)"></label></div>');
+                                    l.push({
+                                        text : (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
+                                        id : response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                        leaf : true,
+                                        checked : false
+                                    });
+                                }
+                            }
+                        }
+                        $(function() {
+                            $("#blob").popover({
+                                offset : 10,
+                                html : true,
+                                content : $("#layers")
+                            });
+                            $("#blob").popover('show');
+                            
+                        })
+                    }
+                });
+            });
+		</script>
+	</head>
+	<body>
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+					<div class="nav-collapse">
+						<ul class="nav">
+							<li>
+								<a href="#" id="blob" rel="popover" data-placement="bottom" title="Seværdigheder"> Seværdigheder </a>
+							</li>
+						</ul>
+					</div><!--/.nav-collapse -->
+					<span class="brand">Vesthimmerlands Museum</span>
+					<span class="brand right">Kulturarvstjenesten</span>
+				</div>
+			</div>
+		</div>
+		<div id="map" style="width: 100%;height: 100%;position: absolute">
+			<div id="layers"></div>
+		</div>
+		<!-- Modal -->
+		<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					×
+				</button>
+				<h3 id="myModalLabel">[Seværdighed]</h3>
+			</div>
+			<div class="modal-body">
+				<p>
+					[Indhold]
+				</p>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">
+					Luk
+				</button>
+			</div>
+		</div>
+	</body>
+	<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-collapse.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
+	<script src="/js/bootstrap/js/bootstrap.js"></script>
+</html>
