@@ -1,6 +1,6 @@
 <?php
 include '../../conf/main.php';
-session_set_cookie_params(0, '/',$domain);
+session_set_cookie_params(0, '/',".".$domain);
 session_start();
 include '../header.html';
 include '../../libs/functions.php';
