@@ -1,22 +1,14 @@
 <?php
-session_start();
+include '../header.php';
 // Check if user is logged in - and redirect if this is not the case
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
-	die("<script>window.location='/user/login'</script>");
+	die("<script>window.location='http://{$domain}/user/login'</script>");
 }
-include '../header.html';
-include '../../conf/main.php';
-include '../../libs/functions.php';
-include 'model/databases.php';
-//print_r($_SESSION);
-?>
-<!--<p>Hi <?php echo $_SESSION['screen_name']; ?></p>-->
-<?php
 $db = new databases();
 if ($db -> doesDbExist(postgis::toAscii($_SESSION['screen_name'], NULL, "_"))) {
-	echo "<a style='margin-top:40px' href='/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
+	echo "<a style='margin-top:40px' href='http://{$_SESSION['zone']}.{$domain}/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
 } else {
-	echo "<a style='margin-top:40px' href='/createstore' class='btn btn-large btn-info'>Create MyGeoCloud</a>";
+	echo "<a style='margin-top:40px' href='http://{$_SESSION['zone']}.{$domain}/createstore' class='btn btn-large btn-info'>Create MyGeoCloud</a>";
 	echo "<p>It will take a minute.</p>";
 }
 ?>

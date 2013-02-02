@@ -117,7 +117,7 @@ include("html_header.php");
 						
 						echo "<h2>Your geocloud \"{$name}\" was created!</h2>";
 						echo "<div class='inner'><p> </p>"; 
-						echo "<p><button class='btn btn-warning' onclick=\"window.location.href='/store/{$name}'\">Take me to my cloud</button></p></div>";
+						echo "<p><button class='btn btn-warning' onclick=\"window.location.href='http://{$_SESSION['zone']}.{$domain}/store/{$name}'\">Take me to my cloud</button></p></div>";
 					} 
 					else {
 						echo "<h2>Sorry, something went wrong. Try again</h2>";

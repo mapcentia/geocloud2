@@ -4,7 +4,6 @@ include ('../../libs/vdaemon/vdaemon.php');
 ?>
 
 <form id="Register" action="registration_p.php" method="POST" runat="vdaemon" disablebuttons="all">
-	
 	<div class="control-group" style="margin-top: 40px">
 		<div class="controls">
 			<vllabel validators="UserID,UserIDExist" errclass="error" for="UserID" cerrclass="controlerror">
@@ -23,7 +22,7 @@ include ('../../libs/vdaemon/vdaemon.php');
 			</vllabel>
 
 			<input name="Email" type="TEXT" class="control" id="Email" size="15">
-				<vlvalidator type="format" format="email" name="Email" control="Email" errmsg="<span class='label label-warning'>Invalid E-mail</span>">
+			<vlvalidator type="format" format="email" name="Email" control="Email" errmsg="<span class='label label-warning'>Invalid E-mail</span>">
 		</div>
 
 		<div class="controls">
@@ -42,6 +41,17 @@ include ('../../libs/vdaemon/vdaemon.php');
 			</vllabel>
 			<input name="Password2" type="PASSWORD" class="control" id="Password2" size="15">
 		</div>
+		<div class="controls">
+			Availability Zones
+			<label class="radio">
+				<input type="radio" name="Zone" value="us1" checked>
+				North America </label>
+			<label class="radio">
+				<input type="radio" name="Zone" value="eu1">
+				Europe </label>
+		</div>
+		
+		<br>
 
 		<!--
 		<tr>
@@ -68,15 +78,25 @@ include ('../../libs/vdaemon/vdaemon.php');
 				<input type="reset" class="btn" value="Reset">
 			</div>
 		</div>
+		<div class="controls">
+			<label class="checkbox">
+				<input name="Agreement" type="checkbox" id="Agreement" value="1">
+				<vllabel errclass="error" validators="Agreement" for="Agreement">
+					I agree with the terms of service
+				</vllabel> </label>
+
+			<vlvalidator type="required" name="Agreement" control="Agreement" errmsg="<span class='label label-warning'>Agreement must be checked</span>">
+
+		</div>
 	</div>
 
-</div>
-<div class="span4" style="border-left:4px solid #F1F1F1;display: block;height: 250px;margin-top: 0px;padding-left: 40px;padding-top: 40px">
-	<h1>Sign up to MyGeoCloud</h1>
-	<div style="height: 2em">
-		<vlsummary class="error" headertext="" displaymode="bulletlist">
 	</div>
-</div>
+	<div class="span4" style="border-left:4px solid #F1F1F1;display: block;height: 250px;margin-top: 0px;padding-left: 40px;padding-top: 40px">
+		<h1>Sign up to MyGeoCloud</h1>
+		<div style="height: 2em">
+			<vlsummary class="error" headertext="" displaymode="bulletlist">
+		</div>
+	</div>
 </form>
 </div>
 </div>

@@ -1,6 +1,7 @@
 <?php
-session_start();
 include '../../conf/main.php';
+session_set_cookie_params(0, '/',$domain);
+session_start();
 include '../../libs/oauth/EpiCurl.php';
 include '../../libs/oauth/EpiOAuth.php';
 include '../../libs/oauth/EpiTwitter.php';

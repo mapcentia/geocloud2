@@ -1,17 +1,11 @@
 <?php
-session_start();
+include '../header.php';
+$postgisObject = new postgis();
+include ('../../libs/vdaemon/vdaemon.php');
 // Check if user is logged in - and redirect if this is the case
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
 	die("<script>window.location='/user/login/p'</script>");
 }
-include '../header.html';
-include '../../conf/main.php';
-include '../../libs/functions.php';
-include '../../model/settings_viewer.php';
-$postgisdb = 'mygeocloud';
-$sTable = 'users';
-$postgisObject = new postgis();
-include ('../../libs/vdaemon/vdaemon.php');
 function UserIDCheck($sValue, &$oStatus) {
 	global $sTable;
 	global $postgisObject;
@@ -24,24 +18,25 @@ function UserIDCheck($sValue, &$oStatus) {
 	$oStatus -> bValid = false;
 	$oStatus -> sErrMsg = "User ID '$sValue' already exist";
 
-	$sQuery = "SELECT COUNT(*) as count FROM {$sTable} WHERE screenname = :sUserID AND pw = :sPassword";
+	$sQuery = "SELECT * FROM {$sTable} WHERE screenname = :sUserID AND pw = :sPassword";
 	$res = $postgisObject -> prepare($sQuery);
 	$res -> execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword));
 	$row = $postgisObject -> fetchRow($res);
 	//echo($sQuery);
 	//die();
-	if ($row['count'] > 0) {
+	if ($row['screenname']) {
 		$oStatus -> bValid = 1;
-		$postgisObject -> numRows($res);
+		// Login successful.
+		$_SESSION['zone'] = $row['zone'];
+		$_SESSION['VDaemonData'] = null;
+		$_SESSION['auth'] = true;
+		$_SESSION['screen_name'] = $sUserID;
 	} else {
 		$oStatus -> bValid = 0;
 	}
 }
+
 if ($oVDaemonStatus && $oVDaemonStatus -> bValid) {
-	// Login successful.
-	$_SESSION['VDaemonData'] = null;
-	$_SESSION['auth'] = true;
-	$_SESSION['screen_name'] = $sUserID;
 	header("location: p");
 }
 ?>
