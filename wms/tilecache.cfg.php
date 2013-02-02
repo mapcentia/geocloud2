@@ -41,7 +41,7 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 	while ($row = $postgisObject->fetchRow($result)) {
 		echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
 		echo "type=WMS\n";
-		echo "url=http://127.0.0.1/cgi-bin/mapserv?map={$basePath}/wms/mapfiles/{$user}_{$row['f_table_schema']}.map\n";
+		echo "url=http://127.0.0.1/wms/{$user}/{$row['f_table_schema']}/?";
 		echo "extension=png\n";
 		echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";
 		echo "maxResolution=156543.0339\n";

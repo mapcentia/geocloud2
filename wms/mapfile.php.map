@@ -64,7 +64,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  "wms_name"    "<?php echo $user;?>"
 		  "wms_format"    "image/png"
 		  "wms_onlineresource"	"http://<?php echo $_SERVER['HTTP_HOST'];?>/wms/<?php echo $user;?>/<?php echo $postgisschema;?>/"
-		  
+		  "ows_enable_request" "*"
 		END
 	  END
 	  #
@@ -172,7 +172,7 @@ SYMBOL
     TYPE ELLIPSE
   	FILLED TRUE
   	POINTS 1 1 END
-  	STYLE 4 2 END
+  	#STYLE 4 2 END
  END
  
 # ============================================================================ 
@@ -193,7 +193,7 @@ SYMBOL
   TYPE ELLIPSE
   FILLED TRUE
   POINTS 1 1 END
-  STYLE 5 5 END
+  #STYLE 5 5 END
 END
 
 # --------------------
@@ -203,7 +203,7 @@ SYMBOL
   TYPE ELLIPSE
   FILLED TRUE
   POINTS 1 1 END
-  STYLE 10 10 END
+  #STYLE 10 10 END
 END
 
 # --------------------
@@ -213,7 +213,7 @@ SYMBOL
   TYPE ELLIPSE
   FILLED TRUE
   POINTS 1 1 END
-  STYLE 20 6 2 6 END
+  #STYLE 20 6 2 6 END
 END
 
 # --------------------
@@ -223,7 +223,7 @@ SYMBOL
   TYPE ELLIPSE
   FILLED TRUE
   POINTS 1 1 END
-  STYLE 10 6 2 6 2 6 END
+  #STYLE 10 6 2 6 2 6 END
 END
  
 # --------------------
@@ -233,7 +233,7 @@ SYMBOL
   TYPE ELLIPSE
   FILLED TRUE
   POINTS 1 1 END
-  STYLE 2 2 END
+  #STYLE 2 2 END
 END
 
 	  
