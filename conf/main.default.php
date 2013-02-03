@@ -4,6 +4,7 @@ error_reporting(3);
 
 // URL and path information. Must be the web root folder! 
 $hostName = "http://mysite.com";
+$domain = "mysite.com";
 $basePath = "/var/www/";
 $sessionName = "mysession";
 

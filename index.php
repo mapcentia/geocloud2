@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<?php session_start(); ?>
+<?php
+	include 'conf/main.php';
+	session_name($sessionName);
+	session_set_cookie_params(0, '/', "." . $domain);
+?>
 <html lang="en">
 	<head>
 		<title>MyGeoCloud - Analyze and map your data</title>
@@ -67,7 +71,8 @@
 							</li>
 
 							<li>
-								<?php if 	(!$_SESSION['auth'] || !$_SESSION['screen_name']) {?>
+								<?php if 	(!$_SESSION['auth'] || !$_SESSION['screen_name']) {
+								?>
 								<a href="/user/login">Log in</a>
 								<?php } else { ?>
 								<a href="/user/logout">Log out</a>
