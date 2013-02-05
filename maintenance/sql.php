@@ -2,7 +2,7 @@
 $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
 
 
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN cartomobile text";
+$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter text";
 
 $sqls[] = "
 CREATE VIEW settings.geometry_columns_view AS 
@@ -34,7 +34,8 @@ CREATE VIEW settings.geometry_columns_view AS
 		geometry_columns_join.data,
 		geometry_columns_join.not_querable,
 		geometry_columns_join.single_tile,
-		geometry_columns_join.cartomobile
+		geometry_columns_join.cartomobile,
+		geometry_columns_join.filter
    FROM geometry_columns
    LEFT JOIN 
    		settings.geometry_columns_join ON

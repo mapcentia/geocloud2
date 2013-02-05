@@ -10,7 +10,7 @@ $arr = $dbList->listAllDbs();
 foreach($arr['data'] as $db) {
 	echo $db."<br/>";
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
-		if ($db=="mobreg") { 
+		if (1===1) { 
 			$postgisdb = $db;
 			$conn = new postgis();
 			foreach($sqls as $sql) {
