@@ -3,7 +3,8 @@
 	<head>
 		<title>MyGeoCloud - Analyze and map your data</title>
 		<meta charset="UTF-8" />
-		<script type="text/javascript" src="/api/v1/js/api.js"></script>
+		<<script src="/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
 		<script type="text/javascript" src="/js/common.js"></script>
 		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
@@ -18,6 +19,9 @@
 			}
 			.right {
 				float: right !important;
+			}
+			img {
+				max-width: none !important;
 			}
 
 			#result {
@@ -50,10 +54,47 @@
             var schema = "kulturarvstjenesten";
             var switchLayer = function(id, visible) {
                 (visible) ? cloud.showLayer(id) : cloud.hideLayer(id);
-            }
+            };
+            var kmsLayer = {
+                layerid : 1,
+                type : "WMTS",
+                name : "Skaermkort",
+                url : "http://kortforsyningen.kms.dk/topo_skaermkort",
+                params : {
+                    service : 'WMTS',
+                    version : '1.0.0',
+                    request : 'GetTile',
+                    format : 'image/jpeg',
+                    layer : 'dtk_skaermkort',
+                    style : 'default',
+                    BGCOLOR : '0xDCF0F9',
+                    matrixSet : 'View1',
+                    matrixIds : 'L00,L01,L02,L03,L04,L05,L06,L07,L08,L09,L10,L11',
+                    info_format : 'text/plain',
+                    transparent : true
+                },
+                options : {
+                    isBaseLayer : true,
+                    visibility : false,
+                    requestEncoding : 'kvp',
+                    layerid : 1
+                }
+            };
+            var startExt = [420000, 6025000, 905000, 6450000];
+            var maxExt = new OpenLayers.Bounds(120000, 5661139.2, 1558860.8, 6500000);
             $(window).load(function() {
-                cloud = new mygeocloud_ol.map("map", db);
-                cloud.zoomToExtent();
+                cloud = new mygeocloud_ol.map({
+                    el : "map",
+                    //controls : this.mapControls,
+                    projection : "EPSG:25832",
+                    resolutions : new Array(0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 204.8, 409.6, 819.2, 1638.4),
+                    units : "m",
+                    maxResolution : (maxExt.top - maxExt.bottom) / 256,
+                    maxExtent : maxExt,
+                    numZoomLevels : 12
+                });
+                cloud.addWmtsLayer(kmsLayer);
+                cloud.zoomToExtent(startExt);
                 var store = new mygeocloud_ol.geoJsonStore("mydb");
                 // Add the GeoJSON store to the map
                 cloud.addGeoJsonStore(store);
@@ -85,7 +126,7 @@
                         store.sql = "SELECT *, to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date,vejnavn||' '||husnr||', '||postnummer as adr_husnr_postnr,round(ST_Distance(transform(the_geom,900913), GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',900913))) as afstand FROM rudersdal_save.tforms115770006299681_join_vis_view ORDER BY afstand LIMIT 1";
                         store.reset();
                         //store.load()
-						$("#queryResult").append('<a class="btn small" onclick="$(\'#myModal\').modal()">Se mere</a>')
+                        $("#queryResult").append('<a class="btn small" onclick="$(\'#myModal\').modal()">Se mere</a>')
 
                         store.onLoad = function() {
                             ctrl.select(store.layer.features[0]);
@@ -166,7 +207,7 @@
                                 content : $("#layers")
                             });
                             $("#blob").popover('show');
-                            
+
                         })
                     }
                 });

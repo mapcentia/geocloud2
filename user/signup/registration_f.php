@@ -1,9 +1,9 @@
 <?php
-include '../header.html';
+include '../header.php';
 include ('../../libs/vdaemon/vdaemon.php');
 ?>
 
-<form id="Register" action="registration_p.php" method="POST" runat="vdaemon" disablebuttons="all">
+<form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
 	<div class="control-group" style="margin-top: 40px">
 		<div class="controls">
 			<vllabel validators="UserID,UserIDExist" errclass="error" for="UserID" cerrclass="controlerror">

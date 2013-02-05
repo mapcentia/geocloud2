@@ -463,6 +463,29 @@ var mygeocloud_ol = (function() {"use strict";
             }, defaults);
             return l;
         };
+        this.addWmtsLayer = function(layerConfig) {
+            var layer = null;
+
+            layerConfig.options.tileSize = new OpenLayers.Size(256, 256);
+            layerConfig.options.tileOrigin = new OpenLayers.LonLat(this.map.maxExtent.left, this.map.maxExtent.top);
+            layerConfig.options.tileFullExtent = this.map.maxExtent.clone();
+            for (var opts in layerConfig.options) {
+                layerConfig[opts] = layerConfig.options[opts];
+            }
+            for (var par in layerConfig.params) {
+                layerConfig[par] = layerConfig.params[par];
+            }
+            if (layerConfig["matrixIds"] != null) {
+                if (layerConfig["matrixIds"].indexOf(',') > 0) {
+                    layerConfig["matrixIds"] = layerConfig["matrixIds"].split(',');
+                }
+            }
+
+            layer = new OpenLayers.Layer.WMTS(layerConfig);
+
+            this.map.addLayer(layer);
+            return layer;
+        }
         this.removeTileLayerByName = function(name) {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
@@ -492,15 +515,14 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.removeLayer(store.layer);
             //??????????????
         };
-        this.hideLayer = function(name){
+        this.hideLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(false);
-            
+
         }
-        this.showLayer = function(name){
+        this.showLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(true);
         }
-      
-        this.addGoogleStreets();
+        //this.addGoogleStreets();
         this.getCenter = function() {
             var point = this.map.center;
             return {

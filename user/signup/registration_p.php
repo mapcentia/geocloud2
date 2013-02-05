@@ -19,12 +19,12 @@ function UserIDCheck($sValue, &$oStatus) {
 	$res = $postgisObject -> execQuery($sQuery);
 	$row = $postgisObject -> fetchRow($res);
 
-	//echo($row['count']);
+	echo($row['count']);
 	//die();
 
 	if ($row['count'] > 0) {
 		$oStatus -> bValid = 0;
-		$postgisObject -> numRows($res);
+		//$postgisObject -> numRows($res);
 	} else {
 		$oStatus -> bValid = 1;
 	}

@@ -109,7 +109,6 @@ function makeMapFile($user,$extentLayer=NULL) {
 		  SIZE SMALL
 		  COLOR 0 0 0
 		  SHADOWSIZE 2 2 
-		  BACKGROUNDSHADOWSIZE 1 1 
 		END
 	  END
 	  Symbol

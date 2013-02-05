@@ -24,21 +24,22 @@ var mygeocloud_ol = (function() {"use strict";
     var host = mygeocloud_host;
     var parentThis = this;
     var mapLib;
-    if ( typeof (OpenLayers) == "object" && typeof (L) == "object") {
+    if ( typeof (OpenLayers) === "object" && typeof (L) === "object") {
         alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
     }
-    if ( typeof (OpenLayers) != "object" && typeof (L) != "object") {
+    if ( typeof (OpenLayers) !== "object" && typeof (L) !== "object") {
         alert("You need to load neither OpenLayer.js or Leaflet.js");
     }
-    if ( typeof (OpenLayers) == "object") {
+    if ( typeof (OpenLayers) === "object") {
         mapLib = "ol";
     }
-    if ( typeof (L) == "object") {
+    if ( typeof (L) === "object") {
         mapLib = "l";
     }
-    var geoJsonStore = function(db, config) {
+    var geoJsonStore = function(config) {
         var prop, parentThis = this;
         var defaults = {
+            db : null,
             sql : null,
             onLoad : function() {
             },
@@ -59,6 +60,7 @@ var mygeocloud_ol = (function() {"use strict";
                 defaults[prop] = config[prop];
             }
         };
+        this.db = defaults.db;
         this.sql = defaults.sql;
         this.onLoad = defaults.onLoad;
         this.movedEnd = defaults.movedEnd;
@@ -183,7 +185,7 @@ var mygeocloud_ol = (function() {"use strict";
                 dataType : 'jsonp',
                 data : 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
                 jsonp : 'jsonp_callback',
-                url : host + '/api/v1/sql/' + db,
+                url : host + '/api/v1/sql/' + this.db,
                 success : function(response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -209,7 +211,7 @@ var mygeocloud_ol = (function() {"use strict";
             return new OpenLayers.Format.WKT().write(this.layer.features);
         };
     };
-    map = function(el, db, config) {
+    map = function(config) {
         var prop, baseLayer, popup, // baseLayer wrapper
         parentMap, defaults = {
             numZoomLevels : 20,
@@ -223,7 +225,6 @@ var mygeocloud_ol = (function() {"use strict";
         }
         parentMap = this;
         this.layerStr = "";
-        this.db = db;
         this.geoLocation = {
             x : null,
             y : null,
@@ -298,7 +299,7 @@ var mygeocloud_ol = (function() {"use strict";
                     dataType : 'jsonp',
                     data : 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + parentMap.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
                     jsonp : 'jsonp_callback',
-                    url : host + '/apps/viewer/servers/query/' + db,
+                    url : host + '/apps/viewer/servers/query/' + this.db,
                     success : function(response) {
                         if (response.html != false) {
                             document.getElementById("queryResult").innerHTML = response.html;
@@ -318,7 +319,7 @@ var mygeocloud_ol = (function() {"use strict";
         });
         switch (mapLib) {
             case "ol":
-                this.map = new OpenLayers.Map(el, {
+                this.map = new OpenLayers.Map(defaults.el, {
                     //theme: null,
                     controls : [//new OpenLayers.Control.Navigation(),
                     //new OpenLayers.Control.PanZoomBar(),
@@ -349,7 +350,7 @@ var mygeocloud_ol = (function() {"use strict";
                 break;
         }
         /**
-         * 
+         *
          */
         var _map = this.map;
         /**
@@ -431,12 +432,34 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.addLayer(this.baseGHYBRID);
             return (this.baseGHYBRID);
         }
-        this.addMapQuestOSM();
+        this.addWmtsLayer = function(layerConfig) {
+            var layer;
+            layerConfig.options.tileSize = new OpenLayers.Size(256, 256);
+            layerConfig.options.tileOrigin = new OpenLayers.LonLat(this.map.maxExtent.left, this.map.maxExtent.top);
+            layerConfig.options.tileFullExtent = this.map.maxExtent.clone();
+            for (var opts in layerConfig.options) {
+                layerConfig[opts] = layerConfig.options[opts];
+            }
+            for (var par in layerConfig.params) {
+                layerConfig[par] = layerConfig.params[par];
+            }
+            if (layerConfig["matrixIds"] != null) {
+                if (layerConfig["matrixIds"].indexOf(',') > 0) {
+                    layerConfig["matrixIds"] = layerConfig["matrixIds"].split(',');
+                }
+            }
+            layer = new OpenLayers.Layer.WMTS(layerConfig);
+            this.map.addLayer(layer);
+            return layer;
+        }
+        //this.addMapQuestOSM();
         this.setBaseLayer = function(baseLayer) {
             this.map.setBaseLayer(baseLayer);
         }
-        this.addTileLayers = function(layers, config) {
+        this.addTileLayers = function(config) {
             var defaults = {
+                layers: [],
+                db: null,
                 singleTile : false,
                 opacity : 1,
                 isBaseLayer : false,
@@ -451,6 +474,7 @@ var mygeocloud_ol = (function() {"use strict";
                     defaults[prop] = config[prop];
                 }
             };
+            var layers = defaults.layers;
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l = this.createTileLayer(layers[i], defaults)
@@ -463,9 +487,9 @@ var mygeocloud_ol = (function() {"use strict";
             var parts = [];
             parts = layer.split(".");
             if (!defaults.tileCached) {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/?";
+                var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
             } else {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/tilecache/?";
+                var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
             }
             var l = new OpenLayers.Layer.WMS(defaults.name, url, {
                 layers : layer,
@@ -492,7 +516,7 @@ var mygeocloud_ol = (function() {"use strict";
             this.map.addLayer(this.createTileLayerGroup(layers, defaults));
         };
         this.createTileLayerGroup = function(layers, defaults) {
-            var l = new OpenLayers.Layer.WMS(defaults.name, host + "/wms/" + this.db + "/" + defaults.schema + "/?", {
+            var l = new OpenLayers.Layer.WMS(defaults.name, host + "/wms/" + defaults.db + "/" + defaults.schema + "/?", {
                 layers : layers,
                 transparent : true
             }, defaults);
