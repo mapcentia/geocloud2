@@ -1,3 +1,4 @@
+var mygeocloud_host;
 var mygeocloud_ol = (function() {"use strict";
     var scriptSource = ( function(scripts) {"use strict";
             scripts = document.getElementsByTagName('script');
@@ -7,7 +8,6 @@ var mygeocloud_ol = (function() {"use strict";
             }
             return script.getAttribute('src', -1);
         }());
-    var mygeocloud_host;
     // In IE7 host name is missing if script url is relative
     if (scriptSource.charAt(0) === "/") {
         mygeocloud_host = "";
