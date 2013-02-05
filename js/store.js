@@ -803,6 +803,13 @@ $(window).load(function() {"use strict";
                         name : 'data',
                         value : r.data.data
 
+                    },{
+                        width : 300,
+                        xtype : 'textfield',
+                        fieldLabel : 'Filter',
+                        name : 'filter',
+                        value : r.data.filter
+
                     }],
                     buttons : [{
                         iconCls : 'silk-add',
@@ -816,7 +823,7 @@ $(window).load(function() {"use strict";
                                 };
                                 param = Ext.util.JSON.encode(param);
                                 Ext.Ajax.request({
-                                   // url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
+                                   url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
                                     headers : {
                                         'Content-Type' : 'application/json; charset=utf-8'
                                     },
