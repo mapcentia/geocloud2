@@ -1,5 +1,5 @@
 <?php
-session_start();
+//session_start();
 include_once("../../../conf/main.php");
 include("../../../inc/user_name_from_uri.php");
 
