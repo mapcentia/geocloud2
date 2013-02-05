@@ -280,6 +280,9 @@ END
 		<?php } else {?> 
 			DATA "<?php echo $row['f_geometry_column'];?> from <?php echo $row['f_table_schema'];?>.<?php echo $row['f_table_name'];?>  using unique <?php echo $primeryKey['attname'] ?> using srid=<?php echo $row['srid'] ?>"
 		<?php } ?>
+		<?php if ($row['filter']) {?>
+			FILTER "<?php echo $row['filter'];?>"
+			<?php }?> 
 		<?php
 		switch ($row['type']) {
 					case "POINT":
