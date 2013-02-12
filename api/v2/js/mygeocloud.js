@@ -67,19 +67,23 @@ var mygeocloud_ol = (function() {"use strict";
         // Map member for parent map obj. Set when store is added to a map
         this.map = null;
         // Layer Def
-        this.layer = new OpenLayers.Layer.Vector("Vector", {
-            styleMap : defaults.styleMap,
-            visibility : defaults.visibility,
-            renderers : ['Canvas', 'SVG', 'VML'],
-            rendererOptions : defaults.rendererOptions,
-            strategies : [new OpenLayers.Strategy.AnimatedCluster({
-                //strategies : [new OpenLayers.Strategy.Cluster({
-                distance : 45,
-                animationMethod : OpenLayers.Easing.Expo.easeOut,
-                animationDuration : 10,
-                autoActivate : false
-            })]
-        });
+        switch (mapLib) {
+            case "ol":
+                this.layer = new OpenLayers.Layer.Vector("Vector", {
+                    styleMap : defaults.styleMap,
+                    visibility : defaults.visibility,
+                    renderers : ['Canvas', 'SVG', 'VML'],
+                    rendererOptions : defaults.rendererOptions,
+                    strategies : [new OpenLayers.Strategy.AnimatedCluster({
+                        //strategies : [new OpenLayers.Strategy.Cluster({
+                        distance : 45,
+                        animationMethod : OpenLayers.Easing.Expo.easeOut,
+                        animationDuration : 10,
+                        autoActivate : false
+                    })]
+                });
+                break;
+        }
         this.hide = function() {
             this.layer.setVisibility(false);
         };
@@ -335,7 +339,8 @@ var mygeocloud_ol = (function() {"use strict";
                     projection : defaults.projection,
                     maxResolution : defaults.maxResolution,
                     minResolution : defaults.minResolution,
-                    maxExtent : defaults.maxExtent
+                    maxExtent : defaults.maxExtent,
+                    eventListeners : defaults.eventListeners
                     //units : "m"
                 });
                 this.click = new this.clickController();
@@ -458,8 +463,8 @@ var mygeocloud_ol = (function() {"use strict";
         }
         this.addTileLayers = function(config) {
             var defaults = {
-                layers: [],
-                db: null,
+                layers : [],
+                db : null,
                 singleTile : false,
                 opacity : 1,
                 isBaseLayer : false,
@@ -558,7 +563,13 @@ var mygeocloud_ol = (function() {"use strict";
         this.showLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(true);
         }
-
+        this.hideAllTileLayers = function() {
+            for (var i = 0; i < this.map.layers.length; i++) {
+                if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                    this.map.layers[i].setVisibility(false);
+                }
+            }
+        }
         this.getCenter = function() {
             var point = this.map.center;
             return {
@@ -566,7 +577,6 @@ var mygeocloud_ol = (function() {"use strict";
                 y : point.lat
             }
         }
-
         this.getExtent = function() {
             var mapBounds = this.map.getExtent();
             return mapBounds.toArray();

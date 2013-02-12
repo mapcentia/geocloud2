@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>MyGeoCloud - Analyze and map your data</title>
+		<title>Kulturarvstjenesten Vesthimmerlands Museum</title>
 		<meta charset="UTF-8" />
-		<<script src="/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
+		<script src="http://cdn.eu1.mygeocloud.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="hsttp://eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
 		<script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
-		<script type="text/javascript" src="/js/common.js"></script>
-		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
-		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
+		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
 			.popover {
 				width: 300px;
@@ -47,13 +46,20 @@
 				font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 			}
 		</style>
+
 		<script>
             var cloud, popup;
-            var hostname = "";
+            var kms_skaermkort, orto_foraar;
+            var hostname = mygeocloud_host;
             var db = "vmus";
             var schema = "kulturarvstjenesten";
-            var switchLayer = function(id, visible) {
-                (visible) ? cloud.showLayer(id) : cloud.hideLayer(id);
+            var metaData = null;
+            var activeTileLayer="";
+            var metaDataKeys = [];
+            var switchLayer = function(id) {
+                cloud.hideAllTileLayers();
+                cloud.showLayer(id);
+                activeTileLayer = id;
             };
             var kmsLayer = {
                 layerid : 1,
@@ -80,22 +86,70 @@
                     layerid : 1
                 }
             };
-            var startExt = [420000, 6025000, 905000, 6450000];
-            var maxExt = new OpenLayers.Bounds(120000, 5661139.2, 1558860.8, 6500000);
+            var styleMap = new OpenLayers.StyleMap({
+                'default' : {},
+                'select' : {
+                    fillColor : "rgb(178, 34, 34)",
+                    fillOpacity : 0.9,
+                    strokeColor : "rgb(178, 34, 34)",
+                    strokeOpacity : 0.5,
+                    strokeWidth : 12,
+                    pointRadius : 10
+                }
+            });
+            var startExt = [982022.41542977, 7694595.0928929, 1136119.4644312, 7754368.8490035];
+            var maxExt = new OpenLayers.Bounds(982022.41542977, 7694595.0928929, 1136119.4644312, 7754368.8490035);
+            var addLegend = function(layers) {
+                var layers = cloud.getVisibleLayers();
+                console.log(layers);
+                var param = 'layers=' + layers + '&amp;type=text&amp;lan=';
+                $.ajax({
+                    url : hostname + '/apps/viewer/servers/legend/vmus?' + param,
+                    dataType : 'jsonp',
+                    jsonp : 'jsonp_callback',
+                    success : function(response) {
+                        //console.log(response);
+                        $('#legendContent').html(response.html);
+
+                    }
+                });
+            }
             $(window).load(function() {
                 cloud = new mygeocloud_ol.map({
                     el : "map",
                     //controls : this.mapControls,
-                    projection : "EPSG:25832",
-                    resolutions : new Array(0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 204.8, 409.6, 819.2, 1638.4),
+                    projection : "EPSG:3857",
+                    //resolutions : new Array(0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 204.8, 409.6, 819.2, 1638.4),
                     units : "m",
-                    maxResolution : (maxExt.top - maxExt.bottom) / 256,
+                    //maxResolution : (maxExt.top - maxExt.bottom) / 256,
                     maxExtent : maxExt,
-                    numZoomLevels : 12
+                    eventListeners : {
+                        "changelayer" : addLegend
+                    }
+                    //numZoomLevels : 12
                 });
-                cloud.addWmtsLayer(kmsLayer);
+                //cloud.addWmtsLayer(kmsLayer);
+                cloud.map.events.register("moveend", null, function() {
+                    console.log(cloud.getExtent())
+                });
+                kms_skaermkort = cloud.addTileLayers({
+                layers : ["public.kms_skaermkort"],
+                db : "vmus",
+                isBaseLayer : true,
+                name: "kms_skaermkort"
+                })[0];
+                orto_foraar = cloud.addTileLayers({
+                layers : ["public.orto_foraar"],
+                db : "vmus",
+                isBaseLayer : true,
+                name: "orto_foraar"
+                })[0];
+                cloud.setBaseLayer(cloud.addOSM());
                 cloud.zoomToExtent(startExt);
-                var store = new mygeocloud_ol.geoJsonStore("mydb");
+                var store = new mygeocloud_ol.geoJsonStore({
+                    db : db,
+                    styleMap : styleMap
+                });
                 // Add the GeoJSON store to the map
                 cloud.addGeoJsonStore(store);
                 /* Click controller */
@@ -121,16 +175,18 @@
                             popup.destroy();
                         } catch (e) {
                         };
-                        popup = new OpenLayers.Popup("result", coords, null, "<div id='queryResult' style='z-index:1000;'>Wait..</div>", null, true);
-                        cloud.map.addPopup(popup);
-                        store.sql = "SELECT *, to_char('epoch'::timestamptz + (registreringsdato) * '1 sec'::interval,'DD.MM.YYYY') as date,vejnavn||' '||husnr||', '||postnummer as adr_husnr_postnr,round(ST_Distance(transform(the_geom,900913), GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',900913))) as afstand FROM rudersdal_save.tforms115770006299681_join_vis_view ORDER BY afstand LIMIT 1";
+						var where;
+						(activeTileLayer!=="") ? where = metaDataKeys[activeTileLayer].filter : where = null;
+                        store.sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) as afstand FROM kulturarvstjenesten.master WHERE " + where + " ORDER BY afstand LIMIT 1";
+                        console.log(where);
                         store.reset();
-                        //store.load()
-                        $("#queryResult").append('<a class="btn small" onclick="$(\'#myModal\').modal()">Se mere</a>')
-
+                        store.load()
                         store.onLoad = function() {
+                            var anchor = new OpenLayers.LonLat(store.layer.features[0].geometry.x, store.layer.features[0].geometry.y);
+                            popup = new OpenLayers.Popup("result", anchor, null, "<div id='queryResult' style='z-index:1000;'>Wait..</div>", null, true);
+                            cloud.map.addPopup(popup);
                             ctrl.select(store.layer.features[0]);
-
+                            $("#queryResult").html('<div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.kort_tekst + '</div><div><a class="btn btn-small" onclick="$(\'#body-fund\').modal()">Se mere</a></div>')
                         }
                     }
                 });
@@ -144,9 +200,8 @@
                     renderIntent : "select",
                     onSelect : function(e) {
                         //console.log(e);
-                        //$('#attr').empty();
-                        //console.log(e);
-                        //$('#attr').append($('#template').jqote(e));
+                        console.log(e);
+                        $('#body-fund').html($('#template-fund').jqote(e.data));
                     },
                     onUnselect : function(feature) {
                     }
@@ -159,8 +214,12 @@
                     dataType : 'jsonp',
                     jsonp : 'jsonp_callback',
                     success : function(response) {
+                        metaData = response;
+                        for (var i=0;i<metaData.data.length;i++) {
+                        	metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                        }
+                        console.log(metaDataKeys);
                         var groups = [];
-
                         for (var i = 0; i < response.data.length; ++i) {
                             groups[i] = response.data[i].layergroup;
                         }
@@ -171,8 +230,9 @@
                             } else {
                                 var isBaseLayer = false;
                             }
-                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                                singleTile : false,
+                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers({
+                                layers : [response.data[u].f_table_schema + "." + response.data[u].f_table_name],
+                                db : "vmus",
                                 isBaseLayer : isBaseLayer,
                                 visibility : false,
                                 wrapDateLine : false,
@@ -183,30 +243,37 @@
                         }
                         var base64name;
                         for (var i = 0; i < arr.length; ++i) {
-                            var l = [];
-                            base64name = Base64.encode(arr[i]).replace("=", "");
-                            $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '"> ' + arr[i] + ' </a></div></div>');
-                            $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
-                            for (var u = 0; u < response.data.length; ++u) {
-                                if (response.data[u].layergroup == arr[i]) {
-                                    var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
-                                    $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="switchLayer(this.id,this.checked)"></label></div>');
-                                    l.push({
-                                        text : (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                        id : response.data[u].f_table_schema + "." + response.data[u].f_table_name,
-                                        leaf : true,
-                                        checked : false
-                                    });
+                            if (arr[i]) {
+                                var l = [];
+                                base64name = Base64.encode(arr[i]).replace(/=/g, "");
+                                $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '"> ' + arr[i] + ' </a></div></div>');
+                                $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
+                                for (var u = 0; u < response.data.length; ++u) {
+                                    if (response.data[u].layergroup == arr[i]) {
+                                        var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
+                                        $("#collapse" + base64name).append('<div class="accordion-inner"><button type="button" class="btn btn-mini btn-layer" data-toggle="button" style="width:100px" id="' + response.data[u].f_table_name + '" onclick="switchLayer(this.id)">' + text + '</button></div>');
+                                        l.push({
+                                            text : (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
+                                            id : response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                            leaf : true,
+                                            checked : false
+                                        });
+                                    }
                                 }
                             }
                         }
                         $(function() {
-                            $("#blob").popover({
+                            $("#layers-popover").popover({
                                 offset : 10,
                                 html : true,
                                 content : $("#layers")
                             });
-                            $("#blob").popover('show');
+                            $("#layers-popover").popover('show');
+                            $("#base-layers-popover").popover({
+                                offset : 10,
+                                html : true,
+                                content : $("#base-layers")
+                            });
 
                         })
                     }
@@ -222,42 +289,78 @@
 					<div class="nav-collapse">
 						<ul class="nav">
 							<li>
-								<a href="#" id="blob" rel="popover" data-placement="bottom" title="Seværdigheder"> Seværdigheder </a>
+								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="Seværdigheder"> Seværdigheder </a>
+							</li>
+							<li>
+								<a href="#" id="base-layers-popover" rel="popover" data-placement="bottom" title="Baggrundskort"> Baggrundskort </a>
 							</li>
 						</ul>
 					</div><!--/.nav-collapse -->
-					<span class="brand">Vesthimmerlands Museum</span>
 					<span class="brand right">Kulturarvstjenesten</span>
+					<span class="brand right">Vesthimmerlands Museum</span>
+
 				</div>
 			</div>
 		</div>
 		<div id="map" style="width: 100%;height: 100%;position: absolute">
-			<div id="layers"></div>
+			<div id="layers" data-toggle="buttons-radio"></div>
+			<div class="dropdown clearfix" style="position: absolute; z-index: 2000; bottom: 10px; right: 10px">
+				<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display: block; position: static; margin-bottom: 5px; *width: 180px;">
+					<li>
+						<a tabindex="-1" href="#">
+						<div>
+							Signatur
+						</div></a>
+					</li>
+					<li>
+						<div id="legendContent"></div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<!-- base layers-->
+		<div id="base-layers">
+			<span onclick="cloud.setBaseLayer(kms_skaermkort)">Skærmkort</span>
+			<span onclick="cloud.setBaseLayer(orto_foraar)">Luftfoto</span>
 		</div>
 		<!-- Modal -->
-		<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-					×
-				</button>
-				<h3 id="myModalLabel">[Seværdighed]</h3>
-			</div>
-			<div class="modal-body">
-				<p>
-					[Indhold]
-				</p>
-			</div>
-			<div class="modal-footer">
-				<button class="btn" data-dismiss="modal" aria-hidden="true">
-					Luk
-				</button>
-			</div>
+		<div id="body-fund" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
 		</div>
 	</body>
-	<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-collapse.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
-	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
-	<script src="/js/bootstrap/js/bootstrap.js"></script>
+	<script type="text/html" id="template-fund">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+		×
+		</button>
+		<h3 id="body-fundLabel"><%= this.navn %></h3>
+		</div>
+		<div class="modal-body" id="body-fund">
+			<div style="float: left; position: relative">
+				<div>
+					<%= this.tekst %>
+				</div>
+				<div>
+					<%= this.image1 %>
+				</div>
+			</div>
+			<div style="float: right; position: relative">
+				<div><%= this.image2 %></div>
+				<div><%= this.image3 %></div>
+				<div><%= this.image4 %></div>
+				<div><%= this.image5 %></div>
+			</div>
+		</div>
+		<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">
+		Luk
+		</button>
+		</div>
+	</script>
+	<script src="http://eu1.mygeocloud.com/js/bootstrap/js/bootstrap.js"></script>
+	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
+	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
+
+	<script type="text/javascript" src="http://eu1.mygeocloud.com/js/common.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
 </html>
