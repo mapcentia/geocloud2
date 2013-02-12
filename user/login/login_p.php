@@ -4,6 +4,8 @@ include '../header.php';
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 	die("<script>window.location='http://{$domain}/user/login'</script>");
 }
+// We set the 
+$postgisdb = $nodeDbIPs[$_SESSION['zone']];
 $db = new databases();
 if ($db -> doesDbExist(postgis::toAscii($_SESSION['screen_name'], NULL, "_"))) {
 	echo "<a style='margin-top:40px' href='http://{$_SESSION['zone']}.{$domain}/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
