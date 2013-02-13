@@ -3,14 +3,14 @@
 	<head>
 		<title>Kulturarvstjenesten Vesthimmerlands Museum</title>
 		<meta charset="UTF-8" />
-		<script src="http://cdn.eu1.mygeocloud.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
-		<script type="text/javascript" src="hsttp://eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
-		<script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
+		<script src="http://eu1.mygeocloud.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="http://eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
+		<script type="text/javascript" src="_/api/v2/js/mygeocloud.js"></script>
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
 			.popover {
-				width: 300px;
+				width: 200px;
 			}
 			.popover-inner {
 				overflow: auto;
@@ -22,17 +22,18 @@
 			img {
 				max-width: none !important;
 			}
-
+			#modal-fund {
+				width: 700px;
+			}
+			#wait {
+				background-color: transparent !important;
+			}
 			#result {
-				height: auto !important;
-				width: auto !important
 				opacity: 1 !important;
 				background-color: transparent !important;
 				padding: 10px
 			}
 			#result_GroupDiv {
-				width: 150px !important;
-				height: 100px !important;
 				background: white;
 				box-shadow: 0 3px 14px rgba(0,0,0,0.4);
 				padding: 1px;
@@ -45,21 +46,46 @@
 				line-height: 1.4;
 				font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 			}
+			.images {
+				width: 300px;
+				margin-bottom: 4px;
+			}
+			.images-small {
+				width: 100%;
+				margin-bottom: 4px;
+			}
+			.olControlZoom {
+				right: 40px;
+				left: auto !important;
+				top: 70px !important;
+			}
+			.olButton {
+				height: 50px !important;
+				width: 50px !important;
+				font-size: 24px;
+				font-weight: bold;
+			}
 		</style>
 
 		<script>
-            var cloud, popup;
-            var kms_skaermkort, orto_foraar;
+            var cloud, store, sogneStore, popup;
+            var kms_skaermkort, orto_foraar, sogne;
             var hostname = mygeocloud_host;
             var db = "vmus";
             var schema = "kulturarvstjenesten";
             var metaData = null;
-            var activeTileLayer="";
+            var activeTileLayer = "";
             var metaDataKeys = [];
             var switchLayer = function(id) {
                 cloud.hideAllTileLayers();
                 cloud.showLayer(id);
                 activeTileLayer = id;
+                try {
+                    popup.destroy();
+                } catch(e) {
+                }
+                store.reset();
+                addLegend();
             };
             var kmsLayer = {
                 layerid : 1,
@@ -87,8 +113,7 @@
                 }
             };
             var styleMap = new OpenLayers.StyleMap({
-                'default' : {},
-                'select' : {
+                'default' : {
                     fillColor : "rgb(178, 34, 34)",
                     fillOpacity : 0.9,
                     strokeColor : "rgb(178, 34, 34)",
@@ -122,9 +147,9 @@
                     //resolutions : new Array(0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 204.8, 409.6, 819.2, 1638.4),
                     units : "m",
                     //maxResolution : (maxExt.top - maxExt.bottom) / 256,
-                    maxExtent : maxExt,
+                    // maxExtent : maxExt,
                     eventListeners : {
-                        "changelayer" : addLegend
+                        //"changelayer" : addLegend
                     }
                     //numZoomLevels : 12
                 });
@@ -136,22 +161,29 @@
                 layers : ["public.kms_skaermkort"],
                 db : "vmus",
                 isBaseLayer : true,
-                name: "kms_skaermkort"
+                name: "kms_skaermkort",
+                tileCached: false
                 })[0];
                 orto_foraar = cloud.addTileLayers({
                 layers : ["public.orto_foraar"],
                 db : "vmus",
                 isBaseLayer : true,
-                name: "orto_foraar"
+                name: "orto_foraar",
+                tileCached: false
                 })[0];
                 cloud.setBaseLayer(cloud.addOSM());
                 cloud.zoomToExtent(startExt);
-                var store = new mygeocloud_ol.geoJsonStore({
+                store = new mygeocloud_ol.geoJsonStore({
                     db : db,
                     styleMap : styleMap
                 });
+                sogneStore = new mygeocloud_ol.geoJsonStore({
+                    db : db
+                    //styleMap : styleMap
+                });
                 // Add the GeoJSON store to the map
                 cloud.addGeoJsonStore(store);
+                cloud.addGeoJsonStore(sogneStore);
                 /* Click controller */
                 cloud.clickController = OpenLayers.Class(OpenLayers.Control, {
                     defaultHandlerOptions : {
@@ -170,23 +202,38 @@
                     },
                     trigger : function(e) {
                         var coords = this.map.getLonLatFromViewPortPx(e.xy);
-                        //console.log(this.map.layers);
+                        var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
+                        cloud.map.addPopup(waitPopup);
                         try {
                             popup.destroy();
                         } catch (e) {
                         };
-						var where;
-						(activeTileLayer!=="") ? where = metaDataKeys[activeTileLayer].filter : where = null;
+                        var where;
+                        (activeTileLayer !== "" && activeTileLayer !== "sogne") ? where = metaDataKeys[activeTileLayer].filter : where = null;
                         store.sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) as afstand FROM kulturarvstjenesten.master WHERE " + where + " ORDER BY afstand LIMIT 1";
-                        console.log(where);
+                        sogneStore.sql = "SELECT * FROM public.sogne WHERE ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857) && ST_Transform(the_geom,3857) AND ST_Intersects(ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857), ST_Transform(the_geom,3857))";
                         store.reset();
-                        store.load()
-                        store.onLoad = function() {
-                            var anchor = new OpenLayers.LonLat(store.layer.features[0].geometry.x, store.layer.features[0].geometry.y);
-                            popup = new OpenLayers.Popup("result", anchor, null, "<div id='queryResult' style='z-index:1000;'>Wait..</div>", null, true);
-                            cloud.map.addPopup(popup);
-                            ctrl.select(store.layer.features[0]);
-                            $("#queryResult").html('<div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.kort_tekst + '</div><div><a class="btn btn-small" onclick="$(\'#body-fund\').modal()">Se mere</a></div>')
+                        sogneStore.reset();
+                        if (activeTileLayer === "sogne") {
+                            sogneStore.load()
+                            sogneStore.onLoad = function() {
+                                waitPopup.destroy();
+                                var anchor = new OpenLayers.LonLat(sogneStore.layer.features[0].geometry.getCentroid().x, sogneStore.layer.features[0].geometry.getCentroid().y);
+                                popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
+                                cloud.map.addPopup(popup);
+                                $('#modal-fund').html($('#template-sogn').jqote(sogneStore.layer.features[0].data));
+                                $("#queryResult").html('<div style="position:relative"><div><b>' + sogneStore.layer.features[0].data.sogn + '</b></div><div>' + sogneStore.layer.features[0].data.kort_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + sogneStore.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();sogneStore.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                            }
+                        } else {
+                            store.load()
+                            store.onLoad = function() {
+                                waitPopup.destroy();
+                                var anchor = new OpenLayers.LonLat(store.layer.features[0].geometry.x, store.layer.features[0].geometry.y);
+                                popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
+                                cloud.map.addPopup(popup);
+                                $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
+                                $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.kort_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                            }
                         }
                     }
                 });
@@ -194,19 +241,16 @@
                 cloud.map.addControl(click);
                 click.activate();
 
-                /* Control */
-                ctrl = cloud.addControl(new OpenLayers.Control.SelectFeature(store.layer, {
-                    hover : false,
-                    renderIntent : "select",
-                    onSelect : function(e) {
-                        //console.log(e);
-                        console.log(e);
-                        $('#body-fund').html($('#template-fund').jqote(e.data));
-                    },
-                    onUnselect : function(feature) {
-                    }
-                }));
-
+                sogne = cloud.addTileLayers({
+                layers : ["public.sogne"],
+                db : "vmus",
+                name: "sogne",
+                visibility : false,
+                tileCached: true
+                })[0];
+                $("#sogn-btn").click(function() {
+                    switchLayer("sogne");
+                })
                 var layers = {};
                 $.ajax({
                     url : hostname + '/controller/geometry_columns/' + db + '/getall/',
@@ -215,8 +259,8 @@
                     jsonp : 'jsonp_callback',
                     success : function(response) {
                         metaData = response;
-                        for (var i=0;i<metaData.data.length;i++) {
-                        	metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                        for (var i = 0; i < metaData.data.length; i++) {
+                            metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
                         }
                         console.log(metaDataKeys);
                         var groups = [];
@@ -288,15 +332,19 @@
 					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
 					<div class="nav-collapse">
 						<ul class="nav">
-							<li>
-								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="Seværdigheder"> Seværdigheder </a>
-							</li>
+							
 							<li>
 								<a href="#" id="base-layers-popover" rel="popover" data-placement="bottom" title="Baggrundskort"> Baggrundskort </a>
 							</li>
+							<li>
+								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="På opdagelse"> På opdagelse </a>
+							</li>
 						</ul>
 					</div><!--/.nav-collapse -->
-					<span class="brand right">Kulturarvstjenesten</span>
+					<button id="sogn-btn" class="btn" type="button">
+						Sognebeskrivelser
+					</button>
+					<!--<span class="brand right">Kulturarvstjenesten</span>-->
 					<span class="brand right">Vesthimmerlands Museum</span>
 
 				</div>
@@ -324,7 +372,7 @@
 			<span onclick="cloud.setBaseLayer(orto_foraar)">Luftfoto</span>
 		</div>
 		<!-- Modal -->
-		<div id="body-fund" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div id="modal-fund" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 
 		</div>
 	</body>
@@ -336,20 +384,45 @@
 		<h3 id="body-fundLabel"><%= this.navn %></h3>
 		</div>
 		<div class="modal-body" id="body-fund">
-			<div style="float: left; position: relative">
-				<div>
-					<%= this.tekst %>
-				</div>
-				<div>
-					<%= this.image1 %>
-				</div>
-			</div>
-			<div style="float: right; position: relative">
-				<div><%= this.image2 %></div>
-				<div><%= this.image3 %></div>
-				<div><%= this.image4 %></div>
-				<div><%= this.image5 %></div>
-			</div>
+		<div style="float: left; position: relative; width: 320px">
+
+		<%= this.tekst %>
+
+		</div>
+		<div style="float: right; position: relative">
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image1 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image2 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image3 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image4 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image5 %>'/></div>
+		</div>
+		</div>
+		<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">
+		Luk
+		</button>
+		</div>
+	</script>
+	<script type="text/html" id="template-sogn">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+		×
+		</button>
+		<h3 id="body-fundLabel"><%= this.sogn %></h3>
+		</div>
+		<div class="modal-body" id="body-fund">
+		<div style="float: left; position: relative; width: 320px">
+
+		<%= this.tekst %>
+
+		</div>
+		<div style="float: right; position: relative">
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image1 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image2 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image3 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image4 %>'/></div>
+		<div><img class="img-polaroid images" src='assets/images/<%= this.image5 %>'/></div>
+		</div>
 		</div>
 		<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">
@@ -360,7 +433,5 @@
 	<script src="http://eu1.mygeocloud.com/js/bootstrap/js/bootstrap.js"></script>
 	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
 	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
-
 	<script type="text/javascript" src="http://eu1.mygeocloud.com/js/common.js"></script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
 </html>

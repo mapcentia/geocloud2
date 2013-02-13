@@ -49,14 +49,15 @@ class databases extends postgis {
 		}
 	}
 	public function doesDbExist($name){
-	    $sql = "select count(*) as count from pg_catalog.pg_database where datname = '{$name}'";
+	    $sql = "SELECT 1 as check from pg_database WHERE datname='{$name}'";
 		$row = $this->fetchRow($this -> execQuery($sql),"assoc");
-		if ($row['count']==1) {
-			return true;
+		if ($row['check']) {
+			$response['success'] = true;
 		}
 		else {
-			return false;
+			$response['success'] = false;
 		}
+		return $response;
 	}
 	public function listAllDbs(){
 		$sql = "SELECT datname from pg_catalog.pg_database";

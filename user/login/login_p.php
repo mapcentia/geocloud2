@@ -5,12 +5,13 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 	die("<script>window.location='http://{$domain}/user/login'</script>");
 }
 // We set the 
-$postgisdb = $nodeDbIPs[$_SESSION['zone']];
-$db = new databases();
-if ($db -> doesDbExist(postgis::toAscii($_SESSION['screen_name'], NULL, "_"))) {
-	echo "<a style='margin-top:40px' href='http://{$_SESSION['zone']}.{$domain}/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
+//$checkDb = file_get_contents("http://{$_SESSION['zone']}.{$domain}/doesdbexist/{$_SESSION['screen_name']}");
+$checkDb = json_decode(file_get_contents("http://127.0.0.1/controller/databases/postgis/doesdbexist/{$_SESSION['screen_name']}"));
+($_SESSION['zone']) ? $prefix=$_SESSION['zone']."." : $prefix="";
+if ($checkDb->success) {
+	echo "<a style='margin-top:40px' href='http://{$prefix}{$domain}/store/{$_SESSION['screen_name']}' class='btn btn-large btn-info'>Start MyGeoCloud</a>";
 } else {
-	echo "<a style='margin-top:40px' href='http://{$_SESSION['zone']}.{$domain}/createstore' class='btn btn-large btn-info'>Create MyGeoCloud</a>";
+	echo "<a style='margin-top:40px' href='http://{$prefix}{$domain}/createstore' class='btn btn-large btn-info'>Create MyGeoCloud</a>";
 	echo "<p>It will take a minute.</p>";
 }
 ?>
