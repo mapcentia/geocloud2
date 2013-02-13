@@ -4,8 +4,7 @@
 		<title>Kulturarvstjenesten Vesthimmerlands Museum</title>
 		<meta charset="UTF-8" />
 		<script src="http://eu1.mygeocloud.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
-		<script type="text/javascript" src="http://eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
-		<script type="text/javascript" src="_/api/v2/js/mygeocloud.js"></script>
+		<script type="text/javascript" src="http://cdn.eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
@@ -161,15 +160,13 @@
                 layers : ["public.kms_skaermkort"],
                 db : "vmus",
                 isBaseLayer : true,
-                name: "kms_skaermkort",
-                tileCached: false
+                name: "kms_skaermkort"
                 })[0];
                 orto_foraar = cloud.addTileLayers({
                 layers : ["public.orto_foraar"],
                 db : "vmus",
                 isBaseLayer : true,
-                name: "orto_foraar",
-                tileCached: false
+                name: "orto_foraar"
                 })[0];
                 cloud.setBaseLayer(cloud.addOSM());
                 cloud.zoomToExtent(startExt);
@@ -222,7 +219,7 @@
                                 popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
                                 cloud.map.addPopup(popup);
                                 $('#modal-fund').html($('#template-sogn').jqote(sogneStore.layer.features[0].data));
-                                $("#queryResult").html('<div style="position:relative"><div><b>' + sogneStore.layer.features[0].data.sogn + '</b></div><div>' + sogneStore.layer.features[0].data.kort_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + sogneStore.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();sogneStore.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                $("#queryResult").html('<div style="position:relative"><div><b>' + sogneStore.layer.features[0].data.sogn + '</b></div><div>' + sogneStore.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + sogneStore.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();sogneStore.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
                             }
                         } else {
                             store.load()
@@ -232,7 +229,7 @@
                                 popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
                                 cloud.map.addPopup(popup);
                                 $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
-                                $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.kort_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
                             }
                         }
                     }
@@ -245,8 +242,7 @@
                 layers : ["public.sogne"],
                 db : "vmus",
                 name: "sogne",
-                visibility : false,
-                tileCached: true
+                visibility : false
                 })[0];
                 $("#sogn-btn").click(function() {
                     switchLayer("sogne");
@@ -280,7 +276,6 @@
                                 isBaseLayer : isBaseLayer,
                                 visibility : false,
                                 wrapDateLine : false,
-                                tileCached : false,
                                 displayInLayerSwitcher : true,
                                 name : response.data[u].f_table_name
                             });
