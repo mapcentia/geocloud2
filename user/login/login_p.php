@@ -5,7 +5,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 	die("<script>window.location='http://{$domain}/user/login'</script>");
 }
 ($_SESSION['zone']) ? $prefix=$_SESSION['zone']."." : $prefix="";
-$checkDb = json_decode(file_get_contents("http://{$prefix}{$domain}/controller/databases/postgis/doesdbexist/{$_SESSION['screen_name']}"));
+$checkDb = json_decode(file_get_contents("http://{$prefix}{$domain}/controller/databases/postgres/doesdbexist/{$_SESSION['screen_name']}"));
 //$checkDb = json_decode(file_get_contents("http://127.0.0.1/controller/databases/postgis/doesdbexist/{$_SESSION['screen_name']}"));
 
 if ($checkDb->success) {
