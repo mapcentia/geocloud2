@@ -195,7 +195,7 @@ var mygeocloud_ol = (function() {"use strict";
                         alert(response.message);
                     }
                     if (response.success === true) {
-                        if ( typeof (response.features) !== null) {
+                        if (response.features !== null) {
                             parentThis.geoJSON = response;
                             parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
                             parentThis.featureStore = new GeoExt.data.FeatureStore({
