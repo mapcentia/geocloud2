@@ -203,7 +203,7 @@ var mygeocloud_ol = (function() {"use strict";
                                 layer : parentThis.layer
                             });
                         }
-                        alert('');
+                        else alert('');
                     }
                 },
                 complete : function() {
