@@ -195,12 +195,15 @@ var mygeocloud_ol = (function() {"use strict";
                         alert(response.message);
                     }
                     if (response.success === true) {
-                        parentThis.geoJSON = response;
-                        parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
-                        parentThis.featureStore = new GeoExt.data.FeatureStore({
-                            fields : response.forStore,
-                            layer : parentThis.layer
-                        });
+                        if ( typeof (response) === "object") {
+                            parentThis.geoJSON = response;
+                            parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                            parentThis.featureStore = new GeoExt.data.FeatureStore({
+                                fields : response.forStore,
+                                layer : parentThis.layer
+                            });
+                        }
+                        alert('');
                     }
                 },
                 complete : function() {
@@ -539,7 +542,6 @@ var mygeocloud_ol = (function() {"use strict";
                     });
                     break;
             }
-            console.log(l);
             return l;
         };
         this.addTileLayerGroup = function(layers, config) {
