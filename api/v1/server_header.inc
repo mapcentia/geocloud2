@@ -1,5 +1,5 @@
 <?php
-session_start();
+//session_start();
 include '../../../conf/main.php';
 include 'libs/oauth/EpiCurl.php';
 include 'libs/oauth/EpiOAuth.php';
