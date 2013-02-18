@@ -605,7 +605,7 @@ var mygeocloud_ol = (function() {"use strict";
         }
         this.hideAllTileLayers = function(arr) {
             for (var i = 0; i < this.map.layers.length; i++) {
-                if ($.inArray(this.map.layers[i].name,arr)===false && this.map.layers[i].isBaseLayer === false && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                if (($.inArray(this.map.layers[i].name,arr)===false) || this.map.layers[i].isBaseLayer === false && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                     this.map.layers[i].setVisibility(false);
                 }
             }
