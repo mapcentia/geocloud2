@@ -8,6 +8,10 @@
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
+			em {
+				font-style: normal !important;
+				font-weight: bold !important;
+			}
 			.popover {
 				width: 200px;
 			}
@@ -79,7 +83,7 @@
 
 		<script>
             var cloud, store, sogneStore, popup;
-            var kms_skaermkort, orto_foraar, sogne;
+            var kms_skaermkort, orto_foraar, sogne, kommuner;
             var hostname = mygeocloud_host;
             var db = "vmus";
             var schema = "kulturarvstjenesten";
@@ -88,8 +92,13 @@
             var metaDataKeys = [];
             var metaDataKeysTitle = [];
             var switchLayer = function(id) {
-                if (id !== "sogne")
-                    cloud.hideAllTileLayers();
+                if (id !== "sogne") {
+                    for (var i = 0; i < cloud.map.layers.length; i++) {
+                        if (cloud.map.layers[i].name !== "kommuner" && cloud.map.layers[i].isBaseLayer === false && cloud.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                            cloud.map.layers[i].setVisibility(false);
+                        }
+                    }
+                }
                 cloud.showLayer(id);
                 activeTileLayer = id;
                 try {
@@ -99,6 +108,11 @@
                 store.reset();
                 addLegend();
             };
+            var resetAllButtons = function() {
+                $('.btn-layer').each(function(key, obj) {
+                    $(obj).removeClass("active");
+                });
+            }
             var kmsLayer = {
                 layerid : 1,
                 type : "WMTS",
@@ -221,7 +235,7 @@
                         var where;
                         (activeTileLayer !== "" && activeTileLayer !== "sogne") ? where = metaDataKeys[activeTileLayer].filter : where = null;
                         store.sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) as afstand FROM kulturarvstjenesten.master WHERE round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) < 1000 AND " + where + " ORDER BY afstand LIMIT 1";
-                        sogneStore.sql = "SELECT * FROM public.sogne WHERE ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857) && ST_Transform(the_geom,3857) AND ST_Intersects(ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857), ST_Transform(the_geom,3857))";
+                        sogneStore.sql = "SELECT * FROM kulturarvstjenesten.sogne WHERE ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857) && ST_Transform(the_geom,3857) AND ST_Intersects(ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857), ST_Transform(the_geom,3857))";
                         store.reset();
                         sogneStore.reset();
                         if (activeTileLayer === "sogne") {
@@ -263,8 +277,8 @@
                 name: "master",
                 visibility : true
                 })[0];
-                
-                cloud.addTileLayers({
+
+                kommuner = cloud.addTileLayers({
                 layers : ["public.kommuner"],
                 db : "vmus",
                 name: "kommuner",
@@ -274,7 +288,7 @@
                 addLegend();
 
                 sogne = cloud.addTileLayers({
-                layers : ["public.sogne"],
+                layers : ["kulturarvstjenesten.sogne"],
                 db : "vmus",
                 name: "sogne",
                 visibility : false
@@ -320,12 +334,12 @@
                         var base64name;
                         var cv;
                         for (var i = 0; i < arr.length; ++i) {
-                            if (arr[i]) {
+                            if (arr[i] && arr[i]!=="Master") {
                                 var l = [];
                                 console.log("TEST" + metaDataKeysTitle[arr[i]]);
                                 cv = ( typeof (metaDataKeysTitle[arr[i]]) === "object") ? metaDataKeysTitle[arr[i]].f_table_name : null;
                                 base64name = Base64.encode(arr[i]).replace(/=/g, "");
-                                $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '" onclick="switchLayer(\'' + cv + '\')"> ' + arr[i] + ' </a></div></div>');
+                                $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '" onclick="resetAllButtons();switchLayer(\'' + cv + '\')"> ' + arr[i] + ' </a></div></div>');
                                 $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
                                 for (var u = 0; u < response.data.length; ++u) {
                                     if (response.data[u].layergroup == arr[i]) {
@@ -430,10 +444,15 @@
 		</div>
 		<div style="float: right; position: relative">
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image1 %>'/></div>
+		<div><%= this.image1_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image2 %>'/></div>
+		<div><%= this.image2_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image3 %>'/></div>
+		<div><%= this.image3_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image4 %>'/></div>
+		<div><%= this.image4_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image5 %>'/></div>
+		<div><%= this.image5_tekst %></div>
 		</div>
 		</div>
 		<div class="modal-footer">
@@ -452,15 +471,20 @@
 		<div class="modal-body" id="body-fund">
 		<div style="float: left; position: relative; width: 320px">
 
-		<%= this.tekst %>
+		<%= markdown.toHTML(this.tekst) %>
 
 		</div>
 		<div style="float: right; position: relative">
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image1 %>'/></div>
+		<div><%= this.image1_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image2 %>'/></div>
+		<div><%= this.image2_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image3 %>'/></div>
+		<div><%= this.image3_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image4 %>'/></div>
+		<div><%= this.image4_tekst %></div>
 		<div><img class="img-polaroid images" src='assets/images/<%= this.image5 %>'/></div>
+		<div><%= this.image5_tekst %></div>
 		</div>
 		</div>
 		<div class="modal-footer">
@@ -474,4 +498,5 @@
 	<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
 	<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
 	<script type="text/javascript" src="http://eu1.mygeocloud.com/js/common.js"></script>
+	<script src="https://raw.github.com/evilstreak/markdown-js/master/lib/markdown.js"></script>
 </html>
