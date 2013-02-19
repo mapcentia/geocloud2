@@ -74,6 +74,8 @@ function startWfsEdition(layerName) {
                                 });
                             } else if (columnsForGrid[i].typeObj.type == "string") {
                                 columnsForGrid[i].editor = new Ext.form.TextField();
+                            } else if (columnsForGrid[i].typeObj.type == "text") {
+                                columnsForGrid[i].editor = new Ext.form.TextArea();
                             }
                         }
                     }

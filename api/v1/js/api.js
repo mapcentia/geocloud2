@@ -19,7 +19,8 @@ document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
+//document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
+document.write("<script src='" + mygeocloud_host + "/js/GeoExt/lib/GeoExt.js'><\/script>");
 //document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/openlayers/theme/default/style.mobile.css'\/>");
 //document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
 

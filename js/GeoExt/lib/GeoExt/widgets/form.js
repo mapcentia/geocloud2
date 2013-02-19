@@ -129,7 +129,7 @@ GeoExt.form.recordToField = function(record) {
         var minLength = restriction["minLength"] !== undefined ?
             parseFloat(restriction["minLength"]) : undefined;
         field = {
-            xtype: "textfield",
+            xtype: "textarea",
             name: name,
             fieldLabel: label,
             maxLength: maxLength,

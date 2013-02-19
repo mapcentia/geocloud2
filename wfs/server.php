@@ -656,7 +656,7 @@ function dropFirstChrs($str, $no) {
  */
 function dropNameSpace($tag) {
 	//$tag = html_entity_decode($tag);
-	$tag = gmlConverter::oneLineXML($tag);
+	//$tag = gmlConverter::oneLineXML($tag);
 	$tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/',"",$tag); // Remove xmlns with "
 	$tag = preg_replace('/ xmlns(?:.*?)?=\'.*?\'/',"",$tag); // Remove xmlns with '
 	$tag = preg_replace('/ xsi(?:.*?)?=\".*?\"/',"",$tag); // remove xsi:schemaLocation with "
