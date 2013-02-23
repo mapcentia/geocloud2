@@ -1,4 +1,4 @@
 RewriteEngine On
-RewriteRule ^([\w'-]*)/([\w'-]*)$ $1.phtml
-RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ $1.phtml
-RewriteRule ^([\w'-]*)$ $1.phtml
+RewriteRule ^([\w'-]*)/([\w'-]*)$ $1.php
+RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ $1.php
+RewriteRule ^([\w'-]*)$ $1.php
