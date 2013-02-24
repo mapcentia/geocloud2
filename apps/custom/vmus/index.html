@@ -79,6 +79,10 @@
 				font-size: 130%;
 				text-align: center;
 			}
+			.image-text {
+				width: 300px;
+				margin-bottom: 15px;
+			}
 		</style>
 
 		<script>
@@ -260,7 +264,7 @@
                                     popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
                                     cloud.map.addPopup(popup);
                                     $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
-                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">Ã—</button></div>')
                                 } else {
                                     $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                                 }
@@ -389,7 +393,7 @@
 								<a href="#" id="base-layers-popover" rel="popover" data-placement="bottom" title="Baggrundskort"> Baggrundskort </a>
 							</li>
 							<li>
-								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="På opdagelse"> På opdagelse </a>
+								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="PÃ¥ opdagelse"> PÃ¥ opdagelse </a>
 							</li>
 						</ul>
 					</div><!--/.nav-collapse -->
@@ -420,7 +424,7 @@
 		</div>
 		<!-- base layers-->
 		<div id="base-layers">
-			<span onclick="cloud.setBaseLayer(kms_skaermkort)">Skærmkort</span>
+			<span onclick="cloud.setBaseLayer(kms_skaermkort)">SkÃ¦rmkort</span>
 			<span onclick="cloud.setBaseLayer(orto_foraar)">Luftfoto</span>
 		</div>
 		<!-- Modal -->
@@ -429,13 +433,13 @@
 		</div>
 		<!-- Alert -->
 		<div id="alert" class="alert alert-info">
-			Du ramte ikke noget. Prøv at zoome tættere på.
+			Du ramte ikke noget. PrÃ¸v at zoome tÃ¦ttere pÃ¥.
 		</div>
 	</body>
 	<script type="text/html" id="template-fund">
 		<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-		×
+		Ã—
 		</button>
 		<h3 id="body-fundLabel"><%= this.navn %></h3>
 		</div>
@@ -447,15 +451,15 @@
 		</div>
 		<div style="float: right; position: relative">
 		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image1 %>'/></div>
-		<div><%= this.image1_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image2 %>'/></div>
-		<div><%= this.image2_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image3 %>'/></div>
-		<div><%= this.image3_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image4 %>'/></div>
-		<div><%= this.image4_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image5 %>'/></div>
-		<div><%= this.image5_tekst %></div>
+		<div class="image-text"><%= this.image1_tekst %></div>
+		<% if (this.image2!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image2 %>'/></div>  <% } %>
+		<% if (this.image2_tekst!==null) { %><div class="image-text"><%= this.image2_tekst %></div> <% } %>
+		<% if (this.image3!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image3 %>'/></div>  <% } %>
+		<% if (this.image3_tekst!==null) { %><div class="image-text"><%= this.image3_tekst %></div> <% } %>
+		<% if (this.image4!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image4 %>'/></div>  <% } %>
+		<% if (this.image5_tekst!==null) { %><div class="image-text"><%= this.image4_tekst %></div> <% } %>
+		<% if (this.image5!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image5 %>'/></div>  <% } %>
+		<% if (this.image5_tekst!==null) { %><div class="image-text"><%= this.image5_tekst %></div> <% } %>
 		</div>
 		</div>
 		<div class="modal-footer">
@@ -467,7 +471,7 @@
 	<script type="text/html" id="template-sogn">
 		<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-		×
+		Ã—
 		</button>
 		<h3 id="body-fundLabel"><%= this.sogn %></h3>
 		</div>
@@ -479,15 +483,15 @@
 		</div>
 		<div style="float: right; position: relative">
 		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image1 %>'/></div>
-		<div><%= this.image1_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image2 %>'/></div>
-		<div><%= this.image2_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image3 %>'/></div>
-		<div><%= this.image3_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image4 %>'/></div>
-		<div><%= this.image4_tekst %></div>
-		<div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image5 %>'/></div>
-		<div><%= this.image5_tekst %></div>
+		<div class="image-text"><%= this.image1_tekst %></div>
+		<% if (this.image2!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image2 %>'/></div>  <% } %>
+		<% if (this.image2_tekst!==null) { %><div class="image-text"><%= this.image2_tekst %></div> <% } %>
+		<% if (this.image3!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image3 %>'/></div>  <% } %>
+		<% if (this.image3_tekst!==null) { %><div class="image-text"><%= this.image3_tekst %></div> <% } %>
+		<% if (this.image4!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image4 %>'/></div>  <% } %>
+		<% if (this.image5_tekst!==null) { %><div class="image-text"><%= this.image4_tekst %></div> <% } %>
+		<% if (this.image5!==null) { %><div><img class="img-polaroid images" src='<%= imageDir %>/<%= this.image5 %>'/></div>  <% } %>
+		<% if (this.image5_tekst!==null) { %><div class="image-text"><%= this.image5_tekst %></div> <% } %>
 		</div>
 		</div>
 		<div class="modal-footer">
