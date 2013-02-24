@@ -28,7 +28,7 @@ class GeometryColumns extends postgis {
 	}
 
 	function getAll() {
-		$sql = "SELECT * FROM settings.geometry_columns_view";
+		$sql = "SELECT * FROM settings.geometry_columns_view order by sort_id";
 		$result = $this -> execQuery($sql);
 		$check = array();
 		if (!$this -> PDOerror) {

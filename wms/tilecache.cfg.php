@@ -32,6 +32,7 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 	//echo "access_key=AKIAIZUYE3I462NPVANQ\n";
 	//echo "secret_access_key=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\n";
 
+	echo "expire=30\n";
 	$sql="SELECT * FROM settings.geometry_columns_view";
 	//echo $sql;
 	$result = $postgisObject->execQuery($sql);
