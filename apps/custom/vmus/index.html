@@ -260,7 +260,7 @@
                                     popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
                                     cloud.map.addPopup(popup);
                                     $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
-                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="assets/images/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
                                 } else {
                                     $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                                 }
