@@ -4,16 +4,23 @@
 		<title>Kulturarvstjenesten Vesthimmerlands Museum</title>
 		<meta charset="UTF-8" />
 		<script src="http://eu1.mygeocloud.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
-		<script type="text/javascript" src="http://eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
+		<script type="text/javascript" src="http://cdn.eu1.mygeocloud.com/api/v2/js/mygeocloud.js"></script>
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
+			.navbar .nav > li {
+				padding: 0px 85px;/* this the one which enforces space between each link*/
+			}
+			.base-map-button {
+				width: 150px;
+				margin-top: 0px !important;
+			}
 			em {
 				font-style: normal !important;
 				font-weight: bold !important;
 			}
 			.popover {
-				width: 200px;
+				width: 250px;
 			}
 			.popover-inner {
 				overflow: auto;
@@ -57,6 +64,10 @@
 				width: 100%;
 				margin-bottom: 4px;
 			}
+			.images-base-map {
+				width: 50px;
+				margin-right: 10px;
+			}
 			.olControlZoom {
 				right: 40px;
 				left: auto !important;
@@ -83,11 +94,15 @@
 				width: 300px;
 				margin-bottom: 15px;
 			}
+			#base-layers div {
+				margin-top: 10px;
+				margin-bottom: 10px;
+			}
 		</style>
 
 		<script>
             var cloud, store, sogneStore, popup;
-            var kms_skaermkort, orto_foraar, sogne, kommuner;
+            var osm, kms_skaermkort, orto_foraar, sogne, kommuner, topo20_hoeje_maalebordsblade, topo20_lave_maalebordsblade;
             var hostname = mygeocloud_host;
             var db = "vmus";
             var schema = "kulturarvstjenesten";
@@ -200,7 +215,23 @@
                 isBaseLayer : true,
                 name: "orto_foraar"
                 })[0];
-                cloud.setBaseLayer(cloud.addOSM());
+
+                topo20_hoeje_maalebordsblade = cloud.addTileLayers({
+                layers : ["public.topo20_hoeje_maalebordsblade"],
+                db : "vmus",
+                isBaseLayer : true,
+                name: "topo20_hoeje_maalebordsblade"
+                })[0];
+
+                topo20_lave_maalebordsblade = cloud.addTileLayers({
+                layers : ["public.topo20_lave_maalebordsblade"],
+                db : "vmus",
+                isBaseLayer : true,
+                name: "topo20_lave_maalebordsblade"
+                })[0];
+
+                osm = cloud.addOSM();
+                cloud.setBaseLayer(osm);
                 cloud.zoomToExtent(startExt);
                 store = new mygeocloud_ol.geoJsonStore({
                     db : db,
@@ -331,7 +362,7 @@
                                 layers : [response.data[u].f_table_schema + "." + response.data[u].f_table_name],
                                 db : "vmus",
                                 isBaseLayer : isBaseLayer,
-                                tileCached: false,
+                                tileCached : false,
                                 visibility : false,
                                 wrapDateLine : false,
                                 displayInLayerSwitcher : true,
@@ -341,7 +372,7 @@
                         var base64name;
                         var cv;
                         for (var i = 0; i < arr.length; ++i) {
-                            if (arr[i] && arr[i]!=="Master") {
+                            if (arr[i] && arr[i] !== "Master") {
                                 var l = [];
                                 console.log("TEST" + metaDataKeysTitle[arr[i]]);
                                 cv = ( typeof (metaDataKeysTitle[arr[i]]) === "object") ? metaDataKeysTitle[arr[i]].f_table_name : null;
@@ -363,19 +394,19 @@
                             }
                         }
                         $(function() {
-                            $("#layers-popover").popover({
-                                offset : 10,
-                                html : true,
-                                content : $("#layers")
-                            });
-                            $("#layers-popover").popover('show');
-                            $("#base-layers-popover").popover({
-                                offset : 10,
-                                html : true,
-                                content : $("#base-layers")
-                            });
-
-                        })
+                        $("#layers-popover").popover({
+                        offset : 10,
+                        html : true,
+                        content : $("#layers")
+                        });
+                        $("#layers-popover").popover('show');
+                        $("#base-layers-popover").popover({
+                        offset : 10,
+                        html : true,
+                        content : $("#base-layers")
+                        });
+                        $("#base-layers-popover").popover('show');
+                        })()
                     }
                 });
             });
@@ -388,13 +419,13 @@
 					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
 					<div class="nav-collapse">
 						<ul class="nav">
+							<li>
+								<button class="btn active" data-toggle="button" id="layers-popover" rel="popover" data-placement="bottom" title="P&aring; opdagelse"> P&aring; opdagelse </button>
+							</li>
+							<li>
+								<button class="btn active" data-toggle="button" id="base-layers-popover" rel="popover" data-placement="bottom" title="Baggrundskort"> Baggrundskort </button>
+							</li>
 
-							<li>
-								<a href="#" id="base-layers-popover" rel="popover" data-placement="bottom" title="Baggrundskort"> Baggrundskort </a>
-							</li>
-							<li>
-								<a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="P&aring; opdagelse"> P&aring; opdagelse </a>
-							</li>
 						</ul>
 					</div><!--/.nav-collapse -->
 					<button id="sogn-btn" class="btn" type="button">
@@ -423,9 +454,31 @@
 			</div>
 		</div>
 		<!-- base layers-->
-		<div id="base-layers">
-			<span onclick="cloud.setBaseLayer(kms_skaermkort)">SkÃ¦rmkort</span>
-			<span onclick="cloud.setBaseLayer(orto_foraar)">Luftfoto</span>
+		<div id="base-layers" data-toggle="buttons-radio">
+			<div>
+				<span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/osm.png"></span>
+				<button class="btn btn-small active base-map-button" onclick="cloud.setBaseLayer(osm)">
+					Open Street Map
+				</button>
+			</div>
+			<div>
+				<span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/hmb.png"></span>
+				<button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(topo20_hoeje_maalebordsblade)">
+					Høje målebordsblade
+				</button>
+			</div>
+			<div>
+				<span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/lmb.png"></span>
+				<button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(topo20_lave_maalebordsblade)">
+					Lave målebordsblade
+				</button>
+			</div>
+			<div>
+				<span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+				<button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(orto_foraar)">
+					Luftfoto forår 2012
+				</button>
+			</div>
 		</div>
 		<!-- Modal -->
 		<div id="modal-fund" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
