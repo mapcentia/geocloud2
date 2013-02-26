@@ -8,6 +8,10 @@
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="http://eu1.mygeocloud.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<style>
+			h2 {
+				font-size: 20px;
+				line-height: 25px;
+			}
 			.navbar .nav > li {
 				padding: 0px 85px;/* this the one which enforces space between each link*/
 			}
@@ -33,7 +37,8 @@
 				max-width: none !important;
 			}
 			#modal-fund {
-				width: 700px;
+				width:940px;
+   				margin-left:-470px;
 			}
 			#wait {
 				background-color: transparent !important;
@@ -57,7 +62,7 @@
 				font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 			}
 			.images {
-				width: 300px;
+				width: 400px;
 				margin-bottom: 4px;
 			}
 			.images-small {
@@ -91,12 +96,17 @@
 				text-align: center;
 			}
 			.image-text {
-				width: 300px;
+				width: 400px;
 				margin-bottom: 15px;
 			}
 			#base-layers div {
 				margin-top: 10px;
 				margin-bottom: 10px;
+			}
+			.modal-text{
+				float: left; 
+				position: relative; 
+				width: 450px;
 			}
 		</style>
 
@@ -292,10 +302,12 @@
                                 waitPopup.destroy();
                                 if ( typeof (store.layer.features[0]) === "object") {
                                     var anchor = new OpenLayers.LonLat(store.layer.features[0].geometry.x, store.layer.features[0].geometry.y);
-                                    popup = new OpenLayers.Popup("result", anchor, new OpenLayers.Size(250, 250), "<div id='queryResult' style='z-index:1000;'></div>", false, null);
+                                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(250, 350), "<div id='queryResult' style='z-index:1000;'></div>",null,false, null);
+                                    popup.panMapIfOutOfView=true;
+                                    //popup.relativePosition="tr";
                                     cloud.map.addPopup(popup);
                                     $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
-                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><div><a class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><a style="margin-top:3px;margin-bottom:3px" class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><button onclick="popup.destroy();store.reset();" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
                                 } else {
                                     $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                                 }
@@ -406,7 +418,7 @@
                         content : $("#base-layers")
                         });
                         $("#base-layers-popover").popover('show');
-                        })()
+                        })
                     }
                 });
             });
@@ -494,10 +506,10 @@
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
 		×
 		</button>
-		<h3 id="body-fundLabel"><%= this.navn %></h3>
+		<h1 id="body-fundLabel"><%= this.navn %></h1>
 		</div>
 		<div class="modal-body" id="body-fund">
-		<div style="float: left; position: relative; width: 320px">
+		<div class="model-text">
 
 		<%= this.tekst %>
 
@@ -526,10 +538,10 @@
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
 		×
 		</button>
-		<h3 id="body-fundLabel"><%= this.sogn %></h3>
+		<h1 id="body-fundLabel"><%= this.sogn %></h1>
 		</div>
 		<div class="modal-body" id="body-fund">
-		<div style="float: left; position: relative; width: 320px">
+		<div class="modal-text">
 
 		<%= markdown.toHTML(this.tekst) %>
 
