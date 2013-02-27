@@ -37,8 +37,8 @@
 				max-width: none !important;
 			}
 			#modal-fund {
-				width: 940px;
-				margin-left: -470px;
+				width: 1200px;
+				margin-left: -600px;
 			}
 			#wait {
 				background-color: transparent !important;
@@ -62,7 +62,7 @@
 				font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 			}
 			.images {
-				width: 400px;
+				width: 500px;
 				margin-bottom: 4px;
 			}
 			.images-small {
@@ -96,8 +96,10 @@
 				text-align: center;
 			}
 			.image-text {
-				width: 400px;
+				width: 500px;
 				margin-bottom: 15px;
+				font-size: 14pt;
+				line-height: 20pt;
 			}
 			#base-layers div {
 				margin-top: 10px;
@@ -106,12 +108,18 @@
 			.modal-text {
 				float: left;
 				position: relative;
-				width: 450px;
+				width: 550px;
+				font-size: 14pt;
+				line-height: 20pt;
+			}
+			#teaser-text {
+				font-size: 12pt;
+				line-height: 16pt;
 			}
 			#time-line {
 				bottom: 10px;
 				left: 10px;
-				width: 1000px;
+				width: 1400px;
 				height: 100px;
 				background-color: white;
 				position: absolute;
@@ -136,7 +144,7 @@
 				-webkit-border-radius: 11px;
 				-moz-border-radius: 11px;
 				border-radius: 11px;
-				background: #eee;
+				background: #555555;
 				border: 1px solid #ddd;
 				color: #707070;
 				font-size: 1.2em;
@@ -149,7 +157,7 @@
 
 			ul.events li em {
 				color: #aaa;
-				font-weight: normal;
+				font-weight: bold;
 				font-size: 0.9em;
 			}
 
@@ -163,13 +171,12 @@
 			ul.intervals li {
 				background: #fff url(/images/1x1_eee.gif) repeat-x left 10%;
 				border-right: 1px solid #ccc;
-				color: #999;
+				color: #333333;
 				float: left;
 				font-size: 1.2em;
 				margin: 0;
 				padding: 15px 0;
 				text-align: center;
-				width: 16.5%;
 			}
 
 			ul.intervals li.first {
@@ -377,20 +384,22 @@
                                 waitPopup.destroy();
                                 if ( typeof (store.layer.features[0]) === "object") {
                                     var anchor = new OpenLayers.LonLat(store.layer.features[0].geometry.x, store.layer.features[0].geometry.y);
-                                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(250, 350), "<div id='queryResult' style='z-index:1000;'></div>", null, false, null);
+                                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(450, 500), "<div id='queryResult' style='z-index:1000;'></div>", null, false, null);
                                     popup.panMapIfOutOfView = true;
                                     //popup.relativePosition="tr";
                                     cloud.map.addPopup(popup);
                                     $('#modal-fund').html($('#template-fund').jqote(store.layer.features[0].data));
-                                    $("#queryResult").html('<div style="position:relative"><div><b>' + store.layer.features[0].data.navn + '</b></div><div>' + store.layer.features[0].data.intro_tekst + '</div><div><a style="margin-top:3px;margin-bottom:3px" class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><button onclick="popup.destroy();store.reset();$(\'#time-line\').fadeOut(400).delay(1000)" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
-                                	console.log(store.layer.features[0].data.fra_tid);
-                                	console.log(store.layer.features[0].data.til_tid);
-                                	var from_px = ((store.layer.features[0].data.fra_tid+2500)*0.2);
-                                	var to_px = ((store.layer.features[0].data.til_tid+2500)*0.2);
-                                	var width_px = to_px - from_px + 10;
-                                	$("#time").css("left",from_px+"px");
-                                	$("#time").css("width",width_px+"px");
-                                	$("#time-line").fadeIn(400).delay(1000);
+                                    $("#queryResult").html('<div style="position:relative"><div><h3>' + store.layer.features[0].data.navn + '</h3></div><div id="teaser-text">' + store.layer.features[0].data.intro_tekst + '</div><div><a style="margin-top:3px;margin-bottom:3px" class="btn btn-small" onclick="$(\'#modal-fund\').modal()">Se mere</a></div><div><img class="img-rounded images-small" src="' + imageDir + '/' + store.layer.features[0].data.image1 + '"></div><button onclick="popup.destroy();store.reset();$(\'#time-line\').fadeOut(400).delay(1000)" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>')
+                                    console.log(store.layer.features[0].data.fra_tid);
+                                    console.log(store.layer.features[0].data.til_tid);
+                                    var from_px = ((store.layer.features[0].data.fra_tid + 3500) * 0.25);
+                                    var to_px = ((store.layer.features[0].data.til_tid + 3500) * 0.25);
+                                    var width_px = to_px - from_px + 10;
+                                    $("#time").css("left", from_px + "px");
+                                    $("#time").css("width", width_px + "px");
+                                    $("#time-popover").css("left", width_px/2-125 + "px");
+                                    $("#time-line").fadeIn(400).delay(1000);
+                                    $("#periode").html("År " + store.layer.features[0].data.fra_tid + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;År " + store.layer.features[0].data.til_tid)
                                 } else {
                                     $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                                     $("#time-line").fadeOut(400).delay(1000);
@@ -552,32 +561,39 @@
 					</li>
 				</ul>
 			</div>
+			
 			<div id="time-line">
 				<div class="timeline">
 					<ul class="events">
 						<li id="time">
-						
+							<div id="time-popover" class="popover top" style="display: inline;position: absolute;top:-40px">
+								<div class="arrow"></div>
+								<div id="periode" class="popover-content">
+										
+									
+								</div>
+							</div>
 						</li>
 					</ul>
 					<!-- end .events -->
 
 					<ul class="intervals">
-						<li class="first">
+						<li class="first" style="width: 30%">
 							Stenalder
 						</li>
-						<li>
+						<li style="width: 24%">
 							Bronzealder
 						</li>
-						<li>
+						<li style="width: 22%">
 							Jernalder
 						</li>
-						<li>
+						<li style="width: 7%">
 							Vikingetid
 						</li>
-						<li>
+						<li style="width: 7%">
 							Middelalder
 						</li>
-						<li class="last">
+						<li class="last" style="width: 7%">
 							Nyere tid
 						</li>
 					</ul>
