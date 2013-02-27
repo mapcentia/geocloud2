@@ -39,6 +39,7 @@
 			#modal-fund {
 				width: 1200px;
 				margin-left: -600px;
+				z-index: 999999;
 			}
 			#wait {
 				background-color: transparent !important;
@@ -647,7 +648,7 @@
 		<div class="modal-body" id="body-fund">
 		<div class="modal-text">
 
-		<%= this.tekst %>
+		<%= markdown.toHTML(this.tekst) %>
 
 		</div>
 		<div style="float: right; position: relative">
