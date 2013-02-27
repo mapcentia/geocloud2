@@ -261,8 +261,8 @@
                     pointRadius : 10
                 }
             });
-            var startExt = [982022.41542977, 7694595.0928929, 1136119.4644312, 7754368.8490035];
-            var maxExt = new OpenLayers.Bounds(982022.41542977, 7694595.0928929, 1136119.4644312, 7754368.8490035);
+            var startExt = [1002022.41542977, 7755595.0928929, 1116119.4644312, 7703368.8490035];
+            var maxExt = new OpenLayers.Bounds(850244.97868447, 7666039.2374803, 1267896.9011765, 7792924.7044161);
             var addLegend = function(layers) {
                 var layers = cloud.getVisibleLayers();
                 console.log(layers);
@@ -293,6 +293,7 @@
                     //numZoomLevels : 12
                 });
                 //cloud.addWmtsLayer(kmsLayer);
+                cloud.map.setOptions({restrictedExtent: maxExt});
                 cloud.map.events.register("moveend", null, function() {
                     console.log(cloud.getExtent())
                 });
@@ -363,7 +364,7 @@
                         };
                         var where;
                         (activeTileLayer !== "" && activeTileLayer !== "sogne") ? where = metaDataKeys[activeTileLayer].filter : where = null;
-                        store.sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) as afstand FROM kulturarvstjenesten.master WHERE round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) < 1000 AND " + where + " ORDER BY afstand LIMIT 1";
+                        store.sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) as afstand FROM kulturarvstjenesten.master WHERE round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857))) < 3000 AND " + where + " ORDER BY afstand LIMIT 1";
                         sogneStore.sql = "SELECT * FROM kulturarvstjenesten.sogne WHERE ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857) && ST_Transform(the_geom,3857) AND ST_Intersects(ST_GeomFromText('POINT(" + coords.lon + " " + coords.lat + ")',3857), ST_Transform(the_geom,3857))";
                         store.reset();
                         sogneStore.reset();
