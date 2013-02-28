@@ -296,6 +296,7 @@
                 cloud.map.setOptions({restrictedExtent: maxExt});
                 cloud.map.events.register("moveend", null, function() {
                     console.log(cloud.getExtent())
+                    console.log(cloud.getZoom())
                 });
                 kms_skaermkort = cloud.addTileLayers({
                 layers : ["public.kms_skaermkort"],
