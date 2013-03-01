@@ -1,15 +1,22 @@
 <?php
-include("../../header.php");
-include("../server_header.inc");
-//include("../../inc/oauthcheck.php");
+include ("../../inc/controller.php");
+include ("../../model/users.php");
 
-$user = new users($parts[3]);
-
-if ($HTTP_RAW_POST_DATA) {
-	$obj = json_decode($HTTP_RAW_POST_DATA);
+/**
+ *
+ */
+ 
+class User_c extends Controller {
+	public $user;
+	function __construct() {
+		parent::__construct();
+		$parts = $this -> getUrlParts();
+		$this -> user = new User($parts[3]);
+		switch ($parts[4]) {
+			case 'getdata' :
+				$this -> toJSON($this -> user -> getData());
+				break;
+		}
+	}
 }
-//print_r($parts);
-//print_r($obj);
-switch ($parts[4]){
-}
-include_once("../server_footer.inc");
+new User_c();

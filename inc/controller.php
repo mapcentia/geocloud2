@@ -2,21 +2,8 @@
 /**
  *
  */
-//include '../../libs/oauth/EpiCurl.php';
-//include '../../libs/oauth/EpiOAuth.php';
-//include '../../libs/oauth/EpiTwitter.php';
 include '../../conf/main.php';
-include 'libs/functions.php';
-include 'model/users.php';
-include 'model/classes.php';
-include 'model/wmslayers.php';
-include 'model/databases.php';
-include 'model/tables.php';
-include 'model/settings_viewer.php';
-include 'wms/mapfile.map.php';
-include 'model/shapefile.php';
-include 'model/sqlapi.php';
-include 'model/geometry_columns.php';
+include 'functions.php';
 session_name($sessionName);
 session_set_cookie_params(0, '/', "." . $domain);
 session_start();
