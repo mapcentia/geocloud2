@@ -310,11 +310,29 @@ def wsgiHandler (environ, start_response, service):
 
         format, image = service.dispatchRequest( fields, path_info, req_method, host )
         headers = [('Content-Type',format)]
+        
+        #if format.startswith("image/"):
+        #    if service.cache.sendfile:
+        #        headers.append(('X-SendFile', image))
+        #    if service.cache.expire:
+        #        headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
+        
+        # Hack start
         if format.startswith("image/"):
             if service.cache.sendfile:
                 headers.append(('X-SendFile', image))
-            if service.cache.expire:
+            layer_expire = None
+            if fields.has_key('layers') or fields.has_key('LAYERS'):
+                layers = fields.get('layers', fields.get('LAYERS'))
+                # single layers only
+                if not ',' in layers:
+                    layer = service.layers[layers]
+                    if layer.expire:
+                        layer_expire = long(layer.expire)
+                        headers.append(('Expires', email.Utils.formatdate(time.time() + layer_expire, False, True)))
+            if service.cache.expire and not layer_expire:
                 headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
+        # Hack end
 
         start_response("200 OK", headers)
         if service.cache.sendfile and format.startswith("image/"):
