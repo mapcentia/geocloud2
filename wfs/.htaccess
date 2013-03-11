@@ -1,2 +1,2 @@
 RewriteEngine On
-RewriteRule ^[a-z]* server.php [L]
+RewriteRule ^[\w'-]* server.php [L]

@@ -125,7 +125,7 @@ class cartomobile extends postgis {
 		/**/
 		/* End of writing WMS as baselayers */
 		$xml.="</BaseMap>\n";
-		
+
 		/* Start of writing WFS as overlays */
 		$xml.="<Overlays>\n";
 		foreach ($tables->rows as $row) {

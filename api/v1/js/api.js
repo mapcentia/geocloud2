@@ -28,6 +28,8 @@ var mygeocloud_ol = (function() {"use strict";
     var map, host = mygeocloud_host, parentThis = this;
     var geoJsonStore = function(db, config) {
         var prop, parentThis = this;
+
+      if
         var defaults = {
             sql : null,
             onLoad : function() {

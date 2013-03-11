@@ -221,7 +221,7 @@ var mygeocloud_ol = (function() {"use strict";
         var prop, baseLayer, popup, // baseLayer wrapper
         parentMap, defaults = {
             numZoomLevels : 20,
-            projection : "EPSG:900913",
+            projection : "EPSG:900913"
             //maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
         };
         if (config) {
@@ -524,10 +524,13 @@ var mygeocloud_ol = (function() {"use strict";
             } else {
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
             }
-
+            var url1 = url;
+            var url2 = url;
+            var url3 = url;
+            var urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url2.replace("cdn", "cdn3")];
             switch (mapLib) {
                 case "ol":
-                    var l = new OpenLayers.Layer.WMS(defaults.name, url, {
+                    var l = new OpenLayers.Layer.WMS(defaults.name, urlArray, {
                         layers : layer,
                         transparent : true
                     }, defaults);
@@ -599,31 +602,31 @@ var mygeocloud_ol = (function() {"use strict";
         this.hideLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(false);
 
-        }
+        };
         this.showLayer = function(name) {
             this.map.getLayersByName(name)[0].setVisibility(true);
-        }
+        };
         this.hideAllTileLayers = function() {
             for (var i = 0; i < this.map.layers.length; i++) {
                 if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                     this.map.layers[i].setVisibility(false);
                 }
             }
-        }
+        };
         this.getCenter = function() {
             var point = this.map.center;
             return {
                 x : point.lon,
                 y : point.lat
             }
-        }
+        };
         this.getExtent = function() {
             var mapBounds = this.map.getExtent();
             return mapBounds.toArray();
-        }
+        };
         this.getBbox = function() {
             return this.map.getExtent().toString();
-        }
+        };
         // Geolocation stuff starts here
         switch (mapLib) {
             case "ol":
@@ -664,7 +667,7 @@ var mygeocloud_ol = (function() {"use strict";
                 };
                 this.stopLocate = function() {
                     geolocate.deactivate();
-                }
+                };
                 var geolocate = new OpenLayers.Control.Geolocate({
                     bind : false,
                     geolocationOptions : {
@@ -730,19 +733,17 @@ var mygeocloud_ol = (function() {"use strict";
                     };
                     window.resizeInterval = window.setInterval(resize, 50, point, radius);
 
-                }
+                };
                 break;
-        };
+        }
     };
 
     var deserialize = function(element) {
         // console.log(element);
         var type = "wkt";
         var format = new OpenLayers.Format.WKT;
-        var features = format.read(element);
-        return features;
+        return format.read(element);
     };
-
     var grid = function(el, store, config) {
         var prop;
         var defaults = {
