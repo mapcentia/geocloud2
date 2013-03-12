@@ -90,7 +90,7 @@
 		">
 
 			<div class="container">
-				<h1>MyGeoCloud</h1>
+				<h1>MapCentia GeoCloud</h1>
 				<p>
 					Analyze and map your data the easy way.
 				</p>

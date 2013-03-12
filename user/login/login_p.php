@@ -1,5 +1,6 @@
 <?php
 include '../header.php';
+include '../html_header.php';
 // Check if user is logged in - and redirect if this is not the case
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 	die("<script>window.location='http://{$domain}/user/login'</script>");

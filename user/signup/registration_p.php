@@ -1,11 +1,9 @@
 <?php
 include '../header.php';
-
 $postgisObject = new postgis();
-
 define('VDAEMON_PARSE', false);
 include ('../../libs/vdaemon/vdaemon.php');
-
+include '../html_header.php';
 function UserIDCheck($sValue, &$oStatus) {
 	global $sTable;
 	global $postgisObject;
