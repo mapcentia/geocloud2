@@ -286,7 +286,7 @@ $(window).load(function() {
                             isBaseLayer : isBaseLayer,
                             visibility : false,
                             wrapDateLine : false,
-                            tileCached : false,
+                            tileCached : true,
                             displayInLayerSwitcher : true,
                             name : response.data[u].f_table_name
                         });
