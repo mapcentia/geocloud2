@@ -408,7 +408,7 @@ var mygeocloud_ol = (function() {"use strict";
                 isBaseLayer : false,
                 visibility : true,
                 wrapDateLine : true,
-                tileCached : false,
+                tileCached : true,
                 displayInLayerSwitcher : true,
                 name : null
             };
