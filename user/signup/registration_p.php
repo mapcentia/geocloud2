@@ -3,7 +3,6 @@ include '../header.php';
 $postgisObject = new postgis();
 define('VDAEMON_PARSE', false);
 include ('../../libs/vdaemon/vdaemon.php');
-include '../html_header.php';
 function UserIDCheck($sValue, &$oStatus) {
 	global $sTable;
 	global $postgisObject;
@@ -43,16 +42,8 @@ $postgisObject -> execQuery($sQuery);
 $_SESSION['auth'] = true;
 $_SESSION['screen_name'] = $sUserID;
 $_SESSION['zone']= $sZone;
-//print_r($_SESSION);
-?>
 
-</div>
-</div>
-</div>
-</body>
-</html>
-<?php
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
-	die("<script>window.location='/user/login/p'</script>");
+	header("location: /user/login/p");
 }
 ?>

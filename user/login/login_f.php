@@ -36,7 +36,6 @@ function UserIDCheck($sValue, &$oStatus) {
 		$oStatus -> bValid = 0;
 	}
 }
-
 if ($oVDaemonStatus && $oVDaemonStatus -> bValid) {
 	header("location: p");
 }

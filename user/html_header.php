@@ -12,9 +12,15 @@
 		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
 		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
+		<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
+		<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
+		<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
 		<style type="text/css">
 			body {
 				background: url(/theme/images/cartographer.png) repeat top left;
+			}
+			.popover-title{
+				display: none !important;
 			}
 			h1, h2, h3, h4, h5, h6 {
 				margin: 10px 0;
@@ -37,10 +43,9 @@
 				line-height: 1;
 				color: #ffffff;
 			}
-			.dialog {
+			.dialog, .dashboard{
 				border: 1px solid black;
-				width: 440px;
-				height: 480px;
+				
 				padding: 40px;
 				margin: auto;
 				margin-top: 50px;
@@ -50,6 +55,14 @@
 				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 				background-clip: padding-box;
 			}
+			.dialog {
+				width: 440px;
+			}
+			
+			.dashboard{
+				
+			}
+			
 			.first {
 				margin-top: 20px
 			}

@@ -15,6 +15,7 @@ $_SESSION['screen_name'] = $parts[2];
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false">"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 <link rel="stylesheet" type="text/css" href="/js/openlayers/examples/style.mobile.css"/>
 <link rel="stylesheet" type="text/css" href="/js/extras.css?format=txt"/>
