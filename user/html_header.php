@@ -9,12 +9,13 @@
 		<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
-		<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
-		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+		<link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
 		<script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
 		<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
 		<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
+		<script src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
 		<style type="text/css">
 			body {
 				background: url(/theme/images/cartographer.png) repeat top left;
@@ -194,7 +195,7 @@
 								?>
 								<a href="/user/login">Log in</a>
 								<?php } else { ?>
-								<a href="/user/logout">Log out</a>
+								<a href="/user/login">Dashboard</a>
 								<?php } ?>
 							</li>
 

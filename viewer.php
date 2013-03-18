@@ -19,13 +19,15 @@
 		</style>
 		<script>
             var cloud;
+            var startExt = [982328.16354289, 7693441.9121169, 1110742.3710441, 7757266.8307261];
             var switchLayer = function(id, visible) {
                 (visible) ? cloud.showLayer(id) : cloud.hideLayer(id);
             }
             $(window).load(function() {
+            	var db = mygeocloud_ol.pathName[2];
                 cloud = new mygeocloud_ol.map("map", db);
-                cloud.zoomToExtent();
-                var db = mygeocloud_ol.pathName[2];
+                //cloud.zoomToExtent(startExt);
+                
                 var schema = mygeocloud_ol.pathName[3];
                 var layers = {};
                 $.ajax({

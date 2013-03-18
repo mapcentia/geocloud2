@@ -32,6 +32,8 @@ function UserIDCheck($sValue, &$oStatus) {
 		$_SESSION['VDaemonData'] = null;
 		$_SESSION['auth'] = true;
 		$_SESSION['screen_name'] = $sUserID;
+		$_SESSION['email'] = $row['email'];
+		$_SESSION['created'] = strtotime($row['created']);
 	} else {
 		$oStatus -> bValid = 0;
 	}
