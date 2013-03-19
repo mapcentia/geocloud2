@@ -317,21 +317,21 @@ def wsgiHandler (environ, start_response, service):
             if service.cache.expire:
                 headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
         
-        # Hack start
-#        if format.startswith("image/"):
-#            if service.cache.sendfile:
-#                headers.append(('X-SendFile', image))
-#            layer_expire = None
-#            if fields.has_key('layers') or fields.has_key('LAYERS'):
-#                layers = fields.get('layers', fields.get('LAYERS'))
-#                # single layers only
-#                if not ',' in layers:
-#                    layer = service.layers[layers]
-#                    if layer.expire:
-#                        layer_expire = long(layer.expire)
-#                        headers.append(('Expires', email.Utils.formatdate(time.time() + layer_expire, False, True)))
-#            if service.cache.expire and not layer_expire:
-#                headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
+        # Hack start. Expire added to layers
+        if format.startswith("image/"):
+            if service.cache.sendfile:
+                headers.append(('X-SendFile', image))
+            layer_expire = None
+            if fields.has_key('layers') or fields.has_key('LAYERS'):
+                layers = fields.get('layers', fields.get('LAYERS'))
+                # single layers only
+                if not ',' in layers:
+                    layer = service.layers[layers]
+                    if layer.expire:
+                        layer_expire = long(layer.expire)
+                        headers.append(('Expires', email.Utils.formatdate(time.time() + layer_expire, False, True)))
+            if service.cache.expire and not layer_expire:
+                headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
         # Hack end
 
         start_response("200 OK", headers)
@@ -420,7 +420,7 @@ def wsgiApp (environ, start_response):
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ)
     myGeoCloudDB = form['cfg'].value
     cfgfiles = ("","../wms/cfgfiles/" + myGeoCloudDB + ".tilecache.cfg")
-    cfgs    = cfgfiles
+    cfgs = cfgfiles
     #if not theService: # We have to reload the cfg cos the different cfg files
     theService = Service.load(*cfgs)
     return wsgiHandler(environ, start_response, theService)

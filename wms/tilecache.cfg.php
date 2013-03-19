@@ -23,23 +23,23 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 	}
 
 	ob_start();
-
 	echo "[cache]\n";
-	echo "type=Disk\n";
-	echo "base={$basePath}/tmp/{$user}\n\n";
+	//echo "type=Disk\n";
+	//echo "base={$basePath}/tmp/{$user}\n\n";
 	
-	//echo "type=AWSS3\n";
-	//echo "access_key=AKIAIZUYE3I462NPVANQ\n";
-	//echo "secret_access_key=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\n";
+	echo "type=AWSS3\n";
+	echo "access_key=AKIAIZUYE3I462NPVANQ\n";
+	echo "secret_access_key=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\n";
 
-	echo "expire=30\n";
 	$sql="SELECT * FROM settings.geometry_columns_view";
-	//echo $sql;
 	$result = $postgisObject->execQuery($sql);
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);
 	}
+	
 	while ($row = $postgisObject->fetchRow($result)) {
+		$expire = $row['tile_expire'];
+		$expire<30 ? $expire=30:$expire=$expire;
 		echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
 		echo "type=WMS\n";
 		echo "url={$hostName}/wms/{$user}/{$row['f_table_schema']}/?";
@@ -48,7 +48,8 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 		echo "maxResolution=156543.0339\n";
 		echo "metaTile=yes\n";
 		echo "metaSize=5,5\n";
-		echo "srs=EPSG:900913\n\n";
+		echo "srs=EPSG:900913\n";
+		echo "expire={$expire}\n\n";
 	}
 	$data = ob_get_clean();
 	@unlink("{$basePath}wms/cfgfiles/{$user}.tilecache.cfg");

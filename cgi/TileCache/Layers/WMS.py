@@ -1,21 +1,25 @@
 # BSD Licensed, Copyright (c) 2006-2010 TileCache Contributors
 
+# Hack - expire is added to wms object.
+
 from TileCache.Layer import MetaLayer
 import TileCache.Client as WMSClient
 
 class WMS(MetaLayer):
     config_properties = [
-      {'name':'name', 'description': 'Name of Layer'}, 
+      {'name':'name', 'description': 'Name of Layer'},
       {'name':'url', 'description': 'URL of Remote Layer'},
       {'name':'user', 'description': 'Username of remote server: used for basic-auth protected backend WMS layers.'},
       {'name':'password', 'description': 'Password of remote server: Use for basic-auth protected backend WMS layers.'},
-    ] + MetaLayer.config_properties  
-     
-    def __init__ (self, name, url = None, user = None, password = None, **kwargs):
-        MetaLayer.__init__(self, name, **kwargs) 
+      {'name':'expire', 'description': 'Password of remote server: Use for basic-auth protected backend WMS layers.'}
+    ] + MetaLayer.config_properties
+
+    def __init__ (self, name, url = None, user = None, password = None, expire=0, **kwargs):
+        MetaLayer.__init__(self, name, **kwargs)
         self.url = url
         self.user = user
         self.password = password
+        self.expire = expire
 
     def renderTile(self, tile):
         wms = WMSClient.WMS( self.url, {
@@ -25,6 +29,8 @@ class WMS(MetaLayer):
           "srs": self.srs,
           "format": self.mime_type,
           "layers": self.layers,
+          "expire": self.expire,
         }, self.user, self.password)
         tile.data, response = wms.fetch()
-        return tile.data 
+        return tile.data
+
