@@ -443,17 +443,6 @@ $(window).load(function() {
             store.commitChanges();
             saveStrategy.save();
         }
-    }, '-', {
-        text : "Embed",
-        id : "Embed",
-        disabled : false,
-        handler : function(thisBtn, event) {
-
-            //console.log(tree.getNodeById("TEST"));
-            //console.log(tree);
-            tree.getNodeById("aad.test").getUI().toggleCheck(true);
-
-        }
     }, '->', {
         text : "Feature info",
         handler : function() {
@@ -473,7 +462,6 @@ $(window).load(function() {
         items : [{
             region : "center",
             id : "mappanel",
-            title : "Map",
             xtype : "gx_mappanel",
             map : map,
             zoom : 5,

@@ -270,6 +270,10 @@ $(window).load(function() {"use strict";
                 }]
             })
         }, '-', {
+            text : 'Sharing',
+            iconCls : 'silk-delete',
+            handler : onDelete
+        }, '->', {
             text : 'Add new layer',
             iconCls : 'silk-add',
             handler : onAdd
@@ -277,7 +281,11 @@ $(window).load(function() {"use strict";
             text : 'Delete layer',
             iconCls : 'silk-delete',
             handler : onDelete
-        }, '->', new Ext.form.ComboBox({
+        }, '-', {
+            text : 'Add new schema',
+            iconCls : 'silk-add',
+            handler : onAddSchema
+        }, '-', new Ext.form.ComboBox({
             id : "schemabox",
             store : schemasStore,
             displayField : 'schema',
@@ -287,11 +295,7 @@ $(window).load(function() {"use strict";
             emptyText : 'Select a cloud...',
             value : schema,
             width : 135
-        }), '-', {
-            text : 'Add new schema',
-            iconCls : 'silk-add',
-            handler : onAddSchema
-        }],
+        })],
         listeners : {
             // rowdblclick: mapPreview
         }
@@ -803,7 +807,7 @@ $(window).load(function() {"use strict";
                         name : 'data',
                         value : r.data.data
 
-                    },{
+                    }, {
                         width : 300,
                         xtype : 'textfield',
                         fieldLabel : 'Filter',
@@ -823,7 +827,7 @@ $(window).load(function() {"use strict";
                                 };
                                 param = Ext.util.JSON.encode(param);
                                 Ext.Ajax.request({
-                                   url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
+                                    url : '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
                                     headers : {
                                         'Content-Type' : 'application/json; charset=utf-8'
                                     },
@@ -995,12 +999,12 @@ $(window).load(function() {"use strict";
             animate : true
         },
         items : [new Ext.Panel({
-            title: 'authentication',
+            title : 'authentication',
             width : 300,
             frame : false,
             plain : true,
             border : true,
-            items : [httpAuth.form,apiKey.form]
+            items : [httpAuth.form, apiKey.form]
         }), viewerSettings.form, {
             title : 'WFS',
             border : false,

@@ -10,19 +10,6 @@ import Layer, Layers
 
 # Windows doesn't always do the 'working directory' check correctly.
 
-myGeoCloudDB = ""
-myGeoCloud = cgi.FieldStorage()
-try:
-	myGeoCloudDB = myGeoCloud['cfg'].value
-	if sys.platform == 'win32':
-	    workingdir = os.path.abspath(os.path.join(os.getcwd(), os.path.dirname(sys.argv[0])))
-	    cfgfiles = (os.path.join(workingdir, "tilecache.cfg"), os.path.join(workingdir,"..","tilecache.cfg"))
-	else:
-	    cfgfiles = ("/etc/tilecache.cfg", os.path.join("..", "tilecache.cfg"), "../wms/cfgfiles/" + myGeoCloudDB + ".tilecache.cfg")
-
-except:
-	pass
-
 class Capabilities (object):
     def __init__ (self, format, data):
         self.format = format

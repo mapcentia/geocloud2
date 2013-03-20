@@ -24,12 +24,13 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 
 	ob_start();
 	echo "[cache]\n";
-	//echo "type=Disk\n";
-	//echo "base={$basePath}/tmp/{$user}\n\n";
+	echo "type=Disk\n";
+	echo "base={$basePath}/tmp/{$user}\n\n";
 	
-	echo "type=AWSS3\n";
-	echo "access_key=AKIAIZUYE3I462NPVANQ\n";
-	echo "secret_access_key=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\n";
+	//echo "type=AWSS3\n";
+	//echo "access_key=AKIAIZUYE3I462NPVANQ\n";
+	//echo "secret_access_key=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\n";
+	//echo "db={$user}\n";
 
 	$sql="SELECT * FROM settings.geometry_columns_view";
 	$result = $postgisObject->execQuery($sql);
