@@ -39,16 +39,17 @@ function makeTileCacheFile($user,$extentLayer=NULL) {
 	}
 	
 	while ($row = $postgisObject->fetchRow($result)) {
-		$expire = $row['tile_expire'];
-		$expire<30 ? $expire=30:$expire=$expire;
+		$def = json_decode($row['def']);
+		$def->meta_tiles==true ? $meta_tiles="yes" : $meta_tiles="no";
+		$def->ttl<30 ? $expire=30:$expire=$def->ttl;
 		echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
 		echo "type=WMS\n";
 		echo "url={$hostName}/wms/{$user}/{$row['f_table_schema']}/?";
 		echo "extension=png\n";
 		echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";
 		echo "maxResolution=156543.0339\n";
-		echo "metaTile=yes\n";
-		echo "metaSize=5,5\n";
+		echo "metaTile={$meta_tiles}\n";
+		echo "metaSize=3,3\n";
 		echo "srs=EPSG:900913\n";
 		echo "expire={$expire}\n\n";
 	}

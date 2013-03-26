@@ -1,18 +1,17 @@
 <?php
 //god dav
 include ("html_header.php");
-$_SESSION['schema'] = $schemaFromUri;
-$postgisschema = $schemaFromUri;
-$postgisdb = $_SESSION['screen_name'];
-
+$_SESSION['schema']=$schemaFromUri;
+$postgisschema=$schemaFromUri;
+$postgisdb=$_SESSION['screen_name'];
 include 'model/tables.php';
 include ("wms/mapfile.php.map");
 include ("wms/tilecache.cfg.php");
 makeMapFile($postgisdb);
 makeTileCacheFile($postgisdb);
 ?>
-<script type="text/javascript">var screenName = '<?php echo $postgisdb; ?>'</script>
-<script type="text/javascript">var schema = '<?php echo $postgisschema; ?>'</script>
+<script type="text/javascript">var screenName =  '<?php echo $postgisdb; ?>'</script>
+<script type="text/javascript">var schema =  '<?php echo $postgisschema; ?>'</script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
@@ -39,14 +38,18 @@ makeTileCacheFile($postgisdb);
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
 <style type="text/css">
 	.upload-icon {
-		background: url('/js/ext/examples/shared/icons/fam/image_add.png') no-repeat 0 0 !important;
+		background:url('/js/ext/examples/shared/icons/fam/image_add.png') no-repeat 0 0 !important;
 	}
 	#fi-button-msg {
-		border: 2px solid #ccc;
-		padding: 5px 10px;
-		background: #eee;
-		margin: 5px;
-		float: left;
+		border:2px solid #ccc;
+		padding:5px 10px;
+		background:#eee;
+		margin:5px;
+		float:left;
+	}
+	.x-btn-micro, .x-btn-icon-micro-left {
+		font-size: 5pt !important;
+		height:5px !important;
 	}
 </style>
 </head>
@@ -94,4 +97,4 @@ makeTileCacheFile($postgisdb);
 
 	<?php
 	include ("html_footer.php");
-?>
+	?>

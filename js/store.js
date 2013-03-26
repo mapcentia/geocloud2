@@ -2,11 +2,11 @@ var form;
 var store;
 //var onEditWMSLayer;
 Ext.Ajax.disableCaching = false;
+Ext.QuickTips.init();
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function() {"use strict";
     Ext.Container.prototype.bufferResize = false;
-    Ext.QuickTips.init();
     var winAdd;
     var winAddSchema;
     var winEdit;
@@ -122,6 +122,8 @@ $(window).load(function() {"use strict";
     });
     schemasStore.load();
 
+    // Clear cache button
+
     // create a grid to display records from the store
     var grid = new Ext.grid.EditorGridPanel({
         //title: "Layers in your geocloud",
@@ -157,7 +159,10 @@ $(window).load(function() {"use strict";
                 sortable : true,
                 editable : false,
                 tooltip : "This can't be changed",
-                width : 150
+                width : 150,
+                renderer : function(v, p) {
+                    return v;
+                }
             }, {
                 header : "Type",
                 dataIndex : "type",
@@ -210,11 +215,6 @@ $(window).load(function() {"use strict";
                 dataIndex : 'editable',
                 width : 55
             }, {
-                xtype : 'checkcolumn',
-                header : 'Tilecached',
-                dataIndex : 'tilecache',
-                width : 70
-            }, {
                 header : 'Authentication',
                 dataIndex : 'authentication',
                 width : 120,
@@ -232,6 +232,46 @@ $(window).load(function() {"use strict";
                     editable : false,
                     triggerAction : 'all'
                 }
+            }, {
+                header : 'Tile cache',
+                dataIndex : 'tilecache',
+                editable : false,
+                listeners : {
+                    click : function() {
+                        var r = grid.getSelectionModel().getSelected();
+                        var layer = r.data.f_table_schema + "." + r.data.f_table_name;
+                        //alert(layer);
+                        Ext.MessageBox.confirm('Confirm', 'You are about to invalidate the tile cache for layer \'' +r.data.f_table_name + '\'. Are you sure?' , function(btn) {
+                            if (btn === "yes") {
+                                $.ajax({
+                                    url : '/controller/clear_tile_cache/' + screenName + '/' + layer,
+                                    async : true,
+                                    dataType : 'json',
+                                    type : 'GET',
+                                    success : function(data, textStatus, http) {
+                                        if (http.readyState == 4) {
+                                            if (http.status == 200) {
+                                                var response = eval('(' + http.responseText + ')');
+                                                if (response.success === true) {
+                                                    alert(response.message);
+                                                } else {
+                                                    alert(response.message);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                return false;
+                            }
+                        });
+
+                    }
+                },
+                renderer : function(value, id, r) {
+                    return ('<a href="#">Clear</a>');
+                },
+                width : 70
             }]
         }),
         tbar : [{
@@ -281,10 +321,6 @@ $(window).load(function() {"use strict";
             text : 'Delete layer',
             iconCls : 'silk-delete',
             handler : onDelete
-        }, '-', {
-            text : 'Add new schema',
-            iconCls : 'silk-add',
-            handler : onAddSchema
         }, '-', new Ext.form.ComboBox({
             id : "schemabox",
             store : schemasStore,
@@ -295,7 +331,11 @@ $(window).load(function() {"use strict";
             emptyText : 'Select a cloud...',
             value : schema,
             width : 135
-        })],
+        }), {
+            tooltip : 'Add new schema',
+            iconCls : 'silk-add',
+            handler : onAddSchema
+        }],
         listeners : {
             // rowdblclick: mapPreview
         }
@@ -688,7 +728,7 @@ $(window).load(function() {"use strict";
         winWmsLayer = null;
         wmsLayer.init(record);
         winWmsLayer = new Ext.Window({
-            title : "Edit theme and label column + more on '" + record.get("f_table_name") + "'",
+            title : "Settings on layer '" + record.get("f_table_name") + "'",
             modal : true,
             layout : 'fit',
             width : 500,

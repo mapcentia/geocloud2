@@ -24,8 +24,8 @@ class Controller {
 	public function auth($user) {
 		global $userHostName;
 		if (!$_SESSION['auth'] || ($_SESSION['screen_name'] != $user)) {
-			$_SESSION['auth'] = null;
-			$_SESSION['screen_name'] = null;
+			//$_SESSION['auth'] = null;
+			//$_SESSION['screen_name'] = null;
 			die("<script>window.location='{$userHostName}/user/login'</script>");
 		}
 	}
@@ -33,9 +33,9 @@ class Controller {
 	public function toJSON($response) {
 		$callback = $_GET['jsonp_callback'];
 		if ($callback) {
-			echo $callback . '(' . json_encode($response) . ');';
+			return $callback . '(' . json_encode($response) . ');';
 		} else {
-			echo json_encode($response);
+			return json_encode($response);
 		}
 	}
 }

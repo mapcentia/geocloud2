@@ -20,7 +20,7 @@ apiKey.form = new Ext.FormPanel({
         text : 'New API key',
         handler : function() {"use strict";
             Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function(btn) {
-                if (btn == "yes") {
+                if (btn === "yes") {
                     $.ajax({
                         url : '/controller/settings_viewer/' + screenName + '/updateapikey',
                         async : false,

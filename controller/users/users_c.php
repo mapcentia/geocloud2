@@ -14,7 +14,7 @@ class User_c extends Controller {
 		$this -> user = new User($parts[3]);
 		switch ($parts[4]) {
 			case 'getdata' :
-				$this -> toJSON($this -> user -> getData());
+				echo $this -> toJSON($this -> user -> getData());
 				break;
 		}
 	}
