@@ -6,5 +6,5 @@ session_start();
 include '../../libs/functions.php';
 include '../../model/settings_viewer.php';
 include 'model/databases.php';
-$postgisdb = 'mygeocloud';
+$postgisdb = 'mapcentia';
 $sTable = 'users';
