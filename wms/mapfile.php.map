@@ -41,7 +41,7 @@ function makeMapFile($user,$extentLayer=NULL) {
 	  MAXSIZE 4096
 	  #SYMBOLSET "../etc/symbols.sym"
 	  FONTSET "../fonts/fonts.txt"
-	  IMAGECOLOR 255 255 255
+	  IMAGECOLOR 255 2 255
 	  UNITS METERS
 	  INTERLACE OFF
 	  OUTPUTFORMAT
