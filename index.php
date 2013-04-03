@@ -25,6 +25,11 @@
 		<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
 		<style>
+			body {
+padding-top: 0px;
+box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
+background: url(/theme/images/agsquare.png) repeat top left;
+}
 			h1, h2, h3, h4, h5, h6 {
 				margin: 10px 0;
 				font-family: inherit;
@@ -36,9 +41,20 @@
 			p {
 				margin: 0 0 10px;
 			}
-			.jumbotron::after {
+			.jumbotron {
 				background: none;
+				-webkit-box-shadow: none;
+				-moz-box-shadow: none;
+				-box-shadow: none;
 			}
+.masthead {
+padding: 70px 0 0;
+	 margin-bottom: 0;
+color: #fff;
+}
+.btn-start{
+	margin-top:60px;
+}
 
 		</style>
 
@@ -60,11 +76,11 @@
 		</script>
 	</head>
 	<body>
-		<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
 					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
-					<a class="brand" href="/">MyGeoCloud</a>
+					<a class="brand" href="/">MapCentia</a>
 					<div class="nav-collapse">
 						<ul class="nav">
 							<li>
@@ -85,57 +101,15 @@
 				</div>
 			</div>
 		</div>
-		<div class="jumbotron masthead" style="box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-		background: url(/theme/images/cartographer.png) repeat top left;
-		">
+		<div class="jumbotron masthead"">
 
 			<div class="container">
-				<h1>MapCentia GeoCloud</h1>
+				<img src="theme/images/MapCentia_GeoCloud_26032013.png">
 				<p>
-					Analyze and map your data the easy way.
+					<a href="/user/signup" class="btn-start btn btn-inverse btn-large">Start mapping - its free</a>
 				</p>
-				<p>
-					<a href="/user/signup" class="btn btn-warning btn-large">Get started - its free</a>
-				</p>
-				<ul class="masthead-links">
-					<li>
-						<a href="http://github.com/mhoegh/mygeocloud">GitHub project</a>
-					</li>
-					<li>
-						<a href="/about.html">About</a>
-					</li>
-					<li>
-						Beta
-					</li>
-				</ul>
 			</div>
 
-		</div>
-		<div class="bs-docs-social">
-			<div class="container">
-				<ul class="bs-docs-social-buttons">
-
-					<li>
-						<iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
-					</li>
-					<li>
-						<iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=mhoegh&amp;repo=mygeocloud&amp;type=fork&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="98px" height="20px"></iframe>
-					</li>
-					<li class="follow-btn">
-						<iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/follow_button.1352365724.html#_=1352840689739&amp;id=twitter-widget-1&amp;lang=en&amp;screen_name=mhoegh&amp;show_count=true&amp;show_screen_name=true&amp;size=m" class="twitter-follow-button" style="width: 242px; height: 20px;" title="Twitter Follow Button" data-twttr-rendered="true"></iframe>
-					</li>
-					<li class="tweet-btn">
-						<a href="https://twitter.com/share" class="twitter-share-button" data-via="mhoegh">Tweet</a>
-					</li>
-					<li>
-						<g:plusone size="medium"></g:plusone>
-
-					</li>
-					<li>
-						<div class="fb-like" data-href="http://beta.mygeocloud.com" data-send="false" data-width="0" data-show-faces="false" data-font="verdana"></div>
-					</li>
-				</ul>
-			</div>
 		</div>
 		<div class="container">
 			<div class="marketing">
@@ -237,7 +211,7 @@
 
 			</div>
 			<center>
-				All Rights Reserved, MyGeoCloud.com, 2012. <a href="mailto:mygeocloud@gmail.com">mygeocloud@gmail.com</a>
+				All Rights Reserved, MapCentia.com, 2013. <a href="mailto:info@mapcentia.com">info@mapcentia.com</a>
 			</center>
 		</footer>
 
