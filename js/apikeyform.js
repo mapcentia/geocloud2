@@ -3,6 +3,7 @@ apiKey.form = new Ext.FormPanel({
     frame : false,
     border : false,
     autoHeight : false,
+    region: "west",
     //bodyStyle: 'padding: 10px 10px 0 10px;',
     labelWidth : 1,
     defaults : {

@@ -38,6 +38,7 @@ function startWfsEdition(layerName) {
         // TODO: handle exception
     }
     var south = viewport.getComponent(1);
+    south.expand(true);
     south.remove(grid);
 
     $.ajax({
@@ -143,6 +144,8 @@ function startWfsEdition(layerName) {
     });
 
     if (editable) {
+        //drawControl.deactivate();
+        //drawControl.activate();
         wfsTools[2].control = drawControl;
         // We set the control to the first button in wfsTools
         map.addControl(drawControl);
@@ -473,9 +476,9 @@ $(window).load(function() {
             split : true,
             frame : false,
             layout : 'fit',
-            height : 300,
+            height : 200,
             collapsible : true,
-            collapsed : false,
+            collapsed : true,
             contentEl : "instructions"
         }, new Ext.Panel({
             frame : false,

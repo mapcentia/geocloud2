@@ -83,12 +83,12 @@ wmsClasses.init = function(record) {
             }]
         }),
         tbar : [{
-            text : 'Delete',
-            iconCls : 'silk-delete',
+            text : '<i class="icon-minus btn-gc"></i> Delete class',
+            //iconCls : 'silk-delete',
             handler : wmsClasses.onDelete
         }, {
-            text : 'Add',
-            iconCls : 'silk-add',
+            text : '<i class="icon-plus btn-gc"></i> Add class',
+            //iconCls : 'silk-add',
             handler : wmsClasses.onAdd
         }],
         listeners : {
@@ -285,8 +285,8 @@ wmsClass.init = function(id) {
             // the grid will never have scrollbars
         },
         tbar : [{
-            text : 'Update',
-            iconCls : 'silk-accept',
+            text : '<i class="icon-ok btn-gc"></i> Update',
+            //iconCls : 'silk-accept',
             handler : function() {
                 var grid = Ext.getCmp("propGrid");
                 var id = Ext.getCmp("configStore");

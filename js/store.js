@@ -14,6 +14,7 @@ $(window).load(function() {"use strict";
     var winClasses;
     var winWmsLayer;
     var winMoreSettings;
+    var winGlobalSettings;
     var fieldsForStore;
     var settings;
     var groups;
@@ -275,13 +276,12 @@ $(window).load(function() {"use strict";
             }]
         }),
         tbar : [{
-            text : 'Map',
-            //iconCls : 'silk-pencil',
-            iconCls : 'silk-map',
+            text : '<i class="icon-globe btn-gc"></i> Map',
+            //iconCls : 'silk-map',
             handler : onSpatialEdit
         }, '-', {
-            text : 'Layer settings',
-            iconCls : 'silk-layers', // <-- icon
+            text : '<i class="icon-th btn-gc"></i> Layer settings',
+            //iconCls : 'silk-layers', // <-- icon
             menu : new Ext.menu.Menu({
                 id : 'mainMenu',
                 style : {
@@ -289,37 +289,37 @@ $(window).load(function() {"use strict";
                 },
                 items : [{
                     text : 'Layer definition',
-                    iconCls : 'silk-cog',
+                    iconCls : 'icon-cog',
                     handler : onEditWMSLayer
                 }, {
                     text : 'Styles',
-                    iconCls : 'silk-palette',
+                    iconCls : 'icon-plus',
                     handler : onEditWMSClasses
                 }, {
                     text : 'Structure',
-                    iconCls : 'silk-table',
+                    iconCls : 'icon-pencil',
                     handler : onEdit
                 }, {
                     text : 'CartoMobile settings',
-                    iconCls : 'silk-phone',
+                    iconCls : 'icon-camera',
                     handler : onEditCartomobile
                 }, {
                     text : 'Advanced settings',
-                    iconCls : 'silk-cog-edit',
+                    iconCls : 'icon-cog',
                     handler : onEditMoreSettings
                 }]
             })
         }, '-', {
-            text : 'Sharing',
-            iconCls : 'silk-delete',
-            handler : onDelete
+            text : '<i class="icon-lock btn-gc""></i> Authentication',
+            //iconCls : 'icon-search',
+            handler : onGlobalSettings
         }, '->', {
-            text : 'Add new layer',
-            iconCls : 'silk-add',
+            text : '<i class="icon-plus btn-gc"></i> Add new layer',
+            //iconCls : 'icon-plus',
             handler : onAdd
         }, '-', {
-            text : 'Delete layer',
-            iconCls : 'silk-delete',
+            text : '<i class="icon-minus btn-gc"></i> Delete layer',
+            //iconCls : 'silk-delete',
             handler : onDelete
         }, '-', new Ext.form.ComboBox({
             id : "schemabox",
@@ -332,8 +332,9 @@ $(window).load(function() {"use strict";
             value : schema,
             width : 135
         }), {
+	    text: '<i class="icon-plus btn-gc"></i>',
             tooltip : 'Add new schema',
-            iconCls : 'silk-add',
+            //iconCls : 'silk-add',
             handler : onAddSchema
         }],
         listeners : {
@@ -466,8 +467,8 @@ $(window).load(function() {"use strict";
                         emptyText : 'Name of new schema'
                     }],
                     buttons : [{
-                        iconCls : 'silk-add',
-                        text : 'Add',
+                        //iconCls : 'silk-add',
+                        text : '<i class="icon-plus btn-gc"></i> Add new schema',
                         handler : function() {
                             var f = Ext.getCmp('schemaform');
                             if (f.form.isValid()) {
@@ -592,8 +593,8 @@ $(window).load(function() {"use strict";
                 })
             }],
             buttons : [{
-                iconCls : 'silk-add',
-                text : 'Add',
+                //iconCls : 'silk-add',
+                text : '<i class="icon-plus btn-gc"></i> Add new column',
                 handler : function() {
                     if (form.form.isValid()) {
                         form.getForm().submit({
@@ -856,8 +857,8 @@ $(window).load(function() {"use strict";
 
                     }],
                     buttons : [{
-                        iconCls : 'silk-add',
-                        text : 'Update',
+                        //iconCls : 'silk-add',
+                        text : '<i class="icon-ok btn-gc"></i> Update',
                         handler : function() {
                             var f = Ext.getCmp('detailform');
                             if (f.form.isValid()) {
@@ -899,10 +900,75 @@ $(window).load(function() {"use strict";
         });
         winMoreSettings.show(this);
     };
+    function onGlobalSettings(btn, ev) {
+	winGlobalSettings=null; 
+        winGlobalSettings = new Ext.Window({
+            title : "Authentication",
+            modal : true,
+            width : 700,
+            height : 350,
+            initCenter : true,
+            closeAction : 'close',
+                border : false,
+	    layout: 'border',
+            items : [
+	   new Ext.Panel({
+                border : false,
+	    layout: 'border',
+		    region : "center",
+		items : [new Ext.Panel({
+            title : 'Authentication',
+	    region : "center",
+            items : [httpAuth.form, apiKey.form]
+        }), new Ext.Panel({
+	    layout: "border",
+            region: "east",
+            width: 400,
+	    items:[new Ext.Panel( {
+            title : 'WFS',
+            region : "north",
+            border : false,
+	    height : 100,
+            bodyStyle : {
+                background : '#ffffff',
+                padding : '7px'
+            },
+            contentEl : "wfs-dialog"
+        }), new Ext.Panel( {
+            title : 'WMS',
+            border : false,
+	    height : 100,
+	    region : "center",
+            bodyStyle : {
+                background : '#ffffff',
+                padding : '7px'
+            },
+            contentEl : "wms-dialog"
+
+        }),new Ext.Panel( {
+            title : 'SQL',
+	    height : 120,
+            border : false,
+	    region : "south",
+            bodyStyle : {
+                background : '#ffffff',
+                padding : '7px'
+            },
+            contentEl : "sql-dialog"
+
+        })]})]
+            })]
+        });
+        winGlobalSettings.show(this);
+    };
+    function onSave() {
+        store.save();
+    }
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
+        title : 'Layers',
         frame : false,
         layout : 'border',
         region : 'center',
@@ -912,12 +978,11 @@ $(window).load(function() {"use strict";
             id : 'detailPanel',
             region : 'south',
             border : false,
-            height : 50,
+            height : 70,
             bodyStyle : {
                 background : '#ffffff',
                 padding : '7px'
-            },
-            html : '<table><tr class="x-grid3-row"><td>When you click on a layer you can more details in this window.</td></tr></tr></table>'
+            }
         }]
     });
     grid.getSelectionModel().on('rowselect', function(sm, rowIdx, r) {
@@ -1024,48 +1089,16 @@ $(window).load(function() {"use strict";
             Ext.MessageBox.alert('Failure', result.message);
         }
     };
-    var accordion = new Ext.Panel({
-        title : 'Settings',
-        layout : 'accordion',
-        region : 'east',
-        collapsible : true,
-        collapsed : true,
-        width : 300,
-        frame : false,
-        plain : true,
-        closable : false,
-        border : true,
-        layoutConfig : {
-            animate : true
-        },
-        items : [new Ext.Panel({
-            title : 'authentication',
-            width : 300,
-            frame : false,
-            plain : true,
-            border : true,
-            items : [httpAuth.form, apiKey.form]
-        }), viewerSettings.form, {
-            title : 'WFS',
-            border : false,
-            bodyStyle : {
-                background : '#ffffff',
-                padding : '7px'
-            },
-            contentEl : "wfs-dialog"
-        }, {
-            title : 'WMS',
-            border : false,
-            bodyStyle : {
-                background : '#ffffff',
-                padding : '7px'
-            },
-            contentEl : "wms-dialog"
-
-        }]
-    });
+    var tabs = new Ext.TabPanel({
+    activeTab: 0,
+    region : 'center',
+    items: [ct,{
+        title: 'Map',
+        html: '<iframe frameborder="0" style="width:100%;height:100%" src="/editor/' + screenName + '/' + schema +'"></iframe>'
+    }]
+});
     var viewport = new Ext.Viewport({
         layout : 'border',
-        items : [ct, accordion]
+        items : [tabs]
     });
 });

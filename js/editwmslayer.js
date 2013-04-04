@@ -142,8 +142,8 @@ wmsLayer.init = function(record) {
             scrollOffset : 2 // the grid will never have scrollbars
         },
         tbar : [{
-            text : 'Update',
-            iconCls : 'silk-accept',
+            text : '<i class="icon-ok btn-gc"></i> Update',
+            //iconCls : 'silk-accept',
             handler : function() {
                 var grid = Ext.getCmp("propGrid");
                 var id = Ext.getCmp("configStore");
