@@ -3,7 +3,6 @@
 include ("html_header.php");
 $_SESSION['schema']=$schemaFromUri;
 $postgisschema=$schemaFromUri;
-$postgisdb=$_SESSION['screen_name'];
 include 'model/tables.php';
 include ("wms/mapfile.php.map");
 include ("wms/tilecache.cfg.php");
@@ -30,10 +29,10 @@ makeTileCacheFile($postgisdb);
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
+ <link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
 <!-- overrides to base library -->
 <script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js"></script>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/fileuploadfield/css/fileuploadfield.css"/>
-
 <!-- extensions -->
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
 <style type="text/css">
@@ -50,6 +49,12 @@ makeTileCacheFile($postgisdb);
 	.x-btn-micro, .x-btn-icon-micro-left {
 		font-size: 5pt !important;
 		height:5px !important;
+	}
+       .btn-gc {
+	  margin-top: -1px !important;
+	} 
+        .x-grid3-scroller {
+		overflow: hidden;
 	}
 </style>
 </head>
@@ -73,7 +78,7 @@ makeTileCacheFile($postgisdb);
 					</tr>
 					<tr>
 						<td>
-						<input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo $postgisdb; ?>/<?php echo $postgisschema; ?>/4326" size="55"/>
+						<input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo $postgisdb; ?>/<?php echo $postgisschema; ?>/4326" size="65"/>
 						</td>
 					</tr>
 				</tbody>
@@ -87,12 +92,27 @@ makeTileCacheFile($postgisdb);
 					</tr>
 					<tr>
 						<td>
-						<input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo $postgisdb; ?>/<?php echo $postgisschema; ?>/" size="55"/>
+						<input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo $postgisdb; ?>/<?php echo $postgisschema; ?>/" size="65"/>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
+                <div id="sql-dialog">
+			<table border="0">
+				<tbody>
+					<tr>
+						<td>This is the SQL API end point:</td>
+					</tr>
+					<tr>
+						<td>
+						<input type="text" readonly="readonly" value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo $postgisdb; ?>?q=[query]&key=[your_api_key]" size="65"/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
 	</div>
 
 	<?php

@@ -17,6 +17,7 @@ include 'libs/FirePHPCore/FirePHP.class.php';
 include 'libs/FirePHPCore/fb.php';
  
 //$_SESSION['screen_name'] = $parts[2];
+$postgisdb=$_SESSION['screen_name'];
 
 if ($parts[1]=="store" || $parts[1]=="editor") {
 	$db = new databases();
