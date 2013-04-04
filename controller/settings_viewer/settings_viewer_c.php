@@ -1,7 +1,7 @@
 <?php
 //include("../../header.php");
 include("../server_header.inc");
-//include("../../inc/oauthcheck.php");
+include("../../inc/oauthcheck.php");
 
 $settings_viewer = new Settings_viewer();
 

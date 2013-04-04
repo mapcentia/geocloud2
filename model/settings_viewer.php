@@ -55,7 +55,7 @@ class Settings_viewer extends postgis {
 		$this -> execQuery($sql,"PDO","transaction");
 		if (!$this->PDOerror) {
 	 		$response['success'] = true;
-	 		$response['message'] = "Default extent updated";
+	 		$response['message'] = "Password saved";
 		}
 		else {
 			$response['success'] = false;
