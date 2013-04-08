@@ -91,61 +91,6 @@ var mygeocloud_ol = (function() {"use strict";
             this.layer.setVisibility(true);
         };
 
-        /*
-         this.layer.strategies[0].activate = function() {
-         var activated = OpenLayers.Strategy.prototype.activate.call(this);
-         if (activated) {
-         var features = [];
-         var clusters = this.layer.features;
-         for (var i = 0; i < clusters.length; i++) {
-         var cluster = clusters[i];
-         if (cluster.cluster) {
-         for (var j = 0; j < cluster.cluster.length; j++) {
-         features.push(cluster.cluster[j]);
-         }
-         } else {
-         features.push(cluster);
-         }
-         }
-         this.layer.removeAllFeatures();
-         this.layer.events.on({
-         "beforefeaturesadded" : this.cacheFeatures,
-         "moveend" : this.cluster,
-         scope : this
-         });
-         this.layer.addFeatures(features);
-         this.clearCache();
-         }
-         return activated;
-         }
-
-         this.layer.strategies[0].deactivate = function() {
-         var deactivated = OpenLayers.Strategy.prototype.deactivate.call(this);
-         if (deactivated) {
-         var features = [];
-         var clusters = this.layer.features;
-         for (var i = 0; i < clusters.length; i++) {
-         var cluster = clusters[i];
-         if (cluster.cluster) {
-         for (var j = 0; j < cluster.cluster.length; j++) {
-         features.push(cluster.cluster[j]);
-         }
-         } else {
-         features.push(cluster);
-         }
-         }
-         this.layer.removeAllFeatures();
-         this.layer.events.un({
-         "beforefeaturesadded" : this.cacheFeatures,
-         "moveend" : this.cluster,
-         scope : this
-         });
-         this.layer.addFeatures(features);
-         this.clearCache();
-         }
-         return deactivated;
-         };
-         */
         this.clusterDeactivate = function() {
             parentThis.layer.strategies[0].deactivate();
             parentThis.layer.refresh({
@@ -217,6 +162,7 @@ var mygeocloud_ol = (function() {"use strict";
             return new OpenLayers.Format.WKT().write(this.layer.features);
         };
     };
+
     map = function(config) {
         var prop, baseLayer, popup, // baseLayer wrapper
         parentMap, defaults = {
@@ -393,7 +339,6 @@ var mygeocloud_ol = (function() {"use strict";
                     this.mapQuestOSM = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg");
                     this.map.addLayer(this.mapQuestOSM);
                     break;
-                case "l":
 
             }
             return (this.mapQuestAerial);
@@ -523,11 +468,11 @@ var mygeocloud_ol = (function() {"use strict";
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
             } else {
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
+                var url1 = url;
+                var url2 = url;
+                var url3 = url;
+                var urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url3.replace("cdn", "cdn3")];
             }
-            var url1 = url;
-            var url2 = url;
-            var url3 = url;
-            var urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url2.replace("cdn", "cdn3")];
             switch (mapLib) {
                 case "ol":
                     var l = new OpenLayers.Layer.WMS(defaults.name, urlArray, {
