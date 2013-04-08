@@ -466,6 +466,7 @@ var mygeocloud_ol = (function() {"use strict";
             parts = layer.split(".");
             if (!defaults.tileCached) {
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
+                var urlArray = [url];
             } else {
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
                 var url1 = url;
