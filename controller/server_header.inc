@@ -17,6 +17,7 @@ include '../../libs/FirePHPCore/fb.php';
 include '../../model/tables.php';
 include '../../model/settings_viewer.php';
 include '../../wms/mapfile.php.map';
+include '../../wms/tilecache.cfg.php';
 include '../../model/shapefile.php';
 include '../../model/sqlapi.php';
 include '../../model/geometry_columns.php';

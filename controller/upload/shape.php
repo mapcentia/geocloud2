@@ -39,6 +39,8 @@ if(move_uploaded_file($_FILES['shx']['tmp_name'], $file.".shx")) {
 if ($response['uploaded']) {
 	$shapeFile = new shapefile($SafeFile,$_REQUEST['srid'],$file,$_REQUEST['pdo']);
 	$response = $shapeFile->loadInDb();
+    makeMapFile($_SESSION['screen_name']);
+    makeTileCacheFile($_SESSION['screen_name']);
 	
 }
 include_once("../server_footer.inc");

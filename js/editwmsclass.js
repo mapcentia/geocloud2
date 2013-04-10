@@ -83,13 +83,13 @@ wmsClasses.init = function(record) {
             }]
         }),
         tbar : [{
-            text : '<i class="icon-minus btn-gc"></i> Delete class',
-            //iconCls : 'silk-delete',
-            handler : wmsClasses.onDelete
-        }, {
             text : '<i class="icon-plus btn-gc"></i> Add class',
             //iconCls : 'silk-add',
             handler : wmsClasses.onAdd
+        },{
+            text : '<i class="icon-trash btn-gc"></i> Delete class',
+            //iconCls : 'silk-delete',
+            handler : wmsClasses.onDelete
         }],
         listeners : {
             rowdblclick : onSelectClass

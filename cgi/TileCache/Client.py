@@ -153,14 +153,15 @@ def main ():
     if len(args)>3:
         parser.error("Incorrect number of arguments. bbox and padding are now options (-b and -p)")
 
-    from Service import Service, cfgfiles
+    #from Service import Service, cfgfiles
+    from Service import Service
     from Layer import Layer
-    cfgs = cfgfiles
+    #cfgs = cfgfiles
     if options.tilecacheconfig:
         configFile = options.tilecacheconfig
         print "Config file set to %s" % (configFile)
-        cfgs = cfgs + (configFile,)
- 
+        #cfgs = cfgs + (configFile,)
+        cfgs = (configFile,)
     svc = Service.load(*cfgs)
 
     layer = svc.layers[args[0]]

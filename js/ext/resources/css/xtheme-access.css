@@ -22,7 +22,7 @@ body {
     background-color: #232d38;
     border-color:#556;
     color:#fff;
-    font:normal 14px tahoma, arial, helvetica, sans-serif;
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
 }
 
 .x-mask-loading div {
@@ -72,7 +72,7 @@ body {
 }
 
 .loading-indicator {
-    font-size: 14px;
+    font-size: 11px;
     background-image: url(../images/access/grid/loading.gif);
 }
 
@@ -108,7 +108,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-tab-strip span.x-tab-strip-text {
-	font:normal 14px tahoma,arial,helvetica;
+	font:normal 11px tahoma,arial,helvetica;
 	color:#fff;
 }
 
@@ -192,7 +192,7 @@ ul.x-tab-strip-bottom{
     border-color:#99bbe8;
 }
 .x-form-field {
-    font:normal 15px tahoma, arial, helvetica, sans-serif;
+    font:normal 12pxhoma, arial, helvetica, sans-serif;
 }
 
 .x-form-text, textarea.x-form-field{
@@ -317,16 +317,16 @@ ul.x-tab-strip-bottom{
 }
 
 .x-form-grow-sizer {
-	font:normal 15px tahoma, arial, helvetica, sans-serif;
+	font:normal 12pxhoma, arial, helvetica, sans-serif;
 }
 
 .x-form-item {
-    font:normal 15px tahoma, arial, helvetica, sans-serif;
+    font:normal 12pxhoma, arial, helvetica, sans-serif;
 }
 
 .x-form-invalid-msg {
     color:#c0272b;
-    font:normal 14px tahoma, arial, helvetica, sans-serif;
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
     background-image:url(../images/default/shared/warning.gif);
 }
 
@@ -339,7 +339,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-small-editor .x-form-field {
-    font:normal 14px arial, tahoma, helvetica, sans-serif;
+    font:normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .ext-safari .x-small-editor .x-form-field {
@@ -358,15 +358,15 @@ ul.x-tab-strip-bottom{
 }
 
 .x-fieldset legend {
-    font:bold 14px tahoma, arial, helvetica, sans-serif;
+    font:bold 11px tahoma, arial, helvetica, sans-serif;
     color:#fff;
 }
 .x-btn {
-	font:normal 14px tahoma, verdana, helvetica;
+	font:normal 11px tahoma, verdana, helvetica;
 }
 
 .x-btn button {
-    font:normal 14px arial,tahoma,verdana,helvetica;
+    font:normal 11px arial,tahoma,verdana,helvetica;
     color:#fffffa;
     padding-left:6px !important;
     padding-right:6px !important;
@@ -498,7 +498,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-toolbar td,.x-toolbar span,.x-toolbar input,.x-toolbar div,.x-toolbar select,.x-toolbar label{
-    font:normal 14px arial,tahoma, helvetica, sans-serif;
+    font:normal 11px arial,tahoma, helvetica, sans-serif;
 }
 
 .x-toolbar .x-item-disabled {
@@ -652,7 +652,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-grid3-hd-row td, .x-grid3-row td, .x-grid3-summary-row td{
-	font:normal 14px arial, tahoma, helvetica, sans-serif;
+	font:normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-grid3-hd-row td {
@@ -795,7 +795,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-grid3-topbar, .x-grid3-bottombar{
-	font:normal 14px arial, tahoma, helvetica, sans-serif;
+	font:normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-grid3-bottombar .x-toolbar{
@@ -890,7 +890,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
     background-image:url(../images/access/grid/group-collapse.gif);
     background-position:3px 6px;
     color:#ffd;
-    font:bold 14px tahoma, arial, helvetica, sans-serif;
+    font:bold 11px tahoma, arial, helvetica, sans-serif;
 }
 
 .x-grid-group-collapsed .x-grid-group-hd div.x-grid-group-title {
@@ -911,7 +911,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-grid-empty {
     color:gray;
-    font:normal 14px tahoma, arial, helvetica, sans-serif;
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
 }
 
 .x-grid-with-col-lines .x-grid3-row td.x-grid3-cell {
@@ -927,7 +927,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 .x-dd-drag-ghost{
 	color:#000;
-	font: normal 14px arial, helvetica, sans-serif;
+	font: normal 11px arial, helvetica, sans-serif;
     border-color: #ddd #bbb #bbb #ddd;
 	background-color:#fff;
 }
@@ -1040,7 +1040,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-tree-node{
 	color:#000;
-	font: normal 14px arial, tahoma, helvetica, sans-serif;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-tree-node a, .x-dd-drag-ghost a{
@@ -1115,7 +1115,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 .x-date-middle,.x-date-left,.x-date-right {
 	background-image: url(../images/access/shared/hd-sprite.gif);
 	color:#fff;
-	font:bold 14px "sans serif", tahoma, verdana, helvetica;
+	font:bold 11px "sans serif", tahoma, verdana, helvetica;
 }
 
 .x-date-middle .x-btn .x-btn-text {
@@ -1147,7 +1147,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-date-inner a {
-    font:normal 14px arial, helvetica,tahoma,sans-serif;
+    font:normal 11px arial, helvetica,tahoma,sans-serif;
     color:#fff;
     padding:2px 7px 1px 3px; /* Structure to account for larger, bolder fonts in Access theme. */
 }
@@ -1205,14 +1205,14 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-date-mp td {
-	font:normal 14px arial, helvetica,tahoma,sans-serif;
+	font:normal 11px arial, helvetica,tahoma,sans-serif;
 }
 
 .x-date-mp-btns button {
 	background-color:#083772;
 	color:#fff;
 	border-color: #3366cc #000055 #000055 #3366cc;
-	font:normal 14px arial, helvetica,tahoma,sans-serif;
+	font:normal 11px arial, helvetica,tahoma,sans-serif;
 }
 
 .x-date-mp-btns {
@@ -1255,7 +1255,7 @@ td.x-date-mp-sep {
 }
 
 .x-tip .x-tip-mc {
-    font: normal 14px tahoma,arial,helvetica,sans-serif;
+    font: normal 11px tahoma,arial,helvetica,sans-serif;
 }
 .x-tip .x-tip-ml {
 	background-color: #fff;
@@ -1267,7 +1267,7 @@ td.x-date-mp-sep {
 }
 
 .x-tip .x-tip-body {
-    font: normal 14px tahoma,arial,helvetica,sans-serif;
+    font: normal 11px tahoma,arial,helvetica,sans-serif;
     color:#000;
 }
 
@@ -1295,7 +1295,7 @@ td.x-date-mp-sep {
 }
 
 .x-menu-list-item{
-	font:normal 14px tahoma,arial, sans-serif;
+	font:normal 11px tahoma,arial, sans-serif;
 }
 
 .x-menu-item-arrow{
@@ -1378,7 +1378,7 @@ a.x-menu-item {
     background-image: url(../images/default/box/tb.gif);
 	font-family: "Myriad Pro","Myriad Web","Tahoma","Helvetica","Arial",sans-serif;
 	color: #393939;
-	font-size: 15px;
+	font-size: 11px;
 }
 
 .x-box-mc h3 {
@@ -1428,7 +1428,7 @@ a.x-menu-item {
 .x-combo-list {
     border:2px solid #232732;
     background-color:#555566;
-    font:normal 15px tahoma, arial, helvetica, sans-serif;
+    font:normal 12pxhoma, arial, helvetica, sans-serif;
 }
 
 .x-combo-list-inner {
@@ -1436,7 +1436,7 @@ a.x-menu-item {
 }
 
 .x-combo-list-hd {
-    font:bold 14px tahoma, arial, helvetica, sans-serif;
+    font:bold 11px tahoma, arial, helvetica, sans-serif;
     color:fff;
     background-image: url(../images/default/layout/panel-title-light-bg.gif);
     border-bottom-color:#98c0f4;
@@ -1460,17 +1460,17 @@ a.x-menu-item {
 }
 
 .x-combo-list-small {
-    font:normal 14px tahoma, arial, helvetica, sans-serif;
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
 }
 .x-panel {
     border-color: #18181a;
-    font-size: 14px;
+    font-size: 11px;
 }
 
 .x-panel-header {
     color:#fff;
 	font-weight:bold; 
-    font-size: 14px;
+    font-size: 11px;
     font-family: tahoma,arial,verdana,sans-serif;
     border-color:#18181a;
     background-image: url(../images/access/panel/white-top-bottom.gif);
@@ -1502,7 +1502,7 @@ a.x-menu-item {
 
 .x-panel-tl .x-panel-header {
     color:fff;
-	font:bold 14px tahoma,arial,verdana,sans-serif;
+	font:bold 11px tahoma,arial,verdana,sans-serif;
 }
 
 .x-panel-tc {
@@ -1519,7 +1519,7 @@ a.x-menu-item {
 }
 
 .x-panel-mc {
-    font: normal 14px tahoma,arial,helvetica,sans-serif;
+    font: normal 11px tahoma,arial,helvetica,sans-serif;
     background-color:#3f4757;
 }
 
@@ -1548,7 +1548,7 @@ a.x-menu-item {
 }
 
 .x-panel-fbar td,.x-panel-fbar span,.x-panel-fbar input,.x-panel-fbar div,.x-panel-fbar select,.x-panel-fbar label{
-    font:normal 14px arial,tahoma, helvetica, sans-serif;
+    font:normal 11px arial,tahoma, helvetica, sans-serif;
 }
 .x-window-proxy {
     background-color:#1f2833;
@@ -1557,7 +1557,7 @@ a.x-menu-item {
 
 .x-window-tl .x-window-header {
     color:#fff;
-	font:bold 14px tahoma,arial,verdana,sans-serif;
+	font:bold 11px tahoma,arial,verdana,sans-serif;
 }
 
 .x-window-tc {
@@ -1586,7 +1586,7 @@ a.x-menu-item {
 
 .x-window-mc {
     border-color:#18181a;
-    font: normal 14px tahoma,arial,helvetica,sans-serif;
+    font: normal 11px tahoma,arial,helvetica,sans-serif;
     background-color:#1f2833;
 }
 
@@ -1746,7 +1746,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 
 .x-list-header-inner div em {
     border-left-color:#667;
-    font:normal 14px arial, tahoma, helvetica, sans-serif;
+    font:normal 11px arial, tahoma, helvetica, sans-serif;
     line-height: 14px;
 }
 
@@ -1755,7 +1755,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 }
 
 .x-list-body dt em {
-    font:normal 14px arial, tahoma, helvetica, sans-serif;
+    font:normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-list-over {
@@ -1792,11 +1792,11 @@ body.x-body-masked .x-window-plain .x-window-mc {
 }
 .x-window-dlg .ext-mb-text,
 .x-window-dlg .x-window-header-text {
-    font-size:15px;
+    font-size:12px;
 }
 
 .x-window-dlg .ext-mb-textarea {
-    font:normal 15px tahoma,arial,helvetica,sans-serif;
+    font:normal 12pxhoma,arial,helvetica,sans-serif;
 }
 
 .x-window-dlg .x-msg-box-wait {

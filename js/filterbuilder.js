@@ -92,10 +92,11 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
         
         this.items = [ {
             xtype: "fieldset",
-            title: "Query by location",
+            title: "Filter by location",
             checkboxToggle: true,
             //collapsed: !this.spatialQuery,
             anchor: "95%",
+            html : "Only features within the map view will be loaded.",
             //items: [this.mapExtentField],
             listeners: {
                 collapse: function () {
@@ -108,7 +109,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
             }
         },{
             xtype: "fieldset",
-            title: "Query by attributes",
+            title: "Filter by attributes",
             checkboxToggle: true,
             collapsed: !this.attributeQuery,
             anchor: "95%",
@@ -165,8 +166,8 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
      */
     createToolBar: function() {
         var bar = [{
-            text: "add condition",
-            iconCls: "silk-add",
+            text: "<i class='icon-plus-sign btn-gc'></i> Add condition",
+            //iconCls: "silk-add",
             handler: function() {
                 this.addCondition();
             },
@@ -563,8 +564,9 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                 style: "padding-left: 2px",
                 items: {
                     xtype: "button",
+                    text: "<i class='icon-minus-sign btn-gc'></i>",
                     tooltip: "remove condition",
-                    iconCls: "silk-delete",
+                    //iconCls: "silk-delete",
                     handler: function(btn){
                         this.removeCondition(ct, filterContainer.filter);
                     },

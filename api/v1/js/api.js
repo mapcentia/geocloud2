@@ -341,13 +341,13 @@ var mygeocloud_ol = (function() {"use strict";
         }
         this.addMapQuestAerial = function() {
             this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
-            this.mapQuestAerial.wrapDateLine = false;
+            this.mapQuestAerial.wrapDateLine = true;
             this.map.addLayer(this.mapQuestAerial);
             return (this.mapQuestAerial);
         }
         this.addOSM = function() {
             this.baseOSM = new OpenLayers.Layer.OSM("OSM");
-            this.baseOSM.wrapDateLine = false;
+            this.baseOSM.wrapDateLine = true;
             this.map.addLayer(this.baseOSM);
             return (this.baseOSM);
         }
@@ -356,7 +356,7 @@ var mygeocloud_ol = (function() {"use strict";
             try {
                 this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {
                     type : G_NORMAL_MAP,
-                    sphericalMercator : false,
+                    sphericalMercator : true,
                     wrapDateLine : true,
                     numZoomLevels : 20
                 });
@@ -366,7 +366,7 @@ var mygeocloud_ol = (function() {"use strict";
             // v3
             try {
                 this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {// the default
-                    wrapDateLine : false,
+                    wrapDateLine : true,
                     numZoomLevels : 20
                 });
             } catch(e) {
@@ -397,6 +397,34 @@ var mygeocloud_ol = (function() {"use strict";
             }
             this.map.addLayer(this.baseGHYBRID);
             return (this.baseGHYBRID);
+        }
+        this.addGoogleSatellite = function() {
+            // v3
+            try {
+                this.baseGSATELLITE = new OpenLayers.Layer.Google("Google Satellite", {
+                    type : google.maps.MapTypeId.SATELLITE,
+                    wrapDateLine : true,
+                    numZoomLevels : 20
+                });
+            } catch(e) {
+                alert(e.message)
+            }
+            this.map.addLayer(this.baseGSATELLITE);
+            return (this.baseGSATELLITE);
+        };
+        this.addGoogleTerrain = function() {
+            // v3
+            try {
+                this.baseGTERRAIN = new OpenLayers.Layer.Google("Google Terrain", {
+                    type : google.maps.MapTypeId.TERRAIN,
+                    wrapDateLine : true,
+                    numZoomLevels : 20
+                });
+            } catch(e) {
+                alert(e.message)
+            }
+            this.map.addLayer(this.baseGTERRAIN);
+            return (this.baseGTERRAIN);
         }
         this.setBaseLayer = function(baseLayer) {
             this.map.setBaseLayer(baseLayer);

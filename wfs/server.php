@@ -1,5 +1,5 @@
 <?php
-//session_start();
+session_start();
 
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);

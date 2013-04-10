@@ -85,7 +85,7 @@ tableStructure.init = function(record, screenName) {
 							response, arg) {
 						if (type === 'remote') { // success is false
 							// alert(response.message);
-							message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
+							var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
 									+ response.message + "</textarea>";
 							Ext.MessageBox.show( {
 								title : 'Failure',
@@ -260,8 +260,8 @@ tableStructure.init = function(record, screenName) {
 			}
 		},
 		tbar : [ {
-			text : 'Delete',
-			iconCls : 'silk-delete',
+			text : '<i class="icon-trash btn-gc"></i> Delete column',
+			//iconCls : 'silk-delete',
 			handler : tableStructure.onDelete
 		} ]
 	});

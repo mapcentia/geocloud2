@@ -14,5 +14,6 @@ if ($response2['operation'] == "inserted") {
 	$class->insert();
 }
 makeMapFile($_SESSION['screen_name']);
+makeTileCacheFile($_SESSION['screen_name']);
 
 include_once("../server_footer.inc");
