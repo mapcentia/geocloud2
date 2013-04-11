@@ -87,8 +87,7 @@ addScratch.onSubmit = function (form, action) {
     var result = action.result;
     if (result.success) {
 		store.load();
-        Ext.MessageBox.alert('Success', result.message);
-        //addScratch.form.reset();
+        App.setAlert(App.STATUS_NOTICE, result.message);
     } else {
         Ext.MessageBox.alert('Failure', result.message);
     }

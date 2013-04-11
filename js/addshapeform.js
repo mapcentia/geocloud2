@@ -121,7 +121,7 @@ addShape.onSubmit = function (form, action) {
     var result = action.result;
     if (result.success) {
 		store.load();
-        Ext.MessageBox.alert('Success', result.message);
+        App.setAlert(App.STATUS_NOTICE, result.message);
         //addShape.form.reset();
     } else {
         Ext.MessageBox.alert('Failure', result.message);

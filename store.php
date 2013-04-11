@@ -13,6 +13,7 @@ makeTileCacheFile($postgisdb);
 <script type="text/javascript">var schema = '<?php echo $postgisschema; ?>'</script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
+<script type="text/javascript" src="/js/msg.js"></script>
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>
 <script type="text/javascript" src="/js/edittablestructure.js"></script>
@@ -26,10 +27,12 @@ makeTileCacheFile($postgisdb);
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
+
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 <link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
+
 <!-- overrides to base library -->
 <script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js"></script>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/fileuploadfield/css/fileuploadfield.css"/>
@@ -51,7 +54,6 @@ makeTileCacheFile($postgisdb);
     .btn-gc {
         margin-top: -1px !important;
     }
-
 </style>
 </head>
 <body>

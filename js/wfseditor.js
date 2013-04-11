@@ -1,4 +1,5 @@
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
+var App = new Ext.App({});
 var layer;
 var modifyControl;
 var grid;
@@ -26,7 +27,7 @@ function startWfsEdition(layerName) {
     var loadMessage = Ext.MessageBox;
     var editable = true;
     var sm;
-    var layerBeingEditing=layerName;
+    var layerBeingEditing = layerName;
     // allow testing of specific renderers via "?renderer=Canvas", etc
     /*
      var renderer = OpenLayers.Util.getParameters(window.location.href).renderer;
@@ -85,7 +86,6 @@ function startWfsEdition(layerName) {
                             }
                         }
                     }
-                    ;
                 }
             }
 
@@ -93,7 +93,7 @@ function startWfsEdition(layerName) {
     });
     var styleMap = new OpenLayers.StyleMap({
         temporary: OpenLayers.Util.applyDefaults({
-            pointRadius: 15
+            pointRadius: 5
         }, OpenLayers.Feature.Vector.style.temporary)
     });
     layer = new OpenLayers.Layer.Vector("vector", {
@@ -115,20 +115,15 @@ function startWfsEdition(layerName) {
         styleMap: styleMap
     });
 
-    map.addLayers([layer]);
-    layer.events.register("loadend", layer, function () {
-        //map.zoomToExtent(layer.getDataExtent());
 
-        // loadMessage.hide();
-        // alert("");
+    layer.events.register("loadend", layer, function () {
+        var count = layer.features.length;
+        App.setAlert(App.STATUS_NOTICE, count + " features loaded");
     });
     layer.events.register("loadstart", layer, function () {
-        /*
-         * loadMessage.show({ msg: 'Getting your data, please wait...',
-         * progressText: 'Loading...', width:300, wait:true, waitConfig:
-         * {interval:200} });
-         */
+        //App.setAlert(App.STATUS_OK, "Start loading...");
     });
+    map.addLayers([layer]);
     if (type == "Point") {
         handlerType = OpenLayers.Handler.Point;
     }
@@ -147,12 +142,9 @@ function startWfsEdition(layerName) {
             }
         }
     });
-
     if (editable) {
-        //drawControl.deactivate();
-        //drawControl.activate();
+        // We set the control to the second button in wfsTools
         wfsTools[2].control = drawControl;
-        // We set the control to the first button in wfsTools
         map.addControl(drawControl);
         modifyControl = new OpenLayers.Control.ModifyFeature(layer, {
             vertexRenderIntent: 'temporary',
@@ -184,7 +176,6 @@ function startWfsEdition(layerName) {
         }),
         fields: fieldsForStore,
         layer: layer,
-
         featureFilter: new OpenLayers.Filter({
             evaluate: function (feature) {
                 return feature.state !== OpenLayers.State.DELETE;
@@ -386,18 +377,22 @@ $(window).load(function () {
         });
     };
     reLoadTree = function () {
+
         var num = cloud.map.getNumLayers();
         for (var j = 1; j < num; j++) {
             if (cloud.map.layers[j].isBaseLayer === false) {
                 cloud.map.layers[j].setVisibility(false);
-            };
+            }
         }
+
         var west = viewport.getComponent(2);
         west.remove(tree);
         tree = null;
         loadTree();
+        App.setAlert(App.STATUS_NOTICE, "Layer tree reloaded");
         west.add(tree);
         west.doLayout();
+
     }
     loadTree();
     wfsTools = [
@@ -449,7 +444,8 @@ $(window).load(function () {
                 store.commitChanges();
                 saveStrategy.save();
             }
-        },'-',
+        },
+        '-',
         {
             text: "<i class='icon-stop btn-gc'></i> Stop editing",
             disabled: true,
@@ -460,7 +456,7 @@ $(window).load(function () {
 
         {
             text: "<i class='icon-th-list btn-gc'></i> Attributes",
-            id : "infobutton",
+            id: "infobutton",
             disabled: true,
             handler: function () {
                 attributeForm.win.show();
@@ -470,13 +466,15 @@ $(window).load(function () {
         '-',
         {
             text: "<i class='icon-filter btn-gc'></i> Filter",
-            id : "filterbutton",
+            id: "filterbutton",
             disabled: true,
             handler: function () {
                 filter.win.show();
 
             }
-        },'-', {
+        },
+        '-',
+        {
             text: "<i class='icon-refresh btn-gc'></i> Reload",
             handler: function () {
                 stopEdit();
@@ -546,11 +544,6 @@ function onInsert() {
     grid.selModel.selectRow(pos);
     //attributeForm.win.show();
 }
-
-function test() {
-    alert('test');
-}
-
 function array_unique(ar) {
     if (ar.length && typeof ar !== 'string') {
         var sorter = {};
@@ -565,99 +558,22 @@ function array_unique(ar) {
     return out || ar;
 }
 
-var saveStrategy = new OpenLayers.Strategy.Save({
+var saveStrategy;
+saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
-        if (response.success()) {
-            saveStrategy.layer.refresh();
-            format = new OpenLayers.Format.XML();
-            var doc = format.read(response.priv.responseText);
-            try {
-                var inserted = doc
-                    .getElementsByTagName('wfs:totalInserted')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var deleted = doc
-                    .getElementsByTagName('wfs:totalDeleted')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var updated = doc
-                    .getElementsByTagName('wfs:totalUpdated')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var updated = doc
-                    .getElementsByTagName('wfs:Message')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-
-            // For webkit
-            try {
-                var inserted = doc
-                    .getElementsByTagName('totalInserted')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var deleted = doc
-                    .getElementsByTagName('totalDeleted')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var updated = doc
-                    .getElementsByTagName('totalUpdated')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-            try {
-                var updated = doc
-                    .getElementsByTagName('Message')[0].firstChild.data;
-            } catch (e) {
-            }
-            ;
-
-            var message = "";
-            if (inserted) {
-                message += "<p>Inserted: " + inserted + "</p>";
-            }
-            if (updated) {
-                message += "<p>Updated: " + updated + "</p>";
-            }
-            if (deleted) {
-                message += "<p>Deleted: " + deleted + "</p>";
-            }
-            // message+="<textarea rows='5'
-            // cols='31'>"+error+"</textarea>"
-
-            // Ext.fly('info').dom.value = Ext.MessageBox.INFO;
-            Ext.MessageBox.show({
-                title: 'Success!',
-                msg: message,
-                buttons: Ext.MessageBox.OK,
-                width: 200,
-                icon: Ext.MessageBox.INFO
-            });
-        } else {
-            format = new OpenLayers.Format.XML();
+        if (!response.success()) {
+            var format = new OpenLayers.Format.XML();
             var doc = format.read(response.priv.responseText);
             try {
                 var error = doc
                     .getElementsByTagName('ServiceException')[0].firstChild.data;
             } catch (e) {
             }
-            ;
             try {
                 var error = doc
                     .getElementsByTagName('wfs:ServiceException')[0].firstChild.data;
             } catch (e) {
             }
-            ;
             message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows='5' cols='31'>" + error + "</textarea>";
             Ext.MessageBox.show({
                 title: 'Failure',
@@ -667,6 +583,74 @@ var saveStrategy = new OpenLayers.Strategy.Save({
                 height: 300,
                 icon: Ext.MessageBox.ERROR
             });
+        } else {
+            saveStrategy.layer.refresh();
+            format = new OpenLayers.Format.XML();
+            var doc = format.read(response.priv.responseText);
+            try {
+                var inserted = doc
+                    .getElementsByTagName('wfs:totalInserted')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var deleted = doc
+                    .getElementsByTagName('wfs:totalDeleted')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var updated = doc
+                    .getElementsByTagName('wfs:totalUpdated')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var updated = doc
+                    .getElementsByTagName('wfs:Message')[0].firstChild.data;
+            } catch (e) {
+            }
+
+
+            // For webkit
+            try {
+                var inserted = doc
+                    .getElementsByTagName('totalInserted')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var deleted = doc
+                    .getElementsByTagName('totalDeleted')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var updated = doc
+                    .getElementsByTagName('totalUpdated')[0].firstChild.data;
+            } catch (e) {
+            }
+
+            try {
+                var updated = doc
+                    .getElementsByTagName('Message')[0].firstChild.data;
+            } catch (e) {
+            }
+
+
+            var message = "";
+            if (inserted) {
+                message = "<p>Inserted: " + inserted + "</p>";
+                App.setAlert(App.STATUS_OK, message);
+            }
+            if (updated) {
+                message = "<p>Updated: " + updated + "</p>";
+                App.setAlert(App.STATUS_OK, message);
+            }
+            if (deleted) {
+                message = "<p>Deleted: " + deleted + "</p>";
+                App.setAlert(App.STATUS_OK, message);
+            }
         }
 
     }

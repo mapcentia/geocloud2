@@ -1,8 +1,8 @@
 var form;
 var store;
-//var onEditWMSLayer;
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
+var App = new Ext.App({});
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
@@ -127,8 +127,6 @@ $(window).load(function () {
         url: '/controller/databases/' + screenName + '/getschemas'
     });
     schemasStore.load();
-
-    // Clear cache button
 
     // create a grid to display records from the store
     var grid = new Ext.grid.EditorGridPanel({
@@ -271,9 +269,9 @@ $(window).load(function () {
                                                 if (http.status == 200) {
                                                     var response = eval('(' + http.responseText + ')');
                                                     if (response.success === true) {
-                                                        alert(response.message);
+                                                        App.setAlert(App.STATUS_NOTICE, response.message);
                                                     } else {
-                                                        alert(response.message);
+                                                        App.setAlert(App.STATUS_NOTICE, response.message);
                                                     }
                                                 }
                                             }
@@ -354,9 +352,9 @@ $(window).load(function () {
                                         if (http.status == 200) {
                                             var response = eval('(' + http.responseText + ')');
                                             if (response.success === true) {
-                                                alert(response.message);
+                                                App.setAlert(App.STATUS_OK, response.message);
                                             } else {
-                                                alert(response.message);
+                                                App.setAlert(App.STATUS_NOTICE, response.message);
                                             }
                                         }
                                     }
@@ -409,17 +407,11 @@ $(window).load(function () {
     function onDelete() {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
             if (btn == "yes") {
-                //console.log(record.data.f_table);
                 proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + schema + "." + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
@@ -547,28 +539,15 @@ $(window).load(function () {
                                 if (f.form.isValid()) {
                                     f.getForm().submit({
                                         url: '/controller/databases/' + screenName + '/addschema',
-                                        waitMsg: 'Saving Data...',
                                         submitEmptyText: false,
+                                        waitMsg: 'Creating schema',
                                         success: function () {
                                             schemasStore.reload();
-                                            Ext.MessageBox.show({
-                                                title: 'Success!',
-                                                msg: 'New schema created',
-                                                buttons: Ext.MessageBox.OK,
-                                                width: 300,
-                                                height: 300
-                                            });
+                                            App.setAlert(App.STATUS_OK, "New schema created");
                                         },
                                         failure: function (form, action) {
                                             var result = action.result;
-                                            Ext.MessageBox.show({
-                                                title: 'Failure',
-                                                msg: result.message,
-                                                buttons: Ext.MessageBox.OK,
-                                                width: 300,
-                                                height: 300
-                                            });
-
+                                            App.setAlert(App.STATUS_ERROR, result.message);
                                         }
                                     });
                                 } else {
@@ -576,7 +555,6 @@ $(window).load(function () {
                                     Ext.iterate(schemaForm.form.getValues(), function (key, value) {
                                         s += String.format("{0} = {1}<br />", key, value);
                                     }, this);
-                                    //Ext.example.msg('Form Values', s);
                                 }
                             }
                         }
@@ -610,12 +588,7 @@ $(window).load(function () {
     function onEdit(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
 
@@ -725,12 +698,7 @@ $(window).load(function () {
     function onEditCartomobile(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
 
@@ -766,12 +734,7 @@ $(window).load(function () {
     function onEditWMSClasses(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
 
@@ -802,12 +765,7 @@ $(window).load(function () {
     function onEditWMSLayer(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
         wmsLayer.grid = null;
@@ -829,12 +787,7 @@ $(window).load(function () {
     function onEditMoreSettings(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            Ext.MessageBox.show({
-                title: 'Hi',
-                msg: 'You\'ve to select a layer',
-                buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.INFO
-            });
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
         var r = record;
@@ -980,13 +933,7 @@ $(window).load(function () {
                                         success: function () {
                                             store.reload();
                                             groupsStore.load();
-                                            Ext.MessageBox.show({
-                                                title: 'Success!',
-                                                msg: 'Settings updated',
-                                                buttons: Ext.MessageBox.OK,
-                                                width: 300,
-                                                height: 300
-                                            });
+                                            App.setAlert(App.STATUS_NOTICE, "Settings updated");
                                         }
                                         //failure: test
                                     });
@@ -995,7 +942,6 @@ $(window).load(function () {
                                     Ext.iterate(f.form.getValues(), function (key, value) {
                                         s += String.format("{0} = {1}<br />", key, value);
                                     }, this);
-                                    //Ext.example.msg('Form Values', s);
                                 }
                             }
                         }

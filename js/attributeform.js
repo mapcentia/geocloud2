@@ -48,7 +48,7 @@ attributeForm.init = function (layer) {
                     query: function () {
                         var protocol = store.proxy.protocol;
                         protocol.defaultFilter = filter.filterBuilder.getFilter();
-                        store.load();
+                        saveStrategy.layer.refresh();
                         //layer;
                     },
                     items: [filter.filterBuilder]
@@ -73,8 +73,6 @@ attributeForm.init = function (layer) {
             }}
 
     });
-
-
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,
         region: 'center',
@@ -115,12 +113,9 @@ attributeForm.init = function (layer) {
                         //Ext.example.msg('Form Values', s);
                     }
                 }
-
-
             }
         ]
     });
-
     attributeForm.attributeStore.load();
 };
 attributeForm.onSubmit = function () {

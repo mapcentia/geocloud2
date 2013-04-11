@@ -320,12 +320,7 @@ wmsClass.init = function(id) {
 function onSelectClass(btn, ev) {
     var record = wmsClasses.grid.getSelectionModel().getSelected();
     if (!record) {
-        Ext.MessageBox.show({
-            title : 'Hi',
-            msg : 'You\'ve to select a layer',
-            buttons : Ext.MessageBox.OK,
-            icon : Ext.MessageBox.INFO
-        });
+        App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
         return false;
     }
     wmsClass.grid = null;
@@ -347,22 +342,10 @@ function onSelectClass(btn, ev) {
 
 wmsClasses.onSubmit = function(response) {
     if (response.success) {
-        Ext.MessageBox.show({
-            title : 'Success!',
-            msg : 'The style is updated',
-            buttons : Ext.MessageBox.OK,
-            width : 300,
-            height : 300
-        });
+        App.setAlert(App.STATUS_OK, "Style is updated");
 
     } else {
         message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
-        Ext.MessageBox.show({
-            title : 'Failure',
-            msg : message,
-            buttons : Ext.MessageBox.OK,
-            width : 300,
-            height : 300
-        });
+        App.setAlert(App.STATUS_NOTICE, message);
     }
 }; 
