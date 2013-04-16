@@ -1,7 +1,6 @@
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({});
 var layer;
-var modifyControl;
 var grid;
 var store;
 var map;
@@ -16,6 +15,7 @@ var loadTree;
 var reLoadTree;
 var layerBeingEditing;
 
+
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 function startWfsEdition(layerName) {
 
@@ -27,7 +27,7 @@ function startWfsEdition(layerName) {
     var loadMessage = Ext.MessageBox;
     var editable = true;
     var sm;
-    var layerBeingEditing = layerName;
+    layerBeingEditing = layerName;
     // allow testing of specific renderers via "?renderer=Canvas", etc
     /*
      var renderer = OpenLayers.Util.getParameters(window.location.href).renderer;

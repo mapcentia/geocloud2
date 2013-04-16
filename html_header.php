@@ -29,7 +29,7 @@ if ($parts[1] == "store" || $parts[1] == "editor") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MyGeoCloud - Online GIS - Store geographical data and make online maps - WFS and WMS</title>
+    <title>MapCentia GeoCloud</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="description"
           content="Analyze and visualize your data. Use a powerful API for adding maps to your own apps."/>

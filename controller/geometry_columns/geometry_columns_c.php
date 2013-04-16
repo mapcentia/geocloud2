@@ -19,7 +19,7 @@ switch ($parts[4]) {
 		$response = $gc -> updateCartoMobileSettings($obj -> data, $parts[6]);
 		break;
 	case 'getall' :
-		$response = $gc -> getAll($parts[5]);
+		$response = $gc -> getAll($parts[5],$_SESSION['auth']);
 		break;
 	case 'getschemas' :
 		$response = $gc -> getSchemas();

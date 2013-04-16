@@ -12,7 +12,7 @@
 Ext.App = function(config) {
     this.views = [];
 
-    this.initStateProvider();
+    //this.initStateProvider();
 
     Ext.apply(this, config);
 

@@ -1,4 +1,3 @@
-RewriteEngine On
-RewriteRule ^([\w'-]*)/([\w'-]*)$ $1.php
-RewriteRule ^([\w'-]*)/([\w'-]*)/([\w'-]*)$ $1.php
-RewriteRule ^([\w'-]*)$ $1.php
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !(\.png|\.jpg|\.gif|\.jpeg|\.bmp|\.js|\.css)$
+RewriteRule (.*) index.html?url=$0 [QSA,L]

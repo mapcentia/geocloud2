@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapCentia GeoCloud - Analyze and map your data</title>
+    <meta charset="UTF-8"/>
+    <script src="http://eu1.mapcentia.com/js/openlayers/OpenLayers.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
+    <link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="/apps/viewer/css/styles.css" rel="stylesheet">
+    <script type="text/javascript"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
+</head>
+<body>
+<div class="navbar navbar-fixed-top navbar-absolute">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span>
+                <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+            <a class="brand" href="/">GeoCloud</a>
+
+            <div class="nav-collapse">
+                <ul class="nav">
+                    <li id="layers-popover-li">
+                        <a href="#" id="layers-popover" rel="popover" data-placement="bottom" title="Layers">
+                            Layers </a>
+                    </li>
+                    <li id="layers-modal-li" class="gc-btn">
+                        <a href="#" id="layers-modal" title="Layers" onclick="$('#modal-layers').modal();">
+                            Layers </a>
+                    </li>
+                    <li id="base-layers-popover-li" class="gc-btn">
+                        <a href="#" id="base-layers-popover" rel="popover" data-placement="bottom" title="Base layers">
+                            Base layers </a>
+                    </li>
+                    <li id="base-layers-modal-li" class="gc-btn">
+                        <a href="#" id="base-layers-modal" title="Base layers"
+                           onclick="$('#modal-base-layers').modal();">
+                            Base layers </a>
+                    </li>
+                    <li id="legend-popover-li" class="gc-btn">
+                        <a href="#" id="legend-popover" rel="popover" data-placement="bottom" title="Legend">
+                            Legend </a>
+                    </li>
+                    <li id="legend-modal-li" class="gc-btn">
+                        <a href="#" id="legend-modal" title="Legend"
+                           onclick="$('#modal-legend').modal();">
+                            Legend </a>
+                    </li>
+                    <li class="gc-btn">
+                        <form class="navbar-search" action="">
+                            <input type="text" class="search-query" placeholder="Search">
+                        </form>
+                    </li>
+
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+<!-- map -->
+<div id="map" style="width: 100%;height: 100%;position: absolute"></div>
+<!-- layers -->
+<div id="layers"></div>
+<!-- base layers -->
+<div id="base-layers" data-toggle="buttons-radio">
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/osm.png"></span>
+        <button class="btn btn-small active base-map-button" onclick="cloud.setBaseLayer(osm)">
+            Open Street Map
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/hmb.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(mapQuestOSM)">
+            MapQuest OSM
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/lmb.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(mapQuestAerial)">
+            MapQuest Aerial
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GNORMAL)">
+            Google Streets
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GHYBRID)">
+            Google Hybrid
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GSATELLITE)">
+            Google Satellite
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GTERRAIN)">
+            Google Terrain
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(stamenToner)">
+            Stamen toner
+        </button>
+    </div>
+</div>
+<!-- layers -->
+<div id="legend"></div>
+<!-- base layers modal -->
+<div id="modal-base-layers" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Base layers</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- layers modal -->
+<div id="modal-layers" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Layers</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- legend modal -->
+<div id="modal-legend" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Legend</h3>
+    </div>
+    <div class="modal-body">sdd</div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- info modal -->
+<div id="modal-info" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Info</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="http://eu1.mapcentia.com/js/bootstrap/js/bootstrap.js"></script>
+<script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
+<script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
+<script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
+<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
+<script type="text/javascript" src="https://raw.github.com/ten1seven/jRespond/master/js/jRespond.js"></script>
+<script type="text/javascript" src="http://eu1.mapcentia.com/js/common.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/apps/viewer/js/triggers.js"></script>
+<script type="text/javascript" src="/apps/viewer/js/viewer.js"></script>
+</html>
