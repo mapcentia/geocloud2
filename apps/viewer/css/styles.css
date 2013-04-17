@@ -39,7 +39,7 @@ img {
         display: none !important;
     }
     .navbar-fixed-top {
-        margin-bottom: 0px;
+        margin-bottom: 0;
     }
     #map {
         margin-left: -20px !important;
@@ -60,7 +60,7 @@ img {
         display: none !important;
     }
     .navbar-fixed-top {
-        margin-bottom: 0px;
+        margin-bottom: 0;
     }
 }
 @media (max-width: 979px) {
@@ -85,4 +85,29 @@ img {
     .gc-btn {
         margin-left: 100px;
     }
+    #locate-btn{
+        margin-left: 5px;
+    }
+}
+#result_GroupDiv {
+    background: white;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+    padding: 1px;
+    text-align: left;
+    -webkit-border-radius: 20px;
+    border-radius: 20px;
+}
+
+#queryResult {
+    margin: 10px 15px;
+    line-height: 1.4;
+    font: 11px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+#result {
+    opacity: 1 !important;
+    background-color: transparent !important;
+    padding: 10px
+}
+.pac-container{
+    z-index: 10000000 !important;
 }

@@ -1,7 +1,7 @@
 var mygeocloud_host; // Global var
 var mygeocloud_ol = (function () {
     "use strict";
-    var scriptSource = ( function (scripts) {
+    var scriptSource = (function (scripts) {
         "use strict";
         scripts = document.getElementsByTagName('script');
         var script = scripts[scripts.length - 1];
@@ -202,19 +202,34 @@ var mygeocloud_ol = (function () {
                 }
             }
             return layerArr.join(";");
-        }
+        };
+        this.getNamesOfVisibleLayers = function () {
+            var layerArr = [];
+            for (var i = 0; i < this.map.layers.length; i++) {
+                if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                    layerArr.push(this.map.layers[i].name);
+                }
+            }
+            return layerArr.join(",");
+        };
+        this.getBaseLayer = function () {
+            return this.map.baseLayer;
+        };
+        this.getBaseLayerName = function(){
+            return this.getBaseLayer().name;
+        };
         this.getZoom = function () {
             return this.map.getZoom();
-        }
+        };
         this.getPixelCoord = function (x, y) {
             var p = {};
             p.x = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).x;
             p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).y;
             return p;
-        }
+        };
         this.zoomToPoint = function (x, y, z) {
             this.map.setCenter(new OpenLayers.LonLat(x, y), z);
-        }
+        };
         switch (mapLib) {
             case "ol":
                 this.popupTemplate = '<div style="position:relative"><div>tets</div><div id="queryResult"></div><button onclick="popup.destroy()" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>';
@@ -324,7 +339,7 @@ var mygeocloud_ol = (function () {
         this.addMapQuestOSM = function () {
             switch (mapLib) {
                 case "ol":
-                    this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
+                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
                     this.mapQuestOSM.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestOSM);
                     break;
@@ -338,7 +353,7 @@ var mygeocloud_ol = (function () {
         this.addMapQuestAerial = function () {
             switch (mapLib) {
                 case "ol":
-                    this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
+                    this.mapQuestAerial = new OpenLayers.Layer.OSM("mapQuestOpenAerial", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
                     this.mapQuestAerial.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestAerial);
                     break;
@@ -353,7 +368,7 @@ var mygeocloud_ol = (function () {
         this.addOSM = function () {
             switch (mapLib) {
                 case "ol":
-                    this.baseOSM = new OpenLayers.Layer.OSM("OSM");
+                    this.baseOSM = new OpenLayers.Layer.OSM("osm");
                     this.baseOSM.wrapDateLine = false;
                     this.map.addLayer(this.baseOSM);
                     break;
@@ -367,7 +382,7 @@ var mygeocloud_ol = (function () {
         this.addGoogleStreets = function () {
             // v2
             try {
-                this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {
+                this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {
                     type: G_NORMAL_MAP,
                     sphericalMercator: false,
                     wrapDateLine: true,
@@ -379,7 +394,7 @@ var mygeocloud_ol = (function () {
             ;
             // v3
             try {
-                this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {// the default
+                this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {// the default
                     wrapDateLine: false,
                     numZoomLevels: 20
                 });
@@ -391,7 +406,7 @@ var mygeocloud_ol = (function () {
         this.addGoogleHybrid = function () {
             // v2
             try {
-                this.baseGHYBRID = new OpenLayers.Layer.Google("Google Hybrid", {
+                this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
                     type: G_HYBRID_MAP,
                     sphericalMercator: true,
                     wrapDateLine: true,
@@ -402,7 +417,7 @@ var mygeocloud_ol = (function () {
             ;
             // v3
             try {
-                this.baseGHYBRID = new OpenLayers.Layer.Google("Google Hybrid", {
+                this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
                     type: google.maps.MapTypeId.HYBRID,
                     wrapDateLine: true,
                     numZoomLevels: 20
@@ -416,7 +431,7 @@ var mygeocloud_ol = (function () {
         this.addGoogleSatellite = function () {
             // v3
             try {
-                this.baseGSATELLITE = new OpenLayers.Layer.Google("Google Satellite", {
+                this.baseGSATELLITE = new OpenLayers.Layer.Google("googleSatellite", {
                     type: google.maps.MapTypeId.SATELLITE,
                     wrapDateLine: true,
                     numZoomLevels: 20
@@ -430,7 +445,7 @@ var mygeocloud_ol = (function () {
         this.addGoogleTerrain = function () {
             // v3
             try {
-                this.baseGTERRAIN = new OpenLayers.Layer.Google("Google Terrain", {
+                this.baseGTERRAIN = new OpenLayers.Layer.Google("GoogleTerrain", {
                     type: google.maps.MapTypeId.TERRAIN,
                     wrapDateLine: true,
                     numZoomLevels: 20
@@ -592,6 +607,12 @@ var mygeocloud_ol = (function () {
         this.showLayer = function (name) {
             this.map.getLayersByName(name)[0].setVisibility(true);
         };
+        this.getLayerById = function(id){
+            return this.map.getLayer(id);
+        }
+        this.getLayersByName = function(name){
+            return this.map.getLayersByName(name);
+        }
         this.hideAllTileLayers = function () {
             for (var i = 0; i < this.map.layers.length; i++) {
                 if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {

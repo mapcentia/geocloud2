@@ -33,7 +33,7 @@ class shapefile extends postgis {
 		$this->connect("PDO");
 		$table = new table($this->safeFile);
 		if (!$this->pdo) {
-			$cmd = "shp2pgsql -W 'WINDOWS-1252' -I -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
+			$cmd = "shp2pgsql -g 'the_geom' -W 'WINDOWS-1252' -I -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
 			$result = exec($cmd, $output);
 
 			$sql_total = implode("", $output);

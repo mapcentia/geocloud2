@@ -12,8 +12,6 @@
     <link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="/apps/viewer/css/styles.css" rel="stylesheet">
-    <script type="text/javascript"
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&amp;sensor=false"></script>
 </head>
 <body>
 <div class="navbar navbar-fixed-top navbar-absolute">
@@ -51,10 +49,16 @@
                            onclick="$('#modal-legend').modal();">
                             Legend </a>
                     </li>
-                    <li class="gc-btn">
-                        <form class="navbar-search" action="">
-                            <input type="text" class="search-query" placeholder="Search">
-                        </form>
+                    <li>
+                        <div class="navbar-search" action="">
+                            <input id="search-input" name="search-input" type="text" class="search-query"
+                                   placeholder="Search">
+                        </div>
+                    </li>
+                    <li>
+                        <button id="locate-btn" class="btn" type="button">
+                            <i class="icon-screenshot"></i>
+                        </button>
                     </li>
 
                 </ul>
@@ -71,50 +75,50 @@
 <div id="base-layers" data-toggle="buttons-radio">
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/osm.png"></span>
-        <button class="btn btn-small active base-map-button" onclick="cloud.setBaseLayer(osm)">
+        <button class="btn btn-small active base-map-button" onclick="MapCentia.setBaseLayer('osm')">
             Open Street Map
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/hmb.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(mapQuestOSM)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestOSM')">
             MapQuest OSM
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/lmb.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(mapQuestAerial)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestAerial')">
             MapQuest Aerial
         </button>
     </div>
-    <div>
+    <!--<div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GNORMAL)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GNORMAL)">
             Google Streets
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GHYBRID)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GHYBRID)">
             Google Hybrid
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GSATELLITE)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GSATELLITE)">
             Google Satellite
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(GTERRAIN)">
+        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GTERRAIN)">
             Google Terrain
         </button>
-    </div>
+    </div>-->
     <div>
         <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="cloud.setBaseLayer(stamenToner)">
-            Stamen toner
+        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('toner')">
+            Stamen Toner
         </button>
     </div>
 </div>
@@ -169,11 +173,11 @@
 <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
 <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
 <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
-<script type="text/javascript" src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
 <script type="text/javascript" src="https://raw.github.com/ten1seven/jRespond/master/js/jRespond.js"></script>
 <script type="text/javascript" src="http://eu1.mapcentia.com/js/common.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
 <script type="text/javascript" src="/js/common.js"></script>
-<script type="text/javascript" src="/apps/viewer/js/triggers.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
 <script type="text/javascript" src="/apps/viewer/js/viewer.js"></script>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
 </html>

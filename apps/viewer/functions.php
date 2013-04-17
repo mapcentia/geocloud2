@@ -945,7 +945,7 @@ class control
 		if ($data_row) {
 			$table_title_new = "<table><tr><td><b class='output_table_row' style='background:".$tabelColor.";'>".$table_title_new."</b></td></tr></table>";
 			if (strLen($title_row)==0) $table_title_new="";
-			$dumpTable = $table_title_new."<table border=0><tr class='output_table_row'>"
+			$dumpTable = $table_title_new."<table id='result_output_table' border=0><tr class='output_table_row'>"
 			.$title_row
 			."<tr>"
 			.$data_row

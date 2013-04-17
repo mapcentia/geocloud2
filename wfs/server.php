@@ -365,7 +365,7 @@ function doQuery($queryType) {
 	global $useWktToGmlInPHP;
 	global $postgisschema;
 	global $tableObj;
-	global $fieldConfArr;
+	//global $fieldConfArr;
 	global $geometryColumnsObj;
 	
 	if (!$srs){
@@ -377,7 +377,7 @@ function doQuery($queryType) {
 			foreach ($tables as $table) {
 				$tableObj = new table($postgisschema.".".$table);
 				$primeryKey = $tableObj->getPrimeryKey($postgisschema.".".$table);
-				$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
+				//$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
 
 				$sql="SELECT ";
 					
