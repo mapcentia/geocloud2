@@ -232,7 +232,7 @@ var MapCentia = (function () {
                         layers: [response.data[u].f_table_schema + "." + response.data[u].f_table_name],
                         db: db,
                         isBaseLayer: isBaseLayer,
-                        tileCached: false,
+                        tileCached: true,
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
