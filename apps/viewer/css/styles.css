@@ -102,6 +102,7 @@ img {
     margin: 10px 15px;
     line-height: 1.4;
     font: 11px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+    min-width: 100px;
 }
 #result {
     opacity: 1 !important;
@@ -110,4 +111,14 @@ img {
 }
 .pac-container{
     z-index: 10000000 !important;
+}
+#alert {
+    position: absolute;
+    width: 300px;
+    margin: -100px 0 0 -200px;
+    top: 50%;
+    left: 50%;
+    display: none;
+    font-size: 130%;
+    text-align: center;
 }

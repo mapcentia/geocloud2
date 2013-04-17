@@ -49,8 +49,8 @@ var MapCentia = (function () {
         },
         trigger: function (e) {
             var coords = this.map.getLonLatFromViewPortPx(e.xy);
-            var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
-            cloud.map.addPopup(waitPopup);
+            //var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
+            //cloud.map.addPopup(waitPopup);
             try {
                 popup.destroy();
             } catch (e) {
@@ -66,17 +66,19 @@ var MapCentia = (function () {
                 jsonp: 'jsonp_callback',
                 url: hostname + '/apps/viewer/servers/query/' + db,
                 success: function (response) {
-                    waitPopup.destroy();
+                    //waitPopup.destroy();
                     var anchor = new OpenLayers.LonLat(coords.lon, coords.lat);
-                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(200, 200), popupTemplate, null, false, null);
+                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(100, 150), popupTemplate, null, false, null);
                     popup.panMapIfOutOfView = true;
-                    if (response.html !== false) {
+                    if (response.html !== false && response.html!=="") {
+                        // Dirty hack! We have to add the popup measure the width, destroy it and add it again width the right width.
                         cloud.map.addPopup(popup);
                         $("#queryResult").html(response.html);
                         var width = $("#queryResult").width()+35;
-                        $("#result").width(width);
-                        $("#result_contentDiv").width(width-10);
-
+                        popup.destroy();
+                        popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(width, 150), popupTemplate, null, false, null);
+                        cloud.map.addPopup(popup);
+                        $("#queryResult").html(response.html);
                         //popup.relativePosition="tr";
                         popUpVectors.removeAllFeatures();
                         cloud.map.raiseLayer(popUpVectors, 10);
@@ -84,7 +86,7 @@ var MapCentia = (function () {
                             popUpVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
                         }
                     } else {
-                        document.getElementById("queryResult").innerHTML = "Found nothing";
+                        $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                     }
                 }
             });
@@ -128,7 +130,7 @@ var MapCentia = (function () {
                 url: hostname + '/apps/viewer/servers/query/' + db,
                 success: function (response) {
                     waitPopup.destroy();
-                    if (response.html !== false) {
+                    if (response.html !== false && response.html!=="") {
                         $("#modal-info .modal-body").html(response.html);
                         $('#modal-info').modal('show');
                         modalVectors.removeAllFeatures();
@@ -137,7 +139,7 @@ var MapCentia = (function () {
                             modalVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
                         }
                     } else {
-                        document.getElementById("queryResult").innerHTML = "Found nothing";
+                        $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                     }
                 }
             });
