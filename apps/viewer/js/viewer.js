@@ -351,9 +351,9 @@ var MapCentia = (function () {
                         }
                     }
                 }
-                else {
-                    cloud.zoomToExtent()
-                }
+            }
+            else {
+                cloud.zoomToExtent()
             }
         })();
         cloud.map.events.register("moveend", null, function () {

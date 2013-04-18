@@ -11,7 +11,7 @@
     <script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
     <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-    <link href="http://cdn.us1.mapcentia.com/apps/viewer/css/styles.css" rel="stylesheet">
+    <link href="/apps/viewer/css/styles.css" rel="stylesheet">
 </head>
 <body>
 <div class="navbar navbar-fixed-top navbar-absolute">
@@ -74,19 +74,19 @@
 <!-- base layers -->
 <div id="base-layers" data-toggle="buttons-radio">
     <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/osm.png"></span>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/osm.png"></span>
         <button class="btn btn-small active base-map-button" onclick="MapCentia.setBaseLayer('osm')">
             Open Street Map
         </button>
     </div>
     <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/hmb.png"></span>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqosm.png"></span>
         <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestOSM')">
             MapQuest OSM
         </button>
     </div>
     <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/lmb.png"></span>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqaerial.png"></span>
         <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestAerial')">
             MapQuest Aerial
         </button>
@@ -116,7 +116,7 @@
         </button>
     </div>-->
     <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/toner.png"></span>
         <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('toner')">
             Stamen Toner
         </button>
@@ -178,6 +178,6 @@
 <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/common.js"></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
-<script type="text/javascript" src="http://cdn.us1.mapcentia.com/apps/viewer/js/viewer.js"></script>
+<script type="text/javascript" src="/apps/viewer/js/viewer.js"></script>
 <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/openlayers/proj4js-combined.js"></script>
 </html>

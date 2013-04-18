@@ -1,5 +1,5 @@
 .popover {
-    width: 180px;
+    width: 225px;
 }
 
 .popover-inner {
@@ -83,7 +83,7 @@ img {
         display: none !important;
     }
     .gc-btn {
-        margin-left: 100px;
+        margin-left: 140px;
     }
     #locate-btn{
         margin-left: 5px;
@@ -121,4 +121,14 @@ img {
     display: none;
     font-size: 130%;
     text-align: center;
+}
+.images-base-map {
+    width: 50px;
+    margin-right: 5px;
+}
+#base-layers div{
+    margin-bottom: 10px;
+}
+.base-map-button{
+    margin-top: 0 !important;
 }
