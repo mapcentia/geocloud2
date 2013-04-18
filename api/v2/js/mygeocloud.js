@@ -815,6 +815,7 @@ var mygeocloud_ol = (function () {
             });
             return mapvars;
         })(),
-        pathName: window.location.pathname.split("/")
+        pathName: window.location.pathname.split("/"),
+        urlHash: window.location.hash
     };
 })();

@@ -1,7 +1,8 @@
 var MapCentia = (function () {
-    var hostname, cloud, db, schema, uri, osm, mapQuestOSM, mapQuestAerial, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, toner, popUpVectors, modalVectors;
+    var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, toner, popUpVectors, modalVectors;
     hostname = mygeocloud_host;
     uri = mygeocloud_ol.pathName;
+    hash = mygeocloud_ol.urlHash;
     db = uri[3];
     schema = uri[4];
     var switchLayer = function (name, visible) {
@@ -336,14 +337,15 @@ var MapCentia = (function () {
         });
         //Set up the state from the URI
         (function () {
-            var name, p, arr, i;
-            if (uri[5]) {
-                setBaseLayer(uri[5]);
-                if (uri[6] && uri[7] && uri[8]) {
-                    p = transformPoint(uri[7], uri[8], "EPSG:4326", "EPSG:900913");
-                    cloud.zoomToPoint(p.x, p.y, uri[6]);
-                    if (uri[9]) {
-                        arr = uri[9].split(",");
+            var name, p, arr, i, hashArr;
+            hashArr = hash.replace("#","").split("/");
+            if (hashArr[0]) {
+                setBaseLayer(hashArr[0]);
+                if (hashArr[1] && hashArr[2] && hashArr[3]) {
+                    p = transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
+                    cloud.zoomToPoint(p.x, p.y, hashArr[1]);
+                    if (hashArr[4]) {
+                        arr = hashArr[4].split(",");
                         for (i = 0; i < arr.length; i++) {
                             name = cloud.getLayerById(schema + "." + arr[i]).name;
                             switchLayer(name, true);
@@ -359,7 +361,7 @@ var MapCentia = (function () {
         cloud.map.events.register("moveend", null, function () {
             var p;
             p = transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/" + cloud.getBaseLayerName() + "/" + cloud.getZoom() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
+            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/#" + cloud.getBaseLayerName() + "/" + cloud.getZoom() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
         });
     });
     return{
