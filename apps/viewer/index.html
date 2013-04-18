@@ -75,49 +75,25 @@
 <div id="base-layers" data-toggle="buttons-radio">
     <div>
         <span><img class="img-rounded images-base-map" src="/apps/viewer/img/osm.png"></span>
-        <button class="btn btn-small active base-map-button" onclick="MapCentia.setBaseLayer('osm')">
+        <button id="osm" class="btn btn-small active base-map-button" onclick="MapCentia.setBaseLayer('osm')">
             Open Street Map
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqosm.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestOSM')">
+        <button id="mapQuestOSM" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestOSM')">
             MapQuest OSM
         </button>
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqaerial.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestAerial')">
+        <button id="mapQuestAerial" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestAerial')">
             MapQuest Aerial
         </button>
     </div>
-    <!--<div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GNORMAL)">
-            Google Streets
-        </button>
-    </div>
-    <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GHYBRID)">
-            Google Hybrid
-        </button>
-    </div>
-    <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GSATELLITE)">
-            Google Satellite
-        </button>
-    </div>
-    <div>
-        <span><img class="img-rounded images-base-map" src="assets/baselayer_thumbs/orto.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.cloud.setBaseLayer(GTERRAIN)">
-            Google Terrain
-        </button>
-    </div>-->
     <div>
         <span><img class="img-rounded images-base-map" src="/apps/viewer/img/toner.png"></span>
-        <button class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('toner')">
+        <button id="toner" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('toner')">
             Stamen Toner
         </button>
     </div>

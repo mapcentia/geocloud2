@@ -340,6 +340,8 @@ var MapCentia = (function () {
             var name, p, arr, i, hashArr;
             hashArr = hash.replace("#","").split("/");
             if (hashArr[0]) {
+                $(".base-map-button").removeClass("active");
+                $("#"+hashArr[0]).addClass("active");
                 setBaseLayer(hashArr[0]);
                 if (hashArr[1] && hashArr[2] && hashArr[3]) {
                     p = transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
