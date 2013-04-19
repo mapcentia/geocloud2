@@ -17,27 +17,11 @@ var mygeocloud_ol = (function () {
         mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
-    document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
-    document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-    document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
-
     var map;
     var host = mygeocloud_host;
     var parentThis = this;
     var mapLib;
-    if (typeof (OpenLayers) === "object" && typeof (L) === "object") {
-        alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
-    }
-    if (typeof (OpenLayers) !== "object" && typeof (L) !== "object") {
-        alert("You need to load neither OpenLayer.js or Leaflet.js");
-    }
-    if (typeof (OpenLayers) === "object") {
-        mapLib = "ol";
-    }
-    if (typeof (L) === "object") {
-        mapLib = "l";
-    }
+    mapLib = "ol";
     var geoJsonStore = function (config) {
         var prop, parentThis = this;
         var defaults = {
@@ -62,7 +46,6 @@ var mygeocloud_ol = (function () {
                 defaults[prop] = config[prop];
             }
         }
-        ;
         this.db = defaults.db;
         this.sql = defaults.sql;
         this.onLoad = defaults.onLoad;
@@ -171,7 +154,6 @@ var mygeocloud_ol = (function () {
                 db: null,
                 numZoomLevels: 20,
                 projection: "EPSG:900913"
-                //maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
             };
         if (config) {
             for (prop in config) {
@@ -186,7 +168,8 @@ var mygeocloud_ol = (function () {
         };
         this.zoomToExtent = function (extent, closest) {
             if (!extent) {
-                this.map.zoomToExtent(this.map.maxExtent);
+                this.map.getView().setCenter([0, 0]);
+                this.map.getView().setResolution(39136);
             } else {
                 this.map.zoomToExtent(new OpenLayers.Bounds(extent), closest);
             }
@@ -196,18 +179,18 @@ var mygeocloud_ol = (function () {
         };
         this.getVisibleLayers = function () {
             var layerArr = [];
-            for (var i = 0; i < this.map.layers.length; i++) {
-                if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
-                    layerArr.push(this.map.layers[i].params.LAYERS);
+            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].id !== undefined && this.map.getLayers().a[i].baseLayer === undefined) {
+                    layerArr.push(this.map.getLayers().a[i].id);
                 }
             }
             return layerArr.join(";");
         };
         this.getNamesOfVisibleLayers = function () {
             var layerArr = [];
-            for (var i = 0; i < this.map.layers.length; i++) {
-                if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
-                    layerArr.push(this.map.layers[i].name);
+            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
+                    layerArr.push(this.map.getLayers().a[i].id);
                 }
             }
             return layerArr.join(",");
@@ -215,11 +198,20 @@ var mygeocloud_ol = (function () {
         this.getBaseLayer = function () {
             return this.map.baseLayer;
         };
-        this.getBaseLayerName = function(){
-            return this.getBaseLayer().name;
+        this.getBaseLayerName = function () {
+            var layers = this.map.getLayers();
+            for (var i = 0; i < layers.getLength(); i++) {
+                if (layers.a[i].t.visible === true && layers.a[i].baseLayer===true) {
+                   return this.map.getLayers().a[i].id;
+                }
+            }
         };
         this.getZoom = function () {
             return this.map.getZoom();
+        };
+        //ol3
+        this.getResolution = function () {
+            return this.map.getView().getResolution();
         };
         this.getPixelCoord = function (x, y) {
             var p = {};
@@ -227,11 +219,12 @@ var mygeocloud_ol = (function () {
             p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).y;
             return p;
         };
-        this.zoomToPoint = function (x, y, z) {
-            this.map.setCenter(new OpenLayers.LonLat(x, y), z);
+        this.zoomToPoint = function (x, y, r) {
+            this.map.getView().setCenter([x, y]);
+            if (r) this.map.getView().setResolution(r);
         };
         switch (mapLib) {
-            case "ol":
+            case "ol3":
                 this.popupTemplate = '<div style="position:relative"><div>tets</div><div id="queryResult"></div><button onclick="popup.destroy()" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>';
                 this.clickController = OpenLayers.Class(OpenLayers.Control, {
                     defaultHandlerOptions: {
@@ -296,32 +289,17 @@ var mygeocloud_ol = (function () {
         }
         switch (mapLib) {
             case "ol":
-                this.map = new OpenLayers.Map(defaults.el, {
-                    //theme: null,
-                    controls: [//new OpenLayers.Control.Navigation(),
-                        //new OpenLayers.Control.PanZoomBar(),
-                        //new OpenLayers.Control.LayerSwitcher(),
-                        new OpenLayers.Control.Zoom(),
-                        //new OpenLayers.Control.PanZoom(),
-                        new OpenLayers.Control.TouchNavigation({
-                            dragPanOptions: {
-                                enableKinetic: true
-                            }
-                        })],
-                    numZoomLevels: defaults.numZoomLevels,
-                    projection: defaults.projection,
-                    maxResolution: defaults.maxResolution,
-                    minResolution: defaults.minResolution,
-                    maxExtent: defaults.maxExtent,
-                    eventListeners: defaults.eventListeners
-                    //units : "m"
+                this.map = new ol.Map({
+                    target: defaults.el,
+                    view: new ol.View2D({
+                        zoom: 10
+
+                    }),
+                    renderers: ol.RendererHints.createFromQueryData()
                 });
-                this.click = new this.clickController();
-                this.map.addControl(this.click);
-                var vectors = new OpenLayers.Layer.Vector("Mark", {
-                    displayInLayerSwitcher: false
-                });
-                this.map.addLayers([vectors]);
+
+                //var vectors = new ol.layer.Vector();
+                //this.map.addLayer(vectors);
                 break;
             case "l":
                 this.map = new L.map(defaults.el).setView([51.505, -0.09], 13);
@@ -337,39 +315,32 @@ var mygeocloud_ol = (function () {
          * @return {Object} The new layer object.
          */
         this.addMapQuestOSM = function () {
-            switch (mapLib) {
-                case "ol":
-                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
-                    this.mapQuestOSM.wrapDateLine = false;
-                    this.map.addLayer(this.mapQuestOSM);
-                    break;
-                case "l":
-                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
-                    this.map.addLayer(this.mapQuestOSM);
-                    break;
-            }
+            this.mapQuestOSM = new ol.layer.TileLayer({
+                source: new ol.source.MapQuestOSM(),
+                visible: false
+            });
+            this.mapQuestOSM.baseLayer = true;
+            this.mapQuestOSM.id = "mapQuestOSM";
+            this.map.addLayer(this.mapQuestOSM);
             return (this.mapQuestOSM);
         };
         this.addMapQuestAerial = function () {
-            switch (mapLib) {
-                case "ol":
-                    this.mapQuestAerial = new OpenLayers.Layer.OSM("mapQuestAerial", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
-                    this.mapQuestAerial.wrapDateLine = false;
-                    this.map.addLayer(this.mapQuestAerial);
-                    break;
-                case "l":
-                    this.mapQuestOSM = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg");
-                    this.map.addLayer(this.mapQuestOSM);
-                    break;
-
-            }
+            this.mapQuestAerial = new ol.layer.TileLayer({
+                source: new ol.source.MapQuestOpenAerial(),
+                visible: false
+            });
+            this.mapQuestAerial.baseLayer = true;
+            this.mapQuestAerial.id = "mapQuestAerial";
+            this.map.addLayer(this.mapQuestAerial);
             return (this.mapQuestAerial);
         };
         this.addOSM = function () {
             switch (mapLib) {
                 case "ol":
-                    this.osm = new OpenLayers.Layer.OSM("osm");
-                    this.osm.wrapDateLine = false;
+                    this.osm = new ol.layer.TileLayer({
+                        source: new ol.source.OSM(),
+                        visible: false
+                    });
                     this.map.addLayer(this.osm);
                     break;
                 case "l":
@@ -377,7 +348,21 @@ var mygeocloud_ol = (function () {
                     this.map.addLayer(this.osm);
                     break;
             }
+            this.osm.baseLayer=true;
+            this.osm.id="osm";
             return (this.osm);
+        };
+        this.addStamenToner = function () {
+            this.stamenToner = new ol.layer.TileLayer({
+                source: new ol.source.Stamen({
+                    layer: 'toner'
+                }),
+                visible: false
+            });
+            this.stamenToner.baseLayer = true;
+            this.stamenToner.id = "stamenToner";
+            this.map.addLayer(this.stamenToner);
+            return (this.stamenToner);
         };
         this.addGoogleStreets = function () {
             // v2
@@ -400,7 +385,7 @@ var mygeocloud_ol = (function () {
                 });
             } catch (e) {
             }
-            this.map.addLayer(this.baseGNORMAL);
+            //this.map.addLayer(this.baseGNORMAL);
             return (this.baseGNORMAL);
         };
         this.addGoogleHybrid = function () {
@@ -414,7 +399,7 @@ var mygeocloud_ol = (function () {
                 });
             } catch (e) {
             }
-            ;
+
             // v3
             try {
                 this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
@@ -423,9 +408,9 @@ var mygeocloud_ol = (function () {
                     numZoomLevels: 20
                 });
             } catch (e) {
-                alert(e.message)
+                //alert(e.message)
             }
-            this.map.addLayer(this.baseGHYBRID);
+            //this.map.addLayer(this.baseGHYBRID);
             return (this.baseGHYBRID);
         };
         this.addGoogleSatellite = function () {
@@ -437,9 +422,9 @@ var mygeocloud_ol = (function () {
                     numZoomLevels: 20
                 });
             } catch (e) {
-                alert(e.message)
+                // alert(e.message)
             }
-            this.map.addLayer(this.baseGSATELLITE);
+            //this.map.addLayer(this.baseGSATELLITE);
             return (this.baseGSATELLITE);
         };
         this.addGoogleTerrain = function () {
@@ -451,9 +436,9 @@ var mygeocloud_ol = (function () {
                     numZoomLevels: 20
                 });
             } catch (e) {
-                alert(e.message)
+                // alert(e.message)
             }
-            this.map.addLayer(this.baseGTERRAIN);
+            //this.map.addLayer(this.baseGTERRAIN);
             return (this.baseGTERRAIN);
         };
         this.addWmtsLayer = function (layerConfig) {
@@ -476,15 +461,14 @@ var mygeocloud_ol = (function () {
             this.map.addLayer(layer);
             return layer;
         }
-        //this.addMapQuestOSM();
-        this.setBaseLayer = function (baseLayer) {
-            switch (mapLib) {
-                case "ol":
-                    this.map.setBaseLayer(baseLayer);
-                    break
-                case "l":
-                    break;
+        this.setBaseLayer = function(baseLayerName) {
+            var layers = this.map.getLayers();
+            for (var i = 0; i < layers.getLength(); i++) {
+                if (layers.a[i].baseLayer === true) {
+                    layers.a[i].set("visible", false);
+                }
             }
+            this.getLayersByName(baseLayerName).set("visible", true);
         }
         this.addTileLayers = function (config) {
             var defaults = {
@@ -504,7 +488,6 @@ var mygeocloud_ol = (function () {
                     defaults[prop] = config[prop];
                 }
             }
-            ;
             var layers = defaults.layers;
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
@@ -515,7 +498,7 @@ var mygeocloud_ol = (function () {
             return layersArr;
         };
         this.createTileLayer = function (layer, defaults) {
-            var parts = [];
+            var parts;
             parts = layer.split(".");
             if (!defaults.tileCached) {
                 var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
@@ -529,10 +512,13 @@ var mygeocloud_ol = (function () {
             }
             switch (mapLib) {
                 case "ol":
-                    var l = new OpenLayers.Layer.WMS(defaults.name, urlArray, {
-                        layers: layer,
-                        transparent: true
-                    }, defaults);
+                    var l = new ol.layer.TileLayer({
+                        source: new ol.source.TiledWMS({
+                            url: urlArray,
+                            params: {LAYERS: layer}
+                        }),
+                        visible: defaults.visibility
+                    });
                     l.id = layer;
                     break;
                 case "l":
@@ -600,18 +586,26 @@ var mygeocloud_ol = (function () {
             this.map.removeLayer(store.layer);
             //??????????????
         };
+        //ol3
         this.hideLayer = function (name) {
-            this.map.getLayersByName(name)[0].setVisibility(false);
+            this.getLayersByName(name).set("visible", false);
 
         };
+        //ol3
         this.showLayer = function (name) {
-            this.map.getLayersByName(name)[0].setVisibility(true);
+            this.getLayersByName(name).set("visible", true);
         };
-        this.getLayerById = function(id){
+        this.getLayerById = function (id) {
             return this.map.getLayer(id);
         }
-        this.getLayersByName = function(name){
-            return this.map.getLayersByName(name);
+        //ol3
+        this.getLayersByName = function (name) {
+            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                if (this.map.getLayers().a[i].id === name) {
+                    var l = this.map.getLayers().a[i];
+                }
+            }
+            return l;
         }
         this.hideAllTileLayers = function () {
             for (var i = 0; i < this.map.layers.length; i++) {
@@ -620,11 +614,12 @@ var mygeocloud_ol = (function () {
                 }
             }
         };
+        // ol3
         this.getCenter = function () {
-            var point = this.map.center;
+            var point = this.map.getView().getCenter();
             return {
-                x: point.lon,
-                y: point.lat
+                x: point[0],
+                y: point[1]
             }
         };
         this.getExtent = function () {
@@ -635,114 +630,25 @@ var mygeocloud_ol = (function () {
             return this.map.getExtent().toString();
         };
         // Geolocation stuff starts here
-        switch (mapLib) {
-            case "ol":
-                var geolocation_layer = new OpenLayers.Layer.Vector('geolocation_layer', {
-                    displayInLayerSwitcher: false
+        this.locate = function(){
+            var center;
+            var geolocation = new ol.Geolocation();
+            geolocation.setTracking(true);
+            geolocation.bindTo('projection', this.map.getView());
+            var marker = new ol.Overlay({
+                map: this.map,
+                element: /** @type {Element} */ ($('<i/>').addClass('icon-flag').get(0))
+            });
+            // bind the marker position to the device location.
+            marker.bindTo('position', geolocation);
+            geolocation.addEventListener('accuracy_changed', function() {
+                console.log(geolocation);
+                center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:3857');
+                this.zoomToPoint(center[0],center[1],1000);
+                $(marker.getElement()).tooltip({
+                    title: this.getAccuracy() + 'm from this point'
                 });
-
-                var firstGeolocation = true;
-                var style = {
-                    fillColor: '#000',
-                    fillOpacity: 0.1,
-                    strokeWidth: 0
-                };
-                this.map.addLayers([geolocation_layer]);
-
-                var firstCallBack;
-                var trackCallBack;
-                this.locate = function (config) {
-                    var defaults = {
-                        firstCallBack: function () {
-                        },
-                        trackCallBack: function () {
-                        }
-                    };
-                    if (config) {
-                        for (prop in config) {
-                            defaults[prop] = config[prop];
-                        }
-                    }
-                    ;
-                    firstCallBack = defaults.firstCallBack;
-                    trackCallBack = defaults.trackCallBack;
-                    geolocation_layer.removeAllFeatures();
-                    geolocate.deactivate();
-                    //$('track').checked = false;
-                    geolocate.watch = true;
-                    firstGeolocation = true;
-                    geolocate.activate();
-                };
-                this.stopLocate = function () {
-                    geolocate.deactivate();
-                };
-                var geolocate = new OpenLayers.Control.Geolocate({
-                    bind: false,
-                    geolocationOptions: {
-                        enableHighAccuracy: false,
-                        maximumAge: 0,
-                        timeout: 7000
-                    }
-                });
-                this.map.addControl(geolocate);
-                geolocate.events.register("locationupdated", geolocate, function (e) {
-                    geolocation_layer.removeAllFeatures();
-                    var circle = new OpenLayers.Feature.Vector(OpenLayers.Geometry.Polygon.createRegularPolygon(new OpenLayers.Geometry.Point(e.point.x, e.point.y), e.position.coords.accuracy / 2, 40, 0), {}, style);
-                    geolocation_layer.addFeatures([new OpenLayers.Feature.Vector(e.point, {}, {
-                        graphicName: 'cross',
-                        strokeColor: '#f00',
-                        strokeWidth: 1,
-                        fillOpacity: 0,
-                        pointRadius: 10
-                    }), circle]);
-                    parentMap.geoLocation = {
-                        x: e.point.x,
-                        y: e.point.y,
-                        obj: e
-                    };
-                    if (firstGeolocation) {
-                        this.map.zoomToExtent(geolocation_layer.getDataExtent());
-                        pulsate(circle);
-                        firstGeolocation = false;
-                        this.bind = true;
-                        firstCallBack();
-                    } else {
-                        trackCallBack();
-                    }
-
-                });
-                geolocate.events.register("locationfailed", this, function () {
-                    alert("No location");
-                });
-                var pulsate = function (feature) {
-                    var point = feature.geometry.getCentroid(), bounds = feature.geometry.getBounds(), radius = Math.abs((bounds.right - bounds.left) / 2), count = 0, grow = 'up';
-
-                    var resize = function () {
-                        if (count > 16) {
-                            clearInterval(window.resizeInterval);
-                        }
-                        var interval = radius * 0.03;
-                        var ratio = interval / radius;
-                        switch (count) {
-                            case 4:
-                            case 12:
-                                grow = 'down';
-                                break;
-                            case 8:
-                                grow = 'up';
-                                break;
-                        }
-                        if (grow !== 'up') {
-                            ratio = -Math.abs(ratio);
-                        }
-                        feature.geometry.resize(1 + ratio, point);
-                        geolocation_layer.drawFeature(feature);
-                        count++;
-                    };
-                    window.resizeInterval = window.setInterval(resize, 50, point, radius);
-
-                };
-                break;
+            });
         }
     };
 
@@ -818,4 +724,5 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/"),
         urlHash: window.location.hash
     };
-})();
+})
+    ();

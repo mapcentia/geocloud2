@@ -11,7 +11,7 @@ img {
     max-width: none !important;
 }
 
-.olControlZoom {
+.ol-zoom {
     right: 20px;
     left: auto !important;
     top: 70px !important;
@@ -19,23 +19,23 @@ img {
     opacity: 0.7;
 }
 
-.olButton {
+.ol-zoom-in, .ol-zoom-out {
     height: 50px !important;
     width: 50px !important;
     font-size: 24px;
     font-weight: bold;
 }
 
-div.olControlZoom a {
+.ol-zoom a,  .ol-zoom a:hover{
     font-size: 30px !important;
     font-weight: bold !important;
     background: none !important;
     line-height: 45px !important;
+    text-decoration: none;
+    color: white;
 }
 
-.navbar-absolute + div {
-    msargin-top: 68px;
-}
+
 
 @media (max-width: 767px) {
     #layers-popover-li {

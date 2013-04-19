@@ -71,7 +71,7 @@ class shapefile extends postgis {
 			if ($table->exits) {
 				$table->destroy();
 			}
-			$cmd = "shp2pgsql -W 'WINDOWS-1252' -I -D -c -s {$this->srid} {$this->file}.shp {$this->safeFile}|psql {$this->postgisdb} postgres";
+			$cmd = "shp2pgsql -W -g 'the_geom' 'WINDOWS-1252' -I -D -c -s {$this->srid} {$this->file}.shp {$this->safeFile}|psql {$this->postgisdb} postgres";
 			$result = exec($cmd);
 			if ($result=="COMMIT") {
 				if (!$table->exits) { // no need to re-init table object if table exits

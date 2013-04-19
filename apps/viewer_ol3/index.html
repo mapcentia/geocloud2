@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MapCentia GeoCloud - Analyze and map your data</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/div/assets/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" href="/js/ol3/ol.css" type="text/css">
+    <script src="/js/ol3/ol.js"></script>
+
+    <script type="text/javascript" src="/api/v3/js/geocloud.js"></script>
+    <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="/apps/viewer_ol3/css/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="navbar navbar-fixed-top navbar-absolute">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span>
+                <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+            <a class="brand" href="#">GeoCloud</a>
+
+            <div class="nav-collapse">
+                <ul class="nav">
+                    <li id="layers-popover-li">
+                        <a href="javascript:void(0)" id="layers-popover" rel="popover" data-placement="bottom" title="Layers">
+                            Layers </a>
+                    </li>
+                    <li id="layers-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="layers-modal" title="Layers" onclick="$('#modal-layers').modal();">
+                            Layers </a>
+                    </li>
+                    <li id="base-layers-popover-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="base-layers-popover" rel="popover" data-placement="bottom" title="Base layers">
+                            Base layers </a>
+                    </li>
+                    <li id="base-layers-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="base-layers-modal" title="Base layers"
+                           onclick="$('#modal-base-layers').modal();">
+                            Base layers </a>
+                    </li>
+                    <li id="legend-popover-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="legend-popover" rel="popover" data-placement="bottom" title="Legend">
+                            Legend </a>
+                    </li>
+                    <li id="legend-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="legend-modal" title="Legend"
+                           onclick="$('#modal-legend').modal();">
+                            Legend </a>
+                    </li>
+                    <li>
+                        <div class="navbar-search" action="">
+                            <input id="search-input" name="search-input" type="text" class="search-query"
+                                   placeholder="Search">
+                        </div>
+                    </li>
+                    <li>
+                        <button id="locate-btn" class="btn" type="button">
+                            <i class="icon-screenshot"></i>
+                        </button>
+                    </li>
+
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+<!-- map -->
+<div id="map"  style="width: 100%;height: 100%;position: absolute"></div>
+<!-- layers -->
+<div id="layers"></div>
+<!-- base layers -->
+<div id="base-layers" data-toggle="buttons-radio">
+    <div>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/osm.png"></span>
+        <button id="osm" class="btn btn-small active base-map-button" onclick="MapCentia.setBaseLayer('osm')">
+            Open Street Map
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqosm.png"></span>
+        <button id="mapQuestOSM" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestOSM')">
+            MapQuest OSM
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/mqaerial.png"></span>
+        <button id="mapQuestAerial" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('mapQuestAerial')">
+            MapQuest Aerial
+        </button>
+    </div>
+    <div>
+        <span><img class="img-rounded images-base-map" src="/apps/viewer/img/toner.png"></span>
+        <button id="toner" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('stamenToner')">
+            Stamen Toner
+        </button>
+    </div>
+</div>
+<!-- layers -->
+<div id="legend"></div>
+<!-- base layers modal -->
+<div id="modal-base-layers" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Base layers</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="javascript:void(0)" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- layers modal -->
+<div id="modal-layers" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Layers</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="javascript:void(0)" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- legend modal -->
+<div id="modal-legend" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Legend</h3>
+    </div>
+    <div class="modal-body">sdd</div>
+    <div class="modal-footer">
+        <a href="javascript:void(0)" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- info modal -->
+<div id="modal-info" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Info</h3>
+    </div>
+    <div class="modal-body"></div>
+    <div class="modal-footer">
+        <a href="javascript:void(0)" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<!-- Alert -->
+<div id="alert" class="alert alert-info">
+    You didn't hit anything. Try again.
+</div>
+</body>
+<script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/bootstrap/js/bootstrap.js"></script>
+<script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/div/jRespond.js"></script>
+<script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/common.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
+<script type="text/javascript" src="/apps/viewer_ol3/js/viewer.js"></script>
+<script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/openlayers/proj4js-combined.js"></script>
+</html>
