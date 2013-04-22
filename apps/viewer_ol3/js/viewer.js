@@ -58,22 +58,14 @@ MapCentia = (function () {
         //cloud.map.addPreRenderFunctions([pan, bounce]);
         cloud.zoomToPoint(center[0], center[1], 10);
     });
-    var transformPoint = function (lat, lon, s, d) {
-        var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
-        var dest = new Proj4js.Proj(d);
-        var p = new Proj4js.Point(lat, lon);
-        Proj4js.transform(source, dest, p);
-        return p;
-    };
+
     $(window).load(function () {
         var clickPopUp, clickModal, metaData, metaDataKeys, metaDataKeysTitle, layers, jRes;
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
         cloud = new mygeocloud_ol.map({
-            el: "map",
-            db: db,
-            projection: "EPSG:3857"
+            el: "map"
         });
         osm = cloud.addOSM();
         mapQuestOSM = cloud.addMapQuestOSM();
@@ -227,14 +219,14 @@ MapCentia = (function () {
             if (hashArr[0]) {
                 $(".base-map-button").removeClass("active");
                 $("#" + hashArr[0]).addClass("active");
-                setBaseLayer(hashArr[0]);
                 if (hashArr[1] && hashArr[2] && hashArr[3]) {
-                    p = transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
+                    p = mygeocloud_ol.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
                     cloud.zoomToPoint(p.x, p.y, hashArr[1]);
+                    setBaseLayer(hashArr[0]);
                     if (hashArr[4]) {
                         arr = hashArr[4].split(",");
                         for (i = 0; i < arr.length; i++) {
-                            name = cloud.getLayersByName(arr[i]).a.id;
+                            //name = cloud.getLayersByName(arr[i]).a.id;
                             switchLayer(arr[i], true);
                             $("#" + arr[i].replace(schema + ".", "")).attr('checked', true);
                         }
@@ -247,8 +239,8 @@ MapCentia = (function () {
         })();
         cloud.map.on("dragend", function () {
             var p;
-            p = transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-            history.pushState(null, null, "/apps/viewer_ol3/" + db + "/" + schema + "/?renderer=" + ol.RendererHints.createFromQueryData() + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getResolution()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
+            p = mygeocloud_ol.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+            history.pushState(null, null, "/apps/viewer_ol3/" + db + "/" + schema + "/?renderer=webgl,canvas,dom#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
         });
         var clicktimer;
         cloud.map.on("dblclick", function (e) {

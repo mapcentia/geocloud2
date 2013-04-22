@@ -156,3 +156,6 @@ img {
 .base-map-button {
     margin-top: 0 !important;
 }
+.navbar-absolute + div {
+    smargin-top: 68px;
+}

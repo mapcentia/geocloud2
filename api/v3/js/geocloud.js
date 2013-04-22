@@ -17,18 +17,16 @@ var mygeocloud_ol = (function () {
         mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    var map;
+    var map, lControl;
     var host = mygeocloud_host;
-    var parentThis = this;
+    //var parentThis = this;
     var mapLib;
-    mapLib = "ol";
+    mapLib = "l";
     var geoJsonStore = function (config) {
         var prop, parentThis = this;
         var defaults = {
             db: null,
             sql: null,
-            onLoad: function () {
-            },
             styleMap: null,
             projection: "900913",
             strategies: null,
@@ -37,9 +35,11 @@ var mygeocloud_ol = (function () {
                 zIndexing: true
             },
             lifetime: 0,
+            selectControl: {},
             movedEnd: function () {
             },
-            selectControl: {}
+            onLoad: function () {
+            }
         };
         if (config) {
             for (prop in config) {
@@ -76,7 +76,6 @@ var mygeocloud_ol = (function () {
         this.show = function () {
             this.layer.setVisibility(true);
         };
-
         this.clusterDeactivate = function () {
             parentThis.layer.strategies[0].deactivate();
             parentThis.layer.refresh({
@@ -89,16 +88,6 @@ var mygeocloud_ol = (function () {
                 forces: true
             });
         };
-
-        //this.clusterDeactivate();
-        this.pointControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Point);
-        this.lineControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Path);
-        this.polygonControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Polygon);
-        this.selectControl = new OpenLayers.Control.SelectFeature(this.layer, defaults.selectControl);
-        this.selectControl.handlers.feature.stopDown = false;
-
-        this.modifyControl = new OpenLayers.Control.ModifyFeature(this.layer, {});
-
         this.geoJSON = {};
         this.featureStore = null;
         this.load = function (doNotShowAlertOnError) {
@@ -113,9 +102,7 @@ var mygeocloud_ol = (function () {
                 sql = sql.replace("{maxY}", map.getExtent().top);
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
-                //console.log(e.message);
             }
-            //console.log(sql);
             $.ajax({
                 dataType: 'jsonp',
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
@@ -151,9 +138,8 @@ var mygeocloud_ol = (function () {
     map = function (config) {
         var prop, popup, // baseLayer wrapper
             parentMap, defaults = {
-                db: null,
                 numZoomLevels: 20,
-                projection: "EPSG:900913"
+                projection: "EPSG:3857"
             };
         if (config) {
             for (prop in config) {
@@ -161,57 +147,125 @@ var mygeocloud_ol = (function () {
             }
         }
         parentMap = this;
-        this.geoLocation = {
-            x: null,
-            y: null,
-            obj: {}
-        };
+        //ol3
         this.zoomToExtent = function (extent, closest) {
-            if (!extent) {
-                this.map.getView().setCenter([0, 0]);
-                this.map.getView().setResolution(39136);
-            } else {
-                this.map.zoomToExtent(new OpenLayers.Bounds(extent), closest);
+            switch (mapLib) {
+                case "ol":
+                    if (!extent) {
+                        this.map.getView().setCenter([0, 0]);
+                        this.map.getView().setResolution(39136);
+                    } else {
+                        this.map.zoomToExtent(new OpenLayers.Bounds(extent), closest);
+                    }
+                    break;
+                case "l":
+                    if (!extent) {
+                        this.map.fitWorld();
+                    }
+                    else {
+                        //Check it!
+                        this.map.fitBounds(extent)
+                    }
+                    break;
             }
+
         };
         this.zoomToExtentOfgeoJsonStore = function (store) {
             this.map.zoomToExtent(store.layer.getDataExtent());
         };
+        //ol3 and leaflet
         this.getVisibleLayers = function () {
             var layerArr = [];
-            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
-                if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].id !== undefined && this.map.getLayers().a[i].baseLayer === undefined) {
-                    layerArr.push(this.map.getLayers().a[i].id);
-                }
+            switch (mapLib) {
+                case "ol":
+                    for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                        if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
+                            layerArr.push(this.map.getLayers().a[i].id);
+                        }
+                    }
+                    break;
+                case "l":
+                    var layers = this.map._layers;
+                    for (var key in layers) {
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].baseLayer !== true) {
+                                layerArr.push(layers[key].id);
+                            }
+                        }
+                    }
+                    break;
             }
             return layerArr.join(";");
         };
+        //ol3 and leaflet
         this.getNamesOfVisibleLayers = function () {
             var layerArr = [];
-            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
-                if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
-                    layerArr.push(this.map.getLayers().a[i].id);
-                }
+            switch (mapLib) {
+                case "ol":
+                    for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                        if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
+                            layerArr.push(this.map.getLayers().a[i].id);
+                        }
+                    }
+                    break;
+                case "l":
+                    var layers = this.map._layers;
+                    for (var key in layers) {
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].baseLayer !== true) {
+                                layerArr.push(layers[key].id);
+                            }
+                        }
+                    }
+                    break;
             }
+
             return layerArr.join(",");
         };
         this.getBaseLayer = function () {
             return this.map.baseLayer;
         };
+        //ol3 and leaflet
         this.getBaseLayerName = function () {
-            var layers = this.map.getLayers();
-            for (var i = 0; i < layers.getLength(); i++) {
-                if (layers.a[i].t.visible === true && layers.a[i].baseLayer===true) {
-                   return this.map.getLayers().a[i].id;
-                }
+            var name, layers;
+            switch (mapLib) {
+                case "ol":
+                    layers = this.map.getLayers();
+                    for (var i = 0; i < layers.getLength(); i++) {
+                        if (layers.a[i].t.visible === true && layers.a[i].baseLayer === true) {
+                            name = this.map.getLayers().a[i].id;
+                        }
+                    }
+                    break;
+                case "l":
+                    layers = this.map._layers;
+                    for (var key in layers) {
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].baseLayer === true) {
+                                name = layers[key].id;
+                            }
+                        }
+                    }
+                    break;
             }
+            return name;
         };
+        //leaflet
         this.getZoom = function () {
-            return this.map.getZoom();
+            var zoom;
+            switch (mapLib) {
+                case "ol":
+                    //zoom=this.map.getZoom();
+                    break;
+                case "l":
+                    zoom = this.map.getZoom();
+                    break;
+            }
+            return zoom;
         };
         //ol3
         this.getResolution = function () {
-            return this.map.getView().getResolution();
+            // return this.map.getView().getResolution();
         };
         this.getPixelCoord = function (x, y) {
             var p = {};
@@ -219,10 +273,20 @@ var mygeocloud_ol = (function () {
             p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).y;
             return p;
         };
+        //ol3 and leaflet
         this.zoomToPoint = function (x, y, r) {
-            this.map.getView().setCenter([x, y]);
-            if (r) this.map.getView().setResolution(r);
+            switch (mapLib) {
+                case "ol":
+                    this.map.getView().setCenter([x, y]);
+                    if (r) this.map.getView().setResolution(r);
+                    break;
+                case "l":
+                    var p = transformPoint(x, y, "EPSG:900913", "EPSG:4326");
+                    this.map.setView([p.y, p.x], r);
+                    break;
+            }
         };
+        //click
         switch (mapLib) {
             case "ol3":
                 this.popupTemplate = '<div style="position:relative"><div>tets</div><div id="queryResult"></div><button onclick="popup.destroy()" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>';
@@ -287,53 +351,66 @@ var mygeocloud_ol = (function () {
                 });
                 break;
         }
+        // map init
         switch (mapLib) {
             case "ol":
                 this.map = new ol.Map({
                     target: defaults.el,
                     view: new ol.View2D({
-                        zoom: 10
-
                     }),
                     renderers: ol.RendererHints.createFromQueryData()
                 });
-
                 //var vectors = new ol.layer.Vector();
                 //this.map.addLayer(vectors);
                 break;
             case "l":
-                this.map = new L.map(defaults.el).setView([51.505, -0.09], 13);
+                this.map = new L.map(defaults.el);
+                lControl = L.control.layers([], [])
+                this.map.addControl(lControl);
                 break;
         }
-        /**
-         *
-         */
         var _map = this.map;
-        /**
-         * Creates a new Circle from a diameter.
-         *
-         * @return {Object} The new layer object.
-         */
+        //ol3 and leaflet
         this.addMapQuestOSM = function () {
-            this.mapQuestOSM = new ol.layer.TileLayer({
-                source: new ol.source.MapQuestOSM(),
-                visible: false
-            });
+            switch (mapLib) {
+                case "ol":
+
+                    this.mapQuestOSM = new ol.layer.TileLayer({
+                        source: new ol.source.MapQuestOSM(),
+                        visible: false
+                    });
+                    this.map.addLayer(this.mapQuestOSM);
+                    break;
+                case "l":
+                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
+                    lControl.addBaseLayer(this.mapQuestOSM);
+                    break;
+            }
             this.mapQuestOSM.baseLayer = true;
             this.mapQuestOSM.id = "mapQuestOSM";
-            this.map.addLayer(this.mapQuestOSM);
+
             return (this.mapQuestOSM);
         };
+        //ol3 and leaflet
         this.addMapQuestAerial = function () {
-            this.mapQuestAerial = new ol.layer.TileLayer({
-                source: new ol.source.MapQuestOpenAerial(),
-                visible: false
-            });
+            switch (mapLib) {
+                case "ol":
+                    this.mapQuestAerial = new ol.layer.TileLayer({
+                        source: new ol.source.MapQuestOpenAerial(),
+                        visible: false
+                    });
+                    break
+                case "l":
+                    this.mapQuestAerial = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+                    lControl.addBaseLayer(this.mapQuestAerial);
+                    break;
+
+            }
             this.mapQuestAerial.baseLayer = true;
             this.mapQuestAerial.id = "mapQuestAerial";
-            this.map.addLayer(this.mapQuestAerial);
             return (this.mapQuestAerial);
         };
+        //ol3 and leaflet
         this.addOSM = function () {
             switch (mapLib) {
                 case "ol":
@@ -345,23 +422,31 @@ var mygeocloud_ol = (function () {
                     break;
                 case "l":
                     this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-                    this.map.addLayer(this.osm);
+                    lControl.addBaseLayer(this.osm);
                     break;
             }
-            this.osm.baseLayer=true;
-            this.osm.id="osm";
+            this.osm.baseLayer = true;
+            this.osm.id = "osm";
             return (this.osm);
         };
+        //ol3 and leaflet
         this.addStamenToner = function () {
-            this.stamenToner = new ol.layer.TileLayer({
-                source: new ol.source.Stamen({
-                    layer: 'toner'
-                }),
-                visible: false
-            });
+            switch (mapLib) {
+                case "ol":
+                    this.stamenToner = new ol.layer.TileLayer({
+                        source: new ol.source.Stamen({
+                            layer: 'toner'
+                        }),
+                        visible: false
+                    });
+                    break;
+                case "l":
+                    this.stamenToner = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+                    lControl.addBaseLayer(this.stamenToner);
+                    break;
+            }
             this.stamenToner.baseLayer = true;
             this.stamenToner.id = "stamenToner";
-            this.map.addLayer(this.stamenToner);
             return (this.stamenToner);
         };
         this.addGoogleStreets = function () {
@@ -441,35 +526,32 @@ var mygeocloud_ol = (function () {
             //this.map.addLayer(this.baseGTERRAIN);
             return (this.baseGTERRAIN);
         };
-        this.addWmtsLayer = function (layerConfig) {
-            var layer;
-            layerConfig.options.tileSize = new OpenLayers.Size(256, 256);
-            layerConfig.options.tileOrigin = new OpenLayers.LonLat(this.map.maxExtent.left, this.map.maxExtent.top);
-            layerConfig.options.tileFullExtent = this.map.maxExtent.clone();
-            for (var opts in layerConfig.options) {
-                layerConfig[opts] = layerConfig.options[opts];
+        //ol3 and leaflet
+        this.setBaseLayer = function (baseLayerName) {
+            switch (mapLib) {
+                case "ol":
+                    var layers = this.map.getLayers();
+                    for (var i = 0; i < layers.getLength(); i++) {
+                        if (layers.a[i].baseLayer === true) {
+                            layers.a[i].set("visible", false);
+                        }
+                    }
+                    this.getLayersByName(baseLayerName).set("visible", true);
+                    break;
+                case "l":
+                    var layers = lControl._layers;
+                    for (var key in layers) {
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) this.map.removeLayer(layers[key].layer);
+                            if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
+                                this.map.addLayer(layers[key].layer,false);
+                            }
+                        }
+                    }
+                    break;
             }
-            for (var par in layerConfig.params) {
-                layerConfig[par] = layerConfig.params[par];
-            }
-            if (layerConfig["matrixIds"] != null) {
-                if (layerConfig["matrixIds"].indexOf(',') > 0) {
-                    layerConfig["matrixIds"] = layerConfig["matrixIds"].split(',');
-                }
-            }
-            layer = new OpenLayers.Layer.WMTS(layerConfig);
-            this.map.addLayer(layer);
-            return layer;
         }
-        this.setBaseLayer = function(baseLayerName) {
-            var layers = this.map.getLayers();
-            for (var i = 0; i < layers.getLength(); i++) {
-                if (layers.a[i].baseLayer === true) {
-                    layers.a[i].set("visible", false);
-                }
-            }
-            this.getLayersByName(baseLayerName).set("visible", true);
-        }
+        //ol3 and leaflet
         this.addTileLayers = function (config) {
             var defaults = {
                 layers: [],
@@ -492,11 +574,25 @@ var mygeocloud_ol = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l = this.createTileLayer(layers[i], defaults)
-                this.map.addLayer(l);
+                l.baseLayer = defaults.isBaseLayer;
+                switch (mapLib) {
+                    case "ol":
+                        this.map.addLayer(l);
+                        break;
+                    case "l":
+                        if (defaults.isBaseLayer === true) {
+                            lControl.addBaseLayer(l);
+                        }
+                        else {
+                            lControl.addOverlay(l);
+                        }
+                        break;
+                }
                 layersArr.push(l);
             }
             return layersArr;
         };
+        //ol3 and leaflet
         this.createTileLayer = function (layer, defaults) {
             var parts;
             parts = layer.split(".");
@@ -525,35 +621,11 @@ var mygeocloud_ol = (function () {
                     var l = new L.TileLayer.WMS(url, {
                         layers: layer,
                         format: 'image/png',
-                        transparent: true
+                        transparent: true,
                     });
+                    l.id = layer;
                     break;
             }
-            return l;
-        };
-        this.addTileLayerGroup = function (layers, config) {
-            var defaults = {
-                singleTile: false,
-                opacity: 1,
-                isBaseLayer: false,
-                visibility: true,
-                //wrapDateLine : false,
-                name: null,
-                schema: null
-            };
-            if (config) {
-                for (prop in config) {
-                    defaults[prop] = config[prop];
-                }
-            }
-            ;
-            this.map.addLayer(this.createTileLayerGroup(layers, defaults));
-        };
-        this.createTileLayerGroup = function (layers, defaults) {
-            var l = new OpenLayers.Layer.WMS(defaults.name, host + "/wms/" + defaults.db + "/" + defaults.schema + "/?", {
-                layers: layers,
-                transparent: true
-            }, defaults);
             return l;
         };
         this.removeTileLayerByName = function (name) {
@@ -564,46 +636,57 @@ var mygeocloud_ol = (function () {
             store.map = this.map;
             // set the parent map obj
             this.map.addLayers([store.layer]);
-            this.map.addControl(store.pointControl);
-            this.map.addControl(store.lineControl);
-            this.map.addControl(store.polygonControl);
-            this.map.addControl(store.selectControl);
-            this.map.addControl(store.modifyControl);
-            this.map.events.register("moveend", null, store.movedEnd);
-
-        };
-        this.addControl = function (control) {
-            this.map.addControl(control);
-            try {
-                control.handlers.feature.stopDown = false;
-            } catch (e) {
-            }
-            ;
-            control.activate();
-            return control;
         };
         this.removeGeoJsonStore = function (store) {
             this.map.removeLayer(store.layer);
             //??????????????
         };
-        //ol3
+        //ol3 and leaflet
         this.hideLayer = function (name) {
-            this.getLayersByName(name).set("visible", false);
-
+            switch (mapLib) {
+                case "ol":
+                    this.getLayersByName(name).set("visible", false);
+                    break;
+                case "l":
+                    this.map.removeLayer(this.getLayersByName(name));
+                    break;
+            }
         };
-        //ol3
+        //ol3 and leaflet
         this.showLayer = function (name) {
-            this.getLayersByName(name).set("visible", true);
+            switch (mapLib) {
+                case "ol":
+                    this.getLayersByName(name).set("visible", true);
+                    break;
+                case "l":
+                    this.getLayersByName(name).addTo(this.map);
+                    break;
+            }
         };
         this.getLayerById = function (id) {
             return this.map.getLayer(id);
         }
-        //ol3
+        //ol3 and leaflet (rename to getLayerByName)
         this.getLayersByName = function (name) {
-            for (var i = 0; i < this.map.getLayers().getLength(); i++) {
-                if (this.map.getLayers().a[i].id === name) {
-                    var l = this.map.getLayers().a[i];
-                }
+            var l;
+            switch (mapLib) {
+                case "ol":
+                    for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                        if (this.map.getLayers().a[i].id === name) {
+                            l = this.map.getLayers().a[i];
+                        }
+                    }
+                    break;
+                case "l":
+                    var layers = lControl._layers;
+                    for (var key in layers) {
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].layer.id === name) {
+                                l = layers[key].layer;
+                            }
+                        }
+                    }
+                    break;
             }
             return l;
         }
@@ -614,13 +697,26 @@ var mygeocloud_ol = (function () {
                 }
             }
         };
-        // ol3
+        // ol3 and leaflet
         this.getCenter = function () {
-            var point = this.map.getView().getCenter();
-            return {
-                x: point[0],
-                y: point[1]
+            switch (mapLib) {
+                case "ol":
+                    var point = this.map.getView().getCenter();
+                    return {
+                        x: point[0],
+                        y: point[1]
+                    }
+                    break;
+                case "l":
+                    var point = this.map.getCenter();
+                    var p = transformPoint(point.lng, point.lat, "EPSG:4326", "EPSG:900913");
+                    return {
+                        x: p.x,
+                        y: p.y
+                    }
+                    break;
             }
+
         };
         this.getExtent = function () {
             var mapBounds = this.map.getExtent();
@@ -629,8 +725,8 @@ var mygeocloud_ol = (function () {
         this.getBbox = function () {
             return this.map.getExtent().toString();
         };
-        // Geolocation stuff starts here
-        this.locate = function(){
+        // ol3
+        this.locate = function () {
             var center;
             var geolocation = new ol.Geolocation();
             geolocation.setTracking(true);
@@ -641,79 +737,31 @@ var mygeocloud_ol = (function () {
             });
             // bind the marker position to the device location.
             marker.bindTo('position', geolocation);
-            geolocation.addEventListener('accuracy_changed', function() {
-                console.log(geolocation);
+            geolocation.addEventListener('accuracy_changed', function () {
                 center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:3857');
-                this.zoomToPoint(center[0],center[1],1000);
+                this.zoomToPoint(center[0], center[1], 1000);
                 $(marker.getElement()).tooltip({
                     title: this.getAccuracy() + 'm from this point'
                 });
             });
         }
-    };
-
+    }
     var deserialize = function (element) {
-        // console.log(element);
         var type = "wkt";
         var format = new OpenLayers.Format.WKT;
         return format.read(element);
     };
-    var grid = function (el, store, config) {
-        var prop;
-        var defaults = {
-            height: 300,
-            selectControl: {
-                onSelect: function (feature) {
-                },
-                onUnselect: function () {
-                }
-            },
-            columns: store.geoJSON.forGrid
-        };
-        if (config) {
-            for (prop in config) {
-                defaults[prop] = config[prop];
-            }
-        }
-        this.grid = new Ext.grid.GridPanel({
-            id: "gridpanel",
-            viewConfig: {
-                forceFit: true
-            },
-            store: store.featureStore, // layer
-            sm: new GeoExt.grid.FeatureSelectionModel({// Only when there is a map
-                singleSelect: false,
-                selectControl: defaults.selectControl
-            }),
-            cm: new Ext.grid.ColumnModel({
-                defaults: {
-                    sortable: true,
-                    editor: {
-                        xtype: "textfield"
-                    }
-                },
-                columns: defaults.columns
-            }),
-            listeners: defaults.listeners
-        });
-        this.panel = new Ext.Panel({
-            renderTo: el,
-            split: true,
-            frame: false,
-            border: false,
-            layout: 'fit',
-            collapsible: false,
-            collapsed: false,
-            height: defaults.height,
-            items: [this.grid]
-        });
-        this.grid.getSelectionModel().bind().handlers.feature.stopDown = false;
-        this.selectionModel = this.grid.getSelectionModel().bind();
+    var transformPoint = function (lat, lon, s, d) {
+        var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+        var dest = new Proj4js.Proj(d);
+        var p = new Proj4js.Point(lat, lon);
+        Proj4js.transform(source, dest, p);
+        return p;
     };
     return {
         geoJsonStore: geoJsonStore,
         map: map,
-        grid: grid,
+        transformPoint: transformPoint,
         urlVars: (function getUrlVars() {
             var mapvars = {};
             var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
@@ -724,5 +772,4 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/"),
         urlHash: window.location.hash
     };
-})
-    ();
+})();
