@@ -243,7 +243,6 @@ MapCentia = (function () {
             else clicktimer = setTimeout(function (e) {
                 clicktimer = undefined;
                 var coords = event.getCoordinate();
-                console.log(coords)
                 try {
                     popup.destroy();
                 } catch (e) {
