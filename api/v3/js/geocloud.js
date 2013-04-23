@@ -17,11 +17,19 @@ var mygeocloud_ol = (function () {
         mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    var map, lControl;
-    var host = mygeocloud_host;
-    //var parentThis = this;
-    var mapLib;
-    mapLib = "l";
+    var map, lControl, MAPLIB, host = mygeocloud_host;
+    if (typeof (ol) === "object" && typeof (L) === "object") {
+        alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
+    }
+    if (typeof (ol) !== "object" && typeof (L) !== "object") {
+        alert("You need to load neither OpenLayer.js or Leaflet.js");
+    }
+    if (typeof (ol) === "object") {
+        MAPLIB = "ol3";
+    }
+    if (typeof (L) === "object") {
+        MAPLIB = "leaflet";
+    }
     var geoJsonStore = function (config) {
         var prop, parentThis = this;
         var defaults = {
@@ -53,8 +61,8 @@ var mygeocloud_ol = (function () {
         // Map member for parent map obj. Set when store is added to a map
         this.map = null;
         // Layer Def
-        switch (mapLib) {
-            case "ol":
+        switch (MAPLIB) {
+            case "ol3":
                 this.layer = new OpenLayers.Layer.Vector("Vector", {
                     styleMap: defaults.styleMap,
                     visibility: defaults.visibility,
@@ -149,8 +157,8 @@ var mygeocloud_ol = (function () {
         parentMap = this;
         //ol3
         this.zoomToExtent = function (extent, closest) {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     if (!extent) {
                         this.map.getView().setCenter([0, 0]);
                         this.map.getView().setResolution(39136);
@@ -158,7 +166,7 @@ var mygeocloud_ol = (function () {
                         this.map.zoomToExtent(new OpenLayers.Bounds(extent), closest);
                     }
                     break;
-                case "l":
+                case "leaflet":
                     if (!extent) {
                         this.map.fitWorld();
                     }
@@ -176,15 +184,15 @@ var mygeocloud_ol = (function () {
         //ol3 and leaflet
         this.getVisibleLayers = function () {
             var layerArr = [];
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     for (var i = 0; i < this.map.getLayers().getLength(); i++) {
                         if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
                             layerArr.push(this.map.getLayers().a[i].id);
                         }
                     }
                     break;
-                case "l":
+                case "leaflet":
                     var layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
@@ -200,15 +208,15 @@ var mygeocloud_ol = (function () {
         //ol3 and leaflet
         this.getNamesOfVisibleLayers = function () {
             var layerArr = [];
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     for (var i = 0; i < this.map.getLayers().getLength(); i++) {
                         if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
                             layerArr.push(this.map.getLayers().a[i].id);
                         }
                     }
                     break;
-                case "l":
+                case "leaflet":
                     var layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
@@ -228,8 +236,8 @@ var mygeocloud_ol = (function () {
         //ol3 and leaflet
         this.getBaseLayerName = function () {
             var name, layers;
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     layers = this.map.getLayers();
                     for (var i = 0; i < layers.getLength(); i++) {
                         if (layers.a[i].t.visible === true && layers.a[i].baseLayer === true) {
@@ -237,7 +245,7 @@ var mygeocloud_ol = (function () {
                         }
                     }
                     break;
-                case "l":
+                case "leaflet":
                     layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
@@ -250,14 +258,15 @@ var mygeocloud_ol = (function () {
             }
             return name;
         };
-        //leaflet
+        //ol3 leaflet
         this.getZoom = function () {
             var zoom;
-            switch (mapLib) {
-                case "ol":
-                    //zoom=this.map.getZoom();
+            switch (MAPLIB) {
+                case "ol3":
+                    var resolution = this.getResolution();
+                    zoom = Math.round(Math.log(2 * Math.PI * 6378137 / (256 * resolution)) / Math.LN2);
                     break;
-                case "l":
+                case "leaflet":
                     zoom = this.map.getZoom();
                     break;
             }
@@ -265,7 +274,7 @@ var mygeocloud_ol = (function () {
         };
         //ol3
         this.getResolution = function () {
-            // return this.map.getView().getResolution();
+            return this.map.getView().getResolution();
         };
         this.getPixelCoord = function (x, y) {
             var p = {};
@@ -275,20 +284,22 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.zoomToPoint = function (x, y, r) {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.map.getView().setCenter([x, y]);
-                    if (r) this.map.getView().setResolution(r);
+                    var resolution;
+                    resolution = 2 * Math.PI * 6378137 / (256 * Math.pow(2, r));
+                    this.map.getView().setResolution(resolution);
                     break;
-                case "l":
+                case "leaflet":
                     var p = transformPoint(x, y, "EPSG:900913", "EPSG:4326");
                     this.map.setView([p.y, p.x], r);
                     break;
             }
         };
         //click
-        switch (mapLib) {
-            case "ol3":
+        switch (MAPLIB) {
+            case "ol3_":
                 this.popupTemplate = '<div style="position:relative"><div>tets</div><div id="queryResult"></div><button onclick="popup.destroy()" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">×</button></div>';
                 this.clickController = OpenLayers.Class(OpenLayers.Control, {
                     defaultHandlerOptions: {
@@ -352,18 +363,18 @@ var mygeocloud_ol = (function () {
                 break;
         }
         // map init
-        switch (mapLib) {
-            case "ol":
+        switch (MAPLIB) {
+            case "ol3":
                 this.map = new ol.Map({
                     target: defaults.el,
                     view: new ol.View2D({
-                    }),
-                    renderers: ol.RendererHints.createFromQueryData()
+                    })
+                    //renderers: ol.RendererHints.createFromQueryData()
                 });
                 //var vectors = new ol.layer.Vector();
                 //this.map.addLayer(vectors);
                 break;
-            case "l":
+            case "leaflet":
                 this.map = new L.map(defaults.el);
                 lControl = L.control.layers([], [])
                 this.map.addControl(lControl);
@@ -372,8 +383,8 @@ var mygeocloud_ol = (function () {
         var _map = this.map;
         //ol3 and leaflet
         this.addMapQuestOSM = function () {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
 
                     this.mapQuestOSM = new ol.layer.TileLayer({
                         source: new ol.source.MapQuestOSM(),
@@ -381,7 +392,7 @@ var mygeocloud_ol = (function () {
                     });
                     this.map.addLayer(this.mapQuestOSM);
                     break;
-                case "l":
+                case "leaflet":
                     this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
                     lControl.addBaseLayer(this.mapQuestOSM);
                     break;
@@ -393,15 +404,16 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.addMapQuestAerial = function () {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.mapQuestAerial = new ol.layer.TileLayer({
                         source: new ol.source.MapQuestOpenAerial(),
                         visible: false
                     });
+                    this.map.addLayer(this.mapQuestAerial);
                     break
-                case "l":
-                    this.mapQuestAerial = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+                case "leaflet":
+                    this.mapQuestAerial = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg");
                     lControl.addBaseLayer(this.mapQuestAerial);
                     break;
 
@@ -412,15 +424,15 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.addOSM = function () {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.osm = new ol.layer.TileLayer({
                         source: new ol.source.OSM(),
                         visible: false
                     });
                     this.map.addLayer(this.osm);
                     break;
-                case "l":
+                case "leaflet":
                     this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
                     lControl.addBaseLayer(this.osm);
                     break;
@@ -431,17 +443,18 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.addStamenToner = function () {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.stamenToner = new ol.layer.TileLayer({
                         source: new ol.source.Stamen({
                             layer: 'toner'
                         }),
                         visible: false
                     });
+                    this.map.addLayer(this.stamenToner);
                     break;
-                case "l":
-                    this.stamenToner = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+                case "leaflet":
+                    this.stamenToner = new L.StamenTileLayer("toner");
                     lControl.addBaseLayer(this.stamenToner);
                     break;
             }
@@ -528,8 +541,8 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     var layers = this.map.getLayers();
                     for (var i = 0; i < layers.getLength(); i++) {
                         if (layers.a[i].baseLayer === true) {
@@ -538,13 +551,13 @@ var mygeocloud_ol = (function () {
                     }
                     this.getLayersByName(baseLayerName).set("visible", true);
                     break;
-                case "l":
+                case "leaflet":
                     var layers = lControl._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
                             if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) this.map.removeLayer(layers[key].layer);
                             if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
-                                this.map.addLayer(layers[key].layer,false);
+                                this.map.addLayer(layers[key].layer, false);
                             }
                         }
                     }
@@ -575,11 +588,11 @@ var mygeocloud_ol = (function () {
             for (var i = 0; i < layers.length; i++) {
                 var l = this.createTileLayer(layers[i], defaults)
                 l.baseLayer = defaults.isBaseLayer;
-                switch (mapLib) {
-                    case "ol":
+                switch (MAPLIB) {
+                    case "ol3":
                         this.map.addLayer(l);
                         break;
-                    case "l":
+                    case "leaflet":
                         if (defaults.isBaseLayer === true) {
                             lControl.addBaseLayer(l);
                         }
@@ -606,8 +619,8 @@ var mygeocloud_ol = (function () {
                 var url3 = url;
                 var urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url3.replace("cdn", "cdn3")];
             }
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     var l = new ol.layer.TileLayer({
                         source: new ol.source.TiledWMS({
                             url: urlArray,
@@ -617,7 +630,7 @@ var mygeocloud_ol = (function () {
                     });
                     l.id = layer;
                     break;
-                case "l":
+                case "leaflet":
                     var l = new L.TileLayer.WMS(url, {
                         layers: layer,
                         format: 'image/png',
@@ -643,22 +656,22 @@ var mygeocloud_ol = (function () {
         };
         //ol3 and leaflet
         this.hideLayer = function (name) {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.getLayersByName(name).set("visible", false);
                     break;
-                case "l":
+                case "leaflet":
                     this.map.removeLayer(this.getLayersByName(name));
                     break;
             }
         };
         //ol3 and leaflet
         this.showLayer = function (name) {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     this.getLayersByName(name).set("visible", true);
                     break;
-                case "l":
+                case "leaflet":
                     this.getLayersByName(name).addTo(this.map);
                     break;
             }
@@ -669,15 +682,15 @@ var mygeocloud_ol = (function () {
         //ol3 and leaflet (rename to getLayerByName)
         this.getLayersByName = function (name) {
             var l;
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     for (var i = 0; i < this.map.getLayers().getLength(); i++) {
                         if (this.map.getLayers().a[i].id === name) {
                             l = this.map.getLayers().a[i];
                         }
                     }
                     break;
-                case "l":
+                case "leaflet":
                     var layers = lControl._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
@@ -699,15 +712,15 @@ var mygeocloud_ol = (function () {
         };
         // ol3 and leaflet
         this.getCenter = function () {
-            switch (mapLib) {
-                case "ol":
+            switch (MAPLIB) {
+                case "ol3":
                     var point = this.map.getView().getCenter();
                     return {
                         x: point[0],
                         y: point[1]
                     }
                     break;
-                case "l":
+                case "leaflet":
                     var point = this.map.getCenter();
                     var p = transformPoint(point.lng, point.lat, "EPSG:4326", "EPSG:900913");
                     return {
@@ -745,6 +758,29 @@ var mygeocloud_ol = (function () {
                 });
             });
         }
+
+    }
+    var clickEvent = function (e) {
+        this.getCoordinate = function () {
+            var point;
+            switch (MAPLIB) {
+                case "ol3":
+                    point = e.getCoordinate();
+                    return {
+                        x: point[0],
+                        y: point[1]
+                    }
+                    break;
+                case "leaflet":
+                    point = e.latlng;
+                    var p = transformPoint(point.lng, point.lat, "EPSG:4326", "EPSG:900913");
+                    return {
+                        x: p.x,
+                        y: p.y
+                    }
+                    break;
+            }
+        }
     }
     var deserialize = function (element) {
         var type = "wkt";
@@ -761,6 +797,8 @@ var mygeocloud_ol = (function () {
     return {
         geoJsonStore: geoJsonStore,
         map: map,
+        MAPLIB: MAPLIB,
+        clickEvent: clickEvent,
         transformPoint: transformPoint,
         urlVars: (function getUrlVars() {
             var mapvars = {};
@@ -772,4 +810,5 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/"),
         urlHash: window.location.hash
     };
-})();
+})
+    ();

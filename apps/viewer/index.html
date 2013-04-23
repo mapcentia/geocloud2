@@ -7,11 +7,11 @@
     <!--[if lt IE 9]>
     <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/div/assets/js/html5shiv.js"></script>
     <![endif]-->
-    <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/openlayers/OpenLayers.js"></script>
-    <script type="text/javascript" src="/api/v2/js/mygeocloud.js"></script>
-    <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-    <link href="/apps/viewer/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="/js/ol3/ol.css" type="text/css">
+    <link rel="stylesheet" href="/js/leaflet/leaflet.css" type="text/css">
+    <link rel="stylesheet" href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap.css" type="text/css">
+    <link rel="stylesheet" href="http://cdn.us1.mapcentia.com/js/bootstrap/css/bootstrap-responsive.min.css" type="text/css">
+    <link rel="stylesheet" href="/apps/viewer/css/styles.css" type="text/css">
 </head>
 <body>
 <div class="navbar navbar-fixed-top navbar-absolute">
@@ -68,7 +68,7 @@
     </div>
 </div>
 <!-- map -->
-<div id="map" style="width: 100%;height: 100%;position: absolute"></div>
+<div id="map"  style="width: 100%;height: 100%;position: absolute"></div>
 <!-- layers -->
 <div id="layers"></div>
 <!-- base layers -->
@@ -93,7 +93,7 @@
     </div>
     <div>
         <span><img class="img-rounded images-base-map" src="/apps/viewer/img/toner.png"></span>
-        <button id="toner" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('toner')">
+        <button id="toner" class="btn btn-small base-map-button" onclick="MapCentia.setBaseLayer('stamenToner')">
             Stamen Toner
         </button>
     </div>
@@ -149,6 +149,12 @@
     You didn't hit anything. Try again.
 </div>
 </body>
+
+
+
+
+<script type="text/javascript" src="/apps/viewer/js/loader.js"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js"></script>
 <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/bootstrap/js/bootstrap.js"></script>
 <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/div/jRespond.js"></script>
 <script type="text/javascript" src="http://cdn.us1.mapcentia.com/js/common.js"></script>

@@ -1,6 +1,7 @@
 var MapCentia;
 MapCentia = (function () {
-    var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, toner, popUpVectors, modalVectors;
+    "use strict";
+    var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, toner, popUpVectors, modalVectors;
     hostname = mygeocloud_host;
     uri = mygeocloud_ol.pathName;
     hash = mygeocloud_ol.urlHash;
@@ -15,8 +16,7 @@ MapCentia = (function () {
         addLegend();
     };
     var setBaseLayer = function (str) {
-        var id = eval(str); //Evil
-        cloud.setBaseLayer(id);
+        cloud.setBaseLayer(str);
     };
     var addLegend = function () {
         var layers = cloud.getVisibleLayers();
@@ -30,125 +30,7 @@ MapCentia = (function () {
             }
         });
     };
-    var popUpClickController = OpenLayers.Class(OpenLayers.Control, {
-        defaultHandlerOptions: {
-            'single': true,
-            'double': false,
-            'pixelTolerance': 0,
-            'stopSingle': false,
-            'stopDouble': false
-        },
-        initialize: function (options) {
-            popUpVectors = new OpenLayers.Layer.Vector("Mark", {
-                displayInLayerSwitcher: false
-            });
-            cloud.map.addLayers([popUpVectors]);
-            this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-            OpenLayers.Control.prototype.initialize.apply(this, arguments);
-            this.handler = new OpenLayers.Handler.Click(this, {
-                'click': this.trigger
-            }, this.handlerOptions);
-        },
-        trigger: function (e) {
-            var coords = this.map.getLonLatFromViewPortPx(e.xy);
-            //var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
-            //cloud.map.addPopup(waitPopup);
-            try {
-                popup.destroy();
-            } catch (e) {
-            }
-            var mapBounds = this.map.getExtent();
-            var boundsArr = mapBounds.toArray();
-            var boundsStr = boundsArr.join(",");
-            var mapSize = this.map.getSize();
-            var popupTemplate = '<div style="position:relative;"><div></div><div id="queryResult" style="display: table"></div><button onclick="popup.destroy()" style="position:absolute; top: -10px; right: 5px" type="button" class="close" aria-hidden="true">&times;</button></div>';
-            $.ajax({
-                dataType: 'jsonp',
-                data: 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + cloud.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
-                jsonp: 'jsonp_callback',
-                url: hostname + '/apps/viewer/servers/query/' + db,
-                success: function (response) {
-                    //waitPopup.destroy();
-                    var anchor = new OpenLayers.LonLat(coords.lon, coords.lat);
-                    popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(100, 150), popupTemplate, null, false, null);
-                    popup.panMapIfOutOfView = true;
-                    if (response.html !== false && response.html !== "") {
-                        // Dirty hack! We have to add the popup measure the width, destroy it and add it again width the right width.
-                        cloud.map.addPopup(popup);
-                        $("#queryResult").html(response.html);
-                        var width = $("#queryResult").width() + 35;
-                        popup.destroy();
-                        popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(width, 150), popupTemplate, null, false, null);
-                        cloud.map.addPopup(popup);
-                        $("#queryResult").html(response.html);
-                        //popup.relativePosition="tr";
-                        popUpVectors.removeAllFeatures();
-                        cloud.map.raiseLayer(popUpVectors, 10);
-                        for (var i = 0; i < response.renderGeometryArray.length; ++i) {
-                            popUpVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
-                        }
-                    } else {
-                        $("#alert").fadeIn(400).delay(1000).fadeOut(400);
-                        popUpVectors.removeAllFeatures();
-                    }
-                }
-            });
-        }
-    });
-    var modalClickController = OpenLayers.Class(OpenLayers.Control, {
-        defaultHandlerOptions: {
-            'single': true,
-            'double': false,
-            'pixelTolerance': 0,
-            'stopSingle': false,
-            'stopDouble': false
-        },
-        initialize: function (options) {
-            modalVectors = new OpenLayers.Layer.Vector("Mark", {
-                displayInLayerSwitcher: false
-            });
-            cloud.map.addLayers([modalVectors]);
-            this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-            OpenLayers.Control.prototype.initialize.apply(this, arguments);
-            this.handler = new OpenLayers.Handler.Click(this, {
-                'click': this.trigger
-            }, this.handlerOptions);
-        },
-        trigger: function (e) {
-            var coords = this.map.getLonLatFromViewPortPx(e.xy);
-            //var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
-            //cloud.map.addPopup(waitPopup);
-            try {
-                popup.destroy();
-            } catch (e) {
-            }
-            var mapBounds = this.map.getExtent();
-            var boundsArr = mapBounds.toArray();
-            var boundsStr = boundsArr.join(",");
-            var mapSize = this.map.getSize();
-            $.ajax({
-                dataType: 'jsonp',
-                data: 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + cloud.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
-                jsonp: 'jsonp_callback',
-                url: hostname + '/apps/viewer/servers/query/' + db,
-                success: function (response) {
-                    //waitPopup.destroy();
-                    if (response.html !== false && response.html !== "") {
-                        $("#modal-info .modal-body").html(response.html);
-                        $('#modal-info').modal('show');
-                        modalVectors.removeAllFeatures();
-                        cloud.map.raiseLayer(modalVectors, 10);
-                        for (var i = 0; i < response.renderGeometryArray.length; ++i) {
-                            modalVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
-                        }
-                    } else {
-                        $("#alert").fadeIn(400).delay(1000).fadeOut(400);
-                        modalVectors.removeAllFeatures();
-                    }
-                }
-            });
-        }
-    });
+
     var deserialize = function (element) {
         var format = new OpenLayers.Format.WKT;
         return format.read(element);
@@ -161,51 +43,31 @@ MapCentia = (function () {
     );
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace();
-        var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913")
-        var point = new OpenLayers.LonLat(p.x, p.y);
-        cloud.map.setCenter(point, 15);
-        try {
-            placeMarkers.destroy()
-        } catch (e) {
-        }
-        var placeMarkers = new OpenLayers.Layer.Markers("Markers");
-        cloud.map.addLayer(placeMarkers);
-        var size = new OpenLayers.Size(21, 25);
-        var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
-        var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
-        placeMarkers.addMarker(new OpenLayers.Marker(point, icon));
-        placeMarkers.addMarker(new OpenLayers.Marker(point, icon.clone()));
+        var center = mygeocloud_ol.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:3857");;
+        cloud.zoomToPoint(center.x, center.y, 10);
     });
-    var transformPoint = function (lat, lon, s, d) {
-        var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
-        var dest = new Proj4js.Proj(d);
-        var p = new Proj4js.Point(lat, lon);
-        Proj4js.transform(source, dest, p);
-        return p;
-    };
+
     $(window).load(function () {
         var clickPopUp, clickModal, metaData, metaDataKeys, metaDataKeysTitle, layers, jRes;
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
         cloud = new mygeocloud_ol.map({
-            el: "map",
-            db: db,
-            projection: "EPSG:3857"
+            el: "map"
         });
         osm = cloud.addOSM();
         mapQuestOSM = cloud.addMapQuestOSM();
         mapQuestAerial = cloud.addMapQuestAerial();
+        stamenToner = cloud.addStamenToner();
         GNORMAL = cloud.addGoogleStreets();
         GHYBRID = cloud.addGoogleHybrid();
         GSATELLITE = cloud.addGoogleSatellite();
         GTERRAIN = cloud.addGoogleTerrain();
-        cloud.map.addLayer(toner = new OpenLayers.Layer.Stamen("toner"));
-        cloud.setBaseLayer(osm);
+        setBaseLayer("osm");
 
         // we add two click controllers for desktop and handheld
-        cloud.map.addControl(clickPopUp = new popUpClickController);
-        cloud.map.addControl(clickModal = new modalClickController);
+        //cloud.map.addControl(clickPopUp = new popUpClickController);
+        //cloud.map.addControl(clickModal = new modalClickController);
 
         $("#locate-btn").on("click", function () {
             cloud.locate();
@@ -253,7 +115,7 @@ MapCentia = (function () {
                             if (response.data[u].layergroup == arr[i]) {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <a href='#' data-toggle='tooltip' title='first tooltip'><i class='icon-lock'></i></a>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
-                                $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + authIcon + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(this.id,this.checked)"></label></div>');
+                                $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + authIcon + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)"></label></div>');
                                 l.push({
                                     text: text,
                                     id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
@@ -290,15 +152,15 @@ MapCentia = (function () {
                 $("#modal-layers .modal-body").append($('#layers'));
                 $("#modal-base-layers .modal-body").append($("#base-layers"));
                 $("#modal-legend .modal-body").append($("#legend"));
-                clickModal.activate();
+                //clickModal.activate();
             },
             exit: function () {
                 $('#modal-layers').modal('hide');
                 $('#modal-base-layers').modal('hide');
                 $('#modal-legend').modal('hide');
                 $('#modal-info').modal('hide');
-                clickModal.deactivate();
-                modalVectors.removeAllFeatures();
+                //clickModal.deactivate();
+                //modalVectors.removeAllFeatures();
             }
         });
         jRes.addFunc({
@@ -322,7 +184,7 @@ MapCentia = (function () {
                 $('#legend-popover').on('click', function (e) {
                     addLegend();
                 });
-                clickPopUp.activate();
+                //clickPopUp.activate();
             },
             exit: function () {
                 // We activate the popovers, so the divs becomes visible once before screen resize.
@@ -330,12 +192,12 @@ MapCentia = (function () {
                 $("#base-layers-popover").popover('show');
                 $("#legend-popover").popover('show');
                 addLegend();
-                clickPopUp.deactivate();
+                //clickPopUp.deactivate();
                 try {
                     popup.destroy();
                 } catch (e) {
                 }
-                popUpVectors.removeAllFeatures();
+                //popUpVectors.removeAllFeatures();
             }
         });
         //Set up the state from the URI
@@ -345,16 +207,16 @@ MapCentia = (function () {
             if (hashArr[0]) {
                 $(".base-map-button").removeClass("active");
                 $("#" + hashArr[0]).addClass("active");
-                setBaseLayer(hashArr[0]);
                 if (hashArr[1] && hashArr[2] && hashArr[3]) {
-                    p = transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
+                    p = mygeocloud_ol.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
                     cloud.zoomToPoint(p.x, p.y, hashArr[1]);
+                    setBaseLayer(hashArr[0]);
                     if (hashArr[4]) {
                         arr = hashArr[4].split(",");
                         for (i = 0; i < arr.length; i++) {
-                            name = cloud.getLayerById(schema + "." + arr[i]).name;
-                            switchLayer(name, true);
-                            $("#" + name).attr('checked', true);
+                            //name = cloud.getLayersByName(arr[i]).a.id;
+                            switchLayer(arr[i], true);
+                            $("#" + arr[i].replace(schema + ".", "")).attr('checked', true);
                         }
                     }
                 }
@@ -363,14 +225,55 @@ MapCentia = (function () {
                 cloud.zoomToExtent()
             }
         })();
-        cloud.map.events.register("moveend", null, function () {
+        cloud.map.on("dragend", function () {
             var p;
-            p = transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/#" + cloud.getBaseLayerName() + "/" + cloud.getZoom() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
+            p = mygeocloud_ol.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + mygeocloud_ol.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
         });
+        var clicktimer;
+        cloud.map.on("dblclick", function (e) {
+            clicktimer = undefined;
+        });
+        cloud.map.on("click", function (e) {
+            var event = new mygeocloud_ol.clickEvent(e);
+            if (clicktimer) {
+                clearTimeout(clicktimer);
+            }
+            else clicktimer = setTimeout(function (e) {
+                clicktimer = undefined;
+                var coords = event.getCoordinate();
+                console.log(coords)
+                try {
+                    popup.destroy();
+                } catch (e) {
+                }
+                $.ajax({
+                    dataType: 'jsonp',
+                    data: 'proj=900913&lon=' + coords.x + '&lat=' + coords.y + '&layers=' + cloud.getVisibleLayers() + '&extent=' + "1,2,3,4" + '&width=' + '10' + '&height=' + '10',
+                    jsonp: 'jsonp_callback',
+                    url: hostname + '/apps/viewer/servers/query/' + db,
+                    success: function (response) {
+                        //waitPopup.destroy();
+                        if (response.html !== false && response.html !== "") {
+                            $("#modal-info .modal-body").html(response.html);
+                            $('#modal-info').modal('show');
+                            //modalVectors.removeAllFeatures();
+                            //cloud.map.raiseLayer(modalVectors, 10);
+                            for (var i = 0; i < response.renderGeometryArray.length; ++i) {
+                                //modalVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
+                            }
+                        } else {
+                            $("#alert").fadeIn(400).delay(1000).fadeOut(400);
+                            // modalVectors.removeAllFeatures();
+                        }
+                    }
+                });
+            }, 250);
+        })
     });
     return{
         switchLayer: switchLayer,
-        setBaseLayer: setBaseLayer
+        setBaseLayer: setBaseLayer,
+        schema: schema
     }
 })();
