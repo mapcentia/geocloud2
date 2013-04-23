@@ -147,7 +147,7 @@ var mygeocloud_ol = (function () {
         var prop, popup, // baseLayer wrapper
             parentMap, defaults = {
                 numZoomLevels: 20,
-                projection: "EPSG:3857"
+                projection: "EPSG:900913"
             };
         if (config) {
             for (prop in config) {
@@ -751,7 +751,7 @@ var mygeocloud_ol = (function () {
             // bind the marker position to the device location.
             marker.bindTo('position', geolocation);
             geolocation.addEventListener('accuracy_changed', function () {
-                center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:3857');
+                center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:900913');
                 this.zoomToPoint(center[0], center[1], 1000);
                 $(marker.getElement()).tooltip({
                     title: this.getAccuracy() + 'm from this point'

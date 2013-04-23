@@ -43,7 +43,8 @@ MapCentia = (function () {
     );
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace();
-        var center = mygeocloud_ol.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:3857");;
+        var center = new mygeocloud_ol.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+        console.log(center)
         cloud.zoomToPoint(center.x, center.y, 10);
     });
 
