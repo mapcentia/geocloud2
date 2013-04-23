@@ -5,5 +5,7 @@ var parts = window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (
 
 if (mapvars['fw'] === "ol3")
     document.write("<script src='/js/ol3/ol.js'><\/script>");
-if (mapvars['fw'] === "leaflet")
+else if (mapvars['fw'] === "leaflet")
+    document.write("<script src='/js/leaflet/leaflet.js'><\/script>");
+else
     document.write("<script src='/js/leaflet/leaflet.js'><\/script>");
