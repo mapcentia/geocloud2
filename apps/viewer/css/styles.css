@@ -11,7 +11,7 @@ img {
     max-width: none !important;
 }
 
-.ol-zoom {
+.ol-zoom, .olControlZoom {
     right: 20px;
     left: auto !important;
     top: 70px !important;
@@ -31,14 +31,14 @@ img {
 
 }
 
-.ol-zoom-in, .ol-zoom-out {
+.ol-zoom-in, .ol-zoom-out, .olControlZoomIn, .olControlZoomOut {
     height: 50px !important;
     width: 50px !important;
     font-size: 24px;
     font-weight: bold;
 }
 
-.ol-zoom a,  .ol-zoom a:hover{
+.ol-zoom a,  .ol-zoom a:hover, .olControlZoom a{
     font-size: 30px !important;
     font-weight: bold !important;
     background: none !important;
