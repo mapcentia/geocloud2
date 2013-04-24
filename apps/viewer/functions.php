@@ -1800,7 +1800,7 @@ class postgis extends control
 			$_schema = str_replace(".","",$_schema);
 		}
 		return array("schema"=>$_schema,"table"=>$_table);
-		
+
 	}
 	function connectString()
 	{
@@ -1913,8 +1913,8 @@ class postgis extends control
         		if ($field == 'not_querable') {
                         return $row['not_querable'];
                 }
-				
-				
+
+
         }
 	function insertfeature($geoCoordStr)
 	{
@@ -2032,7 +2032,7 @@ class postgis extends control
 		elseif ($this -> control -> units == "degrees") $border = 0.01 * $zoom;
 		if (sizeof($row) > 0)
 		{
-			//echo $query; 
+			//echo $query;
 			$this -> control -> setMinx($row[minx] - $border);
 			$this -> control -> setMiny($row[miny] - $border);
 			$this -> control -> setMaxx($row[maxx] + $border);
@@ -2128,7 +2128,7 @@ class postgis extends control
 	{
 		$query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::regclass AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = any(pg_index.indkey) AND indisprimary";
 		$result = $this->execQuery($query);
-		
+
 		if ($this->PDOerror) {
 			return NULL;
 		}
@@ -2139,7 +2139,7 @@ class postgis extends control
 			return($row);
 		}
 	}
-	function postgisquery($NewPointArray,$layer,$fields,$pg_query_type,$function,$buffer,$where=0)
+	function postgisquery($NewPointArray,$layer,$fields,$pg_query_type,$function,$buffer,$where=0,$resproj=false)
 	{
 		global $HTTP_FORM_VARS;
 		global $whereClause;
@@ -2235,7 +2235,7 @@ class postgis extends control
         else {
         	$whereStr = "";
         }
-
+        if (!$resproj) $resproj = $this -> control -> proj;
 		if (!$this -> control -> proj)
 		{
 			$query =
@@ -2257,7 +2257,7 @@ class postgis extends control
 		{
 			$query =
 			"select ST_AsText(ST_Transform({$the_geom},"
-			.$this -> control -> proj
+			.$resproj
 			.")) as geometry,{$primeryKey['attname']} as gid,"
 			.$fields
 			." from "
@@ -2276,9 +2276,9 @@ class postgis extends control
 			.$this -> getGeometryColumns($layer, srid)
 			."),{$the_geom})"
 			.$whereStr;
-			
+
 			//echo $query;
-			
+
 
 		}
 		global $depth;
@@ -2329,7 +2329,8 @@ class postgis extends control
 	$type,
 	$value,
 	$buffer=0,
-	$where=0)
+	$where=0,
+    $resproj=false)
 	{
 		global $HTTP_FORM_VARS;
 		global $postGisQueryColor;
@@ -2356,7 +2357,8 @@ class postgis extends control
 				$this -> pg_query_type,
 				$this -> pg_query_function,
 				$buffer,
-				$where
+				$where,
+                $resproj
 				);
 				break;
 			case "FEATURE" :
@@ -2528,12 +2530,12 @@ class postgis extends control
 			.")) as geometry,".$subLayer.".gid as fid,"
 			.$fields
 			." from ";
-			
+
 			if ($subLayer!=$pg_select_layer)
 			$query.= $subLayer.",".$pg_select_layer;
 			else
 			$query.= $pg_select_layer;
-			
+
 			$query.=" where "
 			.$pg_select_layer
 			.".gid="
@@ -3595,12 +3597,12 @@ class htmlSpecialChars
 {
 	function ConvertDanishChars($string)
 	{
-		$string = str_replace("�","&aelig;",$string);
-		$string = str_replace("�","&oslash;",$string);
-		$string = str_replace("�","&aring;",$string);
-		$string = str_replace("�","&AElig;",$string);
-		$string = str_replace("�","&Oslash;",$string);
-		$string = str_replace("�","&Aring;",$string);
+		$string = str_replace("?","&aelig;",$string);
+		$string = str_replace("?","&oslash;",$string);
+		$string = str_replace("?","&aring;",$string);
+		$string = str_replace("?","&AElig;",$string);
+		$string = str_replace("?","&Oslash;",$string);
+		$string = str_replace("?","&Aring;",$string);
 		return($string);
 	}
 }

@@ -30,11 +30,6 @@ MapCentia = (function () {
             }
         });
     };
-
-    var deserialize = function (element) {
-        var format = new OpenLayers.Format.WKT;
-        return format.read(element);
-    };
     var autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'),
         {
             //bounds: defaultBounds
@@ -44,7 +39,6 @@ MapCentia = (function () {
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace();
         var center = new mygeocloud_ol.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
-        console.log(center)
         cloud.zoomToPoint(center.x, center.y, 10);
     });
 
@@ -103,7 +97,7 @@ MapCentia = (function () {
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
-                        name: response.data[u].f_table_name
+                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                     });
                 }
                 for (var i = 0; i < arr.length; ++i) {
@@ -226,17 +220,19 @@ MapCentia = (function () {
                 cloud.zoomToExtent()
             }
         })();
-        cloud.map.on("dragend", function () {
+        var moveEndCallBack =function () {
             var p;
             p = mygeocloud_ol.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
             history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + mygeocloud_ol.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
-        });
+        }
+        cloud.on("dragend", moveEndCallBack);
+        cloud.on("moveend", moveEndCallBack);
         var clicktimer;
-        cloud.map.on("dblclick", function (e) {
+        cloud.on("dblclick", function (e) {
             clicktimer = undefined;
         });
-        cloud.map.on("click", function (e) {
-            var event = new mygeocloud_ol.clickEvent(e);
+        cloud.on("click", function (e) {
+            var event = new mygeocloud_ol.clickEvent(e,cloud);
             if (clicktimer) {
                 clearTimeout(clicktimer);
             }
@@ -249,22 +245,23 @@ MapCentia = (function () {
                 }
                 $.ajax({
                     dataType: 'jsonp',
-                    data: 'proj=900913&lon=' + coords.x + '&lat=' + coords.y + '&layers=' + cloud.getVisibleLayers() + '&extent=' + "1,2,3,4" + '&width=' + '10' + '&height=' + '10',
+                    data: 'resproj=4326&proj=900913&lon=' + coords.x + '&lat=' + coords.y + '&layers=' + cloud.getVisibleLayers() + '&extent=' + "1,2,3,4" + '&width=' + '10' + '&height=' + '10',
                     jsonp: 'jsonp_callback',
                     url: hostname + '/apps/viewer/servers/query/' + db,
                     success: function (response) {
                         //waitPopup.destroy();
+                        var arr = [];
                         if (response.html !== false && response.html !== "") {
                             $("#modal-info .modal-body").html(response.html);
                             $('#modal-info').modal('show');
-                            //modalVectors.removeAllFeatures();
-                            //cloud.map.raiseLayer(modalVectors, 10);
                             for (var i = 0; i < response.renderGeometryArray.length; ++i) {
-                                //modalVectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
+                                arr.push(response.renderGeometryArray[i][0]);
                             }
+                            cloud.addLayerFromWkt(arr);
+
                         } else {
                             $("#alert").fadeIn(400).delay(1000).fadeOut(400);
-                            // modalVectors.removeAllFeatures();
+                            cloud.removeQueryLayers();
                         }
                     }
                 });

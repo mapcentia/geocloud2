@@ -620,7 +620,7 @@ var mygeocloud_ol = (function () {
                 }
             }
         };
-        this.getCenter = function () {
+        this.getCenter = function ()    {
             var point = this.map.center;
             return {
                 x: point.lon,

@@ -72,7 +72,7 @@ for ($i = 0; $i < sizeof($layers); $i++) {
 
         if ($bits[1] || $queryable == true) {
             $coords = $_REQUEST['lon'] . " " . $_REQUEST['lat'];
-            $response['html'] .= $postgisObject->queryDump('', $coords, $queryTable, '*', 'POSTGIS', '', $queryBuffer);
+            $response['html'] .= $postgisObject->queryDump('', $coords, $queryTable, '*', 'POSTGIS', '', $queryBuffer,false,$_REQUEST['resproj']);
         } else {
             if ($response['html'] == "") $response['html'] = false;
         }
