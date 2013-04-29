@@ -11,7 +11,6 @@ $conn = new postgis();
 
 foreach($arr['data'] as $db) {
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template" AND $db!="mhoegh" AND $db!="mygeocloud") {
-		$conn = new postgis();
 		$sql = "DROP DATABASE {$db}";
 			$result = $conn->execQuery($sql,"PDO","transaction");
 			echo "<p>{$conn->PDOerror[0]} SQL loaded in {$db}</p>";
@@ -23,4 +22,3 @@ foreach($arr['data'] as $db) {
 	}
 	
 }
-?>

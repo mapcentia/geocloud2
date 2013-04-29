@@ -13,11 +13,16 @@ class User_c extends Controller
     {
         parent::__construct();
         $parts = $this->getUrlParts();
-        $this->user = new User($parts[3]);
         switch ($parts[4]) {
+            case '' :
+                $this->user = new User(null);
+                echo $this->toJSON($this->user->getAll());
+                break;
             case 'getdata' :
+                $this->user = new User($parts[3]);
                 echo $this->toJSON($this->user->getData());
                 break;
+
         }
     }
 }

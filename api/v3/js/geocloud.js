@@ -2,22 +2,21 @@ var mygeocloud_host; // Global var
 var mygeocloud_ol = (function () {
     "use strict";
     var scriptSource = (function (scripts) {
-        "use strict";
         scripts = document.getElementsByTagName('script');
         var script = scripts[scripts.length - 1];
         if (script.getAttribute.length !== undefined) {
             return script.src;
         }
         return script.getAttribute('src', -1);
-    })();
+    }()), map, geoJsonStore, clickEvent, transformPoint, lControl, MAPLIB, host;
     // In IE7 host name is missing if script url is relative
     if (scriptSource.charAt(0) === "/") {
         mygeocloud_host = "";
     } else {
         mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
+    host = mygeocloud_host;
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    var map, lControl, MAPLIB, host = mygeocloud_host;
     if (typeof ol === "object" && typeof L === "object") {
         alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
     }
@@ -33,7 +32,7 @@ var mygeocloud_ol = (function () {
     if (typeof L === "object") {
         MAPLIB = "leaflet";
     }
-    var geoJsonStore = function (config) {
+    geoJsonStore = function (config) {
         var prop, parentThis = this;
         var defaults = {
             db: null,
@@ -147,8 +146,8 @@ var mygeocloud_ol = (function () {
         };
     };
     map = function (config) {
-        var prop, popup, queryLayers = [],
-            parentMap, defaults = {
+        var prop, popup, queryLayers = [], parentMap,
+            defaults = {
                 numZoomLevels: 20,
                 projection: "EPSG:900913"
             };
@@ -332,71 +331,6 @@ var mygeocloud_ol = (function () {
                     break;
             }
         };
-        //click
-        switch (MAPLIB) {
-            case "ol3_":
-                this.popupTemplate = '<div style="position:relative"><div>tets</div><div id="queryResult"></div><button onclick="popup.destroy()" style="position:absolute; top:5px; right: 5px" type="button" class="close" aria-hidden="true">?</button></div>';
-                this.clickController = OpenLayers.Class(OpenLayers.Control, {
-                    defaultHandlerOptions: {
-                        'single': true,
-                        'double': false,
-                        'pixelTolerance': 0,
-                        'stopSingle': false,
-                        'stopDouble': false
-                    },
-                    initialize: function (options) {
-                        this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-                        OpenLayers.Control.prototype.initialize.apply(this, arguments);
-                        this.handler = new OpenLayers.Handler.Click(this, {
-                            'click': this.trigger
-                        }, this.handlerOptions);
-                    },
-                    trigger: function (e) {
-                        var coords = this.map.getLonLatFromViewPortPx(e.xy);
-                        var waitPopup = new OpenLayers.Popup("wait", coords, new OpenLayers.Size(36, 36), "<div style='z-index:1000;'><img src='assets/spinner/spinner.gif'></div>", null, true);
-                        cloud.map.addPopup(waitPopup);
-                        try {
-                            popup.destroy();
-                        } catch (e) {
-                        }
-                        var mapBounds = this.map.getExtent();
-                        var boundsArr = mapBounds.toArray();
-                        var boundsStr = boundsArr.join(",");
-                        try {
-                            popup.destroy();
-                        } catch (e) {
-                        }
-                        var mapSize = this.map.getSize();
-                        $.ajax({
-                            dataType: 'jsonp',
-                            data: 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + parentMap.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
-                            jsonp: 'jsonp_callback',
-                            url: host + '/apps/viewer/servers/query/' + defaults.db,
-                            success: function (response) {
-                                waitPopup.destroy();
-                                var anchor = new OpenLayers.LonLat(coords.lon, coords.lat);
-                                popup = new OpenLayers.Popup.Anchored("result", anchor, new OpenLayers.Size(200, 200), parentMap.popupTemplate, null, false, null);
-                                popup.panMapIfOutOfView = true;
-                                // Make popup global, so it can be accessed. Dirty hack!
-                                window.popup = popup;
-                                cloud.map.addPopup(popup);
-                                if (response.html !== false) {
-                                    document.getElementById("queryResult").innerHTML = response.html;
-                                    //popup.relativePosition="tr";
-                                    vectors.removeAllFeatures();
-                                    _map.raiseLayer(vectors, 10);
-                                    for (var i = 0; i < response.renderGeometryArray.length; ++i) {
-                                        vectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
-                                    }
-                                } else {
-                                    document.getElementById("queryResult").innerHTML = "Found nothing";
-                                }
-                            }
-                        });
-                    }
-                });
-                break;
-        }
         // map init
         switch (MAPLIB) {
             case "ol2":
@@ -424,8 +358,6 @@ var mygeocloud_ol = (function () {
                     })
                     //renderers: ol.RendererHints.createFromQueryData()
                 });
-                //var vectors = new ol.layer.Vector();
-                //this.map.addLayer(vectors);
                 break;
             case "leaflet":
                 this.map = new L.map(defaults.el);
@@ -867,7 +799,7 @@ var mygeocloud_ol = (function () {
             switch (MAPLIB) {
                 case "ol2":
                     this.removeQueryLayers();
-                    var features, geometry,transformedFeature, wkt = new OpenLayers.Format.WKT;
+                    var features, geometry, transformedFeature, wkt = new OpenLayers.Format.WKT;
                     for (var i = 0; i < elements.length; i++) {
                         features = wkt.read(elements[i]);
                         queryLayers[i] = new OpenLayers.Layer.Vector(null, {
@@ -909,7 +841,7 @@ var mygeocloud_ol = (function () {
         this.removeQueryLayers = function () {
             switch (MAPLIB) {
                 case "ol2":
-                    try{
+                    try {
                         for (var i = 0; i < queryLayers.length; i++) {
                             //queryLayers[i].destroy();
                             this.map.removeLayer(queryLayers[i])
@@ -972,7 +904,7 @@ var mygeocloud_ol = (function () {
             }
         }
     }
-    var clickEvent = function (e, map) {
+    clickEvent = function (e, map) {
         this.getCoordinate = function () {
             var point;
             switch (MAPLIB) {
@@ -1001,7 +933,7 @@ var mygeocloud_ol = (function () {
             }
         }
     }
-    var transformPoint = function (lat, lon, s, d) {
+    transformPoint = function (lat, lon, s, d) {
         var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
         var dest = new Proj4js.Proj(d);
         var p = new Proj4js.Point(lat, lon);
@@ -1024,5 +956,4 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/"),
         urlHash: window.location.hash
     };
-})
-    ();
+})();
