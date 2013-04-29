@@ -2225,7 +2225,7 @@ class postgis extends control
 		else $__srid="EPSG:".$this -> control -> proj;
 		$__geoObj=$__geofactory->createGeometry($__wkt,$__srid);
 		if ($buffer) {
-			$__bufferStr1 = "buffer(";
+			$__bufferStr1 = "ST_buffer(";
 			$__bufferStr2 = $buffer."),";
 		}
 
@@ -2549,7 +2549,7 @@ class postgis extends control
 			."("
 			.$subLayer
 			.".the_geom,";
-			if ($buffer) $query.="buffer(";
+			if ($buffer) $query.="ST_buffer(";
 			$query.=$pg_select_layer;
 			$query.=".the_geom";
 			if ($buffer) $query.=",".$buffer.")";
