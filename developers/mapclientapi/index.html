@@ -1,208 +1,95 @@
 <!DOCTYPE html>
 <html>
-	<!--#include virtual="../header.html" -->
-	<body onload="prettyPrint()">
-		<div class="navbar navbar-inverse navbar-fixed-top">
-			<div class="navbar-inner">
-				<div class="container">
-					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
-					<a class="brand-dev" href="/developers/index.html">Developers</a>
-					<a class="brand" href="/">MyGeoCloud</a>
-					<div class="nav-collapse">
-						<ul class="nav">
-							<li>
-								<a href="/developers/sqlapi/index.html">SQL API</a>
-							</li>
-							<!--<li><a href="/developers/wfsapi/index.html">WFS API</a></li>-->
-							<!--<li><a href="/developers/wmsapi/index.html">WMS API</a></li>-->
-							<ul class="nav">
-								<li class="dropdown">
-									<a href="#"
-									class="dropdown-toggle"
-									data-toggle="dropdown">Map API<b class="caret"></b> </a>
-									<ul class="dropdown-menu">
-										<li class="active">
-											<a href="index.html">Basic examples</a>
-										</li>
-										<li>
-											<a href="advanced1.html">Advanced examples 1</a>
-										</li>
-									</ul>
-								</li>
-							</ul>
-						</ul>
-					</div><!--/.nav-collapse -->
-				</div>
-			</div>
-		</div>
-		<div class="container">
-			<div class="hero-unit">
-				<h1>Map client API</h1>
-				<p>
-					The Map client API makes it very easy to add maps to your own web pages or apps. The API works with the SQL API and WMS API. Below are a few basic examples.
-				</p>
-			</div>
-			<div class="row" style="background:none">
-				<div class="span12">
-					<script>
-                        $(window).load(function() {
-                            // Create a new map object
-                            var cloud_example1 = new mygeocloud_ol.map("map_example1", "mydb");
-                            // Zoom to default extent
-                            cloud_example1.zoomToExtent();
-                            // Add a single tile layer
-                            cloud_example1.addTileLayers(["public.publicnuclear_facilities_update"]);
-                        });
-					</script>
-					<p>
-						This is the Hello World example. A map with a single tile layer.
-					</p>
-					<div id="map_example1" style="width: 100%;height: 500px"></div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span12">
+<!--#include virtual="../header.html" -->
+<body onload="prettyPrint()">
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span>
+                <span class="icon-bar"></span> <span class="icon-bar"></span> </a>
+            <a class="brand-dev" href="/developers/index.html">Developers</a>
+            <a class="brand" href="/">MyGeoCloud</a>
+
+            <div class="nav-collapse">
+                <ul class="nav">
+                    <li>
+                        <a href="/developers/sqlapi/index.html">SQL API</a>
+                    </li>
+                    <li>
+                        <a href="/developers/mapclientapi/index.html">JavaScript API</a>
+                    </li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="hero-unit">
+        <h1>Map client API</h1>
+
+        <p>
+            The Map client API makes it very easy to add maps to your own web pages or apps. The API works with the SQL
+            API and WMS API. Below are a few basic examples.
+        </p>
+    </div>
+    <div class="row" style="background:none">
+        <div class="span12">
+            <script>
+                $(window).load(function () {
+                    // Create a new map object
+                    var cloud_example1 = new geocloud.map({
+                        el: "map_example1"
+                    });
+                    // Add a base layer
+                    cloud_example1.addOSM();
+                    // Set the base layer active
+                    cloud_example1.setBaseLayer("osm");
+                    // Zoom to default extent
+                    cloud_example1.zoomToExtent();
+                    // Add a single tile layer
+                    cloud_example1.addTileLayers({
+                        db: "martin",
+                        layers: ["public.ne"],
+                        visibility: true
+                    });
+                });
+            </script>
+            <p>
+                This is the Hello World example. A map with a single tile layer.
+            </p>
+
+            <div id="map_example1" style="width: 100%;height: 500px"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span12">
 					<pre class="prettyprint">
 &lt;script&gt;
-$(window).load(function() {
-	// Create a new map object
-	var cloud_example1 = new mygeocloud_ol.map(&quot;map_example1&quot;,&quot;mydb&quot;);
-	// Zoom to default extent
-	cloud_example1.zoomToExtent();
-	// Add a single tile layer
-	cloud_example1.addTileLayers([&quot;public.publicnuclear_facilities_update&quot;]);
+$(window).load(function () {
+    // Create a new map object
+    var cloud_example1 = new geocloud.map({
+        el: "map_example1"
+    });
+    // Add a base layer
+    cloud_example1.addOSM();
+    // Set the base layer active
+    cloud_example1.setBaseLayer("osm");
+    // Zoom to default extent
+    cloud_example1.zoomToExtent();
+    // Add a single tile layer
+    cloud_example1.addTileLayers({
+        db: "martin",
+        layers: ["public.ne"],
+        visibility: true
+    });
 });
 &lt;/script&gt;
 &lt;div id=&quot;map_example1&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
 </pre>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span12">
-					<script>
-                        $(window).load(function() {
-                            // Create a new map object
-                            var cloud_example2 = new mygeocloud_ol.map("map_example2", "mydb");
-                            // Create a new GeoJSON store
-                            var store_example2 = new mygeocloud_ol.geoJsonStore("mydb");
-                            // Add the GeoJSON store to the map
-                            cloud_example2.addGeoJsonStore(store_example2);
-                            // Set the SQL query in the store
-                            store_example2.sql = "SELECT * FROM public.publicnuclear_facilities_update";
-                            // Load the GeoJSON
-                            store_example2.load();
-                            // Defined a "onLoad" function
-                            store_example2.onLoad = function() {
-                                // When the GeoJSON is loaded, zoom to its extent
-                                cloud_example2.zoomToExtentOfgeoJsonStore(store_example2);
-                            };
-                        });
-					</script>
-					<p>
-						This example shows how to add GeoJSON to a map object using the SQL API.
-					</p>
-					<div id="map_example2" style="width: 100%;height: 500px"></div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span12">
-					<pre class="prettyprint">
-&lt;script&gt;
-$(window).load(function() {
-	// Create a new map object
-	var cloud_example2 = new mygeocloud_ol.map(&quot;map_example2&quot;,&quot;mydb&quot;);
-	// Create a new GeoJSON store
-	var store_example2 = new mygeocloud_ol.geoJsonStore(&quot;mydb&quot;);
-	// Add the GeoJSON store to the map
-	cloud_example2.addGeoJsonStore(store_example2);
-	// Set the SQL query in the store
-	store_example2.sql = &quot;SELECT * FROM public.publicnuclear_facilities_update&quot;;
-	// Load the GeoJSON
-	store_example2.load();
-	// Defined a &quot;onLoad&quot; function
-	store_example2.onLoad = function(){
-		// When the GeoJSON is loaded, zoom to its extent
-		cloud_example2.zoomToExtentOfgeoJsonStore(store_example2);
-	};
-});
-&lt;/script&gt;
-&lt;div id=&quot;map_example2&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
-</pre>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span12">
-					<script>
-                        $(window).load(function() {
-                            // Create a new map object
-                            var cloud_example3 = new mygeocloud_ol.map("map_example3", "mydb");
-                            // Create a new GeoJSON store
-                            var store_example3 = new mygeocloud_ol.geoJsonStore("mydb");
-                            // Add the GeoJSON store to the map
-                            cloud_example3.addGeoJsonStore(store_example3);
-                            // Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries.
-                            store_example3.sql = "SELECT *,ST_Buffer(ST_Transform(the_geom,900913),100000) FROM public.publicnuclear_facilities_update LIMIT 5";
-                            // Load the GeoJSON
-                            store_example3.load();
-                            // Defined a "onLoad" function
-                            store_example3.onLoad = function() {
-                                var selectControl = {
-                                    onSelect : function(feature) {
-                                        //alert('');
-                                    },
-                                    onUnselect : function() {
-                                        //alert('');
-                                    }
-                                };
-                                // When the GeoJSON is loaded, zoom to its extent
-                                cloud_example3.zoomToExtentOfgeoJsonStore(store_example3);
-                                // Add a grid with the GeoJSON
-                                var grid_example3 = new mygeocloud_ol.grid("grid_example3", store_example3, {
-                                    selectControl : selectControl
-                                });
-                                //grid_example3.grid.getSelectionModel().bind().handlers.feature.stopDown = false
-                                grid_example3.selectionModel.onSelect = function(){alert('dd')};
-                            };
-                        });
-					</script>
-					<p>
-						This is a bit more advanced example. It shows how use the the SQL API to create a 100 km buffer around features. Both the features and the buffers is mapped. Because the features in this case are stored in projection EPSG:4326 they are transformed to webmercator before the buffering. The grid object is used to show the GeoJSON in a table grid.
-					</p>
-					<div id="map_example3" style="width: 100%;height: 500px"></div>
-					<div id="grid_example3" style="width: 100%;height: 300px"></div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="span12">
-					<pre class="prettyprint"> 
-&lt;script&gt;
-$(window).load(function() {
-	// Create a new map object
-	var cloud_example3 = new mygeocloud_ol.map(&quot;map_example3&quot;,&quot;mydb&quot;);
-	// Create a new GeoJSON store
-	var store_example3 = new mygeocloud_ol.geoJsonStore(&quot;mydb&quot;);
-	// Add the GeoJSON store to the map
-	cloud_example3.addGeoJsonStore(store_example3);
-	// Set the SQL query in the store. You can fire any SELECT query that returns one or more geometries. 
-	store_example3.sql = &quot;SELECT *,buffer(transform(the_geom,900913),100000) FROM public.publicnuclear_facilities_update LIMIT 5&quot;;
-	// Load the GeoJSON
-	store_example3.load();
-	// Defined a &quot;onLoad&quot; function
-	store_example3.onLoad = function(){
-		// When the GeoJSON is loaded, zoom to its extent
-		cloud_example3.zoomToExtentOfgeoJsonStore(store_example3);
-		// Add a grid with the GeoJSON
-		var grid_example3 = new mygeocloud_ol.grid(&quot;grid_example3&quot;,store_example3);
-	};
-});
-&lt;/script&gt;
-&lt;div id=&quot;map_example3&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
-&lt;div id=&quot;grid_example3&quot; style=&quot;width: 100%;height: 500px&quot;&gt;&lt;/div&gt;
-</pre>
-				</div>
-
-			</div>
-			<!--#include virtual="../footer.html" -->
-		</div>
-	</body>
+        </div>
+    </div>
+    <!--#include virtual="../footer.html" -->
+</div>
+</body>
 </html>

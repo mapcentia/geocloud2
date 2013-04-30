@@ -2,9 +2,9 @@ var MapCentia;
 MapCentia = (function () {
     "use strict";
     var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, toner, popUpVectors, modalVectors;
-    hostname = mygeocloud_host;
-    uri = mygeocloud_ol.pathName;
-    hash = mygeocloud_ol.urlHash;
+    hostname = geocloud_host;
+    uri = geocloud.pathName;
+    hash = geocloud.urlHash;
     db = uri[3];
     schema = uri[4];
     var switchLayer = function (name, visible) {
@@ -38,7 +38,7 @@ MapCentia = (function () {
     );
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace();
-        var center = new mygeocloud_ol.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+        var center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(center.x, center.y, 10);
     });
 
@@ -47,7 +47,7 @@ MapCentia = (function () {
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
-        cloud = new mygeocloud_ol.map({
+        cloud = new geocloud.map({
             el: "map"
         });
         osm = cloud.addOSM();
@@ -203,7 +203,7 @@ MapCentia = (function () {
                 $(".base-map-button").removeClass("active");
                 $("#" + hashArr[0]).addClass("active");
                 if (hashArr[1] && hashArr[2] && hashArr[3]) {
-                    p = mygeocloud_ol.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
+                    p = geocloud.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
                     cloud.zoomToPoint(p.x, p.y, hashArr[1]);
                     setBaseLayer(hashArr[0]);
                     if (hashArr[4]) {
@@ -222,8 +222,8 @@ MapCentia = (function () {
         })();
         var moveEndCallBack =function () {
             var p;
-            p = mygeocloud_ol.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + mygeocloud_ol.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
+            p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+            history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
         }
         cloud.on("dragend", moveEndCallBack);
         cloud.on("moveend", moveEndCallBack);
@@ -232,7 +232,7 @@ MapCentia = (function () {
             clicktimer = undefined;
         });
         cloud.on("click", function (e) {
-            var event = new mygeocloud_ol.clickEvent(e,cloud);
+            var event = new geocloud.clickEvent(e,cloud);
             if (clicktimer) {
                 clearTimeout(clicktimer);
             }

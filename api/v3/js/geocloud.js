@@ -1,5 +1,5 @@
-var mygeocloud_host; // Global var
-var mygeocloud_ol = (function () {
+var geocloud_host; // Global var
+var geocloud = (function () {
     "use strict";
     var scriptSource = (function (scripts) {
         scripts = document.getElementsByTagName('script');
@@ -11,12 +11,13 @@ var mygeocloud_ol = (function () {
     }()), map, geoJsonStore, clickEvent, transformPoint, lControl, MAPLIB, host;
     // In IE7 host name is missing if script url is relative
     if (scriptSource.charAt(0) === "/") {
-        mygeocloud_host = "";
+        geocloud_host = "";
     } else {
-        mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+        geocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
-    host = mygeocloud_host;
+    host = geocloud_host;
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    document.write("<link rel='stylesheet' href='" + geocloud_host + "/api/v3/css/styles.css' type='text/css'>");
     if (typeof ol === "object" && typeof L === "object") {
         alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
     }
@@ -561,7 +562,9 @@ var mygeocloud_ol = (function () {
                     var layers = lControl._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
-                            if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) this.map.removeLayer(layers[key].layer);
+                            if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) {
+                                this.map.removeLayer(layers[key].layer)
+                            }
                             if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
                                 this.map.addLayer(layers[key].layer, false);
                             }
@@ -607,6 +610,9 @@ var mygeocloud_ol = (function () {
                         }
                         else {
                             lControl.addOverlay(l);
+                        }
+                        if (defaults.visibility === true) {
+                            this.showLayer(layers[i])
                         }
                         break;
                 }
