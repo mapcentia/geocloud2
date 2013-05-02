@@ -3,6 +3,7 @@ include ("../../inc/controller.php");
 include ("../../model/users.php");
 include ("../../wms/mapfile.php.map");
 include ("../../wms/tilecache.cfg.php");
+include ("../../model/classes.php");// For casttoclass
 
 /**
  *
