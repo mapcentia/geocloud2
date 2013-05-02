@@ -46,7 +46,7 @@ function transaction($sql) {
 		$response['success'] = false;
 		$response['message'] = "CREATE is not allowed through the API";
 	} elseif ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']) {
-		if ($apiKey == $_REQUEST['key']) {
+		if ($apiKey == $_REQUEST['key'] || $apiKey==false) {
 			$api = new sqlapi();
 			$response = $api -> transaction($_REQUEST['q']);
 		} else {

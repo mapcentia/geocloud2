@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^[a-z]* mapfile_c.php [L]
