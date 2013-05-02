@@ -653,7 +653,7 @@ var geocloud = (function () {
                     l.id = layer;
                     break;
                 case "leaflet":
-                    l = new L.TileLayer.WMS(url, {
+                    l = new L.TileLayer.WMS(urlArray, {
                         layers: layer,
                         format: 'image/png',
                         transparent: true
