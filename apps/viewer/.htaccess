@@ -2,3 +2,4 @@ RewriteEngine on
 RewriteCond %{REQUEST_FILENAME} !(\.png|\.jpg|\.gif|\.jpeg|\.bmp|\.js|\.css)$
 RewriteRule (.*) index.html?url=$0 [QSA,L]
 FileETag None
+
