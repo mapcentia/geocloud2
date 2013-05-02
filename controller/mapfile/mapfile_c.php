@@ -17,7 +17,7 @@ class Mapfile_c extends Controller
         global $postgisschema;
         parent::__construct();
         $parts = $this->getUrlParts();
-        $this->auth($parts[3]);
+       // $this->auth($parts[3]);
         $postgisschema = $parts[4];
         switch ($parts[5]) {
             case 'create' :
