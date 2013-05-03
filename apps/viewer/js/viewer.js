@@ -68,7 +68,7 @@ MapCentia = (function () {
             cloud.locate();
         });
         $.ajax({
-            url: hostname + '/controller/geometry_columns/' + db + '/getall/' + schema,
+            url: hostname.replace("cdn.", "") + '/controller/geometry_columns/' + db + '/getall/' + schema,
             async: false,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
@@ -220,7 +220,7 @@ MapCentia = (function () {
                 cloud.zoomToExtent()
             }
         })();
-        var moveEndCallBack =function () {
+        var moveEndCallBack = function () {
             var p;
             p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
             history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
@@ -232,7 +232,7 @@ MapCentia = (function () {
             clicktimer = undefined;
         });
         cloud.on("click", function (e) {
-            var event = new geocloud.clickEvent(e,cloud);
+            var event = new geocloud.clickEvent(e, cloud);
             if (clicktimer) {
                 clearTimeout(clicktimer);
             }
