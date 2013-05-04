@@ -20,7 +20,6 @@ session_start();
     <meta name="keywords"
           content="examples, openlayers, api, postgis, hosting, mapserver, tile cache, gdal, ogr2ogr, spatial, sql, cluster map, buffer map, map, geo, cloud, visualize, analyze, gis, geographical data, maps, web mapping, shape file, GPX, MapInfo, wms, wfs, wfs-t, ogc"/>
     <meta name="author" content="Martin Hoegh"/>
-    <script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <link href="/styles/banner-ie.css" rel="stylesheet">
@@ -87,6 +86,7 @@ session_start();
     </script>
 </head>
 <body>
+    <?php include_once("analyticstracking.php") ?>
     <span id="corner-banner">
             <em>beta</em>
         </span>
