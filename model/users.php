@@ -7,7 +7,7 @@ class User extends postgis {
 	function __construct($userId) {
 		parent::__construct();
 		$this->userId=$userId;
-		$this->postgisdb="mygeocloud";
+		$this->postgisdb="mapcentia";
 	}
     public function getAll(){
         $query = "SELECT * FROM users WHERE email<>''";

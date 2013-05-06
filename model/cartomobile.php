@@ -42,17 +42,17 @@ class cartomobile extends postgis {
 		$xml.="<BaseMap>\n";
 		$xml.="
 	<BaseMapSource>
-	    <Label>OpenStreetMap</Label>
-	    <Extent srs='EPSG:3857'>
-		<LowerCorner>-180.000000 -90.000000</LowerCorner>
-		<UpperCorner>180.000000 90.000000</UpperCorner>
-	    </Extent>
-	    <OpenMapServer src='http://tile.openstreetmap.org/'/>
+	   <Label>Base Map</Label>
+        <Extent srs='EPSG:3857'>
+          <LowerCorner>-180 -90</LowerCorner>
+          <UpperCorner>180 90</UpperCorner>
+        </Extent>
+        <DefaultBaseMap/>
 	</BaseMapSource>";
 		if ($baseLayer){
 		$xml.="<BaseMapSource>
 	    <Label>{$baseLayer}</Label>
-	    <Extent srs='EPSG:900913'>
+	    <Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
@@ -64,9 +64,10 @@ class cartomobile extends postgis {
 
 		/* Start of writing WMS as baselayers */
 		/**/
+
 		foreach (array_unique($groups) as $group) {
 			$xmltmp.="<BaseMapSource>\n";
-			$xmltmp.="<Extent srs='EPSG:900913'>
+			$xmltmp.="<Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
@@ -99,11 +100,12 @@ class cartomobile extends postgis {
 			$xml.=$xmltmp;
 			$xmltmp="";
 		}
+
 		foreach ($tables->rows as $row) {
 			if ($schema==$row['f_table_schema']) {
 				//$table = new table("{$row['f_table_schema']}.{$row['f_table_name']}");
 				$xml.="<BaseMapSource>\n";
-				$xml.="<Extent srs='EPSG:900913'>
+				$xml.="<Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
@@ -122,6 +124,7 @@ class cartomobile extends postgis {
 				$xml.="</BaseMapSource>\n";
 			}
 		}
+
 		/**/
 		/* End of writing WMS as baselayers */
 		$xml.="</BaseMap>\n";
