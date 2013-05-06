@@ -84,19 +84,33 @@ function parseFilter($filter,$table,$operator="=") {
 		}
 		//BBox
 		if ($arr['BBOX']) {
+		
 			if (is_array($arr['BBOX']['Box']['coordinates'])) {
 				$arr['BBOX']['Box']['coordinates']['_content'] = str_replace(" ",",",$arr['BBOX']['Box']['coordinates']['_content']);
 				$coordsArr = explode(",",$arr['BBOX']['Box']['coordinates']['_content']);
 			}
-
 			else {
 				$arr['BBOX']['Box']['coordinates'] = str_replace(" ",",",$arr['BBOX']['Box']['coordinates']);
 				$coordsArr = explode(",",$arr['BBOX']['Box']['coordinates']);
 				
 			}
-			$sridOfFilter = gmlConverter::parseEpsgCode($arr['BBOX']['Box']['srsName']);
-			if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
-			if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
+			if (is_array($arr['BBOX']['Box'])) {
+				$sridOfFilter = gmlConverter::parseEpsgCode($arr['BBOX']['Box']['srsName']);
+				if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
+				if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
+			}
+			if (is_array($arr['BBOX']['Envelope'])){
+				$coordsArr = array_merge(explode(" ",$arr['BBOX']['Envelope']['lowerCorner']),explode(" ",$arr['BBOX']['Envelope']['upperCorner']));
+				ob_start();
+				print_r($arr['BBOX']['Envelope']);
+				print_r($coordsArr);
+				$data = ob_get_clean();
+				//logfile::write($data);
+				$sridOfFilter = gmlConverter::parseEpsgCode($arr['BBOX']['Envelope']['srsName']);
+				if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
+				if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
+				
+			}
 
 			/*
 			$coordsArr[0] = floor($coordsArr[0]/1000)*1000;

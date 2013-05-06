@@ -89,7 +89,7 @@ $unserializer_options = array (
 );
 $unserializer = &new XML_Unserializer($unserializer_options);
 
-/*$HTTP_RAW_POST_DATA = '<?xml version="1.0" encoding="utf-8"?><wfs:Transaction service="WFS" version="1.0.0" xmlns="http://www.opengis.net/wfs" xmlns:mrhg="http://twitter/mrhg" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><wfs:Insert idgen="GenerateNew"><mrhg:hej><the_geom><gml:MultiPolygon srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><gml:polygonMember><gml:Polygon><gml:exterior><gml:LinearRing><gml:coordinates>5.0657329559,-41.1107215881 8.4824724197,-39.3435783386 4.3241734505,-34.6001853943 5.0657329559,-41.1107215881 </gml:coordinates></gml:LinearRing></gml:exterior></gml:Polygon></gml:polygonMember></gml:MultiPolygon></the_geom></mrhg:hej></wfs:Insert></wfs:Transaction>';*/
+/*$HTTP_RAW_POST_DATA = '<?xml version="1.0" encoding="utf-8"?><wfs:GetFeature service="WFS" version="1.0.0" xmlns:ogc="http://www.opengis.net/ogc" xmlns:hawkeye="http://twitter/hawkeye" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml"><wfs:Query typeName="hawkeye:pointlayer" srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><ogc:Filter xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml"><ogc:BBOX><ogc:PropertyName>the_geom</ogc:PropertyName><gml:Envelope srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><gml:lowerCorner>56.706890008339 9.345423233484</gml:lowerCorner><gml:upperCorner>57.452366329215 10.394726718930</gml:upperCorner></gml:Envelope></ogc:BBOX></ogc:Filter></wfs:Query></wfs:GetFeature>';*/
 
 
 /*$HTTP_RAW_POST_DATA = '<?xml version="1.0"?><DescribeFeatureType  version="1.1.0"  service="WFS"  xmlns="http://www.opengis.net/wfs"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">    <TypeName>california_coastline</TypeName></DescribeFeatureType>';
@@ -134,7 +134,7 @@ if ($HTTP_RAW_POST_DATA) {
 					if($checkXml===FALSE) {
 						makeExceptionReport("Filter is not valid");
 					}
-					//$wheres[$queries['typeName']] = parseFilter($queries['Filter'],$queries['typeName']);
+					$wheres[$queries['typeName']] = parseFilter($queries['Filter'],$queries['typeName']);
 				}
 			}
 			$HTTP_FORM_VARS["TYPENAME"] = dropLastChrs($HTTP_FORM_VARS["TYPENAME"], 1);
