@@ -134,7 +134,7 @@ if ($HTTP_RAW_POST_DATA) {
 					if($checkXml===FALSE) {
 						makeExceptionReport("Filter is not valid");
 					}
-					$wheres[$queries['typeName']] = parseFilter($queries['Filter'],$queries['typeName']);
+					//$wheres[$queries['typeName']] = parseFilter($queries['Filter'],$queries['typeName']);
 				}
 			}
 			$HTTP_FORM_VARS["TYPENAME"] = dropLastChrs($HTTP_FORM_VARS["TYPENAME"], 1);
@@ -246,14 +246,14 @@ if (!(empty($bbox[0]))) {
 		}
 		$axisOrder = gmlConverter::getAxisOrderFromEpsg($bbox[4]);
 		if ($axisOrder=="longitude") {
-			$wheres[$table].= "intersects"
+			$wheres[$table].= "ST_intersects"
 			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
 			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
 		}
 		else {
-			$wheres[$table].= "intersects"
+			$wheres[$table].= "ST_intersects"
 			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[1]." ".$bbox[0].",".$bbox[3]." ".$bbox[0].",".$bbox[3]." ".$bbox[2].",".$bbox[1]." ".$bbox[2].",".$bbox[1]." ".$bbox[0]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
