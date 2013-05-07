@@ -89,7 +89,7 @@ $unserializer_options = array (
 );
 $unserializer = &new XML_Unserializer($unserializer_options);
 
-/*$HTTP_RAW_POST_DATA = '<?xml version="1.0" encoding="utf-8"?><wfs:Transaction service="WFS" version="1.0.0" xmlns="http://www.opengis.net/wfs" xmlns:mrhg="http://twitter/mrhg" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><wfs:Insert idgen="GenerateNew"><mrhg:hej><the_geom><gml:MultiPolygon srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><gml:polygonMember><gml:Polygon><gml:exterior><gml:LinearRing><gml:coordinates>5.0657329559,-41.1107215881 8.4824724197,-39.3435783386 4.3241734505,-34.6001853943 5.0657329559,-41.1107215881 </gml:coordinates></gml:LinearRing></gml:exterior></gml:Polygon></gml:polygonMember></gml:MultiPolygon></the_geom></mrhg:hej></wfs:Insert></wfs:Transaction>';*/
+/*$HTTP_RAW_POST_DATA = '<?xml version="1.0" encoding="utf-8"?><wfs:GetFeature service="WFS" version="1.0.0" xmlns:ogc="http://www.opengis.net/ogc" xmlns:hawkeye="http://twitter/hawkeye" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml"><wfs:Query typeName="hawkeye:pointlayer" srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><ogc:Filter xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml"><ogc:BBOX><ogc:PropertyName>the_geom</ogc:PropertyName><gml:Envelope srsName="urn:x-ogc:def:crs:EPSG:6.9:4326"><gml:lowerCorner>56.706890008339 9.345423233484</gml:lowerCorner><gml:upperCorner>57.452366329215 10.394726718930</gml:upperCorner></gml:Envelope></ogc:BBOX></ogc:Filter></wfs:Query></wfs:GetFeature>';*/
 
 
 /*$HTTP_RAW_POST_DATA = '<?xml version="1.0"?><DescribeFeatureType  version="1.1.0"  service="WFS"  xmlns="http://www.opengis.net/wfs"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">    <TypeName>california_coastline</TypeName></DescribeFeatureType>';
@@ -192,6 +192,7 @@ $tables = explode(",",$HTTP_FORM_VARS["TYPENAME"]);
 $properties = explode(",", dropNameSpace($HTTP_FORM_VARS["PROPERTYNAME"]));
 $featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
 $bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
+$resultType = $HTTP_FORM_VARS["RESULTTYPE"];
 
 // Start HTTP basic authentication
 //if(!$_SESSION["oauth_token"]) {
@@ -246,14 +247,14 @@ if (!(empty($bbox[0]))) {
 		}
 		$axisOrder = gmlConverter::getAxisOrderFromEpsg($bbox[4]);
 		if ($axisOrder=="longitude") {
-			$wheres[$table].= "intersects"
+			$wheres[$table].= "ST_intersects"
 			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[0]." ".$bbox[1].",".$bbox[0]." ".$bbox[3].",".$bbox[2]." ".$bbox[3].",".$bbox[2]." ".$bbox[1].",".$bbox[0]." ".$bbox[1]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
 			.$postgisObject->getGeometryColumns($postgisschema.".".$table, "f_geometry_column").")";
 		}
 		else {
-			$wheres[$table].= "intersects"
+			$wheres[$table].= "ST_intersects"
 			."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$bbox[1]." ".$bbox[0].",".$bbox[3]." ".$bbox[0].",".$bbox[3]." ".$bbox[2].",".$bbox[1]." ".$bbox[2].",".$bbox[1]." ".$bbox[0]."))',"
 			.gmlConverter::parseEpsgCode($bbox[4])
 			."),".$postgisObject->getGeometryColumns($postgisschema.".".$table, "srid")."),"
@@ -286,7 +287,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
 			//print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=".$HTTP_FORM_VARS["TYPENAME"]." http://www.opengis.net/wfs ".str_replace("server.php","",$thePath)."schemas/wfs/1.0.0/WFS-basic.xsd\"";
 			print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=".$HTTP_FORM_VARS["TYPENAME"]." http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd\"";
 		}
-		print ">\n";
+		if ($resultType!="hits") print ">\n";
 		doQuery("Select");
 		print "</".$gmlFeatureCollection.">";
 
@@ -355,6 +356,7 @@ function doQuery($queryType) {
 	global $filters;
 	global $limits;
 	global $disjoints;
+	global $resultType;
 	global $notDisjoints;
 	global $disjointCoords;
 	global $notDisjointCoords;
@@ -378,39 +380,42 @@ function doQuery($queryType) {
 				$tableObj = new table($postgisschema.".".$table);
 				$primeryKey = $tableObj->getPrimeryKey($postgisschema.".".$table);
 				//$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
-
 				$sql="SELECT ";
-					
-				if (!(empty($fields[$table]))) {
+				if ($resultType!="hits") {	
+					if (!(empty($fields[$table]))) {
 
-					$fields[$table] = substr($fields[$table], 0, strlen($fields[$table]) - 1);
-					$fieldsArr[$table] = explode(",",$fields[$table]);
+						$fields[$table] = substr($fields[$table], 0, strlen($fields[$table]) - 1);
+						$fieldsArr[$table] = explode(",",$fields[$table]);
+					}
+					else {
+						foreach($postgisObject -> getMetaData($table) as $key=>$value) {
+							if ($key!=$primeryKey['attname']) {
+								$fieldsArr[$table][] = $key;
+							}
+						}
+					}
+					// We add "" around field names in sql, so sql keywords don't mess things up
+					foreach($fieldsArr[$table] as $key=>$value) {
+						$fieldsArr[$table][$key] = "\"{$value}\"";
+					}
+					$sql = $sql.implode(",",$fieldsArr[$table]).",{$primeryKey['attname']} as fid";
+
+					foreach ($tableObj->metaData as $key => $arr) {
+						if ($arr['type']=="geometry"){
+							if ($useWktToGmlInPHP) {
+								$sql = str_replace("\"{$key}\"","public.ST_AsText(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
+							}
+							else {
+								$sql = str_replace("\"{$key}\"","ST_AsGml(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
+
+							}
+							$sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMax ";
+
+						}
+					}
 				}
 				else {
-					foreach($postgisObject -> getMetaData($table) as $key=>$value) {
-						if ($key!=$primeryKey['attname']) {
-							$fieldsArr[$table][] = $key;
-						}
-					}
-				}
-				// We add "" around field names in sql, so sql keywords don't mess things up
-				foreach($fieldsArr[$table] as $key=>$value) {
-					$fieldsArr[$table][$key] = "\"{$value}\"";
-				}
-				$sql = $sql.implode(",",$fieldsArr[$table]).",{$primeryKey['attname']} as fid";
-
-				foreach ($tableObj->metaData as $key => $arr) {
-					if ($arr['type']=="geometry"){
-						if ($useWktToGmlInPHP) {
-							$sql = str_replace("\"{$key}\"","public.ST_AsText(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
-						}
-						else {
-							$sql = str_replace("\"{$key}\"","ST_AsGml(public.ST_Transform(".$key.",".$srs.")) as ".$key, $sql);
-								
-						}
-						$sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(".$key.",{$srs}))) AS TYMax ";
-
-					}
+					$sql .= "count(*) as count";
 				}
 				$from = " FROM {$postgisschema}.{$table}";
 
@@ -497,6 +502,7 @@ function doSelect($table, $sql, $sql2, $from) {
 	global $tableObj;
 	global $postgisschema;
 	global $fieldConfArr;
+	global $resultType;
 
 	if (!$gmlFeature[$table]) {
 		$gmlFeature[$table] =$table;
@@ -543,6 +549,14 @@ function doSelect($table, $sql, $sql2, $from) {
 	if($postgisObject->PDOerror){
 		makeExceptionReport($postgisObject->PDOerror);
 	}
+	if ($resultType=="hits"){
+
+		$myrow = $postgisObject->fetchRow($result);
+		print "\nnumberOfFeatures=\"{$myrow['count']}\"\n";
+		// Close the GeometryCollection tag
+		print ">\n";
+	}
+	else {
 	while ($myrow = $postgisObject->fetchRow($result)) {
 		writeTag("open", "gml", "featureMember", null, True, True);
 		$depth++;
@@ -615,6 +629,7 @@ function doSelect($table, $sql, $sql2, $from) {
 		writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True);
 		$depth--;
 		writeTag("close", "gml", "featureMember", null, True, True);
+	}
 	}
 
 	$totalTime = microtime_float()-$startTime;

@@ -67,6 +67,7 @@ class cartomobile extends postgis {
 
 		foreach (array_unique($groups) as $group) {
 			$xmltmp.="<BaseMapSource>\n";
+			$xmltmp.="\t<Label>{$group} ({$titleStr})</Label>\n";
 			$xmltmp.="<Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
@@ -92,7 +93,6 @@ class cartomobile extends postgis {
 			}
 			$titleStr = implode(",", $titleArr);
 			$xmltmp.="\t\t</WMSServer>";
-			$xmltmp.="\t<Label>{$group} ({$titleStr})</Label>\n";
 			$xmltmp.="</BaseMapSource>\n";
 			if (sizeof($titleArr)<2) {
 				$xmltmp="";
@@ -105,6 +105,12 @@ class cartomobile extends postgis {
 			if ($schema==$row['f_table_schema']) {
 				//$table = new table("{$row['f_table_schema']}.{$row['f_table_name']}");
 				$xml.="<BaseMapSource>\n";
+				if($row['f_table_title']){
+					$xml.="\t<Label>{$row['f_table_title']}</Label>\n";
+				}
+				else {
+					$xml.="\t<Label>{$row['f_table_name']}</Label>\n";
+				}
 				$xml.="<Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
@@ -115,12 +121,6 @@ class cartomobile extends postgis {
 				}
 				$xml.="\t\t\t<Layer id='{$this->postgisschema}.{$row['f_table_name']}'></Layer>\n";
 				$xml.="\t\t</WMSServer>";
-				if($row['f_table_title']){
-					$xml.="\t<Label>{$row['f_table_title']}</Label>\n";
-				}
-				else {
-					$xml.="\t<Label>{$row['f_table_name']}</Label>\n";
-				}
 				$xml.="</BaseMapSource>\n";
 			}
 		}
@@ -169,6 +169,9 @@ class cartomobile extends postgis {
 						if (!$cartomobileArr[$key]->cartomobiletype) {
 							switch ($table->metaData[$key]['type']) {
 							case "int":
+								$type="Number";
+								break;
+							case "number":
 								$type="Number";
 								break;
 							case "string":
