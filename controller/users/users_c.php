@@ -26,5 +26,4 @@ class User_c extends Controller
         }
     }
 }
-
 new User_c();
