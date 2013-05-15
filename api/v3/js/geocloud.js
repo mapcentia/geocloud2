@@ -38,8 +38,9 @@ var geocloud = (function () {
         var defaults = {
             db: null,
             sql: null,
+            id: "vector",
             styleMap: null,
-            projection: "900913",
+            projection: (MAPLIB === "leaflet") ? "4326" : "900913",
             strategies: null,
             visibility: true,
             rendererOptions: {
@@ -50,7 +51,9 @@ var geocloud = (function () {
             movedEnd: function () {
             },
             onLoad: function () {
-            }
+            },
+            onEachFeature: function () {
+            } //Only leaflet
         };
         if (config) {
             for (prop in config) {
@@ -65,20 +68,30 @@ var geocloud = (function () {
         this.map = null;
         // Layer Def
         switch (MAPLIB) {
-            case "ol3":
+            case "ol2":
                 this.layer = new OpenLayers.Layer.Vector("Vector", {
                     styleMap: defaults.styleMap,
                     visibility: defaults.visibility,
                     renderers: ['Canvas', 'SVG', 'VML'],
-                    rendererOptions: defaults.rendererOptions,
-                    strategies: [new OpenLayers.Strategy.AnimatedCluster({
-                        //strategies : [new OpenLayers.Strategy.Cluster({
-                        distance: 45,
-                        animationMethod: OpenLayers.Easing.Expo.easeOut,
-                        animationDuration: 10,
-                        autoActivate: false
-                    })]
+                    rendererOptions: defaults.rendererOptions/*,
+                     strategies: [new OpenLayers.Strategy.AnimatedCluster({
+                     //strategies : [new OpenLayers.Strategy.Cluster({
+                     distance: 45,
+                     animationMethod: OpenLayers.Easing.Expo.easeOut,
+                     animationDuration: 10,
+                     autoActivate: false
+                     })]*/
                 });
+                break;
+            case "leaflet":
+                this.layer = L.geoJson(null, {
+                    style: defaults.styleMap,
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng);
+                    },
+                    onEachFeature: defaults.onEachFeature
+                });
+                this.layer.id = defaults.name;
                 break;
         }
         this.hide = function () {
@@ -116,7 +129,7 @@ var geocloud = (function () {
             }
             $.ajax({
                 dataType: 'jsonp',
-                data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime,
+                data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime + "&srs=" + defaults.projection,
                 jsonp: 'jsonp_callback',
                 url: host + '/api/v1/sql/' + this.db,
                 success: function (response) {
@@ -126,17 +139,21 @@ var geocloud = (function () {
                     if (response.success === true) {
                         if (response.features !== null) {
                             parentThis.geoJSON = response;
-                            parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
-                            parentThis.featureStore = new GeoExt.data.FeatureStore({
-                                fields: response.forStore,
-                                layer: parentThis.layer
-                            });
+                            switch (MAPLIB) {
+                                case "ol2":
+                                    parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                    break;
+                                case "leaflet":
+                                    parentThis.layer.addData(response);
+                                    break;
+                            }
                         }
                     }
                 },
                 complete: function () {
                     parentThis.onLoad();
                 }
+
             });
         };
         this.reset = function () {
@@ -189,8 +206,15 @@ var geocloud = (function () {
 
         };
         this.zoomToExtentOfgeoJsonStore = function (store) {
-            this.map.zoomToExtent(store.layer.getDataExtent());
-        };
+            switch (MAPLIB) {
+                case "ol2":
+                    this.map.zoomToExtent(store.layer.getDataExtent());
+                    break;
+                case "leaflet":
+                    this.map.fitBounds(store.layer.getBounds())
+                    break;
+            }
+        }
         //ol2, ol3 and leaflet
         this.getVisibleLayers = function () {
             var layerArr = [];
@@ -668,9 +692,17 @@ var geocloud = (function () {
             this.map.removeLayer(arr[0]);
         };
         this.addGeoJsonStore = function (store) {
-            store.map = this.map;
             // set the parent map obj
-            this.map.addLayers([store.layer]);
+            store.map = this.map;
+            switch (MAPLIB) {
+                case "ol2":
+                    this.map.addLayers([store.layer]);
+                    break;
+                case "leaflet":
+                    lControl.addOverlay(store.layer);
+                    this.showLayer(store.layer.id);
+                    break;
+            }
         };
         this.removeGeoJsonStore = function (store) {
             this.map.removeLayer(store.layer);
@@ -962,4 +994,5 @@ var geocloud = (function () {
         pathName: window.location.pathname.split("/"),
         urlHash: window.location.hash
     };
-})();
+})
+    ();

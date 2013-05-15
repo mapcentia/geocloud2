@@ -23,8 +23,8 @@ foreach($arr['data'] as $db) {
 		$viewer = new Settings_viewer();
 		$arr = $viewer->get();
 		$sql = "INSERT INTO users(screenname,pw) VALUES('{$db}','{$arr['data']['pw']}')";
-		$postgis->execQuery($sql);
-		echo $sql."\n";
+		//$postgis->execQuery($sql);
+		//echo $sql."\n";
 		
 		$i++;
 	}
