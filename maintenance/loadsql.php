@@ -8,18 +8,17 @@ $arr = $dbList->listAllDbs();
 
 
 foreach($arr['data'] as $db) {
-	echo $db."<br/>";
 	if ($db!="template1" AND $db!="template0" AND $db!="postgres" AND $db!="postgis_template") {
 		if (1===1) { 
 			$postgisdb = $db;
 			$conn = new postgis();
 			foreach($sqls as $sql) {
 				$result = $conn->execQuery($sql,"PDO","transaction");
-				echo "<p>{$conn->PDOerror[0]} SQL loaded in {$db}</p>";
+				echo "{$conn->PDOerror[0]} SQL loaded in {$db}\n";
 					
 				$conn->PDOerror = NULL;
 			}
-			echo "<p>---------------------</p>";
+			echo "---------------------\n";
 			$conn->db=NULL;
 			$conn = NULL;
 		}

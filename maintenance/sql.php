@@ -1,9 +1,8 @@
 <?php
 $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
 
-$sqls[] = "ALTER TABLE settings.geometry_columns_join DROP COLUMN wmssource";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmssource text";
-$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter text";
+$sqls[] = "ALTER TABLE settings.geometry_columns_join DROP COLUMN editable";
+$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN editable bool";
 
 $sqls[] = "
 CREATE VIEW settings.geometry_columns_view AS 
