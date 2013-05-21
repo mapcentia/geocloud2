@@ -52,7 +52,7 @@ class Sql_to_es extends postgis
                     $features = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
                 }
                 if (sizeof($geometries) == 0) {
-                    $features = array("geometry" => null, "type" => "Feature", "properties" => $arr);
+                    $features = array("type" => "Feature", "properties" => $arr);
                 }
                 unset($geometries);
                 $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
