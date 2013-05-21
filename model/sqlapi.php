@@ -44,6 +44,9 @@ class sqlapi extends postgis {
 				if (sizeof($geometries) == 1) {
 					$features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
 				}
+                if (sizeof($geometries) == 0) {
+                    $features[] = array("type" => "Feature", "properties" => $arr);
+                }
 				unset($geometries);
 			}
 			foreach ($arrayWithFields as $key => $value) {

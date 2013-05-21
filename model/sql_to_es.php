@@ -51,11 +51,15 @@ class Sql_to_es extends postgis
                 if (sizeof($geometries) == 1) {
                     $features = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
                 }
+                if (sizeof($geometries) == 0) {
+                    $features = array("geometry" => null, "type" => "Feature", "properties" => $arr);
+                }
                 unset($geometries);
                 $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
+                //echo $json;
 
                 if (is_int($i / 1000)) {
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
