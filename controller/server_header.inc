@@ -23,6 +23,7 @@ include '../../model/sqlapi.php';
 include '../../model/geometry_columns.php';
 
 
+
 $postgisdb = $parts[3]; // We change the db to user
 $postgisschema = $_SESSION['schema'];
 //$postgisuser = $_SESSION['screen_name']; // We change the user

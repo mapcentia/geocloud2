@@ -1,13 +1,10 @@
 <?php
-@include '../../../conf/main.php';
-@include("inc/controller.php");
-@include("model/sql_to_es.php");
-
-
+include '../../../conf/main.php';
+@include("../../../inc/controller.php");
+include("../../../model/sql_to_es.php");
 class SqlToEs_c extends Controller
 {
     public $user;
-
     function __construct()
     {
         global $argv;
@@ -21,5 +18,4 @@ class SqlToEs_c extends Controller
         $api->sql($argv[5], $argv[2], $argv[3], $argv[4]);
     }
 }
-
 new SqlToEs_c();
