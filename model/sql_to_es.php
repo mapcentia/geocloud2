@@ -64,7 +64,6 @@ class Sql_to_es extends postgis
                 if (is_int($i / 1000)) {
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
                     curl_exec($ch);
-                    //curl_close($ch);
                     $json="";
                     echo $i."\n";
                 }
