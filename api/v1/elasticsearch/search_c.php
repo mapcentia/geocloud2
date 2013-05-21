@@ -19,11 +19,15 @@ class Search_c extends Controller
 
     }
 
-    function search($q, $call_back = false)
+    function search($q, $call_back = false, $call_counter=false)
     {
         $parts = parent::getUrlParts();
         $cmd = "curl -XGET 'http://localhost:9200/{$parts[6]}/{$parts[7]}/_search?pretty=false&size=10' -d '" . urldecode($q) . "'";
 
-        return ($call_back) ? $call_back . "(" . exec($cmd) . ")" : exec($cmd);
+        $obj = json_decode(exec($cmd));
+
+        $obj->call_counter = (int)$call_counter;
+        $json = ($call_back) ? $call_back . "(" . json_encode($obj) . ")" : exec($cmd);
+        return $json;
     }
 }
