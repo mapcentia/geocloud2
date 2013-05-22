@@ -22,7 +22,6 @@ class User_c extends Controller
                 $this->user = new User($parts[3]);
                 echo $this->toJSON($this->user->getData());
                 break;
-
         }
     }
 }

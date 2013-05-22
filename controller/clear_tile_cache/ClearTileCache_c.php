@@ -14,6 +14,8 @@ class ClearTileCache_c extends Controller
         $respons = array();
         parent::__construct();
         $parts = $this->getUrlParts();
+
+        $this->startSession();
         $this->auth($parts[3]);
         if ($parts[4] === "schema") {
             $dir = $basePath . "tmp/" . $parts[3] . "/" . $parts[5] . ".*";
