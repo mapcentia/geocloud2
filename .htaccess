@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteRule ^$ index 
-RewriteRule ^([a-z]*)/([\w'-]*)$ $1.php 
-RewriteRule ^([a-z]*)/([\w'-]*)/([\w'-]*)$ $1.php 
-RewriteRule ^([\w'-]*)$ $1.php 
+RewriteRule ^$ index
+RewriteRule ^([a-z]*)/([\w'-]*)$ $1.php
+RewriteRule ^([a-z]*)/([\w'-]*)/([\w'-]*)$ $1.php
+RewriteRule ^([\w'-]*)$ $1.php

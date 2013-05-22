@@ -24,5 +24,5 @@ switch ($parts[4]) {
         include 'count_c.php';
         echo Count_c::count();
         break;
-
 }
+echo  "\n";

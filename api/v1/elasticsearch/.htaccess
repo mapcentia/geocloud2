@@ -1,3 +1,2 @@
-RemoveOutputFilter DEFLATE
 RewriteEngine On
 RewriteRule ^[a-z]* route.php [L]

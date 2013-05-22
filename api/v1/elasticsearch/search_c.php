@@ -1,4 +1,5 @@
 <?php
+
 //include("model/sql_to_es.php");
 class Search_c extends Controller
 {
@@ -23,9 +24,10 @@ class Search_c extends Controller
 
 
         if ($call_counter) {
-            $obj->call_counter = (int)$call_counter;
+            //$obj->call_counter = (int)$call_counter;
         }
         $json = ($call_back) ? $call_back . "(" . $buffer . ")" :$buffer;
         return $json;
     }
 }
+
