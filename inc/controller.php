@@ -19,6 +19,8 @@ class Controller
 
     public function startSession()
     {
+        global $sessionName;
+        global $domain;
         session_name($sessionName);
         session_set_cookie_params(0, '/', "." . $domain);
         session_start();
