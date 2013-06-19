@@ -56,23 +56,23 @@ class cartomobile extends postgis {
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
-		$xml.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/?TRANSPARENT=TRUE%26SERVICE=WMS%26VERSION=1.1.1%26REQUEST=GetMap%26STYLES=%26FORMAT=image/png%26SRS=EPSG:900913'>\n";
+		$xml.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/'>\n";
 		$xml.="\t\t\t<Layer id='{$baseLayer}'></Layer>\n";
 		$xml.="\t\t</WMSServer>";
 		$xml.= "</BaseMapSource>";
 		}
 
-		/* Start of writing WMS as baselayers */
-		/**/
+		/* Start of writing WMS as overlays */
 
+           /*
 		foreach (array_unique($groups) as $group) {
-			$xmltmp.="<BaseMapSource>\n";
+			$xmltmp.="<BaseMapSource supplemental='true'>\n";
 			$xmltmp.="\t<Label>{$group} ({$titleStr})</Label>\n";
 			$xmltmp.="<Extent srs='EPSG:3857'>
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
-			$xmltmp.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/?TRANSPARENT=TRUE%26SERVICE=WMS%26VERSION=1.1.1%26REQUEST=GetMap%26STYLES=%26FORMAT=image/png%26SRS=EPSG:900913'>\n";
+			$xmltmp.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/'>\n";
 			$titleArr=array();
 			if ($baseLayer){
 				$xmltmp.="\t\t\t<Layer id='{$baseLayer}'></Layer>\n";
@@ -100,11 +100,11 @@ class cartomobile extends postgis {
 			$xml.=$xmltmp;
 			$xmltmp="";
 		}
-
+        */
 		foreach ($tables->rows as $row) {
 			if ($schema==$row['f_table_schema']) {
 				//$table = new table("{$row['f_table_schema']}.{$row['f_table_name']}");
-				$xml.="<BaseMapSource>\n";
+				$xml.="<BaseMapSource supplemental='true'>\n";
 				if($row['f_table_title']){
 					$xml.="\t<Label>{$row['f_table_title']}</Label>\n";
 				}
@@ -115,7 +115,7 @@ class cartomobile extends postgis {
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
-				$xml.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/?TRANSPARENT=TRUE%26SERVICE=WMS%26VERSION=1.1.1%26REQUEST=GetMap%26STYLES=%26FORMAT=image/png%26SRS=EPSG:900913%26LAYERS={$this->postgisschema}.{$row['f_table_name']}'>\n";
+				$xml.="\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/'>\n";
 				if ($baseLayer){
 					$xml.="\t\t\t<Layer id='{$baseLayer}'></Layer>\n";
 				}
@@ -125,7 +125,7 @@ class cartomobile extends postgis {
 			}
 		}
 
-		/**/
+
 		/* End of writing WMS as baselayers */
 		$xml.="</BaseMap>\n";
 
