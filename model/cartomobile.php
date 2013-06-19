@@ -57,7 +57,7 @@ class cartomobile extends postgis
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
-            $xml .= "\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/tilecache/'>\n";
+            $xml .= "\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/'>\n";
             $xml .= "\t\t\t<Layer id='{$baseLayer}'></Layer>\n";
             $xml .= "\t\t</WMSServer>";
             $xml .= "</BaseMapSource>";
@@ -115,7 +115,7 @@ class cartomobile extends postgis
 		<LowerCorner>-20037508.34 -20037508.34</LowerCorner>
 		<UpperCorner>20037508.34 20037508.34</UpperCorner>
 	    </Extent>";
-                $xml .= "\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/tilecache/'>\n";
+                $xml .= "\t\t<WMSServer src='{$hostName}/wms/{$this->postgisdb}/{$this->postgisschema}/'>\n";
                 if ($baseLayer) {
                     $xml .= "\t\t\t<Layer id='{$baseLayer}'></Layer>\n";
                 }
