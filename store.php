@@ -63,7 +63,7 @@ makeTileCacheFile($postgisdb);
         HTTP authentication password for WMS and WFS
     </div>
     <div id="apikey">
-        API key. This is used for the SQP API. You can always change the key
+        API key. This is used for the SQL API. You can always change the key
         <br>
         <br>
         <b><span id='apikeyholder'></span></b>
