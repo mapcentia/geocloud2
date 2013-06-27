@@ -53,7 +53,10 @@ var geocloud = (function () {
             onLoad: function () {
             },
             onEachFeature: function () {
-            } //Only leaflet
+            }, //Only leaflet
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng);
+            }
         };
         if (config) {
             for (prop in config) {
@@ -86,9 +89,7 @@ var geocloud = (function () {
             case "leaflet":
                 this.layer = L.geoJson(null, {
                     style: defaults.styleMap,
-                    pointToLayer: function (feature, latlng) {
-                        return L.circleMarker(latlng);
-                    },
+                    pointToLayer: defaults.pointToLayer,
                     onEachFeature: defaults.onEachFeature
                 });
                 this.layer.id = defaults.name;
