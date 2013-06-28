@@ -56,7 +56,7 @@ var geocloud = (function () {
             }, //Only leaflet
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng);
-            }
+            } //Only leaflet
         };
         if (config) {
             for (prop in config) {
