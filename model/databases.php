@@ -76,7 +76,7 @@ class databases extends postgis {
 		return $response;
 	}
 	public function listAllSchemas(){
-		$sql = "SELECT schema_name from information_schema.schemata WHERE schema_name not like 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema'";
+		$sql = "SELECT schema_name from information_schema.schemata WHERE schema_name not like 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi'";
 		$result = $this->execQuery($sql);
 		if (!$this->PDOerror) {
 			while ($row = $this->fetchRow($result,"assoc")) {

@@ -9,7 +9,7 @@ class sqlapi extends postgis {
 	function sql($q) {
 		$name = "_" . rand(1, 999999999) . microtime();
 		$name = $this -> toAscii($name, null, "_");
-		$view = "public.{$name}";
+		$view = "sqlapi.{$name}";
 		$sqlView = "CREATE VIEW {$view} as {$q}";
 		//echo $sqlView ;
 		$result = $this -> execQuery($sqlView);
