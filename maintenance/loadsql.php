@@ -18,7 +18,7 @@ foreach($arr['data'] as $db) {
 					
 				$conn->PDOerror = NULL;
 			}
-			echo "---------------------\n";
+			echo "---------------------\n<br>";
 			$conn->db=NULL;
 			$conn = NULL;
 		}

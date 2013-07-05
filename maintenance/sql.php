@@ -1,4 +1,5 @@
 <?php
+/*
 $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
 
 $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP COLUMN editable";
@@ -42,9 +43,5 @@ CREATE VIEW settings.geometry_columns_view AS
    			geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text = 
    			geometry_columns_join._key_::text;
 ";
-/*
-foreach($sqls as $sql){
-	echo $sql.";\n";
-};
 */
-	
+$sqls[] = "CREATE SCHEMA sqlapi";
