@@ -45,6 +45,8 @@ CREATE TABLE viewer (
     viewer text
 );
 
+CREATE SCHEMA sqlapi;
+
 INSERT INTO viewer VALUES ('{\"pw\":\"81dc9bdb52d04dc20036dbd8313ed055\"}');
 
 SET search_path = public, pg_catalog;
