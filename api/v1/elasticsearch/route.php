@@ -1,5 +1,5 @@
 <?php
-set_time_limit(0);
+//set_time_limit(0);
 include '../../../conf/main.php';
 include("inc/controller.php");
 include 'model/settings_viewer.php';
