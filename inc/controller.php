@@ -10,8 +10,6 @@ header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 
 class Controller
 {
-    public $urlParts;
-
     function __construct()
     {
 
@@ -37,6 +35,19 @@ class Controller
             //$_SESSION['auth'] = null;
             //$_SESSION['screen_name'] = null;
             die("<script>window.location='{$userHostName}/user/login'</script>");
+        }
+    }
+
+    public function authApiKey($user, $key){
+        global $postgisdb;
+        $postgisdb = $user;
+        $settings_viewer = new Settings_viewer();
+        $res = $settings_viewer->get();
+        $apiKey = $res['data']['api_key'];
+        if ($apiKey == $key && $key!=false) {
+            return true;
+        } else {
+            return false;
         }
     }
 

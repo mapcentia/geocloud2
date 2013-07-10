@@ -9,11 +9,13 @@ class Sql_to_es extends postgis
         $this->srs = $srs;
     }
 
-    function sql($q, $index, $type, $id)
+    function sql($q, $index, $type, $id, $db)
     {
+        // We create a unique index name
+        $index = $db."_".$index;
         $name = "_" . rand(1, 999999999) . microtime();
         $name = $this->toAscii($name, null, "_");
-        $view = "public.{$name}";
+        $view = "sqlapi.{$name}";
         $sqlView = "CREATE VIEW {$view} as {$q}";
         $this->execQuery($sqlView);
         if (!$this->PDOerror) {

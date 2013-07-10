@@ -221,7 +221,8 @@ class postgis {
 					$this -> db = NULL;
 					$this -> connectionFailed=true;
 					$this->PDOerror[]="Could not connect to database";
-    				
+                    print_r($this->PDOerror);
+                    die();
 				}
 				break;
 		}
