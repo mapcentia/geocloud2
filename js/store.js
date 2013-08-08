@@ -737,12 +737,8 @@ $(window).load(function () {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
-
         wmsClasses.grid = null;
         wmsClasses.init(record);
-
-        //wmsLayer.grid = null;
-        //wmsLayer.init(record.get("f_table_name"));
         winClasses = null;
         winClasses = new Ext.Window({
             title: "Edit classes '" + record.get("f_table_name") + "'",
@@ -813,7 +809,6 @@ $(window).load(function () {
                     frame: false,
                     border: false,
                     region: 'center',
-                    //title: 'More layer settings',
                     id: "detailform",
                     bodyStyle: 'padding: 10px 10px 0 10px;',
                     items: [
@@ -959,7 +954,7 @@ $(window).load(function () {
             width: 700,
             height: 350,
             initCenter: true,
-            closeAction: 'close',
+            closeAction: 'hide',
             border: false,
             layout: 'border',
             items: [

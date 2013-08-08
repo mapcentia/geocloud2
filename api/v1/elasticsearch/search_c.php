@@ -9,7 +9,11 @@ class Search_c extends Controller
     function search($q, $call_back, $size, $pretty, $call_counter = false)
     {
         $parts = parent::getUrlParts();
-        $index = $parts[5]."_".$parts[6];
+        $indices = explode(",",$parts[6]);
+        foreach ($indices as $v){
+            $arr[] = $parts[5]."_".$v;
+        }
+        $index = implode(",",$arr);
         $ch = curl_init("http://localhost:9200/{$index}/{$parts[7]}/_search?pretty={$pretty}&size={$size}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);

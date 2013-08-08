@@ -61,7 +61,7 @@ class GeometryColumns extends postgis
 
     function getSchemas() // All tables
     {
-        $sql = "SELECT f_table_schema as schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL GROUP BY f_table_schema";
+        $sql = "SELECT f_table_schema as schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
             while ($row = $this->fetchRow($result, "assoc")) {
