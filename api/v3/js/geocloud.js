@@ -2,13 +2,17 @@ var geocloud_host; // Global var
 var geocloud = (function () {
     "use strict";
     var scriptSource = (function (scripts) {
-        scripts = document.getElementsByTagName('script');
-        var script = scripts[scripts.length - 1];
-        if (script.getAttribute.length !== undefined) {
-            return script.src;
-        }
-        return script.getAttribute('src', -1);
-    }()), map, geoJsonStore, clickEvent, transformPoint, lControl, MAPLIB, host;
+            scripts = document.getElementsByTagName('script');
+            var script = scripts[scripts.length - 1];
+            if (script.getAttribute.length !== undefined) {
+                return script.src;
+            }
+            return script.getAttribute('src', -1);
+        }()),
+        map, geoJsonStore, clickEvent, transformPoint, lControl, MAPLIB, host,
+        OSM = "osm",
+        MAPQUESTOSM = "mapQuestOSM",
+        MAPBOXNATURALEARTH = "mapBoxNaturalEarth";
     // In IE7 host name is missing if script url is relative
     if (scriptSource.charAt(0) === "/") {
         geocloud_host = "";
@@ -401,7 +405,12 @@ var geocloud = (function () {
         this.addMapQuestOSM = function () {
             switch (MAPLIB) {
                 case "ol2":
-                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"]);
+                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM", [
+                        "http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+                        "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+                        "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
+                        "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"
+                    ]);
                     this.mapQuestOSM.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestOSM);
                     break;
@@ -495,6 +504,35 @@ var geocloud = (function () {
             this.stamenToner.baseLayer = true;
             this.stamenToner.id = "stamenToner";
             return (this.stamenToner);
+        };
+        //ol3 and leaflet
+        this.addMapBoxNaturalEarth = function () {
+            switch (MAPLIB) {
+                case "ol2":
+                    this.mapBoxNaturalEarth = new new OpenLayers.Layer.XYZ("mapBoxNaturalEarth",[
+                            "http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                            "http://b.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                            "http://c.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                            "http://d.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png"
+                        ]);
+                    this.mapBoxNaturalEarth.wrapDateLine = false;
+                    this.map.addLayer(this.mapBoxNaturalEarth);
+                    break;
+                case "ol3":
+                    this.mapBoxNaturalEarth = new ol.layer.TileLayer({
+                        source: new ol.source.OSM(),
+                        visible: false
+                    });
+                    this.map.addLayer(this.mapBoxNaturalEarth);
+                    break;
+                case "leaflet":
+                    this.mapBoxNaturalEarth = new L.tileLayer("http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
+                    lControl.addBaseLayer(this.mapBoxNaturalEarth);
+                    break;
+            }
+            this.mapBoxNaturalEarth.baseLayer = true;
+            this.mapBoxNaturalEarth.id = "mapBoxNaturalEarth";
+            return (this.mapBoxNaturalEarth);
         };
         this.addGoogleStreets = function () {
             // v2
@@ -601,6 +639,20 @@ var geocloud = (function () {
                         }
                     }
                     break;
+            }
+        }
+        this.addBaseLayer = function (l) {
+            switch (l) {
+                case "osm":
+                    this.addOSM();
+                    break;
+                case "mapQuestOSM":
+                    this.addMapQuestOSM();
+                    break;
+                case "mapBoxNaturalEarth":
+                    this.addMapBoxNaturalEarth();
+                    break;
+
             }
         }
         //ol2, ol3 and leaflet
@@ -998,7 +1050,10 @@ var geocloud = (function () {
             return mapvars;
         })(),
         pathName: window.location.pathname.split("/"),
-        urlHash: window.location.hash
+        urlHash: window.location.hash,
+        OSM: OSM,
+        MAPQUESTOSM: MAPQUESTOSM,
+        MAPBOXNATURALEARTH: MAPBOXNATURALEARTH
     };
 })
     ();
