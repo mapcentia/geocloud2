@@ -9,22 +9,27 @@ var geocloud = (function () {
             }
             return script.getAttribute('src', -1);
         }()),
-        map, geoJsonStore, clickEvent, transformPoint, lControl, MAPLIB, host,
+        map,
+        geoJsonStore,
+        clickEvent,
+        transformPoint,
+        lControl,
+        MAPLIB,
+        host,
         OSM = "osm",
         MAPQUESTOSM = "mapQuestOSM",
-        MAPBOXNATURALEARTH = "mapBoxNaturalEarth";
+        MAPBOXNATURALEARTH = "mapBoxNaturalEarth",
+        STAMENTONER = "stamenToner",
+        GOOGLESTREETS = "googleStreets",
+        GOOGLEHYBRID = "googleHybrid",
+        GOOGLESATELLITE = "googleSatellite",
+        GOOGLETERRAIN = "googleTerrain",
+        BINGROAD = "bingRoad",
+        BINGAERIAL = "bingAerial",
+        BINGAERIALWITHLABELS = "bingAerialWithLabels";
     // In IE7 host name is missing if script url is relative
-    if (scriptSource.charAt(0) === "/") {
-        geocloud_host = "";
-    } else {
-        geocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
-    }
-    host = geocloud_host;
+    geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    document.write("<link rel='stylesheet' href='" + geocloud_host + "/api/v3/css/styles.css' type='text/css'>");
-    if (typeof ol === "object" && typeof L === "object") {
-        alert("You can\'t use both OpenLayer and Leaflet on the same page. You have to decide?");
-    }
     if (typeof ol !== "object" && typeof L !== "object" && typeof OpenLayers !== "object") {
         alert("You need to load neither OpenLayers.js, ol3,js or Leaflet.js");
     }
@@ -36,7 +41,11 @@ var geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
+        document.write("<script src='http://local.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
+        document.write("<script src='http://local.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
+        document.write("<link href='http://eu1.mapcentia.com/js/leaflet/leaflet.css' type='text/css' rel='stylesheet'>");
     }
+    document.write("<link rel='stylesheet' href='" + geocloud_host + "/api/v3/css/styles.css' type='text/css'>");
     geoJsonStore = function (config) {
         var prop, parentThis = this;
         var defaults = {
@@ -179,6 +188,7 @@ var geocloud = (function () {
                 defaults[prop] = config[prop];
             }
         }
+        this.bingApiKey = null;
         parentMap = this;
         //ol2, ol3
         this.zoomToExtent = function (extent, closest) {
@@ -413,6 +423,7 @@ var geocloud = (function () {
                     ]);
                     this.mapQuestOSM.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestOSM);
+                    this.mapQuestOSM.setVisibility(false);
                     break;
                 case "ol3":
                     this.mapQuestOSM = new ol.layer.TileLayer({
@@ -437,6 +448,7 @@ var geocloud = (function () {
                     this.mapQuestAerial = new OpenLayers.Layer.OSM("mapQuestAerial", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
                     this.mapQuestAerial.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestAerial);
+                    this.mapQuestAerial.setVisibility(false);
                     break;
                 case "ol3":
                     this.mapQuestAerial = new ol.layer.TileLayer({
@@ -462,6 +474,7 @@ var geocloud = (function () {
                     this.osm = new OpenLayers.Layer.OSM("osm");
                     this.osm.wrapDateLine = false;
                     this.map.addLayer(this.osm);
+                    this.osm.setVisibility(false);
                     break;
                 case "ol3":
                     this.osm = new ol.layer.TileLayer({
@@ -486,6 +499,7 @@ var geocloud = (function () {
                     this.stamenToner = new OpenLayers.Layer.Stamen("toner");
                     this.stamenToner.name = "stamenToner";
                     this.map.addLayer(this.stamenToner);
+                    this.stamenToner.setVisibility(false);
                     break;
                 case "ol3":
                     this.stamenToner = new ol.layer.TileLayer({
@@ -509,14 +523,15 @@ var geocloud = (function () {
         this.addMapBoxNaturalEarth = function () {
             switch (MAPLIB) {
                 case "ol2":
-                    this.mapBoxNaturalEarth = new new OpenLayers.Layer.XYZ("mapBoxNaturalEarth",[
-                            "http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                            "http://b.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                            "http://c.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                            "http://d.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png"
-                        ]);
+                    this.mapBoxNaturalEarth = new OpenLayers.Layer.XYZ("mapBoxNaturalEarth", [
+                        "http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "http://b.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "http://c.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "http://d.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png"
+                    ]);
                     this.mapBoxNaturalEarth.wrapDateLine = false;
                     this.map.addLayer(this.mapBoxNaturalEarth);
+                    this.mapBoxNaturalEarth.setVisibility(false);
                     break;
                 case "ol3":
                     this.mapBoxNaturalEarth = new ol.layer.TileLayer({
@@ -535,86 +550,160 @@ var geocloud = (function () {
             return (this.mapBoxNaturalEarth);
         };
         this.addGoogleStreets = function () {
-            // v2
-            try {
-                this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {
-                    type: G_NORMAL_MAP,
-                    sphericalMercator: false,
-                    wrapDateLine: true,
-                    numZoomLevels: 20
-                });
+            switch (MAPLIB) {
+                case "ol2":
+                    try {
+                        this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {
+                            type: G_NORMAL_MAP,
+                            sphericalMercator: false,
+                            wrapDateLine: true,
+                            numZoomLevels: 20
+                        });
 
-            } catch (e) {
+                    } catch (e) {
+                    }
+                    // v3
+                    try {
+                        this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {// the default
+                            wrapDateLine: false,
+                            numZoomLevels: 20
+                        });
+                    } catch (e) {
+                    }
+                    this.map.addLayer(this.baseGNORMAL);
+                    this.baseGNORMAL.setVisibility(false);
+                    break;
+                case "leaflet":
+                    this.baseGNORMAL = new L.Google('ROADMAP');
+                    lControl.addBaseLayer(this.baseGNORMAL);
+                    break;
+
             }
-            ;
-            // v3
-            try {
-                this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {// the default
-                    wrapDateLine: false,
-                    numZoomLevels: 20
-                });
-            } catch (e) {
-            }
-            //this.map.addLayer(this.baseGNORMAL);
+            this.baseGNORMAL.baseLayer = true;
+            this.baseGNORMAL.id = "googleStreets";
             return (this.baseGNORMAL);
-        };
+        }
         this.addGoogleHybrid = function () {
-            // v2
-            try {
-                this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
-                    type: G_HYBRID_MAP,
-                    sphericalMercator: true,
-                    wrapDateLine: true,
-                    numZoomLevels: 20
-                });
-            } catch (e) {
-            }
+            switch (MAPLIB) {
+                case "ol2":
+                    // v2
+                    try {
+                        this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
+                            type: G_HYBRID_MAP,
+                            sphericalMercator: true,
+                            wrapDateLine: true,
+                            numZoomLevels: 20
+                        });
+                    } catch (e) {
+                    }
 
-            // v3
-            try {
-                this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
-                    type: google.maps.MapTypeId.HYBRID,
-                    wrapDateLine: true,
-                    numZoomLevels: 20
-                });
-            } catch (e) {
-                //alert(e.message)
+                    // v3
+                    try {
+                        this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
+                            type: google.maps.MapTypeId.HYBRID,
+                            wrapDateLine: true,
+                            numZoomLevels: 20
+                        });
+                    } catch (e) {
+                        //alert(e.message)
+                    }
+                    this.map.addLayer(this.baseGHYBRID);
+                    this.baseGHYBRID.setVisibility(false);
+                    break;
+                case "leaflet":
+                    this.baseGHYBRID = new L.Google('HYBRID');
+                    lControl.addBaseLayer(this.baseGHYBRID);
+                    break;
             }
-            //this.map.addLayer(this.baseGHYBRID);
+            this.baseGHYBRID.baseLayer = true;
+            this.baseGHYBRID.id = "googleHybrid";
             return (this.baseGHYBRID);
         };
         this.addGoogleSatellite = function () {
-            // v3
-            try {
-                this.baseGSATELLITE = new OpenLayers.Layer.Google("googleSatellite", {
-                    type: google.maps.MapTypeId.SATELLITE,
-                    wrapDateLine: true,
-                    numZoomLevels: 20
-                });
-            } catch (e) {
-                // alert(e.message)
+            switch (MAPLIB) {
+                case "ol2":
+                    // v3
+                    try {
+                        this.baseGSATELLITE = new OpenLayers.Layer.Google("googleSatellite", {
+                            type: google.maps.MapTypeId.SATELLITE,
+                            wrapDateLine: true,
+                            numZoomLevels: 20
+                        });
+                    }
+                    catch
+                        (e) {
+                        // alert(e.message)
+                    }
+                    this.map.addLayer(this.baseGSATELLITE);
+                    this.baseGSATELLITE.setVisibility(false);
+                    break;
+                case "leaflet":
+                    this.baseGSATELLITE = new L.Google('SATELLITE');
+                    lControl.addBaseLayer(this.baseGSATELLITE);
+                    break;
             }
-            //this.map.addLayer(this.baseGSATELLITE);
+            this.baseGSATELLITE.baseLayer = true;
+            this.baseGSATELLITE.id = "googleSatellite";
             return (this.baseGSATELLITE);
         };
         this.addGoogleTerrain = function () {
-            // v3
-            try {
-                this.baseGTERRAIN = new OpenLayers.Layer.Google("GoogleTerrain", {
-                    type: google.maps.MapTypeId.TERRAIN,
-                    wrapDateLine: true,
-                    numZoomLevels: 20
-                });
-            } catch (e) {
-                // alert(e.message)
+            switch (MAPLIB) {
+                case "ol2":
+                    this.baseGTERRAIN = new OpenLayers.Layer.Google("googleTerrain", {
+                        type: google.maps.MapTypeId.TERRAIN,
+                        wrapDateLine: true,
+                        numZoomLevels: 20
+                    });
+                    this.map.addLayer(this.baseGTERRAIN);
+                    this.baseGTERRAIN.setVisibility(false);
+                    break;
+                case "leaflet":
+                    this.baseGTERRAIN = new L.Google('TERRAIN');
+                    lControl.addBaseLayer(this.baseGTERRAIN);
+                    break;
             }
-            //this.map.addLayer(this.baseGTERRAIN);
+            this.baseGTERRAIN.baseLayer = true;
+            this.baseGTERRAIN.id = "googleTerrain";
             return (this.baseGTERRAIN);
+        };
+        this.addBing = function (type) {
+            var l, name;
+            switch (type) {
+                case "Road":
+                    name = "bingRoad";
+                    break;
+                case "Aerial":
+                    name = "bingAerial";
+                    break;
+                case "AerialWithLabels":
+                    name = "bingAerialWithLabels";
+                    break;
+            };
+            switch (MAPLIB) {
+                case "ol2":
+                    l = new OpenLayers.Layer.Bing({
+                        name: name,
+                        wrapDateLine: true,
+                        key: this.bingApiKey,
+                        type: type
+                    });
+                    this.map.addLayer(l);
+                    l.setVisibility(false);
+                    break;
+                case "leaflet":
+                    l = new L.BingLayer(this.bingApiKey, {"type": type});
+                    lControl.addBaseLayer(l);
+                    break;
+            }
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
             switch (MAPLIB) {
                 case "ol2":
+                    this.showLayer(baseLayerName);
                     this.map.setBaseLayer(this.getLayersByName(baseLayerName));
                     break
                 case "ol3":
@@ -628,13 +717,17 @@ var geocloud = (function () {
                     break;
                 case "leaflet":
                     var layers = lControl._layers;
+
                     for (var key in layers) {
+
                         if (layers.hasOwnProperty(key)) {
                             if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) {
-                                this.map.removeLayer(layers[key].layer)
+                                this.map.removeLayer(layers[key].layer);
+
                             }
                             if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
                                 this.map.addLayer(layers[key].layer, false);
+
                             }
                         }
                     }
@@ -652,7 +745,30 @@ var geocloud = (function () {
                 case "mapBoxNaturalEarth":
                     this.addMapBoxNaturalEarth();
                     break;
-
+                case "stamenToner":
+                    this.addStamenToner();
+                    break;
+                case "googleStreets":
+                    this.addGoogleStreets();
+                    break;
+                case "googleHybrid":
+                    this.addGoogleHybrid();
+                    break;
+                case "googleSatellite":
+                    this.addGoogleSatellite();
+                    break;
+                case "googleTerrain":
+                    this.addGoogleTerrain();
+                    break;
+                case "bingRoad":
+                    this.addBing("Road");
+                    break;
+                case "bingAerial":
+                    this.addBing("Aerial");
+                    break;
+                case "bingAerialWithLabels":
+                    this.addBing("AerialWithLabels");
+                    break;
             }
         }
         //ol2, ol3 and leaflet
@@ -1053,7 +1169,14 @@ var geocloud = (function () {
         urlHash: window.location.hash,
         OSM: OSM,
         MAPQUESTOSM: MAPQUESTOSM,
-        MAPBOXNATURALEARTH: MAPBOXNATURALEARTH
+        MAPBOXNATURALEARTH: MAPBOXNATURALEARTH,
+        STAMENTONER: STAMENTONER,
+        GOOGLESTREETS: GOOGLESTREETS,
+        GOOGLEHYBRID: GOOGLEHYBRID,
+        GOOGLESATELLITE: GOOGLESATELLITE,
+        GOOGLETERRAIN: GOOGLETERRAIN,
+        BINGROAD: BINGROAD,
+        BINGAERIAL: BINGAERIAL,
+        BINGAERIALWITHLABELS: BINGAERIALWITHLABELS
     };
-})
-    ();
+})();
