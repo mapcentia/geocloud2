@@ -13,7 +13,6 @@ L.BingLayer = L.TileLayer.extend({
         this._url = null;
         this.meta = {};
         this.loadMetadata();
-
     },
 
     tile2quad: function(x, y, z) {

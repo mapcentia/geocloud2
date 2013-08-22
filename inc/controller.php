@@ -4,17 +4,12 @@
  */
 include '../../conf/main.php';
 include 'functions.php';
-header('Content-Type: text/plain');
+header('Content-Type: text/plain; charset=utf-8');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 
 class Controller
 {
-    function __construct()
-    {
-
-    }
-
     public function startSession()
     {
         global $sessionName;
