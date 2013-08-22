@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="512bec31-4dd1-4aee-8876-7963be5ab8d0" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/js/ext/examples/docs/output/Ext.calendar.DayHeaderTemplate.html" afterPath="" />
+    <list default="true" id="512bec31-4dd1-4aee-8876-7963be5ab8d0" name="Default" comment="Clean up">
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/ext/examples/docs/output/Ext.calendar.DayHeaderView.html" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/ext/examples/docs/output/Ext.calendar.EventRecord.html" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/ext/examples/docs/output/Ext.ux.GMapPanel.html" afterPath="" />
@@ -114,10 +113,12 @@
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/openlayers/theme/default/img/view_next_off.png" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/openlayers/theme/default/img/view_previous_on.png" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/js/openlayers/theme/default/img/zoom-panel.png" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="geocloud.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377202306470" ignored="false" />
+    <file path="/Dummy.txt" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377202765898" ignored="false" />
     <file path="/registration_f.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1369638163854" ignored="false" />
     <file path="/login_p.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1375992923883" ignored="false" />
     <file path="/tables.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1365112114563" ignored="false" />
@@ -184,6 +185,7 @@
     <file path="/twitter_c.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377089924100" ignored="false" />
     <file path="/Route.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377198200550" ignored="false" />
     <file path="/Controller.php" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377199490676" ignored="false" />
+    <file path="/.gitignore" changelist="512bec31-4dd1-4aee-8876-7963be5ab8d0" time="1377203125798" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -208,10 +210,19 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name=".htaccess" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name=".htaccess" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.htaccess">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="8" column="7" selection-start="219" selection-end="219" vertical-scroll-proportion="0.16483517">
+            <state line="8" column="11" selection-start="223" selection-end="223" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1" column="6" selection-start="20" selection-end="20" vertical-scroll-proportion="0.020604396">
               <folding />
             </state>
           </provider>
@@ -251,7 +262,7 @@
         <entry key="$PROJECT_DIR$" value="test2" />
       </map>
     </option>
-    <option name="RECENT_COMMON_BRANCH" value="master" />
+    <option name="RECENT_COMMON_BRANCH" value="test2" />
   </component>
   <component name="GitLogSettings">
     <option name="myDateState">
@@ -261,7 +272,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/js/leaflet/leaflet-bing.js" />
         <option value="$PROJECT_DIR$/inc/TwitterAPIExchange.php" />
         <option value="$PROJECT_DIR$/api/v1/twitter/.htaccess" />
         <option value="$PROJECT_DIR$/api/v3/js/geocloud.js" />
@@ -277,6 +287,7 @@
         <option value="$PROJECT_DIR$/api/v1/elasticsearch/search_c.php" />
         <option value="$PROJECT_DIR$/index.php" />
         <option value="$PROJECT_DIR$/.htaccess" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -333,38 +344,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="geocloud" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="geocloud" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="geocloud" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="geocloud" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="geocloud" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="GeoExt" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -808,7 +787,11 @@
       <created>1377202319289</created>
       <updated>1377202319289</updated>
     </task>
-    <option name="localTasksCounter" value="87" />
+    <task id="LOCAL-00087" summary="Clean up">
+      <created>1377202737803</created>
+      <updated>1377202737804</updated>
+    </task>
+    <option name="localTasksCounter" value="88" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -970,7 +953,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/.htaccess">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="8" column="7" selection-start="219" selection-end="219" vertical-scroll-proportion="0.16483517">
+        <state line="8" column="11" selection-start="223" selection-end="223" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="6" selection-start="20" selection-end="20" vertical-scroll-proportion="0.020604396">
           <folding />
         </state>
       </provider>
