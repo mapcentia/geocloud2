@@ -1,5 +1,9 @@
-RewriteEngine On
-RewriteRule ^$ index
-RewriteRule ^([a-z]*)/([\w'-]*)$ $1.php
-RewriteRule ^([a-z]*)/([\w'-]*)/([\w'-]*)$ $1.php
-RewriteRule ^([\w'-]*)$ $1.php
+<IfModule mod_rewrite.c>
+   RewriteEngine On
+
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+
+   # Rewrite all other URLs to index.php/URL
+   RewriteRule ^(.*)$ index.php/$1 [PT,L]
+</IfModule>

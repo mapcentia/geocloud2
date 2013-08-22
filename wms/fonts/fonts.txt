@@ -1,5 +1,0 @@
-arial	arial.ttf
-arialbd	arialbd.ttf
-arialbi arialbi.ttf
-ariali	ariali.ttf
-
