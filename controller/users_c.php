@@ -1,6 +1,6 @@
 <?php
-include ("../../inc/controller.php");
-include ("../../model/users.php");
+include("../../inc/controller.php");
+include("../../model/users.php");
 
 /**
  *

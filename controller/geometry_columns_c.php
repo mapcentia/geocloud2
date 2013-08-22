@@ -1,5 +1,5 @@
 <?php
-include ("../server_header.inc");
+include("../server_header.inc");
 //include("../../inc/oauthcheck.php");
 
 if ($HTTP_RAW_POST_DATA) {
@@ -25,4 +25,4 @@ switch ($parts[4]) {
 		$response = $gc -> getSchemas();
 		break;
 }
-include_once ("../server_footer.inc");
+include_once("../server_footer.inc");
