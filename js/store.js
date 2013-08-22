@@ -1015,7 +1015,7 @@ $(window).load(function () {
     var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
-        title: 'Layers',
+        title: 'Layers test',
         frame: false,
         layout: 'border',
         region: 'center',
