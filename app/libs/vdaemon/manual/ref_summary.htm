@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>&lt;VLSUMMARY&gt; Custom Tag</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Reference</span><br>
+  &lt;VLSUMMARY&gt; Custom Tag</h1>
+<p>The <b>vlsummary</b> custom tag allows you to summarize the error messages from all validators 
+  on a form in a single location. The error message displayed in the summary for each validator 
+  on the form is specified by the <b>ErrMsg</b> Attribute of corresponding validator. If the 
+  <b>ErrMsg</b> Attribute of the validator is not set, no error message is displayed in the 
+  summary for that validator. You can also specify a custom title in the heading section of 
+  the summary by setting the <b>HeaderText</b> attribute.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlsummary
+      form=&quot;formName&quot;
+      class=&quot;cssStyle&quot;
+      headertext=&quot;summaryHeader&quot;
+      showsummary=&quot;true&quot;|&quot;false&quot;
+      messagebox=&quot;true&quot;|&quot;false&quot;
+      displaymode=&quot;list&quot;|&quot;bulletlist&quot;|&quot;paragraph&quot;
+&gt;</pre>
+<h5>Form Attribute</h5>
+<p>Specifies form name to which this summary belongs. This attribute is not requiered if summary
+  tag located inside VDaemon form.</p>
+<h5>Class Attribute</h5>
+<p>Sets the CSS style for the summary. Ignored if the <b>Tag</b> attribute is not defined.</p>
+<h5>HeaderText Attribute</h5>
+<p>Use this attribute to display a title for the summary. The <b>HeaderText</b> is not HTML 
+encoded. Therefore, HTML tags can be included in the <b>HeaderText</b>.</p>
+<h5>ShowSummary Attribute</h5>
+<p>Specifies if summary should be rendered on page. Default value is <b>true</b>.</p>
+<h5>MessageBox Attribute</h5>
+<p>If client-side validation is enabled this attribute defines is summary should be displayed
+in separate pop-up window (messagebox).</p>
+<h5>DisplayMode Attribute</h5>
+<p>Set the summary DisplayMode attribute to format the error messages, using one
+of the following values:</p>
+<p>  <b>BulletList</b> - Each message appears as a bulleted item. <br>
+  <b>List</b><b> (Default)</b> - Each message appears on its own line. <br>
+  <b>Paragraph</b> - Each message appears as a sentence in a paragraph. </p>
+<p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>&lt;FORM&gt; Custom Tag</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Reference</span><br>
+  &lt;FORM&gt; Custom Tag</h1>
+<p>Creates a VDaemon server-side object that maps to the <b>form</b> HTML element and allows 
+  you creating a container for elements in a Web page.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;form id="formId"
+      method=&quot;POST&quot;
+      action="formActionPage"
+      anchor=&quot;formAnchor&quot;
+      clientvalidate=&quot;true&quot;|&quot;false&quot;
+      populate=&quot;true&quot;|&quot;false|always&quot;
+      runat="vdaemon"
+      disablebuttons=&quot;none&quot;|&quot;submit&quot;|&quot;all&quot;
+      validationmode=&quot;onsubmit&quot;|&quot;onchange&quot;&gt;
+   Other input elements, and so on.
+&lt;/form&gt;</pre>
+<h5>Id Attribute</h5>
+<p>Use <b>Id</b> or <b>Name</b> attribute to define the unique identifier for the VDaemon <b>form</b> 
+  custom tag. <b>Id</b> or <b>Name</b> attribute is required. <SPAN class=postbody>If both <b>Id</b> and <b>Name</b>  are
+  defined and not equal to each other, <b>Id</b> takes precedence.</SPAN></p>
+<h5>Method Attribute</h5>
+<p>Sets how to send the form data to the server. VDaemon allows only <b>POST</b> method.</p>
+<h5>Action Attribute</h5>
+<p>Acts like standard HTML form action attribute.</p>
+<h5>Anchor Attribute</h5>
+<p>Adds anchor section to the form redirection URL. In case of errors VDaemon will redirect
+  user to the following URL:</p>
+<p>    SCRIPT_NAME<b>?</b>QUERY_STRING<b>#ANCHOR</b></p>
+<h5>ClientValidate Attribute</h5>
+<p>Determines if client-side validation will be performed. To disable client-side
+  validation set it to <b>false</b>. Default value is <b>true</b>.</p>
+<h5>Populate Attribute</h5>
+<p>Specifies whether form elements should be filled out with a data user has entered on previous submit/validation
+  cycle.</p>
+<p><strong>false</strong> -  never fill out form fields.<br>
+	<strong>true</strong> - 
+fill out form fields in case of validation errors.<br>
+<strong>always</strong> - fill out form fields always when visitor returns to the form page. To use this
+option form data must be saved in a session (set <strong>VDAEMON_SAVE_DATA</strong> option to <strong>true</strong> in
+<em>config.php</em> file).</p>
+<p>Default value is <b>true</b>.</p>
+<h5>RunAt Attribute</h5>
+<p>Set the <b>RunAt</b> attribute to <b>vdaemon</b> value to allow the form to be processed by VDaemon.</p>
+<h5>DisableButtons Attribute</h5>
+<p>Defines whether VDaemon  automatically disables form buttons before sending submitted data to the web server.
+  Can accept the following values:</p>
+<p><b>None</b> - do not disable buttons.<br>
+  <b>Submit</b> - disable submit buttons only.<br>
+  <b>All</b> - disable all form buttons.</p>
+<p>Default value is <b>none</b>. </p>
+<h5>ValidationMode Attribute</h5>
+<p>Specifies VDaemon validation and error messaging mode.  Can
+accept the following values:</p>
+<p><b>OnSubmit</b> - VDaemon will validate a form and display error messages after visitor clicks submit button.<br>
+  <b>OnChange</b> - VDaemon will validate a form and display error messages after visitor changes
+  some information on the form. This mode works only for javascript validation.</p>
+<p>Default value is <b>onsubmit</b>.</p>
+<p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Setup</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon User Guide</span><br>
+  VDaemon Setup</h1>
+<p>Before you start using VDaemon you need to setup it properly.</p>
+<h2>Installation</h2>
+<p>VDaemon comes in zip archive &quot;vdaemon.zip&quot;. To install VDaemon unpack it to any folder under web site root on
+your web server. <SPAN class=postbody>VDaemon files must be accessible from the internet.</SPAN> It's
+recommended to unpack it into &quot;&lt;website_root&gt;/vdaemon&quot; folder.</p>
+<h2>Configuration</h2>
+<p>VDaemon configuration options are located in the <b>config.php</b> file in VDaemon installation
+  folder:</p>
+<p><b>$sVDaemonSecurityKey</b> - this key is used by VDaemon to prevent form validation rules from <SPAN class=postbody>changing
+     or avoiding by person
+    with malicious intentions</SPAN>. While
+  this key kept secret <SPAN class=postbody>you can be sure that your validation rules are genuine.
+  It is strongly recomended to change this key after installation. Do not use common words for this. This key is
+  not a password - you do not need to memorize it and can change it at any time. So, values like &quot;kjgdf69maluhjltr6qt154vic&quot;
+  is exactly what you need. It can be of any length (but more than 10 characters is recomended). </SPAN></p>
+<p><b>VDAEMON_POST_SECURITY</b> - defines VDaemon's behavior on action page in case of POST request. If form data
+has been sent using POST method but validation data of the form is missing then there is a risk that your
+  form is under attack - someone tries to avoid validation process. In this case VDaemon behavior depends on VDAEMON_POST_SECURITY
+    option. If VDAEMON_POST_SECURITY is true then VDaemon will generate error and stop, otherwise VDaemon will skip
+    validation.
+  You can set this option for each specific page (&quot;define&quot; statement should be placed before VDaemon
+&quot;include&quot; like shown below):</p>
+<p>define('VDAEMON_POST_SECURITY', false);<br>
+  include('vdaemon'php');</p>
+<p><b>VDAEMON_USE_BUNDLED_PEAR</b> - defines which PEAR.php file will be used by VDaemon. VDaemon uses XML_HTMLSax
+  PEAR package to parse html pages. This package comes with VDaemon installation. This allows VDaemon to work if
+  PEAR is not installed or not configured properly on your web server, but it can cause a conflict between PEAR packages.</p>
+<p>If VDAEMON_USE_BUNDLED_PEAR option is set to &quot;true&quot; then VDaemon will use bundled PEAR package (comes with
+  VDaemon)<br>
+  If VDAEMON_USE_BUNDLED_PEAR option is set to &quot;false&quot; then VDaemon will try to find PEAR installation
+on web server and use PEAR from there. If it will not be found VDaemon will use bundled PEAR package.</p>
+<p>You must set this option to &quot;false&quot; if you plan to use other PEAR functionality and VDaemon simultaneously.</p>
+<p><b>VDAEMON_SIMULATE_SELFSUBMIT</b> - if set to &quot;true&quot; VDaemon simulates selfsubmit form
+	behavior. I.e. in case of errors you will have post variables available on the form page.<br>
+  Note: you always 
+  can get post variables from $_VDAEMON global array. </p>
+<p><b>VDAEMON_SAVE_DATA</b> - defines whether VDaemon must save submitted forms data to a session.</p>
+</body>
+</html>

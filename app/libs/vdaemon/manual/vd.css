@@ -1,0 +1,184 @@
+/* standard elements */
+
+body {
+    background: #FFFFFF;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+}
+
+td {
+    font-size: 12px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    text-decoration: none;
+    color: #000000;
+}
+
+input {
+    font-size: 12px;
+}
+
+select {
+    font-size: 12px;
+}
+
+p {
+    color: #000000;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+h1 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    background-color: #FFEFC6;
+    border: 1px solid #999999;
+    margin: 0px;
+    padding: 3px;
+}
+
+h2 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #013057;
+    background-color: #FFEFC6;
+    border: 1px none;
+    margin: 0px;
+}
+
+h3 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #013057;
+}
+
+h4 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    color: #013057;
+}
+
+h5 {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #000000;
+}
+
+/* default links */
+
+a:link {
+    color: #013057;
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #570101;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #CC3300;
+    text-decoration: underline;
+}
+
+a:active {
+    color: #CC3300;
+    text-decoration: underline;
+}
+
+/* documentation link formatting */
+
+a.docSection:link {
+    color: #013057;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+a.docSection:visited {
+    color: #013057;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+a.docSection:hover {
+    color: #CC3300;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+a.docSection:active {
+    color: #CC3300;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+a.doc:link {
+    color: #013057;
+    text-decoration: underline;
+}
+
+a.doc:visited {
+    color: #013057;
+    text-decoration: underline;
+}
+
+a.doc:hover {
+    color: #CC3300;
+    text-decoration: underline;
+}
+
+a.doc:active {
+    color: #CC3300;
+    text-decoration: underline;
+}
+
+/* general styles */
+
+.error {
+    color: #013057;
+}
+
+.err {
+    color: #013057;
+}
+
+.syntax {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    background-color: #CCCCCC;
+    margin-right: 15px;
+    margin-left: 15px;
+    border: 1px solid #999999;
+    padding: 5px;
+}
+
+.section {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: normal;
+}
+
+.sample {
+    background-color: #DDDDDD;
+    padding: 10px;
+}
+
+.announce {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    padding: 5px;
+    border: 1px solid #000066;
+    line-height: 130%;
+    background-color: #FFFFEE;
+    }
+
+.revision {
+    color: #ff0000;
+    }

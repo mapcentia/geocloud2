@@ -1,0 +1,15 @@
+/common.php////*///
+/dbase.php////*///
+/fbsql.php////*///
+/ibase.php////*///
+/ifx.php////*///
+/msql.php////*///
+/mssql.php////*///
+/mysql.php////*///
+/mysqli.php////*///
+/oci8.php////*///
+/odbc.php////*///
+/pgsql.php////*///
+/sqlite.php////*///
+/storage.php////*///
+/sybase.php////*///

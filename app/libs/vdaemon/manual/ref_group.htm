@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>&lt;VLLABEL&gt; Custom Tag</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+<h1><span class="section">VDaemon Reference</span><br>
+  &lt;VLGROUP&gt; Custom Tag</h1>
+<p>Sometimes it is needed to validate a field against several different patterns or to validate data conditionally
+(one field depending on values from another fields). In other words it is needed to construct logical expressions
+  with validators. <b>vlgroup</b> validator allows to define logical expression on its subvalidators.</p>
+<p><b>vlgroup</b> validator is just logical &quot;OR&quot;, &quot;AND&quot; or &quot;XOR&quot; evaluation of all its subvalidators.
+  In conjunction with logical &quot;NOT&quot; operation available for each &quot;simple&quot; validator (&quot;negation&quot; attribute)
+  it gives you possibility to <span class="body">construct logical expressions of any complexity with </span> your
+  validation rules.</p>
+<p><b>vlgroup</b> validators can be nested since VDaemon version 3.0.0.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlgroup
+      name=&quot;validatorName&quot;
+      operator=&quot;or&quot;|&quot;and&quot;|&quot;xor&quot;
+      errmsg=&quot;errorMessage&quot;
+      clientvalidate=&quot;true&quot;|&quot;false&quot;&gt;
+
+   &lt;vlvalidator ...&gt;|&lt;vlgroup ...&gt;...&lt;/vlgroup&gt;
+   ...
+&lt;/vlgroup&gt;</pre>
+<h5>Name Attribute</h5>
+<p>Use the <b>Name</b> attribute to set the unique identifier name for the VDaemon <b>vlgroup</b> custom
+  tag.</p>
+<h5>Operator Attribute</h5>
+<p>Determines type of logical operation. Can accept the following values:</p>
+<p><b>Or</b> - logical &quot;or&quot; operation. <br>
+<b>And</b> - logical &quot;and&quot; operation. <br>
+<b>Xor</b> - logical &quot;xor&quot; operation (available since version 3.0.4). </p>
+<p>Default value is <b>or</b>.  </p>
+<h5>ErrMsg Attribute</h5>
+<p>Use the <b>ErrMsg</b> attribute to specify the text to display by the <a href="ref_summary.htm"><b>vlsummary</b></a> custom
+  tag when validation fails.</p>
+<h5>ClientValidate Attribute</h5>
+<p>Determines if client-side validation for current validator will be performed.
+  Default value is <b>true</b>.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,12 @@
+/Autoloader.php////*///
+/Builder.php////*///
+/Command.php////*///
+/Common.php////*///
+/Config.php////*///
+/Dependency.php////*///
+/Downloader.php////*///
+/ErrorStack.php////*///
+/Installer.php////*///
+/Packager.php////*///
+/Registry.php////*///
+/Remote.php////*///
