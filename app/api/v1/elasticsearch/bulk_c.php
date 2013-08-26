@@ -1,17 +1,12 @@
 <?php
-//include '../../../conf/main.php';
+namespace app\api\v1\elasticsearch;
 include("../../../model/sql_to_es.php");
-class Bulk_c extends Controller
+class Bulk_c extends \app\inc\Controller
 {
-    function __construct()
+    function get_index()
     {
-        parent::__construct();
-    }
-
-    function bulk()
-    {
-        $parts = Controller::getUrlParts();
-        if (!$this->authApiKey($parts[5], $_GET['key'])) {
+        $get = \app\inc\Input::getQuery();
+        if (!$this->authApiKey($parts[5], $get)) {
             $response['success'] = false;
             $response['message'] = "Not the right key.";
             echo json_encode($response);
@@ -23,10 +18,8 @@ class Bulk_c extends Controller
             echo json_encode($response);
             die();
         }
-        //$postgisdb = $argv[1];
         $api = new Sql_to_es();
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        //$api->sql($argv[5], $argv[2], $argv[3], $argv[4]);
         echo $api->sql(rawurldecode($_GET['q']), $parts[6], $parts[7], $parts[8], $parts[5]);
     }
 }

@@ -1,15 +1,14 @@
 <?php
-class Map_c extends Controller
-{
-    function __construct()
-    {
-        parent::__construct();
-    }
+namespace app\api\v1\elasticsearch;
 
-    function map($map, $key)
+class Map_c extends \app\inc\Controller
+{
+
+    function put_index($map, $key)
     {
+        $put = \app\inc\Input::getQuery();
         $parts = parent::getUrlParts();
-        if (!$this->authApiKey($parts[5], $key)) {
+        if (!$this->authApiKey($parts[5], $put['key'])) {
             $response['success'] = false;
             $response['message'] = "Not the right key.";
             echo json_encode($response);

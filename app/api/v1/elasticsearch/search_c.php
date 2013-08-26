@@ -3,19 +3,15 @@ namespace app\api\v1\elasticsearch;
 
 class Search_c extends \app\inc\Controller
 {
-    function __construct()
-    {
-        echo "plet";
-    }
-
     function get_index()
     {
-        $q = $_GET['q'];
-        $call_back = $_GET['jsonp_callback'];
-        $size = ($_GET['size']) ? $_GET['size'] : 10;
-        $pretty = (($_GET['pretty']) || $_GET['pretty'] == "true") ? $_GET['pretty'] : "false";
+        $get = \app\inc\Input::getQuery();
+        $q = $get['q'];
+        $call_back = $get['jsonp_callback'];
+        $size = ($get['size']) ? $get['size'] : 10;
+        $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
 
-        $parts = parent::getUrlParts();
+        $parts = \app\inc\Input::getPath();;
         $indices = explode(",", $parts[6]);
         foreach ($indices as $v) {
             $arr[] = $parts[5] . "_" . $v;
@@ -27,9 +23,6 @@ class Search_c extends \app\inc\Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         $buffer = curl_exec($ch);
         curl_close($ch);
-        if ($call_counter) {
-            //$obj->call_counter = (int)$call_counter;
-        }
         $json = ($call_back) ? $call_back . "(" . $buffer . ")" : $buffer;
         return $json;
     }
