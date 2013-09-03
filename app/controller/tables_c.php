@@ -1,6 +1,5 @@
 <?php
-include("../server_header.inc");
-//include("../../inc/oauthcheck.php");
+include("server_header.inc");
 
 $table = new table($parts[5]);
 
@@ -63,4 +62,4 @@ switch ($parts[4]){
 		makeMapFile($_SESSION['screen_name']);
 		break;
 }
-include_once("../server_footer.inc");
+include_once("server_footer.inc");

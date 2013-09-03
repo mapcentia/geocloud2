@@ -1,7 +1,5 @@
 <?php
-//include("../../header.php");
-include("../server_header.inc");
-include("../../inc/oauthcheck.php");
+include("server_header.inc");
 
 $settings_viewer = new Settings_viewer();
 
@@ -25,4 +23,4 @@ switch ($parts[4]){
 	break;
 	
 }
-include_once("../server_footer.inc");
+include_once("server_footer.inc");

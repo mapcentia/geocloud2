@@ -2,8 +2,8 @@
 $callback = $_GET['jsonp_callback'];
 
 if ($callback) {
-	echo $callback.'('.$json->encode($response).');';
+	echo $callback.'('.json_encode($response).');';
 }
 else {
-	echo $json->encode($response);
+	echo json_encode($response);
 }

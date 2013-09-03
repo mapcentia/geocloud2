@@ -1,11 +1,14 @@
 <?php
 namespace app\api\v1\elasticsearch;
 
-class Delete_c extends \app\inc\Controller
+use \app\inc\Controller;
+use \app\inc\Input;
+
+class Delete_c extends Controller
 {
     function delete_index()
     {
-        $delete = \app\inc\Input::getQuery();
+        $delete = Input::getQuery();
         $parts = parent::getUrlParts();
         if (!$this->authApiKey($parts[5], $delete['key'])) {
             $response['success'] = false;
