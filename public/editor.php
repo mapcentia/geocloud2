@@ -1,5 +1,5 @@
 <?php
-include ("html_header.php");
+include("html_header.php");
 $_SESSION['screen_name'] = $parts[2];
 ?>
 <script type="text/javascript">var screenName = '<?php echo $_SESSION['screen_name']; ?>'</script>
@@ -111,5 +111,5 @@ $_SESSION['screen_name'] = $parts[2];
     </p>
 </div>
 <?php
-include ("html_footer.php");
+include("html_footer.php");
 ?>
