@@ -3,15 +3,9 @@ session_name($sessionName);
 session_set_cookie_params(0, '/', "." . $domain);
 session_start();
 include 'inc/user_name_from_uri.php';
-include 'model/users.php';
-include 'model/databases.php';
-include 'model/classes.php';
-include 'model/wmslayers.php';
-include 'model/settings_viewer.php'; // we need to get pw for http authentication
-
 
 if ($parts[1] == "store" || $parts[1] == "editor") {
-    $db = new databases();
+    $db = new app\model\databases();
     if (!$parts[2]) {
         die("<script>window.location='/?db=false'</script>");
     }

@@ -1,20 +1,11 @@
 <?php
 
+namespace app\model;
+
 use app\inc\postgis;
 
 class cartomobile extends postgis
 {
-    /**
-     *
-     */
-
-
-    function __construct()
-    {
-        parent::__construct();
-    }
-
-
     /**
      *
      *

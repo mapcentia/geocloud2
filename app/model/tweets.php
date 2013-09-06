@@ -1,5 +1,7 @@
 <?php
 
+namespace app\model;
+
 use app\inc\postgis;
 
 class Tweet extends postgis

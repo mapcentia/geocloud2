@@ -3,7 +3,6 @@
 include ("html_header.php");
 $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
-include 'model/tables.php';
 include ("wms/mapfile.php.map");
 include ("wms/tilecache.cfg.php");
 makeMapFile($postgisdb);

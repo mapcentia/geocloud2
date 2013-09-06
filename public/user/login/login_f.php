@@ -1,7 +1,12 @@
 <?php
 use \app\inc\postgis;
+use \app\model\Settings_viewer;
+
 include '../header.php';
 $postgisObject = new postgis();
+
+include ('../vdaemon/vdaemon.php');
+
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
@@ -12,6 +17,7 @@ function UserIDCheck($sValue, &$oStatus)
     global $sTable;
     global $postgisObject;
     global $sUserID;
+
     $sUserID = postgis::toAscii($sValue, NULL, "_");
     $sPassword = VDFormat($_POST['Password'], true);
     $sPassword = Settings_viewer::encryptPw($sPassword);

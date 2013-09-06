@@ -1,14 +1,12 @@
 <?php
-include("../server_header.inc");
-//include("../../inc/oauthcheck.php");
 
-$db = new databases();
+$db = new app\model\databases();
 
 if ($HTTP_RAW_POST_DATA) {
 	$obj = json_decode($HTTP_RAW_POST_DATA);
 }
 
-switch ($parts[4]){
+switch ($request[4]){
 	case "addschema":
 		$response = $db->createSchema($_POST['schema']);
 		break;
@@ -16,7 +14,6 @@ switch ($parts[4]){
 		$response = $db->listAllSchemas($_POST['schema']);
 		break;
 	case "doesdbexist":
-		$response = $db->doesDbExist($parts[5]);
+		$response = $db->doesDbExist($request[5]);
 	break;
 }
-include_once("../server_footer.inc");

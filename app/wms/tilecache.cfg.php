@@ -1,15 +1,9 @@
 <?php
+use \app\inc\postgis;
 function makeTileCacheFile($user, $extentLayer = NULL)
 {
-    //return;
-    global $basePath;
-    global $postgisdb;
-    global $postgishost;
-    global $postgispw;
-    global $hostName;
-    global $postgisschema;
-    $postgisdb = $user;
 
+    \Connection::$param["postgisdb"] = $user;
 
     $table = $extentLayer;
     $postgisObject = new postgis();
@@ -69,8 +63,8 @@ function makeTileCacheFile($user, $extentLayer = NULL)
     echo "srs=EPSG:900913\n";
     echo "expire={$expire}\n\n";
     $data = ob_get_clean();
-    @unlink("{$basePath}wms/cfgfiles/{$user}.tilecache.cfg");
-    $newFile = "{$basePath}wms/cfgfiles/{$user}.tilecache.cfg";
+    @unlink(__DIR__."/cfgfiles/{$user}.tilecache.cfg");
+    $newFile = __DIR__."/cfgfiles/{$user}.tilecache.cfg";
     $fh = fopen($newFile, 'w');
     fwrite($fh, $data);
     fclose($fh);
