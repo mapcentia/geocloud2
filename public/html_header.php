@@ -5,7 +5,7 @@ session_start();
 include 'inc/user_name_from_uri.php';
 
 if ($parts[1] == "store" || $parts[1] == "editor") {
-    $db = new app\model\databases();
+    $db = new app\models\Database();
     if (!$parts[2]) {
         die("<script>window.location='/?db=false'</script>");
     }

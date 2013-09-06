@@ -1,9 +1,9 @@
 <?php
 include("../conf/main.php");
 include("../libs/functions.php");
-include("../model/databases.php");
-include("../model/dbchecks.php");
-include '../model/settings_viewer.php';
+include("../models/Database.php");
+include("../models/dbchecks.php");
+include '../models/Settings_viewer.php';
 
 $dbList = new databases();
 try {

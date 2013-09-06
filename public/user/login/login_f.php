@@ -1,6 +1,6 @@
 <?php
 use \app\inc\postgis;
-use \app\model\Settings_viewer;
+use \app\models\Settings_viewer;
 
 include '../header.php';
 $postgisObject = new postgis();

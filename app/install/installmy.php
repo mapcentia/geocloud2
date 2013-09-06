@@ -1,7 +1,7 @@
 <?php
 include("../conf/main.php");
 include("../libs/functions.php");
-include("../model/databases.php");
+include("../models/Database.php");
 include("sqls.php");
 
 $postgisdb = $_REQUEST['db'];

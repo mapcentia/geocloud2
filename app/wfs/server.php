@@ -9,10 +9,10 @@ include('../inc/user_name_from_uri.php');
 
 include "../libs/phpgeometry_class.php";
 include "../libs/functions.php";
-include "../model/users.php";
-include "../model/tables.php";
-include "../model/versions.php";
-include("../model/settings_viewer.php"); // we need to get pw for http authentication
+include "../models/users.php";
+include "../models/tables.php";
+include "../models/versions.php";
+include("../models/Settings_viewer.php"); // we need to get pw for http authentication
 
 include "../libs/PEAR/XML/Unserializer.php";
 include "../libs/PEAR/XML/Serializer.php";
@@ -27,7 +27,7 @@ include 'explodefilter.php';
 include '../libs/FirePHPCore/FirePHP.class.php';
 include '../libs/FirePHPCore/fb.php';
 
-include '../model/geometry_columns.php';
+include '../models/geometry_columns.php';
 
 
 //$userFromUri = "mhoegh"; // for testing

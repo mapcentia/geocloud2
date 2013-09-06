@@ -34,11 +34,11 @@ if ($request[1] == "controller") {
     header('Content-Type: text/plain');
 
     if ($request[2] == "tables")
-        include_once("app/controller/tables_c.php");
+        include_once("app/controllers/Table.php");
     if ($request[2] == "settings_viewer")
-        include_once("app/controller/settings_viewer_c.php");
+        include_once("app/controllers/settings_viewer_c.php");
     if ($request[2] == "databases")
-        include_once("app/controller/databases_c.php");
+        include_once("app/controllers/databases_c.php");
 
     $callback = $_GET['jsonp_callback'];
 

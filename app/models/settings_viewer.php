@@ -1,6 +1,6 @@
 <?php
 
-namespace app\model;
+namespace app\models;
 
 use app\inc\postgis;
 

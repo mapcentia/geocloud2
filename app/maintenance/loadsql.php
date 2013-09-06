@@ -1,7 +1,7 @@
 <?php
 include("../conf/main.php");
 include("../libs/functions.php");
-include("../model/databases.php");
+include("../models/Database.php");
 include("sql.php");
 $dbList = new databases();
 $arr = $dbList->listAllDbs();

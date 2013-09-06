@@ -6,8 +6,8 @@
 
 		include ("../conf/main.php");
 		include ("../libs/functions.php");
-		include ("../model/databases.php");
-		include ("../model/dbchecks.php");
+		include("../models/Database.php");
+		include("../models/dbchecks.php");
 
 		echo "<div>PHP version " . phpversion() . " ";
 		if (function_exists(apache_get_modules)) {

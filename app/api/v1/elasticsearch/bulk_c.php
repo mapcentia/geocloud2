@@ -1,6 +1,6 @@
 <?php
 namespace app\api\v1\elasticsearch;
-include("../../../model/sql_to_es.php");
+include("../../../models/sql_to_es.php");
 class Bulk_c extends \app\inc\Controller
 {
     function get_index()

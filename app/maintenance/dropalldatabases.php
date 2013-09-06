@@ -2,7 +2,7 @@
 die("What are u doing?");
 include("../conf/main.php");
 include("../libs/functions.php");
-include("../model/databases.php");
+include("../models/Database.php");
 //echo "test";
 $dbList = new databases();
 $arr = $dbList->listAllDbs();

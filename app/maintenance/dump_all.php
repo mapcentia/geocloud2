@@ -1,7 +1,7 @@
 <?php
 include("../conf/main.php");
 include("../libs/functions.php");
-include("../model/users.php");
+include("../models/users.php");
 //echo "test";
 $user = new User(null);
 $all = $user->getAll();
