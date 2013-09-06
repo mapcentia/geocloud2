@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>How VDaemon works</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+<h1><span class="section">VDaemon User Guide</span><br>
+  How VDaemon works</h1>
+<p>VDaemon can perform server side and client side validation. Client side (javascript) validation
+  is optional and can be turned off (default is on). VDaemon performs validation on the server even if the validation have
+  already performed on the client. It helps prevent users from being able to bypass
+  validation by disabling or changing the client script.</p>
+<h2>Server-Side Validation </h2>
+<p><img src="../img/scheme.gif" width="478" height="171"></p>
+<p>When the user submits a form to the server, VDaemon code is invoked to review the user's
+  input. If an error has occurred in any of the input controls, the page
+  itself is set to
+an invalid state (validation failed) and user is redirected back to the form page with displayed
+  error messages. If validation passed, user code specified on form processing page is invoked.
+  Thus, VDaemon doesn't change HTML forms behavior except it always redirects visitor to the
+  form page until visitor enters fully valid data. It allows easily incorporate VDaemon validation
+  into existing web sites.</p>
+<h2>Client-Side Validation</h2>
+<p>If the user is working with browser that support DHTML and W3C DOM Level2, VDaemon can
+  perform validation using client script. Because in this case immediate
+  feedback
+  is provided (without
+a round trip to the server), the user experience with the page is enhanced.</p>
+<p>Under most circumstances,
+    you do not have to make any changes to your page or to the validators to use client-side
+    validation. VDaemon automatically detects if the browser supports
+    DHTML
+    and performs its checking accordingly. Client-side validation uses the same
+  error display mechanism as server-side checking.</p>
+<p>Currently client-side validation is tested for  IE
+&gt;= 5, Firefox &gt;= 1.0, Netscape &gt;= 7, Opera &gt;= 7, Safari &gt;= 2.0.</p>
+<p><br>
+</p>
+</body>
+</html>

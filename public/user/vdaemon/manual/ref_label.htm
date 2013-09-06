@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>&lt;VLLABEL&gt; Custom Tag</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Reference</span><br>
+  &lt;VLLABEL&gt; Custom Tag</h1>
+<p>You may need to display an error message or highlight some text at or near the location
+  where an input validation error has occurred. The <b>vllabel</b> custom tag provides you
+  an easy yet powerful way to accomplish this. Each <b>vllabel</b> tag references one or more
+  validators (<a href="ref_validator.htm">vlvalidator</a> or <a href="ref_group.htm">vlgroup</a> tags).
+  The logical &quot;AND&quot; is
+  applied to the vlvalidator references to determine how the <b>vllabel</b> tag will be rendered
+  on
+a
+page.  <b>vllabel</b> also can change style
+of the form input element.</p>
+<p>When VDaemon parses page it replaces all <b>vllabel</b> custom tags to <b>label</b> html tags. You can use
+any attribute of <b>label</b> tag inside <b>vllabel</b> tag - it will be kept after replacement.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vllabel
+      form=&quot;formName&quot;
+      for=&quot;inputFieldName&quot;
+      class=&quot;cssStyle&quot;
+      errclass=&quot;cssStyle&quot;
+      cerrclass=&quot;cssStyle&quot;
+      errtext="errorText"
+      validators=&quot;validatorName[, validatorName ...]&quot;&gt;
+   Default text
+&lt;/vllabel&gt;</pre>
+<h5>Form Attribute</h5>
+<p>Specifies form name to which this label belongs. This attribute is not requiered if label
+  tag located inside vdaemon form.</p>
+<h5>For Attribute</h5>
+<p>Associates <b>vllabel</b> with the form input element. Binding to <b>id</b> or <b>name</b> attributes
+  of input element is allowed.</p>
+<h5>Class Attribute</h5>
+<p>Sets the CSS style for the default text. Default text will be displayed in place of <b>vllabel</b> 
+  tag if each validator referenced in <b>validators</b> attribute has not reported an error.</p>
+<h5>ErrClass Attribute</h5>
+<p>Sets the CSS style for the <b>ErrText</b> attribute text. If the <b>ErrClass</b> attribute
+  is not defined, the CSS style defined by the <b>Class</b> attribute
+  will be used instead.</p>
+<h5>CErrClass Attribute</h5>
+<p>Sets the CSS style for the associated input element if any validator 
+referenced in the <b>validators</b> attribute has reported an error.</p>
+<h5>ErrText Attribute</h5>
+<p>The <b>ErrText</b> attribute text will be displayed in place of the <b>vllabel</b> tag if any validator 
+  referenced in the <b>validators</b> attribute has reported an error. If the <b>ErrText</b> attribute 
+  is not defined, the default text will be used instead.</p>
+<h5>Validators Attribute</h5>
+<p>The <b>validators</b> attribute contains a set of references to one or more <a href="ref_validator.htm"><b>vlvalidator</b></a> or
+  <a href="ref_group.htm"><b>vlgroup</b></a> tags whose states will determine how the <b>vllabel</b> tag will be rendered. If
+  any of the validators has reported an error the <b>ErrText</b> attribute text with <b>ErrClass</b> attribute
+  CSS style will be displayed in place of <b>vllabel</b> tag, otherwise the default text with <b>Class</b> attribute
+  CSS style will be displayed.</p>
+<p>&nbsp;</p>
+</body>
+</html>

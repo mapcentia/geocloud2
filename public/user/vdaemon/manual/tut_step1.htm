@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Tutorial - Step 1</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Tutorial</span><br>
+  Creating the form</h1>
+<p>During this step we create the &quot;hello!&quot; form. This simple form contains only one &quot;Name&quot; entry
+  field and submit button. After submitting the form visitor will see &quot;Hello &lt;Name&gt;&quot; greeting. We
+  assume that you already know how to create html forms.</p>
+<p>Page that contains the form will be called &quot;form page&quot;. We also need to create &quot;action page&quot; -
+  page which address is specified in the form's &quot;action&quot; attribute. </p>
+<p>Create file with name <b>&quot;name.php&quot;</b> and copy this <b>form page</b> source code to it:</p>
+<pre class="sample">&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello form.&lt;/p&gt;
+&lt;form method=&quot;POST&quot; action=&quot;hello.php&quot;&gt;
+  &lt;table cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;&gt;
+    &lt;tr&gt;
+      &lt;td&gt;
+        Enter your Name:
+      &lt;/td&gt;
+      &lt;td&gt;
+        &lt;input name=&quot;Name&quot; type=&quot;text&quot; size=&quot;25&quot;&gt;
+      &lt;/td&gt;
+    &lt;tr&gt;
+      &lt;td colspan=&quot;2&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Send&quot;&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>Create file with name <b>&quot;hello.php&quot;</b> and copy this <b>action page</b> source code to it:</p>
+<pre class="sample">&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello &lt;?php echo $_POST['Name']; ?&gt;!&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>Place these files to any location accessible by browser (the best place is your development web server document
+  root). Try to run name.php using your browser.</p>
+<p>Continue to <a href="tut_step2.htm">Including vdaemon.php</a></p>
+<p>&nbsp;</p>
+</body>
+</html>

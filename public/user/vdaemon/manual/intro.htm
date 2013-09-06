@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Introduction</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon Extension</a> |
+  <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon User Guide</span><br>
+  Introduction</h1>
+<p>An important aspect of creating Web Forms pages for user input is to be able to check that
+  the information users enter is valid. VDaemon is a PHP library that grants an easy-to-use  
+   but powerful way to check for errors and, if necessary, display messages to the user. VDaemon
+   provides several custom HTML tags (VDaemon tags) to allow developer defining form validation
+   rules.</p>
+<p>VDaemon provides a mechanism for all common types of validation - for example, testing 
+  for valid dates or values within a specified range - plus ways to provide custom-written validation. 
+  In addition, VDaemon allows for complete customization of how error information is displayed 
+  to the user.</p>
+<h2>Using VDaemon tags<a name="Using"></a></h2>
+<p>You enable validation of user input by adding VDaemon tags to your form as you would with
+   other HTML tags. Each VDaemon validation tag (validator) references an input tag on the
+  form. When the user's input is processed (for example, when the form is submitted), VDaemon
+  tests the user's input and sets a state to indicate whether the entry passed the validation test(s).
+  If any of the validation tests fail, the entire form is set to invalid.</p>
+<p>You can test the state of a form using your own (custom) code. For example, you can test
+  the state  of a form for properly formatted and required information before updating a database
+  with the submitted information.
+  If you detect an invalid state, you bypass the database update. Typically, if any validation
+  check fails, user is returned to the form
+  page  with error messages that you have predefined for VDaemon to display in the
+  event of validation failure. These
+  error messages will help to guide and prompt the user
+  to enter the required and/or properly formatted information.</p>
+<h2>Validating for Multiple Conditions<a name="Multiple"></a></h2>
+<p>Each VDaemon validator performs just one test. However, you may wish to check 
+  an input element for multiple conditions. For example, you might want to establish that a
+  field is required and that it is limited to accepting dates within a specific range. You
+  can have
+  more than 
+  one validation tag reference a given input field in a form. In that case, the tests performed
+  by the validators are resolved using a logical AND. The data input by the user must
+  pass all the tests 
+  in order to be considered valid.</p>
+<p>In some instances, entries in several different formats might be valid. For example, if
+  you are prompting for a phone number, you might allow users to enter a local number, a long-distance
+  number, or an international number. This situation arises primarily when checking for specific
+  patterns of numbers or characters. To perform this type of test &#8212; a logical OR &#8212; you
+use the group validator  and specify multiple validators within it.</p>
+<h2>Displaying Error Information<a name="Error"></a></h2>
+<p>Validators are not visible in the rendered form. However, if the validator detects
+   an error, it produces error message text that you specify. The error message can be displayed
+  
+  in a variety of ways: </p>
+<h4>- In place</h4>
+<p>Each validator can be referenced by a VDaemon label. VDaemon label displays an error message
+  or glyph in place (usually next to the control where the error occurred).</p>
+<h4>- Summary</h4>
+<p>Validation errors can be collected and displayed in one place - for example, at the top of 
+  the form. This strategy is often used in combination with displaying a glyph next to the input 
+  fields with errors. </p>
+<h4>- In place and Summary</h4>
+<p>The error message can be different in the summary and in place. You can use this option to 
+  show a shorter error message in place with more detail in the summary, or to show an error 
+  glyph next to the input field and an error message in the summary.</p>
+<h2>Requirements <a name="Requirements"></a></h2>
+<p><b>VDaemon</b> requires:</p>
+<p>  for <b>server-side</b> validation:<br>
+  - PHP version 4.2.0 or later</p>
+<p>for <b>client-side</b> validation (optional):<br>
+  - IE 5 and later<br>
+  - Firefox 1.0 and later<br>
+  - Opera 7 and later<br>
+  - Netscape 7 and later<br>
+  - Safari 2.0 and later
+</p>
+<p>&nbsp;</p>
+</body>
+</html>

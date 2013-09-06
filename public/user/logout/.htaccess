@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^$ logout_f.php

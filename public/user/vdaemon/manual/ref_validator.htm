@@ -1,0 +1,424 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>&lt;VLVALIDATOR&gt; Custom Tag</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Reference</span><br>
+  &lt;VLVALIDATOR&gt; Custom Tag</h1>
+<p>The <b>vlvalidator</b> custom tag allows you  validating an associated form input element
+  and displaying a custom message when validation fails. Each validator performs a specific
+  type of  validation. For example, you can validate against a specific value or a range of
+  values. You 
+  can even define your own validation criteria. You can control where the message is displayed
+   on the Web page by placing the corresponding <b><a href="ref_label.htm">vllabel</a></b> custom
+    tag at the desired location. You can also display a summary of the results from all <b>vlvalidator</b> 
+  tags on the page by using the <a href="ref_summary.htm"><b>vlsummary</b></a> custom tag.</p>
+<p>Multiple <b>vlvalidator</b> tags
+    can reference the same input element.</p>
+<h2>Required Validator<a name="Required"></a></h2>
+<p>Use the validator of <b>required</b> type to make an input element a mandatory field.
+   The input element fails validation if the length of value it contains does not fall within the range defined by
+  <b>minlength</b>  and <b>maxlength</b>.
+   By default, minimum length is 1, maximum length is not specified,
+   that indicates that any value must be entered in the input element to pass validation (field can not be blank).</p>
+<p>Extra spaces at the beginning and end of the input value are removed before validation is 
+  performed.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;required&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#MinLength">minlength</a>=&quot;integerValue&quot;
+      <a href="#MaxLength">maxlength</a>=&quot;integerValue&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>CheckType Validator<a name="Checktype"></a></h2>
+<p>Checks if the value of the associated input element can be converted to the specified data 
+  type.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;checktype&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#ValidType">validtype</a>=&quot;type&quot;
+      <a href="#GroupChar">groupchar</a>=&quot;char&quot;
+      <a href="#DecimalChar">decimalchar</a>=&quot;char&quot;
+      <a href="#DateOrder">dateorder</a>=&quot;mdy&quot;|&quot;dmy&quot;|&quot;ymd&quot;
+      <a href="#TimeFormat">timeformat</a>=&quot;12&quot;|&quot;24&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#RequiredAttr">required</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>Range Validator<a name="Range"></a></h2>
+<p>The Range Validator allows you to check whether a user's entry is between a specified upper 
+  and lower boundary. You can check ranges within pairs of numbers, strings, and dates. Boundaries 
+  are expressed as constants.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;range&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#ValidType">validtype</a>=&quot;type&quot;
+      <a href="#CaseSensitive">casesensitive</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#GroupChar">groupchar</a>=&quot;char&quot;
+      <a href="#DecimalChar">decimalchar</a>=&quot;char&quot;
+      <a href="#DateOrder">dateorder</a>=&quot;mdy&quot;|&quot;dmy&quot;|&quot;ymd&quot;
+      <a href="#TimeFormat">timeformat</a>=&quot;12&quot;|&quot;24&quot;
+      <a href="#MinValue">minvalue</a>=&quot;value&quot;
+      <a href="#MaxValue">maxvalue</a>=&quot;value&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#RequiredAttr">required</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>Compare Validator<a name="Compare"></a></h2>
+<p>Validates the value of an input element against a constant value or the value of another 
+  input element to determine whether the two values match the relationship specified by a comparison 
+  operator (less than, equal to, greater than, and so on).</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;compare&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#ValidType">validtype</a>=&quot;type&quot;
+      <a href="#CaseSensitive">casesensitive</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#GroupChar">groupchar</a>=&quot;char&quot;
+      <a href="#DecimalChar">decimalchar</a>=&quot;char&quot;
+      <a href="#DateOrder">dateorder</a>=&quot;mdy&quot;|&quot;dmy&quot;|&quot;ymd&quot;
+      <a href="#TimeFormat">timeformat</a>=&quot;12&quot;|&quot;24&quot;
+      <a href="#CompareValue">comparevalue</a>=&quot;value&quot;
+      <a href="#CompareControl">comparecontrol</a>=&quot;inputFieldName&quot;
+      <a href="#Operator">operator</a>=&quot;e&quot;|&quot;ne&quot;|&quot;g&quot;|&quot;ge&quot;|&quot;l&quot;|&quot;le&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#RequiredAttr">required</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>RegExp Validator<a name="RegExp"></a></h2>
+<p>The RegExp Validator is used to determine whether the value of an input element matches a 
+  pattern defined by a regular expression.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;regexp&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#RegExpAttr">regexp</a>=&quot;pattern&quot;
+      <a href="#ClientRegExp">clientregexp</a>=&quot;pattern&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#RequiredAttr">required</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>Format Validator<a name="Format"></a></h2>
+<p>The Format Validator is used to determine whether the value of the associated input element 
+  is formatted according to predefined format type.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;format&quot;
+      <a href="#FormatAttr">format</a>=&quot;formatType&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#RequiredAttr">required</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#Negation">negation</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>Custom Validator<a name="Custom"></a></h2>
+<p>The Custom Validator allows you to create a customized validation logic.</p>
+<h5>Syntax</h5>
+<pre class="syntax">&lt;vlvalidator
+      <a href="#Name">name</a>=&quot;validatorName&quot;
+      <a href="#Type">type</a>=&quot;custom&quot;
+      <a href="#Control">control</a>=&quot;inputFieldName&quot;
+      <a href="#ErrMsg">errmsg</a>=&quot;errorMessage&quot;
+      <a href="#Function">function</a>=&quot;validationFunctionName&quot;
+      <a href="#ClientFunction">clientfunction</a>=&quot;javascriptFunctionName&quot;
+      <a href="#ClientValidate">clientvalidate</a>=&quot;true&quot;|&quot;false&quot;
+      <a href="#SetFocus">setfocus</a>=&quot;true&quot;|&quot;false&quot;
+&gt;</pre>
+<p>For attribute descriptions see the <a href="#Attributes">Attributes</a> section.</p>
+<h2>Attributes<a name="Attributes"></a></h2>
+<p>There are several types of <b>vlvalidator</b> tags. Each type has proper set of attributes. 
+  But some attributes are common to all types of <b>vlvalidator</b> tags.</p>
+<h5>Name Attribute<a name="Name"></a></h5>
+<p>Use the <b>Name</b> attribute to set the unique identifier name for the VDaemon <b>vlvalidator</b> 
+  custom tag.</p>
+<h5>Type Attribute<a name="Type"></a></h5>
+<p>Use the <b>Type</b> attribute to set the type of validation peformed by validator. <b>Type</b>  attribute
+  is required and used by all types of validators.
+  <b>Type</b> attribute receives one of the following values:</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="90" valign="top"><b>- required</b></td>
+    <td valign="top">Makes the associated input element a mandatory field. </td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- checktype</b></td>
+    <td valign="top">Checks if the value of the associated input element can be converted to 
+      the specified data type.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- range</b></td>
+    <td valign="top">Checks whether the value of the associated input element is within a specified 
+      range of values.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- compare</b></td>
+    <td valign="top">Evaluates the value of an input element against a constant value or the 
+      value of another input element to determine whether the two values match the relationship 
+      specified by a comparison operator (less than, equal to, greater than, and so on).</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- regexp</b></td>
+    <td valign="top">Evaluates the value of an input element to determine whether it matches 
+      a pattern defined by a regular expression.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- format </b></td>
+    <td valign="top">Checks if the value of the associated input element  
+  is formatted according to predefined format type.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- custom</b></td>
+    <td valign="top">Evaluates the value of an input element to determine whether it passes 
+      customized validation logic.</td>
+  </tr>
+</table>
+<h5>Control Attribute<a name="Control"></a></h5>
+<p>Use the <b>Control</b> attribute to specify the input element to validate. This attribute 
+  must be set to the name of an input element. If you do not specify a valid input element, 
+  an error will occur when the page is rendered. The <b>Control</b> attribute must refer to
+  an input element within the same form as the <b>vlvalidator</b> tag.</p>
+<h5>ErrMsg Attribute<a name="ErrMsg"></a></h5>
+<p>Use the <b>ErrMsg</b> attribute to specify the text to display by the <a href="ref_summary.htm"><b>vlsummary</b></a> 
+  custom tag when validation fails.</p>
+<h5>ValidType Attribute<a name="ValidType"></a></h5>
+<p>Specifies the data type of the value being validated. Validation fails if the value of the 
+  input element cannot be converted to the specified data type. This attribute is used only by <b>checktype</b>, <b>range</b> and <b>compare</b> <b>vlvalidator</b> tag
+  types. This attribute  is set with one of the following values:</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="80" valign="top"><b>- currency</b></td>
+    <td valign="top">A monetary data type. The value is treated as an signed numeric
+      with or whithout two decimal places. Currency symbol is not allowed.</td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- date</b></td>
+    <td valign="top">A date data type. You should use a  format specified by DateOrder attribute.
+      Allowed separators are: &quot;/&quot;, &quot;.&quot; and &quot;-&quot;.</td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- time </b></td>
+    <td valign="top">A time data type. You should use a  format specified by TimeFormat attribute.</td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- datetime</b></td>
+    <td valign="top">A datetime data type. You should use a  formats specified by Dateorder and TimeFormat attributes.
+      Allowed separators are: &quot;/&quot;, &quot;.&quot; and &quot;-&quot; for date and &quot;:&quot; for time. </td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- float</b></td>
+    <td valign="top">A floating point number data type.</td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- integer</b></td>
+    <td valign="top">A signed integer data type.</td>
+  </tr>
+  <tr>
+    <td width="80" valign="top"><b>- string</b></td>
+    <td valign="top">A string data type.</td>
+  </tr>
+</table>
+<h5>GroupChar Attribute<a name="GroupChar"></a></h5>
+<p>It is used in <b>checktype</b>, <b>range</b> and <b>compare</b> validators when their Validtype attribute is
+set to &quot;integer&quot;, &quot;float&quot;  or &quot;currency&quot; . Defines 3 digits grouping symbol. Must be empty value (default) or exactly one char. For example if groupchar=&quot;,&quot; then 12,234,567 is valid integer. </p>
+<h5>DecimalChar Attribute<a name="DecimalChar"></a></h5>
+<p>It is used in <b>checktype</b>, <b>range</b> and <b>compare</b> validators when their Validtype attribute is
+set to  &quot;float&quot;  or &quot;currency&quot; . Defines decimal symbol. Must be exactly one char. Default value is &quot;.&quot; For example if decimalchar=&quot;,&quot; then 12,2 is valid float. </p>
+<h5>CaseSensitive Attribute<a name="CaseSensitive"></a></h5>
+<p>The <b>CaseSensitive</b> attribute sets whether comparisons with the input should ignore 
+  case. This attribute is valid only for <b>checktype</b>, <b>range</b> and <b>compare</b> 
+  <b>vlvalidator</b> tag types.</p>
+<h5>DateOrder Attribute<a name="DateOrder"></a></h5>
+<p>It is used in <b>checktype</b>, <b>range</b> and <b>compare</b> validators when their Validtype attribute is
+  set to &quot;date&quot; or &quot;datetime&quot; . Defines valid date format. Possible values are: MDY (default),
+  DMY and YMD.</p>
+<h5>TimeFormat Attribute<a name="TimeFormat"></a></h5>
+<p>It is used in <b>checktype</b>, <b>range</b> and <b>compare</b> validators when their Validtype attribute is
+  set to &quot;time&quot; or &quot;datetime&quot; . Defines valid time format. Possible values are: 12 (default)
+  and 24.</p>
+<h5>MinLength Attribute<a name="MinLength"></a></h5>
+<p>Use this attribute to specify the minimum length of the associated input element value. By default <b>minlength=&quot;1&quot;</b>.</p>
+<h5>MaxLength Attribute<a name="MaxLength"></a></h5>
+<p>Use this attribute to specify the maximum length of the associated input element value. If it is not specified, value can be of any length.</p>
+<h5>MinValue Attribute<a name="MinValue"></a></h5>
+<p>Use the <b>MinValue</b> attribute to specify the minimum value of the validation range. If 
+  the value specified by this attribute fails to convert to the data type specified by the <b>ValidType</b> 
+  attribute, an error will occur.</p>
+<h5>MaxValue Attribute<a name="MaxValue"></a></h5>
+<p>Use the <b>MaxValue</b> attribute to specify the maximum value of the validation range. If 
+  the value specified by this attribute fails to convert to the data type specified by the <b>ValidType</b> 
+  attribute, an error will occur.</p>
+<h5>CompareValue Attribute<a name="CompareValue"></a></h5>
+<p>Use the <b>CompareValue</b> attribute to specify a constant value to compare with the value 
+  entered by the user into the input element being validated. If the constant value specified 
+  by this attribute fails to convert to the data type specified by the <b>ValidType</b> attribute, 
+  an error will occur.</p>
+<h5>CompareControl Attribute<a name="CompareControl"></a></h5>
+<p>Use the <b>CompareControl</b> attribute to specify an input element to compare with the input 
+  element being validated. If the input element specified by this property is not an element 
+  on the page, an error will occur.</p>
+<p><b>Note:</b> Do not set both the <b>CompareControl</b> and <b>CompareValue</b> attributes 
+  at the same time. You can either compare the value of an input element to another input element, 
+  or to a constant value. If both attributes are set, the <b>CompareValue</b> attribute takes 
+  precedence.</p>
+<h5>Operator Attribute<a name="Operator"></a></h5>
+<p>Use the Operator property to specify the comparison operation to perform. The following table 
+  lists the comparison operations that are possible:</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="40" valign="top"><b>- E</b></td>
+    <td valign="top">A comparison for equality between the values of the input element being 
+      validated and another element, or a constant value.</td>
+  </tr>
+  <tr>
+    <td width="40" valign="top"><b>- NE</b></td>
+    <td valign="top">A comparison for inequality between the values of the input element being 
+      validated and another element, or a constant value.</td>
+  </tr>
+  <tr>
+    <td width="40" valign="top"><b>- G</b></td>
+    <td valign="top">A comparison for greater than between the values of the input element being 
+      validated and another element, or a constant value.</td>
+  </tr>
+  <tr>
+    <td width="40" valign="top"><b>- GE</b></td>
+    <td valign="top">A comparison for greater than or equal to between the values of the input 
+      element being validated and another element, or a constant value.</td>
+  </tr>
+  <tr>
+    <td width="40" valign="top"><b>- L</b></td>
+    <td valign="top">A comparison for less than between the values of the input element being 
+      validated and another element, or a constant value.</td>
+  </tr>
+  <tr>
+    <td width="40" valign="top"><b>- LE</b></td>
+    <td valign="top">A comparison for less than or equal to between the values of the input 
+      element being validated and another element, or a constant value.</td>
+  </tr>
+</table>
+<h5>RegExp Attribute<a name="RegExpAttr"></a></h5>
+<p>Sets the regular expression that determines the pattern used to validate an input element. 
+  Perl-Compatible regular expression syntax is used.</p>
+<h5>ClientRegExp Attribute<a name="ClientRegExp"></a></h5>
+<p>Is used in Regexp validator for specifying regular expression pattern which is used in client-side
+  validation. Pattern should comply with Perl-Compatible javascript regular expression syntax <b>(clientregexp=&quot;/pattern/[flags]&quot;)</b>.
+  If it is not specified, <b>RegExp</b> attribute is used.</p>
+<h5>Format Attribute<a name="FormatAttr"></a></h5>
+<p>Sets the format type used to validate an input element. Can accept one of the following
+  values:</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="90" valign="top"><b>- email </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted
+    E-mail address.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- zip_us5 </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted US 5 digits
+    zip code.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- zip_us9 </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted US 9 digits
+    zip code.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- zip_us </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted US 5 or
+    9 digits zip code.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- zip_canada </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted Canada
+    zip code.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- zip_uk </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted United
+    Kingdom zip code.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- phone_us </b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted US phone
+    number.</td>
+  </tr>
+  <tr>
+    <td width="90" valign="top"><b>- ip4</b></td>
+    <td valign="top">Determines whether the value of the associated input element is a properly formatted IP version
+      4 address.</td>
+  </tr>
+</table>
+<h5>Function Attribute<a name="Function"></a></h5>
+<p>Set this attribute to the name of the custom function that performs the validation. Function 
+  has the following prototype:</p>
+<p><i>void validationFunctionName($sValue, &amp;$oStatus)</i></p>
+<p>where string parameter <i>$sValue</i> contains value of input element being validated. If
+  input element is not defined
+it contains <b>null</b>.<br>
+$oStatus is object of CVDValidatorStatus type (declared in vdaemon.php
+file). It has the
+following properties:</p>
+<p>bValid - defines if corresponding custom validator has passed validation. If not set, considered
+  as <b>true</b>.<br>
+sErrMsg - is used to customize error message.</p>
+<h5>ClientFunction Attribute<a name="ClientFunction"></a></h5>
+<p>In custom validator specifies user-defined function name which will be called during client-side
+  validation. If it
+  is not specified, client-side validation for this validator is skipped. Function 
+  shold have the following prototype:</p>
+<p><i>void  validationFunctionName(oStatus)</i></p>
+<p>where oStatus is javascript object with the following properties:</p>
+<p>isvalid - defines is corresponding custom validator passed validation.  If not set,
+  considered as <b>true</b>.<br>
+  errmsg - is used to customize error message.<br>
+value - contains current value of input element being validated. If input element is not defined
+it contains <b>null</b>.</p>
+<h5>ClientValidate Attribute<a name="ClientValidate"></a></h5>
+<p>Determines if client-side validation for current validator will be performed.
+  Default value is <b>true</b>.</p>
+<h5>Required Attribute<a name="RequiredAttr"></a></h5>
+<p>Makes the associated input element a mandatory field.
+  Default value is <b>false</b>.</p>
+<h5>Negation Attribute<a name="Negation"></a></h5>
+<p><SPAN class=postbody>Inverts the result of validation. Acts just like logical "NOT" operator.</SPAN>
+  Default value is <b>false</b>.</p>
+<h5>SetFocus Attribute<a name="SetFocus"></a></h5>
+<p>Prevents setting focus to the associated input element if validation fails .
+  Default value is <b>true</b>.</p>
+</body>
+</html>

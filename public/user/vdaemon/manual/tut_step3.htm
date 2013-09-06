@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Tutorial - Step 3</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Tutorial</span><br>
+Setting Up Form Tag</h1>
+<p>To mark our form as &quot;VDaemon form&quot; we need to setup &lt;form&gt; tag properly. The VDaemon &lt;form&gt; tag is different from
+  the HTML &lt;form&gt; tag because it has some additional attributes.
+The following attributes must be specified for each VDaemon form:</p>
+<p>- The <b>runat</b> attribute must be set to &quot;vdaemon&quot; (runat=&quot;vdaemon&quot;).  This marks form
+  as &quot;VDaemon form&quot;.<br>
+  - The <b>id</b> or <b>name</b> attribute must be specified (e.g. id=&quot;Hello&quot;). It is recomended to use
+  &quot;id&quot; attribute. It must have unique value. <br>
+- The <b>method</b> attribute must be set to &quot;post&quot;.</p>
+<p>We should edit the &lt;form&gt; tag on our form page to fulfill the requirements listed above. After this the <b>name.php</b> must
+  look like:</p>
+<pre class="sample">&lt;?php include('vdaemon/vdaemon.php'); ?&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello form.&lt;/p&gt;
+<b>&lt;form method=&quot;POST&quot; action=&quot;hello.php&quot; id=&quot;Hello&quot; runat=&quot;vdaemon&quot;&gt;</b>
+  &lt;table cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;&gt;
+    &lt;tr&gt;
+      &lt;td&gt;
+        Enter your Name:
+      &lt;/td&gt;
+      &lt;td&gt;
+        &lt;input name=&quot;Name&quot; type=&quot;text&quot; size=&quot;25&quot;&gt;
+      &lt;/td&gt;
+    &lt;tr&gt;
+      &lt;td colspan=&quot;2&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Send&quot;&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+&lt;?php VDEnd(); ?&gt;
+</pre>
+<p>Continue to <a href="tut_step4.htm">Defining Validation Rules</a></p>
+<p>&nbsp;</p>
+</body>
+</html>

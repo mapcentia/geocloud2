@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>VDaemon Tutorial - Step 5</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="vd.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<p align="right"><a href="http://www.x-code.com/vdaemon_web_form_validation.php" target="_blank">VDaemon
+    PHP Library</a> |
+  <a href="http://www.x-code.com/vdaemon_dreamweaver_extension.php" target="_blank">VDaemon
+  Extension</a> | <a href="index.htm" target="_parent">Table of Contents</a></p>
+
+<h1><span class="section">VDaemon Tutorial</span><br>
+Displaying Error Messages</h1>
+<p>During this step we will add displaying of error messages to the page. To accomplish
+  this, <a href="ref_summary.htm">vlsummary</a> and <a href="ref_label.htm">vllabel</a> VDaemon
+  custom tags are used.</p>
+<p>The &lt;vlsummary&gt; custom tag allows us summarizing error messages from all invalid validators
+  on a form in a single location. The error message displayed in the summary for each validator
+  on the form is specified by the &quot;errmsg&quot; attribute of the corresponding validator.
+  You can
+also specify a custom title in the heading section of the summary by setting the &quot;headertext&quot;
+attribute. Style of the entire summary is defined by &quot;class&quot; attribute:<br>
+<b>&lt;vlsummary class=&quot;error&quot; headertext=&quot;Error(s) found:&quot;&gt;</b></p>
+<p>To highlight label near the &quot;Name&quot; input field we will use &lt;vllabel&gt; VDaemon custom tag. Each &lt;vllabel&gt; tag
+  references one or more &lt;vlvalidator&gt; tags. The logical
+&quot;AND&quot; operation is applied to the &lt;vlvalidator&gt; states to determine how the &lt;vllabel&gt; tag
+will be rendered on
+a
+page. &quot;errclass&quot; attribute defines style of the label for error state. When VDaemon label is in error state
+it also can change style of the form input element. &quot;for&quot; attribute defines input element to change (you
+can reference  input element &quot;name&quot; or &quot;id&quot; attribute). &quot;cerrclass&quot; attribute defines
+input element error class:<br>
+<b>&lt;vllabel errclass="error" validators="NameReq,NameRegExp" for="Name" cerrclass="controlerror"&gt;</b>Enter
+your Name:<b>&lt;/vllabel&gt;</b></p>
+<p>The last thing we must do is  adding &quot;error&quot; and &quot;controlerror&quot; styles to the page:</p>
+<p>After adding error messaging elements to your page, the source code should appear as shown
+  below.</p>
+<pre class="sample">&lt;?php include('vdaemon/vdaemon.php'); ?&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Hello!&lt;/title&gt;
+<b>&lt;style type=&quot;text/css&quot;&gt;
+&lt;!--
+.error {
+    color: #AA0000
+}
+.controlerror {<br>    background-color: #ffffdd;<br>    border: 1px solid #AA0000;<br>}<br>--&gt;
+&lt;/style&gt;</b>
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Hello form.&lt;/p&gt;
+&lt;form method=&quot;POST&quot; action=&quot;hello.php&quot; id=&quot;Hello&quot; runat=&quot;vdaemon&quot;&gt;
+  &lt;table cellpadding=&quot;2&quot; cellspacing=&quot;0&quot; border=&quot;0&quot;&gt;
+    &lt;tr&gt;
+      &lt;td&gt;
+        <b>&lt;vllabel errclass="error" validators="NameReq,NameRegExp"
+          for="Name" cerrclass="controlerror"&gt;</b>Enter your Name:<b>&lt;/vllabel&gt;
+      </b>&lt;/td&gt;
+      &lt;td&gt;
+        &lt;input name=&quot;Name&quot; type=&quot;text&quot; size=&quot;25&quot;&gt;
+        &lt;vlvalidator name=&quot;NameReq&quot; type=&quot;required&quot; control=&quot;Name&quot; errmsg=&quot;Name required&quot;&gt;
+        &lt;vlvalidator name=&quot;NameRegExp&quot; type=&quot;regexp&quot; control=&quot;Name&quot;
+          errmsg=&quot;Invalid Name&quot; regexp=&quot;/^[a-z'\s]*$/i&quot;&gt;
+      &lt;/td&gt;
+    &lt;tr&gt;
+      &lt;td colspan=&quot;2&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Send&quot;&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+  &lt;p&gt;<b>&lt;vlsummary class=&quot;error&quot; headertext=&quot;Error(s) found:&quot;&gt;</b>&lt;/p&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+&lt;?php VDEnd(); ?&gt;
+</pre>
+<p>Congratulations! Our form is ready. Run and test it. </p>
+<p>We have completed the tutorial and I hope that you will enjoy using VDaemon for creating
+    your own form validation solutions. Do not forget to visit the <A href="http://www.x-code.com/">X-code</A> web
+    site from time to time for updates to the VDaemon family of products.</p>
+<p>&nbsp;</p>
+</body>
+</html>
