@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class cartomobile extends postgis
 {
     /**

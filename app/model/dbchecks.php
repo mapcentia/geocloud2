@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class dbcheck extends postgis {
 	function __construct()
 	{

@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class Settings_viewer extends postgis {
 	function __construct() {
 		parent::__construct();

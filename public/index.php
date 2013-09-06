@@ -1,14 +1,6 @@
 <?php
-//include "app/conf/main.php";
-spl_autoload_register(function ($className) {
-    $ds = DIRECTORY_SEPARATOR;
-    $dir = __DIR__;
-    $className = strtr($className, '\\', $ds);
-    $file = "{$dir}{$ds}{$className}.php";
-    if (is_readable($file)) {
-        require_once $file;
-    }
-});
+include "../app/conf/main.php";
+
 use \app\inc\Input;
 
 

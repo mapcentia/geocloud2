@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class Sql_to_es extends postgis
 {
     var $srs;

@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class sqlapi extends postgis {
 	var $srs;
 	function __construct($srs = "900913") {

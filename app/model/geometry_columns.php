@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class GeometryColumns extends postgis
 {
     var $rows;

@@ -1,7 +1,7 @@
 <?php
-/**
- *
- */
+
+use app\inc\postgis;
+
 class User extends postgis {
 	public $user;
 	function __construct($userId) {

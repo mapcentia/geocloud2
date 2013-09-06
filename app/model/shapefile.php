@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class shapefile extends postgis {
 	var $safeFile;
 	var $srid;

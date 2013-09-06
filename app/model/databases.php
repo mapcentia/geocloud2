@@ -1,9 +1,8 @@
 <?php
+
+use app\inc\postgis;
+
 class databases extends postgis {
-	function __construct()
-	{
-		parent::__construct();
-	}
     private function createUser($name)
     {
         $sql = "create user {$name} with password '1234'";

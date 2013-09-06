@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class table extends postgis {
 	var $table;
 	var $tableWithOutSchema;

@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class version extends postgis {
 	var $userObj;
 	function __construct($userObj) {

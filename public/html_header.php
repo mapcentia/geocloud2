@@ -1,9 +1,7 @@
 <?php
-include 'conf/main.php';
 session_name($sessionName);
 session_set_cookie_params(0, '/', "." . $domain);
 session_start();
-include 'libs/functions.php';
 include 'inc/user_name_from_uri.php';
 include 'model/users.php';
 include 'model/databases.php';
@@ -17,7 +15,7 @@ if ($parts[1] == "store" || $parts[1] == "editor") {
     if (!$parts[2]) {
         die("<script>window.location='/?db=false'</script>");
     }
-    if ($db->doesDbExist(postgis::toAscii($parts[2], NULL, "_"))) {
+    if ($db->doesDbExist(app\inc\postgis::toAscii($parts[2], NULL, "_"))) {
         $postgisdb = $parts[2];
     } else {
         die("<script>window.location='/?db=false'</script>");

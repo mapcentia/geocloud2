@@ -1,4 +1,7 @@
 <?php
+
+use app\inc\postgis;
+
 class _class extends postgis {
 	var $table;
 	function __construct($table) {
