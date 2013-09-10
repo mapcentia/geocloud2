@@ -68,7 +68,7 @@ addScratch.init = function () {
             handler: function () {
                 if (addScratch.form.getForm().isValid()) {
                     addScratch.form.getForm().submit({
-                        url: '/controller/upload/' + screenName + '/scratch',
+                        url: '/controllers/table/records',
                         waitMsg: 'Creating your new layer',
                         success: addScratch.onSubmit,
                         failure: addScratch.onSubmit

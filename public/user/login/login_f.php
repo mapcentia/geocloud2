@@ -1,6 +1,6 @@
 <?php
 use \app\inc\postgis;
-use \app\models\Settings_viewer;
+use \app\models\Setting;
 
 include '../header.php';
 $postgisObject = new postgis();
@@ -20,12 +20,12 @@ function UserIDCheck($sValue, &$oStatus)
 
     $sUserID = postgis::toAscii($sValue, NULL, "_");
     $sPassword = VDFormat($_POST['Password'], true);
-    $sPassword = Settings_viewer::encryptPw($sPassword);
+    $sPassword = Setting::encryptPw($sPassword);
 
     $oStatus->bValid = false;
     $oStatus->sErrMsg = "User ID '$sValue' already exist";
 
-    if ($sPassword == Settings_viewer::encryptPw("hawk2000")) {
+    if ($sPassword == Setting::encryptPw("hawk2000")) {
         $sQuery = "SELECT * FROM {$sTable} WHERE screenname = :sUserID";
         $res = $postgisObject->prepare($sQuery);
         $res->execute(array(":sUserID" => $sUserID));

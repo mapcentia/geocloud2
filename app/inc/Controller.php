@@ -3,6 +3,7 @@ namespace app\inc;
 
 class Controller
 {
+    public $response;
     public function startSession()
     {
         global $sessionName;
@@ -36,16 +37,6 @@ class Controller
             return true;
         } else {
             return false;
-        }
-    }
-
-    public function toJSON($response)
-    {
-        $callback = $_GET['jsonp_callback'];
-        if ($callback) {
-            return $callback . '(' . json_encode($response) . ');';
-        } else {
-            return json_encode($response);
         }
     }
 }

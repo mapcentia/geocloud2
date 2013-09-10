@@ -6,7 +6,8 @@ class Input
     public static function getPath()
     {
         $request = explode("/", str_replace("?" . $_SERVER['QUERY_STRING'], "", $_SERVER['REQUEST_URI']));
-        return $request;
+        $obj = new GetPart($request);
+        return $obj;
     }
 
     public static function getMethod()
@@ -14,10 +15,10 @@ class Input
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function getQuery()
+    public static function get()
     {
         $query = "";
-        switch (static::getMethod()){
+        switch (static::getMethod()) {
             case "get":
                 $query = $_GET;
                 break;
@@ -25,14 +26,41 @@ class Input
                 $query = $_POST;
                 break;
             case "put":
-                parse_str(file_get_contents('php://input'), $_PUT);
-                $query = $_PUT;
+                $query = static::parseQueryString(file_get_contents('php://input'));
                 break;
             case "delete":
-                parse_str(file_get_contents('php://input'), $_DELETE);
-                $query = $_DELETE;
+                $query = static::parseQueryString(file_get_contents('php://input'));
                 break;
         }
-        return $query;
+        if (!reset($query))
+            return key($query);
+        else
+            return $query;
+    }
+
+    static function parseQueryString($str)
+    {
+        $op = array();
+        $pairs = explode("&", $str);
+        foreach ($pairs as $pair) {
+            list($k, $v) = array_map("urldecode", explode("=", $pair));
+            $op[$k] = $v;
+        }
+        return $op;
+    }
+}
+
+class GetPart
+{
+    private $parts;
+
+    function __construct($request)
+    {
+        $this->parts = $request;
+    }
+
+    function part($e)
+    {
+        return $this->parts[$e];
     }
 }

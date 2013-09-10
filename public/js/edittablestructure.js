@@ -73,19 +73,16 @@ tableStructure.init = function (record, screenName) {
     });
     tableStructure.proxy = new Ext.data.HttpProxy(
         {
+            restful: true,
             api: {
-                read: '/controller/tables/' + screenName
-                    + '/getstructure/' + record.get("f_table_schema")
+                read: '/controllers/table/structure/' + record.get("f_table_schema")
                     + '.' + record.get("f_table_name"),
-                create: '/controller/tables/' + screenName
-                    + '/createcolumn/' + record.get("f_table_schema")
+                create: '/controllers/table/columns/' + record.get("f_table_schema")
                     + '.' + record.get("f_table_name"),
-                update: '/controller/tables/' + screenName
-                    + '/updatecolumn/' + record.get("f_table_schema")
+                update: '/controllers/table/columns/' + record.get("f_table_schema")
                     + '.' + record.get("f_table_name") + '/'
                     + record.get("_key_"),
-                destroy: '/controller/tables/' + screenName
-                    + '/destroycolumn/' + record.get("f_table_schema")
+                destroy: '/controllers/table/columns/' + record.get("f_table_schema")
                     + '.' + record.get("f_table_name")
             },
             listeners: {

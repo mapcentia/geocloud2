@@ -28,7 +28,7 @@ include_once("../../../libs/phpgeometry_class.php");
 include_once("../functions.php");
 include_once("../../../libs/JSON.php");
 include_once("../../../models/tables.php");
-include_once("../../../models/geometry_columns.php");
+include_once("../../../models/Layer.php");
 
 
 $postgisObject = new postgis(); 

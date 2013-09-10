@@ -78,7 +78,7 @@ var geocloud = (function () {
         this.map = null;
         switch (MAPLIB) {
             case "ol2":
-                this.layer = new OpenLayers.Layer.Vector("Vector", {
+                this.layer = new OpenLayers.Layer.Vector(this.defaults.name, {
                     styleMap: this.defaults.styleMap,
                     visibility: this.defaults.visibility,
                     renderers: ['Canvas', 'SVG', 'VML'],
@@ -129,6 +129,7 @@ var geocloud = (function () {
             db: null,
             sql: null,
             id: "vector",
+            name: "Vector",
             styleMap: null,
             projection: (MAPLIB === "leaflet") ? "4326" : "900913",
             strategies: null,

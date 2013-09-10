@@ -21,7 +21,7 @@ $(window).load(function () {
     var groups;
 
     $.ajax({
-        url: '/controller/tables/' + screenName + '/getcolumnswithkey/settings.geometry_columns_view',
+        url: '/controllers/layer/columnswithkey',
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -37,7 +37,7 @@ $(window).load(function () {
     });
 
     $.ajax({
-        url: '/controller/settings_viewer/' + screenName + '/get',
+        url: '/controllers/setting',
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -71,10 +71,11 @@ $(window).load(function () {
         }
     };
     var proxy = new Ext.data.HttpProxy({
+        restful: true,
         api: {
-            read: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
-            update: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
-            destroy: '/controller/tables/' + screenName + '/destroy'
+            read: '/controllers/layer/records',
+            update: '/controllers/layer/records',
+            destroy: '/controllers/later/records'
         },
         listeners: {
             write: onWrite,
@@ -112,7 +113,7 @@ $(window).load(function () {
                 "name": "group"
             }
         ]),
-        url: '/controller/tables/' + screenName + '/getgroupby/settings.geometry_columns_view/layergroup'
+        url: '/controllers/layer/groups'
     });
     groupsStore.load();
     var schemasStore = new Ext.data.Store({
@@ -124,7 +125,7 @@ $(window).load(function () {
                 "name": "schema"
             }
         ]),
-        url: '/controller/databases/' + screenName + '/getschemas'
+        url: '/controllers/database/schemas'
     });
     schemasStore.load();
 
@@ -412,7 +413,7 @@ $(window).load(function () {
         }
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
             if (btn == "yes") {
-                proxy.api.destroy.url = "/controller/tables/" + screenName + "/destroy/" + schema + "." + record.data.f_table_name;
+                proxy.api.destroy.url = "/controllers/table/records/" + record.data.f_table_schema + "." + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
                 return false;
@@ -655,7 +656,7 @@ $(window).load(function () {
                     handler: function () {
                         if (form.form.isValid()) {
                             form.getForm().submit({
-                                url: '/controller/tables/' + screenName + '/createcolumn/' + schema + '.' + record.get("f_table_name"),
+                                url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name"),
                                 waitMsg: 'Saving Data...',
                                 submitEmptyText: false,
                                 success: onSubmit,

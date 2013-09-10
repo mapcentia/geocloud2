@@ -4,7 +4,7 @@ namespace app\models;
 use app\inc\postgis;
 use app\inc\log;
 
-class table extends postgis
+class Table extends postgis
 {
     var $table;
     var $tableWithOutSchema;
@@ -25,7 +25,7 @@ class table extends postgis
         $_table = $matches[0];
 
         if (!$_schema) {
-            $table = $this->postgisschema . "." . $table;
+            $table = \Connection::$param['postgisschema']. "." . $table;
         }
         $this->tableWithOutSchema = $_table;
 
@@ -39,7 +39,6 @@ class table extends postgis
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
-            //$this->id = $this->getGeometryColumns($this->table, "id");
             $this->setType();
             $this->exits = true;
         }

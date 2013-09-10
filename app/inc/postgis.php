@@ -27,17 +27,6 @@ class postgis
 
     function fetchRow($result, $result_type = "assoc")
     {
-        /*
-         switch ($result_type) {
-         case "assoc":
-         $row=pg_fetch_assoc($result);
-         break;
-         case "both";
-         $row=pg_fetch_array($result);
-         break;
-         }
-         return($row);
-         */
         if ($this->PDOerror) {
             throw new Exception($this->PDOerror[0]);
         }
@@ -152,7 +141,7 @@ class postgis
                             // Return interger
                             $result = $this->db->exec($query);
                     }
-                } catch (PDOException $e) {
+                } catch (\PDOException $e) {
                     $this->PDOerror[] = $e->getMessage();
                 }
                 return ($result);

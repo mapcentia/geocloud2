@@ -3,7 +3,7 @@ include("../conf/main.php");
 include("../libs/functions.php");
 include("../models/Database.php");
 include("../models/dbchecks.php");
-include '../models/Settings_viewer.php';
+include '../models/Setting.php';
 
 $dbList = new databases();
 try {

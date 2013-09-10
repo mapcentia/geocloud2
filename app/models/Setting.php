@@ -4,7 +4,7 @@ namespace app\models;
 
 use app\inc\postgis;
 
-class Settings_viewer extends postgis {
+class Setting extends postgis {
 	function __construct() {
 		parent::__construct();
 	}

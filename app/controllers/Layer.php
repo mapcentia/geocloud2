@@ -4,55 +4,40 @@ namespace app\controllers;
 use \app\inc\Response;
 use \app\inc\Input;
 
-class Table extends \app\inc\Controller
+class Layer extends \app\inc\Controller
 {
     private $table;
+    private $obj;
+    private $path;
+    public  $payload;
 
     function __construct()
     {
-        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $this->payload = json_decode(Input::get());
+        $this->path = Input::getPath();
+        $this->table = new \app\models\table("settings.geometry_columns_view");
     }
 
-    public function post_records()
+    public function get_records()
     {
-        $table = new \app\models\Table(null);
-        $response = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
-        return Response::json($response);
+        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . \Connection::$param["postgisschema"] . "'"));
     }
-
-    public function delete_records()
+    public function get_groups()
     {
-        return Response::json($this->table->destroy());
+        return Response::json($this->response = $this->table->getGroupBy("layergroup"));
     }
-
+    public function put_records()
+    {
+        $this->table = new \app\models\table("settings.geometry_columns_join");
+        return Response::json($this->table->updateRecord((array)$this->payload, "_key_"));
+    }
     public function get_columns()
     {
-        return Response::json($this->table->getColumnsForExtGridAndStore());
+        $this->response = $this->table->getColumnsForExtGridAndStore();
     }
-
     public function get_columnswithkey()
     {
         return Response::json($this->table->getColumnsForExtGridAndStore(true));
-    }
-
-    public function put_columns()
-    {
-        return Response::json($this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5)));
-    }
-
-    public function post_columns()
-    {
-        return Response::json($this->table->addColumn(Input::get())); // Is POSTED by a form
-    }
-
-    public function delete_columns()
-    {
-        return Response::json($this->table->deleteColumn(json_decode(Input::get())->data));
-    }
-
-    public function get_structure()
-    {
-        return Response::json($this->table->getTableStructure());
     }
 }
 
