@@ -19,15 +19,15 @@ class Setting extends \app\inc\Controller
     }
     public function put_index()
     {
-        return Response::json($this->update($_POST));
+        return Response::json($this->settings->update($_POST));
     }
     public function put_pw()
     {
-        return Response::json($this->updatePw($_POST['pw']));
+        return Response::json($this->settings->updatePw($_POST['pw']));
     }
     public function put_apikey()
     {
-        return Response::json($this->updateApiKey());
+        return Response::json($this->settings->updateApiKey());
     }
 }
 

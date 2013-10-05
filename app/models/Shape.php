@@ -1,23 +1,13 @@
 <?php
-
-namespace app\model;
+namespace app\models;
 
 use app\inc\postgis;
 
-class shapefile extends postgis {
+class Shape extends postgis {
 	var $safeFile;
 	var $srid;
 	var $file;
 	var $pdo;
-	/**
-	 *
-	 *
-	 * @param unknown $safeFile
-	 * @param unknown $srid
-	 * @param unknown $file
-	 * @param unknown $pdo
-	 */
-
 
 	function __construct($safeFile, $srid, $file, $pdo) {
 		parent::__construct();
@@ -25,15 +15,7 @@ class shapefile extends postgis {
 		$this->srid = $srid;
 		$this->file = $file;
 		$this->pdo = $pdo;
-		fb($pdo);
 	}
-
-
-	/**
-	 *
-	 *
-	 * @return unknown
-	 */
 	public function loadInDb() {
 		$this->connect("PDO");
 		$table = new table($this->safeFile);
@@ -61,7 +43,7 @@ class shapefile extends postgis {
 				}
 				//$table->point2multipoint();
 				$response['success'] = true;
-				$response['message'] = "Your shape file was uploaded and processed. You can find new layer i your geocloud.".$overWriteTxt;
+				$response['message'] = "Your shape file was uploaded and processed. You can find new layer in your geocloud.".$overWriteTxt;
 			}
 			else {
 				$response['success'] = false;
@@ -97,7 +79,7 @@ class shapefile extends postgis {
 
 
 				$response['success'] = true;
-				$response['message'] = "Your shape file was uploaded and processed. You can find new layer i your geocloud.".$overWriteTxt;
+				$response['message'] = "Your shape file was uploaded and processed. You can find new layer in your geocloud.".$overWriteTxt;
 			}
 			else {
 				$this->rollback();
@@ -110,15 +92,12 @@ class shapefile extends postgis {
 
 			// If layer is new (inserted) then insert a new class for it
 			if ($response2['operation'] == "inserted") {
-				$class = new _class();
-				$class->insert($this->safeFile, array(), "_");
+				//$class = new _class();
+				//$class->insert($this->safeFile, array(), "_");
 			}
-			makeMapFile($_SESSION['screen_name']);
 			$response['cmd'] = $cmd;
 			
 		}
 		return $response;
 	}
-
-
 }

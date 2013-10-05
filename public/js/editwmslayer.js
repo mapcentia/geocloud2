@@ -2,7 +2,7 @@ Ext.namespace('wmsLayer');
 wmsLayer.init = function(record) {
     var fieldsForStore = [];
     $.ajax({
-        url : '/controller/tables/' + screenName + '/getcolumns/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
+        url : '/controllers/table/columns/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
         async : false,
         dataType : 'json',
         type : 'GET',
@@ -24,10 +24,7 @@ wmsLayer.init = function(record) {
     wmsLayer.store = new Ext.data.JsonStore({
         // store config
         autoLoad : true,
-        url : '/controller/wmslayers/' + screenName + '/get/' + record.get("_key_"),
-        baseParams : {
-            xaction : 'read'
-        },
+        url : '/controllers/tile/index/' + record.get("_key_"),
         storeId : 'configStore',
         // reader config
         successProperty : 'success',
@@ -151,8 +148,8 @@ wmsLayer.init = function(record) {
                 var jsonDataStr = null;
                 jsonDataStr = Ext.encode(source);
                 var requestCg = {
-                    url : '/controller/wmslayers/' + screenName + '/update/' + wmsLayer.classId,
-                    method : 'post',
+                    url : '/controllers/tile/index/' + wmsLayer.classId,
+                    method : 'put',
                     params : {
                         data : jsonDataStr
                     },

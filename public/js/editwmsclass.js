@@ -20,10 +20,11 @@ wmsClasses.init = function(record) {
         encode : false
     });
     wmsClasses.proxy = new Ext.data.HttpProxy({
+        restful: true,
         api : {
-            read : '/controller/classes/' + screenName + '/getall/' + wmsClasses.table,
-            create : '/controller/classes/' + screenName + '/createcolumn/' + wmsClasses.table,
-            destroy : '/controller/classes/' + screenName + '/destroy/' + wmsClasses.table
+            read : '/controllers/classification/index/' + wmsClasses.table,
+            create : '/controllers/classification/index/' + wmsClasses.table,
+            destroy : '/controllers/classification/index/' + wmsClasses.table
         },
         listeners : {
             // write: wmsClasses.onWrite,
@@ -98,7 +99,7 @@ wmsClasses.init = function(record) {
 };
 wmsClasses.onAdd = function() {
     var requestCg = {
-        url : '/controller/classes/' + screenName + '/insert/' + wmsClasses.table,
+        url : '/controllers/classification/index/' + wmsClasses.table,
         method : 'post',
         callback : function(options, success, http) {
             var response = eval('(' + http.responseText + ')');
@@ -150,10 +151,7 @@ wmsClass.init = function(id) {
     wmsClass.store = new Ext.data.JsonStore({
         // store config
         autoLoad : true,
-        url : '/controller/classes/' + screenName + '/get/' + wmsClasses.table + '/' + id,
-        baseParams : {
-            xaction : 'read'
-        },
+        url : '/controllers/classification/index/' + wmsClasses.table + '/' + id,
         storeId : 'configStore',
         // reader config
         successProperty : 'success',
@@ -300,7 +298,8 @@ wmsClass.init = function(id) {
                 param = Ext.util.JSON.encode(param);
 
                 var requestCg = {
-                    url : '/controller/classes/' + screenName + '/update/' + wmsClasses.table + '/' + wmsClass.classId,
+                    url : '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
+                    method: 'put',
                     params : param,
                     headers : {
                         'Content-Type' : 'application/json; charset=utf-8'

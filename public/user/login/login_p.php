@@ -6,7 +6,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='{$userHostName}/user/login'</script>");
 }
 ($_SESSION['zone']) ? $prefix = $_SESSION['zone'] . "." : $prefix = "";
-$checkDb = json_decode(file_get_contents("http://{$prefix}{$domain}/controller/databases/postgres/doesdbexist/{$_SESSION['screen_name']}"));
+$checkDb = json_decode(file_get_contents("http://{$prefix}{$domain}/controllers/database/exist/{$_SESSION['screen_name']}"));
 ?>
 <div class="container">
     <?php if ($checkDb->success) : ?>
@@ -62,23 +62,8 @@ $checkDb = json_decode(file_get_contents("http://{$prefix}{$domain}/controller/d
         var db = "<?php echo $_SESSION['screen_name'];?>";
         var hostName = "http://<?php echo "{$prefix}{$domain}";?>";
         $(window).ready(function () {
-            /*$.ajax({
-                url: hostName + '/controller/geometry_columns/' + db + '/getall/',
-                async: true,
-                dataType: 'jsonp',
-                jsonp: 'jsonp_callback',
-                success: function (response) {
-                    var metaData = response;
-                    for (var i = 0; i < metaData.data.length; i++) {
-                        metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                        (metaData.data[i].f_table_title) ? metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i] : null;
-                    }
-                    //console.log(metaData);
-                }
-            });
-            */
             $.ajax({
-                url: hostName + '/controller/geometry_columns/' + db + '/getschemas',
+                url: hostName + '/controllers/database/schemas',
                 async: true,
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',

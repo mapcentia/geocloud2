@@ -7,13 +7,10 @@ use \app\inc\Input;
 class Layer extends \app\inc\Controller
 {
     private $table;
-    private $obj;
     private $path;
-    public  $payload;
 
     function __construct()
     {
-        $this->payload = json_decode(Input::get());
         $this->path = Input::getPath();
         $this->table = new \app\models\table("settings.geometry_columns_view");
     }
@@ -29,7 +26,7 @@ class Layer extends \app\inc\Controller
     public function put_records()
     {
         $this->table = new \app\models\table("settings.geometry_columns_join");
-        return Response::json($this->table->updateRecord((array)$this->payload, "_key_"));
+        return Response::json($this->table->updateRecord((array)json_decode(Input::get()), "_key_"));
     }
     public function get_columns()
     {
@@ -41,41 +38,3 @@ class Layer extends \app\inc\Controller
     }
 }
 
-/*switch ($this->path[4]) {
-    case "getrecords": // only geometrycolumns table
-
-        break;
-    case "getgeojson": // only geometrycolumns table
-        break;
-    case "getallrecords": // All tables
-        break;
-    case "getgroupby": // All tables
-        break;
-    case "updaterecord": // All tables
-
-        makeMapFile($_SESSION['screen_name']);
-        break;
-    case "destroy": // Geometry columns
-        makeMapFile($_SESSION['screen_name']);
-        break;
-    case 'getcolumns': // All tables
-        
-        break;
-    case 'getcolumnswithkey': // All tables
-        break;
-    case 'getstructure': // All tables
-       
-        break;
-    case 'updatecolumn':
-        makeMapFile($_SESSION['screen_name']);
-        break;
-    case 'createcolumn':
-        makeMapFile($_SESSION['screen_name']);
-        break;
-    case 'destroycolumn':
-        makeMapFile($_SESSION['screen_name']);
-        break;
-    case 'addcolumn':
-        makeMapFile($_SESSION['screen_name']);
-        break;
-}*/

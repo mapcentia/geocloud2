@@ -3,10 +3,10 @@ ini_set("display_errors", "On");
 error_reporting(3);
 // URL and path information. Must be the web root folder!
 
-$hostName = "http://local.mapcentia.com";
-$userHostName = "http://local.mapcentia.com";
+$hostName = "http://local2.mapcentia.com";
+$userHostName = "http://local2.mapcentia.com";
 $domain = "mapcentia.com";
-$basePath = "/mnt/hgfs/Documents/geocloud/";
+$basePath = "/mnt/hgfs/Documents/www/geocloud2/";
 $sessionName = "PHPSESSID";
 
 

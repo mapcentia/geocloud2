@@ -23,12 +23,11 @@ apiKey.form = new Ext.FormPanel({
             Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function(btn) {
                 if (btn === "yes") {
                     $.ajax({
-                        url : '/controller/settings_viewer/' + screenName + '/updateapikey',
+                        url : '/controllers/setting/apikey',
                         async : false,
                         dataType : 'json',
-                        type : 'GET',
+                        type : 'put',
                         success : function(data, textStatus, http) {
-                            console.log(http);
                             if (http.readyState === 4) {
                                 if (http.status === 200) {
                                     var response = eval('(' + http.responseText + ')');

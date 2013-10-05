@@ -1,10 +1,9 @@
 <?php
-
-namespace app\model;
+namespace app\models;
 
 use app\inc\postgis;
 
-class wmslayers extends postgis {
+class Tile extends postgis {
 	var $table;
 	function __construct($table) {
 		parent::__construct();

@@ -261,10 +261,10 @@ $(window).load(function () {
                             Ext.MessageBox.confirm('Confirm', 'You are about to invalidate the tile cache for layer \'' + r.data.f_table_name + '\'. Are you sure?', function (btn) {
                                 if (btn === "yes") {
                                     $.ajax({
-                                        url: '/controller/clear_tile_cache/' + screenName + '/' + layer,
+                                        url: '/controllers/tilecache/index/' + layer,
                                         async: true,
                                         dataType: 'json',
-                                        type: 'GET',
+                                        type: 'delete',
                                         success: function (data, textStatus, http) {
                                             if (http.readyState == 4) {
                                                 if (http.status == 200) {
@@ -344,10 +344,9 @@ $(window).load(function () {
                     Ext.MessageBox.confirm('Confirm', 'You are about to invalidate the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
                             $.ajax({
-                                url: '/controller/clear_tile_cache/' + screenName + '/schema/' + schema,
-                                async: true,
+                                url: '/controllers/tilecache/index/schema/' + schema,
                                 dataType: 'json',
-                                type: 'GET',
+                                type: 'delete',
                                 success: function (data, textStatus, http) {
                                     if (http.readyState == 4) {
                                         if (http.status == 200) {
@@ -512,6 +511,7 @@ $(window).load(function () {
                 border: false,
                 frame: true,
                 items: [new Ext.FormPanel({
+                    method: 'post',
                     labelWidth: 1,
                     frame: false,
                     border: false,
@@ -539,7 +539,7 @@ $(window).load(function () {
                                 var f = Ext.getCmp('schemaform');
                                 if (f.form.isValid()) {
                                     f.getForm().submit({
-                                        url: '/controller/databases/' + screenName + '/addschema',
+                                        url: '/controllers/database/schemas',
                                         submitEmptyText: false,
                                         waitMsg: 'Creating schema',
                                         success: function () {
@@ -921,7 +921,8 @@ $(window).load(function () {
                                     };
                                     param = Ext.util.JSON.encode(param);
                                     Ext.Ajax.request({
-                                        url: '/controller/tables/' + screenName + '/updaterecord/settings.geometry_columns_join/_key_',
+                                        url: '/controllers/layer/records/_key_',
+                                        method: 'put',
                                         headers: {
                                             'Content-Type': 'application/json; charset=utf-8'
                                         },

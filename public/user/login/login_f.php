@@ -4,9 +4,7 @@ use \app\models\Setting;
 
 include '../header.php';
 $postgisObject = new postgis();
-
 include ('../vdaemon/vdaemon.php');
-
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {

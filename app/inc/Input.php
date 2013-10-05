@@ -15,7 +15,7 @@ class Input
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function get()
+    public static function get($key = null)
     {
         $query = "";
         switch (static::getMethod()) {
@@ -33,9 +33,14 @@ class Input
                 break;
         }
         if (!reset($query))
+            //$obj = new GetValue(key($query));
             return key($query);
-        else
-            return $query;
+        else {
+            //$obj = new GetValue($query);
+            return $query[$key];
+
+        }
+
     }
 
     static function parseQueryString($str)
@@ -63,4 +68,20 @@ class GetPart
     {
         return $this->parts[$e];
     }
+}
+
+class GetValue
+{
+    private $values;
+
+    function __construct($query)
+    {
+        $this->values = $query;
+    }
+
+    function values($e = false)
+    {
+        return ($e) ? $this->values[$e] : $this->values;
+    }
+
 }

@@ -1,8 +1,12 @@
 <?php
+use \app\inc\postgis;
+use \app\models\Setting;
+
 include '../header.php';
 $postgisObject = new postgis();
 define('VDAEMON_PARSE', false);
-include ('../../libs/vdaemon/vdaemon.php');
+include ('../vdaemon/vdaemon.php');
+
 function UserIDCheck($sValue, &$oStatus) {
 	global $sTable;
 	global $postgisObject;
@@ -34,7 +38,7 @@ $sZone = VDFormat($_POST['Zone'], true);
 
 
 $sUserID = postgis::toAscii($sUserID, NULL, "_");
-$sPassword = Settings_viewer::encryptPw($sPassword);
+$sPassword = Setting::encryptPw($sPassword);
 
 $sQuery = "INSERT INTO $sTable (screenname,pw,email,zone) VALUES('{$sUserID}','{$sPassword}','{$sEmail}','{$sZone}') RETURNING created";
 $res = $postgisObject -> execQuery($sQuery);

@@ -1,44 +1,47 @@
 Ext.namespace('httpAuth');
 httpAuth.form = new Ext.FormPanel({
+    method: 'put',
+    frame: false,
+    border: false,
+    autoHeight: false,
+    labelWidth: 1,
+    defaults: {
+        anchor: '95%',
+        allowBlank: false,
+        msgTarget: 'side'
+    },
+    items: [ new Ext.Panel({
         frame: false,
-		border: false,
-        autoHeight: false,
-        labelWidth: 1,
-        defaults: {
-            anchor: '95%',
-            allowBlank: false,
-            msgTarget: 'side'
-        },
-        items: [ new Ext.Panel({
-				frame: false,
         border: false,
-				bodyStyle: 'padding: 7px 7px 10px 7px;',
-				contentEl: "authentication"
-			}),{
-            xtype: 'textfield',
-			inputType:'password',
-            id: 'httpAuthForm',
-            name: 'pw',
-            emptyText: 'Password'
-        }
-			],
-        buttons: [{
+        bodyStyle: 'padding: 7px 7px 10px 7px;',
+        contentEl: "authentication"
+    }), {
+        xtype: 'textfield',
+        inputType: 'password',
+        id: 'httpAuthForm',
+        name: 'pw',
+        emptyText: 'Password'
+    }
+    ],
+    buttons: [
+        {
             text: 'Update',
             handler: function () {
-				"use strict";
+                "use strict";
                 if (httpAuth.form.getForm().isValid()) {
                     httpAuth.form.getForm().submit({
-                        url: '/controller/settings_viewer/' + screenName + '/updatepw',
+                        url: '/controllers/setting/pw',
                         success: httpAuth.onSubmit,
                         failure: httpAuth.onSubmit
                     });
                 }
             }
-        }]
-        //html: "Set password for WFS http authentication"
-    });
+        }
+    ]
+    //html: "Set password for WFS http authentication"
+});
 httpAuth.onSubmit = function (form, action) {
-	"use strict";
+    "use strict";
     var result = action.result;
     if (result.success) {
         Ext.MessageBox.alert('Success', result.message);

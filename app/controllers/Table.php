@@ -37,12 +37,12 @@ class Table extends \app\inc\Controller
 
     public function put_columns()
     {
-        return Response::json($this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5)));
+        return Response::json($this->table->updateColumn(json_decode(Input::get()->values())->data, Input::getPath()->part(5)));
     }
 
     public function post_columns()
     {
-        return Response::json($this->table->addColumn(Input::get())); // Is POSTED by a form
+        return Response::json($this->table->addColumn(Input::get()->values())); // Is POSTED by a form
     }
 
     public function delete_columns()
