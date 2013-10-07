@@ -1,9 +1,9 @@
 <?php
 namespace app\models;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class Shape extends postgis {
+class Shape extends Model {
 	var $safeFile;
 	var $srid;
 	var $file;

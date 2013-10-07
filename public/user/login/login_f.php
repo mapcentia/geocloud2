@@ -1,9 +1,9 @@
 <?php
-use \app\inc\postgis;
+use \app\inc\Model;
 use \app\models\Setting;
 
 include '../header.php';
-$postgisObject = new postgis();
+$postgisObject = new Model();
 include ('../vdaemon/vdaemon.php');
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
@@ -16,7 +16,7 @@ function UserIDCheck($sValue, &$oStatus)
     global $postgisObject;
     global $sUserID;
 
-    $sUserID = postgis::toAscii($sValue, NULL, "_");
+    $sUserID = Model::toAscii($sValue, NULL, "_");
     $sPassword = VDFormat($_POST['Password'], true);
     $sPassword = Setting::encryptPw($sPassword);
 

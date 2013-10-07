@@ -3,6 +3,7 @@ namespace app\controllers\upload;
 
 use \app\inc\Response;
 use \app\inc\Input;
+use \app\conf\Connection;
 
 class Shape extends \app\inc\Controller
 {
@@ -11,7 +12,7 @@ class Shape extends \app\inc\Controller
     function __construct()
     {
         global $basePath;
-        $this->file = $basePath . "/app/tmp/" .\Connection::$param["postgisschema"] . "_" . time();
+        $this->file = $basePath . "/app/tmp/" .Connection::$param["postgisschema"] . "_" . time();
     }
 
     public function post_index()
@@ -34,8 +35,8 @@ class Shape extends \app\inc\Controller
         $SafeFile = str_replace(".shp", "", $SafeFile);
         $SafeFile = strtolower($SafeFile);
 
-        $SafeFile = \app\inc\postgis::toAscii($SafeFile, array(), "_");
-        $SafeFile = \Connection::$param["postgisschema"] . "." . $SafeFile;
+        $SafeFile = \app\inc\Model::toAscii($SafeFile, array(), "_");
+        $SafeFile = Connection::$param["postgisschema"] . "." . $SafeFile;
 
         if (move_uploaded_file($_FILES['shp']['tmp_name'], $this->file . ".shp")) {
         } else {

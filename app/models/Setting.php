@@ -2,9 +2,9 @@
 
 namespace app\models;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class Setting extends postgis {
+class Setting extends Model {
 	function __construct() {
 		parent::__construct();
 	}

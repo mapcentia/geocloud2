@@ -1,7 +1,9 @@
 <?php
-$settings_viewer = new Settings_viewer();
+use \app\inc\Log;
+$settings_viewer = new \app\models\Setting();
 $response = $settings_viewer->get();
-if (!$_SESSION['auth'] || ($_SESSION['screen_name'] != $parts[2])) {
+
+if (!$_SESSION['auth'] || ($_SESSION['screen_name'] != \app\inc\Input::getPath()->part(2))) {
     // mod_php
     if (isset($_SERVER['PHP_AUTH_USER'])) {
         $username = $_SERVER['PHP_AUTH_USER'];
@@ -13,7 +15,7 @@ if (!$_SESSION['auth'] || ($_SESSION['screen_name'] != $parts[2])) {
         if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic') === 0)
             list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
     }
-    logfile::write($password);
+    Log::write($password);
     if (is_null($username)) {
         header('WWW-Authenticate: Basic realm="' . $parts[2] . '"');
         header('HTTP/1.0 401 Unauthorized');

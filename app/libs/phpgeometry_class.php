@@ -1303,7 +1303,6 @@ class gmlConverter
 		ob_start();
 		print_r($this->axisOrder);
 		$data = ob_get_clean();
-		logfile::write($data);
 		$_str = str_replace(" ","&",$_str);
 		$_str = str_replace(","," ",$_str);
 		$_str = str_replace("&",",",$_str);
@@ -1325,7 +1324,6 @@ class gmlConverter
 		ob_start();
 		print_r($this->axisOrder);
 		$data = ob_get_clean();
-		logfile::write($data);
 		$arr = explode(" ",trim($_str));
 		$i=1;
 		foreach($arr as $value){
@@ -1361,7 +1359,6 @@ class gmlConverter
 		ob_start();
 		print_r($split);
 		$data = ob_get_clean();
-		logfile::write($data);
 		$clean = end($split);
 		$clean = preg_replace("/[\w]\./", "", $clean);
 		return $clean;

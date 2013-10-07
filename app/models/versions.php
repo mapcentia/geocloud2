@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class version extends postgis {
+class version extends Model {
 	var $userObj;
 	function __construct($userObj) {
 		parent::__construct();

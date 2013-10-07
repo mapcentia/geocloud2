@@ -17,7 +17,7 @@
     <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 
     <link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
-    <link href="/styles/banner.css" rel="stylesheet">
+    <link href="/css/banner.css" rel="stylesheet">
     <script src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
     <style type="text/css">
         body {

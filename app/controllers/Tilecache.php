@@ -3,15 +3,16 @@ namespace app\controllers;
 
 use \app\inc\Response;
 use \app\inc\Input;
+use \app\conf\Connection;
+use \app\conf\App;
 
 class Tilecache extends \app\inc\Controller
 {
     public function delete_index(){
-        global $basePath;
-        if (Input::getPath()->part(3) === "schema") {
-            $dir = $basePath . "tmp/" . \Connection::$param["postgisschema"] . "/" . Input::getPath()->part(4) . ".*";
+        if (Input::getPath()->part(4) === "schema") {
+            $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/" . Input::getPath()->part(5) . ".*";
         } else {
-            $dir = $basePath . "tmp/" .  \Connection::$param["postgisschema"] . "/" .  Input::getPath()->part(3);
+            $dir = App::$param['path'] . "app/tmp/" .  Connection::$param["postgisdb"] . "/" .  Input::getPath()->part(4);
         }
         $dir = str_replace("..", "", $dir);
         //$dirReal = realpath($dir); // Do not work on *

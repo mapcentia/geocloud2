@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class User extends postgis {
+class User extends Model {
 	public $user;
 	function __construct($userId) {
 		parent::__construct();

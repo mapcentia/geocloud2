@@ -2,7 +2,8 @@
 namespace app\controllers;
 
 use \app\inc\Input;
-use app\inc\Response;
+use \app\inc\Response;
+use \app\conf\Connection;
 
 class Database extends \app\inc\Controller
 {
@@ -17,7 +18,6 @@ class Database extends \app\inc\Controller
 
     public function get_schemas()
     {
-
         return Response::json($this->db->listAllSchemas());
     }
 
@@ -28,7 +28,7 @@ class Database extends \app\inc\Controller
 
     public function get_exist()
     {
-        \Connection::$param['postgisdb'] = "postgres";
+        Connection::$param['postgisdb'] = "postgres";
         $this->db = new \app\models\Database();
         return Response::json($this->db->doesDbExist(Input::getPath()->part(4)));
     }

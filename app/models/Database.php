@@ -2,7 +2,9 @@
 
 namespace app\models;
 
-class Database extends \app\inc\postgis {
+use \app\conf\Connection;;
+
+class Database extends \app\inc\Model {
     private function createUser($name)
     {
         $sql = "create user {$name} with password '1234'";

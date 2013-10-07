@@ -1,10 +1,11 @@
 <?php
 namespace app\models;
 
-use app\inc\postgis;
+use app\inc\Model;
 use app\inc\log;
+use \app\conf\Connection;
 
-class Table extends postgis
+class Table extends Model
 {
     var $table;
     var $tableWithOutSchema;
@@ -25,7 +26,7 @@ class Table extends postgis
         $_table = $matches[0];
 
         if (!$_schema) {
-            $table = \Connection::$param['postgisschema']. "." . $table;
+            $table = Connection::$param['postgisschema']. "." . $table;
         }
         $this->tableWithOutSchema = $_table;
 

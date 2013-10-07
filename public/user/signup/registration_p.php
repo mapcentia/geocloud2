@@ -1,9 +1,9 @@
 <?php
-use \app\inc\postgis;
+use \app\inc\Model;
 use \app\models\Setting;
 
 include '../header.php';
-$postgisObject = new postgis();
+$postgisObject = new Model();
 define('VDAEMON_PARSE', false);
 include ('../vdaemon/vdaemon.php');
 
@@ -11,7 +11,7 @@ function UserIDCheck($sValue, &$oStatus) {
 	global $sTable;
 	global $postgisObject;
 	//$sUserID = addslashes($sValue);
-	$sUserID = postgis::toAscii($sValue, NULL, "_");
+	$sUserID = Model::toAscii($sValue, NULL, "_");
 
 	$oStatus -> bValid = false;
 	$oStatus -> sErrMsg = "<span class='label label-warning'>User ID '$sValue' already exist</span>";
@@ -37,7 +37,7 @@ $sEmail = VDFormat($_POST['Email'], true);
 $sZone = VDFormat($_POST['Zone'], true);
 
 
-$sUserID = postgis::toAscii($sUserID, NULL, "_");
+$sUserID = Model::toAscii($sUserID, NULL, "_");
 $sPassword = Setting::encryptPw($sPassword);
 
 $sQuery = "INSERT INTO $sTable (screenname,pw,email,zone) VALUES('{$sUserID}','{$sPassword}','{$sEmail}','{$sZone}') RETURNING created";

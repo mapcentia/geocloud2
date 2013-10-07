@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class cartomobile extends postgis
+class cartomobile extends Model
 {
     /**
      *

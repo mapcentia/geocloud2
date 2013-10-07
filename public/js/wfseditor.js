@@ -48,7 +48,7 @@ function startWfsEdition(layerName) {
     south.remove(grid);
 
     $.ajax({
-        url: '/controller/tables/' + screenName + '/getcolumns/' + layerName,
+        url: '/controllers/table/columns/' + layerName,
         async: false,
         dataType: 'json',
         type: 'GET',
@@ -269,7 +269,7 @@ $(window).load(function () {
         ];
 
         $.ajax({
-            url: '/controller/tables/' + screenName + '/getrecords/settings.geometry_columns_view',
+            url: '/controllers/layer/records',
             async: false,
             dataType: 'json',
             type: 'GET',

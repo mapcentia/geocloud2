@@ -3,10 +3,10 @@
 include ("html_header.php");
 $_SESSION['schema'] = $schemaFromUri;
 $postgisschema = $schemaFromUri;
-include ("wms/mapfile.php.map");
-include ("wms/tilecache.cfg.php");
-makeMapFile($postgisdb);
-makeTileCacheFile($postgisdb);
+//include ("wms/mapfile.php.map");
+//include ("wms/tilecache.cfg.php");
+//makeMapFile($postgisdb);
+//makeTileCacheFile($postgisdb);
 ?>
 <script type="text/javascript">var screenName = '<?php echo $postgisdb; ?>'</script>
 <script type="text/javascript">var schema = '<?php echo $postgisschema; ?>'</script>

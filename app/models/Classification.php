@@ -2,7 +2,7 @@
 
 namespace app\models;
 
-class Classification extends \app\inc\postgis
+class Classification extends \app\inc\Model
 {
     private $table;
 
@@ -116,14 +116,4 @@ class Classification extends \app\inc\postgis
         return $response;
     }
 
-}
-
-function casttoclass($class, $object)
-{
-    return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
-}
-
-function replace_unicode_escape_sequence($match)
-{
-    return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
 }

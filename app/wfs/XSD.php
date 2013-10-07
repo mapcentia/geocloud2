@@ -29,7 +29,7 @@ if (!$tables[0]){
 
 foreach($tables as $table)
 {
-	$tableObj = new table($postgisschema.".".$table);
+	$tableObj = new \app\models\table($postgisschema.".".$table);
 
 	$primeryKey = $tableObj->primeryKey;
 
@@ -80,7 +80,6 @@ foreach($tables as $table)
 		{
 			//$geomType = $postgisObject -> getGeometryColumns($postgisschema.".".$table, "type");
 			$geomType = $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","type");
-			fb($geomType);
 			switch ($geomType) {
 				case "POINT":
 				$atts["type"]="gml:PointPropertyType";

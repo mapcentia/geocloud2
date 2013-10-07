@@ -1,9 +1,9 @@
 <?php
 namespace app\models;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class Tile extends postgis {
+class Tile extends Model {
 	var $table;
 	function __construct($table) {
 		parent::__construct();

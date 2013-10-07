@@ -30,19 +30,3 @@ class Setting extends \app\inc\Controller
         return Response::json($this->settings->updateApiKey());
     }
 }
-
-
-/*switch ($request[4]) {
-    case "get": // All tables
-        break;
-    case "update": // All tables
-        $response = $settings_viewer->update($_POST);
-        break;
-    case "updatepw": // All tables
-        $response = $settings_viewer->updatePw($_POST['pw']);
-        break;
-    case "updateapikey": // All tables
-        $response = $settings_viewer->updateApiKey();
-        break;
-
-}*/

@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class sqlapi extends postgis {
+class sqlapi extends Model {
 	var $srs;
 	function __construct($srs = "900913") {
 		parent::__construct();

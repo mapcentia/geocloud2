@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class Tweet extends postgis
+class Tweet extends Model
 {
     /**
      *

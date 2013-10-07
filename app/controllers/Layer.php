@@ -3,21 +3,19 @@ namespace app\controllers;
 
 use \app\inc\Response;
 use \app\inc\Input;
+use \app\conf\Connection;
 
 class Layer extends \app\inc\Controller
 {
     private $table;
-    private $path;
 
     function __construct()
     {
-        $this->path = Input::getPath();
         $this->table = new \app\models\table("settings.geometry_columns_view");
     }
-
     public function get_records()
     {
-        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . \Connection::$param["postgisschema"] . "'"));
+        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "'"));
     }
     public function get_groups()
     {
@@ -36,5 +34,16 @@ class Layer extends \app\inc\Controller
     {
         return Response::json($this->table->getColumnsForExtGridAndStore(true));
     }
+    public function getValueFromKey($_key_, $column)
+    {
+        $rows = $this->table->getRecords();
+        $rows = $rows['data'];
+        foreach ($rows as $row) {
+            foreach ($row as $field => $value) {
+                if ($field == "_key_" && $value == $_key_) {
+                    return ($row[$column]);
+                }
+            }
+        }
+    }
 }
-

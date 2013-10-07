@@ -1,9 +1,9 @@
 <?php
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class Sql_to_es extends postgis
+class Sql_to_es extends Model
 {
     var $srs;
 

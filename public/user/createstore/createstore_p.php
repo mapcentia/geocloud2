@@ -1,12 +1,12 @@
 <?php
-use \app\inc\postgis;
+use \app\inc\Model;
 
 include("../header.php");
 $postgisdb = $databaseTemplate; 
 if (!$_SESSION['screen_name']) {
 
 } else {
-	$name = postgis::toAscii($_SESSION['screen_name'], NULL, "_");
+	$name = Model::toAscii($_SESSION['screen_name'], NULL, "_");
 	$db = new app\models\Database;
 	$dbObj = $db -> createdb($name, $databaseTemplate, "UTF8");
 	// databaseTemplate is set in conf/main.php

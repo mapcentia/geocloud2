@@ -1,9 +1,13 @@
 <?php
-include '../../../app/conf/main.php';
+include_once("../../../app/conf/Autoload.php");
+new \app\conf\Autoload();
+new \app\conf\IncludePath();
 
-session_name($sessionName);
-session_set_cookie_params(0, '/',".".$domain);
+use \app\conf\App;
+
+session_name(\app\conf\App::$param['sessionName']);
+session_set_cookie_params(0, '/',".".\app\conf\App::$param['domain']);
 session_start();
 
-\Connection::$param["postgisdb"] = 'mapcentia';
+\app\conf\Connection::$param["postgisdb"] = 'mapcentia';
 $sTable = 'users';

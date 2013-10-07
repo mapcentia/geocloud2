@@ -2,9 +2,9 @@
 
 namespace app\model;
 
-use app\inc\postgis;
+use app\inc\Model;
 
-class dbcheck extends postgis {
+class dbcheck extends Model {
 	function __construct()
 	{
 		parent::__construct();

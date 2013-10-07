@@ -10,7 +10,7 @@ function parseFilter($filter,$table,$operator="=") {
 	global $postgisschema;
 	//global $forUseInSpatialFilter;
 	global $srs;
-	$st = postgis::explodeTableName($table);
+	$st = \app\inc\Model::explodeTableName($table);
 	if (!$st['schema']){
 		$st['schema'] = $postgisschema;
 	}
@@ -131,7 +131,6 @@ function parseFilter($filter,$table,$operator="=") {
 	print_r($where);
 	$data = ob_get_clean();
 	
-	logfile::write($data);
 	if (!$BoolOperator) $BoolOperator = "OR";
 	return "(".implode(" ".$BoolOperator." " ,$where).")";
 }
