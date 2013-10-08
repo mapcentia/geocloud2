@@ -1,15 +1,6 @@
 <?php
-//god dav
 include ("html_header.php");
-$_SESSION['schema'] = $schemaFromUri;
-$postgisschema = $schemaFromUri;
-//include ("wms/mapfile.php.map");
-//include ("wms/tilecache.cfg.php");
-//makeMapFile($postgisdb);
-//makeTileCacheFile($postgisdb);
 ?>
-<script type="text/javascript">var screenName = '<?php echo $postgisdb; ?>'</script>
-<script type="text/javascript">var schema = '<?php echo $postgisschema; ?>'</script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
 <script type="text/javascript" src="/js/msg.js"></script>

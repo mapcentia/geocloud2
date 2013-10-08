@@ -1,5 +1,6 @@
 <?php
 use \app\inc\Model;
+use \app\conf\App;
 
 include("../header.php");
 $postgisdb = $databaseTemplate; 
@@ -7,8 +8,8 @@ if (!$_SESSION['screen_name']) {
 
 } else {
 	$name = Model::toAscii($_SESSION['screen_name'], NULL, "_");
-	$db = new app\models\Database;
-	$dbObj = $db -> createdb($name, $databaseTemplate, "UTF8");
+	$db = new \app\models\Database;
+	$dbObj = $db -> createdb($name, App::$param['databaseTemplate'], "UTF8");
 	// databaseTemplate is set in conf/main.php
 	if ($dbObj) {
 		header("location: {$userHostName}/user/login/p");

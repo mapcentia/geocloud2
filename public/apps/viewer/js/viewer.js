@@ -68,7 +68,7 @@ MapCentia = (function () {
             cloud.locate();
         });
         $.ajax({
-            url: hostname.replace("cdn.", "") + '/controller/geometry_columns/' + db + '/getall/' + schema,
+            url: hostname.replace("cdn.", "") + '/api/v1/meta/layer/' + db + '/' + schema,
             async: false,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',

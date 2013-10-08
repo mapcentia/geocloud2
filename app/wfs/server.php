@@ -23,10 +23,6 @@ if (!$gmlNameSpaceUri) {
     $gmlNameSpaceUri = "http://twitter/" . \app\inc\Input::getPath()->part(2);
 }
 
-// We connect to the users db
-Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
-Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
-
 $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
 
@@ -60,9 +56,6 @@ $fields = array();
 $wheres = array();
 $limits = array();
 
-Log::write("\nRequest\n\n");
-Log::write($HTTP_RAW_POST_DATA . "\n\n");
-
 $unserializer_options = array(
     'parseAttributes' => TRUE,
     'typeHints' => FALSE
@@ -73,7 +66,6 @@ $unserializer = new XML_Unserializer($unserializer_options);
 if ($HTTP_RAW_POST_DATA) {
     //$forUseInSpatialFilter = $HTTP_RAW_POST_DATA; // We store a unaltered version of the raw request
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
-    Log::write($HTTP_RAW_POST_DATA . "\n\n");
 
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
@@ -228,9 +220,7 @@ if (!(empty($bbox[0]))) {
                 . gmlConverter::parseEpsgCode($bbox[4])
                 . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid") . "),"
                 . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column") . ")";
-
         }
-
     }
 }
 //get the request
@@ -789,7 +779,7 @@ function doParse($arr)
                         //if(!$_SESSION["oauth_token"]) {
                         $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
                         if ($auth == "Write" OR $auth == "Read/write") {
-                            include('../inc/http_basic_authen.php');
+                            include('inc/http_basic_authen.php');
                         }
                         //	}
                         // End HTTP basic authentication
@@ -832,7 +822,7 @@ function doParse($arr)
                 //if(!$_SESSION["oauth_token"]) {
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
-                    include('../inc/http_basic_authen.php');
+                    include('inc/http_basic_authen.php');
                 }
                 //	}
                 // End HTTP basic authentication
@@ -853,7 +843,7 @@ function doParse($arr)
                 //if(!$_SESSION["oauth_token"]) {
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
-                    include('../inc/http_basic_authen.php');
+                    include('inc/http_basic_authen.php');
                 }
                 //	}
                 // End HTTP basic authentication

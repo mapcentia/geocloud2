@@ -1,20 +1,4 @@
-<?php
-
-include 'inc/user_name_from_uri.php';
-
-if ($parts[1] == "store" || $parts[1] == "editor") {
-    $db = new app\models\Database();
-    if (!$parts[2]) {
-        die("<script>window.location='/?db=false'</script>");
-    }
-    if ($db->doesDbExist(app\inc\Model::toAscii($parts[2], NULL, "_"))) {
-        $postgisdb = $parts[2];
-    } else {
-        die("<script>window.location='/?db=false'</script>");
-    }
-    include("inc/oauthcheck.php");
-}
-?>
+<?php use \app\inc\Input;?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,3 +12,5 @@ if ($parts[1] == "store" || $parts[1] == "editor") {
     <meta name="keywords"
           content="map, visualize, geo, cloud, analyze, gis, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC"/>
     <meta name="author" content="Martin Hoegh"/>
+    <script type="text/javascript">var screenName = '<?php echo $_SESSION['screen_name']; ?>'</script>
+    <script type="text/javascript">var schema = '<?php echo (Input::getPath()->part(3)) ? Input::getPath()->part(3) : "public"; ?>'</script>

@@ -33,11 +33,13 @@ class Input
                 break;
         }
         if (!reset($query))
-            //$obj = new GetValue(key($query));
             return key($query);
+
         else {
-            //$obj = new GetValue($query);
-            return $query[$key];
+            if ($key != null)
+                return $query[$key];
+            else
+                return $query;
 
         }
 
@@ -68,20 +70,4 @@ class GetPart
     {
         return $this->parts[$e];
     }
-}
-
-class GetValue
-{
-    private $values;
-
-    function __construct($query)
-    {
-        $this->values = $query;
-    }
-
-    function values($e = false)
-    {
-        return ($e) ? $this->values[$e] : $this->values;
-    }
-
 }

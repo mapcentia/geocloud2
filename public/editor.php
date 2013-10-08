@@ -1,9 +1,6 @@
 <?php
 include("html_header.php");
-$_SESSION['screen_name'] = $parts[2];
 ?>
-<script type="text/javascript">var screenName = '<?php echo $_SESSION['screen_name']; ?>'</script>
-<script type="text/javascript">var schema = '<?php echo $schemaFromUri; ?>'</script>
 <script type="text/javascript" src="/api/v1/js/api.js"></script>
 <script type="text/javascript" src="/js/wfseditor.js"></script>
 <script type="text/javascript" src="/js/attributeform.js"></script>

@@ -2,6 +2,7 @@
 namespace app\controllers;
 
 use app\inc\Response;
+use app\inc\Input;
 
 class Setting extends \app\inc\Controller
 {
@@ -19,11 +20,11 @@ class Setting extends \app\inc\Controller
     }
     public function put_index()
     {
-        return Response::json($this->settings->update($_POST));
+        return Response::json($this->settings->update(Input::get()));
     }
     public function put_pw()
     {
-        return Response::json($this->settings->updatePw($_POST['pw']));
+        return Response::json($this->settings->updatePw(Input::get('pw')));
     }
     public function put_apikey()
     {

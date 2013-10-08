@@ -23,7 +23,7 @@ class Database extends \app\inc\Controller
 
     public function post_schemas()
     {
-        return Response::json($this->db->createSchema($_POST['schema']));
+        return Response::json($this->db->createSchema(Input::get('schema')));
     }
 
     public function get_exist()

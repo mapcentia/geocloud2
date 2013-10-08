@@ -1,5 +1,6 @@
 <?php
-class GeometryColumns extends postgis
+namespace app\models;
+class Layer extends \app\inc\Model
 {
     var $rows;
 
