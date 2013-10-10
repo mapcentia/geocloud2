@@ -27,7 +27,7 @@ wmsClasses.init = function(record) {
             destroy : '/controllers/classification/index/' + wmsClasses.table
         },
         listeners : {
-            // write: wmsClasses.onWrite,
+            write: wmsClasses.onWrite,
             exception : function(proxy, type, action, options, response, arg) {
                 if (type === 'remote') {// success is false
                     // alert(response.message);
@@ -116,7 +116,6 @@ wmsClasses.onDelete = function() {
     Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function(btn) {
         if (btn === "yes") {
             wmsClasses.grid.store.remove(record);
-            wmsClasses.store.load();
         } else {
             return false;
         }
@@ -127,7 +126,6 @@ wmsClasses.onSave = function() {
     wmsClasses.store.save();
 };
 wmsClasses.onWrite = function(store, action, result, transaction, rs) {
-    // console.log('onwrite', store, action, result, transaction, rs);
     if (transaction.success) {
         wmsClasses.store.load();
     }
@@ -342,6 +340,7 @@ function onSelectClass(btn, ev) {
 wmsClasses.onSubmit = function(response) {
     if (response.success) {
         App.setAlert(App.STATUS_OK, "Style is updated");
+        writeFiles();
 
     } else {
         message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";

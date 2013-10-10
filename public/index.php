@@ -1,78 +1,71 @@
 <?php
+ini_set("display_errors", "On");
+error_reporting(3);
+
 use \app\inc\Input;
 use \app\inc\Session;
+use \app\inc\Route;
 use \app\conf\Connection;
 
 include_once("../app/conf/Autoload.php");
 new \app\conf\Autoload();
-new \app\conf\IncludePath();
+new \app\conf\Path();
 
-$request = Input::getPath();
-
-if ($request->part(1) == "api") {
-    Connection::$param["postgisdb"] = $request->part(5);
-    Connection::$param["postgisschema"] = $request->part(6);
-
-    if ($request->part(3) == "meta") Session::start();
-
-    $class = "app\\api\\{$request->part(2)}\\{$request->part(3)}\\" . ucfirst($request->part(4));
-    $controller = new $class();
-    $method = Input::getMethod() . "_index";
-    echo $controller->$method();
+if (Input::getPath()->part(1) == "api") {
+    Route::add("api/v1/sql", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(4);
+    });
+    Route::add("api/v1/elasticsearch", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(5);
+    });
+    Route::add("api/v1/meta", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(5);
+        Connection::$param["postgisschema"] = Input::getPath()->part(6);
+    });
+    Route::add("api/v1/twitter");
 }
 
-
-if ($request->part(1) == "store") {
+if (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate();
+    $_SESSION['postgisschema'] = Input::getPath()->part(3);
     include_once("store.php");
 }
 
-
-if ($request->part(1) == "editor") {
+if (Input::getPath()->part(1) == "editor") {
     Session::start();
     Session::authenticate();
     include_once("editor.php");
 }
 
+if (Input::getPath()->part(1) == "controllers") {
 
-if ($request->part(1) == "controllers") {
     Session::start();
     Session::authenticate();
     //header('charset=utf-8');
     //header('Content-Type: text/plain; charset=utf-8');
 
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
-    Connection::$param["postgisschema"] = ($_SESSION['postgisschema'])?:"public";
+    Connection::$param["postgisschema"] = ($_SESSION['postgisschema']) ? : "public";
 
-    if ($request->part(2) == "upload") {
-        $class = "app\\controllers\\upload\\" . ucfirst($request->part(3));
-        if (!$request->part(4))
-            $r = "index";
-        else
-            $r = $request->part(4);
-    } else {
-        $class = "app\\controllers\\" . ucfirst($request->part(2));
-        if (!$request->part(3))
-            $r = "index";
-        else
-            $r = $request->part(3);
-    }
-    $controller = new $class();
-    $method = Input::getMethod() . "_" . $r;
-    echo $controller->$method();
+    Route::add("controllers/cfgfile");
+    Route::add("controllers/classification");
+    Route::add("controllers/database");
+    Route::add("controllers/layer");
+    Route::add("controllers/mapfile");
+    Route::add("controllers/setting");
+    Route::add("controllers/table");
+    Route::add("controllers/tile");
+    Route::add("controllers/tilecache");
+    Route::add("controllers/upload/shape");
+    Route::add("controllers/upload/mapinfo");
 }
 
-
-if ($request->part(1) == "wms") {
-    Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
-    Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
-
+if (Input::getPath()->part(1) == "wms") {
     new \app\controllers\Wms();
 }
 
-
-if ($request->part(1) == "wfs") {
+if (Input::getPath()->part(1) == "wfs") {
     Session::start();
     Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);

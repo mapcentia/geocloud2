@@ -13,6 +13,7 @@
  * @license LGPL 3
  * @version 0.0.4
  */
+namespace app\inc;
 class SqlParser {
 
     var $handle = null;

@@ -168,6 +168,7 @@ wmsLayer.init = function(record) {
 wmsLayer.onSubmit = function(response) {
     if (response.success) {
         App.setAlert(App.STATUS_NOTICE, "The layer settings are updated");
+        writeFiles();
     } else {
         message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
         Ext.MessageBox.show({

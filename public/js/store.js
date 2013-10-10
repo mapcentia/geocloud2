@@ -3,6 +3,7 @@ var store;
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
 var App = new Ext.App({});
+var writeFiles;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
@@ -65,9 +66,9 @@ $(window).load(function () {
         // <-- New "messageProperty" meta-data
     }, fieldsForStore);
     var onWrite = function (store, action, result, transaction, rs) {
-        // console.log('onwrite', store, action, result, transaction, rs);
         if (transaction.success) {
             groupsStore.load();
+            writeFiles();
         }
     };
     var proxy = new Ext.data.HttpProxy({
@@ -75,7 +76,7 @@ $(window).load(function () {
         api: {
             read: '/controllers/layer/records',
             update: '/controllers/layer/records',
-            destroy: '/controllers/later/records'
+            destroy: '/controllers/table/records'
         },
         listeners: {
             write: onWrite,
@@ -411,7 +412,7 @@ $(window).load(function () {
             return false;
         }
         Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
-            if (btn == "yes") {
+            if (btn === "yes") {
                 proxy.api.destroy.url = "/controllers/table/records/" + record.data.f_table_schema + "." + record.data.f_table_name;
                 grid.store.remove(record);
             } else {
@@ -1017,7 +1018,7 @@ $(window).load(function () {
     var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
-        title: 'Layers test',
+        title: 'Layers',
         frame: false,
         layout: 'border',
         region: 'center',
@@ -1152,4 +1153,15 @@ $(window).load(function () {
         layout: 'border',
         items: [tabs]
     });
+
+    writeFiles = function () {
+        $.ajax({
+            url: '/controllers/mapfile',
+            success: function (response) {}
+        });
+        $.ajax({
+            url: '/controllers/cfgfile',
+            success: function (response) {}
+        });
+    };
 });

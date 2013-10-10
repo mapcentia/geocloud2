@@ -1,7 +1,7 @@
 <?php
 include_once("../../../app/conf/Autoload.php");
 new \app\conf\Autoload();
-new \app\conf\IncludePath();
+new \app\conf\Path();
 
 use \app\conf\App;
 

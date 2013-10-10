@@ -1,29 +1,17 @@
 <?php
 namespace app\models;
-class Layer extends \app\inc\Model
+class Layer extends \app\models\Table
 {
-    var $rows;
-
     function __construct()
     {
-        parent::__construct();
-        $sql = "SELECT * FROM settings.geometry_columns_view order by sort_id";
-        $result = $this->execQuery($sql);
-        if (!$this->connectionFailed) {
-
-            $this->rows = $this->fetchAll($result);
-        }
-
-        /*
-         $geometryColumnsObj = new table("settings.geometry_columns_view");
-         $this->rows = $geometryColumnsObj->getRecords();
-         $this->rows = $this->rows['data'];
-         */
+        parent::__construct("settings.geometry_columns_view");
     }
 
-    function getValueFromKey($_key_, $column)
+    public function getValueFromKey($_key_, $column)
     {
-        foreach ($this->rows as $row) {
+        $rows = $this->getRecords();
+        $rows = $rows['data'];
+        foreach ($rows as $row) {
             foreach ($row as $field => $value) {
                 if ($field == "_key_" && $value == $_key_) {
                     return ($row[$column]);
@@ -83,7 +71,7 @@ class Layer extends \app\inc\Model
         $response['message'] = "Structure loaded";
         $arr = array();
         $keySplit = explode(".", $_key_);
-        $table = new table($keySplit[0] . "." . $keySplit[1]);
+        $table = new Table($keySplit[0] . "." . $keySplit[1]);
         $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
         //print_r($cartomobileArr);
         foreach ($table->metaData as $key => $value) {
@@ -106,7 +94,7 @@ class Layer extends \app\inc\Model
 
     function updateCartoMobileSettings($data, $_key_)
     {
-        $table = new table("settings.geometry_columns_join");
+        $table = new Table("settings.geometry_columns_join");
         $data = $table->makeArray($data);
         $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
         foreach ($data as $value) {
@@ -120,7 +108,7 @@ class Layer extends \app\inc\Model
         $conf['_key_'] = $_key_;
 
         $table->updateRecord(json_decode(json_encode($conf)), "_key_");
-        $this->execQuery($sql, "PDO", "transaction");
+        //$this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
             $response['success'] = true;
             $response['message'] = "Column renamed";

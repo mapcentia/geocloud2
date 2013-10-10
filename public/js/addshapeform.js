@@ -1,6 +1,7 @@
 Ext.namespace('addShape');
 addShape.init = function () {
     "use strict";
+    var me = this;
     Ext.QuickTips.init();
     var msg = function (title, msg) {
         Ext.Msg.show({
@@ -12,7 +13,7 @@ addShape.init = function () {
             buttons: Ext.Msg.OK
         });
     };
-    addShape.form = new Ext.FormPanel({
+    me.form = new Ext.FormPanel({
         region: 'center',
         id: "addform",
         fileUpload: true,
@@ -21,9 +22,9 @@ addShape.init = function () {
         title: 'ESRI Shape file upload',
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px',
-        labelWidth: 60,
+        labelWidth: 1,
         defaults: {
-            anchor: '95%',
+            anchor: '97%',
             allowBlank: false,
             msgTarget: 'side'
         },
@@ -71,23 +72,18 @@ addShape.init = function () {
                 buttonCfg: {
                     iconCls: 'upload-icon'
                 }
-            },
-            {
-                xtype: 'checkbox',
-                name: 'pdo',
-                fieldLabel: 'Direct load'
             }
         ],
         buttons: [
             {
                 text: 'Save',
                 handler: function () {
-                    if (addShape.form.getForm().isValid()) {
-                        addShape.form.getForm().submit({
+                    if (me.form.getForm().isValid()) {
+                        me.form.getForm().submit({
                             url: '/controllers/upload/shape',
                             //waitMsg: 'Uploading your shape file...',
-                            success: addShape.onSubmit,
-                            failure: addShape.onSubmit
+                            success: me.onSubmit,
+                            failure: me.onSubmit
                         });
                     }
                 }
@@ -95,20 +91,20 @@ addShape.init = function () {
             {
                 text: 'Reset',
                 handler: function () {
-                    addShape.form.getForm().reset();
+                    me.form.getForm().reset();
                 }
             }
         ]
     });
+    me.onSubmit = function (form, action) {
+        "use strict";
+        var result = action.result;
+        if (result.success) {
+            store.load();
+            App.setAlert(App.STATUS_NOTICE, result.message);
+            //addShape.form.reset();
+        } else {
+            Ext.MessageBox.alert('Failure', result.message);
+        }
+    };
 };
-addShape.onSubmit = function (form, action) {
-    "use strict";
-    var result = action.result;
-    if (result.success) {
-        store.load();
-        App.setAlert(App.STATUS_NOTICE, result.message);
-        //addShape.form.reset();
-    } else {
-        Ext.MessageBox.alert('Failure', result.message);
-    }
-}

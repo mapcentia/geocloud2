@@ -7,11 +7,9 @@ use app\inc\Input;
 class Setting extends \app\inc\Controller
 {
     private $settings;
-    private $request;
 
     function __construct()
     {
-        $this->request = \app\inc\Input::getPath();
         $this->settings = new \app\models\Setting();
     }
     public function get_index()

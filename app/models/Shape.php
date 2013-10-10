@@ -19,7 +19,7 @@ class Shape extends Model {
 	public function loadInDb() {
 		$this->connect("PDO");
 		$table = new table($this->safeFile);
-		if (!$this->pdo) {
+		if ($this->pdo) {
 			$cmd = "shp2pgsql -g 'the_geom' -W 'WINDOWS-1252' -I -c -s {$this->srid} {$this->file}.shp {$this->safeFile}";
 			$result = exec($cmd, $output);
 
@@ -96,7 +96,6 @@ class Shape extends Model {
 				//$class->insert($this->safeFile, array(), "_");
 			}
 			$response['cmd'] = $cmd;
-			
 		}
 		return $response;
 	}

@@ -2,14 +2,13 @@
 namespace app\controllers;
 
 use \app\conf\App;
-use \app\conf\Connection;
 
 class Wms extends \app\inc\Controller
 {
     function __construct()
     {
         $path = App::$param['path']."/app/wms/mapfiles/";
-        $name = Connection::$param['postgisdb']."_".Connection::$param['postgisschema'].".map";
+        $name = \app\inc\Input::getPath()->part(2)."_".\app\inc\Input::getPath()->part(3).".map";
 
         $oMap = ms_newMapobj($path.$name);
         $request = ms_newowsrequestobj();

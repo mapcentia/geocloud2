@@ -27,7 +27,7 @@ class Classification extends \app\inc\Model
             $row = $this->fetchRow($result, "assoc");
             $arr = (array)json_decode($row['class']);
             for ($i = 0; $i < sizeof($arr); $i++) {
-                $arrNew[$i] = (array)casttoclass('stdClass', $arr[$i]);
+                $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
                 $arrNew[$i]['id'] = $i;
             }
             $response['data'] = $arrNew;

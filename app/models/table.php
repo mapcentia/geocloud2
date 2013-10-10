@@ -7,14 +7,13 @@ use \app\conf\Connection;
 
 class Table extends Model
 {
-    var $table;
+    public  $table;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
     var $geomType;
     var $exits;
 
-    //var $id;
     function __construct($table)
     {
         parent::__construct();
@@ -165,10 +164,7 @@ class Table extends Model
 
     function destroy() // Geometry columns
     {
-        $sql = "BEGIN;";
-        $sql .= "DELETE FROM geometry_columns WHERE f_table_schema='{$this->postgisschema}' AND f_table_name='{$this->tableWithOutSchema}';";
-        $sql .= "DROP TABLE {$this->table} CASCADE;";
-        $sql .= "COMMIT;";
+        $sql = "DROP TABLE {$this->table} CASCADE;";
         //echo $sql;
         $this->execQuery($sql, "PDO", "transaction");
         if (!$this->PDOerror) {

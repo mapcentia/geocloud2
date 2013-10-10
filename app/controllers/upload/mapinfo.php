@@ -1,79 +1,68 @@
 <?php
-include("../server_header.inc");
-$targetPath = "{$_SERVER["DOCUMENT_ROOT"]}/tmp/";
-$fileName = $_SESSION['screen_name']."_".time();
-$file = $targetPath.$fileName;
+namespace app\controllers\upload;
 
-$response['uploaded'] = true;
+use \app\inc\Response;
+use \app\inc\Input;
+use \app\conf\Connection;
 
-if ($_REQUEST['name']) {
-	$SafeFile =$_REQUEST['name'];
+class Mapinfo extends Baseupload
+{
+    public function post_index()
+    {
+        if (move_uploaded_file($_FILES['tab']['tmp_name'], $this->file . ".tab")) {
+        } else {
+            $this->response['uploaded'] = false;
+        }
+        if (move_uploaded_file($_FILES['map']['tmp_name'], $this->file . ".map")) {
+        } else {
+            $this->response['uploaded'] = false;
+        }
+        if (move_uploaded_file($_FILES['id']['tmp_name'], $this->file . ".id")) {
+        } else {
+            $this->response['uploaded'] = false;
+        }
+        if (move_uploaded_file($_FILES['dat']['tmp_name'], $this->file . ".dat")) {
+        } else {
+            $this->response['uploaded'] = false;
+        }
+
+        if ($this->response['uploaded']) {
+
+            switch (Input::get('type')) {
+                case "Point":
+                    $type = "point";
+                    break;
+                case "Polygon":
+                    $type = "multipolygon";
+                    break;
+                case "Line":
+                    $type = "multilinestring";
+                    break;
+                case "Geometry":
+                    $type = "geometry";
+                    break;
+            }
+            //$skip = (Input::get('skipfailures')) ? "" : "-skipfailures";
+            $cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr {$skip} " .
+                "-overwrite ".
+                "-lco 'GEOMETRY_NAME=the_geom' " .
+                "-lco 'FID=gid' " .
+                "-nlt '{$type}' " .
+                "-a_srs 'EPSG:{$_REQUEST['srid']}' " .
+                "-f 'PostgreSQL' PG:'user=postgres dbname=" . Connection::$param["postgisdb"] . " active_schema=".Connection::$param["postgisschema"]."' " .
+                $this->file . ".tab " .
+                "-nln " . $this->safeFileWithOutSchema;
+            //echo $cmd;
+            exec($cmd . ' 2>&1', $out, $err);
+            $result = $out[0];
+            if ($result == "") {
+                $this->response['success'] = true;
+                $this->response['message'] = "MapInfo TAB file uploaded and processed";
+            } else {
+                $this->response['success'] = false;
+                $this->response['message'] = $result;
+            }
+        }
+        return Response::json($this->response);
+    }
 }
-
-else {
-	$SafeFile = $_FILES['shp']['name'];
-}
-
-
-$SafeFile = str_replace("#", "No.", $SafeFile); 
-$SafeFile = str_replace("-", "_", $SafeFile); 
-$SafeFile = str_replace("$", "Dollar", $SafeFile); 
-$SafeFile = str_replace("%", "Percent", $SafeFile); 
-$SafeFile = str_replace("^", "", $SafeFile); 
-$SafeFile = str_replace("&", "and", $SafeFile); 
-$SafeFile = str_replace("*", "", $SafeFile); 
-$SafeFile = str_replace("?", "", $SafeFile); 
-$SafeFile = str_replace(".TAB", "", $SafeFile);
-$SafeFile = strtolower ($SafeFile);
-
-$SafeFile = postgis::toAscii($SafeFile,array(),"_");
-$SafeFile = $postgisschema.".".$SafeFile;
-
-
-if(move_uploaded_file($_FILES['tab']['tmp_name'], $file.".tab")) {
-} else{$response['uploaded'] = false;}
-if(move_uploaded_file($_FILES['map']['tmp_name'], $file.".map")) {
-} else{$response['uploaded'] = false;}
-if(move_uploaded_file($_FILES['id']['tmp_name'], $file.".id")) {
-} else{$response['uploaded'] = false;}
-if(move_uploaded_file($_FILES['dat']['tmp_name'], $file.".dat")) {
-} else{$response['uploaded'] = false;}
-
- 
-if ($response['uploaded']) {
-
-	switch ($_REQUEST['type']) {
-		case "Point":
-		$type = "point";
-		break;
-		case "Polygon":
-		$type = "multipolygon";
-		break;
-		case "Line":
-		$type = "multilinestring";
-		break;
-		case "Geometry":
-		$type = "geometry";
-		break;
-	}
-	
-	$cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr -skipfailures -overwrite -lco 'GEOMETRY_NAME=the_geom' -lco 'FID=gid' -nlt '{$type}' -a_srs 'EPSG:{$_REQUEST['srid']}' -f 'PostgreSQL' PG:'user=postgres dbname={$postgisdb}' {$file}.tab -nln ".$SafeFile;
-	$result = exec($cmd);
-	$response['success'] = true;
-	$response['message'] = $result;
-	/*
-	$cmd = "ogr2ogr -skipfailures -f 'ESRI Shapefile' '{$file}_arc.shp' -lco 'SHPT=ARC' '{$file}.tab'";
-	$result = exec($cmd, $output);
-	$cmd = "ogr2ogr -skipfailures -f 'ESRI Shapefile' '{$file}_point.shp' -lco 'SHPT=POINT' '{$file}.tab'";
-	$result = exec($cmd, $output);
-	$cmd = "ogr2ogr -skipfailures -f 'ESRI Shapefile' '{$file}_polygon.shp' -lco 'SHPT=POLYGON' '{$file}.tab'";
-	$result = exec($cmd, $output);
-	
-	$shapeFile = new shapefile($SafeFile,$_REQUEST['srid'],$file."_polygon",$_REQUEST['pdo']);
-	$response = $shapeFile->loadInDb();
-	*/
-    makeMapFile($_SESSION['screen_name']);
-    makeTileCacheFile($_SESSION['screen_name']);
-}
-
-include_once("../server_footer.inc");

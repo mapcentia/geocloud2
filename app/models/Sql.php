@@ -1,10 +1,8 @@
 <?php
 
-namespace app\model;
+namespace app\models;
 
-use app\inc\Model;
-
-class sqlapi extends Model {
+class Sql extends \app\inc\Model {
 	var $srs;
 	function __construct($srs = "900913") {
 		parent::__construct();

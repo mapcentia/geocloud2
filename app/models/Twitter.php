@@ -1,14 +1,10 @@
 <?php
-
-namespace app\model;
+namespace app\models;
 
 use app\inc\Model;
 
-class Tweet extends Model
+class Twitter extends Model
 {
-    /**
-     *
-     */
     private $settings;
 
     function __construct()
@@ -28,13 +24,12 @@ class Tweet extends Model
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
         $getfield = '?' . $search;
         $requestMethod = 'GET';
-        $twitter = new TwitterAPIExchange($this->settings);
+        $twitter = new \app\inc\TwitterAPIExchange($this->settings);
         $res = $twitter
             ->setGetfield($getfield)
             ->buildOauth($url, $requestMethod)
             ->performRequest();
         $arr = json_decode($res);
-        //print_r($arr->statuses);
         foreach ($arr->statuses as $value) {
             if (is_object($value->coordinates)) {
                 $features[] = array("geometry" => $value->coordinates, "type" => "Feature", "properties" => array(
@@ -58,7 +53,6 @@ class Tweet extends Model
         $response['success'] = true;
         $response['type'] = "FeatureCollection";
         $response['features'] = $features;
-        //print_r(json_encode($response));
         return ($response);
     }
 }

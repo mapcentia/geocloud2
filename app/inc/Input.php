@@ -32,7 +32,7 @@ class Input
                 $query = static::parseQueryString(file_get_contents('php://input'));
                 break;
         }
-        if (!reset($query))
+        if (!reset($query) && $key == null)
             return key($query);
 
         else {
