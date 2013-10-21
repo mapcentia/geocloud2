@@ -1,5 +1,5 @@
 <?php
-include ("html_header.php");
+include("html_header.php");
 ?>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
@@ -18,6 +18,7 @@ include ("html_header.php");
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
 
+
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
@@ -28,6 +29,12 @@ include ("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/fileuploadfield/css/fileuploadfield.css"/>
 <!-- extensions -->
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css"/>
+<script type="text/javascript" src="/js/plupload/js/plupload.full.js"></script>
+<script type="text/javascript"
+        src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.js"></script>
+
 <style type="text/css">
     .upload-icon {
         background: url('/js/ext/examples/shared/icons/fam/image_add.png') no-repeat 0 0 !important;
@@ -106,8 +113,7 @@ include ("html_header.php");
             </tbody>
         </table>
     </div>
-
 </div>
 <?php
-include ("html_footer.php");
+include("html_footer.php");
 ?>

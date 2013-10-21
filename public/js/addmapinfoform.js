@@ -100,6 +100,10 @@ addMapInfo.init = function () {
                         fields: ['name', 'value'],
                         data: [
                             {
+                                name: 'Auto',
+                                value: 'Auto'
+                            },
+                            {
                                 name: 'Point',
                                 value: 'Point'
                             },

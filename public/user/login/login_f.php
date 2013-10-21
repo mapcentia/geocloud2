@@ -48,7 +48,7 @@ function UserIDCheck($sValue, &$oStatus)
     }
 }
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
-    header("location: {$userHostName}/user/login/p");
+    header("location: /user/login/p");
 }
 ?>
 <div class="container">

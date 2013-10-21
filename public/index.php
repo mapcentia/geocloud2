@@ -7,9 +7,8 @@ use \app\inc\Session;
 use \app\inc\Route;
 use \app\conf\Connection;
 
-include_once("../app/conf/Autoload.php");
-new \app\conf\Autoload();
-new \app\conf\Path();
+include_once("../app/conf/App.php");
+new \app\conf\App();
 
 if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/sql", function () {
@@ -48,17 +47,17 @@ if (Input::getPath()->part(1) == "controllers") {
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
     Connection::$param["postgisschema"] = ($_SESSION['postgisschema']) ? : "public";
 
-    Route::add("controllers/cfgfile");
-    Route::add("controllers/classification");
-    Route::add("controllers/database");
-    Route::add("controllers/layer");
+    Route::add("controllers/cfgfile/");
+    Route::add("controllers/classification/");
+    Route::add("controllers/database/");
+    Route::add("controllers/layer/");
     Route::add("controllers/mapfile");
     Route::add("controllers/setting");
     Route::add("controllers/table");
-    Route::add("controllers/tile");
+    Route::add("controllers/tile/");
     Route::add("controllers/tilecache");
-    Route::add("controllers/upload/shape");
-    Route::add("controllers/upload/mapinfo");
+    Route::add("controllers/upload/file");
+    Route::add("controllers/upload/process");
 }
 
 if (Input::getPath()->part(1) == "wms") {

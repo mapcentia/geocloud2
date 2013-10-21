@@ -45,9 +45,7 @@ $(window).load(function () {
         success: function (data, textStatus, http) {
             if (http.readyState == 4) {
                 if (http.status == 200) {
-                    var response = eval('(' + http.responseText + ')');
-                    // JSON
-                    settings = response.data;
+                    settings = data.data;
                     $("#apikeyholder").html(settings.api_key)
                 }
             }
@@ -370,7 +368,6 @@ $(window).load(function () {
             '-',
             {
                 text: '<i class="icon-plus btn-gc"></i> New layer',
-                //iconCls : 'icon-plus',
                 handler: onAdd
             },
             '-',
@@ -438,14 +435,13 @@ $(window).load(function () {
             layout: 'fit',
             modal: true,
             width: 500,
-            height: 350,
+            height: 385,
             closeAction: 'close',
             plain: true,
             items: [p],
             tbar: [
                 {
                     text: 'Blank layer',
-                    //iconCls: 'silk-add',
                     handler: function () {
                         addScratch.init();
                         var c = p.getComponent(0);
@@ -456,8 +452,7 @@ $(window).load(function () {
                 },
                 '-',
                 {
-                    text: 'Esri Shape',
-                    //iconCls: 'silk-add',
+                    text: 'Upload files',
                     handler: function () {
                         addShape.init();
                         var c = p.getComponent(0);
@@ -465,34 +460,8 @@ $(window).load(function () {
                         c.add(addShape.form);
                         c.doLayout();
                     }
-                },
-                '-',
-                {
-                    text: 'GML',
-                    disabled: true,
-                    //iconCls: 'silk-add',
-                    tooltip: "Coming in beta",
-                    handler: function () {
-                        addGml.init();
-                        var c = p.getComponent(0);
-                        c.remove(0);
-                        c.add(addGml.form);
-                        c.doLayout();
-                    }
-                },
-                '-',
-                {
-                    text: 'MapInfo TAB',
-                    disabled: false,
-                    tooltip: "Coming in beta",
-                    handler: function () {
-                        addMapInfo.init();
-                        var c = p.getComponent(0);
-                        c.remove(0);
-                        c.add(addMapInfo.form);
-                        c.doLayout();
-                    }
                 }
+
             ]
         });
 
@@ -1157,11 +1126,13 @@ $(window).load(function () {
     writeFiles = function () {
         $.ajax({
             url: '/controllers/mapfile',
-            success: function (response) {}
+            success: function (response) {
+            }
         });
         $.ajax({
             url: '/controllers/cfgfile',
-            success: function (response) {}
+            success: function (response) {
+            }
         });
     };
 });

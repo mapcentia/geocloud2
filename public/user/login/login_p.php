@@ -5,7 +5,7 @@ include '../header.php';
 include '../html_header.php';
 // Check if user is logged in - and redirect if this is not the case
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
-    die("<script>window.location='{$userHostName}/user/login'</script>");
+   die("<script>window.location='/user/login'</script>");
 }
 ($_SESSION['zone']) ? $prefix = $_SESSION['zone'] . "." : $prefix = "";
 ?>
@@ -26,6 +26,9 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
                 </div>
             </div>
         </div>
+        <div style="position: absolute; right: 5px; top: 3px">
+            <div><a href="/user/logout">Log out</a></div>
+        </div>
     </div>
     <div id="db_exists_not" style="display: none">
         <div class="row dashboard-create">
@@ -38,6 +41,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
             </div>
         </div>
     </div>
+
 </div>
 <script type="text/html" id="template-schema-list">
     <tr class="map-entry">
