@@ -4,10 +4,10 @@
 		<div class="span9 offset2">
 		<?php
 
-		include ("../conf/main.php");
-		include ("../libs/functions.php");
-		include("../models/Database.php");
-		include("../models/dbchecks.php");
+		include ("../../app/conf/Connection.php");
+		include ("../../app/inc/Model.php");
+		include("../../app/models/Database.php");
+		include("../../app/models/Dbchecks.php");
 
 		echo "<div>PHP version " . phpversion() . " ";
 		if (function_exists(apache_get_modules)) {
@@ -56,7 +56,7 @@
 		if ($mod_rewrite) {
 			echo "<div class='alert alert-success'>Apache mod_rewrite is installed</div>";
 		} else {
-			echo "<div class='alert alert-error'>Apache mod_rewrite is not installed<div>";
+			echo "<div class='alert alert-error'>Apache mod_rewrite is not installed</div>";
 		}
 
 		if (function_exists(ms_newMapobj)) {
@@ -74,7 +74,7 @@
 			echo "<div class='alert alert-error	'>It seems that Python is not installed</div>";
 		}
 
-		$dbList = new databases();
+		$dbList = new app\models\Database();
 		try {
 			$arr = $dbList -> listAllDbs();
 		
@@ -86,8 +86,8 @@
 
 			if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template") {
 				echo "<tr><td>{$db}</td>";
-				$postgisdb = $db;
-				$dbc = new dbcheck();
+                \app\conf\Connection::$param["postgisdb"] = $db;
+				$dbc = new app\model\Dbcheck();
 
 				// Check if postgis is installed
 				$checkPostGIS = $dbc->isPostGISInstalled();
@@ -110,7 +110,7 @@
 				} else {
 					echo "<td style='color:red'>X</td>";
 					if ($checkPostGIS['success']) {
-						echo "<td><a class='btn btn-primary small' href='installmy.php?db={$postgisdb}'>Install MyGeoCloud</a></td>";
+						echo "<td><a class='btn btn-primary small' href='installmy.php?db={$db}'>Install MyGeoCloud</a></td>";
 					}
 					else
 					echo "<td></td>";

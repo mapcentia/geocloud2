@@ -47,10 +47,10 @@ if (Input::getPath()->part(1) == "controllers") {
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
     Connection::$param["postgisschema"] = ($_SESSION['postgisschema']) ? : "public";
 
-    Route::add("controllers/cfgfile/");
-    Route::add("controllers/classification/");
-    Route::add("controllers/database/");
-    Route::add("controllers/layer/");
+    Route::add("controllers/cfgfile");
+    Route::add("controllers/classification");
+    Route::add("controllers/database");
+    Route::add("controllers/layer");
     Route::add("controllers/mapfile");
     Route::add("controllers/setting");
     Route::add("controllers/table");

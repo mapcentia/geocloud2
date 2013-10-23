@@ -1,11 +1,12 @@
 <?php
-include("../conf/main.php");
-include("../libs/functions.php");
-include("../models/Database.php");
+include("../../app/conf/Connection.php");
+include("../../app/inc/Model.php");
+include("../../app/models/Database.php");
+include("../../app/models/Dbchecks.php");
 include("sqls.php");
 
-$postgisdb = $_REQUEST['db'];
-$conn = new postgis();
+\app\conf\Connection::$param["postgisdb"]  = $_REQUEST['db'];
+$conn = new \app\inc\Model();
 try {
 	$conn->connect();
 } catch (Exception $e) {
@@ -43,7 +44,7 @@ if (!$conn->PDOerror[0]) {
 	echo "View created<br/>";
 }
 else {
-	echo "Something went wrong; {$conn->PDOerror[0]}";
+	echo "Something went wrrtong; {$conn->PDOerror[0]}";
 	$conn->rollback();
 
 }

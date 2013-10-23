@@ -1,5 +1,6 @@
 .leaflet-top {
-    top: 70px !important;
+    bottom: 50px !important;
+    top: auto !important;
 }
 
 .ol-zoom, .olControlZoom {
@@ -86,6 +87,13 @@ img {
 
     #locate-btn {
         margin-left: 5px;
+    }
+    .modal {
+        top: 50px !important;
+        right: 10px !important;
+        width: 360px !important;
+        position: absolute !important;
+        left: auto !important;
     }
 }
 

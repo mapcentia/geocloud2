@@ -31,7 +31,6 @@ class Process extends \app\inc\Controller
                 $type = "PROMOTE_TO_MULTI";
                 break;
         }
-
         $cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr " .
             "-overwrite " .
             "-lco 'GEOMETRY_NAME=the_geom' " .

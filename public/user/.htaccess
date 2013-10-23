@@ -1,9 +1,0 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule login/p$ login/login_p.php [L]
-    RewriteRule login/$ login/login_f.php [L]
-    RewriteRule logout/$ logout/logout_p.php [L]
-    RewriteRule signup/$ signup/signup_f.php [L]
-    RewriteRule signup/p$ signup/signup_p.php [L]
-    RewriteRule createstore/$ createstore/createstore_p.php [L]
-</IfModule>

@@ -15,6 +15,7 @@ var geocloud = (function () {
         geoJsonStore,
         sqlStore,
         tweetStore,
+        elasticStore,
         clickEvent,
         transformPoint,
         lControl,
@@ -33,6 +34,8 @@ var geocloud = (function () {
         BINGAERIALWITHLABELS = "bingAerialWithLabels";
     // In IE7 host name is missing if script url is relative
     geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+
+    //host = "http://us1.mapcentia.com";
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
     if (typeof ol !== "object" && typeof L !== "object" && typeof OpenLayers !== "object") {
         alert("You need to load neither OpenLayers.js, ol3,js or Leaflet.js");
@@ -45,30 +48,50 @@ var geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
-        document.write("<script src='http://local.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
-        document.write("<script src='http://local.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
-        document.write("<link href='http://eu1.mapcentia.com/js/leaflet/leaflet.css' type='text/css' rel='stylesheet'>");
+        // The JavaScript
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
+        document.write("<script src='http://us1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js'><\/script>");
+
+        // The css
+        document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' type='text/css' rel='stylesheet'>");
+        document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' type='text/css' rel='stylesheet'>");
+        //document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.Default.css' type='text/css' rel='stylesheet'>");
+        document.write("<link href='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' type='text/css' rel='stylesheet'>");
     }
     document.write("<link rel='stylesheet' href='" + geocloud_host + "/api/v3/css/styles.css' type='text/css'>");
+
+
+    // Helper for extending classes
     extend = function (ChildClass, ParentClass) {
         ChildClass.prototype = new ParentClass();
-        // ChildClass.prototype.constructor = ChildClass;
+        //ChildClass.prototype.constructor = ChildClass;
     };
-    storeClass = function (config) {
-        var prop;
+    // Base class for stores
+    storeClass = function () {
         this.defaults = {
             styleMap: null,
+            visibility: true,
+            lifetime: 0,
+            db: null,
+            sql: null,
+            q: null,
+            name: "Vector",
+            rendererOptions: { zIndexing: true },
+            projection: (MAPLIB === "leaflet") ? "4326" : "900913",
+            //Only leaflet
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng);
-            }, //Only leaflet
+            },
+            //Only leaflet
             onEachFeature: function () {
-            } //Only leaflet
+            },
+            onLoad: function () {
+            },
+            index: "",
+            type: ""
         };
-        if (config) {
-            for (prop in config) {
-                this.defaults[prop] = config[prop];
-            }
-        }
         this.hide = function () {
             this.layer.setVisibility(false);
         };
@@ -76,89 +99,57 @@ var geocloud = (function () {
             this.layer.setVisibility(true);
         };
         this.map = null;
-        switch (MAPLIB) {
-            case "ol2":
-                this.layer = new OpenLayers.Layer.Vector(this.defaults.name, {
-                    styleMap: this.defaults.styleMap,
-                    visibility: this.defaults.visibility,
-                    renderers: ['Canvas', 'SVG', 'VML'],
-                    rendererOptions: this.defaults.rendererOptions/*,
-                     strategies: [new OpenLayers.Strategy.AnimatedCluster({
-                     //strategies : [new OpenLayers.Strategy.Cluster({
-                     distance: 45,
-                     animationMethod: OpenLayers.Easing.Expo.easeOut,
-                     animationDuration: 10,
-                     autoActivate: false
-                     })]*/
-                });
-                break;
-            case "leaflet":
-                this.layer = L.geoJson(null, {
-                    style: this.defaults.styleMap,
-                    pointToLayer: this.defaults.pointToLayer,
-                    onEachFeature: this.defaults.onEachFeature
-                });
-                this.layer.id = this.defaults.name;
-                break;
-        }
-        this.clusterDeactivate = function () {
-            parentThis.layer.strategies[0].deactivate();
-            parentThis.layer.refresh({
-                forces: true
-            });
-        };
-        this.clusterActivate = function () {
-            parentThis.layer.strategies[0].activate();
-            parentThis.layer.refresh({
-                forces: true
-            });
+        // Initiate base class settings
+        this.init = function () {
+            this.onLoad = this.defaults.onLoad;
+            switch (MAPLIB) {
+                case 'ol2':
+                    this.layer = new OpenLayers.Layer.Vector(this.defaults.name, {
+                        styleMap: this.defaults.styleMap,
+                        visibility: this.defaults.visibility,
+                        renderers: ['Canvas', 'SVG', 'VML'],
+                        rendererOptions: this.defaults.rendererOptions
+                    });
+                    break;
+                case 'leaflet':
+                    this.layer = L.geoJson(null, {
+                        style: this.defaults.styleMap,
+                        pointToLayer: this.defaults.pointToLayer,
+                        onEachFeature: this.defaults.onEachFeature
+                    });
+                    this.layer.id = this.defaults.name;
+                    break;
+            }
         };
         this.geoJSON = {};
         this.featureStore = null;
         this.reset = function () {
-            this.layer.destroyFeatures();
+            switch (MAPLIB) {
+                case "ol2":
+                    this.layer.destroyFeatures();
+                    break;
+                case "leaflet":
+                    this.layer.clearLayers();
+                    break;
+            }
         };
         this.getWKT = function () {
             return new OpenLayers.Format.WKT().write(this.layer.features);
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        storeClass.call(this, config);
         var prop, parentThis = this;
-        this.defaults = {
-            db: null,
-            sql: null,
-            id: "vector",
-            name: "Vector",
-            styleMap: null,
-            projection: (MAPLIB === "leaflet") ? "4326" : "900913",
-            strategies: null,
-            visibility: true,
-            rendererOptions: {
-                zIndexing: true
-            },
-            lifetime: 0,
-            selectControl: {},
-            movedEnd: function () {
-            },
-            onLoad: function () {
-            },
-            onEachFeature: function () {
-            } //Only leaflet
-        };
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
             }
         }
-        this.db = this.defaults.db;
+        this.init();
         this.sql = this.defaults.sql;
-        this.onLoad = this.defaults.onLoad;
-        this.movedEnd = this.defaults.movedEnd;
         this.load = function (doNotShowAlertOnError) {
-            var sql = this.sql;
+            var url = host.replace("cdn.", "");
             try {
-                var map = parentThis.map;
+                var map = parentThis.map, sql = this.sql;
                 sql = sql.replace("{centerX}", map.getCenter().lat.toString());
                 sql = sql.replace("{centerY}", map.getCenter().lon.toString());
                 sql = sql.replace("{minX}", map.getExtent().left);
@@ -172,7 +163,7 @@ var geocloud = (function () {
                 dataType: 'jsonp',
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection,
                 jsonp: 'jsonp_callback',
-                url: host + '/api/v1/sql/' + this.db,
+                url: url + '/api/v1/sql/' + this.defaults.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -199,52 +190,31 @@ var geocloud = (function () {
         };
     };
     tweetStore = function (config) {
-        storeClass.call(this, config);
         var prop, parentThis = this;
-        this.defaults = {
-            db: null,
-            search: null,
-            id: "tweets",
-            projection: (MAPLIB === "leaflet") ? "4326" : "900913",
-            strategies: null,
-            visibility: true,
-            rendererOptions: {
-                zIndexing: true
-            },
-            lifetime: 0,
-            selectControl: {},
-            movedEnd: function () {
-            },
-            onLoad: function () {
-            }
-        };
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
             }
         }
-        this.db = this.defaults.db;
-        this.search = this.defaults.q;
-        this.onLoad = this.defaults.onLoad;
-        this.movedEnd = this.defaults.movedEnd;
+        this.init();
         this.load = function (doNotShowAlertOnError) {
-            var sql = this.sql;
+            var q = this.defaults.q;
             try {
                 var map = parentThis.map;
-                sql = sql.replace("{centerX}", map.getCenter().lat.toString());
-                sql = sql.replace("{centerY}", map.getCenter().lon.toString());
-                sql = sql.replace("{minX}", map.getExtent().left);
-                sql = sql.replace("{maxX}", map.getExtent().right);
-                sql = sql.replace("{minY}", map.getExtent().bottom);
-                sql = sql.replace("{maxY}", map.getExtent().top);
-                sql = sql.replace("{bbox}", map.getExtent().toString());
+                q = q.replace("{centerX}", map.getCenter().lat.toString());
+                q = q.replace("{centerY}", map.getCenter().lon.toString());
+                q = q.replace("{minX}", map.getExtent().left);
+                q = q.replace("{maxX}", map.getExtent().right);
+                q = q.replace("{minY}", map.getExtent().bottom);
+                q = q.replace("{maxY}", map.getExtent().top);
+                q = q.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
             }
             $.ajax({
                 dataType: 'jsonp',
-                data: 'search=' + encodeURIComponent(this.defaults.search),
+                data: 'search=' + encodeURIComponent(q),
                 jsonp: 'jsonp_callback',
-                url: host + '/api/v1/twitter/' + this.db,
+                url: host + '/api/v1/twitter/' + this.defaults.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -266,14 +236,68 @@ var geocloud = (function () {
                 complete: function () {
                     parentThis.onLoad();
                 }
-
             });
         };
     };
-    //extend(sqlStore, storeClass);
-    //extend(tweetStore, storeClass)
+    elasticStore = function (config) {
+        var prop, parentThis = this;
+        if (config) {
+            for (prop in config) {
+                this.defaults[prop] = config[prop];
+            }
+        }
+        this.init();
+        this.q = this.defaults.q;
+        this.load = function (doNotShowAlertOnError) {
+            try {
+                var map = parentThis.map, q = this.q;
+                q = q.replace("{centerX}", map.getCenter().lat.toString());
+                q = q.replace("{centerY}", map.getCenter().lon.toString());
+                q = q.replace("{minX}", map.getExtent().left);
+                q = q.replace("{maxX}", map.getExtent().right);
+                q = q.replace("{minY}", map.getExtent().bottom);
+                q = q.replace("{maxY}", map.getExtent().top);
+                q = q.replace("{bbox}", map.getExtent().toString());
+            } catch (e) {
+            }
+            $.ajax({
+                dataType: 'jsonp',
+                data: 'q=' + encodeURIComponent(q),
+                jsonp: 'jsonp_callback',
+                url: host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
+                success: function (response) {
+                    var features = [];
+                    $.each(response.hits.hits, function (i, v) {
+                        features.push(v._source);
+                    })
+                    response.features = features;
+                    if (response.features !== null) {
+                        parentThis.geoJSON = response;
+                        switch (MAPLIB) {
+                            case "ol2":
+                                parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                break;
+                            case "leaflet":
+                                parentThis.layer.addData(response);
+                                break;
+                        }
+                    }
+
+                },
+                complete: function () {
+                    parentThis.onLoad();
+                }
+            });
+        };
+    };
+    // Extend classes
+    extend(sqlStore, storeClass);
+    extend(tweetStore, storeClass);
+    extend(elasticStore, storeClass);
+
+    // Set map constructor
     map = function (config) {
-        var prop, popup, queryLayers = [], parentMap,
+        var prop, queryLayers = [],
             defaults = {
                 numZoomLevels: 20,
                 projection: "EPSG:900913"
@@ -284,7 +308,6 @@ var geocloud = (function () {
             }
         }
         this.bingApiKey = null;
-        parentMap = this;
         //ol2, ol3
         this.zoomToExtent = function (extent, closest) {
             switch (MAPLIB) {
@@ -1084,23 +1107,28 @@ var geocloud = (function () {
         };
         // ol3
         this.locate = function () {
-            var center;
-            var geolocation = new ol.Geolocation();
-            geolocation.setTracking(true);
-            geolocation.bindTo('projection', this.map.getView());
-            var marker = new ol.Overlay({
-                map: this.map,
-                element: /** @type {Element} */ ($('<i/>').addClass('icon-flag').get(0))
-            });
-            // bind the marker position to the device location.
-            marker.bindTo('position', geolocation);
-            geolocation.addEventListener('accuracy_changed', function () {
-                center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:900913');
-                this.zoomToPoint(center[0], center[1], 1000);
-                $(marker.getElement()).tooltip({
-                    title: this.getAccuracy() + 'm from this point'
-                });
-            });
+            /*            var center;
+             var geolocation = new ol.Geolocation();
+             geolocation.setTracking(true);
+             geolocation.bindTo('projection', this.map.getView());
+             var marker = new ol.Overlay({
+             map: this.map,
+             element: */
+            /** @type {Element} */
+            /* ($('<i/>').addClass('icon-flag').get(0))
+             });
+             // bind the marker position to the device location.
+             marker.bindTo('position', geolocation);
+             geolocation.addEventListener('accuracy_changed', function () {
+             center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:900913');
+             this.zoomToPoint(center[0], center[1], 1000);
+             $(marker.getElement()).tooltip({
+             title: this.getAccuracy() + 'm from this point'
+             });
+             });*/
+            this.map.locate({
+                setView: true
+            })
         }
         //ol2 and leaflet
         this.addLayerFromWkt = function (elements) { // Take 4326
@@ -1240,7 +1268,7 @@ var geocloud = (function () {
                     break;
             }
         }
-    }
+    };
     transformPoint = function (lat, lon, s, d) {
         var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
         var dest = new Proj4js.Proj(d);
@@ -1248,9 +1276,11 @@ var geocloud = (function () {
         Proj4js.transform(source, dest, p);
         return p;
     };
+
     return {
         geoJsonStore: geoJsonStore,
         sqlStore: sqlStore,
+        elasticStore: elasticStore,
         tweetStore: tweetStore,
         map: map,
         MAPLIB: MAPLIB,

@@ -4,7 +4,7 @@ namespace app\model;
 
 use app\inc\Model;
 
-class dbcheck extends Model {
+class Dbcheck extends Model {
 	function __construct()
 	{
 		parent::__construct();

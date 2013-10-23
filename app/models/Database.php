@@ -2,8 +2,6 @@
 
 namespace app\models;
 
-use \app\conf\Connection;;
-
 class Database extends \app\inc\Model {
     private function createUser($name)
     {

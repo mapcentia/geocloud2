@@ -1,9 +1,24 @@
 <IfModule mod_rewrite.c>
    RewriteEngine On
 
+   # Rewrite URLs for user module
+   RewriteRule user/login/p$ user/login/login_p.php [L]
+   RewriteRule user/login/$ user/login/login_f.php [L]
+   RewriteRule user/logout/$ user/logout/logout_p.php [L]
+   RewriteRule user/signup/$ user/signup/signup_f.php [L]
+   RewriteRule user/signup/p$ user/signup/signup_p.php [L]
+   RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
+
+   # Rewrite URL so tile request is going direct to TileCache cgi
+   RewriteRule wms/(.*)/(.*)/tilecache/$ /cgi/tilecache.fcgi?cfg=$1 [QSA,L]
+
+   # Rewrite URL to HTLM map viewer
    RewriteCond %{REQUEST_FILENAME} !-f
-   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
 
    # Rewrite all other URLs to index.php/URL
-   RewriteRule ^(.*)$ index.php/$1 [PT,L]
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^(.*)$ index.php/$1 [L]
+
 </IfModule>
