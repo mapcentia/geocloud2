@@ -1,9 +1,6 @@
 app/conf/App.php
 app/conf/Connection.php
 app/tmp/
-app/wms/cfgfiles
-app/wms/mapfiles
-
 
 .idea/
 .vagrant/
