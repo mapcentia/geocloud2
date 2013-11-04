@@ -1,6 +1,5 @@
 app/conf/App.php
 app/conf/Connection.php
-app/tmp/
 
 .idea/
 .vagrant/
