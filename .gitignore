@@ -1,2 +1,16 @@
-app/conf/main.php
-.idea
+app/conf/App.php
+app/conf/Connection.php
+
+.idea/
+.vagrant/
+Vagrantfile
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
