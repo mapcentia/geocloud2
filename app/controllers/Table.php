@@ -10,7 +10,7 @@ class Table extends \app\inc\Controller
 
     function __construct()
     {
-        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $this->table = new \app\models\Table(Input::getPath()->part(4));
     }
 
     public function post_records()

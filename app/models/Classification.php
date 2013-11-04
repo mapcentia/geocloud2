@@ -72,7 +72,7 @@ class Classification extends \app\inc\Model
 
         // First we replace unicode escape sequence
         //$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
-        $tableObj = new table("settings.geometry_columns_join");
+        $tableObj = new Table("settings.geometry_columns_join");
         $obj = new \stdClass;
         $obj->class = $data;
         $obj->_key_ = $this->table;
