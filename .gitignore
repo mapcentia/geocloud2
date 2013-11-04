@@ -4,9 +4,12 @@ app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles
 
+
 .idea/
 .vagrant/
+geocloud2.bbprojectd
 Vagrantfile
+
 
 # OS generated files #
 ######################
