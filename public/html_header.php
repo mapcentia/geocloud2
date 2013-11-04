@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MapCentia GeoCloud</title>
+    <title>Administration</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="description"
           content="Analyze and visualize your data. Use a powerful API for adding maps to your own apps."/>

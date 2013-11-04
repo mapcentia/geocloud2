@@ -14,7 +14,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
         <div class="row dashboard">
             <div class="span3">
                 <?php
-                echo "<a href='http://" . $prefix . App::$param['domain'] . "/store/{$_SESSION['screen_name']}' id='btn-admin' class='btn btn-large btn-info' data-placement='top'
+                echo "<a target='_blank' href='http://" . $prefix . App::$param['domain'] . "/store/{$_SESSION['screen_name']}' id='btn-admin' class='btn btn-large btn-info' data-placement='top'
                                      title='Start the administration of your GeoCloud'>Start admin</a>";
                 ?>
             </div>

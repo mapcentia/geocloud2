@@ -16,6 +16,6 @@ class Meta extends \app\inc\Controller
 
     public function get_index()
     {
-        return Response::json($this->layers->getAll(Input::getPath()->part(6), Session::isAuth()));
+        return Response::json($this->layers->getAll(Input::getPath()->part(5), Session::isAuth()));
     }
 }

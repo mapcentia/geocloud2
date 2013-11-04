@@ -263,11 +263,11 @@ class Model
         $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
         if (!$row)
-            return $languageText[selectText];
+            return $languageText['selectText'];
         elseif ($row)
-            $this->theGeometry = $row[type];
+            $this->theGeometry = $row['type'];
         if ($field == 'f_geometry_column') {
-            return $row[f_geometry_column];
+            return $row['f_geometry_column'];
         }
         if ($field == 'srid') {
             return $row['srid'];

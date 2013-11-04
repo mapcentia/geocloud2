@@ -52,6 +52,6 @@ class Layer extends \app\inc\Controller
 
     public function getValueFromKey($_key_, $column)
     {
-        return Response::json($this->table->getValueFromKey($_key_, $column));
+        return $this->table->getValueFromKey($_key_, $column);
     }
 }
