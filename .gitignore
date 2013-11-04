@@ -1,5 +1,13 @@
 app/conf/App.php
 app/conf/Connection.php
+app/tmp/
+app/wms/cfgfiles
+app/wms/mapfiles
+
+!app/tmp/.gitignore
+!app/wms/cfgfiles/.gitignore
+!app/wms/mapfiles/.gitignore
+
 
 .idea/
 .vagrant/
