@@ -1,9 +1,8 @@
 <?php
 namespace app\controllers\upload;
 
-use app\conf\App;
+use \app\conf\App;
 use \app\inc\Response;
-use \app\inc\Input;
 use \app\conf\Connection;
 
 class Process extends \app\inc\Controller
@@ -43,9 +42,21 @@ class Process extends \app\inc\Controller
 
         //echo $cmd;
         exec($cmd . ' 2>&1', $out, $err);
+
+        $model = new \app\inc\Model();
+        $geoType = $model->getGeometryColumns(Connection::$param["postgisschema"].".".$safeName, "type");
+        $key = Connection::$param["postgisschema"] . "." . $safeName . ".the_geom";
+        $class = new \app\models\Classification($key);
+        $arr = $class->getAll();
+
+        if (empty($arr['data'])) {
+            $class->insert();
+            $class->update("0", \app\models\Classification::createClass($geoType));
+        }
         if ($out[0] == "") {
             $response['success'] = true;
             $response['message'] = "Layer <b>{$safeName}</b> is created";
+            $response['type'] = $geoType;
         } else {
             $response['success'] = false;
             $response['message'] = $out[0];

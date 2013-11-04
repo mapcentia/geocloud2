@@ -7,15 +7,13 @@ class Route
 {
     static function add($uri, $func = "")
     {
-        $requestUri = str_replace("?" . $_SERVER['QUERY_STRING'], "", $_SERVER['REQUEST_URI']);
+        $requestUri = strtok($_SERVER["REQUEST_URI"], '?');
+//        $requestUri = rtrim($requestUri, "/");
         if (strpos($requestUri, $uri) !== false) {
             if ($func) {
                 $func();
             }
-            // Remove trailing "/"
-            if (substr($uri, -1) == "/") {
-                $uri = rtrim($uri, "/");
-            }
+            $uri = rtrim($uri, "/");
             $n = sizeof(explode("/", $uri));
             $className = strtr($uri, '/', '\\');
             $class = "app\\{$className}";

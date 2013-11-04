@@ -182,7 +182,7 @@ class Table extends Model
         foreach ($data as $row) {
             foreach ($row as $key => $value) {
                 if ($value === false) {
-                    $value = 0;
+                    $value = null;
                 }
                 $value = $this->db->quote($value);
                 if ($key != $keyName) {

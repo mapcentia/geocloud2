@@ -78,6 +78,7 @@ var geocloud = (function () {
             sql: null,
             q: null,
             name: "Vector",
+            id: null,
             rendererOptions: { zIndexing: true },
             projection: (MAPLIB === "leaflet") ? "4326" : "900913",
             //Only leaflet
@@ -133,6 +134,16 @@ var geocloud = (function () {
                     break;
             }
         };
+        this.isEmpty = function () {
+            switch (MAPLIB) {
+                case "ol2":
+                    return (this.layer.features.length === 0) ? true : false;
+                    break;
+                case "leaflet":
+                    return (Object.keys(this.layer._layers).length === 0) ? true : false;
+                    break;
+            }
+        };
         this.getWKT = function () {
             return new OpenLayers.Format.WKT().write(this.layer.features);
         };
@@ -145,6 +156,7 @@ var geocloud = (function () {
             }
         }
         this.init();
+        this.id = this.defaults.id;
         this.sql = this.defaults.sql;
         this.load = function (doNotShowAlertOnError) {
             var url = host.replace("cdn.", "");
@@ -997,9 +1009,17 @@ var geocloud = (function () {
                     break;
             }
         };
+        //ol2 and leaflet
         this.removeGeoJsonStore = function (store) {
-            this.map.removeLayer(store.layer);
-            //??????????????
+            switch (MAPLIB) {
+                case "ol2":
+                    this.map.removeLayer(store.layer);
+                    break;
+                case "leaflet":
+                    this.map.removeLayer(store.layer);
+                    break;
+            }
+
         };
         //ol2, ol3 and leaflet
         this.hideLayer = function (name) {

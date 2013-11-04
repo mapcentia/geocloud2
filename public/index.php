@@ -18,29 +18,30 @@ if (Input::getPath()->part(1) == "api") {
         Connection::$param["postgisdb"] = Input::getPath()->part(5);
     });
     Route::add("api/v1/meta", function () {
-        Connection::$param["postgisdb"] = Input::getPath()->part(5);
-        Connection::$param["postgisschema"] = Input::getPath()->part(6);
+        Connection::$param["postgisdb"] = Input::getPath()->part(4);
+        Session::start();
     });
     Route::add("api/v1/twitter");
 }
 
 if (Input::getPath()->part(1) == "store") {
     Session::start();
-    Session::authenticate();
-    $_SESSION['postgisschema'] = Input::getPath()->part(3);
+    Session::authenticate("/user/login/");
+    $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
     include_once("store.php");
+    include_once("../app/conf/intercom.js.inc");
 }
 
 if (Input::getPath()->part(1) == "editor") {
     Session::start();
-    Session::authenticate();
+    Session::authenticate("/user/login/");
     include_once("editor.php");
 }
 
 if (Input::getPath()->part(1) == "controllers") {
 
     Session::start();
-    Session::authenticate();
+    Session::authenticate("/user/login/");
     //header('charset=utf-8');
     //header('Content-Type: text/plain; charset=utf-8');
 
@@ -48,14 +49,14 @@ if (Input::getPath()->part(1) == "controllers") {
     Connection::$param["postgisschema"] = ($_SESSION['postgisschema']) ? : "public";
 
     Route::add("controllers/cfgfile");
-    Route::add("controllers/classification");
-    Route::add("controllers/database");
-    Route::add("controllers/layer");
+    Route::add("controllers/classification/");
+    Route::add("controllers/database/");
+    Route::add("controllers/layer/");
     Route::add("controllers/mapfile");
     Route::add("controllers/setting");
-    Route::add("controllers/table");
+    Route::add("controllers/table/");
     Route::add("controllers/tile/");
-    Route::add("controllers/tilecache");
+    Route::add("controllers/tilecache/");
     Route::add("controllers/upload/file");
     Route::add("controllers/upload/process");
 }

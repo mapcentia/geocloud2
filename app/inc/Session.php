@@ -12,12 +12,12 @@ class Session
         session_set_cookie_params(9999999999, '/', "." . App::$param['domain']);
         session_start();
     }
-    static function authenticate(){
+    static function authenticate($redirect="/"){
         if ($_SESSION['auth'] == true) {
             return true;
         }
         else {
-            die(Response::json(array("success"=>false,"message"=>"Not authenticated")));
+            Redirect::to($redirect);
         }
     }
     static function isAuth (){

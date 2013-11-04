@@ -19,6 +19,9 @@
 img {
     max-width: none !important;
 }
+#modal-info-body {
+    height: 300px !important;
+}
 
 @media (max-width: 767px) {
     #layers-popover-li {

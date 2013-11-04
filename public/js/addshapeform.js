@@ -44,6 +44,7 @@ addShape.init = function () {
                                     if (response.success) {
                                         store.load();
                                         App.setAlert(App.STATUS_NOTICE, response.message);
+                                        writeFiles();
                                     } else {
                                         Ext.MessageBox.alert('Failure', response.message);
                                     }

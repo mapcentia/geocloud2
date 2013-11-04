@@ -33,10 +33,12 @@ class Layer extends \app\models\Table
             while ($row = $this->fetchRow($result, "assoc")) {
                 $arr = array();
                 foreach ($row as $key => $value) {
+                    $value = ($key == "layergroup" && (!$value))? "Default group":$value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
                 }
                 $response['data'][] = $arr;
             }
+            $response['data'] = ($response['data'])?:array();
         }
         if (!$this->PDOerror) {
             $response['success'] = true;

@@ -47,4 +47,9 @@ class Util
         return $returnAsString ? implode($seperator, $rgbArray) : $rgbArray;
         // returns the rgb string or the associative array
     }
+
+    static function randHexColor()
+    {
+        return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
+    }
 }
