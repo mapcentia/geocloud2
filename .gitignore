@@ -7,7 +7,7 @@ app/wms/mapfiles
 
 .idea/
 .vagrant/
-geocloud2.bbprojectd
+geocloud2.bbprojectd/
 Vagrantfile
 
 
