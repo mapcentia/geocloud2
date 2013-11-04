@@ -32,6 +32,7 @@ class Process extends \app\inc\Controller
         }
         $cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr " .
             "-overwrite " .
+            "-dim 2 " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-a_srs 'EPSG:{$srid}' " .

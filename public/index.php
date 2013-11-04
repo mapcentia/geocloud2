@@ -26,7 +26,7 @@ if (Input::getPath()->part(1) == "api") {
 
 if (Input::getPath()->part(1) == "store") {
     Session::start();
-    Session::authenticate("/user/login/");
+    Session::authenticate(\app\conf\App::$param['userHostName']."/user/login/");
     $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
     include_once("store.php");
     include_once("../app/conf/intercom.js.inc");
@@ -34,7 +34,7 @@ if (Input::getPath()->part(1) == "store") {
 
 if (Input::getPath()->part(1) == "editor") {
     Session::start();
-    Session::authenticate("/user/login/");
+    Session::authenticate(\app\conf\App::$param['userHostName']."/user/login/");
     include_once("editor.php");
 }
 
