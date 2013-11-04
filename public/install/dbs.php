@@ -18,26 +18,26 @@
 			$mod_apache = false;
 		}
 
-		// We check if "wms/mapfiles" is writeable
-		$ourFileName = "../wms/mapfiles/testFile.txt";
-		$ourFileHandle = @fopen($ourFileName, 'w');
-		if ($ourFileHandle) {
-			echo "<div class='alert alert-success'>wms/mapfiles dir is writeable</div>";
-			@fclose($ourFileHandle);
-			@unlink($ourFileName);
-		} else {
-			echo "<div class='alert alert-error'>wms/mapfiles dir is not writeable. You must set permissions so the webserver can write in the wms/mapfiles dir.</div>";
-		}
-		$ourFileName = "../wms/cfgfiles/testFile.txt";
-		$ourFileHandle = @fopen($ourFileName, 'w');
+        // We check if "wms/mapfiles" is writeable
+        $ourFileName = "../../app/wms/mapfiles/testFile.txt";
+        $ourFileHandle = @fopen($ourFileName, 'w');
+        if ($ourFileHandle) {
+            echo "<div class='alert alert-success'>app/wms/mapfiles dir is writeable</div>";
+            @fclose($ourFileHandle);
+            @unlink($ourFileName);
+        } else {
+            echo "<div class='alert alert-error'>app/wms/mapfiles dir is not writeable. You must set permissions so the webserver can write in the wms/mapfiles dir.</div>";
+        }
+        $ourFileName = "../../app/wms/cfgfiles/testFile.txt";
+        $ourFileHandle = @fopen($ourFileName, 'w');
 
-		if ($ourFileHandle) {
-			echo "<div class='alert alert-success'>wms/cfgfiles dir is writeable</div>";
-			@fclose($ourFileHandle);
-			@unlink($ourFileName);
-		} else {
-			echo "<div class='alert alert-error'>wms/cfgfiles dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
-		}
+        if ($ourFileHandle) {
+            echo "<div class='alert alert-success'>app/wms/cfgfiles dir is writeable</div>";
+            @fclose($ourFileHandle);
+            @unlink($ourFileName);
+        } else {
+            echo "<div class='alert alert-error'>app/wms/cfgfiles dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
+        }
 
 		$mod_rewrite = FALSE;
 		if (function_exists("apache_get_modules")) {
@@ -87,7 +87,7 @@
 			if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template") {
 				echo "<tr><td>{$db}</td>";
                 \app\conf\Connection::$param["postgisdb"] = $db;
-				$dbc = new app\model\Dbcheck();
+				$dbc = new app\models\Dbcheck();
 
 				// Check if postgis is installed
 				$checkPostGIS = $dbc->isPostGISInstalled();
