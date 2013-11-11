@@ -203,7 +203,7 @@
     </style>
 </head>
 <body>
-    <?php include_once("../../analyticstracking.php") ?>
+    <?php include_once("../../../app/conf/analyticstracking.php") ?>
     <span id="corner-banner">
             <em>beta</em>
         </span>

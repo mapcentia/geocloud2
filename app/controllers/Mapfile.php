@@ -224,7 +224,7 @@ class Mapfile extends \app\inc\Controller
         # Start of layers
         #
         <?php
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='".Connection::$param['postgisschema']."' OR f_table_schema='public'";
+        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "' OR f_table_schema='public'";
         //echo $sql;
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
@@ -368,7 +368,15 @@ class Mapfile extends \app\inc\Controller
                     <?php if ($class['outlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
 
                     #SIZE
-                    <?php if ($class['size']) echo "SIZE " . $class['size'] . "\n"; ?>
+                    <?php
+                    if ($class['size']) {
+                        if (is_numeric($class['size']))
+                            echo "SIZE ".$class['size'];
+                        else
+                            echo "SIZE [{$class['size']}]";
+                    }
+                    echo "\n";
+                    ?>
 
                     END # style
 
@@ -380,13 +388,21 @@ class Mapfile extends \app\inc\Controller
                     <?php if ($class['overlaywidth']) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
 
                     #COLOR
-                    <?php if ($class['overlaycolor']) echo "COLOR " . color::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
+                    <?php if ($class['overlaycolor']) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
 
                     #OUTLINECOLOR
-                    <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . color::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
+                    <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
 
                     #SIZE
-                    <?php if ($class['overlaysize']) echo "SIZE " . $class['overlaysize'] . "\n"; ?>
+                    <?php
+                    if ($class['overlaysize']) {
+                        if (is_numeric($class['overlaysize']))
+                            echo "SIZE ".$class['overlaysize'];
+                        else
+                            echo "SIZE [{$class['overlaysize']}]";
+                    }
+                    echo "\n";
+                    ?>
 
                     END # style
 
@@ -397,10 +413,12 @@ class Mapfile extends \app\inc\Controller
                         LABEL
                         TYPE truetype
                         FONT "arialbd"
-                        SIZE
-                        <?php
+                        SIZE <?php
                         if ($class['label_size']) {
-                            echo $class['label_size'];
+                            if (is_numeric($class['label_size']))
+                                echo $class['label_size'];
+                            else
+                                echo "[{$class['label_size']}]";
                         } else {
                             echo "11";
                         }
@@ -416,7 +434,7 @@ class Mapfile extends \app\inc\Controller
                         #BACKGROUNDCOLOR 233 246 224
                         #BACKGROUNDSHADOWSIZE 1 1
                         ANTIALIAS false
-                        FORCE false
+                        FORCE <?php echo ($class['force_label']) ? "true" : "false" . "\n"; ?>
                         PARTIALS false
                         END #Label
                     <?php } ?>
@@ -430,12 +448,12 @@ class Mapfile extends \app\inc\Controller
         END #MapFile
         <?php
         $data = ob_get_clean();
-        $path = App::$param['path']."/app/wms/mapfiles/";
-        $name = Connection::$param['postgisdb']."_".Connection::$param['postgisschema'].".map";
-        @unlink($path.$name);
-        $fh = fopen($path.$name, 'w');
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+        $name = Connection::$param['postgisdb'] . "_" . Connection::$param['postgisschema'] . ".map";
+        @unlink($path . $name);
+        $fh = fopen($path . $name, 'w');
         fwrite($fh, $data);
         fclose($fh);
-        echo Response::json(array("success"=>true,"message"=>"Mapfile written"));
+        echo Response::json(array("success" => true, "message" => "Mapfile written"));
     }
 }

@@ -249,7 +249,7 @@ MapCentia = (function () {
                     });
                     layers = cloud.getVisibleLayers().split(";");
                     $("#info-tab").empty();
-                    $("#martin").empty();
+                    $("#info-pane").empty();
                     $.each(layers, function (index, value) {
                         var isEmpty = true;
                         var srid = metaDataKeys[value.split(".")[1]].srid;
@@ -265,7 +265,7 @@ MapCentia = (function () {
                                     var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
 
                                     $("#info-tab").append('<li><a data-toggle="tab" href="#_' + index + '">' + layerTitel + '</a></li>');
-                                    $("#martin").append('<div class="tab-pane" id="_' + index + '"><table class="table table-condensed"><thead><tr><th>Property</th><th>Value</th></tr></thead></table></div>');
+                                    $("#info-pane").append('<div class="tab-pane" id="_' + index + '"><table class="table table-condensed"><thead><tr><th>Property</th><th>Value</th></tr></thead></table></div>');
 
                                     $.each(layerObj.geoJSON.features, function (i, feature) {
                                         if (fieldConf === null) {
@@ -284,10 +284,12 @@ MapCentia = (function () {
                                         out.sort(function (a, b) {
                                             return a[1] - b[1];
                                         });
+                                        console.log(out);
 
                                         $.each(out, function (name, property) {
                                             $("#_" +index + " table").append('<tr><td>' +  property[2] + '</td><td>' + property[3] + '</td></tr>');
                                         });
+                                        $("#_" +index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
                                         out = [];
                                         $('#info-tab a:first').tab('show');
 

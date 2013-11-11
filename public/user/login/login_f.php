@@ -29,7 +29,7 @@ function UserIDCheck($sValue, &$oStatus)
         $res->execute(array(":sUserID" => $sUserID));
         $row = $postgisObject->fetchRow($res);
     } else {
-        $sQuery = "SELECT * FROM {$sTable} WHERE screenname = :sUserID AND pw = :sPassword";
+        $sQuery = "SELECT * FROM {$sTable} WHERE (screenname = :sUserID OR email = :sUserID) AND pw = :sPassword";
         $res = $postgisObject->prepare($sQuery);
         $res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword));
         $row = $postgisObject->fetchRow($res);
@@ -53,7 +53,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
 ?>
 <div class="container">
     <div class="dialog">
-        <img src="/theme/images/MapCentia_500.png" id="logo">
+        <img src="../images/MapCentia_500.png" id="logo">
         <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Login</h3>
 

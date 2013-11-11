@@ -4,6 +4,8 @@ Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
 var App = new Ext.App({});
 var writeFiles;
+var clearTileCache;
+var onEditWMSClasses;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
@@ -702,32 +704,83 @@ $(window).load(function () {
         store.save();
     }
 
-    function onEditWMSClasses(btn, ev) {
-        var record = grid.getSelectionModel().getSelected();
+    onEditWMSClasses = function (e) {
+        var record;
+        grid.getStore().each(function (rec) {  // for each row
+            var row = rec.data; // get record
+            //console.log(row._key_)
+            if (row._key_ === e + ".the_geom") {
+                record = row;
+            }
+        });
         if (!record) {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
+        Ext.getCmp("layerStylePanel").expand(true);
+
+        var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
+
+        Ext.getCmp("layerStyleTabs").activate(0);
+        var a1 = Ext.getCmp("a1");
+        var a4 = Ext.getCmp("a4");
+        a1.remove(wmsLayer.grid);
+        a4.remove(wmsLayer.sqlForm);
+        wmsLayer.grid = null;
+        wmsLayer.sqlForm = null;
+        wmsLayer.init(record);
+        a1.add(wmsLayer.grid);
+        a4.add(wmsLayer.sqlForm);
+        a1.doLayout();
+        a4.doLayout();
+
+
+        Ext.getCmp("layerStyleTabs").activate(1);
+        var a2 = Ext.getCmp("a2");
+        a2.remove(wmsClasses.grid);
         wmsClasses.grid = null;
         wmsClasses.init(record);
-        winClasses = null;
-        winClasses = new Ext.Window({
-            title: "Edit classes '" + record.get("f_table_name") + "'",
-            modal: true,
-            layout: 'fit',
-            width: 500,
-            height: 400,
-            initCenter: false,
-            x: 50,
-            y: 100,
-            closeAction: 'close',
-            plain: true,
-            border: false,
-            items: [wmsClasses.grid]
+        a2.add(wmsClasses.grid);
+        a2.doLayout();
 
-        });
-        winClasses.show(this);
-    }
+        var a3 = Ext.getCmp("a3");
+        a3.remove(wmsClass.grid);
+        a3.doLayout();
+
+        Ext.getCmp("layerStyleTabs").activate(activeTab);
+
+
+        /*winClasses = new Ext.Window({
+         title: "Edit classes '" + record.f_table_name + "'",
+         modal: false,
+         renderTo: "mapPane",
+         layout: 'fit',
+         width: 600,
+         height: 400,
+         initCenter: false,
+         closeAction: 'close',
+         plain: true,
+         border: false,
+         items: [
+         new Ext.TabPanel({
+         activeTab: 0,
+         region: 'center',
+         items: [
+         {
+         title: 'Layer',
+         layout: 'fit',
+         items: [wmsLayer.grid]
+         },
+         {
+         title: 'Classes',
+         layout: 'fit',
+         items: [wmsClasses.grid]
+         }
+         ]
+         })]
+         });
+         winClasses.show(this);*/
+    };
 
     function onEditWMSLayer(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
@@ -750,7 +803,8 @@ $(window).load(function () {
             items: [wmsLayer.grid]
         });
         winWmsLayer.show(this);
-    };
+    }
+
     function onEditMoreSettings(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
@@ -987,7 +1041,7 @@ $(window).load(function () {
     var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
-        title: 'Layers',
+        title: 'Database',
         frame: false,
         layout: 'border',
         region: 'center',
@@ -1113,12 +1167,94 @@ $(window).load(function () {
     var tabs = new Ext.TabPanel({
         activeTab: 0,
         region: 'center',
-        items: [ct, {
-            title: 'Map',
-            html: '<iframe frameborder="0" style="width:100%;height:100%" src="/editor/' + screenName + '/' + schema + '"></iframe>'
-        }]
+        plain: true,
+        items: [
+            {
+                xtype: "panel",
+                title: 'Map',
+                layout: 'border',
+                items: [
+                    {
+                        frame: false,
+                        border: false,
+                        id: "mapPane",
+                        region: "center",
+                        html: '<iframe frameborder="0" style="width:100%;height:100%" src="/editor/' + screenName + '/' + schema + '"></iframe>'
+                    },
+                    {
+                        xtype: "panel",
+                        region: 'east',
+                        collapsible: false,
+                        collapsed: true,
+                        collapseMode: "mini",
+                        id: "layerStylePanel",
+                        width: 300,
+                        frame: false,
+                        plain: true,
+                        border: true,
+                        layoutConfig: {
+                            animate: true
+                        },
+                        items: [
+                            {
+                                xtype: "tabpanel",
+                                border: false,
+                                id: "layerStyleTabs",
+                                activeTab: 0,
+                                plain: false,
+                                items: [
+                                    {
+                                        xtype: "panel",
+                                        title: 'Layer settings',
+                                        height: 500,
+                                        defaults: {
+                                            border: false
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a1",
+                                                layout: "fit"
+                                            },
+                                            {
+                                                xtype: "panel",
+                                                id: "a4"
+
+                                            }
+                                        ]
+
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Classification',
+                                        defaults: {
+                                            height: 250,
+                                            border: false
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a2",
+                                                layout: "fit"
+                                            },
+                                            {
+                                                xtype: "panel",
+                                                id: "a3"
+
+                                            }
+                                        ]
+
+                                    }
+
+                                ]
+                            }
+                        ]
+                    }
+                ]},
+            ct
+        ]
     });
-    var viewport = new Ext.Viewport({
+    new Ext.Viewport({
         layout: 'border',
         items: [tabs]
     });
@@ -1132,6 +1268,26 @@ $(window).load(function () {
         $.ajax({
             url: '/controllers/cfgfile',
             success: function (response) {
+            }
+        });
+    };
+    clearTileCache = function (layer) {
+        $.ajax({
+            url: '/controllers/tilecache/index/' + layer,
+            async: true,
+            dataType: 'json',
+            type: 'delete',
+            success: function (data, textStatus, http) {
+                if (http.readyState == 4) {
+                    if (http.status == 200) {
+                        var response = eval('(' + http.responseText + ')');
+                        if (response.success === true) {
+                            App.setAlert(App.STATUS_NOTICE, response.message);
+                        } else {
+                            App.setAlert(App.STATUS_NOTICE, response.message);
+                        }
+                    }
+                }
             }
         });
     };

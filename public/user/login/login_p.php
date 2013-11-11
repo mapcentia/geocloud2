@@ -5,7 +5,7 @@ include '../header.php';
 include '../html_header.php';
 // Check if user is logged in - and redirect if this is not the case
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
-   die("<script>window.location='/user/login'</script>");
+    die("<script>window.location='/user/login'</script>");
 }
 ($_SESSION['zone']) ? $prefix = $_SESSION['zone'] . "." : $prefix = "";
 ?>
@@ -27,7 +27,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
             </div>
         </div>
         <div style="position: absolute; right: 5px; top: 3px">
-            <div><a href="/user/logout">Log out</a></div>
+            <div><?php echo $_SESSION['screen_name'] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;</div>
         </div>
     </div>
     <div id="db_exists_not" style="display: none">
@@ -48,7 +48,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
         <td><%= this . schema %></td>
         <td><a target="_blank"
                href="http://<?php echo $prefix . App::$param['domain'] . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
-            </a></td>
+        </a></td>
     </tr>
 </script>
 <script>
@@ -99,9 +99,8 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
                 }
             }
         });
-
     });
 </script>
-<?php include_once("../../../app/conf/intercom.js.inc");?>
+<?php include_once("../../../app/conf/intercom.js.inc"); ?>
 </body>
 </html>

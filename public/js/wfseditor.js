@@ -355,7 +355,9 @@ $(window).load(function () {
             listeners: {
                 click: {
                     fn: function (e) {
+
                         if (e.lastChild === null && e.parentNode.id !== "baselayers") {
+                            window.parent.onEditWMSClasses(e.id);
                             Ext.getCmp('editlayerbutton').setDisabled(false);
                         } else {
                             Ext.getCmp('editlayerbutton').setDisabled(true);
@@ -509,7 +511,7 @@ $(window).load(function () {
             new Ext.Panel({
                 frame: false,
                 region: "west",
-                collapsible: true,
+                collapsible: false,
                 layout: 'fit',
                 width: 200,
                 items: [tree]

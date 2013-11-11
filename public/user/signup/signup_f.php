@@ -1,18 +1,21 @@
 <?php
-include '../header.php';
-include ('../vdaemon/vdaemon.php');
-include '../html_header.php';
+include('../header.php');
+include('../vdaemon/vdaemon.php');
+include('../html_header.php');
 ?>
     <div class="container">
         <div class="dialog">
-            <img src="/theme/images/MapCentia_500.png" id="logo">
+            <img src="../images/MapCentia_500.png" id="logo">
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
                     <h3>Sign up for GeoCloud</h3>
                     <h5>Start with a free acount. No credit card needed.</h5>
 
                     <div class="controls first">
-                        <vllabel validators="UserID,UserIDExist" errclass="error"
+                        <div style="height: 2em; float: right">
+                            <vlsummary class="error" headertext="" displaymode="bulletlist">
+                        </div>
+                        <vllabel validators="UserID" errclass="error"
                                  errtext="<span class='label label-important'>User name required</span>" for="UserID"
                                  cerrclass="controlerror">
                             User name
@@ -88,9 +91,6 @@ include '../html_header.php';
 
                     </div>
 
-                </div>
-                <div style="height: 2em; float: right">
-                    <vlsummary class="error" headertext="" displaymode="bulletlist">
                 </div>
             </form>
         </div>

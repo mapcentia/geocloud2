@@ -48,7 +48,16 @@ class Classification extends \app\inc\Model
             $arr = $classes['data'][$id];
             unset($arr['id']);
             //print_r($arr);
-            $props = array("name" => "New style", "expression" => "", "label" => false, "color" => "#FF0000", "outlinecolor" => "#FF0000", "symbol" => "", "size" => "2", "width" => "1");
+            $props = array(
+                "name" => "New style",
+                "expression" => "",
+                "label" => false,
+                "force_label" => false,
+                "color" => "#FF0000",
+                "outlinecolor" => "#FF0000",
+                "symbol" => "",
+                "size" => "2",
+                "width" => "1");
             foreach ($classes['data'][$id] as $key => $value) {
 
                 foreach ($props as $key2 => $value2) {
@@ -117,7 +126,9 @@ class Classification extends \app\inc\Model
         $response = $this->store(json_encode($classes['data']));
         return $response;
     }
-    static function createClass($type){
+
+    static function createClass($type)
+    {
         $symbol = "";
         $size = "2";
         $width = "2";
@@ -127,7 +138,7 @@ class Classification extends \app\inc\Model
             $size = "10";
             $width = "1";
         }
-        $jsonStr = '{"name":"New style","expression":"","label":false,"label_size":"","color":"'.$color.'","outlinecolor":"#000000","symbol":"'.$symbol.'","size":"'.$size.'","width":"'.$width.'","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
+        $jsonStr = '{"name":"New style","expression":"","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
         return json_decode($jsonStr);
     }
 
