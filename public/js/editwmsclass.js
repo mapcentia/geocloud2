@@ -201,6 +201,9 @@ wmsClass.init = function (id) {
                 type: 'boolean'
             },
             {
+                name: 'opacity'
+            },
+            {
                 name: 'label_size'
             },
             // Base style start
@@ -297,6 +300,11 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using

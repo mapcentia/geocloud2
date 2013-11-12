@@ -358,6 +358,9 @@ class Mapfile extends \app\inc\Controller
                     #SYMBOL
                     <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
 
+                    #OPACITY
+                    <?php if ($class['opacity']) echo "OPACITY " . $class['opacity'] . "\n"; ?>
+
                     #WIDTH
                     <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
 
