@@ -297,7 +297,7 @@ $(window).load(function () {
                                 wrapDateLine: false,
                                 tileCached: true,
                                 displayInLayerSwitcher: true,
-                                name: response.data[u].f_table_name
+                                name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                             });
                         }
                         for (var i = 0; i < arr.length; ++i) {

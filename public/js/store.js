@@ -1179,7 +1179,7 @@ $(window).load(function () {
                         border: false,
                         id: "mapPane",
                         region: "center",
-                        html: '<iframe frameborder="0" style="width:100%;height:100%" src="/editor/' + screenName + '/' + schema + '"></iframe>'
+                        html: '<iframe frameborder="0" id="wfseditor" style="width:100%;height:100%" src="/editor/' + screenName + '/' + schema + '"></iframe>'
                     },
                     {
                         xtype: "panel",
@@ -1277,16 +1277,25 @@ $(window).load(function () {
             async: true,
             dataType: 'json',
             type: 'delete',
-            success: function (data, textStatus, http) {
-                if (http.readyState == 4) {
-                    if (http.status == 200) {
-                        var response = eval('(' + http.responseText + ')');
-                        if (response.success === true) {
-                            App.setAlert(App.STATUS_NOTICE, response.message);
-                        } else {
-                            App.setAlert(App.STATUS_NOTICE, response.message);
-                        }
-                    }
+            success: function (response) {
+                console.log(layer)
+                if (response.success === true) {
+                    App.setAlert(App.STATUS_NOTICE, response.message);
+                    var l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
+                    l.clearGrid();
+                    var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                    l.url = l.url.replace(l.url.split("?")[1],"");
+                    l.url = l.url + n;
+                    l.redraw();
+
+
+
+                }
+                else {
+                    App.setAlert(App.STATUS_NOTICE, response.message);
                 }
             }
         });

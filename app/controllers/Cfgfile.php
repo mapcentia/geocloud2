@@ -1,7 +1,7 @@
 <?php
 namespace app\controllers;
 
-use app\conf\App;
+use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Model;
 use \app\inc\Response;

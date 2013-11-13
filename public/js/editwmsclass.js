@@ -363,7 +363,7 @@ wmsClass.init = function (id) {
                         callback: function (options, success, http) {
                             var response = eval('(' + http.responseText + ')');
                             wmsClasses.store.load();
-                            clearTileCache(wmsClasses.table);
+                            clearTileCache(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
                             wmsClasses.onSubmit(response);
                         }
                     };

@@ -472,8 +472,7 @@ var mygeocloud_ol = (function () {
             return layersArr;
         };
         this.createTileLayer = function (layer, defaults) {
-            var parts = [];
-            parts = layer.split(".");
+            var parts = layer.split(".");
             if (!defaults.tileCached) {
                 var url = host + "/wms/" + this.db + "/" + parts[0] + "/?";
             } else {
