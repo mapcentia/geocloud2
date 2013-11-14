@@ -5,7 +5,7 @@ class Input
 {
     public static function getPath()
     {
-        $request = explode("/",strtok($_SERVER["REQUEST_URI"], '?'));
+        $request = explode("/", strtok($_SERVER["REQUEST_URI"], '?'));
         $obj = new GetPart($request);
         return $obj;
     }
@@ -41,7 +41,6 @@ class Input
             else
                 return $query;
         }
-
     }
 
     static function parseQueryString($str)

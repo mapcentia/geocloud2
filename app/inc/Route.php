@@ -1,8 +1,6 @@
 <?php
 namespace app\inc;
 
-use \app\inc\Input;
-
 class Route
 {
     static function add($uri, $func = "")

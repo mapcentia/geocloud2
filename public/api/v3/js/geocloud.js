@@ -158,6 +158,7 @@ var geocloud = (function () {
         this.init();
         this.id = this.defaults.id;
         this.sql = this.defaults.sql;
+        this.db = this.defaults.db;
         this.load = function (doNotShowAlertOnError) {
             var url = host.replace("cdn.", "");
             try {
@@ -175,7 +176,7 @@ var geocloud = (function () {
                 dataType: 'jsonp',
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection,
                 jsonp: 'jsonp_callback',
-                url: url + '/api/v1/sql/' + this.defaults.db,
+                url: url + '/api/v1/sql/' + this.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -226,7 +227,7 @@ var geocloud = (function () {
                 dataType: 'jsonp',
                 data: 'search=' + encodeURIComponent(q),
                 jsonp: 'jsonp_callback',
-                url: host + '/api/v1/twitter/' + this.defaults.db,
+                url: host + '/api/v1/twitter/' + this.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -533,11 +534,7 @@ var geocloud = (function () {
                 this.map = new L.map(defaults.el);
                 lControl = L.control.layers([], [])
                 this.map.addControl(lControl);
-                this.map.attributionControl.setPrefix('');
-                this.map.addControl(new L.Control.Attribution(
-                    {
-                        prefix: "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a>"
-                    }))
+                this.map.attributionControl.setPrefix("Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> ");
                 break;
         }
         var _map = this.map;
