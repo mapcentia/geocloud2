@@ -26,14 +26,15 @@ CREATE TABLE IF NOT EXISTS tweets (
     source character varying(255),
     user_name character varying(255),
     user_screen_name character varying(255),
-    user_id integer,
+    user_id bigint,
     place_id character varying(255),
     place_type character varying(255),
     place_full_name character varying(255),
     place_country_code character varying(255),
     place_country character varying(255),
     retweet_count integer,
-    favorite_count integer
+    favorite_count integer,
+    entities text
 );
 
 

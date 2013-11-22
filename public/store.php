@@ -17,11 +17,13 @@ include("html_header.php");
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
-
+<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
+<link rel="stylesheet" type="text/css" href="/css/legend.css"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/RowEditor.css"/>
 <link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
 
 <!-- overrides to base library -->
@@ -34,22 +36,18 @@ include("html_header.php");
 <script type="text/javascript" src="/js/plupload/js/plupload.full.js"></script>
 <script type="text/javascript"
         src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.js"></script>
-
-<style type="text/css">
-    .upload-icon {
-        background: url('/js/ext/examples/shared/icons/fam/image_add.png') no-repeat 0 0 !important;
-    }
-
-    #fi-button-msg {
-        border: 2px solid #ccc;
-        padding: 5px 10px;
-        background: #eee;
-        margin: 5px;
-        float: left;
-    }
-
+<style>
     .btn-gc {
         margin-top: -1px !important;
+    }
+
+    .x-box-item {
+        font-family: arial, tahoma, helvetica, sans-serif;
+        font-size: 11px;
+        font-style: normal;
+        font-variant: normal;
+        font-weight: normal;
+        vertical-align: middle;
     }
 </style>
 </head>

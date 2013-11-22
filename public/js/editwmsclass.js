@@ -192,20 +192,17 @@ wmsClass.init = function (id) {
             {
                 name: 'expression'
             },
-            {
-                name: 'label',
-                type: 'boolean'
-            },
-            {
-                name: 'force_label',
-                type: 'boolean'
-            },
+
             {
                 name: 'opacity'
             },
             {
-                name: 'label_size'
+                name: 'minscaledenom'
             },
+            {
+                name: 'maxscaledenom'
+            },
+
             // Base style start
             {
                 name: 'color'
@@ -221,6 +218,47 @@ wmsClass.init = function (id) {
             },
             {
                 name: 'width'
+            },
+            {
+                name: 'label',
+                type: 'boolean'
+            },
+            // Label start
+            {
+                name: 'label_force',
+                type: 'boolean'
+            },
+            {
+                name: 'label_minscaledenom'
+            },
+            {
+                name: 'label_maxscaledenom'
+            },
+            {
+                name: 'label_position'
+            },
+            {
+                name: 'label_size'
+            },
+            {
+                name: 'label_color'
+            },
+            {
+                name: 'label_outlinecolor'
+            },
+            // Leader start
+            {
+                name: 'leader',
+                type: 'boolean'
+            },
+            {
+                name: 'leader_gridstep'
+            },
+            {
+                name: 'leader_maxdistance'
+            },
+            {
+                name: 'leader_color'
             },
             // Overlay style start
             {
@@ -257,10 +295,15 @@ wmsClass.init = function (id) {
             }
         }
     });
+    var numberEditor = new Ext.form.NumberField({
+        decimalPrecision: 0,
+        decimalSeparator: '¤'// Some strange char
+        // nobody is using
+    });
     wmsClass.grid = new Ext.grid.PropertyGrid({
         id: 'propGrid',
         //autoHeight: true,
-        height: 200,
+        height: 350,
         modal: false,
         region: 'center',
         border: false,
@@ -269,10 +312,23 @@ wmsClass.init = function (id) {
         },
         propertyNames: {
             name: 'Name',
-            label_size: 'Label size',
-            label: 'Use label',
-            force_label: 'Force labels',
+            label_size: 'Label: size',
+            label: 'Label: on',
+            label_force: 'Label: force',
             expression: 'Expression',
+            opacity: 'Opacity',
+            minscaledenom: 'min scale',
+            maxscaledenom: 'max scale',
+            label_minscaledenom: 'Label: min. scale',
+            label_maxscaledenom: 'Label: max scale',
+            label_position: 'Label: position',
+            label_color: 'Label: color',
+            label_outlinecolor: 'Label: outline color',
+
+            leader: 'Leader: on',
+            leader_gridstep: 'Leader: gridstep',
+            leader_maxdistance: 'Leader: maxdistance',
+            leader_color: 'Leader: color',
 
             outlinecolor: 'Outline color',
             symbol: 'Symbol',
@@ -280,11 +336,11 @@ wmsClass.init = function (id) {
             size: 'Symbol size',
             width: 'Line width',
 
-            overlaywidth: 'Overlay line width',
-            overlayoutlinecolor: 'Overlay outline color',
-            overlaysymbol: 'Overlay symbol',
-            overlaycolor: 'Overlay color',
-            overlaysize: 'Overlay symbol size'
+            overlaywidth: 'Overlay: line width',
+            overlayoutlinecolor: 'Overlay: outline color',
+            overlaysymbol: 'Overlay: symbol',
+            overlaycolor: 'Overlay: color',
+            overlaysize: 'Overlay: symbol size'
         },
         customEditors: {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
@@ -309,11 +365,49 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
+            'minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
             'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsClasses.fieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
+            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'label_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
+                editable: false,
+                triggerAction: 'all'
+            }), {}),
+            'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({

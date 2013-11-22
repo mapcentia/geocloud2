@@ -191,7 +191,11 @@ wmsLayer.init = function (record) {
         bodyStyle: 'padding: 10px 5px 0px 5px;',
         items: [
             {
-                html: "as"
+                html: '<table>' +
+                    '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
+                    '</table>',
+                border: false,
+                bodyStyle: 'padding-left: 3px'
             },
             {
                 name: '_key_',
@@ -202,12 +206,11 @@ wmsLayer.init = function (record) {
             {
                 xtype: 'textarea',
                 width: '95%',
-                height: 150,
-                //fieldLabel: 'Local data source',
+                height: 100,
                 labelAlign: 'top',
                 name: 'data',
                 value: record.data
-
+//                emptyText: 'dsdsd'
             }
         ],
         buttons: [

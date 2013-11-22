@@ -15,10 +15,9 @@ MapCentia = (function () {
         cloud.setBaseLayer(str);
     };
     var addLegend = function () {
-        var layers = cloud.getVisibleLayers();
-        var param = 'layers=' + layers + '&amp;type=text&amp;lan=';
+        var param = 'l=' + cloud.getVisibleLayers();
         $.ajax({
-            url: hostname + '/apps/viewer/servers/legend/' + db + '?' + param,
+            url: hostname + '/api/v1/legend/html/' + db + '/' + schema + '?' + param,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
@@ -50,11 +49,14 @@ MapCentia = (function () {
         mapQuestOSM = cloud.addMapQuestOSM();
         mapQuestAerial = cloud.addMapQuestAerial();
         stamenToner = cloud.addStamenToner();
-        GNORMAL = cloud.addGoogleStreets();
-        GHYBRID = cloud.addGoogleHybrid();
-        GSATELLITE = cloud.addGoogleSatellite();
-        GTERRAIN = cloud.addGoogleTerrain();
+        /*GNORMAL = cloud.addGoogleStreets();
+         GHYBRID = cloud.addGoogleHybrid();
+         GSATELLITE = cloud.addGoogleSatellite();
+         GTERRAIN = cloud.addGoogleTerrain();*/
         setBaseLayer("osm");
+
+        /*cloud.addBaseLayer(geocloud.OSM);
+         cloud.setBaseLayer(geocloud.OSM);*/
 
         // we add two click controllers for desktop and handheld
         //cloud.map.addControl(clickPopUp = new popUpClickController);
@@ -253,7 +255,7 @@ MapCentia = (function () {
                     $.each(layers, function (index, value) {
                         var isEmpty = true;
                         var srid = metaDataKeys[value.split(".")[1]].srid;
-                        var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title  !== "") ? metaDataKeys[value.split(".")[1]].f_table_title  : metaDataKeys[value.split(".")[1]].f_table_name ;
+                        var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
                             id: index,
@@ -287,9 +289,9 @@ MapCentia = (function () {
                                         console.log(out);
 
                                         $.each(out, function (name, property) {
-                                            $("#_" +index + " table").append('<tr><td>' +  property[2] + '</td><td>' + property[3] + '</td></tr>');
+                                            $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
                                         });
-                                        $("#_" +index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
+                                        $("#_" + index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
                                         out = [];
                                         $('#info-tab a:first').tab('show');
 

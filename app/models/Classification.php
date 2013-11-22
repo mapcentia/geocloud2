@@ -49,7 +49,7 @@ class Classification extends \app\inc\Model
             unset($arr['id']);
             //print_r($arr);
             $props = array(
-                "name" => "New style",
+                "name" => "Unnamed Class",
                 "expression" => "",
                 "label" => false,
                 "force_label" => false,
@@ -99,7 +99,7 @@ class Classification extends \app\inc\Model
     public function insert()
     {
         $classes = $this->getAll();
-        $classes['data'][] = array("name" => "New style");
+        $classes['data'][] = array("name" => "Unnamed class");
         $response = $this->store(json_encode($classes['data']));
         return $response;
     }

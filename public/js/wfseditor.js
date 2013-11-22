@@ -43,7 +43,7 @@ function startWfsEdition(layerName) {
     } catch (e) {
         //alert(e.message);
     }
-    var south = viewport.getComponent(1);
+    var south = Ext.getCmp("attrtable");
     south.expand(true);
     south.remove(grid);
 
@@ -118,7 +118,7 @@ function startWfsEdition(layerName) {
 
     layer.events.register("loadend", layer, function () {
         var count = layer.features.length;
-        App.setAlert(App.STATUS_NOTICE, count + " features loaded");
+        window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
     });
     layer.events.register("loadstart", layer, function () {
         //App.setAlert(App.STATUS_OK, "Start loading...");
@@ -184,7 +184,6 @@ function startWfsEdition(layerName) {
     });
     grid = new Ext.grid.EditorGridPanel({
         id: "gridpanel",
-        // height:100,
         region: "center",
         disabled: false,
         viewConfig: {
@@ -246,6 +245,9 @@ function startWfsEdition(layerName) {
 
 };
 $(window).load(function () {
+    $("#upload").click(function () {
+        window.parent.onAdd();
+    });
     var cloud = new mygeocloud_ol.map(null, screenName);
     map = cloud.map;
 
@@ -278,74 +280,74 @@ $(window).load(function () {
                 if (http.readyState == 4) {
                     if (http.status == 200) {
                         var response = eval('(' + http.responseText + ')');
-                        //console.log(response);
-                        for (var i = 0; i < response.data.length; ++i) {
-                            groups[i] = response.data[i].layergroup;
-                        }
-                        var arr = array_unique(groups);
-                        for (var u = 0; u < response.data.length; ++u) {
-                            //console.log(response.data[u].baselayer);
-                            if (response.data[u].baselayer) {
-                                var isBaseLayer = true;
-                            } else {
-                                var isBaseLayer = false;
+                        if (response.data !== undefined) {
+                            //console.log(response);
+                            for (var i = 0; i < response.data.length; ++i) {
+                                groups[i] = response.data[i].layergroup;
                             }
-                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                                singleTile: false,
-                                isBaseLayer: isBaseLayer,
-                                visibility: false,
-                                wrapDateLine: false,
-                                tileCached: true,
-                                displayInLayerSwitcher: true,
-                                name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
-                            });
-                        }
-                        for (var i = 0; i < arr.length; ++i) {
-                            var l = [];
+                            var arr = array_unique(groups);
                             for (var u = 0; u < response.data.length; ++u) {
                                 //console.log(response.data[u].baselayer);
-                                //console.log(response.data[u].f_table_title);
-                                if (response.data[u].layergroup == arr[i]) {
-                                    l.push({
-                                        text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                        id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
-                                        leaf: true,
-                                        checked: false
-                                    });
+                                if (response.data[u].baselayer) {
+                                    var isBaseLayer = true;
+                                } else {
+                                    var isBaseLayer = false;
                                 }
+                                layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                                    singleTile: false,
+                                    isBaseLayer: isBaseLayer,
+                                    visibility: false,
+                                    wrapDateLine: false,
+                                    tileCached: true,
+                                    displayInLayerSwitcher: true,
+                                    name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                                });
                             }
-                            treeConfig.push({
-                                //nodeType: "gx_layer",
-                                text: arr[i],
-                                isLeaf: false,
-                                //id: arr[i],
-                                expanded: true,
-                                children: l
-                            });
+                            for (var i = 0; i < arr.length; ++i) {
+                                var l = [];
+                                for (var u = 0; u < response.data.length; ++u) {
+                                    if (response.data[u].layergroup == arr[i]) {
+                                        l.push({
+                                            text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
+                                            id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                            leaf: true,
+                                            checked: false
+                                        });
+                                    }
+                                }
+                                treeConfig.push({
+                                    //nodeType: "gx_layer",
+                                    text: arr[i],
+                                    isLeaf: false,
+                                    //id: arr[i],
+                                    expanded: true,
+                                    children: l
+                                });
+                            }
                         }
                     }
                 }
             }
         });
-        treeConfig = new OpenLayers.Format.JSON().write(treeConfig, true);
+
+        var root = {
+            text: 'Ext JS',
+            children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
+            id: 'source'
+        };
+
+        //if (typeof config === "object") root = config.initialConfig.root;
         // create the tree with the configuration from above
         tree = new Ext.tree.TreePanel({
-            id: "martin",
-            border: true,
+            id: "tree",
+            border: false,
+            frame: false,
             region: "center",
             width: 200,
             split: true,
-            //collapsible: true,
-            //collapseMode: "mini",
             frame: false,
-            border: false,
             autoScroll: true,
-            root: {
-                text: 'Ext JS',
-                children: Ext.decode(treeConfig),
-                id: 'source'
-
-            },
+            root: root,
             loader: new Ext.tree.TreeLoader({
                 applyLoader: false,
                 uiProviders: {
@@ -379,23 +381,20 @@ $(window).load(function () {
         });
     };
     reLoadTree = function () {
-
         var num = cloud.map.getNumLayers();
         for (var j = 1; j < num; j++) {
             if (cloud.map.layers[j].isBaseLayer === false) {
                 cloud.map.layers[j].setVisibility(false);
             }
         }
-
-        var west = viewport.getComponent(2);
+        var west = Ext.getCmp("treepanel");
         west.remove(tree);
         tree = null;
         loadTree();
-        App.setAlert(App.STATUS_NOTICE, "Layer tree reloaded");
+        window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree reloaded");
         west.add(tree);
         west.doLayout();
-
-    }
+    };
     loadTree();
     wfsTools = [
         {
@@ -490,26 +489,41 @@ $(window).load(function () {
         items: [
             {
                 region: "center",
-                id: "mappanel",
-                xtype: "gx_mappanel",
-                map: map,
-                zoom: 5,
-                split: true,
-                tbar: wfsTools
-            },
-            {
-                region: "south",
-                title: "Attribute table",
-                split: true,
-                frame: false,
-                layout: 'fit',
-                height: 200,
-                collapsible: true,
-                collapsed: true,
-                contentEl: "instructions"
+                layout: "fit",
+                border: false,
+                items: [
+                    new Ext.Panel({
+                        layout: "border",
+                        border: false,
+                        items: [
+                            {
+                                region: "center",
+                                id: "mappanel",
+                                xtype: "gx_mappanel",
+                                map: map,
+                                zoom: 5,
+                                split: true,
+                                tbar: wfsTools,
+                            },
+                            {
+                                region: "south",
+                                id: "attrtable",
+                                title: "Attribute table",
+                                split: true,
+                                frame: false,
+                                layout: 'fit',
+                                height: 200,
+                                collapsible: true,
+                                collapsed: true,
+                                contentEl: "instructions"
+                            }
+                        ]
+                    })
+                ]
             },
             new Ext.Panel({
-                frame: false,
+                border: false,
+                id: "treepanel",
                 region: "west",
                 collapsible: false,
                 layout: 'fit',
@@ -535,12 +549,11 @@ function stopEdit() {
         layer.removeAllFeatures();
         map.removeLayer(layer);
     } catch (e) {
-        //alert(e.message);
+        //console.log(e.message);
     }
-    var south = viewport.getComponent(1);
-    //south.remove(grid);
-    south.collapse(true);
+    Ext.getCmp("attrtable").collapse(true);
 }
+
 function onInsert() {
     var pos = grid.getStore().getCount() - 1;
     grid.selModel.selectRow(pos);
@@ -643,15 +656,15 @@ saveStrategy = new OpenLayers.Strategy.Save({
             var message = "";
             if (inserted) {
                 message = "<p>Inserted: " + inserted + "</p>";
-                App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
             if (updated) {
                 message = "<p>Updated: " + updated + "</p>";
-                App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
             if (deleted) {
                 message = "<p>Deleted: " + deleted + "</p>";
-                App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
         }
 

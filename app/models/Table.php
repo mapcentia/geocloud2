@@ -107,7 +107,10 @@ class Table extends Model
             }
             if ($createKeyFrom) {
                 $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+                $arr = $this->array_push_assoc($arr, "pkey", $this->primeryKey['attname']);
+
             }
+
             $response['data'][] = $arr;
         }
         return $response;
@@ -233,7 +236,6 @@ class Table extends Model
         } else {
             $multi = false;
         }
-        //print_r($this->metaData);
         foreach ($this->metaData as $key => $value) {
             if ($value['type'] != "geometry" && $key != $this->primeryKey['attname']) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
@@ -242,15 +244,12 @@ class Table extends Model
         }
         if ($createKeyFrom) {
             $fieldsForStore[] = array("name" => "_key_", "type" => "string");
+            $fieldsForStore[] = array("name" => "pkey", "type" => "string");
         }
         $response["forStore"] = $fieldsForStore;
         $response["forGrid"] = $columnsForGrid;
         $response["type"] = $type;
         $response["multi"] = $multi;
-        /*ob_start();
-         print_r($this->metaData);
-         $output = ob_get_clean();
-         fb($output);*/
         return $response;
     }
 

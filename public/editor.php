@@ -92,6 +92,30 @@ include("html_header.php");
     .btn-gc {
         margin-top: -1px !important;
     }
+
+    #upload a {
+        z-index: 2000;
+        position: absolute;
+        bottom: 20px;
+        display: block;
+        color: #000000;
+        text-decoration: none;
+
+    }
+
+    #upload img {
+        position: relative;
+        width: 100px;
+        left: 40px;
+    }
+
+    #upload div {
+        left: 10px;
+        position: relative;
+        font-family: verdana, arial, sans-serif;
+        font-size: 7.5pt;
+
+    }
 </style>
 </head>
 <body>
@@ -106,6 +130,12 @@ include("html_header.php");
     <p style="padding: 10px">
         To load tiles check the box beside the layer name.
     </p>
+</div>
+<div id="upload">
+    <a href="#">
+        <img src="/assets/images/upload_black.png">
+        <div>.shp .geojson .gml .kml .tab .mif</div>
+    </a>
 </div>
 <?php
 include("html_footer.php");

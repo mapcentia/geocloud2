@@ -5,7 +5,7 @@ include('../html_header.php');
 ?>
 <div class="container">
     <div class="dialog">
-        <img src="../images/MapCentia_500.png" id="logo">
+        <img src="../assets/images/MapCentia_500.png" id="logo">
 
         <form action="/user/edit/p" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Change password</h3>

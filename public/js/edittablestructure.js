@@ -117,15 +117,12 @@ tableStructure.init = function (record, screenName) {
     tableStructure.grid = new Ext.grid.EditorGridPanel({
         iconCls: 'silk-grid',
         store: tableStructure.store,
-        // autoExpandColumn: "desc",
-        height: 345,
-        // width: 750,
         ddGroup: 'mygridDD',
         enableDragDrop: false,
         viewConfig: {
             forceFit: true
         },
-        region: 'north',
+        border: false,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: true
         }),
@@ -223,7 +220,6 @@ tableStructure.init = function (record, screenName) {
             ]
         }),
         listeners: {
-
             "render": {
                 scope: this,
                 fn: function (grid) {
@@ -274,8 +270,79 @@ tableStructure.init = function (record, screenName) {
         },
         tbar: [
             {
+                xtype: 'form',
+                layout: 'hbox',
+                width: 300,
+                id: 'addColumnForm',
+                items: [
+                    {
+                        xtype: 'textfield',
+                        flex: 1,
+                        name: 'column',
+                        emptyText: 'New column name',
+                        allowBlank: false
+                    },
+                    {
+                        width: 150,
+                        xtype: 'combo',
+                        mode: 'local',
+                        triggerAction: 'all',
+                        forceSelection: true,
+                        editable: false,
+                        emptyText: 'New column type',
+                        name: 'type',
+                        displayField: 'name',
+                        valueField: 'value',
+                        allowBlank: false,
+                        store: new Ext.data.JsonStore({
+                            fields: ['name', 'value'],
+                            data: [
+                                {
+                                    name: 'String',
+                                    value: 'string'
+                                },
+                                {
+                                    name: 'Integer',
+                                    value: 'int'
+                                },
+                                {
+                                    name: 'Decimal',
+                                    value: 'float'
+                                },
+                                {
+                                    name: 'Text',
+                                    value: 'text'
+                                },
+                                {
+                                    name: 'Geometry',
+                                    value: 'geometry'
+                                }
+                            ]
+                        })
+                    }
+                ]
+            },
+            {
+                text: '<i class="icon-plus btn-gc"></i> Add new column',
+                handler: function () {
+                    var form = Ext.getCmp("addColumnForm");
+                    if (form.form.isValid()) {
+                        form.form.submit({
+                            url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name"),
+                            submitEmptyText: false,
+                            success: tableStructure.onSubmit,
+                            failure: tableStructure.onSubmit
+                        });
+                    } else {
+                        var s = '';
+                        Ext.iterate(form.form.getValues(), function (key, value) {
+                            s += String.format("{0} = {1}<br />", key, value);
+                        }, this);
+                    }
+                }
+            },
+            {
                 text: '<i class="icon-trash btn-gc"></i> Delete column',
-                //iconCls : 'silk-delete',
                 handler: tableStructure.onDelete
             }
         ]
@@ -297,8 +364,8 @@ tableStructure.onDelete = function () {
         });
 };
 tableStructure.onAdd = function (btn, ev) {
-    var field = tableStructure.grid.getStore().recordType;
-    var u = new field({
+    var field = tableStructure.grid.getStore().recordType,
+        u = new field({
         column: "New_field",
         type: "string"
     });
@@ -310,5 +377,21 @@ tableStructure.onSave = function () {
 tableStructure.onWrite = function (store, action, result, transaction, rs) {
     if (transaction.success) {
         tableStructure.store.load();
+    }
+};
+tableStructure.onSubmit = function (form, action) {
+    var result = action.result;
+    if (result.success) {
+        tableStructure.store.load();
+        form.reset();
+    } else {
+        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
+        Ext.MessageBox.show({
+            title: 'Failure',
+            msg: message,
+            buttons: Ext.MessageBox.OK,
+            width: 300,
+            height: 300
+        });
     }
 };

@@ -22,7 +22,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'></div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml"], geoType, srs;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif"], geoType, srs;
             $("#shape_uploader").pluploadQueue({
                 // General settings
                 runtimes: 'html5,html4',
@@ -40,11 +40,11 @@ addShape.init = function () {
                                 dataType: 'json',
                                 type: 'GET',
                                 success: function (response, textStatus, http) {
-                                    store.load();
                                     if (response.success) {
-                                        store.load();
                                         App.setAlert(App.STATUS_NOTICE, response.message);
                                         writeFiles();
+                                        document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                        store.load();
                                     } else {
                                         Ext.MessageBox.alert('Failure', response.message);
                                     }
@@ -212,7 +212,6 @@ addShape.init = function () {
         if (result.success) {
             store.load();
             App.setAlert(App.STATUS_NOTICE, result.message);
-            //addShape.form.reset();
         } else {
             Ext.MessageBox.alert('Failure', result.message);
         }

@@ -16,7 +16,7 @@ class Layer extends \app\inc\Controller
 
     public function get_records()
     {
-        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "'"));
+        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "' ORDER BY sort_id"));
     }
 
     public function get_groups()

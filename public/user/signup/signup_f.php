@@ -5,7 +5,7 @@ include('../html_header.php');
 ?>
     <div class="container">
         <div class="dialog">
-            <img src="../images/MapCentia_500.png" id="logo">
+            <img src="../assets/images/MapCentia_500.png" id="logo">
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
                     <h3>Sign up for GeoCloud</h3>

@@ -5,7 +5,10 @@ Ext.QuickTips.init();
 var App = new Ext.App({});
 var writeFiles;
 var clearTileCache;
+var updateLegend;
+var activeLayer;
 var onEditWMSClasses;
+var onAdd;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
@@ -131,13 +134,14 @@ $(window).load(function () {
     schemasStore.load();
 
     // create a grid to display records from the store
+    var editor = new Ext.ux.grid.RowEditor();
     var grid = new Ext.grid.EditorGridPanel({
-        //title: "Layers in your geocloud",
+        //plugins: [editor],
         store: store,
         autoExpandColumn: "desc",
-        height: 400,
+        height: 300,
         split: true,
-        region: 'center',
+        region: 'north',
         frame: false,
         border: false,
         sm: new Ext.grid.RowSelectionModel({
@@ -222,12 +226,6 @@ $(window).load(function () {
                     })
                 },
                 {
-                    xtype: 'checkcolumn',
-                    header: 'Editable',
-                    dataIndex: 'editable',
-                    width: 55
-                },
-                {
                     header: 'Authentication',
                     dataIndex: 'authentication',
                     width: 120,
@@ -251,8 +249,19 @@ $(window).load(function () {
                     }
                 },
                 {
+                    xtype: 'booleancolumn',
+                    header: 'Editable',
+                    dataIndex: 'editable',
+                    width: 50,
+                    trueText: 'Yes',
+                    falseText: 'No',
+                    align: 'center',
+                    editor: {
+                        xtype: 'checkbox'
+                    }
+                },
+                {
                     header: 'Tile cache',
-                    dataIndex: 'tilecache',
                     editable: false,
                     listeners: {
                         click: function () {
@@ -295,47 +304,16 @@ $(window).load(function () {
         }),
         tbar: [
             {
-                text: '<i class="icon-wrench btn-gc"></i> Layer settings',
-                //iconCls : 'silk-layers', // <-- icon
-                menu: new Ext.menu.Menu({
-                    id: 'mainMenu',
-                    style: {
-                        overflow: 'visible' // For the Combo popup
-                    },
-                    items: [
-                        {
-                            text: 'Settings',
-                            iconCls: 'icon-edit',
-                            handler: onEditWMSLayer
-                        },
-                        {
-                            text: 'Styles',
-                            iconCls: 'icon-map-marker',
-                            handler: onEditWMSClasses
-                        },
-                        {
-                            text: 'Table structure',
-                            iconCls: 'icon-th',
-                            handler: onEdit
-                        },
-                        {
-                            text: 'CartoMobile',
-                            iconCls: 'icon-camera',
-                            handler: onEditCartomobile
-                        },
-                        {
-                            text: 'Advanced',
-                            iconCls: 'icon-cog',
-                            handler: onEditMoreSettings
-                        }
-                    ]
-                })
+                text: '<i class="icon-camera btn-gc""></i> CartoMobile',
+                handler: onEditCartomobile
             },
-            '-',
             {
                 text: '<i class="icon-lock btn-gc""></i> Authentication',
-                //iconCls : 'icon-search',
                 handler: onGlobalSettings
+            },
+            {
+                text: '<i class="icon-cog btn-gc""></i> Advanced',
+                handler: onEditMoreSettings
             },
             '->',
             {
@@ -370,7 +348,9 @@ $(window).load(function () {
             '-',
             {
                 text: '<i class="icon-plus btn-gc"></i> New layer',
-                handler: onAdd
+                handler: function () {
+                    onAdd();
+                }
             },
             '-',
             {
@@ -398,7 +378,7 @@ $(window).load(function () {
             }
         ],
         listeners: {
-            // rowdblclick: mapPreview
+
         }
     });
     Ext.getCmp("schemabox").on('select', function (e) {
@@ -420,8 +400,9 @@ $(window).load(function () {
         });
     }
 
-    function onAdd(btn, ev) {
+    onAdd = function (btn, ev) {
         winAdd = null;
+        addShape.init();
         var p = new Ext.Panel({
             id: "uploadpanel",
             frame: false,
@@ -432,6 +413,13 @@ $(window).load(function () {
                 region: "center"
             })]
         });
+        var add = function () {
+            addShape.init();
+            var c = p.getComponent(0);
+            c.remove(0);
+            c.add(addShape.form);
+            c.doLayout();
+        };
         winAdd = new Ext.Window({
             title: 'Add new layer',
             layout: 'fit',
@@ -443,6 +431,12 @@ $(window).load(function () {
             items: [p],
             tbar: [
                 {
+                    text: 'Upload files',
+                    id: 'addBtn',
+                    handler: add
+                },
+                '-',
+                {
                     text: 'Blank layer',
                     handler: function () {
                         addScratch.init();
@@ -451,24 +445,12 @@ $(window).load(function () {
                         c.add(addScratch.form);
                         c.doLayout();
                     }
-                },
-                '-',
-                {
-                    text: 'Upload files',
-                    handler: function () {
-                        addShape.init();
-                        var c = p.getComponent(0);
-                        c.remove(0);
-                        c.add(addShape.form);
-                        c.doLayout();
-                    }
                 }
-
             ]
         });
-
         winAdd.show(this);
-    }
+        add();
+    };
 
     function onAddSchema(btn, ev) {
         winAddSchema = new Ext.Window({
@@ -536,7 +518,6 @@ $(window).load(function () {
                     region: "south",
                     border: false,
                     bodyStyle: "padding : 7px",
-
                     height: 50,
                     html: "Schemas are used to organize tables into logical groups to make them more manageable."
                 })]
@@ -547,18 +528,7 @@ $(window).load(function () {
         winAddSchema.show(this);
     }
 
-    function onSpatialEdit(btn, ev) {
-        var url = "/editor/" + screenName + "/" + schema;
-        window.open(url, 'editor');
-
-    }
-
-    function onView(btn, ev) {
-        var url = "/apps/viewer/map_list_frame/" + screenName + "/" + schema;
-        window.open(url, 'viewer', 'width=1000,height=800');
-    }
-
-    function onEdit(btn, ev) {
+    function onEdit() {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
@@ -566,106 +536,12 @@ $(window).load(function () {
         }
 
         tableStructure.grid = null;
-        winEdit = null;
         tableStructure.init(record, screenName);
-        form = new Ext.FormPanel({
-            labelWidth: 100,
-            // label settings here cascade unless overridden
-            frame: true,
-            region: 'center',
-            title: 'Add new column',
-            items: [
-                {
-                    xtype: 'textfield',
-                    flex: 1,
-                    name: 'column',
-                    fieldLabel: 'Column',
-                    allowBlank: false
-                },
-                {
-                    width: 100,
-                    xtype: 'combo',
-                    mode: 'local',
-                    triggerAction: 'all',
-                    forceSelection: true,
-                    editable: false,
-                    fieldLabel: 'Type',
-                    name: 'type',
-                    displayField: 'name',
-                    valueField: 'value',
-                    allowBlank: false,
-                    store: new Ext.data.JsonStore({
-                        fields: ['name', 'value'],
-                        data: [
-                            {
-                                name: 'String',
-                                value: 'string'
-                            },
-                            {
-                                name: 'Integer',
-                                value: 'int'
-                            },
-                            {
-                                name: 'Decimal',
-                                value: 'float'
-                            },
-                            {
-                                name: 'Text',
-                                value: 'text'
-                            },
-                            {
-                                name: 'Geometry',
-                                value: 'geometry'
-                            }
-                        ]
-                    })
-                }
-            ],
-            buttons: [
-                {
-                    //iconCls : 'silk-add',
-                    text: '<i class="icon-plus btn-gc"></i> Add new column',
-                    handler: function () {
-                        if (form.form.isValid()) {
-                            form.getForm().submit({
-                                url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name"),
-                                waitMsg: 'Saving Data...',
-                                submitEmptyText: false,
-                                success: onSubmit,
-                                failure: onSubmit
-                            });
-                        } else {
-                            var s = '';
-                            Ext.iterate(form.form.getValues(), function (key, value) {
-                                s += String.format("{0} = {1}<br />", key, value);
-                            }, this);
-                            //Ext.example.msg('Form Values', s);
-                        }
-                    }
-                }
-            ]
-        });
-        winEdit = new Ext.Window({
-            title: "Structure for the layer '" + record.get("f_table_name") + "'",
-            modal: true,
-            layout: 'fit',
-            width: 800,
-            height: 500,
-            initCenter: false,
-            x: 100,
-            y: 100,
-            closeAction: 'close',
-            plain: true,
-            frame: true,
-            border: false,
-            items: [new Ext.Panel({
-                frame: false,
-                border: false,
-                layout: 'border',
-                items: [tableStructure.grid, form]
-            })]
-        });
-        winEdit.show(this);
+
+        var s = Ext.getCmp("structurePanel");
+        s.removeAll();
+        s.add(tableStructure.grid);
+        s.doLayout();
     }
 
     function onEditCartomobile(btn, ev) {
@@ -699,7 +575,8 @@ $(window).load(function () {
             })]
         });
         winCartomobile.show(this);
-    };
+    }
+
     function onSave() {
         store.save();
     }
@@ -708,7 +585,6 @@ $(window).load(function () {
         var record;
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
-            //console.log(row._key_)
             if (row._key_ === e + ".the_geom") {
                 record = row;
             }
@@ -717,10 +593,19 @@ $(window).load(function () {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
+        activeLayer = record.f_table_schema + "." + record.f_table_name;
+        var markup = [
+            '<table>' +
+                '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_name}</td></tr>' +
+                '<tr class="x-grid3-row"><td><b>Primary key</b></td><td  width="150">{pkey}</td></tr>' +
+                '<tr class="x-grid3-row"><td><b>Srid</b></td><td>{srid}</td></tr>' +
+                '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td></tr>' +
+                '</table>'
+        ];
+        var template = new Ext.Template(markup);
+        template.overwrite(Ext.getCmp('a5').body, record);
         Ext.getCmp("layerStylePanel").expand(true);
-
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-
         Ext.getCmp("layerStyleTabs").activate(0);
         var a1 = Ext.getCmp("a1");
         var a4 = Ext.getCmp("a4");
@@ -734,7 +619,6 @@ $(window).load(function () {
         a1.doLayout();
         a4.doLayout();
 
-
         Ext.getCmp("layerStyleTabs").activate(1);
         var a2 = Ext.getCmp("a2");
         a2.remove(wmsClasses.grid);
@@ -747,63 +631,10 @@ $(window).load(function () {
         a3.remove(wmsClass.grid);
         a3.doLayout();
 
+        updateLegend();
+
         Ext.getCmp("layerStyleTabs").activate(activeTab);
-
-
-        /*winClasses = new Ext.Window({
-         title: "Edit classes '" + record.f_table_name + "'",
-         modal: false,
-         renderTo: "mapPane",
-         layout: 'fit',
-         width: 600,
-         height: 400,
-         initCenter: false,
-         closeAction: 'close',
-         plain: true,
-         border: false,
-         items: [
-         new Ext.TabPanel({
-         activeTab: 0,
-         region: 'center',
-         items: [
-         {
-         title: 'Layer',
-         layout: 'fit',
-         items: [wmsLayer.grid]
-         },
-         {
-         title: 'Classes',
-         layout: 'fit',
-         items: [wmsClasses.grid]
-         }
-         ]
-         })]
-         });
-         winClasses.show(this);*/
     };
-
-    function onEditWMSLayer(btn, ev) {
-        var record = grid.getSelectionModel().getSelected();
-        if (!record) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
-            return false;
-        }
-        wmsLayer.grid = null;
-        winWmsLayer = null;
-        wmsLayer.init(record);
-        winWmsLayer = new Ext.Window({
-            title: "Settings on layer '" + record.get("f_table_name") + "'",
-            modal: true,
-            layout: 'fit',
-            width: 500,
-            height: 400,
-            closeAction: 'close',
-            plain: true,
-            border: true,
-            items: [wmsLayer.grid]
-        });
-        winWmsLayer.show(this);
-    }
 
     function onEditMoreSettings(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
@@ -873,55 +704,9 @@ $(window).load(function () {
                             typeAhead: false,
                             editable: false,
                             triggerAction: 'all',
-                            name: 'baselayer',
-                            fieldLabel: 'Is baselayer',
-                            value: r.data.baselayer
-                        },
-                        {
-                            xtype: 'combo',
-                            store: new Ext.data.ArrayStore({
-                                fields: ['name', 'value'],
-                                data: [
-                                    ['true', true],
-                                    ['false', false]
-                                ]
-                            }),
-                            displayField: 'name',
-                            valueField: 'value',
-                            mode: 'local',
-                            typeAhead: false,
-                            editable: false,
-                            triggerAction: 'all',
                             name: 'not_querable',
                             fieldLabel: 'Not querable',
                             value: r.data.not_querable
-                        },
-                        {
-                            xtype: 'combo',
-                            store: new Ext.data.ArrayStore({
-                                fields: ['name', 'value'],
-                                data: [
-                                    ['true', true],
-                                    ['false', false]
-                                ]
-                            }),
-                            displayField: 'name',
-                            valueField: 'value',
-                            mode: 'local',
-                            typeAhead: false,
-                            editable: false,
-                            triggerAction: 'all',
-                            name: 'single_tile',
-                            fieldLabel: 'Single tile',
-                            value: r.data.single_tile
-                        },
-                        {
-                            width: 300,
-                            xtype: 'textfield',
-                            fieldLabel: 'Local data source',
-                            name: 'data',
-                            value: r.data.data
-
                         },
                         {
                             width: 300,
@@ -971,7 +756,8 @@ $(window).load(function () {
             })]
         });
         winMoreSettings.show(this);
-    };
+    }
+
     function onGlobalSettings(btn, ev) {
         winGlobalSettings = null;
         winGlobalSettings = new Ext.Window({
@@ -1032,9 +818,6 @@ $(window).load(function () {
                 })]
         });
         winGlobalSettings.show(this);
-    };
-    function onSave() {
-        store.save();
     }
 
     // define a template to use for the detail view
@@ -1056,29 +839,22 @@ $(window).load(function () {
                 background: '#ffffff',
                 padding: '7px'
             }
+        }, {
+            id: 'structurePanel',
+            region: 'center',
+            collapsed: false,
+            collapsible: false,
+            border: false,
+            layout: 'fit'
         }]
     });
     grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
         var detailPanel = Ext.getCmp('detailPanel');
         bookTpl.overwrite(detailPanel.body, r.data);
+        onEdit();
     });
 
-    var onSubmit = function (form, action) {
-        var result = action.result;
-        if (result.success) {
-            tableStructure.store.load();
-            form.reset();
-        } else {
-            var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
-            Ext.MessageBox.show({
-                title: 'Failure',
-                msg: message,
-                buttons: Ext.MessageBox.OK,
-                width: 300,
-                height: 300
-            });
-        }
-    };
+
     Ext.namespace('viewerSettings');
     if (schema === "" || schema === "public") {
         viewerSettings.form = new Ext.FormPanel({
@@ -1159,7 +935,6 @@ $(window).load(function () {
         var result = action.result;
         if (result.success) {
             Ext.MessageBox.alert('Success', result.message);
-            //viewerSettings.form.reset();
         } else {
             Ext.MessageBox.alert('Failure', result.message);
         }
@@ -1220,15 +995,23 @@ $(window).load(function () {
                                                 xtype: "panel",
                                                 id: "a4"
 
+                                            },
+                                            {
+                                                id: 'a5',
+                                                border: false,
+                                                height: 70,
+                                                bodyStyle: {
+                                                    background: '#ffffff',
+                                                    padding: '10px'
+                                                }
                                             }
                                         ]
-
                                     },
                                     {
                                         xtype: "panel",
                                         title: 'Classification',
                                         defaults: {
-                                            height: 250,
+                                            height: 150,
                                             border: false
                                         },
                                         items: [
@@ -1239,13 +1022,18 @@ $(window).load(function () {
                                             },
                                             {
                                                 xtype: "panel",
+                                                height: 360,
                                                 id: "a3"
 
+                                            },
+                                            {
+                                                xtype: "panel",
+                                                height: 200,
+                                                id: "a6",
+                                                html: "god dag"
                                             }
                                         ]
-
                                     }
-
                                 ]
                             }
                         ]
@@ -1263,6 +1051,7 @@ $(window).load(function () {
         $.ajax({
             url: '/controllers/mapfile',
             success: function (response) {
+                updateLegend();
             }
         });
         $.ajax({
@@ -1278,7 +1067,6 @@ $(window).load(function () {
             dataType: 'json',
             type: 'delete',
             success: function (response) {
-                console.log(layer)
                 if (response.success === true) {
                     App.setAlert(App.STATUS_NOTICE, response.message);
                     var l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
@@ -1287,16 +1075,24 @@ $(window).load(function () {
                         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                         return v.toString(16);
                     });
-                    l.url = l.url.replace(l.url.split("?")[1],"");
+                    l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + n;
                     l.redraw();
-
-
-
                 }
                 else {
                     App.setAlert(App.STATUS_NOTICE, response.message);
                 }
+            }
+        });
+    };
+    updateLegend = function () {
+        var a6 = Ext.getCmp("a6");
+        $.ajax({
+            url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
+            dataType: 'jsonp',
+            jsonp: 'jsonp_callback',
+            success: function (response) {
+                a6.update(response.html);
             }
         });
     };

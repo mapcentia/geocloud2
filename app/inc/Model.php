@@ -132,7 +132,7 @@ class Model
                     return false;
                 }
                 try {
-                    //$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     switch ($queryType) {
                         case "select" :
                             // Return PDOStatement object

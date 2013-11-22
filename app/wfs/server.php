@@ -539,7 +539,7 @@ function doSelect($table, $sql, $sql2, $from)
                     }
 
                     //$FieldValue = htmlentities($FieldValue);
-                    $FieldValue = altUseCdataOnStrings($FieldValue);
+                    $FieldValue = altUseCdataOnStrings($FieldValue,$FieldName);
 
 
                     if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
@@ -703,10 +703,10 @@ function altFieldValue($field, $value)
  * @param unknown $value
  * @return unknown
  */
-function altUseCdataOnStrings($value)
+function altUseCdataOnStrings($value,$name)
 {
     if (!is_numeric($value) && ($value)) {
-        //$value = "<![CDATA[".$value."]]>";
+        //if ($name == "entities") $value = "<![CDATA[".$value."]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
     } else {

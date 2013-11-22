@@ -44,9 +44,17 @@ class Twitter extends Model
             ->setGetfield($getfield)
             ->buildOauth($url, $requestMethod)
             ->performRequest();
+        $res = file_get_contents("kv13_parsed.json");
+        //echo $res;
         $arr = json_decode($res);
-        foreach ($arr->statuses as $value) {
-//            if (is_object($value->coordinates)) {
+        //print_r($arr);
+        foreach ($arr as $value) {
+            /*if (!is_object($value->coordinates)) {
+                $value->coordinates = new \stdClass();
+                $value->coordinates->type = "point";
+                $value->coordinates->coordinates = array(10.22518158,56.17566115);
+            }*/
+            if (is_object($value->coordinates)) {
                 $bindings = array(
                     "text" => $value->text,
                     "created_at" => date("D jS F Y", strtotime($value->created_at)),
@@ -61,12 +69,13 @@ class Twitter extends Model
                     "place_country_code" => $value->place->country_code,
                     "place_country" => $value->place->country,
                     "retweet_count" => $value->retweet_count,
-                    "favorite_count" => $value->favorite_count
+                    "favorite_count" => $value->favorite_count,
+                    "entities" => json_encode($value->entities)
                 );
                 $features[] = array("geometry" => $value->coordinates, "type" => "Feature", "properties" => $bindings);
                 if ($store) {
                     $bindings['the_geom'] = "POINT(" . $value->coordinates->coordinates[0] . " " . $value->coordinates->coordinates[1] . ")";
-                    $sql = "INSERT INTO {$schema}.tweets (id,text,created_at,source,user_name,user_screen_name,user_id,place_id,place_type,place_full_name,place_country_code,place_country,retweet_count,favorite_count,the_geom) VALUES(" .
+                    $sql = "INSERT INTO {$schema}.tweets (id,text,created_at,source,user_name,user_screen_name,user_id,place_id,place_type,place_full_name,place_country_code,place_country,retweet_count,favorite_count,entities,the_geom) VALUES(" .
                         ":id," .
                         ":text," .
                         ":created_at," .
@@ -81,6 +90,7 @@ class Twitter extends Model
                         ":place_country," .
                         ":retweet_count," .
                         ":favorite_count," .
+                        ":entities," .
                         "ST_GeomFromText(:the_geom,4326))";
                     $res = $this->prepare($sql);
                     try {
@@ -91,6 +101,7 @@ class Twitter extends Model
 
                 }
 //            }
+            }
         }
         $response['success'] = true;
         $response['type'] = "FeatureCollection";

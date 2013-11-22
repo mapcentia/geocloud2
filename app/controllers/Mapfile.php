@@ -353,6 +353,8 @@ class Mapfile extends \app\inc\Controller
                         else echo "EXPRESSION (" . $class['expression'] . ")\n";
                     } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                     ?>
+                    <?php if ($class['maxscaledenom']) echo  "MAXSCALEDENOM {$class['maxscaledenom']}\n"; ?>
+                    <?php if ($class['minscaledenom']) echo  "MINSCALEDENOM {$class['minscaledenom']}\n"; ?>
 
                     STYLE
                     #SYMBOL
@@ -374,7 +376,7 @@ class Mapfile extends \app\inc\Controller
                     <?php
                     if ($class['size']) {
                         if (is_numeric($class['size']))
-                            echo "SIZE ".$class['size'];
+                            echo "SIZE " . $class['size'];
                         else
                             echo "SIZE [{$class['size']}]";
                     }
@@ -400,7 +402,7 @@ class Mapfile extends \app\inc\Controller
                     <?php
                     if ($class['overlaysize']) {
                         if (is_numeric($class['overlaysize']))
-                            echo "SIZE ".$class['overlaysize'];
+                            echo "SIZE " . $class['overlaysize'];
                         else
                             echo "SIZE [{$class['overlaysize']}]";
                     }
@@ -427,19 +429,28 @@ class Mapfile extends \app\inc\Controller
                         }
                         echo "\n";
                         ?>
-                        #MAXSIZE 10000
-                        POSITION AUTO
-                        #BUFFER 1
-                        #MINFEATURESIZE 20
-                        COLOR 1 1 1
-                        OUTLINECOLOR 255 255 255
+                        COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1"; echo "\n"; ?>
+                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255"; echo "\n"; ?>
                         SHADOWSIZE 2 2
-                        #BACKGROUNDCOLOR 233 246 224
-                        #BACKGROUNDSHADOWSIZE 1 1
                         ANTIALIAS false
-                        FORCE <?php echo ($class['force_label']) ? "true" : "false" . "\n"; ?>
+                        FORCE <?php echo ($class['force_label']) ? "true" : "false"; echo "\n"; ?>
+                        POSITION <?php echo ($class['label_position']) ? : "auto"; echo "\n"; ?>
                         PARTIALS false
+                        MINSIZE 6
+                        <?php if ($class['label_maxscaledenom']) echo  "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
+                        <?php if ($class['label_minscaledenom']) echo  "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                         END #Label
+                    <?php } ?>
+
+                    <?php if ($class['leader']) { ?>
+                        LEADER
+                            GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5"; echo "\n"; ?>
+                            MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30"; echo "\n"; ?>
+                            STYLE
+                                COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1"; echo "\n"; ?>
+                                WIDTH 1
+                            END
+                        END
                     <?php } ?>
                     END # Class
                 <?php

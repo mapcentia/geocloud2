@@ -1,5 +1,6 @@
 <?php
 ini_set("display_errors", "On");
+ini_set('memory_limit','256M');
 error_reporting(3);
 
 use \app\inc\Input;
@@ -24,6 +25,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/twitter", function () {
         Connection::$param["postgisdb"] = Input::getPath()->part(4);
     });
+    Route::add("api/v1/legend");
 }
 
 if (Input::getPath()->part(1) == "store") {
