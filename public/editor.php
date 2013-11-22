@@ -12,8 +12,9 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
-<link rel="stylesheet" type="text/css" href="/js/extras.css?format=txt"/>
-<link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
+<link rel="stylesheet" type="text/css" href="/api/v3/css/styles.css"/>
+<link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <style>
     html, body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, p, blockquote, th, td {
         margin: 0;
@@ -134,6 +135,7 @@ include("html_header.php");
 <div id="upload">
     <a href="#">
         <img src="/assets/images/upload_black.png">
+
         <div>.shp .geojson .gml .kml .tab .mif</div>
     </a>
 </div>

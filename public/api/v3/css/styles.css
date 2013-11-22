@@ -28,17 +28,17 @@
 }
 
 .ol-zoom-in, .ol-zoom-out, .olControlZoomIn, .olControlZoomOut {
-    height: 50px !important;
-    width: 50px !important;
+    height: 30px !important;
+    width: 30px !important;
     font-weight: bold;
     text-decoration: none;
 }
 
 .ol-zoom a, .ol-zoom a:hover, .olControlZoom a {
-    font-size: 30px !important;
+    font-size: 16px !important;
     font-weight: bold !important;
     background: none !important;
-    line-height: 45px !important;
+    line-height: 28px !important;
     text-decoration: none;
     color: white;
 }

@@ -27,7 +27,9 @@ class Layer extends \app\inc\Controller
     public function put_records()
     {
         $this->table = new \app\models\table("settings.geometry_columns_join");
-        return Response::json($this->table->updateRecord((array)json_decode(urldecode(Input::get())), "_key_"));
+        $data = (array)json_decode(urldecode(Input::get()));
+        $data["data"]->editable = ($data["data"]->editable) ? : "0";
+        return Response::json($this->table->updateRecord($data, "_key_"));
     }
 
     public function get_columns()

@@ -12,14 +12,10 @@ var onAdd;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).load(function () {
-    "use strict";
     Ext.Container.prototype.bufferResize = false;
     var winAdd;
     var winAddSchema;
-    var winEdit;
     var winCartomobile;
-    var winClasses;
-    var winWmsLayer;
     var winMoreSettings;
     var winGlobalSettings;
     var fieldsForStore;
@@ -61,12 +57,10 @@ $(window).load(function () {
         encode: false
     });
     var reader = new Ext.data.JsonReader({
-        //totalProperty: 'total',
         successProperty: 'success',
         idProperty: '_key_',
         root: 'data',
         messageProperty: 'message'
-        // <-- New "messageProperty" meta-data
     }, fieldsForStore);
     var onWrite = function (store, action, result, transaction, rs) {
         if (transaction.success) {
@@ -85,8 +79,6 @@ $(window).load(function () {
             write: onWrite,
             exception: function (proxy, type, action, options, response, arg) {
                 if (type === 'remote') {
-                    // success is false
-                    //alert(response.message);
                     var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
                     Ext.MessageBox.show({
                         title: 'Failure',
@@ -133,12 +125,13 @@ $(window).load(function () {
     });
     schemasStore.load();
 
-    // create a grid to display records from the store
     var editor = new Ext.ux.grid.RowEditor();
     var grid = new Ext.grid.EditorGridPanel({
         //plugins: [editor],
         store: store,
-        autoExpandColumn: "desc",
+        viewConfig: {
+            forceFit: true
+        },
         height: 300,
         split: true,
         region: 'north',
@@ -152,7 +145,6 @@ $(window).load(function () {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
-
                 }
             },
             columns: [
@@ -170,6 +162,7 @@ $(window).load(function () {
                     editable: false,
                     tooltip: "This can't be changed",
                     width: 150,
+                    flex: 1,
                     renderer: function (v, p) {
                         return v;
                     }
@@ -194,7 +187,8 @@ $(window).load(function () {
                     dataIndex: "f_table_abstract",
                     sortable: true,
                     editable: true,
-                    tooltip: ""
+                    tooltip: "",
+                    width: 250
                 },
                 {
                     header: 'Group',
@@ -228,7 +222,7 @@ $(window).load(function () {
                 {
                     header: 'Authentication',
                     dataIndex: 'authentication',
-                    width: 120,
+                    width: 80,
                     tooltip: 'When accessing your layer from external clients, which level of authentication do you want?',
                     editor: {
                         xtype: 'combo',
@@ -249,16 +243,16 @@ $(window).load(function () {
                     }
                 },
                 {
-                    xtype: 'booleancolumn',
+                    xtype: 'checkcolumn',
                     header: 'Editable',
                     dataIndex: 'editable',
-                    width: 50,
-                    trueText: 'Yes',
-                    falseText: 'No',
-                    align: 'center',
+                    width: 50
+                    //trueText: 'Yes',
+                    //falseText: 'No',
+                   /* align: 'center',
                     editor: {
                         xtype: 'checkbox'
-                    }
+                    }*/
                 },
                 {
                     header: 'Tile cache',
@@ -371,14 +365,48 @@ $(window).load(function () {
                 width: 135
             }),
             {
+                xtype: 'form',
+                layout: 'hbox',
+                width: 150,
+                id: 'schemaform',
+                items: [
+                    {
+                        xtype: 'textfield',
+                        flex: 1,
+                        name: 'schema',
+                        emptyText: 'New schema',
+                        allowBlank: false
+                    }]
+            },
+            {
                 text: '<i class="icon-plus btn-gc"></i>',
                 tooltip: 'Add new schema',
-                //iconCls : 'silk-add',
-                handler: onAddSchema
+                handler: function () {
+                    var f = Ext.getCmp('schemaform');
+                    if (f.form.isValid()) {
+                        f.getForm().submit({
+                            url: '/controllers/database/schemas',
+                            submitEmptyText: false,
+                            success: function () {
+                                schemasStore.reload();
+                                App.setAlert(App.STATUS_OK, "New schema created");
+                            },
+                            failure: function (form, action) {
+                                var result = action.result;
+                                App.setAlert(App.STATUS_ERROR, result.message);
+                            }
+                        });
+                    } else {
+                        var s = '';
+                        Ext.iterate(schemaForm.form.getValues(), function (key, value) {
+                            s += String.format("{0} = {1}<br />", key, value);
+                        }, this);
+                    }
+                }
             }
         ],
         listeners: {
-
+            // Listensers here
         }
     });
     Ext.getCmp("schemabox").on('select', function (e) {
@@ -595,11 +623,13 @@ $(window).load(function () {
         }
         activeLayer = record.f_table_schema + "." + record.f_table_name;
         var markup = [
-            '<table>' +
-                '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_name}</td></tr>' +
+            '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>A SQL must return a primary key and a geometry. Naming and srid must match this: </td></tr></table>' +
+                '<table>' +
+                '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_schema}.{f_table_name}</td></tr>' +
                 '<tr class="x-grid3-row"><td><b>Primary key</b></td><td  width="150">{pkey}</td></tr>' +
                 '<tr class="x-grid3-row"><td><b>Srid</b></td><td>{srid}</td></tr>' +
                 '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td></tr>' +
+                '<tr class="x-grid3-row"><td><b>Geom type</b></td><td>{type}</td></tr>' +
                 '</table>'
         ];
         var template = new Ext.Template(markup);
@@ -821,7 +851,11 @@ $(window).load(function () {
     }
 
     // define a template to use for the detail view
-    var bookTplMarkup = ['<table>' + '<tr class="x-grid3-row"><td width="80">Srid:</td><td  width="150">{srid}</td><td>Created:</td><td>{created}</td></tr>' + '<tr class="x-grid3-row"><td>Geom field</td><td>{f_geometry_column}</td><td>Last modified:</td><td>{lastmodified}</td>' + '</tr>' + '</table>'];
+    var bookTplMarkup = ['<table>' +
+        '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>Created</b></td><td>{created}</td></tr>' +
+        '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td><td><b>Last modified</b></td><td>{lastmodified}</td>' +
+        '</tr>' +
+        '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
         title: 'Database',
@@ -836,7 +870,8 @@ $(window).load(function () {
             border: false,
             height: 70,
             bodyStyle: {
-                background: '#ffffff',
+                background: '#777',
+                color: '#fff',
                 padding: '7px'
             }
         }, {
@@ -981,7 +1016,7 @@ $(window).load(function () {
                                     {
                                         xtype: "panel",
                                         title: 'Layer settings',
-                                        height: 500,
+                                        height: 540,
                                         defaults: {
                                             border: false
                                         },
@@ -999,7 +1034,6 @@ $(window).load(function () {
                                             {
                                                 id: 'a5',
                                                 border: false,
-                                                height: 70,
                                                 bodyStyle: {
                                                     background: '#ffffff',
                                                     padding: '10px'
@@ -1030,7 +1064,7 @@ $(window).load(function () {
                                                 xtype: "panel",
                                                 height: 200,
                                                 id: "a6",
-                                                html: "god dag"
+                                                html: ""
                                             }
                                         ]
                                     }

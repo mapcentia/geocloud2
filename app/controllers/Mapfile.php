@@ -259,13 +259,11 @@ class Mapfile extends \app\inc\Controller
             NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
             STATUS off
             PROCESSING "CLOSE_CONNECTION=DEFER"
-            <?php if ($row['data']) { ?>
-                DATA "<?php echo $row['data']; ?>"
-            <?php } else { ?>
-                DATA "<?php echo $row['f_geometry_column']; ?> from <?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>  using unique <?php echo $primeryKey['attname'] ?> using srid=<?php echo $row['srid'] ?>"
-            <?php } ?>
+            <?php $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
+            echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
+            ?>
             <?php if ($row['filter']) { ?>
-                FILTER "<?php echo $row['filter']; ?>"
+            FILTER "<?php echo $row['filter']; ?>\n"
             <?php } ?>
             <?php
             switch ($row['type']) {
@@ -353,15 +351,10 @@ class Mapfile extends \app\inc\Controller
                         else echo "EXPRESSION (" . $class['expression'] . ")\n";
                     } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                     ?>
-                    <?php if ($class['maxscaledenom']) echo  "MAXSCALEDENOM {$class['maxscaledenom']}\n"; ?>
-                    <?php if ($class['minscaledenom']) echo  "MINSCALEDENOM {$class['minscaledenom']}\n"; ?>
 
                     STYLE
                     #SYMBOL
                     <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
-
-                    #OPACITY
-                    <?php if ($class['opacity']) echo "OPACITY " . $class['opacity'] . "\n"; ?>
 
                     #WIDTH
                     <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
@@ -371,6 +364,9 @@ class Mapfile extends \app\inc\Controller
 
                     #OUTLINECOLOR
                     <?php if ($class['outlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
+
+                    #OPACITY
+                    <?php if ($class['style_opacity']) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
 
                     #SIZE
                     <?php
@@ -398,6 +394,8 @@ class Mapfile extends \app\inc\Controller
                     #OUTLINECOLOR
                     <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
 
+                    #OPACITY
+                    <?php if ($class['overlaystyle_opacity']) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
                     #SIZE
                     <?php
                     if ($class['overlaysize']) {
@@ -429,27 +427,34 @@ class Mapfile extends \app\inc\Controller
                         }
                         echo "\n";
                         ?>
-                        COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1"; echo "\n"; ?>
-                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255"; echo "\n"; ?>
+                        COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
+                        echo "\n"; ?>
+                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
+                        echo "\n"; ?>
                         SHADOWSIZE 2 2
                         ANTIALIAS false
-                        FORCE <?php echo ($class['force_label']) ? "true" : "false"; echo "\n"; ?>
-                        POSITION <?php echo ($class['label_position']) ? : "auto"; echo "\n"; ?>
+                        FORCE <?php echo ($class['force_label']) ? "true" : "false";
+                        echo "\n"; ?>
+                        POSITION <?php echo ($class['label_position']) ? : "auto";
+                        echo "\n"; ?>
                         PARTIALS false
                         MINSIZE 6
-                        <?php if ($class['label_maxscaledenom']) echo  "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
-                        <?php if ($class['label_minscaledenom']) echo  "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
+                        <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
+                        <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                         END #Label
                     <?php } ?>
 
                     <?php if ($class['leader']) { ?>
                         LEADER
-                            GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5"; echo "\n"; ?>
-                            MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30"; echo "\n"; ?>
-                            STYLE
-                                COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1"; echo "\n"; ?>
-                                WIDTH 1
-                            END
+                        GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5";
+                        echo "\n"; ?>
+                        MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30";
+                        echo "\n"; ?>
+                        STYLE
+                        COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1";
+                        echo "\n"; ?>
+                        WIDTH 1
+                        END
                         END
                     <?php } ?>
                     END # Class

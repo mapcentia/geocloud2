@@ -192,10 +192,6 @@ wmsClass.init = function (id) {
             {
                 name: 'expression'
             },
-
-            {
-                name: 'opacity'
-            },
             {
                 name: 'minscaledenom'
             },
@@ -218,6 +214,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: 'width'
+            },
+            {
+                name: 'style_opacity'
             },
             {
                 name: 'label',
@@ -275,6 +274,8 @@ wmsClass.init = function (id) {
             },
             {
                 name: 'overlaywidth'
+            },{
+                name: 'overlaystyle_opacity'
             }
         ],
         listeners: {
@@ -316,7 +317,6 @@ wmsClass.init = function (id) {
             label: 'Label: on',
             label_force: 'Label: force',
             expression: 'Expression',
-            opacity: 'Opacity',
             minscaledenom: 'min scale',
             maxscaledenom: 'max scale',
             label_minscaledenom: 'Label: min. scale',
@@ -330,17 +330,19 @@ wmsClass.init = function (id) {
             leader_maxdistance: 'Leader: maxdistance',
             leader_color: 'Leader: color',
 
-            outlinecolor: 'Outline color',
-            symbol: 'Symbol',
-            color: 'Color',
-            size: 'Symbol size',
-            width: 'Line width',
+            outlinecolor: 'Style: outline color',
+            symbol: 'Style: symbol',
+            color: 'Style: color',
+            size: 'Style: Symbol size',
+            width: 'Style: Line width',
+            style_opacity: 'Style: opacity',
 
             overlaywidth: 'Overlay: line width',
             overlayoutlinecolor: 'Overlay: outline color',
             overlaysymbol: 'Overlay: symbol',
             overlaycolor: 'Overlay: color',
-            overlaysize: 'Overlay: symbol size'
+            overlaysize: 'Overlay: symbol size',
+            overlaystyle_opacity: 'Overlay: opacity'
         },
         customEditors: {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
@@ -360,7 +362,7 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
@@ -421,6 +423,11 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaywidth': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using

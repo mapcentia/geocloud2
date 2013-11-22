@@ -50,7 +50,8 @@ wmsLayer.init = function (record) {
                 name: 'label_min_scale'
             },
             {
-                name: 'meta_tiles'
+                name: 'meta_tiles',
+                type: 'boolean'
             },
             {
                 name: 'meta_size'
@@ -195,8 +196,7 @@ wmsLayer.init = function (record) {
                     '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
                     '</table>',
                 border: false,
-                bodyStyle: 'padding-left: 3px'
-            },
+                bodyStyle: 'padding-left: 3px'            },
             {
                 name: '_key_',
                 xtype: 'hidden',
@@ -209,8 +209,8 @@ wmsLayer.init = function (record) {
                 height: 100,
                 labelAlign: 'top',
                 name: 'data',
-                value: record.data
-//                emptyText: 'dsdsd'
+                value: (record.data) ? record.data : "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name
+                //value: record.data
             }
         ],
         buttons: [
@@ -222,7 +222,6 @@ wmsLayer.init = function (record) {
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
                         values.data = encodeURIComponent(values.data);
-                        console.log(values)
                         var param = {
                             data: values
                         };

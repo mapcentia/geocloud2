@@ -138,7 +138,7 @@ class Classification extends \app\inc\Model
             $size = "10";
             $width = "1";
         }
-        $jsonStr = '{"name":"New style","expression":"","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
+        $jsonStr = '{"name":"Unnamed class","expression":"","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
         return json_decode($jsonStr);
     }
 
