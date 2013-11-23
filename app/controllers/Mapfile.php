@@ -433,7 +433,7 @@ class Mapfile extends \app\inc\Controller
                         echo "\n"; ?>
                         SHADOWSIZE 2 2
                         ANTIALIAS false
-                        FORCE <?php echo ($class['force_label']) ? "true" : "false";
+                        FORCE <?php echo ($class['label_force']) ? "true" : "false";
                         echo "\n"; ?>
                         POSITION <?php echo ($class['label_position']) ? : "auto";
                         echo "\n"; ?>
