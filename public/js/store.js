@@ -55,6 +55,7 @@ $(window).load(function () {
     // Write out mapfile and cfgfile
     $.ajax({
         dataType: 'json',
+        async: false,
         url: '/controllers/mapfile',
         success: function (response) {
 
@@ -62,6 +63,7 @@ $(window).load(function () {
     });
     $.ajax({
         dataType: 'json',
+        async: false,
         url: '/controllers/cfgfile',
         success: function (response) {
 
