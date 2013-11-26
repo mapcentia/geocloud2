@@ -52,6 +52,21 @@ $(window).load(function () {
             }
         }
     });
+    // Write out mapfile and cfgfile
+    $.ajax({
+        dataType: 'json',
+        url: '/controllers/mapfile',
+        success: function (response) {
+
+        }
+    });
+    $.ajax({
+        dataType: 'json',
+        url: '/controllers/cfgfile',
+        success: function (response) {
+
+        }
+    });
     var writer = new Ext.data.JsonWriter({
         writeAllFields: false,
         encode: false
