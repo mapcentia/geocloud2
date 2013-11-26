@@ -113,12 +113,10 @@ wmsClasses.init = function (record) {
         bbar: [
             {
                 text: '<i class="icon-plus btn-gc"></i> Add class',
-                //iconCls : 'silk-add',
                 handler: wmsClasses.onAdd
             },
             {
                 text: '<i class="icon-trash btn-gc"></i> Delete class',
-                //iconCls : 'silk-delete',
                 handler: wmsClasses.onDelete
             }
         ],
@@ -143,9 +141,11 @@ wmsClasses.onDelete = function () {
     if (!record) {
         return false;
     }
-    Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
+    Ext.MessageBox.confirm('Confirm', 'Are you sure you want to delete the class?', function (btn) {
         if (btn === "yes") {
             wmsClasses.grid.store.remove(record);
+            var a3 = Ext.getCmp("a3");
+            a3.remove(wmsClass.grid);
         } else {
             return false;
         }
@@ -245,6 +245,9 @@ wmsClass.init = function (id) {
             {
                 name: 'label_outlinecolor'
             },
+            {
+                name: 'label_buffer'
+            },
             // Leader start
             {
                 name: 'leader',
@@ -324,6 +327,7 @@ wmsClass.init = function (id) {
             label_position: 'Label: position',
             label_color: 'Label: color',
             label_outlinecolor: 'Label: outline color',
+            label_buffer: 'Label: buffer',
 
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',
@@ -388,6 +392,11 @@ wmsClass.init = function (id) {
                 // nobody is using
             }), {}),
             'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'label_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using

@@ -349,7 +349,6 @@ $(window).load(function () {
             '-',
             {
                 text: '<i class="icon-trash btn-gc"></i> Delete layer',
-                //iconCls : 'silk-delete',
                 handler: onDelete
             },
             '-',
@@ -422,6 +421,8 @@ $(window).load(function () {
             if (btn === "yes") {
                 proxy.api.destroy.url = "/controllers/table/records/" + record.data.f_table_schema + "." + record.data.f_table_name;
                 grid.store.remove(record);
+                var s = Ext.getCmp("structurePanel");
+                s.removeAll();
             } else {
                 return false;
             }

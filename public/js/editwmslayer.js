@@ -57,6 +57,9 @@ wmsLayer.init = function (record) {
                 name: 'meta_size'
             },
             {
+                name: 'meta_buffer'
+            },
+            {
                 name: 'ttl'
             }
         ],
@@ -97,6 +100,7 @@ wmsLayer.init = function (record) {
             label_min_scale: 'Label min scale',
             meta_tiles: 'Use meta tiles',
             meta_size: 'Meta tile size',
+            meta_buffer: 'Meta buffer size (px)',
             ttl: 'Time to live (TTL)'
         },
 
@@ -147,6 +151,10 @@ wmsLayer.init = function (record) {
                 decimalSeparator: '¤'// Some strange char nobody is using
             }), {}),
             'meta_size': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char nobody is using
+            }), {}),
+            'meta_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char nobody is using
             }), {})

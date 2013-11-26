@@ -432,7 +432,7 @@ class Mapfile extends \app\inc\Controller
                         OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
                         echo "\n"; ?>
                         SHADOWSIZE 2 2
-                        ANTIALIAS false
+                        ANTIALIAS true
                         FORCE <?php echo ($class['label_force']) ? "true" : "false";
                         echo "\n"; ?>
                         POSITION <?php echo ($class['label_position']) ? : "auto";
@@ -441,6 +441,7 @@ class Mapfile extends \app\inc\Controller
                         MINSIZE 6
                         <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
                         <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
+                        <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
                         END #Label
                     <?php } ?>
 

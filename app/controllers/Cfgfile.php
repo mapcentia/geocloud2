@@ -32,6 +32,7 @@ class Cfgfile extends \app\inc\Controller
             $def = json_decode($row['def']);
             $def->meta_tiles == true ? $meta_tiles = "yes" : $meta_tiles = "no";
             $meta_size = ($def->meta_size) ? : $meta_size = 3;
+            $meta_buffer = ($def->meta_buffer) ? : $meta_buffer = 0;
             $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
             echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
             echo "type=WMS\n";
@@ -39,7 +40,7 @@ class Cfgfile extends \app\inc\Controller
             echo "extension=png\n";
             echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";
             echo "maxResolution=156543.0339\n";
-            echo "metaBuffer=0\n";
+            echo "metaBuffer={$meta_buffer}\n";
             echo "metaTile={$meta_tiles}\n";
             echo "metaSize={$meta_size},{$meta_size}\n";
             echo "srs=EPSG:900913\n";

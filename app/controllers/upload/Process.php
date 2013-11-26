@@ -36,7 +36,7 @@ class Process extends \app\inc\Controller
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'user=postgres dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=postgres dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln {$safeName} " .
             "-nlt {$type}";
@@ -45,7 +45,7 @@ class Process extends \app\inc\Controller
         exec($cmd . ' 2>&1', $out, $err);
 
         $model = new \app\inc\Model();
-        $geoType = $model->getGeometryColumns(Connection::$param["postgisschema"].".".$safeName, "type");
+        $geoType = $model->getGeometryColumns(Connection::$param["postgisschema"] . "." . $safeName, "type");
         $key = Connection::$param["postgisschema"] . "." . $safeName . ".the_geom";
         $class = new \app\models\Classification($key);
         $arr = $class->getAll();
