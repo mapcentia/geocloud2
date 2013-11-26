@@ -60,5 +60,5 @@ if ($row['created']) {
 }
 
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
-    header("location: {$userHostName}/user/login/p");
+    header("location: /user/login/p");
 }

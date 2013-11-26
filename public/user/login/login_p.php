@@ -7,7 +7,7 @@ include '../html_header.php';
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='/user/login'</script>");
 }
-($_SESSION['zone']) ? $prefix = $_SESSION['zone'] . "." : $prefix = "";
+($_SESSION['zone']) ? $prefix = App::$param['domainPrefix'].$_SESSION['zone'] . "." : $prefix = "";
 ?>
 <div class="container">
     <div id="db_exists" style="display: none">

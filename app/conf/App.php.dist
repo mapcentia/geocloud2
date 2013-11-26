@@ -11,7 +11,8 @@ class App
         "sessionName" => "PHPSESSID",
         "databaseTemplate" => "hjahjs",
         "useWktToGmlInPHP" => false,
-        "gMapsApiKey" => "ABQIAAAAixUaqWcOfE1cqF2LJyDYCdTww2B3bmOd5Of57BUV-HZKowzURRTDiOeJ4A8o-OZoiMfdrJzdG3POiw"
+        "gMapsApiKey" => "ABQIAAAAixUaqWcOfE1cqF2LJyDYCdTww2B3bmOd5Of57BUV-HZKowzURRTDiOeJ4A8o-OZoiMfdrJzdG3POiw",
+        "domainPrefix" => ""
     );
     function __construct(){
         spl_autoload_register(function ($className) {
