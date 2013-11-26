@@ -4,7 +4,7 @@ use \app\models\Setting;
 
 include '../header.php';
 $postgisObject = new Model();
-include ('../vdaemon/vdaemon.php');
+include('../vdaemon/vdaemon.php');
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
@@ -47,13 +47,15 @@ function UserIDCheck($sValue, &$oStatus)
         $oStatus->bValid = 0;
     }
 }
+
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
-    header("location: /user/login/p");
+    header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
 }
 ?>
 <div class="container">
     <div class="dialog">
         <img src="../assets/images/MapCentia_500.png" id="logo">
+
         <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Login</h3>
 

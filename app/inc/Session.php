@@ -8,8 +8,8 @@ class Session
 {
     static function start()
     {
-        session_name(App::$param['sessionName']);
-        session_set_cookie_params(9999999999, '/', "." . App::$param['domain']);
+        //session_name(App::$param['sessionName']);
+        session_set_cookie_params(0, '/', "." . App::$param['domain']);
         session_start();
     }
     static function authenticate($redirect="/"){
