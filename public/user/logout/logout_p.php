@@ -2,4 +2,4 @@
 include '../header.php';
 session_unset();
 ?>
-<script>window.location = '<?php echo \app\inc\App::$param['userHostName'] ?>/user/login'</script>
+<script>window.location = '<?php echo \app\conf\App::$param['userHostName'] ?>/user/login'</script>
