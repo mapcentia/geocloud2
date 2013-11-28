@@ -3,8 +3,10 @@ use \app\inc\Model;
 use \app\conf\App;
 
 include("../header.php");
-$postgisdb = $databaseTemplate; 
+$postgisdb = $databaseTemplate;
+\app\conf\Connection::$param["postgisdb"] = 'postgres';
 if (!$_SESSION['screen_name']) {
+
 
 } else {
 	$name = Model::toAscii($_SESSION['screen_name'], NULL, "_");
