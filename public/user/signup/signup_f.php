@@ -68,9 +68,9 @@ include('../html_header.php');
                         <label class="radio">
                             <input type="radio" name="Zone" value="eu1">
                             Europe </label>
-                        <label class="radio">
+                        <!--<label class="radio">
                             <input type="radio" name="Zone" value="local2">
-                            Local </label>
+                            Local </label>-->
                     </div>
                     <div class="control-group">
                         <div class="controls">
