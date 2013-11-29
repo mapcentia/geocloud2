@@ -8,7 +8,7 @@ include('../vdaemon/vdaemon.php');
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
 if ($_SESSION['auth'] && $_SESSION['screen_name']) {
-    die("<script>window.location='{$userHostName}/user/login/p?l={$_SESSION['zone']}'</script>");
+    die("<script>window.location='{$userHostName}/user/login/p'</script>");
 }
 function UserIDCheck($sValue, &$oStatus)
 {
@@ -49,7 +49,7 @@ function UserIDCheck($sValue, &$oStatus)
 }
 
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
-    header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p?l={$_SESSION['zone']}");
+    header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
 }
 ?>
 <div class="container">
