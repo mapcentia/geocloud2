@@ -14,7 +14,7 @@ if (!$_SESSION['screen_name']) {
     $dbObj = $db->createdb($name, App::$param['databaseTemplate'], "UTF8");
     // databaseTemplate is set in conf/main.php
     if ($dbObj) {
-        header("location: " . \app\conf\App::$param['userHostName'] . "}/user/login/p");
+        header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
     } else {
         echo "<h2>Sorry, something went wrong. Try again</h2>";
         echo "<div><a href='" . \app\conf\App::$param['userHostName'] . "/user/signup' class='btn btn-danger'>Go back</a></div>";
