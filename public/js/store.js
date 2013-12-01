@@ -266,10 +266,10 @@ $(window).load(function () {
                     width: 50
                     //trueText: 'Yes',
                     //falseText: 'No',
-                   /* align: 'center',
-                    editor: {
-                        xtype: 'checkbox'
-                    }*/
+                    /* align: 'center',
+                     editor: {
+                     xtype: 'checkbox'
+                     }*/
                 },
                 {
                     header: 'Tile cache',
@@ -392,7 +392,8 @@ $(window).load(function () {
                         name: 'schema',
                         emptyText: 'New schema',
                         allowBlank: false
-                    }]
+                    }
+                ]
             },
             {
                 text: '<i class="icon-plus btn-gc"></i>',
@@ -1138,13 +1139,15 @@ $(window).load(function () {
     };
     updateLegend = function () {
         var a6 = Ext.getCmp("a6");
-        $.ajax({
-            url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
-            dataType: 'jsonp',
-            jsonp: 'jsonp_callback',
-            success: function (response) {
-                a6.update(response.html);
-            }
-        });
+        if (activeLayer !== undefined){
+            $.ajax({
+                url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
+                dataType: 'jsonp',
+                jsonp: 'jsonp_callback',
+                success: function (response) {
+                    a6.update(response.html);
+                }
+            });
+        }
     };
 });
