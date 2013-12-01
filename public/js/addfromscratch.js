@@ -13,9 +13,9 @@ addScratch.init = function () {
     };
     addScratch.form = new Ext.FormPanel({
         region: 'center',
-		id:"addScratch",
+        id: "addScratch",
         frame: false,
-		border: false,
+        border: false,
         title: 'Create layer from scratch',
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
@@ -25,17 +25,20 @@ addScratch.init = function () {
             allowBlank: false,
             msgTarget: 'side'
         },
-        items: [ {
-            xtype: 'textfield',
-            emptyText: 'layer name',
-            name: 'name'
-        },{
-           
-			xtype: 'textfield',
-            name: 'srid',
-            emptyText: 'EPSG number',
-			//value: '4326'
-        },{
+        items: [
+            {
+                xtype: 'textfield',
+                emptyText: 'layer name',
+                name: 'name'
+            },
+            {
+
+                xtype: 'textfield',
+                name: 'srid',
+                emptyText: 'EPSG number',
+                //value: '4326'
+            },
+            {
                 width: 100,
                 xtype: 'combo',
                 mode: 'local',
@@ -47,48 +50,56 @@ addScratch.init = function () {
                 displayField: 'name',
                 valueField: 'value',
                 allowBlank: false,
-				emptyText: 'Type',
+                emptyText: 'Type',
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],
-                    data: [{
-                        name: 'POINT',
-                        value: 'POINT'
-                    }, {
-                        name: 'MULTILINESTRING',
-                        value: 'MULTILINESTRING'
-                    }, {
-                        name: 'MULTIPOLYGON',
-                        value: 'MULTIPOLYGON'
-                    }]
+                    data: [
+                        {
+                            name: 'POINT',
+                            value: 'POINT'
+                        },
+                        {
+                            name: 'MULTILINESTRING',
+                            value: 'MULTILINESTRING'
+                        },
+                        {
+                            name: 'MULTIPOLYGON',
+                            value: 'MULTIPOLYGON'
+                        }
+                    ]
                 })
             }
-			],
-        buttons: [{
-            text: 'Save',
-            handler: function () {
-                if (addScratch.form.getForm().isValid()) {
-                    addScratch.form.getForm().submit({
-                        url: '/controllers/table/records',
-                        waitMsg: 'Creating your new layer',
-                        success: addScratch.onSubmit,
-                        failure: addScratch.onSubmit
-                    });
+        ],
+        buttons: [
+            {
+                text: 'Save',
+                handler: function () {
+                    if (addScratch.form.getForm().isValid()) {
+                        addScratch.form.getForm().submit({
+                            url: '/controllers/table/records',
+                            waitMsg: 'Creating your new layer',
+                            success: addScratch.onSubmit,
+                            failure: addScratch.onSubmit
+                        });
+                    }
+                }
+            },
+            {
+                text: 'Reset',
+                handler: function () {
+                    addScratch.form.getForm().reset();
                 }
             }
-        }, {
-            text: 'Reset',
-            handler: function () {
-                addScratch.form.getForm().reset();
-            }
-        }]
-    })
+        ]
+    });
 };
 addScratch.onSubmit = function (form, action) {
     var result = action.result;
     if (result.success) {
-		store.load();
         App.setAlert(App.STATUS_NOTICE, result.message);
+        document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+        store.load();
     } else {
         Ext.MessageBox.alert('Failure', result.message);
     }
-}
+};

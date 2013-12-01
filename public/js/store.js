@@ -767,7 +767,6 @@ $(window).load(function () {
                     ],
                     buttons: [
                         {
-                            //iconCls : 'silk-add',
                             text: '<i class="icon-ok btn-gc"></i> Update',
                             handler: function () {
                                 var f = Ext.getCmp('detailform');

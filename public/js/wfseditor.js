@@ -279,7 +279,7 @@ $(window).load(function () {
                 var groups = [];
                 if (http.readyState == 4) {
                     if (http.status == 200) {
-                        var response = eval('(' + http.responseText + ')');
+                        var response = data;
                         if (response.data !== undefined) {
                             //console.log(response);
                             for (var i = 0; i < response.data.length; ++i) {
@@ -336,16 +336,13 @@ $(window).load(function () {
             id: 'source'
         };
 
-        //if (typeof config === "object") root = config.initialConfig.root;
         // create the tree with the configuration from above
         tree = new Ext.tree.TreePanel({
             id: "tree",
             border: false,
-            frame: false,
             region: "center",
             width: 200,
             split: true,
-            frame: false,
             autoScroll: true,
             root: root,
             loader: new Ext.tree.TreeLoader({
@@ -391,7 +388,7 @@ $(window).load(function () {
         west.remove(tree);
         tree = null;
         loadTree();
-        window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree reloaded");
+        window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree (re)loaded");
         west.add(tree);
         west.doLayout();
     };
@@ -533,8 +530,7 @@ $(window).load(function () {
         ]
     });
     cloud.map.zoomToMaxExtent();
-
-    // After the view is initiated we zoom to max extent.
+    reLoadTree();
 });
 function stopEdit() {
     Ext.getCmp('editcreatebutton').toggle(false);
