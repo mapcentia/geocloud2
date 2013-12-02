@@ -18,7 +18,7 @@ class Table extends \app\inc\Controller
         $table = new \app\models\Table(null);
         $name = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
         // Set layer editable
-        $join = new \app\models\table("settings.geometry_columns_join");
+        $join = new \app\models\Table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode('{"data":{"editable":true,"_key_":"' . \app\conf\Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom"}}'));
         return Response::json($join->updateRecord($data, "_key_"));
     }

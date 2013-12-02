@@ -51,7 +51,7 @@ class Process extends \app\inc\Controller
         $arr = $class->getAll();
 
         // Set layer editable
-        $join = new \app\models\table("settings.geometry_columns_join");
+        $join = new \app\models\Table("settings.geometry_columns_join");
         $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
         $data = (array)json_decode(urldecode($json));
         $join->updateRecord($data, "_key_");
