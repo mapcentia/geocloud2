@@ -50,9 +50,16 @@ class Process extends \app\inc\Controller
         $class = new \app\models\Classification($key);
         $arr = $class->getAll();
 
+        // Set layer editable
+        $join = new \app\models\table("settings.geometry_columns_join");
+        $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
+        $data = (array)json_decode(urldecode($json));
+        $join->updateRecord($data, "_key_");
+
         if (empty($arr['data'])) {
             $class->insert();
             $class->update("0", \app\models\Classification::createClass($geoType));
+
         }
         if ($out[0] == "") {
             $response['success'] = true;

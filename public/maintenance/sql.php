@@ -44,4 +44,4 @@ CREATE VIEW settings.geometry_columns_view AS
    			geometry_columns_join._key_::text;
 ";
 */
-$sqls[] = "CREATE SCHEMA sqlapi";
+$sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN editable SET DEFAULT true";

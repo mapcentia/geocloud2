@@ -16,8 +16,11 @@ class Table extends \app\inc\Controller
     public function post_records()
     {
         $table = new \app\models\Table(null);
-        $response = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
-        return Response::json($response);
+        $name = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
+        // Set layer editable
+        $join = new \app\models\table("settings.geometry_columns_join");
+        $data = (array)json_decode(urldecode('{"data":{"editable":true,"_key_":"' . \app\conf\Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom"}}'));
+        return Response::json($join->updateRecord($data, "_key_"));
     }
 
     public function delete_records()
