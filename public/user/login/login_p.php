@@ -7,14 +7,21 @@ include '../html_header.php';
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='/user/login'</script>");
 }
-($_SESSION['zone']) ? $prefix = App::$param['domainPrefix'].$_SESSION['zone'] . "." : $prefix = "";
+($_SESSION['zone']) ? $prefix = App::$param['domainPrefix'] . $_SESSION['zone'] . "." : $prefix = "";
+
+if (App::$param['domain']) {
+    $host = "http://" . $prefix . App::$param['domain'];
+} else {
+    $host = App::$param['host'];
+}
+
 ?>
 <div class="container">
     <div id="db_exists" style="display: none">
         <div class="row dashboard">
             <div class="span3">
                 <?php
-                echo "<a target='_blank' href='http://" . $prefix . App::$param['domain'] . "/store/{$_SESSION['screen_name']}' id='btn-admin' class='btn btn-large btn-info' data-placement='top'
+                echo "<a target='_blank' href='" . $host . "/store/{$_SESSION['screen_name']}' id='btn-admin' class='btn btn-large btn-info' data-placement='top'
                                      title='Start the administration of your GeoCloud'>Start admin</a>";
                 ?>
             </div>
@@ -27,7 +34,9 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
             </div>
         </div>
         <div style="position: absolute; right: 5px; top: 3px">
-            <div><?php echo $_SESSION['screen_name'] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;</div>
+            <div><?php echo $_SESSION['screen_name'] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change
+                    password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;
+            </div>
         </div>
     </div>
     <div id="db_exists_not" style="display: none">
@@ -35,7 +44,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
             <div class="row">
                 <div class="span3">
                     <?php
-                    echo "<a href='http://" . $prefix . App::$param['domain'] . "/user/createstore' id='btn-create' class='btn btn-large btn-info' title='' data-placement='right' data-content='Click here to create your geocloud. It may take some secs, so stay on this page.'>Create new database</a>";
+                    echo "<a href='" . $host . "/user/createstore' id='btn-create' class='btn btn-large btn-info' title='' data-placement='right' data-content='Click here to create your geocloud. It may take some secs, so stay on this page.'>Create new database</a>";
                     ?>
                 </div>
             </div>
@@ -47,7 +56,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     <tr class="map-entry">
         <td><%= this . schema %></td>
         <td><a target="_blank"
-               href="http://<?php echo $prefix . App::$param['domain'] . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
+               href="<?php echo $host . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
         </a></td>
     </tr>
 </script>
@@ -55,7 +64,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     var metaDataKeys = [];
     var metaDataKeysTitle = [];
     var db = "<?php echo $_SESSION['screen_name'];?>";
-    var hostName = "http://<?php echo $prefix.App::$param['domain'];?>";
+    var hostName = "<?php echo $host ?>";
     $(window).ready(function () {
         $.ajax({
             url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',

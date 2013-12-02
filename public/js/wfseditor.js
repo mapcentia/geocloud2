@@ -553,7 +553,6 @@ function stopEdit() {
 function onInsert() {
     var pos = grid.getStore().getCount() - 1;
     grid.selModel.selectRow(pos);
-    //attributeForm.win.show();
 }
 function array_unique(ar) {
     if (ar.length && typeof ar !== 'string') {

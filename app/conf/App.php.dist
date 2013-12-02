@@ -4,24 +4,25 @@ namespace app\conf;
 class App
 {
     static $param = array(
-        "host" => "http://local2.mapcentia.com",
+        // The hostname of the server
+        "host" => "http://myserver.com",
+
+        // The hostname of the user module. Normally this is the same as the host above
         "userHostName" => "http://local2.mapcentia.com",
-        "domain" => "mapcentia.com",
-        "path" => "/mnt/hgfs/Documents/www/geocloud2/",
-        "sessionName" => "PHPSESSID",
-        "databaseTemplate" => "hjahjs",
-        "useWktToGmlInPHP" => false,
-        "gMapsApiKey" => "ABQIAAAAixUaqWcOfE1cqF2LJyDYCdTww2B3bmOd5Of57BUV-HZKowzURRTDiOeJ4A8o-OZoiMfdrJzdG3POiw",
-        "domainPrefix" => ""
+
+        //Server path where GeoCLoud is installed.
+        "path" => "/var/www/geocloud2",
+
+        // When creating new databases use this db as template
+        "databaseTemplate" => "my_postgis_database"
     );
     function __construct(){
+        // This is the autoload function and include path setting. No need to fiddle with this.
         spl_autoload_register(function ($className) {
             $ds = DIRECTORY_SEPARATOR;
             $dir = App::$param['path'];
             $className = strtr($className, '\\', $ds);
             $file = "{$dir}{$className}.php";
-            //echo $file . "<br>";
-            //die();
             if (is_readable($file)) {
                 require_once $file;
             }

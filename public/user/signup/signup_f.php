@@ -6,6 +6,7 @@ include('../html_header.php');
     <div class="container">
         <div class="dialog">
             <img src="../assets/images/MapCentia_500.png" id="logo">
+
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
                     <h3>Sign up for GeoCloud</h3>
@@ -60,18 +61,20 @@ include('../html_header.php');
                         <vlvalidator name="PassCmp" type="compare" control="Password" comparecontrol="Password2"
                                      operator="e" validtype="string">
                     </div>
-                    <div class="controls">
-                        Availability Zones
-                        <label class="radio">
-                            <input type="radio" name="Zone" value="us1" checked>
-                            North America </label>
-                        <label class="radio">
-                            <input type="radio" name="Zone" value="eu1">
-                            Europe </label>
-                        <!--<label class="radio">
-                            <input type="radio" name="Zone" value="local2">
-                            Local </label>-->
-                    </div>
+                    <?php if (\app\conf\App::$param['domain']) { ?>
+                        <div class="controls">
+                            Availability Zones
+                            <label class="radio">
+                                <input type="radio" name="Zone" value="us1" checked>
+                                North America </label>
+                            <label class="radio">
+                                <input type="radio" name="Zone" value="eu1">
+                                Europe </label>
+                            <!--<label class="radio">
+                                <input type="radio" name="Zone" value="local2">
+                                Local </label>-->
+                        </div>
+                    <?php } ?>
                     <div class="control-group">
                         <div class="controls">
                             <input type="submit" class="btn btn-info" value="Sign up">
