@@ -58,7 +58,9 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
 
         <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Login</h3>
-
+            <div class="alert alert-success" style="text-align: center">
+                The new and improved GeoCloud2
+            </div>
             <div class="control-group first">
 
                 <div class="controls">
@@ -89,6 +91,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
             <p>
                 Not using MapCentia GeoCloud? <b><a href="/user/signup/">Sign up</a></b>
             </p>
+
         </form>
     </div>
 

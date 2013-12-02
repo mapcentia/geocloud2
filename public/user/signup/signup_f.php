@@ -10,7 +10,9 @@ include('../html_header.php');
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
                     <h3>Sign up for GeoCloud</h3>
-                    <h5>Start with a free acount. No credit card needed.</h5>
+                    <div class="alert alert-success" style="text-align: center">
+                        The new and improved GeoCloud2
+                    </div>
 
                     <div class="controls first">
                         <div style="height: 2em; float: right">
