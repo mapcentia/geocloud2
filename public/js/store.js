@@ -11,7 +11,7 @@ var onEditWMSClasses;
 var onAdd;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
-$(window).load(function () {
+$(window).ready(function () {
     Ext.Container.prototype.bufferResize = false;
     var winAdd;
     var winAddSchema;

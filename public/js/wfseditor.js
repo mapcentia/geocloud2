@@ -244,7 +244,7 @@ function startWfsEdition(layerName) {
 
 
 };
-$(window).load(function () {
+$(window).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
     });
@@ -275,19 +275,16 @@ $(window).load(function () {
             async: false,
             dataType: 'json',
             type: 'GET',
-            success: function (data, textStatus, http) {
+            success: function (response, textStatus, http) {
                 var groups = [];
-                if (http.readyState == 4) {
-                    if (http.status == 200) {
-                        var response = data;
+                if (http.readyState === 4) {
+                    if (http.status === 200) {
                         if (response.data !== undefined) {
-                            //console.log(response);
                             for (var i = 0; i < response.data.length; ++i) {
                                 groups[i] = response.data[i].layergroup;
                             }
                             var arr = array_unique(groups);
                             for (var u = 0; u < response.data.length; ++u) {
-                                //console.log(response.data[u].baselayer);
                                 if (response.data[u].baselayer) {
                                     var isBaseLayer = true;
                                 } else {
@@ -316,10 +313,8 @@ $(window).load(function () {
                                     }
                                 }
                                 treeConfig.push({
-                                    //nodeType: "gx_layer",
                                     text: arr[i],
                                     isLeaf: false,
-                                    //id: arr[i],
                                     expanded: true,
                                     children: l
                                 });
@@ -330,12 +325,6 @@ $(window).load(function () {
             }
         });
 
-        var root = {
-            text: 'Ext JS',
-            children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
-            id: 'source'
-        };
-
         // create the tree with the configuration from above
         tree = new Ext.tree.TreePanel({
             id: "tree",
@@ -344,7 +333,11 @@ $(window).load(function () {
             width: 200,
             split: true,
             autoScroll: true,
-            root: root,
+            root: {
+                text: 'Ext JS',
+                children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
+                id: 'source'
+            },
             loader: new Ext.tree.TreeLoader({
                 applyLoader: false,
                 uiProviders: {
@@ -520,17 +513,29 @@ $(window).load(function () {
             },
             new Ext.Panel({
                 border: false,
-                id: "treepanel",
                 region: "west",
                 collapsible: false,
-                layout: 'fit',
                 width: 200,
-                items: [tree]
+                items: [
+                    {
+                        xtype: "panel",
+                        border: false,
+                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
+                        height: 70
+                    },
+                    new Ext.Panel({
+                        border: false,
+                        id: "treepanel",
+                        collapsible: false,
+                        width: 200,
+                        items: [tree]
+                    })
+                ]
             })
+
         ]
     });
     cloud.map.zoomToMaxExtent();
-    reLoadTree();
 });
 function stopEdit() {
     Ext.getCmp('editcreatebutton').toggle(false);

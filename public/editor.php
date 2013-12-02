@@ -117,6 +117,11 @@ include("html_header.php");
         font-size: 7.5pt;
 
     }
+    .layer-desc {
+        font-family: verdana, arial, sans-serif;
+        font-size: 7.5pt;
+        padding: 10px;
+    }
 </style>
 </head>
 <body>
