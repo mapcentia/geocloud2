@@ -22,7 +22,7 @@ CREATE TABLE geometry_columns_join (
     f_table_abstract character varying(256),
     f_table_title character varying(256),
     tweet text,
-    editable bool DEFAULT t,
+    editable bool DEFAULT 'true',
     created timestamp with time zone DEFAULT ('now'::text)::timestamp(0) with time zone,
     lastmodified timestamp with time zone DEFAULT ('now'::text)::timestamp(0) with time zone,
     authentication text DEFAULT 'Write'::text,

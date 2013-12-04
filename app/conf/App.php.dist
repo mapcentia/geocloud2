@@ -14,7 +14,7 @@ class App
         "path" => "/var/www/geocloud2",
 
         // When creating new databases use this db as template
-        "databaseTemplate" => "my_postgis_database"
+        "databaseTemplate" => "template_geocloud"
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.
