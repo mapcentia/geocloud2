@@ -303,7 +303,7 @@ $(window).ready(function () {
                             for (var i = 0; i < arr.length; ++i) {
                                 var l = [];
                                 for (var u = 0; u < response.data.length; ++u) {
-                                    if (response.data[u].layergroup == arr[i]) {
+                                    if (response.data[u].layergroup === arr[i]) {
                                         l.push({
                                             text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
                                             id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
@@ -370,6 +370,7 @@ $(window).ready(function () {
             }
         });
     };
+    loadTree();
     reLoadTree = function () {
         var num = cloud.map.getNumLayers();
         for (var j = 1; j < num; j++) {
@@ -385,7 +386,6 @@ $(window).ready(function () {
         west.add(tree);
         west.doLayout();
     };
-    loadTree();
     wfsTools = [
         {
             text: "<i class='icon-edit btn-gc'></i> Start edit",
@@ -473,7 +473,6 @@ $(window).ready(function () {
             }
         }
     ];
-
     viewport = new Ext.Viewport({
         layout: 'border',
         items: [

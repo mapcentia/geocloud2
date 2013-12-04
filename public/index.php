@@ -10,6 +10,8 @@ use \app\conf\Connection;
 
 include_once("../app/conf/App.php");
 new \app\conf\App();
+// Set the host name
+include_once("../app/conf/hosts.php");
 
 if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/sql", function () {
