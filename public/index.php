@@ -30,7 +30,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/legend");
 }
 
-if (Input::getPath()->part(1) == "store") {
+elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
     $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
@@ -38,13 +38,13 @@ if (Input::getPath()->part(1) == "store") {
     include_once("../app/conf/intercom.js.inc");
 }
 
-if (Input::getPath()->part(1) == "editor") {
+elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
     include_once("editor.php");
 }
 
-if (Input::getPath()->part(1) == "controllers") {
+elseif (Input::getPath()->part(1) == "controllers") {
 
     Session::start();
     Session::authenticate("/user/login/");
@@ -67,13 +67,16 @@ if (Input::getPath()->part(1) == "controllers") {
     Route::add("controllers/upload/process");
 }
 
-if (Input::getPath()->part(1) == "wms") {
+elseif (Input::getPath()->part(1) == "wms") {
     new \app\controllers\Wms();
 }
 
-if (Input::getPath()->part(1) == "wfs") {
+elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
     Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
     include_once("app/wfs/server.php");
+}
+else {
+    \app\inc\Redirect::to("/user/login");
 }
