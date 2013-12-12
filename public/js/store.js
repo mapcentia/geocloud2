@@ -279,7 +279,7 @@ $(window).ready(function () {
                             var r = grid.getSelectionModel().getSelected();
                             var layer = r.data.f_table_schema + "." + r.data.f_table_name;
                             //alert(layer);
-                            Ext.MessageBox.confirm('Confirm', 'You are about to invalidate the tile cache for layer \'' + r.data.f_table_name + '\'. Are you sure?', function (btn) {
+                            Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for layer \'' + r.data.f_table_name + '\'. Are you sure?', function (btn) {
                                 if (btn === "yes") {
                                     $.ajax({
                                         url: '/controllers/tilecache/index/' + layer,
@@ -331,7 +331,7 @@ $(window).ready(function () {
                 text: '<i class="icon-remove btn-gc""></i> Clear all tile cache',
                 //iconCls : 'icon-search',
                 handler: function () {
-                    Ext.MessageBox.confirm('Confirm', 'You are about to invalidate the tile cache for the whole schema. Are you sure?', function (btn) {
+                    Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
                             $.ajax({
                                 url: '/controllers/tilecache/index/schema/' + schema,

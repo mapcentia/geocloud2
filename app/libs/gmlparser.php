@@ -1,5 +1,5 @@
 <?php
-class GmlParser extends postgis
+class GmlParser extends \app\inc\Model
 {
 	var $gmlArray;
 	var $gmlSource;

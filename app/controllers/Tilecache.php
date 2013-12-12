@@ -19,10 +19,10 @@ class Tilecache extends \app\inc\Controller
         if ($dir) {
             exec("rm -R {$dir}");
             $respons['success'] = true;
-            $respons['message'] = "Tile cache invalidated";
+            $respons['message'] = "Tile cache deleted";
         } else {
             $respons['success'] = false;
-            $respons['message'] = "No tile cache to invalidate.";
+            $respons['message'] = "No tile cache to delete.";
         }
         return Response::json($respons);
     }

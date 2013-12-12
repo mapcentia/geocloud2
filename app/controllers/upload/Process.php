@@ -11,6 +11,11 @@ class Process extends \app\inc\Controller
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"];
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
+
+        if (is_numeric($safeName[0])) {
+            $safeName = "_" . $safeName;
+        }
+
         $srid = ($_REQUEST['srid']) ? : "4326";
 
         switch ($_REQUEST['type']) {
