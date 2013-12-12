@@ -450,18 +450,17 @@ wmsClass.init = function (id) {
         bbar: [
             {
                 text: '<i class="icon-ok btn-gc"></i> Update',
-                //iconCls : 'silk-accept',
                 handler: function () {
                     var grid = Ext.getCmp("propGrid");
                     var id = Ext.getCmp("configStore");
                     var source = grid.getSource();
-                    // source.id = wmsClass.classId;
-                    // var jsonDataStr = null;
-                    // jsonDataStr = Ext.encode(source);
                     var param = {
                         data: source
                     };
                     param = Ext.util.JSON.encode(param);
+
+                    // Encode the json because it can contain "="
+                    param = encodeURIComponent(param);
 
                     var requestCg = {
                         url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,

@@ -291,6 +291,9 @@ class Table extends Model
                 if ($safeColumn == "state") {
                     $safeColumn = "_state";
                 }
+                if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+                    $safeColumn = "_" . $safeColumn;
+                }
                 $sql .= "ALTER TABLE {$this->table} RENAME {$value->id} TO {$safeColumn};";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
@@ -339,6 +342,9 @@ class Table extends Model
     function addColumn($data) // All tables
     {
         $safeColumn = $this->toAscii($data['column'], array(), "_");
+        if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+            $safeColumn = "_" . $safeColumn;
+        }
         if ($safeColumn == "state") {
             $safeColumn = "_state";
         }
@@ -387,6 +393,9 @@ class Table extends Model
     {
         $this->PDOerror = NULL;
         $table = $this->toAscii($table, array(), "_");
+        if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
+            $table = "_" . $table;
+        }
         $sql = "BEGIN;";
         $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int) WITH OIDS;";
         $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public

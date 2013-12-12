@@ -1297,6 +1297,7 @@ var geocloud = (function () {
     return {
         geoJsonStore: geoJsonStore,
         sqlStore: sqlStore,
+        createTileLayer: createTileLayer,
         elasticStore: elasticStore,
         tweetStore: tweetStore,
         map: map,

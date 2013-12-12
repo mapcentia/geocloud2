@@ -106,9 +106,9 @@ class Classification extends \app\inc\Model
 
     public function update($id, $data)
     {
+        $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
         $classes['data'][$id] = $data;
-        //print_r($classes['data']);
         $response = $this->store(json_encode($classes['data']));
         return $response;
     }
