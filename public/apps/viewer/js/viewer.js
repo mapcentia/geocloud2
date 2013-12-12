@@ -4,7 +4,7 @@ MapCentia = (function () {
     var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, showInfoModal, qstore = [];
     hostname = geocloud_host;
     uri = geocloud.pathName;
-    hash = geocloud.urlHash;
+    hash = decodeURIComponent(geocloud.urlHash);
     db = uri[3];
     schema = uri[4];
     var switchLayer = function (name, visible) {
@@ -214,7 +214,6 @@ MapCentia = (function () {
                     if (hashArr[4]) {
                         arr = hashArr[4].split(",");
                         for (i = 0; i < arr.length; i++) {
-                            //name = cloud.getLayersByName(arr[i]).a.id;
                             switchLayer(arr[i], true);
                             $("#" + arr[i].replace(schema + ".", "")).attr('checked', true);
                         }
@@ -222,7 +221,7 @@ MapCentia = (function () {
                 }
             }
             else {
-                cloud.zoomToExtent()
+                cloud.zoomToExtent();
             }
         })();
         var moveEndCallBack = function () {
