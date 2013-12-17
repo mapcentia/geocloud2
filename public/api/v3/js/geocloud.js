@@ -16,6 +16,8 @@ var geocloud = (function () {
         sqlStore,
         tweetStore,
         elasticStore,
+        tileLayer,
+        createTileLayer,
         clickEvent,
         transformPoint,
         lControl,
@@ -35,8 +37,10 @@ var geocloud = (function () {
     // In IE7 host name is missing if script url is relative
     geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 
-    //host = "http://us1.mapcentia.com";
-    document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    // Check if jQuery is loaded and load if not
+    if (typeof jQuery === "undefined") {
+        document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    }
     if (typeof ol !== "object" && typeof L !== "object" && typeof OpenLayers !== "object") {
         alert("You need to load neither OpenLayers.js, ol3,js or Leaflet.js");
     }
@@ -48,25 +52,11 @@ var geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
-        // The JavaScript
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
-        document.write("<script src='http://us1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js'><\/script>");
-
-        // The css
-        document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' type='text/css' rel='stylesheet'>");
-        document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' type='text/css' rel='stylesheet'>");
-        //document.write("<link href='http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.Default.css' type='text/css' rel='stylesheet'>");
-        document.write("<link href='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' type='text/css' rel='stylesheet'>");
     }
-    document.write("<link rel='stylesheet' href='" + geocloud_host + "/api/v3/css/styles.css' type='text/css'>");
-
 
     // Helper for extending classes
     extend = function (ChildClass, ParentClass) {
         ChildClass.prototype = new ParentClass();
-        //ChildClass.prototype.constructor = ChildClass;
     };
     // Base class for stores
     storeClass = function () {
@@ -149,7 +139,7 @@ var geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, parentThis = this;
+        var prop, parentThis = this, map, sql;
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -162,7 +152,7 @@ var geocloud = (function () {
         this.load = function (doNotShowAlertOnError) {
             var url = host.replace("cdn.", "");
             try {
-                var map = parentThis.map, sql = this.sql;
+                map = parentThis.map, sql = this.sql;
                 sql = sql.replace("{centerX}", map.getCenter().lat.toString());
                 sql = sql.replace("{centerY}", map.getCenter().lon.toString());
                 sql = sql.replace("{minX}", map.getExtent().left);
@@ -200,6 +190,7 @@ var geocloud = (function () {
                 }
 
             });
+            return this.layer;
         };
     };
     tweetStore = function (config) {
@@ -250,6 +241,7 @@ var geocloud = (function () {
                     parentThis.onLoad();
                 }
             });
+            return this.layer;
         };
     };
     elasticStore = function (config) {
@@ -301,12 +293,76 @@ var geocloud = (function () {
                     parentThis.onLoad();
                 }
             });
+            return this.layer;
         };
     };
-    // Extend classes
+    // Extend store classes
     extend(sqlStore, storeClass);
     extend(tweetStore, storeClass);
     extend(elasticStore, storeClass);
+
+    tileLayer = function (config) {
+        var prop;
+        var defaults = {
+            layer: null,
+            db: null,
+            singleTile: false,
+            opacity: 1,
+            wrapDateLine: true,
+            tileCached: true,
+            name: null
+        };
+        if (config) {
+            for (prop in config) {
+                defaults[prop] = config[prop];
+            }
+        }
+        return createTileLayer(defaults.layer, defaults);
+    };
+    //ol2, ol3 and leaflet
+    createTileLayer = function (layer, defaults) {
+        var parts, l, url, urlArray;
+        parts = layer.split(".");
+        if (!defaults.tileCached) {
+            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
+            urlArray = [url];
+        } else {
+            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
+            var url1 = url;
+            var url2 = url;
+            var url3 = url;
+            urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url3.replace("cdn", "cdn3")];
+        }
+        switch (MAPLIB) {
+            case "ol2":
+                l = new OpenLayers.Layer.WMS(defaults.name, urlArray, {
+                    layers: layer,
+                    transparent: true
+                }, defaults);
+                l.id = layer;
+                break;
+            case "ol3":
+                l = new ol.layer.TileLayer({
+                    source: new ol.source.TiledWMS({
+                        url: urlArray,
+                        params: {LAYERS: layer}
+                    }),
+                    visible: defaults.visibility
+                });
+                l.id = layer;
+                break;
+            case "leaflet":
+                l = new L.TileLayer.WMS(url, {
+                    layers: layer,
+                    format: 'image/png',
+                    transparent: true
+                });
+                l.id = layer;
+                break;
+        }
+        return l;
+    };
+
 
     // Set map constructor
     map = function (config) {
@@ -320,6 +376,22 @@ var geocloud = (function () {
                 defaults[prop] = config[prop];
             }
         }
+        // Load js and css
+        if (MAPLIB === "leaflet") {
+            // The JavaScript
+            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js');
+            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js');
+            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js');
+            $.getScript('http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js');
+
+            // The css
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
+
+        }
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/api/v3/css/styles.css' }).appendTo('head');
+
         this.bingApiKey = null;
         //ol2, ol3
         this.zoomToExtent = function (extent, closest) {
@@ -921,7 +993,7 @@ var geocloud = (function () {
             var layers = defaults.layers;
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
-                var l = this.createTileLayer(layers[i], defaults)
+                var l = createTileLayer(layers[i], defaults);
                 l.baseLayer = defaults.isBaseLayer;
                 switch (MAPLIB) {
                     case "ol2":
@@ -938,7 +1010,7 @@ var geocloud = (function () {
                             lControl.addOverlay(l);
                         }
                         if (defaults.visibility === true) {
-                            this.showLayer(layers[i])
+                            this.showLayer(layers[i]);
                         }
                         break;
                 }
@@ -946,49 +1018,8 @@ var geocloud = (function () {
             }
             return layersArr;
         };
-        //ol2, ol3 and leaflet
-        this.createTileLayer = function (layer, defaults) {
-            var parts, l;
-            parts = layer.split(".");
-            if (!defaults.tileCached) {
-                var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
-                var urlArray = [url];
-            } else {
-                var url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
-                var url1 = url;
-                var url2 = url;
-                var url3 = url;
-                var urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url3.replace("cdn", "cdn3")];
-            }
-            switch (MAPLIB) {
-                case "ol2":
-                    l = new OpenLayers.Layer.WMS(defaults.name, urlArray, {
-                        layers: layer,
-                        transparent: true
-                    }, defaults);
-                    l.id = layer;
-                    break;
-                case "ol3":
-                    l = new ol.layer.TileLayer({
-                        source: new ol.source.TiledWMS({
-                            url: urlArray,
-                            params: {LAYERS: layer}
-                        }),
-                        visible: defaults.visibility
-                    });
-                    l.id = layer;
-                    break;
-                case "leaflet":
-                    l = new L.TileLayer.WMS(url, {
-                        layers: layer,
-                        format: 'image/png',
-                        transparent: true
-                    });
-                    l.id = layer;
-                    break;
-            }
-            return l;
-        };
+
+
         this.removeTileLayerByName = function (name) {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
@@ -1297,7 +1328,7 @@ var geocloud = (function () {
     return {
         geoJsonStore: geoJsonStore,
         sqlStore: sqlStore,
-        //createTileLayer: createTileLayer,
+        tileLayer: tileLayer,
         elasticStore: elasticStore,
         tweetStore: tweetStore,
         map: map,
