@@ -756,14 +756,6 @@ $(window).ready(function () {
                             name: 'not_querable',
                             fieldLabel: 'Not querable',
                             value: r.data.not_querable
-                        },
-                        {
-                            width: 300,
-                            xtype: 'textfield',
-                            fieldLabel: 'Filter',
-                            name: 'filter',
-                            value: r.data.filter
-
                         }
                     ],
                     buttons: [
