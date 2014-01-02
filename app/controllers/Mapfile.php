@@ -224,7 +224,7 @@ class Mapfile extends \app\inc\Controller
         # Start of layers
         #
         <?php
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "' OR f_table_schema='public'";
+        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "'";
         //echo $sql;
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
@@ -241,6 +241,7 @@ class Mapfile extends \app\inc\Controller
                     $arr[$field] = "";
                 }
             }
+
             $layerArr = array("data" => array($arr));
 
             $arr = (array)json_decode($row['class']);
@@ -263,7 +264,7 @@ class Mapfile extends \app\inc\Controller
             echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
             ?>
             <?php if ($row['filter']) { ?>
-            FILTER "<?php echo $row['filter']; ?>\n"
+            FILTER "<?php echo $row['filter']; ?>"
             <?php } ?>
             <?php
             switch ($row['type']) {
