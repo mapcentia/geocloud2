@@ -14,17 +14,15 @@ if (scriptSource.charAt(0) === "/") {
 } else {
     mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 }
-document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-//document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
+if (typeof jQuery === "undefined") {
+    document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+}
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/msg.js'><\/script>");
-//document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
 document.write("<script src='" + mygeocloud_host + "/js/GeoExt/lib/GeoExt.js'><\/script>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/openlayers/theme/default/style.mobile.css'\/>");
-//document.write("<link rel='stylesheet' type='text/css' href='" + mygeocloud_host + "/js/ext/resources/css/ext-all.css'\/>");
 
 var mygeocloud_ol = (function () {
     "use strict";
