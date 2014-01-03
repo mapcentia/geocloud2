@@ -22,6 +22,10 @@ img {
 #modal-info-body {
     height: 300px !important;
 }
+#layers-popover-li .popover-content {
+    height: 400px;
+    overflow: auto;
+}
 
 @media (max-width: 767px) {
     #layers-popover-li {
