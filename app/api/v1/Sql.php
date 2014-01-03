@@ -67,11 +67,12 @@ class Sql extends \app\inc\Controller
         } elseif ($parsedSQL['select']) {
             $id = $this->q;
             $lifetime = (Input::get('lifetime')) ? : 0;
-            $options = array('cacheDir' => \app\conf\App::$param['path'] . "/tmp/", 'lifeTime' => $lifetime);
+            $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
             $Cache_Lite = new \Cache_Lite($options);
             if ($this->data = $Cache_Lite->get($this->q)) {
-                //echo "cached";
+                //echo "Cached";
             } else {
+                //echo "Not cached";
                 ob_start();
                 $srs = (Input::get('srs')) ? : "900913";
                 $api = new \app\models\Sql($srs);
