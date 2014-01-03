@@ -301,6 +301,7 @@ var geocloud = (function () {
     extend(tweetStore, storeClass);
     extend(elasticStore, storeClass);
 
+    //ol2, ol3 and leaflet
     tileLayer = function (config) {
         var prop;
         var defaults = {

@@ -1026,7 +1026,7 @@ $(window).ready(function () {
                                     {
                                         xtype: "panel",
                                         title: 'Layer settings',
-                                        height: 540,
+                                        height: 570,
                                         defaults: {
                                             border: false
                                         },
