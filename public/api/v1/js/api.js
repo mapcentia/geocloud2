@@ -1,4 +1,4 @@
-var mygeocloud_host,popup;
+var mygeocloud_host, popup;
 var scriptSource = ( function (scripts) {
     "use strict";
     scripts = document.getElementsByTagName('script');
@@ -206,7 +206,16 @@ var mygeocloud_ol = (function () {
             parentMap, defaults = {
                 numZoomLevels: 20,
                 projection: "EPSG:900913",
-                maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
+                maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
+                controls: [
+                //new OpenLayers.Control.Navigation(),
+                    //new OpenLayers.Control.PanZoomBar(),
+                    //new OpenLayers.Control.LayerSwitcher(),
+                    //new OpenLayers.Control.PanZoom(),
+                    new OpenLayers.Control.Zoom(),
+                    new OpenLayers.Control.TouchNavigation({
+                        dragPanOptions: {enableKinetic: true}
+                    })]
             };
         if (config) {
             for (prop in config) {
@@ -320,23 +329,12 @@ var mygeocloud_ol = (function () {
             }
         });
         this.map = new OpenLayers.Map(el, {
-            //theme: null,
-            controls: [//new OpenLayers.Control.Navigation(),
-                //new OpenLayers.Control.PanZoomBar(),
-                //new OpenLayers.Control.LayerSwitcher(),
-                new OpenLayers.Control.Zoom(),
-                //new OpenLayers.Control.PanZoom(),
-                new OpenLayers.Control.TouchNavigation({
-                    dragPanOptions: {
-                        enableKinetic: true
-                    }
-                })],
+            controls : defaults.controls,
             numZoomLevels: defaults.numZoomLevels,
             projection: defaults.projection,
             maxResolution: defaults.maxResolution,
             minResolution: defaults.minResolution,
             maxExtent: defaults.maxExtent
-            //units : "m"
         });
 
         var _map = this.map;
