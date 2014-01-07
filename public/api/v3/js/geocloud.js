@@ -52,6 +52,8 @@ var geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
     }
 
     // Helper for extending classes
@@ -380,14 +382,13 @@ var geocloud = (function () {
         // Load js and css
         if (MAPLIB === "leaflet") {
             // The JavaScript
-            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js');
-            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js');
+
             $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js');
             $.getScript('http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js');
 
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
+            //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
 
         }
@@ -558,6 +559,7 @@ var geocloud = (function () {
             return p;
         };
         //ol2, ol3 and leaflet
+        // Input map coordinates (900913)
         this.zoomToPoint = function (x, y, r) {
             switch (MAPLIB) {
                 case "ol2":
@@ -1025,6 +1027,7 @@ var geocloud = (function () {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
         };
+        //ol2 and leaflet
         this.addGeoJsonStore = function (store) {
             // set the parent map obj
             store.map = this.map;
@@ -1118,6 +1121,7 @@ var geocloud = (function () {
             }
         };
         //ol2, ol3 and leaflet
+        // Output map coordinates (900913)
         this.getCenter = function () {
             var point;
             switch (MAPLIB) {
@@ -1154,30 +1158,11 @@ var geocloud = (function () {
         this.getBbox = function () {
             return this.map.getExtent().toString();
         };
-        // ol3
+        // Leaflet
         this.locate = function () {
-            /*            var center;
-             var geolocation = new ol.Geolocation();
-             geolocation.setTracking(true);
-             geolocation.bindTo('projection', this.map.getView());
-             var marker = new ol.Overlay({
-             map: this.map,
-             element: */
-            /** @type {Element} */
-            /* ($('<i/>').addClass('icon-flag').get(0))
-             });
-             // bind the marker position to the device location.
-             marker.bindTo('position', geolocation);
-             geolocation.addEventListener('accuracy_changed', function () {
-             center = ol.projection.transform([geolocation.a[0], geolocation.a[1]], 'EPSG:4326', 'EPSG:900913');
-             this.zoomToPoint(center[0], center[1], 1000);
-             $(marker.getElement()).tooltip({
-             title: this.getAccuracy() + 'm from this point'
-             });
-             });*/
             this.map.locate({
                 setView: true
-            })
+            });
         }
         //ol2 and leaflet
         this.addLayerFromWkt = function (elements) { // Take 4326
@@ -1222,7 +1207,8 @@ var geocloud = (function () {
                     }
                     break;
             }
-        }
+        };
+        // ol2 and leaflet
         this.removeQueryLayers = function () {
             switch (MAPLIB) {
                 case "ol2":
@@ -1248,7 +1234,8 @@ var geocloud = (function () {
                     break;
             }
 
-        }
+        };
+        // ol2, ol3 and leaflet
         this.on = function (event, callBack) {
             switch (MAPLIB) {
                 case "ol2":
@@ -1289,6 +1276,8 @@ var geocloud = (function () {
             }
         }
     }
+    // ol2, ol3 and leaflet
+    // Input map coordinates (900913)
     clickEvent = function (e, map) {
         this.getCoordinate = function () {
             var point;
