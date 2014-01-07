@@ -10,10 +10,11 @@ class Legend extends \app\inc\Controller
     function __construct()
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
-        $name = \app\inc\Input::getPath()->part(5) . "_" . \app\inc\Input::getPath()->part(6) . ".map";
-        $map = ms_newMapobj($path . $name);
         $layerNames = explode(";", \app\inc\Input::get("l"));
         foreach ($layerNames as $layerName) {
+            $splitName = explode(".",$layerName);
+            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
+            $map = ms_newMapobj($path . $mapFile);
             @$layer = $map->getLayerByName($layerName);
             if ($layer) {
                 $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
