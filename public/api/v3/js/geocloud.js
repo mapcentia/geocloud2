@@ -382,13 +382,12 @@ var geocloud = (function () {
         // Load js and css
         if (MAPLIB === "leaflet") {
             // The JavaScript
-
             $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js');
             $.getScript('http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js');
 
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
-            //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
 
         }

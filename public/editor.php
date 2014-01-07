@@ -121,6 +121,8 @@ include("html_header.php");
         font-family: verdana, arial, sans-serif;
         font-size: 7.5pt;
         padding: 10px;
+        color: #ffffff;
+        background-color: rgb(119, 119, 119);
     }
 </style>
 </head>

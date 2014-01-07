@@ -49,6 +49,10 @@ include("html_header.php");
         font-weight: normal;
         vertical-align: middle;
     }
+    .plupload_header{
+        color: #ffffff;
+        background-color: rgb(119, 119, 119);
+    }
 </style>
 </head>
 <body>

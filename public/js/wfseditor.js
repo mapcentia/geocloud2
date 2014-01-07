@@ -315,7 +315,7 @@ $(window).ready(function () {
                                 treeConfig.push({
                                     text: arr[i],
                                     isLeaf: false,
-                                    expanded: true,
+                                    expanded: false,
                                     children: l
                                 });
                             }
@@ -347,8 +347,7 @@ $(window).ready(function () {
             listeners: {
                 click: {
                     fn: function (e) {
-
-                        if (e.lastChild === null && e.parentNode.id !== "baselayers") {
+                        if (e.leaf === true && e.parentNode.id !== "baselayers") {
                             window.parent.onEditWMSClasses(e.id);
                             Ext.getCmp('editlayerbutton').setDisabled(false);
                         } else {
@@ -370,7 +369,9 @@ $(window).ready(function () {
             }
         });
     };
+
     loadTree();
+
     reLoadTree = function () {
         var num = cloud.map.getNumLayers();
         for (var j = 1; j < num; j++) {
@@ -473,67 +474,71 @@ $(window).ready(function () {
             }
         }
     ];
-    viewport = new Ext.Viewport({
-        layout: 'border',
-        items: [
-            {
-                region: "center",
-                layout: "fit",
-                border: false,
-                items: [
-                    new Ext.Panel({
-                        layout: "border",
-                        border: false,
-                        items: [
-                            {
-                                region: "center",
-                                id: "mappanel",
-                                xtype: "gx_mappanel",
-                                map: map,
-                                zoom: 5,
-                                split: true,
-                                tbar: wfsTools,
-                            },
-                            {
-                                region: "south",
-                                id: "attrtable",
-                                title: "Attribute table",
-                                split: true,
-                                frame: false,
-                                layout: 'fit',
-                                height: 200,
-                                collapsible: true,
-                                collapsed: true,
-                                contentEl: "instructions"
-                            }
-                        ]
-                    })
-                ]
-            },
-            new Ext.Panel({
-                border: false,
-                region: "west",
-                collapsible: false,
-                width: 200,
-                items: [
-                    {
-                        xtype: "panel",
-                        border: false,
-                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
-                        height: 70
-                    },
-                    new Ext.Panel({
-                        border: false,
-                        id: "treepanel",
-                        collapsible: false,
-                        width: 200,
-                        items: [tree]
-                    })
-                ]
-            })
+    // HACK. Wait a bit before rendering of the view port. Tree has to be ready
+    setTimeout(function () {
+        viewport = new Ext.Viewport({
+            layout: 'border',
+            items: [
+                {
+                    region: "center",
+                    layout: "fit",
+                    border: false,
+                    items: [
+                        new Ext.Panel({
+                            layout: "border",
+                            border: false,
+                            items: [
+                                {
+                                    region: "center",
+                                    id: "mappanel",
+                                    xtype: "gx_mappanel",
+                                    map: map,
+                                    zoom: 5,
+                                    split: true,
+                                    tbar: wfsTools,
+                                },
+                                {
+                                    region: "south",
+                                    id: "attrtable",
+                                    title: "Attribute table",
+                                    split: true,
+                                    frame: false,
+                                    layout: 'fit',
+                                    height: 200,
+                                    collapsible: true,
+                                    collapsed: true,
+                                    contentEl: "instructions"
+                                }
+                            ]
+                        })
+                    ]
+                },
+                new Ext.Panel({
+                    border: false,
+                    region: "west",
+                    collapsible: false,
+                    width: 200,
+                    items: [
+                        {
+                            xtype: "panel",
+                            border: false,
+                            html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
+                            height: 70
+                        },
+                        new Ext.Panel({
+                            border: false,
+                            id: "treepanel",
+                            collapsible: false,
+                            width: 200,
+                            items: [tree]
+                        })
+                    ]
+                })
 
-        ]
-    });
+            ]
+        });
+    }, 300);
+
     cloud.map.zoomToMaxExtent();
 });
 function stopEdit() {
