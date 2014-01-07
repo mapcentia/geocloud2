@@ -474,8 +474,7 @@ $(window).ready(function () {
             }
         }
     ];
-    // HACK. Wait a bit before rendering of the view port. Tree has to be ready
-    setTimeout(function () {
+
         viewport = new Ext.Viewport({
             layout: 'border',
             items: [
@@ -537,6 +536,9 @@ $(window).ready(function () {
 
             ]
         });
+    // HACK. reload tree after the view has rendered
+    setTimeout(function () {
+        reLoadTree();
     }, 300);
 
     cloud.map.zoomToMaxExtent();
