@@ -12,7 +12,7 @@ class Legend extends \app\inc\Controller
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $layerNames = explode(";", \app\inc\Input::get("l"));
         foreach ($layerNames as $layerName) {
-            $splitName = explode(".",$layerName);
+            $splitName = explode(".", $layerName);
             $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
             $map = ms_newMapobj($path . $mapFile);
             @$layer = $map->getLayerByName($layerName);
@@ -36,12 +36,14 @@ class Legend extends \app\inc\Controller
         $html = "";
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
-                $html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
+                //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
                 $html .= "<table class=\"legend legend-body: 10px\">";
                 if (is_array($layer['classes'])) {
                     foreach ($layer['classes'] as $class) {
-                        $html .= "<tr><td class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
-                        $html .= "<td class=\"legend legend-text\">" . $class['name'] . "</td></tr>";
+                        if ($class['name']) {
+                            $html .= "<tr><td class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
+                            $html .= "<td class=\"legend legend-text\">" . $class['name'] . "</td></tr>";
+                        }
                     }
                 }
                 $html .= "</table></div>";
