@@ -7,7 +7,7 @@ header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
 include "libs/phpgeometry_class.php";
-include "models/users.php";
+//include "models/users.php";
 include "models/versions.php";
 include "libs/PEAR/XML/Unserializer.php";
 include "libs/PEAR/XML/Serializer.php";
