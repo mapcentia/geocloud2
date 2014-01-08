@@ -118,10 +118,15 @@ function parseFilter($filter,$table,$operator="=") {
 			$coordsArr[2] = ceil($coordsArr[2]/1000)*1000;
 			$coordsArr[3] = ceil($coordsArr[3]/1000)*1000;
 			 */
-
-			$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
+            $where[] = "ST_Intersects"
+                ."(public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
                 .$sridOfFilter
-                ."),$sridOfTable) && ".$arr['BBOX']['PropertyName'];
+                ."),$sridOfTable),"
+                .$arr['BBOX']['PropertyName'].")";
+
+			/*$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
+                .$sridOfFilter
+                ."),$sridOfTable) && ".$arr['BBOX']['PropertyName'];*/
 
 		}
 		// End of filter parsing
