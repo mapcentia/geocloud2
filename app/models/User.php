@@ -1,6 +1,6 @@
 <?php
 
-namespace app\model;
+namespace app\models;
 
 use app\inc\Model;
 
@@ -25,7 +25,7 @@ class User extends Model {
         return $response;
     }
 	public function getData() {
-		global $domain;
+        $domain = \app\conf\App::$param['domain'];
 		$query = "SELECT screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID";
 		$res = $this -> prepare($query);
 		$res -> execute(array(":sUserID" => $this->userId));

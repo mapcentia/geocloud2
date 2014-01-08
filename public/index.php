@@ -27,6 +27,12 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/twitter", function () {
         Connection::$param["postgisdb"] = Input::getPath()->part(4);
     });
+    Route::add("api/v1/cartomobile", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(4);
+    });
+    Route::add("api/v1/user", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(4);
+    });
     Route::add("api/v1/legend");
 }
 
