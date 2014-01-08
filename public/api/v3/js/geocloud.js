@@ -54,6 +54,8 @@ var geocloud = (function () {
         MAPLIB = "leaflet";
         document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
         document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js'><\/script>");
     }
 
     // Helper for extending classes
@@ -381,10 +383,6 @@ var geocloud = (function () {
         }
         // Load js and css
         if (MAPLIB === "leaflet") {
-            // The JavaScript
-            $.getScript('http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js');
-            $.getScript('http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js');
-
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');

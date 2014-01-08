@@ -673,7 +673,6 @@ saveStrategy = new OpenLayers.Strategy.Save({
                 window.parent.App.setAlert(App.STATUS_OK, message);
             }
         }
-
     }
 });
 

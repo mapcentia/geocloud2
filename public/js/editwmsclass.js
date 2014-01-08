@@ -337,8 +337,8 @@ wmsClass.init = function (id) {
             outlinecolor: 'Style: outline color',
             symbol: 'Style: symbol',
             color: 'Style: color',
-            size: 'Style: Symbol size',
-            width: 'Style: Line width',
+            size: 'Style: symbol size',
+            width: 'Style: line width',
             style_opacity: 'Style: opacity',
 
             overlaywidth: 'Overlay: line width',
