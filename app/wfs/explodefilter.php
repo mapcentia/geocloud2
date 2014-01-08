@@ -111,7 +111,6 @@ function parseFilter($filter, $table, $operator = "=")
                 $axisOrder = gmlConverter::getAxisOrderFromEpsg($arr['BBOX']['Envelope']['srsName']);
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
-
             }
 
             /*
