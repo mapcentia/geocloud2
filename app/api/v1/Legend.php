@@ -10,22 +10,24 @@ class Legend extends \app\inc\Controller
     function __construct()
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
-        $layerNames = explode(";", \app\inc\Input::get("l"));
-        foreach ($layerNames as $layerName) {
-            $splitName = explode(".", $layerName);
-            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
-            $map = ms_newMapobj($path . $mapFile);
-            @$layer = $map->getLayerByName($layerName);
-            if ($layer) {
-                $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
-                for ($i = 0; $i < $layer->numclasses; $i++) {
-                    $class = $layer->getClass($i);
-                    $icon = $class->createLegendIcon(17, 17);
-                    ob_start();
-                    $icon->saveImage("", $map);
-                    $data = base64_encode(ob_get_clean());
-                    $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-                    $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+        if (\app\inc\Input::get("l")) {
+            $layerNames = explode(";", \app\inc\Input::get("l"));
+            foreach ($layerNames as $layerName) {
+                $splitName = explode(".", $layerName);
+                $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
+                $map = ms_newMapobj($path . $mapFile);
+                @$layer = $map->getLayerByName($layerName);
+                if ($layer) {
+                    $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
+                    for ($i = 0; $i < $layer->numclasses; $i++) {
+                        $class = $layer->getClass($i);
+                        $icon = $class->createLegendIcon(17, 17);
+                        ob_start();
+                        $icon->saveImage("", $map);
+                        $data = base64_encode(ob_get_clean());
+                        $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+                        $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                    }
                 }
             }
         }
