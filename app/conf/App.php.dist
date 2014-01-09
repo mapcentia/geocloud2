@@ -14,7 +14,10 @@ class App
         "path" => "/var/www/geocloud2",
 
         // When creating new databases use this db as template
-        "databaseTemplate" => "template_geocloud"
+        "databaseTemplate" => "template_geocloud",
+
+        // The host of Elasticsearch serveren
+        "esHost" => ""
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

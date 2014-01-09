@@ -1,5 +1,5 @@
 <?php
-namespace app\model;
+namespace app\models;
 
 use app\inc\Model;
 
@@ -37,7 +37,7 @@ class Sql_to_es extends Model
             $result = $this->execQuery($sql);
             $i = 0;
             $json = "";
-            $ch = curl_init("http://localhost:9200/_bulk");
+            $ch = curl_init(\app\conf\App::$param['esHost'].":9200/_bulk");
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt( $ch, CURLOPT_HEADER, 0);

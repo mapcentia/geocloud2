@@ -7,7 +7,7 @@ class Controller
     public function authApiKey($user, $key){
         global $postgisdb;
         $postgisdb = $user;
-        $settings_viewer = new Settings_viewer();
+        $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
         $apiKey = $res['data']['api_key'];
         if ($apiKey == $key && $key!=false) {
