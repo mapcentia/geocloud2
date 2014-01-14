@@ -38,7 +38,9 @@ CREATE TABLE geometry_columns_join (
     data varchar(255),
     not_querable bool,
     single_tile bool,
-    cartomobile text
+    cartomobile text,
+    filter text
+
 );
 
 CREATE TABLE viewer (
@@ -82,7 +84,8 @@ CREATE VIEW settings.geometry_columns_view AS
 		geometry_columns_join.data,
 		geometry_columns_join.not_querable,
 		geometry_columns_join.single_tile,
-		geometry_columns_join.cartomobile
+		geometry_columns_join.cartomobile,
+		geometry_columns_join.filter
    FROM geometry_columns
    LEFT JOIN 
    		settings.geometry_columns_join ON

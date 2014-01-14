@@ -12,6 +12,7 @@ class Elasticsearch extends \app\inc\Controller
     }
     function get_bulk()
     {
+        ini_set('max_execution_time', 300);
         if (!$this->authApiKey(Input::getPath()->part(5), Input::get('key'))) {
             $response['success'] = false;
             $response['message'] = "Not the right key.";

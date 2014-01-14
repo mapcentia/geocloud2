@@ -23,6 +23,4 @@ foreach($arr['data'] as $db) {
 			$conn = NULL;
 		}
 	}
-
 }
-?>

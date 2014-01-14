@@ -16,7 +16,7 @@ class Legend extends \app\inc\Controller
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
                 $map = ms_newMapobj($path . $mapFile);
-                @$layer = $map->getLayerByName($layerName);
+                $layer = $map->getLayerByName($layerName);
                 if ($layer) {
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
                     for ($i = 0; $i < $layer->numclasses; $i++) {
@@ -53,5 +53,23 @@ class Legend extends \app\inc\Controller
         }
         $response['html'] = $html;
         echo \app\inc\Response::json($response);
+    }
+
+    function get_json()
+    {
+        $json = array();
+        if (is_array($this->legendArr)) {
+            foreach ($this->legendArr as $key=>$layer) {
+                {
+                    if (is_array($layer['classes'])) {
+                        foreach ($layer['classes'] as $class) {
+                            $json[] = array("id"=>$key,"name"=>$class['name'],"img"=>$class['img']);
+                        }
+                    }
+                }
+            }
+        }
+        $response['json'] = $json;
+        echo \app\inc\Response::json($json);
     }
 }
