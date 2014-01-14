@@ -9,9 +9,9 @@ include('../html_header.php');
 
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
-                    <h3>Sign up for GeoCloud</h3>
+                    <h3>Create database</h3>
                     <div class="alert alert-success" style="text-align: center">
-                        The new and improved GeoCloud2
+                        Create a new PostGIS database. Choose between data centers located in US or EU (Availability Zones)
                     </div>
 
                     <div class="controls first">
