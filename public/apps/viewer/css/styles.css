@@ -11,10 +11,10 @@
     width: 225px;
 }
 
-.popover-inner {
+/*.popover-inner {
     overflow: auto;
     max-height: 400px;
-}
+}*/
 
 img {
     max-width: none !important;
@@ -23,7 +23,7 @@ img {
     height: 300px !important;
 }
 #layers-popover-li .popover-content {
-    height: 400px;
+    max-height: 400px;
     overflow: auto;
 }
 
