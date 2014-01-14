@@ -319,7 +319,7 @@ $(window).ready(function () {
                 handler: onEditCartomobile
             },
             {
-                text: '<i class="icon-lock btn-gc""></i> Authentication',
+                text: '<i class="icon-lock btn-gc""></i> Services',
                 handler: onGlobalSettings
             },
             {
@@ -329,7 +329,6 @@ $(window).ready(function () {
             '->',
             {
                 text: '<i class="icon-remove btn-gc""></i> Clear all tile cache',
-                //iconCls : 'icon-search',
                 handler: function () {
                     Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
@@ -534,7 +533,6 @@ $(window).ready(function () {
                     ],
                     buttons: [
                         {
-                            //iconCls : 'silk-add',
                             text: '<i class="icon-plus btn-gc"></i> Add new schema',
                             handler: function () {
                                 var f = Ext.getCmp('schemaform');
@@ -801,7 +799,7 @@ $(window).ready(function () {
     function onGlobalSettings(btn, ev) {
         winGlobalSettings = null;
         winGlobalSettings = new Ext.Window({
-            title: "Authentication",
+            title: "Services",
             modal: true,
             width: 700,
             height: 350,
@@ -815,18 +813,18 @@ $(window).ready(function () {
                     layout: 'border',
                     region: "center",
                     items: [new Ext.Panel({
-                        //title: 'Authentication',
                         region: "center",
                         items: [httpAuth.form, apiKey.form]
                     }), new Ext.Panel({
                         layout: "border",
                         region: "east",
                         width: 400,
-                        items: [new Ext.Panel({
+                        items: [
+                            new Ext.Panel({
                             //title: 'WFS',
                             region: "north",
                             border: false,
-                            height: 100,
+                            height: 50,
                             bodyStyle: {
                                 background: '#ffffff',
                                 padding: '7px'
@@ -835,7 +833,7 @@ $(window).ready(function () {
                         }), new Ext.Panel({
                             //title: 'WMS',
                             border: false,
-                            height: 100,
+                            height: 50,
                             region: "center",
                             bodyStyle: {
                                 background: '#ffffff',
@@ -845,18 +843,34 @@ $(window).ready(function () {
 
                         }), new Ext.Panel({
                             //title: 'SQL',
-                            height: 120,
+                            height: 215,
                             border: false,
                             region: "south",
-                            bodyStyle: {
-                                background: '#ffffff',
-                                padding: '7px'
-                            },
-                            contentEl: "sql-dialog"
+                            items: [
+                                new Ext.Panel({
+                                    //title: 'SQL',
+                                    height: 50,
+                                    border: false,
+                                    region: "north",
+                                    bodyStyle: {
+                                        background: '#ffffff',
+                                        padding: '7px'
+                                    },
+                                    contentEl: "sql-dialog"
 
-                        })]})]
-                })]
-        });
+                                }), new Ext.Panel({
+                                    //title: 'elasticsearch',
+                                    height: 60,
+                                    border: false,
+                                    region: "center",
+                                    bodyStyle: {
+                                        background: '#ffffff',
+                                        padding: '7px'
+                                    },
+                                    contentEl: "elasticsearch-dialog"
+                                })]})]
+                    })]
+                })]});
         winGlobalSettings.show(this);
     }
 
@@ -1131,7 +1145,7 @@ $(window).ready(function () {
     };
     updateLegend = function () {
         var a6 = Ext.getCmp("a6");
-        if (activeLayer !== undefined){
+        if (activeLayer !== undefined) {
             $.ajax({
                 url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
                 dataType: 'jsonp',

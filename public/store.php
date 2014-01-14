@@ -115,6 +115,25 @@ include("html_header.php");
             </tbody>
         </table>
     </div>
+    <div id="elasticsearch-dialog">
+        <table border="0">
+            <tbody>
+            <tr>
+                <td>This is the elasticsearch API end point:</td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" readonly="readonly"
+                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
+                           size="65"/>
+                </td>
+            </tr>
+            <tr>
+                <td>map: PUT, bulk: GET, search: GET, delete: DELETE</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 <?php
 include("html_footer.php");
