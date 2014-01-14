@@ -454,7 +454,7 @@ var geocloud = (function () {
                     var layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
-                            if (layers[key].baseLayer !== true) {
+                            if (layers[key].baseLayer !== true && typeof layers[key]._tiles === "object") {
                                 layerArr.push(layers[key].id);
                             }
                         }

@@ -58,18 +58,20 @@ class Legend extends \app\inc\Controller
     function get_json()
     {
         $json = array();
+        $classes = array();
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $key=>$layer) {
                 {
                     if (is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
-                            $json[] = array("id"=>$key,"name"=>$class['name'],"img"=>$class['img']);
+                            $classes[] = array("name"=>$class['name'],"img"=>$class['img']);
                         }
                     }
+                    $json[] = array("id"=>$key,"classes"=>$classes);
+                    $classes = array();
                 }
             }
         }
-        $response['json'] = $json;
         echo \app\inc\Response::json($json);
     }
 }
