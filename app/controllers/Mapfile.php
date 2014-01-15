@@ -380,6 +380,17 @@ class Mapfile extends \app\inc\Controller
                     echo "\n";
                     ?>
 
+                    #ANGLE
+                    <?php
+                    if ($class['angle']) {
+                        if (is_numeric($class['angle']))
+                            echo "ANGLE " . $class['angle'];
+                        else
+                            echo "ANGLE [{$class['angle']}]";
+                    }
+                    echo "\n";
+                    ?>
+
                     END # style
 
                     STYLE
@@ -404,6 +415,16 @@ class Mapfile extends \app\inc\Controller
                             echo "SIZE " . $class['overlaysize'];
                         else
                             echo "SIZE [{$class['overlaysize']}]";
+                    }
+                    echo "\n";
+                    ?>
+                    #ANGLE
+                    <?php
+                    if ($class['overlayangle']) {
+                        if (is_numeric($class['overlayangle']))
+                            echo "ANGLE " . $class['overlayangle'];
+                        else
+                            echo "ANGLE [{$class['overlayangle']}]";
                     }
                     echo "\n";
                     ?>

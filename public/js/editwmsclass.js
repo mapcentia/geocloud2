@@ -216,6 +216,9 @@ wmsClass.init = function (id) {
                 name: 'width'
             },
             {
+                name: 'angle'
+            },
+            {
                 name: 'style_opacity'
             },
             {
@@ -277,7 +280,11 @@ wmsClass.init = function (id) {
             },
             {
                 name: 'overlaywidth'
-            },{
+            },
+            {
+                name: 'overlayangle'
+            },
+            {
                 name: 'overlaystyle_opacity'
             }
         ],
@@ -339,6 +346,7 @@ wmsClass.init = function (id) {
             color: 'Style: color',
             size: 'Style: symbol size',
             width: 'Style: line width',
+            angle: 'Style: symbol angle',
             style_opacity: 'Style: opacity',
 
             overlaywidth: 'Overlay: line width',
@@ -346,6 +354,7 @@ wmsClass.init = function (id) {
             overlaysymbol: 'Overlay: symbol',
             overlaycolor: 'Overlay: color',
             overlaysize: 'Overlay: symbol size',
+            overlayangle: 'Overlay: symbol angle',
             overlaystyle_opacity: 'Overlay: opacity'
         },
         customEditors: {
@@ -436,6 +445,16 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
+            'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsClasses.fieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsClasses.fieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
             'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -486,7 +505,7 @@ wmsClass.init = function (id) {
 function onSelectClass(btn, ev) {
     var record = wmsClasses.grid.getSelectionModel().getSelected(), a;
     if (!record) {
-        App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+       App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
         return false;
     }
 
