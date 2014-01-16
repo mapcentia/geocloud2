@@ -8,7 +8,11 @@ MapCentia = (function () {
     db = uri[3];
     schema = uri[4];
     var switchLayer = function (name, visible) {
-        (visible) ? cloud.showLayer(name) : cloud.hideLayer(name);
+        if (visible) {
+            cloud.showLayer(name);
+        } else {
+            cloud.hideLayer(name);
+        }
         addLegend();
     };
     var setBaseLayer = function (str) {
@@ -105,10 +109,11 @@ MapCentia = (function () {
                         $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '"> ' + arr[i] + ' </a></div></div>');
                         $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
                         for (var u = 0; u < response.data.length; ++u) {
-                            if (response.data[u].layergroup == arr[i]) {
+                            if (response.data[u].layergroup === arr[i]) {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <a href='#' data-toggle='tooltip' title='first tooltip'><i class='icon-lock'></i></a>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
-                                $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + authIcon + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)"></label></div>');
+                                var metaUrl = (response.data[u].meta_url !== null && response.data[u].meta_url !== "") ? ' <a target="_blank" href="' + response.data[u].meta_url + '"><i class="icon-info-sign"></i></a>' : '';
+                                $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + authIcon + metaUrl + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)"></label></div>');
                                 l.push({
                                     text: text,
                                     id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
