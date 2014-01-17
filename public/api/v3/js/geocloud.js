@@ -1,5 +1,6 @@
 var geocloud_host; // Global var
-var geocloud = (function () {
+var geocloud;
+geocloud = (function () {
     "use strict";
     var scriptSource = (function (scripts) {
             scripts = document.getElementsByTagName('script');
@@ -85,7 +86,8 @@ var geocloud = (function () {
             onLoad: function () {
             },
             index: "",
-            type: ""
+            type: "",
+            size: 3
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -143,7 +145,7 @@ var geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, parentThis = this, map, sql;
+        var prop, me = this, map, sql;
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -156,7 +158,8 @@ var geocloud = (function () {
         this.load = function (doNotShowAlertOnError) {
             var url = host.replace("cdn.", "");
             try {
-                map = parentThis.map, sql = this.sql;
+                map = me.map;
+                sql = this.sql;
                 sql = sql.replace("{centerX}", map.getCenter().lat.toString());
                 sql = sql.replace("{centerY}", map.getCenter().lon.toString());
                 sql = sql.replace("{minX}", map.getExtent().left);
@@ -177,20 +180,20 @@ var geocloud = (function () {
                     }
                     if (response.success === true) {
                         if (response.features !== null) {
-                            parentThis.geoJSON = response;
+                            me.geoJSON = response;
                             switch (MAPLIB) {
                                 case "ol2":
-                                    parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                    me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
                                     break;
                                 case "leaflet":
-                                    parentThis.layer.addData(response);
+                                    me.layer.addData(response);
                                     break;
                             }
                         }
                     }
                 },
                 complete: function () {
-                    parentThis.onLoad();
+                    me.onLoad();
                 }
 
             });
@@ -198,7 +201,7 @@ var geocloud = (function () {
         };
     };
     tweetStore = function (config) {
-        var prop, parentThis = this;
+        var prop, me = this;
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -208,14 +211,14 @@ var geocloud = (function () {
         this.load = function (doNotShowAlertOnError) {
             var q = this.defaults.q;
             try {
-                var map = parentThis.map;
-                q = q.replace("{centerX}", map.getCenter().lat.toString());
-                q = q.replace("{centerY}", map.getCenter().lon.toString());
-                q = q.replace("{minX}", map.getExtent().left);
-                q = q.replace("{maxX}", map.getExtent().right);
-                q = q.replace("{minY}", map.getExtent().bottom);
-                q = q.replace("{maxY}", map.getExtent().top);
-                q = q.replace("{bbox}", map.getExtent().toString());
+                var map = me.map;
+                //q = q.replace("{centerX}", map.getCenter().lat.toString());
+                // = q.replace("{centerY}", map.getCenter().lon.toString());
+                q = q.replace(/\{minX\}/g, map.getExtent().left);
+                q = q.replace(/\{maxX\}/g, map.getExtent().right);
+                q = q.replace(/\{minY\}/g, map.getExtent().bottom);
+                q = q.replace(/\{maxY\}/g, map.getExtent().top);
+                q = q.replace(/{bbox}/g, map.getExtent().toString());
             } catch (e) {
             }
             $.ajax({
@@ -229,27 +232,27 @@ var geocloud = (function () {
                     }
                     if (response.success === true) {
                         if (response.features !== null) {
-                            parentThis.geoJSON = response;
+                            me.geoJSON = response;
                             switch (MAPLIB) {
                                 case "ol2":
-                                    parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                    me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
                                     break;
                                 case "leaflet":
-                                    parentThis.layer.addData(response);
+                                    me.layer.addData(response);
                                     break;
                             }
                         }
                     }
                 },
                 complete: function () {
-                    parentThis.onLoad();
+                    me.onLoad();
                 }
             });
             return this.layer;
         };
     };
     elasticStore = function (config) {
-        var prop, parentThis = this;
+        var prop, me = this;
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -258,10 +261,10 @@ var geocloud = (function () {
         this.init();
         this.q = this.defaults.q;
         this.load = function (doNotShowAlertOnError) {
+            var map = me.map, q = this.q;
             try {
-                var map = parentThis.map, q = this.q;
-                q = q.replace("{centerX}", map.getCenter().lat.toString());
-                q = q.replace("{centerY}", map.getCenter().lon.toString());
+                //q = q.replace("{centerX}", map.getCenter().lat.toString());
+                //q = q.replace("{centerY}", map.getCenter().lon.toString());
                 q = q.replace("{minX}", map.getExtent().left);
                 q = q.replace("{maxX}", map.getExtent().right);
                 q = q.replace("{minY}", map.getExtent().bottom);
@@ -269,9 +272,10 @@ var geocloud = (function () {
                 q = q.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
             }
+
             $.ajax({
                 dataType: 'jsonp',
-                data: 'q=' + encodeURIComponent(q),
+                data: 'q=' + encodeURIComponent(q) + "&size=" + this.defaults.size,
                 jsonp: 'jsonp_callback',
                 url: host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
@@ -281,20 +285,20 @@ var geocloud = (function () {
                     })
                     response.features = features;
                     if (response.features !== null) {
-                        parentThis.geoJSON = response;
+                        me.geoJSON = response;
                         switch (MAPLIB) {
                             case "ol2":
-                                parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
                                 break;
                             case "leaflet":
-                                parentThis.layer.addData(response);
+                                me.layer.addData(response);
                                 break;
                         }
                     }
 
                 },
                 complete: function () {
-                    parentThis.onLoad();
+                    me.onLoad();
                 }
             });
             return this.layer;
@@ -1027,7 +1031,7 @@ var geocloud = (function () {
         //ol2 and leaflet
         this.addGeoJsonStore = function (store) {
             // set the parent map obj
-            store.map = this.map;
+            store.map = this;
             switch (MAPLIB) {
                 case "ol2":
                     this.map.addLayers([store.layer]);
@@ -1148,9 +1152,24 @@ var geocloud = (function () {
         };
         //ol2
         this.getExtent = function () {
-            var mapBounds = this.map.getExtent();
-            return mapBounds.toArray();
+            var mapBounds, bounds;
+            switch (MAPLIB) {
+                case "ol2":
+                    mapBounds = this.map.getExtent();
+                    bounds = mapBounds.toArray();
+                    break;
+                case "ol3":
+
+                    break;
+                case "leaflet":
+                    mapBounds = this.map.getBounds().toBBoxString().split(",");
+                    bounds = {left: mapBounds[0], right: mapBounds[2], top: mapBounds[3], bottom: mapBounds[1]};
+                    break;
+            }
+            return (bounds);
+            //console.log(bounds);
         };
+
         //ol2
         this.getBbox = function () {
             return this.map.getExtent().toString();
@@ -1343,4 +1362,5 @@ var geocloud = (function () {
         BINGAERIAL: BINGAERIAL,
         BINGAERIALWITHLABELS: BINGAERIALWITHLABELS
     };
-})();
+})
+    ();

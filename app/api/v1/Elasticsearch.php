@@ -35,7 +35,7 @@ class Elasticsearch extends \app\inc\Controller
         $get = Input::get();
         $q = $get['q'];
         $call_back = $get['jsonp_callback'];
-        $size = ($get['size']) ? $get['size'] : 10;
+        $size = ($get['size']) ? : 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
 
