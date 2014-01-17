@@ -40,7 +40,9 @@ function microtime_float()
 
 $startTime = microtime_float();
 
-$thePath = "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['REDIRECT_URL'];
+$uri = str_replace("index.php","",$_SERVER['REDIRECT_URL']);
+
+$thePath = "http://" . $_SERVER['SERVER_NAME'] . $uri;
 $server = "http://" . $_SERVER['SERVER_NAME'];
 $BBox = null;
 //end added
