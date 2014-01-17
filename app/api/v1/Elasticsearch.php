@@ -25,7 +25,7 @@ class Elasticsearch extends \app\inc\Controller
             echo json_encode($response);
             die();
         }*/
-        $api = new \app\models\Sql_to_es();
+        $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $api->sql(rawurldecode($_GET['q']), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
     }
