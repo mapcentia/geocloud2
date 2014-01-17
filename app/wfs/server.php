@@ -40,7 +40,8 @@ function microtime_float()
 
 $startTime = microtime_float();
 
-$uri = str_replace("index.php","",$_SERVER['REDIRECT_URL']);
+$uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
+$uri = str_replace("//", "/", $uri);
 
 $thePath = "http://" . $_SERVER['SERVER_NAME'] . $uri;
 $server = "http://" . $_SERVER['SERVER_NAME'];
@@ -541,7 +542,7 @@ function doSelect($table, $sql, $sql2, $from)
                     }
 
                     //$FieldValue = htmlentities($FieldValue);
-                    $FieldValue = altUseCdataOnStrings($FieldValue,$FieldName);
+                    $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
 
 
                     if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
@@ -705,7 +706,7 @@ function altFieldValue($field, $value)
  * @param unknown $value
  * @return unknown
  */
-function altUseCdataOnStrings($value,$name)
+function altUseCdataOnStrings($value, $name)
 {
     if (!is_numeric($value) && ($value)) {
         //if ($name == "entities") $value = "<![CDATA[".$value."]]>";
@@ -863,7 +864,7 @@ function doParse($arr)
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql['tables'][$i]);
             //$metaData = $postgisObject -> getMetaData($forSql['tables'][$i]);
-            $sql = "INSERT into {$postgisschema}.{$forSql['tables'][$i]} (";
+            $sql = "INSERT INTO {$postgisschema}.{$forSql['tables'][$i]} (";
             foreach ($forSql['fields'][$i] as $field) {
                 $fields[] = "\"" . $field . "\"";
             }
