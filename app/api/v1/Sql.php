@@ -41,6 +41,16 @@ class Sql extends \app\inc\Controller
     private function transaction($sql)
     {
         $parsedSQL = \app\inc\SqlParser::ParseString($sql)->getArray();
+        if ($parsedSQL['from']) {
+            if (
+                strpos(strtolower($parsedSQL['from']), 'settings.') !== false ||
+                strpos(strtolower($parsedSQL['from']), 'geometry_columns') !== false
+            ) {
+                $this->response['success'] = false;
+                $this->response['message'] = "Can't complete the query";
+                return $this->response;
+            }
+        }
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
             $this->response['message'] = "You can't use ';'. Use the bulk transaction API instead";
