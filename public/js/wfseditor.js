@@ -17,7 +17,7 @@ var layerBeingEditing;
 
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
-function startWfsEdition(layerName) {
+function startWfsEdition(layerName, geomField) {
 
     var fieldsForStore;
     var columnsForGrid;
@@ -105,7 +105,7 @@ function startWfsEdition(layerName) {
             featureType: layerName,
             featureNS: "http://twitter/" + screenName,
             srsName: "EPSG:900913",
-            geometryName: "the_geom", // must be dynamamic
+            geometryName: geomField, // must be dynamamic
             // Only load features in map extent
             defaultFilter: new OpenLayers.Filter.Spatial({
                 type: OpenLayers.Filter.Spatial.BBOX,
@@ -306,9 +306,10 @@ $(window).ready(function () {
                                     if (response.data[u].layergroup === arr[i]) {
                                         l.push({
                                             text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                            id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                            id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
                                             leaf: true,
-                                            checked: false
+                                            checked: false,
+                                            geomField: response.data[u].f_geometry_column
                                         });
                                     }
                                 }
@@ -361,10 +362,12 @@ $(window).ready(function () {
         });
         tree.on("checkchange", function (node, checked) {
             if (node.lastChild === null && node.parentNode.id !== "baselayers") {
+                // layer id are still only schema.table in map file
+                var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
                 if (checked) {
-                    layers[node.id][0].setVisibility(true);
+                    layers[layerId][0].setVisibility(true);
                 } else {
-                    layers[node.id][0].setVisibility(false);
+                    layers[layerId][0].setVisibility(false);
                 }
             }
         });
@@ -394,9 +397,9 @@ $(window).ready(function () {
             disabled: true,
             handler: function (thisBtn, event) {
                 var node = tree.getSelectionModel().getSelectedNode();
-                //console.log(node.id);
                 var id = node.id.split(".");
-                startWfsEdition(id[1]);
+                var geomField = node.attributes.geomField;
+                startWfsEdition(id[1], geomField);
             }
         },
         '-',
@@ -475,67 +478,67 @@ $(window).ready(function () {
         }
     ];
 
-        viewport = new Ext.Viewport({
-            layout: 'border',
-            items: [
-                {
-                    region: "center",
-                    layout: "fit",
-                    border: false,
-                    items: [
-                        new Ext.Panel({
-                            layout: "border",
-                            border: false,
-                            items: [
-                                {
-                                    region: "center",
-                                    id: "mappanel",
-                                    xtype: "gx_mappanel",
-                                    map: map,
-                                    zoom: 5,
-                                    split: true,
-                                    tbar: wfsTools,
-                                },
-                                {
-                                    region: "south",
-                                    id: "attrtable",
-                                    title: "Attribute table",
-                                    split: true,
-                                    frame: false,
-                                    layout: 'fit',
-                                    height: 200,
-                                    collapsible: true,
-                                    collapsed: true,
-                                    contentEl: "instructions"
-                                }
-                            ]
-                        })
-                    ]
-                },
-                new Ext.Panel({
-                    border: false,
-                    region: "west",
-                    collapsible: false,
-                    width: 200,
-                    items: [
-                        {
-                            xtype: "panel",
-                            border: false,
-                            html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
-                            height: 70
-                        },
-                        new Ext.Panel({
-                            border: false,
-                            id: "treepanel",
-                            collapsible: false,
-                            width: 200,
-                            items: [tree]
-                        })
-                    ]
-                })
+    viewport = new Ext.Viewport({
+        layout: 'border',
+        items: [
+            {
+                region: "center",
+                layout: "fit",
+                border: false,
+                items: [
+                    new Ext.Panel({
+                        layout: "border",
+                        border: false,
+                        items: [
+                            {
+                                region: "center",
+                                id: "mappanel",
+                                xtype: "gx_mappanel",
+                                map: map,
+                                zoom: 5,
+                                split: true,
+                                tbar: wfsTools,
+                            },
+                            {
+                                region: "south",
+                                id: "attrtable",
+                                title: "Attribute table",
+                                split: true,
+                                frame: false,
+                                layout: 'fit',
+                                height: 200,
+                                collapsible: true,
+                                collapsed: true,
+                                contentEl: "instructions"
+                            }
+                        ]
+                    })
+                ]
+            },
+            new Ext.Panel({
+                border: false,
+                region: "west",
+                collapsible: false,
+                width: 200,
+                items: [
+                    {
+                        xtype: "panel",
+                        border: false,
+                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
+                        height: 70
+                    },
+                    new Ext.Panel({
+                        border: false,
+                        id: "treepanel",
+                        collapsible: false,
+                        width: 200,
+                        items: [tree]
+                    })
+                ]
+            })
 
-            ]
-        });
+        ]
+    });
     // HACK. reload tree after the view has rendered
     setTimeout(function () {
         reLoadTree();

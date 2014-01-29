@@ -19,12 +19,12 @@ class Elasticsearch extends \app\inc\Controller
             echo json_encode($response);
             die();
         }
-        /*if (sizeof($parts) < 9 || $parts[8] == "") {
+        if (sizeof(Input::getPath()->parts()) < 9 || Input::getPath()->part(8) == "") {
             $response['success'] = false;
             $response['message'] = "The URI must be in this form: /api/v1/elasticsearch/bulk/[user]/[index]/[type]/[id]?q=[SELECT query]";
             echo json_encode($response);
             die();
-        }*/
+        }
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $api->sql(rawurldecode($_GET['q']), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));

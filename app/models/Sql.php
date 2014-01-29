@@ -14,7 +14,6 @@ class Sql extends \app\inc\Model {
 		$name = $this -> toAscii($name, null, "_");
 		$view = "sqlapi.{$name}";
 		$sqlView = "CREATE VIEW {$view} as {$q}";
-		//echo $sqlView ;
 		$result = $this -> execQuery($sqlView);
 		if (!$this -> PDOerror) {
 			$arrayWithFields = $this -> getMetaData($view);
@@ -29,7 +28,6 @@ class Sql extends \app\inc\Model {
 			}
 			$sql = implode(",", $fieldsArr);
 			$sql = "SELECT {$sql} FROM {$view}";
-			//echo $sql;
 			$result = $this -> execQuery($sql);
 			while ($row = $this -> fetchRow($result, "assoc")) {
 				$arr = array();

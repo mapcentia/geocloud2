@@ -315,20 +315,20 @@ $(window).ready(function () {
         }),
         tbar: [
             {
-                text: '<i class="icon-camera btn-gc""></i> CartoMobile',
+                text: '<i class="icon-camera btn-gc"></i> CartoMobile',
                 handler: onEditCartomobile
             },
             {
-                text: '<i class="icon-lock btn-gc""></i> Services',
+                text: '<i class="icon-lock btn-gc"></i> Services',
                 handler: onGlobalSettings
             },
             {
-                text: '<i class="icon-cog btn-gc""></i> Advanced',
+                text: '<i class="icon-cog btn-gc"></i> Advanced',
                 handler: onEditMoreSettings
             },
             '->',
             {
-                text: '<i class="icon-remove btn-gc""></i> Clear all tile cache',
+                text: '<i class="icon-remove btn-g"></i> Clear all tile cache',
                 handler: function () {
                     Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
@@ -630,7 +630,7 @@ $(window).ready(function () {
         var record;
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
-            if (row._key_ === e + ".the_geom") {
+            if (row._key_ === e) {
                 record = row;
             }
         });
@@ -763,6 +763,10 @@ $(window).ready(function () {
                                 var f = Ext.getCmp('detailform');
                                 if (f.form.isValid()) {
                                     var values = f.form.getValues();
+
+                                    for (key in values) {
+                                        values[key] = encodeURIComponent(values[key]);
+                                    };
                                     var param = {
                                         data: values
                                     };
@@ -821,54 +825,54 @@ $(window).ready(function () {
                         width: 400,
                         items: [
                             new Ext.Panel({
-                            //title: 'WFS',
-                            region: "north",
-                            border: false,
-                            height: 50,
-                            bodyStyle: {
-                                background: '#ffffff',
-                                padding: '7px'
-                            },
-                            contentEl: "wfs-dialog"
-                        }), new Ext.Panel({
-                            //title: 'WMS',
-                            border: false,
-                            height: 50,
-                            region: "center",
-                            bodyStyle: {
-                                background: '#ffffff',
-                                padding: '7px'
-                            },
-                            contentEl: "wms-dialog"
+                                //title: 'WFS',
+                                region: "north",
+                                border: false,
+                                height: 50,
+                                bodyStyle: {
+                                    background: '#ffffff',
+                                    padding: '7px'
+                                },
+                                contentEl: "wfs-dialog"
+                            }), new Ext.Panel({
+                                //title: 'WMS',
+                                border: false,
+                                height: 50,
+                                region: "center",
+                                bodyStyle: {
+                                    background: '#ffffff',
+                                    padding: '7px'
+                                },
+                                contentEl: "wms-dialog"
 
-                        }), new Ext.Panel({
-                            //title: 'SQL',
-                            height: 215,
-                            border: false,
-                            region: "south",
-                            items: [
-                                new Ext.Panel({
-                                    //title: 'SQL',
-                                    height: 50,
-                                    border: false,
-                                    region: "north",
-                                    bodyStyle: {
-                                        background: '#ffffff',
-                                        padding: '7px'
-                                    },
-                                    contentEl: "sql-dialog"
+                            }), new Ext.Panel({
+                                //title: 'SQL',
+                                height: 215,
+                                border: false,
+                                region: "south",
+                                items: [
+                                    new Ext.Panel({
+                                        //title: 'SQL',
+                                        height: 50,
+                                        border: false,
+                                        region: "north",
+                                        bodyStyle: {
+                                            background: '#ffffff',
+                                            padding: '7px'
+                                        },
+                                        contentEl: "sql-dialog"
 
-                                }), new Ext.Panel({
-                                    //title: 'elasticsearch',
-                                    height: 60,
-                                    border: false,
-                                    region: "center",
-                                    bodyStyle: {
-                                        background: '#ffffff',
-                                        padding: '7px'
-                                    },
-                                    contentEl: "elasticsearch-dialog"
-                                })]})]
+                                    }), new Ext.Panel({
+                                        //title: 'elasticsearch',
+                                        height: 60,
+                                        border: false,
+                                        region: "center",
+                                        bodyStyle: {
+                                            background: '#ffffff',
+                                            padding: '7px'
+                                        },
+                                        contentEl: "elasticsearch-dialog"
+                                    })]})]
                     })]
                 })]});
         winGlobalSettings.show(this);

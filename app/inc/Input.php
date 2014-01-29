@@ -68,4 +68,8 @@ class GetPart
     {
         return $this->parts[$e];
     }
+    function parts()
+    {
+        return $this->parts;
+    }
 }
