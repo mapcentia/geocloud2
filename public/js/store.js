@@ -521,7 +521,6 @@ $(window).ready(function () {
 
                     defaults: {
                         allowBlank: false
-                        //msgTarget: 'side'
                     },
                     items: [
                         {
@@ -690,8 +689,6 @@ $(window).ready(function () {
             return false;
         }
         var r = record;
-        winMoreSettings = null;
-        //wmsLayer.init(record.get("f_table_name"));
         winMoreSettings = new Ext.Window({
             title: "More settings on '" + record.get("f_table_name") + "'",
             modal: true,
@@ -801,7 +798,6 @@ $(window).ready(function () {
     }
 
     function onGlobalSettings(btn, ev) {
-        winGlobalSettings = null;
         winGlobalSettings = new Ext.Window({
             title: "Services",
             modal: true,

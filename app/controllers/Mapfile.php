@@ -241,21 +241,33 @@ class Mapfile extends \app\inc\Controller
                     $arr[$field] = "";
                 }
             }
-
             $layerArr = array("data" => array($arr));
+            $sortedArr = array();
 
-            $arr = (array)json_decode($row['class']);
+            // Sort classes
+            $arr = $arr2 = (array)json_decode($row['class']);
+            for ($i = 0; $i < sizeof($arr); $i++) {
+                $last = 100;
+                foreach ($arr2 as $key => $value) {
+                    if ($value->sortid < $last) {
+                        $temp = $value;
+                        $del = $key;
+                    }
+                    $last = $value->sortid;
+                }
+                array_push($sortedArr, $temp);
+                unset($arr2[$del]);
+                $temp = null;
+            }
+            $arr = $sortedArr;
             for ($i = 0; $i < sizeof($arr); $i++) {
                 $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
                 $arrNew[$i]['id'] = $i;
             }
             $classArr = array("data" => $arrNew);
-
             $primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-            //print_r($classArr);
             unset($arrNew);
             ?>
-
             LAYER
             NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
             STATUS off

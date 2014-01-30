@@ -25,8 +25,9 @@ include("html_header.php");
 <link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
 
 <!-- overrides to base library -->
-<script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js"></script>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/fileuploadfield/css/fileuploadfield.css"/>
+<script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css" />
 <!-- extensions -->
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
 

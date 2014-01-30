@@ -32,6 +32,9 @@ wmsClasses.init = function (record) {
             name: 'id'
         },
         {
+            name: 'sortid'
+        },
+        {
             name: 'name'
         },
         {
@@ -71,7 +74,8 @@ wmsClasses.init = function (record) {
         writer: wmsClasses.writer,
         reader: wmsClasses.reader,
         proxy: wmsClasses.proxy,
-        autoSave: true
+        autoSave: true,
+        sortInfo: { field: "sortid", direction: "ASC" }
     });
     wmsClasses.store.load();
     wmsClasses.grid = new Ext.grid.GridPanel({
@@ -90,23 +94,28 @@ wmsClasses.init = function (record) {
         }),
         cm: new Ext.grid.ColumnModel({
             defaults: {
-                sortable: true,
-                editor: {
+                sortable: false,
+                menuDisabled: true,
+                    editor: {
                     xtype: "textfield"
                 }
             },
             columns: [
                 {
+                    id: "sortid",
+                    header: "Sort id",
+                    dataIndex: "sortid",
+                    width: 40
+                },
+                {
                     id: "name",
                     header: "Name",
-                    dataIndex: "name",
-                    sortable: true
+                    dataIndex: "name"
                 },
                 {
                     id: "expression",
                     header: "Expression",
-                    dataIndex: "expression",
-                    sortable: true
+                    dataIndex: "expression"
                 }
             ]
         }),
@@ -186,6 +195,9 @@ wmsClass.init = function (id) {
         root: 'data',
         // fields: 'fields',
         fields: [
+            {
+                name: 'sortid'
+            },
             {
                 name: 'name'
             },
@@ -322,6 +334,7 @@ wmsClass.init = function (id) {
             borderBottom: '1px solid #d0d0d0'
         },
         propertyNames: {
+            sortid: 'Sort id',
             name: 'Name',
             label_size: 'Label: size',
             label: 'Label: on',
@@ -358,6 +371,13 @@ wmsClass.init = function (id) {
             overlaystyle_opacity: 'Overlay: opacity'
         },
         customEditors: {
+            'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: -100,
+                maxValue: 100,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true}),{ }),
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
@@ -463,8 +483,7 @@ wmsClass.init = function (id) {
         },
         viewConfig: {
             forceFit: true
-            //scrollOffset: 2
-            // the grid will never have scrollbars
+
         },
         bbar: [
             {
@@ -505,7 +524,7 @@ wmsClass.init = function (id) {
 function onSelectClass(btn, ev) {
     var record = wmsClasses.grid.getSelectionModel().getSelected(), a;
     if (!record) {
-       App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+        App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
         return false;
     }
 

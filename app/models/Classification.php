@@ -25,11 +25,26 @@ class Classification extends \app\inc\Model
         $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->table}'";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
+            $sortedArr = array();
             $response['success'] = true;
             $row = $this->fetchRow($result, "assoc");
-            $arr = (array)json_decode($row['class']);
+            $arr = $arr2 = (array)json_decode($row['class']);
             for ($i = 0; $i < sizeof($arr); $i++) {
-                $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                $last = 100;
+                foreach ($arr2 as $key => $value) {
+                    if ($value->sortid < $last) {
+                        $temp = $value;
+                        $del = $key;
+                    }
+                    $last = $value->sortid;
+                }
+                array_push($sortedArr, $temp);
+                unset($arr2[$del]);
+                $temp = null;
+            }
+            //$arr = $sortedArr;
+            for ($i = 0; $i < sizeof($arr); $i++) {
+                $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                 $arrNew[$i]['id'] = $i;
             }
             $response['data'] = $arrNew;
@@ -47,7 +62,6 @@ class Classification extends \app\inc\Model
             $response['success'] = true;
             $arr = $classes['data'][$id];
             unset($arr['id']);
-            //print_r($arr);
             $props = array(
                 "name" => "Unnamed Class",
                 "expression" => "",
@@ -58,16 +72,13 @@ class Classification extends \app\inc\Model
                 "symbol" => "",
                 "size" => "2",
                 "width" => "1");
-            foreach ($classes['data'][$id] as $key => $value) {
-
+            foreach ($classes['data'][$id] as $value) {
                 foreach ($props as $key2 => $value2) {
                     if (!isset($arr[$key2])) {
                         $arr[$key2] = $value2;
                     }
                 }
-
             }
-
             $response['data'] = array($arr);
         } else {
             $response['success'] = false;
