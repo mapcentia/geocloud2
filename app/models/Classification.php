@@ -35,14 +35,16 @@ class Classification extends \app\inc\Model
                     if ($value->sortid < $last) {
                         $temp = $value;
                         $del = $key;
+                        $last = $value->sortid;
                     }
-                    $last = $value->sortid;
                 }
                 array_push($sortedArr, $temp);
                 unset($arr2[$del]);
+                //print_r($arr2);
                 $temp = null;
             }
             //$arr = $sortedArr;
+            //print_r($arr);
             for ($i = 0; $i < sizeof($arr); $i++) {
                 $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                 $arrNew[$i]['id'] = $i;
@@ -152,5 +154,6 @@ class Classification extends \app\inc\Model
         $jsonStr = '{"name":"Unnamed class","expression":"","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
         return json_decode($jsonStr);
     }
+
 
 }

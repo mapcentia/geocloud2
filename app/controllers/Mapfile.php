@@ -252,8 +252,8 @@ class Mapfile extends \app\inc\Controller
                     if ($value->sortid < $last) {
                         $temp = $value;
                         $del = $key;
+                        $last = $value->sortid;
                     }
-                    $last = $value->sortid;
                 }
                 array_push($sortedArr, $temp);
                 unset($arr2[$del]);
