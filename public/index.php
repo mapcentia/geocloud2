@@ -61,7 +61,7 @@ elseif (Input::getPath()->part(1) == "controllers") {
     //header('Content-Type: text/plain; charset=utf-8');
 
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
-    Connection::$param["postgisschema"] = ($_SESSION['postgisschema']);
+    Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
 
 
     Route::add("controllers/cfgfile");
@@ -87,6 +87,12 @@ elseif (Input::getPath()->part(1) == "wfs") {
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
     include_once("app/wfs/server.php");
 }
-else {
+elseif (!Input::getPath()->part(1)) {
     \app\inc\Redirect::to("/user/login");
+}
+else {
+    header('HTTP/1.0 404 Not Found');
+    echo "<h1>404 Not Found</h1>";
+    echo "The page that you have requested could not be found.";
+    exit();
 }
