@@ -61,7 +61,8 @@ elseif (Input::getPath()->part(1) == "controllers") {
     //header('Content-Type: text/plain; charset=utf-8');
 
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
-    Connection::$param["postgisschema"] = ($_SESSION['postgisschema']) ? : "public";
+    Connection::$param["postgisschema"] = ($_SESSION['postgisschema']);
+
 
     Route::add("controllers/cfgfile");
     Route::add("controllers/classification/");
