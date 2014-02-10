@@ -11,7 +11,7 @@ class Mapfile extends \app\inc\Controller
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
-        $srs = "900913";
+        $srs = "4326";
         ob_start();
         ?>
         MAP
@@ -44,7 +44,7 @@ class Mapfile extends \app\inc\Controller
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
         "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
-        "wms_srs"    "EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:3857 EPSG:32632"
+        "wms_srs"    "EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:3857 EPSG:900913"
         "wms_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
         "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
@@ -347,9 +347,6 @@ class Mapfile extends \app\inc\Controller
             "init=epsg:<?php echo $row['srid']; ?>"
             END
             <?php
-            //$classObj = new _class("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-            //$classArr = $classObj->getAll();
-            //print_r($classArr);
             if (is_array($classArr['data'])) {
                 foreach ($classArr['data'] as $class) {
 
