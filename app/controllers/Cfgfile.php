@@ -17,7 +17,7 @@ class Cfgfile extends \app\inc\Controller
         echo "base=".App::$param['path']."app/tmp/".Connection::$param['postgisdb']."\n\n";
 
         //echo "type=AWSS3\n";
-        //echo "access_key=AKIAIZUYE3I462NPVANQ\n";
+        //echo "access_key=*****\n";
         //echo "secret_access_key=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\n";
         //echo "db={$user}\n";
 
