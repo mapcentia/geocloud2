@@ -10,6 +10,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/cartomobilesetup.js"></script>
 <script type="text/javascript" src="/js/editwmsclass.js"></script>
 <script type="text/javascript" src="/js/editwmslayer.js"></script>
+<script type="text/javascript" src="/js/classwizards.js"></script>
 <script type="text/javascript" src="/js/addshapeform.js"></script>
 <script type="text/javascript" src="/js/addfromscratch.js"></script>
 <script type="text/javascript" src="/js/colorfield.js"></script>

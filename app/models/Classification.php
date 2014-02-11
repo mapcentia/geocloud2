@@ -6,12 +6,12 @@ use app\inc\Util;
 
 class Classification extends \app\inc\Model
 {
-    private $table;
+    private $layer;
 
     function __construct($table)
     {
         parent::__construct();
-        $this->table = $table;
+        $this->layer = $table;
     }
 
     private function array_push_assoc($array, $key, $value)
@@ -22,7 +22,7 @@ class Classification extends \app\inc\Model
 
     public function getAll()
     {
-        $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->table}'";
+        $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->layer}'";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
             $sortedArr = array();
@@ -85,11 +85,12 @@ class Classification extends \app\inc\Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = 400;
         }
         return $response;
     }
 
-    public function store($data)
+    private function store($data)
     {
 
         // First we replace unicode escape sequence
@@ -97,14 +98,12 @@ class Classification extends \app\inc\Model
         $tableObj = new Table("settings.geometry_columns_join");
         $obj = new \stdClass;
         $obj->class = $data;
-        $obj->_key_ = $this->table;
+        $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
         if (!$tableObj->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Class updated";
+            $response = true;
         } else {
-            $response['success'] = false;
-            $response['message'] = $tableObj->PDOerror[0];
+            $response = false;
         }
         return $response;
     }
@@ -113,7 +112,14 @@ class Classification extends \app\inc\Model
     {
         $classes = $this->getAll();
         $classes['data'][] = array("name" => "Unnamed class");
-        $response = $this->store(json_encode($classes['data']));
+        if ($this->store(json_encode($classes['data']))) {
+            $response['success'] = true;
+            $response['message'] = "Inserted one class";
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+        }
         return $response;
     }
 
@@ -122,7 +128,14 @@ class Classification extends \app\inc\Model
         $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
         $classes['data'][$id] = $data;
-        $response = $this->store(json_encode($classes['data']));
+        if ($this->store(json_encode($classes['data']))) {
+            $response['success'] = true;
+            $response['message'] = "Updated one class";
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+        }
         return $response;
     }
 
@@ -135,23 +148,97 @@ class Classification extends \app\inc\Model
             $arr[] = $value;
         }
         $classes['data'] = $arr;
-        //print_r($classes);
-        $response = $this->store(json_encode($classes['data']));
+        if ($this->store(json_encode($classes['data']))) {
+            $response['success'] = true;
+            $response['message'] = "Deleted one class";
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+        }
         return $response;
     }
 
-    static function createClass($type)
+    private function reset()
+    {
+        $this->store(json_encode(array()));
+    }
+
+    public function createSingle($field)
+    {
+        $this->reset();
+        $layer = new \app\models\Layer();
+        $res = $this->update("0", self::createClass($layer->getValueFromKey($this->layer, type), "Single value", null, 10));
+        if ($res['success']) {
+            $response['success'] = true;
+            $response['message'] = "Updated one class";
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+        }
+        return $response;
+    }
+
+    public function createUnique($field)
+    {
+        $layer = new \app\models\Layer();
+        $bits = explode(".", $this->layer);
+        $table = new \app\models\Table($bits[0] . "." . $bits[1]);
+        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $fieldObj = $table->metaData[$field];
+        $query = "SELECT distinct({$field}) as value FROM " . $table->table . " ORDER BY {$field}";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $rows = $this->fetchAll($res);
+        $this->reset();
+        $type = $fieldObj['type'];
+        if (sizeof($rows) > 20) {
+            $response['success'] = false;
+            $response['message'] = "Too many classes. Stopped after 20.";
+            $response['code'] = 405;
+            return $response;
+        }
+        foreach ($rows as $key => $row) {
+            if ($type == "number" || $type == "int") {
+                $expression = "[{$field}]={$row['value']}";
+            }
+            if ($type == "text" || $type == "string") {
+                $expression = "'[{$field}]'='{$row['value']}'";
+            }
+            $name = "{$field} = {$row['value']}";
+            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10));
+            if (!$res['success']) {
+                $response['success'] = false;
+                $response['message'] = "Error";
+                $response['code'] = 400;
+                return $response;
+            }
+        }
+        $response['success'] = true;
+        $response['message'] = "Updated " . sizeof($rows) . " classes";
+        return $response;
+    }
+
+    static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1)
     {
         $symbol = "";
         $size = "2";
         $width = "2";
         $color = Util::randHexColor();
-        if ($type == "POINT") {
+        if ($type == "POINT" || $type == "MULTIPOINT") {
             $symbol = "circle";
             $size = "10";
             $width = "1";
         }
-        $jsonStr = '{"name":"Unnamed class","expression":"","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
+        $jsonStr = '{"sortid":' . $sortid . ',"name":"' . $name . '","expression":"' . $expression . '","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
         return json_decode($jsonStr);
     }
 

@@ -71,7 +71,6 @@ class Sql_to_es extends Model
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
                     curl_exec($ch);
                     $json="";
-                    echo $i."\n";
                 }
                 $i++;
             }
@@ -79,12 +78,15 @@ class Sql_to_es extends Model
             curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
             curl_exec($ch);
             curl_close($ch);
-            echo $i."\n";
+            $response['success'] = true;
+            $response['message'] = "Indexed {$i} documents";
+            return $response;
 
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
-            echo json_encode($response);
+            $response['code'] = 400;
+            return $response;
         }
         $sql = "DROP VIEW {$view}";
         $result = $this->execQuery($sql);

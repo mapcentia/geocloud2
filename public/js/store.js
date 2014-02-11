@@ -30,9 +30,7 @@ $(window).ready(function () {
         success: function (data, textStatus, http) {
             if (http.readyState == 4) {
                 if (http.status == 200) {
-                    var response = eval('(' + http.responseText + ')');
-                    // JSON
-                    fieldsForStore = response.forStore;
+                    fieldsForStore = data.forStore;
                 }
             }
         }
@@ -648,18 +646,21 @@ $(window).ready(function () {
                 '<tr class="x-grid3-row"><td><b>Geom type</b></td><td>{type}</td></tr>' +
                 '</table>'
         ];
+        var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
+        Ext.getCmp("layerStyleTabs").activate(2);
+
         var template = new Ext.Template(markup);
         template.overwrite(Ext.getCmp('a5').body, record);
         Ext.getCmp("layerStylePanel").expand(true);
-        var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(0);
         var a1 = Ext.getCmp("a1");
         var a4 = Ext.getCmp("a4");
+
         a1.remove(wmsLayer.grid);
         a4.remove(wmsLayer.sqlForm);
         wmsLayer.grid = null;
         wmsLayer.sqlForm = null;
         wmsLayer.init(record);
+        classWizards.init(record);
         a1.add(wmsLayer.grid);
         a4.add(wmsLayer.sqlForm);
         a1.doLayout();
@@ -676,6 +677,12 @@ $(window).ready(function () {
         var a3 = Ext.getCmp("a3");
         a3.remove(wmsClass.grid);
         a3.doLayout();
+
+        Ext.getCmp("layerStyleTabs").activate(0);
+        var a7 = Ext.getCmp("a7");
+        a7.remove(classWizards.quantile);
+        a7.add(classWizards.quantile);
+        a7.doLayout();
 
         updateLegend();
 
@@ -763,7 +770,8 @@ $(window).ready(function () {
 
                                     for (key in values) {
                                         values[key] = encodeURIComponent(values[key]);
-                                    };
+                                    }
+                                    ;
                                     var param = {
                                         data: values
                                     };
@@ -1039,7 +1047,49 @@ $(window).ready(function () {
                                 items: [
                                     {
                                         xtype: "panel",
-                                        title: 'Layer settings',
+                                        title: 'Theme wizard',
+                                        defaults: {
+                                            height: 150,
+                                            border: false
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a7",
+                                                layout: "fit"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Classes',
+                                        defaults: {
+                                            height: 150,
+                                            border: false
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a2",
+                                                layout: "fit"
+                                            },
+                                            {
+                                                xtype: "panel",
+                                                height: 360,
+                                                id: "a3"
+
+                                            },
+                                            {
+                                                xtype: "panel",
+                                                height: 200,
+                                                id: "a6",
+                                                html: ""
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Settings',
                                         height: 570,
                                         defaults: {
                                             border: false
@@ -1065,33 +1115,8 @@ $(window).ready(function () {
                                             }
                                         ]
                                     },
-                                    {
-                                        xtype: "panel",
-                                        title: 'Classification',
-                                        defaults: {
-                                            height: 150,
-                                            border: false
-                                        },
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                id: "a2",
-                                                layout: "fit"
-                                            },
-                                            {
-                                                xtype: "panel",
-                                                height: 360,
-                                                id: "a3"
 
-                                            },
-                                            {
-                                                xtype: "panel",
-                                                height: 200,
-                                                id: "a6",
-                                                html: ""
-                                            }
-                                        ]
-                                    }
+
                                 ]
                             }
                         ]
@@ -1135,6 +1160,7 @@ $(window).ready(function () {
                     });
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + n;
+                    console.log(l);
                     l.redraw();
                 }
                 else {

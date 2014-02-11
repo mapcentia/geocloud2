@@ -52,7 +52,7 @@ class Legend extends \app\inc\Controller
             }
         }
         $response['html'] = $html;
-        echo \app\inc\Response::json($response);
+        return $response;
     }
 
     function get_json()
@@ -72,6 +72,6 @@ class Legend extends \app\inc\Controller
                 }
             }
         }
-        echo \app\inc\Response::json($json);
+        return $json;
     }
 }

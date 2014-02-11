@@ -6,14 +6,13 @@ class Route
     static function add($uri, $func = "")
     {
         $requestUri = strtok($_SERVER["REQUEST_URI"], '?');
-//        $requestUri = rtrim($requestUri, "/");
         if (strpos($requestUri, $uri) !== false) {
             if ($func) {
                 $func();
             }
             $uri = rtrim($uri, "/");
             $e = explode("/", $uri);
-            $e[count($e)-1] = ucfirst($e[count($e)-1]);
+            $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
             $uri = implode($e, "/");
             $n = sizeof($e);
             $className = strtr($uri, '/', '\\');
@@ -22,12 +21,27 @@ class Route
             if (class_exists($class)) {
                 $controller = new $class();
                 if (method_exists($controller, $action)) {
-                    echo $controller->$action();
+                    $response = $controller->$action();
                 } else {
-                    $method = Input::getMethod() . "_index";
-                    echo $controller->$method();
+                    $action = Input::getMethod() . "_index";
+                    if (method_exists($controller, $action)) {
+                        $response = $controller->$action();
+                    } else {
+                        header('HTTP/1.0 404 Not Found');
+                        echo "<h1>404 Not Found</h1>";
+                        exit();
+                    }
                 }
-            } else echo "Not class<br>";
+            }
+            //header('charset=utf-8');
+            //header('Content-Type: text/plain; charset=utf-8');
+            $code = (isset($response["code"])) ? $response["code"] : "200";
+            header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
+            if (isset($response["json"])) {
+                echo $response["json"];
+            } else {
+                echo Response::toJson($response);
+            }
         }
     }
 }

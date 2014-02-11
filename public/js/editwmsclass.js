@@ -1,25 +1,5 @@
 Ext.namespace('wmsClasses');
 wmsClasses.init = function (record) {
-    wmsClasses.fieldsForStore = [];
-    $.ajax({
-        url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
-        async: false,
-        dataType: 'json',
-        type: 'GET',
-        success: function (data, textStatus, http) {
-            if (http.readyState === 4) {
-                if (http.status === 200) {
-                    var response = eval('(' + http.responseText + ')');
-                    // JSON
-                    var forStore = response.forStore;
-                    wmsClasses.fieldsForStore.push("");
-                    for (var i in forStore) {
-                        wmsClasses.fieldsForStore.push(forStore[i].name);
-                    }
-                }
-            }
-        }
-    });
     wmsClasses.table = record._key_;
     wmsClasses.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
@@ -96,7 +76,7 @@ wmsClasses.init = function (record) {
             defaults: {
                 sortable: false,
                 menuDisabled: true,
-                    editor: {
+                editor: {
                     xtype: "textfield"
                 }
             },
@@ -130,7 +110,20 @@ wmsClasses.init = function (record) {
             }
         ],
         listeners: {
-            rowclick: onSelectClass
+            rowclick: function () {
+                var record = wmsClasses.grid.getSelectionModel().getSelected(), a3;
+                if (!record) {
+                    App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+                    return false;
+                }
+                a3 = Ext.getCmp("a3");
+                a3.remove(wmsClass.grid);
+                wmsClass.grid = null;
+                wmsClass.init(record.get("id"));
+                a3.add(wmsClass.grid);
+                a3.doLayout();
+
+            }
         }
     });
 };
@@ -377,7 +370,7 @@ wmsClass.init = function (id) {
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
-                accelerate: true}),{ }),
+                accelerate: true}), { }),
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
@@ -386,7 +379,7 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsClasses.fieldsForStore,
+                store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -411,7 +404,7 @@ wmsClass.init = function (id) {
                 // nobody is using
             }), {}),
             'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsClasses.fieldsForStore,
+                store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -456,7 +449,7 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaysize': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsClasses.fieldsForStore,
+                store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -466,12 +459,12 @@ wmsClass.init = function (id) {
                 // nobody is using
             }), {}),
             'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsClasses.fieldsForStore,
+                store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
             'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsClasses.fieldsForStore,
+                store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -500,49 +493,33 @@ wmsClass.init = function (id) {
                     // Encode the json because it can contain "="
                     param = encodeURIComponent(param);
 
-                    var requestCg = {
+                    Ext.Ajax.request({
                         url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
                         method: 'put',
                         params: param,
                         headers: {
                             'Content-Type': 'application/json; charset=utf-8'
                         },
-                        callback: function (options, success, http) {
-                            var response = eval('(' + http.responseText + ')');
+                        success: function (response) {
+                            App.setAlert(App.STATUS_OK, "Style is updated");
+                            writeFiles();
                             wmsClasses.store.load();
                             clearTileCache(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
-                            wmsClasses.onSubmit(response);
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: eval('(' + response.responseText + ')').message,
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
                         }
-                    };
-                    Ext.Ajax.request(requestCg);
+                    });
                 }
             }
         ]
     });
 };
 
-function onSelectClass(btn, ev) {
-    var record = wmsClasses.grid.getSelectionModel().getSelected(), a;
-    if (!record) {
-        App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
-        return false;
-    }
-
-    a3 = Ext.getCmp("a3");
-    a3.remove(wmsClass.grid);
-    wmsClass.grid = null;
-    wmsClass.init(record.get("id"));
-    a3.add(wmsClass.grid);
-    a3.doLayout();
-}
-
-wmsClasses.onSubmit = function (response) {
-    if (response.success) {
-        App.setAlert(App.STATUS_OK, "Style is updated");
-        writeFiles();
-
-    } else {
-        message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
-        App.setAlert(App.STATUS_NOTICE, message);
-    }
-}; 

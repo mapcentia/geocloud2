@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers\upload;
 
-use \app\inc\Input;
 use \app\conf\Connection;
 use \app\conf\App;
 

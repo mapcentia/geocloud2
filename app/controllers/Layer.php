@@ -29,7 +29,7 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get()));
         $data["data"]->editable = ($data["data"]->editable) ? : "0";
-        return Response::json($this->table->updateRecord($data, "_key_"));
+        return $this->table->updateRecord($data, "_key_");
     }
 
     public function get_columns()

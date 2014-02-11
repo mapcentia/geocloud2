@@ -22,20 +22,14 @@ class Sql extends \app\inc\Controller
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
         $this->apiKey = $res['data']['api_key'];
-        $callback = Input::get('jsonp_callback');
 
         $this->response = $this->transaction($this->q);
 
         // Check if $this->data is set in SELECT section
         if (!$this->data) {
-            $this->data = json_encode($this->response);
+            $this->data = $this->response;
         }
-
-        if ($callback) {
-            echo $callback . '(' . $this->data . ');';
-        } else {
-            echo $this->data;
-        }
+        return  unserialize($this->data);
     }
 
     private function transaction($sql)
@@ -48,7 +42,8 @@ class Sql extends \app\inc\Controller
             ) {
                 $this->response['success'] = false;
                 $this->response['message'] = "Can't complete the query";
-                return $this->response;
+                $this->response['code'] = 406;
+                return serialize($this->response);
             }
         }
         if (strpos($sql, ';') !== false) {
@@ -73,6 +68,7 @@ class Sql extends \app\inc\Controller
             } else {
                 $this->response['success'] = false;
                 $this->response['message'] = "Not the right key!";
+                $this->response['code'] = 403;
             }
         } elseif ($parsedSQL['select']) {
             $id = $this->q;
@@ -88,7 +84,7 @@ class Sql extends \app\inc\Controller
                 $api = new \app\models\Sql($srs);
                 $api->execQuery("set client_encoding='UTF8'", "PDO");
                 $this->response = $api->sql($id);
-                echo json_encode($this->response);
+                echo serialize($this->response);
                 // Cache script
                 $this->data = ob_get_contents();
                 $Cache_Lite->save($this->data, $id);
@@ -98,6 +94,6 @@ class Sql extends \app\inc\Controller
             $this->response['success'] = false;
             $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE";
         }
-        return $this->response;
+        return serialize($this->response);
     }
 }

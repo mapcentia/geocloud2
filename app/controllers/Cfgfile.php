@@ -65,6 +65,6 @@ class Cfgfile extends \app\inc\Controller
         $fh = fopen($path.$name, 'w');
         fwrite($fh, $data);
         fclose($fh);
-        echo Response::json(array("success"=>true,"message"=>"Cfgfile written"));
+        return array("success"=>true,"message"=>"Cfgfile written");
     }
 }

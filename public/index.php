@@ -57,12 +57,9 @@ elseif (Input::getPath()->part(1) == "controllers") {
 
     Session::start();
     Session::authenticate("/user/login/");
-    //header('charset=utf-8');
-    //header('Content-Type: text/plain; charset=utf-8');
 
     Connection::$param["postgisdb"] = $_SESSION['screen_name'];
     Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
-
 
     Route::add("controllers/cfgfile");
     Route::add("controllers/classification/");

@@ -1,21 +1,21 @@
 Ext.namespace('wmsLayer');
 wmsLayer.init = function (record) {
-    var fieldsForStore = [];
+    wmsLayer.fieldsForStore = [];
+    wmsLayer.numFieldsForStore = [];
     $.ajax({
         url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
         async: false,
         dataType: 'json',
         type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState === 4) {
-                if (http.status === 200) {
-                    var response = eval('(' + http.responseText + ')');
-                    // JSON
-                    var forStore = response.forStore;
-                    fieldsForStore.push("");
-                    for (var i in forStore) {
-                        fieldsForStore.push(forStore[i].name);
-                    }
+            var response = data;
+            // JSON
+            var forStore = response.forStore;
+            wmsLayer.fieldsForStore.push("");
+            for (var i in forStore) {
+                wmsLayer.fieldsForStore.push(forStore[i].name);
+                if (forStore[i].type === "number") {
+                    wmsLayer.numFieldsForStore.push(forStore[i].name);
                 }
             }
         }
@@ -121,13 +121,13 @@ wmsLayer.init = function (record) {
 
         customEditors: {
             'label_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: fieldsForStore,
-                editable: false,
+                store: wmsLayer.fieldsForStore,
+                editable: true,
                 triggerAction: 'all'
             }), {}),
             'theme_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: fieldsForStore,
-                editable: false,
+                store: wmsLayer.fieldsForStore,
+                editable: true,
                 triggerAction: 'all'
             }), {}),
             'query_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
@@ -246,8 +246,17 @@ wmsLayer.init = function (record) {
                                 writeFiles();
                                 App.setAlert(App.STATUS_NOTICE, "Sql updated");
                                 clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                            },
+                            failure: function (response) {
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: eval('(' + response.responseText + ')').message,
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 400,
+                                    height: 300,
+                                    icon: Ext.MessageBox.ERROR
+                                });
                             }
-                            //failure: test
                         });
                     } else {
                         var s = '';

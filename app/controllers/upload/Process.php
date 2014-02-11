@@ -64,8 +64,15 @@ class Process extends \app\inc\Controller
         if (empty($arr['data'])) {
             $class->insert();
             $class->update("0", \app\models\Classification::createClass($geoType));
-
         }
+
+        $def = new \app\models\Tile($key);
+        $arr = $def->get();
+        if (empty($arr['data'][0])) {
+            $json = '{"theme_column":"","label_column":"","query_buffer":"","opacity":"","label_max_scale":"","label_min_scale":"","meta_tiles":true,"meta_size":"3","meta_buffer":"10","ttl":""}';
+            $def->update($json);
+        }
+
         if ($out[0] == "") {
             $response['success'] = true;
             $response['message'] = "Layer <b>{$safeName}</b> is created";

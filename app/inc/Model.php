@@ -109,8 +109,12 @@ class Model
         if (!$this->db) {
             $this->connect("PDO");
         }
-        $stmt = $this->db->prepare($sql);
-        // Return PDOStatement object
+        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        try {
+            $stmt = $this->db->prepare($sql);
+        } catch (\PDOException $e) {
+            $this->PDOerror[] = $e->getMessage();
+        }
         return $stmt;
     }
 

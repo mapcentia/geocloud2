@@ -115,7 +115,6 @@ function startWfsEdition(layerName, geomField) {
         styleMap: styleMap
     });
 
-
     layer.events.register("loadend", layer, function () {
         var count = layer.features.length;
         window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
@@ -124,13 +123,13 @@ function startWfsEdition(layerName, geomField) {
         //App.setAlert(App.STATUS_OK, "Start loading...");
     });
     map.addLayers([layer]);
-    if (type == "Point") {
+    if (type === "Point") {
         handlerType = OpenLayers.Handler.Point;
     }
-    if (type == "Polygon") {
+    if (type === "Polygon") {
         handlerType = OpenLayers.Handler.Polygon;
     }
-    if (type == "Path") {
+    if (type === "Path") {
         handlerType = OpenLayers.Handler.Path;
     }
     drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
@@ -379,7 +378,7 @@ $(window).ready(function () {
         var num = cloud.map.getNumLayers();
         for (var j = 1; j < num; j++) {
             if (cloud.map.layers[j].isBaseLayer === false) {
-                cloud.map.layers[j].setVisibility(false);
+               cloud.map.layers[j].setVisibility(false);
             }
         }
         var west = Ext.getCmp("treepanel");

@@ -52,4 +52,24 @@ class Util
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
     }
+
+    static function httpCodeText($code)
+    {
+        $codes = array(200 => "OK",
+            304 => "Not Modified",
+            400 => "Bad Request",
+            401 => "Unauthorized",
+            403 => "Forbidden",
+            404 => "Not Found",
+            406 => "Not Acceptable",
+            410 => "Gone",
+            420 => "Enhance Your Calm",
+            422 => "Unprocessable Entity",
+            429 => "Too Many Requests",
+            500 => "Internal Server Error",
+            502 => "Bad Gateway",
+            503 => "Service Unavailable",
+            504 => "Gateway timeout");
+        return $codes[$code];
+    }
 }

@@ -15,12 +15,12 @@ class Tile extends Model {
 		if (!$this->PDOerror) {
 			$response['success'] = true;
 			$arr = (array)json_decode($row['def']); // Cast stdclass to array
-			$props = array("label_column"=>"","theme_column"=>"","meta_tiles"=>false);
+			/*$props = array("label_column"=>"","theme_column"=>"","meta_tiles"=>false);
 			foreach($props as $field=>$value){
 				if (!isset($arr[$field])){
 					$arr[$field] = $value;
 				}
-			}
+			}*/
 			$response['data'] = array($arr);
 		}
 		else {

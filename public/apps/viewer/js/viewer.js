@@ -1,13 +1,21 @@
 var MapCentia;
 MapCentia = (function () {
     "use strict";
-    var hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, showInfoModal, qstore = [];
+    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, showInfoModal, qstore = [];
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
     db = uri[3];
     schema = uri[4];
-    var switchLayer = function (name, visible) {
+    arrMenu = [
+        {
+            title: 'Layers',
+            id: 'menuID',
+            icon: 'fa fa-reorder',
+            items: []
+        }
+    ];
+    switchLayer = function (name, visible) {
         if (visible) {
             cloud.showLayer(name);
         } else {
@@ -15,10 +23,10 @@ MapCentia = (function () {
         }
         addLegend();
     };
-    var setBaseLayer = function (str) {
+    setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
     };
-    var addLegend = function () {
+    addLegend = function () {
         var param = 'l=' + cloud.getVisibleLayers();
         $.ajax({
             url: hostname + '/api/v1/legend/html/' + db + '/' + schema + '?' + param,
@@ -29,20 +37,14 @@ MapCentia = (function () {
             }
         });
     };
-    var autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'),
-        {
-            //bounds: defaultBounds
-            //types: ['establishment']
-        }
-    );
+    autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'));
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
-        var place = autocomplete.getPlace();
-        var center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+        var place = autocomplete.getPlace(),
+            center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(center.x, center.y, 10);
     });
-
-    $(window).load(function () {
-        var metaData, metaDataKeys, metaDataKeysTitle, layers, jRes;
+    $(document).ready(function () {
+        var metaData, metaDataKeys, metaDataKeysTitle, layers, jRes, node, modalFlag;
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
@@ -69,13 +71,17 @@ MapCentia = (function () {
         $("#locate-btn").on("click", function () {
             cloud.locate();
         });
+        showInfoModal = function () {
+            modalFlag = true;
+            $('#modal-info').modal({"backdrop": false});
+        }
         $.ajax({
             url: '/api/v1/meta/' + db + '/' + schema,
             async: false,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var base64name, authIcon, isBaseLayer, arr, groups;
+                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "";
                 groups = [];
                 metaData = response;
                 for (var i = 0; i < metaData.data.length; i++) {
@@ -85,7 +91,7 @@ MapCentia = (function () {
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
-                for (var i = 0; i < response.data.length; ++i) {
+                for (i = 0; i < response.data.length; ++i) {
                     groups[i] = response.data[i].layergroup;
                 }
                 arr = array_unique(groups);
@@ -102,28 +108,48 @@ MapCentia = (function () {
                         name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                     });
                 }
-                for (var i = 0; i < arr.length; ++i) {
+                for (i = 0; i < arr.length; ++i) {
                     if (arr[i]) {
                         var l = [];
                         base64name = Base64.encode(arr[i]).replace(/=/g, "");
-                        $("#layers").append('<div id="group-' + base64name + '" class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" data-parent="#layers" href="#collapse' + base64name + '"> ' + arr[i] + ' </a></div></div>');
-                        $("#group-" + base64name).append('<div id="collapse' + base64name + '" class="accordion-body collapse"></div>');
-                        for (var u = 0; u < response.data.length; ++u) {
+                        node = {
+                            name: arr[i],
+                            id: 'itemID' + base64name,
+                            icon: 'fa fa-folder',
+                            link: '#',
+                            items: [
+                                {
+                                    title: arr[i],
+                                    icon: 'fa fa-folder',
+                                    items: []
+                                }
+                            ]
+                        };
+                        for (u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
-                                authIcon = (response.data[u].authentication === "Read/write") ? " <a href='#' data-toggle='tooltip' title='first tooltip'><i class='icon-lock'></i></a>" : "";
+                                authIcon = (response.data[u].authentication === "Read/write") ? " <i data-toggle='tooltip' title='first tooltip' class='fa fa-lock'></i>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
-                                var metaUrl = (response.data[u].meta_url !== null && response.data[u].meta_url !== "") ? ' <a target="_blank" href="' + response.data[u].meta_url + '"><i class="icon-info-sign"></i></a>' : '';
-                                $("#collapse" + base64name).append('<div class="accordion-inner"><label class="checkbox">' + text + authIcon + metaUrl + '<input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)"></label></div>');
+                                var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
                                 l.push({
                                     text: text,
                                     id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
                                     leaf: true,
                                     checked: false
                                 });
+                                node.items[0].items.push({
+                                    name: cat,
+                                    metaIcon: 'fa fa-info-circle',
+                                    link: '#',
+                                    metaUrl: response.data[u].meta_url
+                                });
                             }
                         }
+                        arrMenu[0].items.push(node);
                     }
                 }
+                $('#menu').multilevelpushmenu({
+                    menu: arrMenu
+                });
             }
         }); // Ajax call end
         jRes = jRespond([
@@ -147,38 +173,15 @@ MapCentia = (function () {
             breakpoint: ['handheld', 'tablet'],
             enter: function () {
                 // We activate the modals
-                $("#modal-layers .modal-body").append($('#layers'));
-                $("#modal-base-layers .modal-body").append($("#base-layers"));
                 $("#modal-legend .modal-body").append($("#legend"));
-                showInfoModal = function () {
-                    $('#modal-info').modal();
-                    $('#modal-info').on('hidden', function () {
-                        $(this).data('modal', null);
-                    });
-                }
-                //clickModal.activate();
             },
             exit: function () {
-                $('#modal-layers').modal('hide');
-                $('#modal-base-layers').modal('hide');
                 $('#modal-legend').modal('hide');
-                $('#modal-info').modal('hide').data('modal', null);
-                //modalVectors.removeAllFeatures();
             }
         });
         jRes.addFunc({
             breakpoint: ['desktop'],
             enter: function () {
-                $("#layers-popover").popover({
-                    offset: 10,
-                    html: true,
-                    content: $("#layers")
-                }).popover('show');
-                $("#base-layers-popover").popover({
-                    offset: 10,
-                    html: true,
-                    content: $("#base-layers")
-                }).popover('show').popover('hide');
                 $("#legend-popover").popover({
                     offset: 10,
                     html: true,
@@ -187,21 +190,10 @@ MapCentia = (function () {
                 $('#legend-popover').on('click', function (e) {
                     addLegend();
                 });
-                showInfoModal = function () {
-                    $('#modal-info').modal({backdrop: false});
-                    $('#modal-info').on('hidden', function () {
-                        $(this).data('modal', null);
-                    });
-
-                };
-                //clickPopUp.activate();
             },
             exit: function () {
                 // We activate the popovers, so the divs becomes visible once before screen resize.
-                $("#layers-popover").popover('show');
-                $("#base-layers-popover").popover('show');
                 $("#legend-popover").popover('show');
-                $('#modal-info').modal('hide');
                 addLegend();
             }
         });
@@ -245,7 +237,7 @@ MapCentia = (function () {
             clicktimer = undefined;
         });
         cloud.on("click", function (e) {
-            var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud);
+            var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance;
             if (clicktimer) {
                 clearTimeout(clicktimer);
             }
@@ -263,7 +255,15 @@ MapCentia = (function () {
                     $.each(layers, function (index, value) {
                         var isEmpty = true;
                         var srid = metaDataKeys[value.split(".")[1]].srid;
+                        var geoType = metaDataKeys[value.split(".")[1]].type;
                         var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
+                        if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                            var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                                1.19432856696, 0.597164283478, 0.298582141739];
+                            distance = 5 * res[cloud.getZoom()];
+                        }
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
                             id: index,
@@ -298,7 +298,7 @@ MapCentia = (function () {
                                         $.each(out, function (name, property) {
                                             $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
                                         });
-                                        $("#_" + index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
+                                        //$("#_" + index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
                                         out = [];
                                         $('#info-tab a:first').tab('show');
 
@@ -309,21 +309,27 @@ MapCentia = (function () {
                                 if (count === layers.length) {
                                     if (!hit) {
                                         // Do not try to hide a not initiated modal
-                                        if ($('#modal-info').data('modal') !== null && $('#modal-info').data('modal') !== undefined) {
+                                        if (modalFlag) {
                                             $('#modal-info').modal('hide');
                                         }
-                                        $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                                     }
                                 }
-                            },
-                            sql: "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),the_geom)"
+                            }
+
                         });
                         cloud.addGeoJsonStore(qstore[index]);
+                        var sql;
+                        if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),the_geom)";
+                        }
+                        else {
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),the_geom)";
+                        }
+                        qstore[index].sql = sql;
                         qstore[index].load();
                     });
                 }, 250);
             }
-            ;
         });
     });
     return{

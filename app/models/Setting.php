@@ -4,91 +4,123 @@ namespace app\models;
 
 use app\inc\Model;
 
-class Setting extends Model {
-	function __construct() {
-		parent::__construct();
-	}
-	private function getArray(){
-		$sql = "SELECT viewer FROM settings.viewer";
-		$arr = $this->fetchRow($this->execQuery($sql),"assoc");
-		return (array)json_decode($arr['viewer']);
-	}
-	public function update($post){
-		$arr = $this->getArray();
-		foreach($post as $key=>$value) {
-			if (!$value){
-				$value=false;
-			}
-			if (is_numeric($value)){
-				$value=(int)$value;
-			}
-			$arr[$key] = $value;
-		}
-		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-	 		$response['success'] = true;
-	 		$response['message'] = "Default extent updated";
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
-		return $response;
+class Setting extends Model
+{
+    function __construct()
+    {
+        parent::__construct();
     }
-    public function updateApiKey(){
-    	$apiKey = md5(microtime().rand());
-		$arr = $this->getArray();
-		$arr['api_key'] = $apiKey;
-		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-	 		$response['success'] = true;
-	 		$response['message'] = "API key updated";
-			$response['key'] = $apiKey;
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
-		return $response;
-	}
-	public function updatePw($pw){
-		$arr = $this->getArray();
-		$arr['pw'] = $this->encryptPw($pw);
-		$sql = "UPDATE settings.viewer SET viewer='".json_encode($arr)."'";
-		$this -> execQuery($sql,"PDO","transaction");
-		if (!$this->PDOerror) {
-	 		$response['success'] = true;
-	 		$response['message'] = "Password saved";
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
-		return $response;
-	}
-	public function get($unsetPw=false) {
-		$arr = $this->getArray();
-		if ($unsetPw) {
-			unset($arr['pw']);
-		}
-		if (!$this->PDOerror) {
-	 		$response['success'] = true;
-	 		$response['data'] = $arr;
-		}
-		else {
-			$response['success'] = false;
-			$response['message'] = $this->PDOerror;
-		}
-		return $response;
-	}
-	public function encryptPw($pass) {
-		$pass=strip_tags($pass);
-		$pass=str_replace(" ","",$pass);//remove spaces from password
-		$pass=str_replace("%20","",$pass);//remove escaped spaces from password
-		$pass=addslashes($pass);//remove spaces from password
-		$pass=md5($pass);//encrypt password
-		return $pass;
-	}
+
+    private function getArray()
+    {
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $secretKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/secret.key");
+            $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::bytea, dearmor('{$secretKey}')) as viewer FROM settings.viewer";
+        } else {
+            $sql = "SELECT viewer FROM settings.viewer";
+        }
+        $res = $this->execQuery($sql);
+        // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
+        if ($this->PDOerror[0]){
+            $this->PDOerror = null;
+            $sql = "SELECT viewer FROM settings.viewer";
+            $res = $this->execQuery($sql);
+        }
+        $arr = $this->fetchRow($res, "assoc");
+        return (array)json_decode($arr['viewer']);
+    }
+
+    /*public function update($post)
+    {
+        $arr = $this->getArray();
+        foreach ($post as $key => $value) {
+            if (!$value) {
+                $value = false;
+            }
+            if (is_numeric($value)) {
+                $value = (int)$value;
+            }
+            $arr[$key] = $value;
+        }
+        $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = "Default extent updated";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+        }
+        return $response;
+    }*/
+
+    public function updateApiKey()
+    {
+        $apiKey = md5(microtime() . rand());
+        $arr = $this->getArray();
+        $arr['api_key'] = $apiKey;
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = "API key updated";
+            $response['key'] = $apiKey;
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+        }
+        return $response;
+    }
+
+    public function updatePw($pw)
+    {
+        $arr = $this->getArray();
+        $arr['pw'] = $this->encryptPw($pw);
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = "Password saved";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+        }
+        return $response;
+    }
+
+    public function get($unsetPw = false)
+    {
+        $arr = $this->getArray();
+        if ($unsetPw) {
+            unset($arr['pw']);
+        }
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['data'] = $arr;
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+        }
+        return $response;
+    }
+
+    public function encryptPw($pass)
+    {
+        $pass = strip_tags($pass);
+        $pass = str_replace(" ", "", $pass); //remove spaces from password
+        $pass = str_replace("%20", "", $pass); //remove escaped spaces from password
+        $pass = addslashes($pass); //remove spaces from password
+        $pass = md5($pass); //encrypt password
+        return $pass;
+    }
 }

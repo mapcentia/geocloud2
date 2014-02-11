@@ -116,7 +116,7 @@ class Table extends Model
         return $response;
     }
 
-    function getGeoJson($fields = "*")
+    /*function getGeoJson($fields = "*")
     {
         $sql = "SELECT {$fields},ST_asGeoJson(transform(the_geom,900913)) as the_geom FROM {$this->table}";
         if ($whereClause) {
@@ -146,7 +146,7 @@ class Table extends Model
         $response['features'] = $properties;
 
         return $response;
-    }
+    }*/
 
     function getGroupBy($field) // All tables
     {
@@ -214,6 +214,7 @@ class Table extends Model
             } else {
                 $response['success'] = false;
                 $response['message'] = $this->PDOerror;
+                $response['code'] = 406;
             }
             unset($pairArr);
             unset($keyArr);
@@ -283,6 +284,7 @@ class Table extends Model
     function updateColumn($data, $key) // Only geometry tables
     {
         $data = $this->makeArray($data);
+        $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             $safeColumn = $this->toAscii($value->column, array(), "_");
@@ -319,6 +321,7 @@ class Table extends Model
     function deleteColumn($data, $whereClause = NULL) // Only geometry tables
     {
         $data = $this->makeArray($data);
+        $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             $sql .= "ALTER TABLE {$this->table} DROP COLUMN {$value};";
@@ -342,6 +345,7 @@ class Table extends Model
     function addColumn($data) // All tables
     {
         $safeColumn = $this->toAscii($data['column'], array(), "_");
+        $sql = "";
         if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
         }

@@ -7,8 +7,6 @@ use app\inc\Session;
 
 class Schema extends \app\inc\Controller
 {
-    private $layers;
-
     function __construct()
     {
         $this->db = new \app\models\Database();

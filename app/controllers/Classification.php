@@ -16,21 +16,27 @@ class Classification extends \app\inc\Controller
     public function get_index()
     {
         $id = Input::getPath()->part(5);
-        return ($id) ? Response::json($this->class->get($id)) : Response::json($this->class->getAll());
+        return ($id) ? $this->class->get($id) : $this->class->getAll();
     }
 
     public function post_index()
     {
-        return Response::json($this->class->insert());
+        return $this->class->insert();
     }
 
     public function put_index()
     {
-        return Response::json($this->class->update(Input::getPath()->part(5), json_decode(urldecode(Input::get()))->data));
+        return $this->class->update(Input::getPath()->part(5), json_decode(urldecode(Input::get()))->data);
     }
 
     public function delete_index()
     {
-        return Response::json($this->class->destroy(json_decode(Input::get())->data));
+        return $this->class->destroy(json_decode(Input::get())->data);
+    }
+    public function put_unique(){
+        return $this->class->createUnique(Input::getPath()->part(5));
+    }
+    public function put_single(){
+        return $this->class->createSingle(Input::getPath()->part(5));
     }
 }

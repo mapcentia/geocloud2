@@ -75,7 +75,6 @@ class Layer extends \app\models\Table
         $keySplit = explode(".", $_key_);
         $table = new Table($keySplit[0] . "." . $keySplit[1]);
         $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
-        //print_r($cartomobileArr);
         foreach ($table->metaData as $key => $value) {
             if ($value['type'] != "geometry" && $key != $table->primeryKey['attname']) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
