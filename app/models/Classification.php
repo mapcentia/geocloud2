@@ -7,11 +7,14 @@ use app\inc\Util;
 class Classification extends \app\inc\Model
 {
     private $layer;
+    private $table;
 
     function __construct($table)
     {
         parent::__construct();
         $this->layer = $table;
+        $bits = explode(".", $this->layer);
+        $this->table = new \app\models\Table($bits[0] . "." . $bits[1]);
     }
 
     private function array_push_assoc($array, $key, $value)
@@ -164,11 +167,11 @@ class Classification extends \app\inc\Model
         $this->store(json_encode(array()));
     }
 
-    public function createSingle($field)
+    public function createSingle($data)
     {
         $this->reset();
         $layer = new \app\models\Layer();
-        $res = $this->update("0", self::createClass($layer->getValueFromKey($this->layer, type), "Single value", null, 10));
+        $res = $this->update("0", self::createClass($layer->getValueFromKey($this->layer, type), "Single value", null, 10, null, $data));
         if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Updated one class";
@@ -180,14 +183,12 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function createUnique($field)
+    public function createUnique($field, $data)
     {
         $layer = new \app\models\Layer();
-        $bits = explode(".", $this->layer);
-        $table = new \app\models\Table($bits[0] . "." . $bits[1]);
         $geometryType = $layer->getValueFromKey($this->layer, type);
-        $fieldObj = $table->metaData[$field];
-        $query = "SELECT distinct({$field}) as value FROM " . $table->table . " ORDER BY {$field}";
+        $fieldObj = $this->table->metaData[$field];
+        $query = "SELECT distinct({$field}) as value FROM " . $this->table->table . " ORDER BY {$field}";
         $res = $this->prepare($query);
         try {
             $res->execute();
@@ -213,8 +214,8 @@ class Classification extends \app\inc\Model
             if ($type == "text" || $type == "string") {
                 $expression = "'[{$field}]'='{$row['value']}'";
             }
-            $name = "{$field} = {$row['value']}";
-            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10));
+            $name = $row['value'];
+            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10, null, $data));
             if (!$res['success']) {
                 $response['success'] = false;
                 $response['message'] = "Error";
@@ -227,19 +228,78 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1)
+    public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
     {
-        $symbol = "";
-        $size = "2";
-        $width = "2";
-        $color = Util::randHexColor();
-        if ($type == "POINT" || $type == "MULTIPOINT") {
-            $symbol = "circle";
-            $size = "10";
-            $width = "1";
+        $layer = new \app\models\Layer();
+        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $query = "SELECT max({$field}) as max, min({$field}) FROM " . $this->table->table;
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
         }
-        $jsonStr = '{"sortid":' . $sortid . ',"name":"' . $name . '","expression":"' . $expression . '","label":false,"label_size":"","color":"' . $color . '","outlinecolor":"#000000","symbol":"' . $symbol . '","size":"' . $size . '","width":"' . $width . '","overlaycolor":"","overlayoutlinecolor":"","overlaysymbol":"","overlaysize":"","overlaywidth":""}';
-        return json_decode($jsonStr);
+        $row = $this->fetchRow($res);
+        $diff = $row["max"] - $row["min"];
+        $interval = $diff / $num;
+        $this->reset();
+
+        $grad = Util::makeGradient($startColor, $endColor, $num);
+        for ($i = 1; $i <= ($num); $i++) {
+            $top = $row['min'] + ($interval * $i);
+            $bottom = $top - $interval;
+            if ($i == $num) {
+                $top++;
+            }
+            $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
+            $name = " < " . round(($top - 1), 2);
+            $res = $this->update(($i - 1), self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data));
+            if (!$res['success']) {
+                $response['success'] = false;
+                $response['message'] = "Error";
+                $response['code'] = 400;
+                return $response;
+            }
+        }
+        $response['success'] = true;
+        $response['message'] = "Updated " . $num . " classes";
+        return $response;
+
+    }
+
+    static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
+    {
+        $symbol = ($data->symbol) ?  : "";
+        $size = ($data->symbolSize) ?  : null;
+        $color = ($color) ? : Util::randHexColor();
+        if ($type == "POINT" || $type == "MULTIPOINT") {
+            $symbol = ($data->symbol) ?  : "circle";
+            $size = ($data->symbolSize) ?  : 10;
+        }
+        return array(
+            "sortid" => $sortid,
+            "name" => $name,
+            "expression" => $expression,
+            "label" => ($data->labelText) ? true : false,
+            "label_size" => ($data->labelSize) ? : "",
+            "label_color" => ($data->labelColor) ? : "",
+            "color" => $color,
+            "outlinecolor" => ($data->outlineColor) ? : "",
+            "style_opacity" => ($data->opacity) ? : "",
+            "symbol" => $symbol,
+            "angle" => ($data->angle) ? : "",
+            "size" => $size,
+            "width" => ($data->lineWidth) ? : "",
+            "overlaycolor" => "",
+            "overlayoutlinecolor" => "",
+            "overlaysymbol" => "",
+            "overlaysize" => "",
+            "overlaywidth" => "",
+            "label_text" => $data->labelText
+        );
     }
 
 

@@ -8,7 +8,7 @@ class App
         "host" => "http://myserver.com",
 
         // The hostname of the user module. Normally this is the same as the host above
-        "userHostName" => "http://local2.mapcentia.com",
+        "userHostName" => "http://myserver.com",
 
         //Server path where GeoCLoud is installed.
         "path" => "/var/www/geocloud2",
@@ -17,7 +17,10 @@ class App
         "databaseTemplate" => "template_geocloud",
 
         // The host of Elasticsearch serveren
-        "esHost" => ""
+        "esHost" => "http://myserver.com",
+
+        // Encrypt api key in database
+        "encryptSettings" => false
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

@@ -56,7 +56,6 @@ $(window).ready(function () {
         async: false,
         url: '/controllers/mapfile',
         success: function (response) {
-
         }
     });
     $.ajax({
@@ -64,7 +63,6 @@ $(window).ready(function () {
         async: false,
         url: '/controllers/cfgfile',
         success: function (response) {
-
         }
     });
     var writer = new Ext.data.JsonWriter({
@@ -163,13 +161,6 @@ $(window).ready(function () {
                 }
             },
             columns: [
-                /*{
-                 header: "_Key_",
-                 dataIndex: "_key_",
-                 sortable: true,
-                 editable: false,
-                 width: 150
-                 },*/
                 {
                     header: "Name",
                     dataIndex: "f_table_name",
@@ -230,8 +221,7 @@ $(window).ready(function () {
                     width: 55,
                     editor: new Ext.form.NumberField({
                         decimalPrecision: 0,
-                        decimalSeparator: '?'// Some strange char nobody is
-                        // using
+                        decimalSeparator: '?'// Some strange char nobody is using
                     })
                 },
                 {
@@ -262,12 +252,6 @@ $(window).ready(function () {
                     header: 'Editable',
                     dataIndex: 'editable',
                     width: 50
-                    //trueText: 'Yes',
-                    //falseText: 'No',
-                    /* align: 'center',
-                     editor: {
-                     xtype: 'checkbox'
-                     }*/
                 },
                 {
                     header: 'Tile cache',
@@ -410,11 +394,6 @@ $(window).ready(function () {
                                 App.setAlert(App.STATUS_ERROR, result.message);
                             }
                         });
-                    } else {
-                        var s = '';
-                        Ext.iterate(schemaForm.form.getValues(), function (key, value) {
-                            s += String.format("{0} = {1}<br />", key, value);
-                        }, this);
                     }
                 }
             }
@@ -443,15 +422,11 @@ $(window).ready(function () {
             }
         });
     }
-
     onAdd = function (btn, ev) {
-        winAdd = null;
         addShape.init();
         var p = new Ext.Panel({
             id: "uploadpanel",
             frame: false,
-            //width: 500,
-            //height: 400,
             layout: 'border',
             items: [new Ext.Panel({
                 region: "center"
@@ -566,7 +541,6 @@ $(window).ready(function () {
 
             })]
         });
-
         winAddSchema.show(this);
     }
 
@@ -576,10 +550,8 @@ $(window).ready(function () {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
-
         tableStructure.grid = null;
         tableStructure.init(record, screenName);
-
         var s = Ext.getCmp("structurePanel");
         s.removeAll();
         s.add(tableStructure.grid);
@@ -592,9 +564,7 @@ $(window).ready(function () {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
-
         cartomobile.grid = null;
-        winCartomobile = null;
         cartomobile.init(record, screenName);
         winCartomobile = new Ext.Window({
             title: "CartoMobile settings for the layer '" + record.get("f_table_name") + "'",
@@ -647,33 +617,32 @@ $(window).ready(function () {
                 '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(2);
+        Ext.getCmp("layerStyleTabs").activate(1);
+        updateLegend();
 
+        Ext.getCmp("layerStyleTabs").activate(3);
         var template = new Ext.Template(markup);
         template.overwrite(Ext.getCmp('a5').body, record);
         Ext.getCmp("layerStylePanel").expand(true);
         var a1 = Ext.getCmp("a1");
         var a4 = Ext.getCmp("a4");
-
         a1.remove(wmsLayer.grid);
         a4.remove(wmsLayer.sqlForm);
         wmsLayer.grid = null;
         wmsLayer.sqlForm = null;
         wmsLayer.init(record);
-        classWizards.init(record);
         a1.add(wmsLayer.grid);
         a4.add(wmsLayer.sqlForm);
         a1.doLayout();
         a4.doLayout();
 
-        Ext.getCmp("layerStyleTabs").activate(1);
+        Ext.getCmp("layerStyleTabs").activate(2);
         var a2 = Ext.getCmp("a2");
         a2.remove(wmsClasses.grid);
         wmsClasses.grid = null;
         wmsClasses.init(record);
         a2.add(wmsClasses.grid);
         a2.doLayout();
-
         var a3 = Ext.getCmp("a3");
         a3.remove(wmsClass.grid);
         a3.doLayout();
@@ -681,10 +650,9 @@ $(window).ready(function () {
         Ext.getCmp("layerStyleTabs").activate(0);
         var a7 = Ext.getCmp("a7");
         a7.remove(classWizards.quantile);
+        classWizards.init(record);
         a7.add(classWizards.quantile);
         a7.doLayout();
-
-        updateLegend();
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
     };
@@ -1025,10 +993,11 @@ $(window).ready(function () {
                     },
                     {
                         xtype: "panel",
+                        //title: "Tile layer setup",
+                        autoScroll:true,
                         region: 'east',
-                        collapsible: false,
+                        collapsible: true,
                         collapsed: true,
-                        collapseMode: "mini",
                         id: "layerStylePanel",
                         width: 300,
                         frame: false,
@@ -1043,20 +1012,36 @@ $(window).ready(function () {
                                 border: false,
                                 id: "layerStyleTabs",
                                 activeTab: 0,
-                                plain: false,
+                                plain: true,
                                 items: [
                                     {
                                         xtype: "panel",
                                         title: 'Theme wizard',
                                         defaults: {
-                                            height: 150,
                                             border: false
                                         },
+                                        height: 610,
                                         items: [
                                             {
                                                 xtype: "panel",
                                                 id: "a7",
                                                 layout: "fit"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Legend',
+                                        autoHeight: true,
+                                        defaults: {
+                                            border: false,
+                                            bodyStyle: "padding : 7px"
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a6",
+                                                html: ""
                                             }
                                         ]
                                     },
@@ -1078,12 +1063,6 @@ $(window).ready(function () {
                                                 height: 360,
                                                 id: "a3"
 
-                                            },
-                                            {
-                                                xtype: "panel",
-                                                height: 200,
-                                                id: "a6",
-                                                html: ""
                                             }
                                         ]
                                     },
@@ -1114,9 +1093,7 @@ $(window).ready(function () {
                                                 }
                                             }
                                         ]
-                                    },
-
-
+                                    }
                                 ]
                             }
                         ]
@@ -1160,7 +1137,6 @@ $(window).ready(function () {
                     });
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + n;
-                    console.log(l);
                     l.redraw();
                 }
                 else {
@@ -1178,6 +1154,7 @@ $(window).ready(function () {
                 jsonp: 'jsonp_callback',
                 success: function (response) {
                     a6.update(response.html);
+                    a6.doLayout();
                 }
             });
         }

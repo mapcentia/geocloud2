@@ -72,4 +72,40 @@ class Util
             504 => "Gateway timeout");
         return $codes[$code];
     }
+
+    static function makeGradient($start, $end, $steps)
+    {
+
+        $theColorBegin = hexdec($start);
+        $theColorEnd = hexdec($end);
+
+        $theR0 = ($theColorBegin & 0xff0000) >> 16;
+        $theG0 = ($theColorBegin & 0x00ff00) >> 8;
+        $theB0 = ($theColorBegin & 0x0000ff) >> 0;
+
+        $theR1 = ($theColorEnd & 0xff0000) >> 16;
+        $theG1 = ($theColorEnd & 0x00ff00) >> 8;
+        $theB1 = ($theColorEnd & 0x0000ff) >> 0;
+
+        function interpolate($pBegin, $pEnd, $pStep, $pMax)
+        {
+            if ($pBegin < $pEnd) {
+                return (($pEnd - $pBegin) * ($pStep / $pMax)) + $pBegin;
+            } else {
+                return (($pBegin - $pEnd) * (1 - ($pStep / $pMax))) + $pEnd;
+            }
+        }
+        $grad = array();
+        for ($i = 0; $i <= $steps; $i++) {
+            $theR = interpolate($theR0, $theR1, $i, $steps);
+            $theG = interpolate($theG0, $theG1, $i, $steps);
+            $theB = interpolate($theB0, $theB1, $i, $steps);
+
+            $theVal = ((($theR << 8) | $theG) << 8) | $theB;
+
+            $grad[] = sprintf("#%06X", $theVal);
+        }
+        return $grad;
+
+    }
 }

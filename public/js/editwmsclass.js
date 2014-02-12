@@ -160,6 +160,8 @@ wmsClasses.onSave = function () {
 wmsClasses.onWrite = function (store, action, result, transaction, rs) {
     if (transaction.success) {
         wmsClasses.store.load();
+        writeFiles();
+        clearTileCache(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
     }
 };
 
@@ -182,11 +184,8 @@ wmsClass.init = function (id) {
         autoLoad: true,
         url: '/controllers/classification/index/' + wmsClasses.table + '/' + id,
         storeId: 'configStore',
-        // reader config
         successProperty: 'success',
-        // idProperty: 'id',
         root: 'data',
-        // fields: 'fields',
         fields: [
             {
                 name: 'sortid'
@@ -255,6 +254,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: 'label_buffer'
+            },
+            {
+                name: "label_text"
             },
             // Leader start
             {
@@ -341,6 +343,7 @@ wmsClass.init = function (id) {
             label_color: 'Label: color',
             label_outlinecolor: 'Label: outline color',
             label_buffer: 'Label: buffer',
+            label_text: 'Label: text',
 
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',

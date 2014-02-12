@@ -225,15 +225,11 @@ class Mapfile extends \app\inc\Controller
         #
         <?php
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "'";
-        //echo $sql;
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             makeExceptionReport($postgisObject->PDOerror);
         }
         while ($row = $postgisObject->fetchRow($result)) {
-            //$wmslayerObj = new //wmslayers("{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-            //$layerArr = $wmslayerObj->get();
-
             $arr = (array)json_decode($row['def']); // Cast stdclass to array
             $props = array("label_column", "theme_column");
             foreach ($props as $field) {
@@ -247,7 +243,7 @@ class Mapfile extends \app\inc\Controller
             // Sort classes
             $arr = $arr2 = (array)json_decode($row['class']);
             for ($i = 0; $i < sizeof($arr); $i++) {
-                $last = 100;
+                $last = 1000;
                 foreach ($arr2 as $key => $value) {
                     if ($value->sortid < $last) {
                         $temp = $value;
@@ -361,6 +357,9 @@ class Mapfile extends \app\inc\Controller
                         else echo "EXPRESSION (" . $class['expression'] . ")\n";
                     } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                     ?>
+
+                    #TEXT
+                    <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
 
                     STYLE
                     #SYMBOL

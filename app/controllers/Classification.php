@@ -34,9 +34,12 @@ class Classification extends \app\inc\Controller
         return $this->class->destroy(json_decode(Input::get())->data);
     }
     public function put_unique(){
-        return $this->class->createUnique(Input::getPath()->part(5));
+        return $this->class->createUnique(Input::getPath()->part(5),json_decode(urldecode(Input::get()))->data);
     }
     public function put_single(){
-        return $this->class->createSingle(Input::getPath()->part(5));
+        return $this->class->createSingle(json_decode(urldecode(Input::get()))->data);
+    }
+    public function put_equal(){
+        return $this->class->createEqualIntervals(Input::getPath()->part(5),Input::getPath()->part(6),"#".Input::getPath()->part(7),"#".Input::getPath()->part(8), json_decode(urldecode(Input::get()))->data);
     }
 }

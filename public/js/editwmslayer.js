@@ -2,6 +2,7 @@ Ext.namespace('wmsLayer');
 wmsLayer.init = function (record) {
     wmsLayer.fieldsForStore = [];
     wmsLayer.numFieldsForStore = [];
+    wmsLayer.fieldsForStoreBrackets = [];
     $.ajax({
         url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
         async: false,
@@ -14,7 +15,8 @@ wmsLayer.init = function (record) {
             wmsLayer.fieldsForStore.push("");
             for (var i in forStore) {
                 wmsLayer.fieldsForStore.push(forStore[i].name);
-                if (forStore[i].type === "number") {
+                wmsLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
+                if (forStore[i].type === "number" || forStore[i].type === "int") {
                     wmsLayer.numFieldsForStore.push(forStore[i].name);
                 }
             }
@@ -36,9 +38,6 @@ wmsLayer.init = function (record) {
             },
             {
                 name: 'label_column'
-            },
-            {
-                name: 'query_buffer'
             },
             {
                 name: 'opacity'
@@ -94,7 +93,6 @@ wmsLayer.init = function (record) {
         propertyNames: {
             label_column: 'Label item',
             theme_column: 'Class item',
-            query_buffer: 'Query buffer',
             opacity: 'Opacity',
             label_max_scale: 'Label max scale',
             label_min_scale: 'Label min scale',
@@ -129,10 +127,6 @@ wmsLayer.init = function (record) {
                 store: wmsLayer.fieldsForStore,
                 editable: true,
                 triggerAction: 'all'
-            }), {}),
-            'query_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char nobody is using
             }), {}),
             'opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
@@ -218,7 +212,6 @@ wmsLayer.init = function (record) {
                 labelAlign: 'top',
                 name: 'data',
                 value: (record.data) ? record.data : "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name
-                //value: record.data
             }
         ],
         buttons: [
