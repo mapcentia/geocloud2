@@ -319,7 +319,8 @@ geocloud = (function () {
             opacity: 1,
             wrapDateLine: true,
             tileCached: true,
-            name: null
+            name: null,
+	    isBaseLayer: false
         };
         if (config) {
             for (prop in config) {
