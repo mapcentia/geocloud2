@@ -288,7 +288,8 @@ class Classification extends \app\inc\Model
         }
         $row = $this->fetchRow($res);
         $count = $row["count"];
-        $numPerClass = $temp = $count / $num;
+        $numPerClass = $temp = ($count / $num);
+        //echo $numPerClass."\n";
         $query = "SELECT * FROM " . $this->table->table . " ORDER BY {$field}";
         $res = $this->prepare($query);
         try {
@@ -306,11 +307,11 @@ class Classification extends \app\inc\Model
         $u = 0;
         for ($i = 1; $i <= $count; $i++) {
             $row = $res->fetch(\PDO::FETCH_ASSOC);
-            //echo $i . " | " . $temp . " | " . $row[$field] . "\n";
+            //echo $i . " | " . ($temp) . " | " . $row[$field] . "\n";
             if ($i == 1) {
                 $bottom = $row[$field];
             }
-            if ($i >= (int)$temp) {
+            if ($i >= $temp || $i == $count) {
                 if ($top) {
                     $bottom = $top;
                 }
