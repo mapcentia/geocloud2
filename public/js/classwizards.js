@@ -81,6 +81,31 @@ classWizards.init = function (record) {
                 layout: 'column',
                 items: [
                     {
+                        xtype: "form",
+                        id: "uniqueform",
+                        layout: "form",
+                        items: [
+                            {
+                                xtype: 'container',
+                                layout: 'hbox',
+                                defaults: {
+                                    width: 100
+                                },
+                                items: [
+                                    {
+                                        xtype: "combo",
+                                        store: wmsLayer.fieldsForStore,
+                                        editable: false,
+                                        triggerAction: "all",
+                                        name: "value",
+                                        emptyText: "Field",
+                                        allowBlank: false
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         layout: 'form',
                         bodyStyle: 'margin-right:5px; padding-left: 5px',
                         items: [
@@ -126,39 +151,13 @@ classWizards.init = function (record) {
                                 }
                             }
                         ]
-                    },
-                    {
-                        xtype: "form",
-                        id: "uniqueform",
-                        layout: "form",
-                        items: [
-                            {
-                                xtype: 'container',
-                                layout: 'hbox',
-                                width: 200,
-                                defaults: {
-                                    width: 100
-                                },
-                                items: [
-                                    {
-                                        xtype: "combo",
-                                        store: wmsLayer.fieldsForStore,
-                                        editable: false,
-                                        triggerAction: "all",
-                                        name: "value",
-                                        emptyText: "Field",
-                                        allowBlank: false
-                                    }
-                                ]
-                            }
-                        ]
                     }
                 ]
             },
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>Equal intervals</b></td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>Intervals</b></td></tr>' +
                     '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/interval_classes.png"></td></tr>' +
                     '</table>'
 
@@ -167,59 +166,8 @@ classWizards.init = function (record) {
                 defaults: {
                     border: false
                 },
-                layout: 'column',
+                //layout: 'column',
                 items: [
-                    {
-                        layout: 'form',
-                        bodyStyle: 'margin-right:5px; padding-left: 5px',
-                        items: [
-                            {
-                                xtype: 'button',
-                                text: 'Create',
-                                handler: function () {
-                                    var f = Ext.getCmp('equalform');
-                                    if (f.form.isValid()) {
-                                        var values = f.form.getValues(),
-                                            params = classWizards.getAddvalues();
-                                        Ext.Ajax.request({
-                                            url: '/controllers/classification/equal/' + record._key_ + '/' +
-                                                values.value + '/' +
-                                                values.num + '/' +
-                                                values.start.replace("#", "") + '/' +
-                                                values.end.replace("#", "") + '/',
-                                            method: 'put',
-                                            params: params,
-                                            headers: {
-                                                'Content-Type': 'application/json; charset=utf-8'
-                                            },
-                                            success: function (response) {
-                                                Ext.getCmp("a3").remove(wmsClass.grid);
-                                                wmsClasses.store.load();
-                                                writeFiles();
-                                                clearTileCache(record.f_table_schema + "." + record.f_table_name);
-                                                App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
-                                            },
-                                            failure: function (response) {
-                                                Ext.MessageBox.show({
-                                                    title: 'Failure',
-                                                    msg: eval('(' + response.responseText + ')').message,
-                                                    buttons: Ext.MessageBox.OK,
-                                                    width: 400,
-                                                    height: 300,
-                                                    icon: Ext.MessageBox.ERROR
-                                                });
-                                            }
-                                        });
-                                    } else {
-                                        var s = '';
-                                        Ext.iterate(f.form.getValues(), function (key, value) {
-                                            s += String.format("{0} = {1}<br />", key, value);
-                                        }, this);
-                                    }
-                                }
-                            }
-                        ]
-                    },
                     {
                         xtype: "form",
                         id: "equalform",
@@ -228,11 +176,28 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'container',
                                 layout: 'hbox',
-                                width: 200,
                                 defaults: {
-                                    width: 100
+                                    width: 95
                                 },
                                 items: [
+                                    {
+                                        xtype: "combo",
+                                        store: new Ext.data.ArrayStore({
+                                            fields: ['type', 'display'],
+                                            data: [
+                                                ['equal', 'Equal'],
+                                                ['quantile', 'Quantile']
+                                            ]
+                                        }),
+                                        displayField: 'display',
+                                        valueField: 'type',
+                                        editable: false,
+                                        triggerAction: "all",
+                                        name: "type",
+                                        emptyText: "Numeric field",
+                                        allowBlank: false,
+                                        mode: 'local'
+                                    },
                                     {
                                         xtype: "combo",
                                         store: wmsLayer.numFieldsForStore,
@@ -262,9 +227,9 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'container',
                                 layout: 'hbox',
-                                width: 200,
+                                width: 285,
                                 defaults: {
-                                    width: 100
+                                    width: 95
                                 },
                                 items: [
                                     new Ext.form.ColorField({
@@ -276,7 +241,60 @@ classWizards.init = function (record) {
                                         name: "end",
                                         emptyText: "End color",
                                         allowBlank: false
-                                    })
+                                    }),
+                                    {
+                                        layout: 'form',
+                                        bodyStyle: 'margin-right:5px; padding-left: 5px',
+                                        border: false,
+                                        items: [
+                                            {
+                                                xtype: 'button',
+                                                text: 'Create',
+                                                width: 'auto',
+                                                handler: function () {
+                                                    var f = Ext.getCmp('equalform');
+                                                    if (f.form.isValid()) {
+                                                        var values = f.form.getValues(),
+                                                            params = classWizards.getAddvalues();
+                                                        Ext.Ajax.request({
+                                                            url: '/controllers/classification/' + values.type.toLowerCase() + '/' + record._key_ + '/' +
+                                                                values.value + '/' +
+                                                                values.num + '/' +
+                                                                values.start.replace("#", "") + '/' +
+                                                                values.end.replace("#", "") + '/',
+                                                            method: 'put',
+                                                            params: params,
+                                                            headers: {
+                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                            },
+                                                            success: function (response) {
+                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                wmsClasses.store.load();
+                                                                writeFiles();
+                                                                clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                                                                App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                                                            },
+                                                            failure: function (response) {
+                                                                Ext.MessageBox.show({
+                                                                    title: 'Failure',
+                                                                    msg: eval('(' + response.responseText + ')').message,
+                                                                    buttons: Ext.MessageBox.OK,
+                                                                    width: 400,
+                                                                    height: 300,
+                                                                    icon: Ext.MessageBox.ERROR
+                                                                });
+                                                            }
+                                                        });
+                                                    } else {
+                                                        var s = '';
+                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                        }, this);
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
                                 ]
                             }
                         ]

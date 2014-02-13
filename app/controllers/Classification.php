@@ -42,4 +42,7 @@ class Classification extends \app\inc\Controller
     public function put_equal(){
         return $this->class->createEqualIntervals(Input::getPath()->part(5),Input::getPath()->part(6),"#".Input::getPath()->part(7),"#".Input::getPath()->part(8), json_decode(urldecode(Input::get()))->data);
     }
+    public function put_quantile(){
+        return $this->class->createQuantile(Input::getPath()->part(5),Input::getPath()->part(6),"#".Input::getPath()->part(7),"#".Input::getPath()->part(8), json_decode(urldecode(Input::get()))->data);
+    }
 }

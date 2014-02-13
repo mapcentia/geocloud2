@@ -130,6 +130,7 @@ class Classification extends \app\inc\Model
     {
         $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
+        //print_r($classes);
         $classes['data'][$id] = $data;
         if ($this->store(json_encode($classes['data']))) {
             $response['success'] = true;
@@ -256,7 +257,8 @@ class Classification extends \app\inc\Model
             }
             $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
             $name = " < " . round(($top - 1), 2);
-            $res = $this->update(($i - 1), self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data));
+            $class = self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data);
+            $res = $this->update(($i - 1), $class);
             if (!$res['success']) {
                 $response['success'] = false;
                 $response['message'] = "Error";
@@ -270,16 +272,82 @@ class Classification extends \app\inc\Model
 
     }
 
+    public function createQuantile($field, $num, $startColor, $endColor, $data)
+    {
+        $layer = new \app\models\Layer();
+        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $query = "SELECT count(*) as count FROM " . $this->table->table;
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        $count = $row["count"];
+        $numPerClass = $temp = $count / $num;
+        $query = "SELECT * FROM " . $this->table->table . " ORDER BY {$field}";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $this->reset();
+        $grad = Util::makeGradient($startColor, $endColor, $num);
+        $bottom = null;
+        $top = null;
+        $u = 0;
+        for ($i = 1; $i <= $count; $i++) {
+            $row = $res->fetch(\PDO::FETCH_ASSOC);
+            //echo $i . "  " . $temp . "  " . $row[$field] . "\n";
+            if ($i == 1) {
+                $bottom = $row[$field];
+            }
+            if ($i >= $temp) {
+                if ($top) {
+                    $bottom = $top;
+                }
+                $top = $row[$field];
+                if ($i == $count) {
+                    $top++;
+                }
+                $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
+                $name = " < " . round(($top), 2);
+                //echo $expression . "\n";
+                $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
+                $r = $this->update($u, $class);
+                if (!$r['success']) {
+                    $response['success'] = false;
+                    $response['message'] = "Error";
+                    $response['code'] = 400;
+                    return $response;
+                }
+                $u++;
+                $temp = $temp + $numPerClass;
+            }
+        }
+        $response['success'] = true;
+        $response['message'] = "Updated " . $num . " classes";
+        return $response;
+    }
+
     static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
     {
-        $symbol = ($data->symbol) ?  : "";
-        $size = ($data->symbolSize) ?  : null;
+        $symbol = ($data->symbol) ? : "";
+        $size = ($data->symbolSize) ? : null;
         $color = ($color) ? : Util::randHexColor();
         if ($type == "POINT" || $type == "MULTIPOINT") {
-            $symbol = ($data->symbol) ?  : "circle";
-            $size = ($data->symbolSize) ?  : 10;
+            $symbol = ($data->symbol) ? : "circle";
+            $size = ($data->symbolSize) ? : 10;
         }
-        return array(
+        return (object)array(
             "sortid" => $sortid,
             "name" => $name,
             "expression" => $expression,
