@@ -194,7 +194,7 @@ classWizards.init = function (record) {
                                         editable: false,
                                         triggerAction: "all",
                                         name: "type",
-                                        emptyText: "Numeric field",
+                                        emptyText: "Type",
                                         allowBlank: false,
                                         mode: 'local'
                                     },
