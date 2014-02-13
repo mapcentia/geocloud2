@@ -489,5 +489,6 @@ classWizards.init = function (record) {
                 ]
             }
         ]
+
     });
 };
