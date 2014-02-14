@@ -7,14 +7,14 @@ use \app\conf\Connection;
 
 class Table extends Model
 {
-    public  $table;
+    public $table;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
     var $geomType;
     var $exits;
 
-    function __construct($table)
+    function __construct($table, $temp = false)
     {
         parent::__construct();
 
@@ -25,11 +25,14 @@ class Table extends Model
         $_table = $matches[0];
 
         if (!$_schema) {
-            $table = Connection::$param['postgisschema']. "." . $table;
+            // If temp, then don't prefix with schema. Used when table/view is temporary
+            if (!$temp) {
+                $table = Connection::$param['postgisschema'] . "." . $table;
+            }
         }
         $this->tableWithOutSchema = $_table;
 
-        $sql = "select 1 from {$table}";
+        $sql = "SELECT 1 FROM {$table}";
         $this->execQuery($sql);
         if ($this->PDOerror) {
             $this->exits = false;
@@ -150,7 +153,7 @@ class Table extends Model
 
     function getGroupBy($field) // All tables
     {
-        $sql = "SELECT {$field} as {$field} FROM {$this->table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
+        $sql = "SELECT {$field} AS {$field} FROM {$this->table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
             while ($row = $this->fetchRow($result, "assoc")) {
@@ -387,7 +390,7 @@ class Table extends Model
         $sql .= "ALTER TABLE {$this->table} DROP CONSTRAINT enforce_geotype_the_geom;";
         $sql .= "UPDATE {$this->table} SET {$this->geomField} = ST_Multi({$this->geomField});";
         $sql .= "UPDATE geometry_columns SET type = 'MULTIPOINT' WHERE f_table_name = '{$this->table}';";
-        $sql .= "ALTER TABLE {$this->table} ADD CONSTRAINT enforce_geotype_the_geom check (geometrytype({$this->geomField}) = 'MULTIPOINT'::text OR {$this->geomField} IS NULL);";
+        $sql .= "ALTER TABLE {$this->table} ADD CONSTRAINT enforce_geotype_the_geom CHECK (geometrytype({$this->geomField}) = 'MULTIPOINT'::TEXT OR {$this->geomField} IS NULL);";
         $sql .= "COMMIT";
         $this->execQuery($sql, "PDO", "transaction");
     }
@@ -400,7 +403,7 @@ class Table extends Model
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
-        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid serial PRIMARY KEY,id int) WITH OIDS;";
+        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT) WITH OIDS;";
         $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");

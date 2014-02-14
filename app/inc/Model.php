@@ -176,7 +176,7 @@ class Model
         return $response;
     }
 
-    function getMetaData($table)
+    function getMetaData($table, $temp = false)
     {
         $this->connect("PG");
 
@@ -189,7 +189,12 @@ class Model
         if (!$_schema) {
             $_schema = $this->postgisschema;
         }
-        $arr = pg_meta_data($this->db, str_replace(".", "", $_schema) . "." . $_table);
+        if (!$temp) {
+            $arr = pg_meta_data($this->db, str_replace(".", "", $_schema) . "." . $_table);
+        }
+        else {
+            $arr = pg_meta_data($this->db, $_table);
+        }
         $this->close();
         return ($arr);
     }
