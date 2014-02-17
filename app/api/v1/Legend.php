@@ -2,6 +2,7 @@
 namespace app\api\v1;
 
 use \app\conf\App;
+use \app\inc\Input;
 
 class Legend extends \app\inc\Controller
 {
@@ -16,24 +17,28 @@ class Legend extends \app\inc\Controller
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
                 $map = ms_newMapobj($path . $mapFile);
+
                 $layer = $map->getLayerByName($layerName);
                 if ($layer) {
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
                     for ($i = 0; $i < $layer->numclasses; $i++) {
                         $class = $layer->getClass($i);
+
                         $icon = $class->createLegendIcon(17, 17);
                         ob_start();
                         $icon->saveImage("", $map);
                         $data = base64_encode(ob_get_clean());
                         $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+
                         $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                        $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
                     }
                 }
             }
         }
     }
 
-    function get_html()
+    public function get_html()
     {
         $html = "";
         if (is_array($this->legendArr)) {
@@ -55,7 +60,7 @@ class Legend extends \app\inc\Controller
         return $response;
     }
 
-    function get_json()
+    public function get_json()
     {
         $json = array();
         $classes = array();
@@ -64,7 +69,11 @@ class Legend extends \app\inc\Controller
                 {
                     if (is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
-                            $classes[] = array("name"=>$class['name'],"img"=>$class['img']);
+                            $classes[] = array(
+                                "name"=>$class['name'],
+                                "expression"=>$class['expression'],
+                                "img"=>$class['img']
+                            );
                         }
                     }
                     $json[] = array("id"=>$key,"classes"=>$classes);
@@ -74,4 +83,7 @@ class Legend extends \app\inc\Controller
         }
         return $json;
     }
-}
+    public function get_quantile(){
+        $this->class = new \app\models\Classification(Input::get("l"));
+        return $this->class->createQuantile(Input::get("f"),Input::get("n"),"#".Input::get(s),"#".Input::get(e),null,false);
+    }}

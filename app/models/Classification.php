@@ -272,7 +272,7 @@ class Classification extends \app\inc\Model
 
     }
 
-    public function createQuantile($field, $num, $startColor, $endColor, $data)
+    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
     {
         $layer = new \app\models\Layer();
         $geometryType = $layer->getValueFromKey($this->layer, type);
@@ -321,20 +321,24 @@ class Classification extends \app\inc\Model
                 }
                 $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
                 $name = " < " . round(($top), 2);
+                $tops[] = array($top, $grad[$u]);
                 //echo $expression . "\n";
-                $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
-                $r = $this->update($u, $class);
-                if (!$r['success']) {
-                    $response['success'] = false;
-                    $response['message'] = "Error";
-                    $response['code'] = 400;
-                    return $response;
+                if ($update) {
+                    $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
+                    $r = $this->update($u, $class);
+                    if (!$r['success']) {
+                        $response['success'] = false;
+                        $response['message'] = "Error";
+                        $response['code'] = 400;
+                        return $response;
+                    }
                 }
                 $u++;
                 $temp = $temp + $numPerClass;
             }
         }
         $response['success'] = true;
+        $response['values'] = $tops;
         $response['message'] = "Updated " . $num . " classes";
         return $response;
     }

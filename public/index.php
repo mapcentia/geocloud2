@@ -1,6 +1,6 @@
 <?php
 ini_set("display_errors", "Off");
-ini_set('memory_limit','256M');
+ini_set('memory_limit', '256M');
 error_reporting(3);
 
 use \app\inc\Input;
@@ -36,24 +36,22 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/user", function () {
         Connection::$param["postgisdb"] = Input::getPath()->part(4);
     });
-    Route::add("api/v1/legend");
-}
+    Route::add("api/v1/legend", function () {
+        Connection::$param["postgisdb"] = Input::getPath()->part(5);
+        Connection::$param["postgisschema"] = "trackunit";
 
-elseif (Input::getPath()->part(1) == "store") {
+    });
+} elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
     $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
     include_once("store.php");
     include_once("../app/conf/intercom.js.inc");
-}
-
-elseif (Input::getPath()->part(1) == "editor") {
+} elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
     include_once("editor.php");
-}
-
-elseif (Input::getPath()->part(1) == "controllers") {
+} elseif (Input::getPath()->part(1) == "controllers") {
 
     Session::start();
     Session::authenticate("/user/login/");
@@ -72,22 +70,16 @@ elseif (Input::getPath()->part(1) == "controllers") {
     Route::add("controllers/tilecache/");
     Route::add("controllers/upload/file");
     Route::add("controllers/upload/process");
-}
-
-elseif (Input::getPath()->part(1) == "wms") {
+} elseif (Input::getPath()->part(1) == "wms") {
     new \app\controllers\Wms();
-}
-
-elseif (Input::getPath()->part(1) == "wfs") {
+} elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
     Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
     include_once("app/wfs/server.php");
-}
-elseif (!Input::getPath()->part(1)) {
+} elseif (!Input::getPath()->part(1)) {
     \app\inc\Redirect::to("/user/login");
-}
-else {
+} else {
     header('HTTP/1.0 404 Not Found');
     echo "<h1>404 Not Found</h1>";
     echo "The page that you have requested could not be found.";

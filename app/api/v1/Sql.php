@@ -93,6 +93,7 @@ class Sql extends \app\inc\Controller
         } else {
             $this->response['success'] = false;
             $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE";
+            $this->response['code'] = 400;
         }
         return serialize($this->response);
     }

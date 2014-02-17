@@ -119,38 +119,6 @@ class Table extends Model
         return $response;
     }
 
-    /*function getGeoJson($fields = "*")
-    {
-        $sql = "SELECT {$fields},ST_asGeoJson(transform(the_geom,900913)) as the_geom FROM {$this->table}";
-        if ($whereClause) {
-            $sql .= " WHERE {$whereClause}";
-        }
-        $result = $this->execQuery($sql);
-
-        while ($row = $this->fetchRow($result, "assoc")) {
-            if (!$firstRow) {
-                $firstRow = $row;
-            }
-            $arr = array();
-            foreach ($row as $key => $value) {
-                $arr = $this->array_push_assoc($arr, $key, $value);
-            }
-            unset($arr['the_geom']);
-
-            $properties[] = array("geometry" => array("type" => "GeometryCollection", "geometries" => array(json_decode($row['the_geom']))), "type" => "Feature", "properties" => $arr);
-        }
-        foreach ($firstRow as $key => $value) {
-            $fieldsForStore[] = array("name" => $key, "type" => "string");
-            $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => "string", "typeObj" => array("type" => "string"));
-        }
-        $response["forStore"] = $fieldsForStore;
-        $response["forGrid"] = $columnsForGrid;
-        $response['type'] = "FeatureCollection";
-        $response['features'] = $properties;
-
-        return $response;
-    }*/
-
     function getGroupBy($field) // All tables
     {
         $sql = "SELECT {$field} AS {$field} FROM {$this->table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
@@ -168,10 +136,9 @@ class Table extends Model
         return $response;
     }
 
-    function destroy() // Geometry columns
+    function destroy()
     {
         $sql = "DROP TABLE {$this->table} CASCADE;";
-        //echo $sql;
         $this->execQuery($sql, "PDO", "transaction");
         if (!$this->PDOerror) {
             $response['success'] = true;
