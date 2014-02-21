@@ -70,9 +70,15 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/tilecache/");
     Route::add("controllers/upload/file");
     Route::add("controllers/upload/process");
-} elseif (Input::getPath()->part(1) == "wms") {
+}
+elseif (Input::getPath()->part(1) == "wms") {
     new \app\controllers\Wms();
-} elseif (Input::getPath()->part(1) == "wfs") {
+}
+elseif (Input::getPath()->part(1) == "tms") {
+    Session::start();
+    new \app\controllers\Tms();
+}
+elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
     Connection::$param["postgisdb"] = \app\inc\Input::getPath()->part(2);
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
