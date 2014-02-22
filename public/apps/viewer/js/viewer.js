@@ -59,10 +59,9 @@ MapCentia = (function () {
          GHYBRID = cloud.addGoogleHybrid();
          GSATELLITE = cloud.addGoogleSatellite();
          GTERRAIN = cloud.addGoogleTerrain();*/
-        setBaseLayer("osm");
+        //setBaseLayer("osm");
 
-        /*cloud.addBaseLayer(geocloud.OSM);
-         cloud.setBaseLayer(geocloud.OSM);*/
+
 
         // we add two click controllers for desktop and handheld
         //cloud.map.addControl(clickPopUp = new popUpClickController);
@@ -218,6 +217,7 @@ MapCentia = (function () {
                 }
             }
             else {
+                setBaseLayer("osm");
                 cloud.zoomToExtent();
             }
         })();
