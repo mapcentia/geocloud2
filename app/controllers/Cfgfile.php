@@ -46,7 +46,7 @@ class Cfgfile extends \app\inc\Controller
             echo "srs=EPSG:900913\n";
             echo "expire={$expire}\n\n";
         }
-        echo "[".Connection::$param['postgisschema']."]\n";
+        /*echo "[".Connection::$param['postgisschema']."]\n";
         echo "layers=" . implode(",", $layerArr) . "\n";
         echo "type=WMS\n";
         echo "url=".App::$param['host']."/wms/".Connection::$param['postgisdb']."/".Connection::$param['postgisschema']."/?TRANSPARENT=FALSE&";
@@ -57,7 +57,7 @@ class Cfgfile extends \app\inc\Controller
         echo "metaTile={$meta_tiles}\n";
         echo "metaSize=3,3\n";
         echo "srs=EPSG:900913\n";
-        echo "expire={$expire}\n\n";
+        echo "expire={$expire}\n\n";*/
         $data = ob_get_clean();
         $path = App::$param['path']."/app/wms/cfgfiles/";
         $name = Connection::$param['postgisdb'].".tilecache.cfg";
