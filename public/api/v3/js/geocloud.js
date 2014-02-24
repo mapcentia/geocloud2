@@ -87,7 +87,8 @@ geocloud = (function () {
             },
             index: "",
             type: "",
-            size: 3
+            size: 3,
+            clientEncoding: "UTF8"
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -171,7 +172,7 @@ geocloud = (function () {
             }
             $.ajax({
                 dataType: 'jsonp',
-                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection,
+                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: 'jsonp_callback',
                 url: url + '/api/v1/sql/' + this.db,
                 success: function (response) {
