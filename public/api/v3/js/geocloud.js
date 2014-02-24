@@ -321,7 +321,7 @@ geocloud = (function () {
             wrapDateLine: true,
             tileCached: true,
             name: null,
-	    isBaseLayer: false
+            isBaseLayer: false
         };
         if (config) {
             for (prop in config) {
@@ -342,7 +342,11 @@ geocloud = (function () {
             var url1 = url;
             var url2 = url;
             var url3 = url;
-            urlArray = [url1.replace("cdn", "cdn1"), url2.replace("cdn", "cdn2"), url3.replace("cdn", "cdn3")];
+            // For ol2
+            urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
+
+            // For leaflet
+            url = url1.replace("cdn.", "{s}.");
         }
         switch (MAPLIB) {
             case "ol2":
@@ -366,7 +370,9 @@ geocloud = (function () {
                 l = new L.TileLayer.WMS(url, {
                     layers: layer,
                     format: 'image/png',
-                    transparent: true
+                    transparent: true,
+                    subdomains: ["cdn1", "cdn2", "cdn3"]
+
                 });
                 l.id = layer;
                 break;
