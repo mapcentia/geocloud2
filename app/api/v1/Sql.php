@@ -23,7 +23,7 @@ class Sql extends \app\inc\Controller
         $res = $settings_viewer->get();
         $this->apiKey = $res['data']['api_key'];
 
-        $this->response = $this->transaction($this->q);
+        $this->response = $this->transaction($this->q, Input::get('client_encoding'));
 
         // Check if $this->data is set in SELECT section
         if (!$this->data) {
@@ -32,7 +32,7 @@ class Sql extends \app\inc\Controller
         return  unserialize($this->data);
     }
 
-    private function transaction($sql)
+    private function transaction($sql, $clientEncoding = null)
     {
         $parsedSQL = \app\inc\SqlParser::ParseString($sql)->getArray();
         if ($parsedSQL['from']) {
@@ -71,7 +71,6 @@ class Sql extends \app\inc\Controller
                 $this->response['code'] = 403;
             }
         } elseif ($parsedSQL['select']) {
-            $id = $this->q;
             $lifetime = (Input::get('lifetime')) ? : 0;
             $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
             $Cache_Lite = new \Cache_Lite($options);
@@ -83,11 +82,11 @@ class Sql extends \app\inc\Controller
                 $srs = (Input::get('srs')) ? : "900913";
                 $api = new \app\models\Sql($srs);
                 $api->execQuery("set client_encoding='UTF8'", "PDO");
-                $this->response = $api->sql($id);
+                $this->response = $api->sql($this->q, $clientEncoding);
                 echo serialize($this->response);
                 // Cache script
                 $this->data = ob_get_contents();
-                $Cache_Lite->save($this->data, $id);
+                $Cache_Lite->save($this->data, $this->q);
                 ob_get_clean();
             }
         } else {

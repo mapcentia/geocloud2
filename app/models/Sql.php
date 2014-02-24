@@ -10,7 +10,7 @@ class Sql extends \app\inc\Model
         parent::__construct();
         $this->srs = $srs;
     }
-    function sql($q)
+    function sql($q, $clientEncoding = null)
     {
         $name = "_" . rand(1, 999999999) . microtime();
         $name = $this->toAscii($name, null, "_");
@@ -37,6 +37,9 @@ class Sql extends \app\inc\Model
         }
         $sql = implode(",", $fieldsArr);
         $sql = "SELECT {$sql} FROM {$view}";
+        if ($clientEncoding){
+            $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
+        }
         $result = $this->execQuery($sql);
         // Second check. Catched eg. transform errors
         if ($this->PDOerror) {
