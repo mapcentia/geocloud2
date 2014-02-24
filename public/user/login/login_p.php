@@ -16,7 +16,7 @@ if (App::$param['domain']) {
 
 if (App::$param['cdnSubDomain']){
     $bits = explode("://", $host);
-    $cdnHost = $bits[0]."://".App::$param['cdnPrefix'].".".$bits[1];
+    $cdnHost = $bits[0]."://".App::$param['cdnSubDomain'].".".$bits[1];
 }
 else {
     $cdnHost = $host;
