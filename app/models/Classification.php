@@ -202,9 +202,9 @@ class Classification extends \app\inc\Model
         $rows = $this->fetchAll($res);
         $this->reset();
         $type = $fieldObj['type'];
-        if (sizeof($rows) > 20) {
+        if (sizeof($rows) > 100) {
             $response['success'] = false;
-            $response['message'] = "Too many classes. Stopped after 20.";
+            $response['message'] = "Too many classes. Stopped after 100.";
             $response['code'] = 405;
             return $response;
         }
