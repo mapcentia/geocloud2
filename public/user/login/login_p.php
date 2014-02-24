@@ -7,12 +7,19 @@ include '../html_header.php';
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='/user/login'</script>");
 }
-($_SESSION['zone']) ? $prefix = App::$param['domainPrefix'] . $_SESSION['zone'] . "." : $prefix = "";
-
+$prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
 if (App::$param['domain']) {
     $host = "http://" . $prefix . App::$param['domain'];
 } else {
     $host = App::$param['host'];
+}
+
+if (App::$param['cdnSubDomain']){
+    $bits = explode("://", $host);
+    $cdnHost = $bits[0]."://".App::$param['cdnPrefix'].".".$bits[1];
+}
+else {
+    $cdnHost = $host;
 }
 
 ?>
@@ -56,7 +63,7 @@ if (App::$param['domain']) {
     <tr class="map-entry">
         <td><%= this . schema %></td>
         <td><a target="_blank"
-               href="<?php echo $host . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
+               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
         </a></td>
     </tr>
 </script>
