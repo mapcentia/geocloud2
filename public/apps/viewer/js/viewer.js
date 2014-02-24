@@ -155,21 +155,16 @@ MapCentia = (function () {
             {
                 label: 'handheld',
                 enter: 0,
-                exit: 979
-            },
-            {
-                label: 'tablet',
-                enter: 768,
-                exit: 979
+                exit: 768
             },
             {
                 label: 'desktop',
-                enter: 980,
+                enter: 768,
                 exit: 10000
             }
         ]);
         jRes.addFunc({
-            breakpoint: ['handheld', 'tablet'],
+            breakpoint: ['handheld'],
             enter: function () {
                 // We activate the modals
                 $("#modal-legend .modal-body").append($("#legend"));

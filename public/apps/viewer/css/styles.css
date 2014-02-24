@@ -103,26 +103,18 @@ input[type="radio"], input[type="checkbox"] {
     }
 }
 
-@media (min-width: 768px) and (max-width: 979px) {
 
-    #legend-popover-li {
-        display: none !important;
-    }
-
-    .navbar-fixed-top {
-        margin-bottom: 0;
-    }
-
-}
-
-@media (max-width: 979px) {
+@media (max-width: 768px) {
     .navbar-fixed-top.navbar-absolute {
         position: absolute;
         margin: 0;
     }
+    .leaflet-top{
+        display: none;
+    }
 }
 
-@media (min-width: 980px) {
+@media (min-width: 768px) {
 
     #legend-modal-li {
         display: none !important;
@@ -220,3 +212,22 @@ input[type="radio"], input[type="checkbox"] {
 .meta-info {
     padding: 0 !important;
 }
+
+.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    padding: 8px;
+    line-height: 1.428571429;
+    vertical-align: top;
+    border-top: 1px solid rgb(245, 245, 245)
+}
+
+.table > thead > tr > th {
+    border-bottom: 0px;
+}
+.modal-footer {
+    border-top: 1px solid #CCC !important;
+}
+.modal-header {
+    border-bottom: 1px solid #CCC !important;
+}
+
+
