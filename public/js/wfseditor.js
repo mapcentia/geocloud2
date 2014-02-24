@@ -242,7 +242,7 @@ function startWfsEdition(layerName, geomField) {
     Ext.getCmp('infobutton').setDisabled(false);
 
 
-};
+}
 $(window).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
@@ -256,8 +256,9 @@ $(window).ready(function () {
     cloud.addGoogleHybrid();
     cloud.addGoogleStreets();
     cloud.addMapQuestAerial();
-    cloud.addMapQuestOSM();
-    cloud.setBaseLayer(cloud.addOSM())
+    cloud.addOSM();
+    cloud.setBaseLayer(cloud.addMapQuestOSM());
+    ;
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
     var layers = {};
@@ -268,7 +269,6 @@ $(window).ready(function () {
                 nodeType: "gx_baselayercontainer"
             }
         ];
-
         $.ajax({
             url: '/controllers/layer/records',
             async: false,
@@ -288,6 +288,14 @@ $(window).ready(function () {
                                     var isBaseLayer = true;
                                 } else {
                                     var isBaseLayer = false;
+                                }
+                                // Try to remove layer before adding it
+                                try {
+                                    cloud.removeTileLayerByName([
+                                        [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
+                                    ]);
+                                }
+                                catch (e) {
                                 }
                                 layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
                                     singleTile: false,
@@ -364,6 +372,7 @@ $(window).ready(function () {
                 // layer id are still only schema.table in map file
                 var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
                 if (checked) {
+
                     layers[layerId][0].setVisibility(true);
                 } else {
                     layers[layerId][0].setVisibility(false);
@@ -375,12 +384,6 @@ $(window).ready(function () {
     loadTree();
 
     reLoadTree = function () {
-        var num = cloud.map.getNumLayers();
-        for (var j = 1; j < num; j++) {
-            if (cloud.map.layers[j].isBaseLayer === false) {
-               cloud.map.layers[j].setVisibility(false);
-            }
-        }
         var west = Ext.getCmp("treepanel");
         west.remove(tree);
         tree = null;
