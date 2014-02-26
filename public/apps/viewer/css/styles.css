@@ -24,10 +24,12 @@ body {
     bottom: 0px;
     right: 0px;
     width: 100%;
+    z-index: 0;
 }
 
 #menu {
     margin-top: 60px;
+    z-index: 2 !important;
 }
 
 .tnav .navbar .container {
@@ -81,6 +83,7 @@ input[type="radio"], input[type="checkbox"] {
     bottom: auto !important;
     bottom: auto !important;
     overflow-y: hidden !important;
+    z-index: 2 !important;
 }
 
 .modal-footer {
