@@ -1,15 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 Ext.ns('Ext.ux.grid');
 
 Ext.ux.grid.LockingGridView = Ext.extend(Ext.grid.GridView, {
@@ -421,7 +429,10 @@ Ext.ux.grid.LockingGridView = Ext.extend(Ext.grid.GridView, {
                 {itemId: 'desc', text: this.sortDescText, cls: 'xg-hmenu-sort-desc'}
             );
             if(this.grid.enableColLock !== false){
-                this.hmenu.add('-',
+                this.hmenu.add({
+                    itemId: 'sortSep',
+                    xtype: 'menuseparator'
+                },
                     {itemId: 'lock', text: this.lockText, cls: 'xg-hmenu-lock'},
                     {itemId: 'unlock', text: this.unlockText, cls: 'xg-hmenu-unlock'}
                 );
@@ -622,6 +633,7 @@ Ext.ux.grid.LockingGridView = Ext.extend(Ext.grid.GridView, {
             cs[i] = {
                 name : (!Ext.isDefined(name) ? this.ds.fields.get(i).name : name),
                 renderer : cm.getRenderer(i),
+                scope : cm.getRendererScope(i),
                 id : cm.getColumnId(i),
                 style : this.getColumnStyle(i),
                 locked : cm.isLocked(i)
@@ -776,7 +788,7 @@ Ext.ux.grid.LockingGridView = Ext.extend(Ext.grid.GridView, {
                     this.onDenyColumnLock();
                     return undefined;
                 }
-                cm.setLocked(index, true);
+                cm.setLocked(index, true, llen != index);
                 if(llen != index){
                     cm.moveColumn(index, llen);
                     this.grid.fireEvent('columnmove', index, llen);
@@ -831,10 +843,10 @@ Ext.ux.grid.LockingGridView = Ext.extend(Ext.grid.GridView, {
             csize = this.grid.getGridEl().getSize(true),
             lp = Ext.isBorderBox ? 0 : this.lockedBorderWidth,
             rp = Ext.isBorderBox ? 0 : this.rowBorderWidth,
-            vw = (csize.width - lw - lp - rp) + 'px',
+            vw = Math.max(csize.width - lw - lp - rp, 0) + 'px',
             so = this.getScrollOffset();
         if(!this.grid.autoHeight){
-            var vh = (csize.height - this.mainHd.getHeight()) + 'px';
+            var vh = Math.max(csize.height - this.mainHd.getHeight(), 0) + 'px';
             this.lockedScroller.dom.style.height = vh;
             this.scroller.dom.style.height = vh;
         }

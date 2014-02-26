@@ -1,9 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,blockquote,th,td{margin:0;padding:0;}img,body,html{border:0;}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal;}ol,ul {list-style:none;}caption,th {text-align:left;}h1,h2,h3,h4,h5,h6{font-size:100%;}q:before,q:after{content:'';}
 
 .ext-forced-border-box, .ext-forced-border-box * {
@@ -105,9 +119,13 @@ html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,bloc
 }
 
 .x-unselectable, .x-unselectable * {
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select:ignore;
+    user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+    
+    cursor:default;
 }
 
 .x-repaint {
@@ -657,22 +675,28 @@ ul.x-tab-strip li.x-tab-edge {
 }
 
 /*
- * Horrible hack for IE8 in quirks mode
+ * For IE8/9 in quirks mode
  */
-.ext-ie8 ul.x-tab-strip li {
+.ext-ie8 .x-tab-strip li {
     position: relative;
 }
-.ext-ie8 .x-tab-strip .x-tab-right{
-    margin-bottom: 0 !important;
+.ext-border-box .ext-ie8 .x-tab-strip-top .x-tab-right, .ext-border-box .ext-ie9 .x-tab-strip-top .x-tab-right {
     top: 1px;
 }
-.ext-ie8 ul.x-tab-strip-top {
+.ext-ie8 .x-tab-strip-top, .ext-ie9 .x-tab-strip-top {
+    padding-top: 1px;
+}
+.ext-border-box .ext-ie8 .x-tab-strip-top, .ext-border-box .ext-ie9 .x-tab-strip-top {
     padding-top: 0;
 }
-.ext-ie8 .x-tab-strip .x-tab-strip-closable a.x-tab-strip-close {
+.ext-ie8 .x-tab-strip .x-tab-strip-closable a.x-tab-strip-close, .ext-ie9 .x-tab-strip .x-tab-strip-closable a.x-tab-strip-close {
+    top:3px;
+}
+.ext-border-box .ext-ie8 .x-tab-strip .x-tab-strip-closable a.x-tab-strip-close,
+.ext-border-box .ext-ie9 .x-tab-strip .x-tab-strip-closable a.x-tab-strip-close {
     top:4px;
 }
-.ext-ie8 .x-tab-strip-bottom .x-tab-right{
+.ext-ie8 .x-tab-strip-bottom .x-tab-right, .ext-ie9 .x-tab-strip-bottom .x-tab-right{
     top:0;
 }
 
@@ -899,6 +923,22 @@ textarea.x-form-field {
     margin:-1px 0; /* ie bogus margin bug */
     height:22px; /* ie quirks */
     line-height:18px;
+}
+
+.x-quirks .ext-ie9 .x-form-text {
+    height: 22px;
+    padding-top: 3px;
+    padding-bottom: 0px;
+}
+
+/* Ugly hacks for the bogus 1px margin bug in IE9 quirks */
+.x-quirks .ext-ie9 .x-input-wrapper .x-form-text,
+.x-quirks .ext-ie9 .x-form-field-trigger-wrap .x-form-text {
+    margin-top: -1px;
+    margin-bottom: -1px;
+}
+.x-quirks .ext-ie9 .x-input-wrapper .x-form-element {
+    margin-bottom: -1px;
 }
 
 .ext-ie6 .x-form-field-wrap .x-form-file-btn, .ext-ie7 .x-form-field-wrap .x-form-file-btn {
@@ -1191,11 +1231,11 @@ textarea {
     height:19px;
 }
 
-.ext-webkit .x-small-editor .x-form-field-wrap .x-form-trigger{
-    height:21px;
-}
-
 .ext-webkit .x-small-editor .x-form-text{padding-top:3px;font-size:100%;}
+
+.ext-strict .ext-webkit .x-small-editor .x-form-text{
+    height:14px !important;
+}
 
 .x-form-clear {
     clear:both;
@@ -1338,6 +1378,10 @@ textarea {
 
 .ext-ie .x-fieldset legend {
     margin-bottom:10px;
+}
+
+.ext-strict .ext-ie9 .x-fieldset legend.x-fieldset-header {
+    padding-top: 1px;
 }
 
 .ext-ie .x-fieldset {
@@ -2658,6 +2702,11 @@ a.x-grid3-hd-btn:hover {
 .ext-ie6 .x-grid3 .x-editor .x-form-text, .ext-ie7 .x-grid3 .x-editor .x-form-text {
     position:relative;
     top:-1px;
+}
+
+.x-grid-editor .x-form-check-wrap {
+    text-align: center;
+    margin-top: -4px;
 }
 
 .ext-ie .x-props-grid .x-editor .x-form-text {
@@ -4039,6 +4088,22 @@ a.x-menu-item {
     background-position:-15px -90px;
 }
 
+.x-tool-prev {
+    background-position:0 -105px;
+}
+
+.x-tool-prev-over {
+    background-position:-15px -105px;
+}
+
+.x-tool-next {
+    background-position:0 -120px;
+}
+
+.x-tool-next-over {
+    background-position:-15px -120px;
+}
+
 .x-tool-pin {
     background-position:0 -135px;
 }
@@ -4071,20 +4136,20 @@ a.x-menu-item {
     background-position:-15px -180px;
 }
 
-.x-tool-up {
-    background-position:0 -210px;
-}
-
-.x-tool-up-over {
-    background-position:-15px -210px;
-}
-
 .x-tool-down {
     background-position:0 -195px;
 }
 
 .x-tool-down-over {
     background-position:-15px -195px;
+}
+
+.x-tool-up {
+    background-position:0 -210px;
+}
+
+.x-tool-up-over {
+    background-position:-15px -210px;
 }
 
 .x-tool-refresh {
@@ -4095,20 +4160,20 @@ a.x-menu-item {
     background-position:-15px -225px;
 }
 
-.x-tool-minus {
-    background-position:0 -255px;
-}
-
-.x-tool-minus-over {
-    background-position:-15px -255px;
-}
-
 .x-tool-plus {
     background-position:0 -240px;
 }
 
 .x-tool-plus-over {
     background-position:-15px -240px;
+}
+
+.x-tool-minus {
+    background-position:0 -255px;
+}
+
+.x-tool-minus-over {
+    background-position:-15px -255px;
 }
 
 .x-tool-search {
@@ -4141,6 +4206,22 @@ a.x-menu-item {
 
 .x-tool-print-over {
     background-position:-15px -315px;
+}
+
+.x-tool-expand {
+    background-position:0 -330px;
+}
+
+.x-tool-expand-over {
+    background-position:-15px -330px;
+}
+
+.x-tool-collapse {
+    background-position:0 -345px;
+}
+
+.x-tool-collapse-over {
+    background-position:-15px -345px;
 }
 
 .x-tool-resize {
@@ -4789,7 +4870,7 @@ body.ext-ie6.x-body-masked .x-window select {
 
 .x-tool-expand-east, .x-tool-expand-west {
     float:none;
-    margin:3px auto;
+    margin:3px 2px;
 }
 
 .x-accordion-hd .x-tool-toggle {

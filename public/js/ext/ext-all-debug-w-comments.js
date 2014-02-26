@@ -1,9 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 (function(){
 
 var EXTUTIL = Ext.util,
@@ -784,7 +798,27 @@ Ext.DomHelper = function(){
         return node;
     }
 
-
+    /**
+     * @ignore
+     * Fix for IE9 createContextualFragment missing method
+     */   
+    function createContextualFragment(html){
+        var div = document.createElement("div"),
+            fragment = document.createDocumentFragment(),
+            i = 0,
+            length, childNodes;
+        
+        div.innerHTML = html;
+        childNodes = div.childNodes;
+        length = childNodes.length;
+        
+        for (; i < length; i++) {
+            fragment.appendChild(childNodes[i].cloneNode(true));
+        }
+        
+        return fragment;
+    }
+    
     pub = {
         /**
          * Returns the markup for the passed Element(s) config.
@@ -825,7 +859,6 @@ Ext.DomHelper = function(){
                 }
             }
         },
-
         /**
          * Inserts an HTML fragment into the DOM.
          * @param {String} where Where to insert the html in relation to el - beforeBegin, afterBegin, beforeEnd, afterEnd.
@@ -836,10 +869,10 @@ Ext.DomHelper = function(){
         insertHtml : function(where, el, html){
             var hash = {},
                 hashVal,
-                setStart,
                 range,
-                frag,
                 rangeEl,
+                setStart,
+                frag,
                 rs;
 
             where = where.toLowerCase();
@@ -863,14 +896,24 @@ Ext.DomHelper = function(){
                 setStart = 'setStart' + (endRe.test(where) ? 'After' : 'Before');
                 if (hash[where]) {
                     range[setStart](el);
-                    frag = range.createContextualFragment(html);
+                    if (!range.createContextualFragment) {
+                        frag = createContextualFragment(html);
+                    }
+                    else {
+                        frag = range.createContextualFragment(html);
+                    }
                     el.parentNode.insertBefore(frag, where == beforebegin ? el : el.nextSibling);
                     return el[(where == beforebegin ? 'previous' : 'next') + 'Sibling'];
                 } else {
                     rangeEl = (where == afterbegin ? 'first' : 'last') + 'Child';
                     if (el.firstChild) {
                         range[setStart](el[rangeEl]);
-                        frag = range.createContextualFragment(html);
+                        if (!range.createContextualFragment) {
+                            frag = createContextualFragment(html);
+                        }
+                        else {
+                            frag = range.createContextualFragment(html);
+                        }
                         if(where == afterbegin){
                             el.insertBefore(frag, el.firstChild);
                         }else{
@@ -1036,11 +1079,11 @@ Ext.Template.prototype = {
     /**
      * @cfg {RegExp} re The regular expression used to match template variables.
      * Defaults to:<pre><code>
-     * re : /\{([\w-]+)\}/g                                     // for Ext Core
-     * re : /\{([\w-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g      // for Ext JS
+     * re : /\{([\w\-]+)\}/g                                     // for Ext Core
+     * re : /\{([\w\-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g      // for Ext JS
      * </code></pre>
      */
-    re : /\{([\w-]+)\}/g,
+    re : /\{([\w\-]+)\}/g,
     /**
      * See <code>{@link #re}</code>.
      * @type RegExp
@@ -1260,7 +1303,7 @@ Ext.DomQuery = function(){
     	trimRe = /^\s+|\s+$/g,
     	tplRe = /\{(\d+)\}/g,
     	modeRe = /^(\s?[\/>+~]\s?|\s|$)/,
-    	tagTokenRe = /^(#)?([\w-\*]+)/,
+    	tagTokenRe = /^(#)?([\w\-\*]+)/,
     	nthRe = /(\d*)n\+?(\d*)/, 
     	nthRe2 = /\D/,
     	// This is for IE MSXML which does not support expandos.
@@ -1774,7 +1817,7 @@ Ext.DomQuery = function(){
          * Selects the value of a node, optionally replacing null with the defaultValue.
          * @param {String} selector The selector/xpath query
          * @param {Node} root (optional) The start of the query (defaults to document).
-         * @param {String} defaultValue
+         * @param {String} defaultValue (optional)
          * @return {String}
          */
         selectValue : function(path, root, defaultValue){
@@ -1799,7 +1842,7 @@ Ext.DomQuery = function(){
          * Selects the value of a node, parsing integers and floats. Returns the defaultValue, or 0 if none is specified.
          * @param {String} selector The selector/xpath query
          * @param {Node} root (optional) The start of the query (defaults to document).
-         * @param {Number} defaultValue
+         * @param {Number} defaultValue (optional)
          * @return {Number}
          */
         selectNumber : function(path, root, defaultValue){
@@ -1846,19 +1889,19 @@ Ext.DomQuery = function(){
          * statement as specified by their index.
          */
         matchers : [{
-                re: /^\.([\w-]+)/,
+                re: /^\.([\w\-]+)/,
                 select: 'n = byClassName(n, " {1} ");'
             }, {
-                re: /^\:([\w-]+)(?:\(((?:[^\s>\/]*|.*?))\))?/,
+                re: /^\:([\w\-]+)(?:\(((?:[^\s>\/]*|.*?))\))?/,
                 select: 'n = byPseudo(n, "{1}", "{2}");'
             },{
-                re: /^(?:([\[\{])(?:@)?([\w-]+)\s?(?:(=|.=)\s?['"]?(.*?)["']?)?[\]\}])/,
-                select: 'n = byAttribute(n, "{2}", "{4}", "{3}", "{1}");'
+                re: /^(?:([\[\{])(?:@)?([\w\-]+)\s?(?:(=|.=)\s?(["']?)(.*?)\4)?[\]\}])/,
+                select: 'n = byAttribute(n, "{2}", "{5}", "{3}", "{1}");'
             }, {
-                re: /^#([\w-]+)/,
+                re: /^#([\w\-]+)/,
                 select: 'n = byId(n, "{1}");'
             },{
-                re: /^@([\w-]+)/,
+                re: /^@([\w\-]+)/,
                 select: 'return {firstChild:{nodeValue:attrValue(n, "{1}")}};'
             }
         ],
@@ -2137,7 +2180,7 @@ Ext.get('myInputField').on('keypress', function(){
  * also setup a delayed task for you to buffer events.</p> 
  * @constructor The parameters to this constructor serve as defaults and are not required.
  * @param {Function} fn (optional) The default function to call.
- * @param {Object} scope The default scope (The <code><b>this</b></code> reference) in which the
+ * @param {Object} scope (optional) The default scope (The <code><b>this</b></code> reference) in which the
  * function is called. If not specified, <code>this</code> will refer to the browser window.
  * @param {Array} args (optional) The default Array of arguments.
  */
@@ -2860,18 +2903,62 @@ el.un('click', this.handlerFn);
      * @param {String} namespace (optional) The namespace in which to look for the attribute
      * @return {String} The attribute value
      */
-    getAttribute : Ext.isIE ? function(name, ns){
-        var d = this.dom,
-            type = typeof d[ns + ":" + name];
+    getAttribute: (function(){
+        var test = document.createElement('table'),
+            isBrokenOnTable = false,
+            hasGetAttribute = 'getAttribute' in test,
+            unknownRe = /undefined|unknown/;
 
-        if(['undefined', 'unknown'].indexOf(type) == -1){
-            return d[ns + ":" + name];
+        if (hasGetAttribute) {
+
+            try {
+                test.getAttribute('ext:qtip');
+            } catch (e) {
+                isBrokenOnTable = true;
+            }
+
+            return function(name, ns) {
+                var el = this.dom,
+                    value;
+
+                if (el.getAttributeNS) {
+                    value  = el.getAttributeNS(ns, name) || null;
+                }
+
+                if (value == null) {
+                    if (ns) {
+                        if (isBrokenOnTable && el.tagName.toUpperCase() == 'TABLE') {
+                            try {
+                                value = el.getAttribute(ns + ':' + name);
+                            } catch (e) {
+                                value = '';
+                            }
+                        } else {
+                            value = el.getAttribute(ns + ':' + name);
+                        }
+                    } else {
+                        value = el.getAttribute(name) || el[name];
+                    }
+                }
+                return value || '';
+            };
+        } else {
+            return function(name, ns) {
+                var el = this.om,
+                    value,
+                    attribute;
+
+                if (ns) {
+                    attribute = el[ns + ':' + name];
+                    value = unknownRe.test(typeof attribute) ? undefined : attribute;
+                } else {
+                    value = el[name];
+                }
+                return value || '';
+            };
         }
-        return d[name];
-    } : function(name, ns){
-        var d = this.dom;
-        return d.getAttributeNS(ns, name) || d.getAttribute(ns + ":" + name) || d.getAttribute(name) || d[name];
-    },
+        test = null;
+    })(),
 
     /**
     * Update the innerHTML of this element
@@ -2923,10 +3010,6 @@ ep.autoBoxAdjust = true;
 // private
 var unitPattern = /\d+(px|em|%|en|ex|pt|in|cm|mm|pc)$/i,
     docEl;
-
-/**
- * @private
- */
 
 /**
  * Retrieves Ext.Element objects.
@@ -3037,6 +3120,7 @@ function garbageCollect(){
         for(eid in EC){
             o = EC[eid];
             if(o.skipGC){
+                Ext.EventManager.removeFromSpecialCache(o.el);
                 continue;
             }
             el = o.el;
@@ -3762,7 +3846,7 @@ Ext.Element.addMethods(function(){
                 s = me.dom.style;
 
             if(!animate || !me.anim){
-                if(Ext.isIE){
+                if(Ext.isIE9m){
                     var opac = opacity < 1 ? 'alpha(opacity=' + opacity * 100 + ')' : '',
                     val = s.filter.replace(opacityRe, '').replace(trimRe, '');
 
@@ -3783,7 +3867,7 @@ Ext.Element.addMethods(function(){
          */
         clearOpacity : function(){
             var style = this.dom.style;
-            if(Ext.isIE){
+            if(Ext.isIE9m){
                 if(!Ext.isEmpty(style.filter)){
                     style.filter = style.filter.replace(opacityRe, '').replace(trimRe, '');
                 }
@@ -3801,7 +3885,7 @@ Ext.Element.addMethods(function(){
         getHeight : function(contentHeight){
             var me = this,
                 dom = me.dom,
-                hidden = Ext.isIE && me.isStyle('display', 'none'),
+                hidden = Ext.isIE9m && me.isStyle('display', 'none'),
                 h = MATH.max(dom.offsetHeight, hidden ? 0 : dom.clientHeight) || 0;
 
             h = !contentHeight ? h : h - me.getBorderWidth("tb") - me.getPadding("tb");
@@ -3816,7 +3900,7 @@ Ext.Element.addMethods(function(){
         getWidth : function(contentWidth){
             var me = this,
                 dom = me.dom,
-                hidden = Ext.isIE && me.isStyle('display', 'none'),
+                hidden = Ext.isIE9m && me.isStyle('display', 'none'),
                 w = MATH.max(dom.offsetWidth, hidden ? 0 : dom.clientWidth) || 0;
             w = !contentWidth ? w : w - me.getBorderWidth("lr") - me.getPadding("lr");
             return w < 0 ? 0 : w;
@@ -6115,6 +6199,7 @@ if(Ext.DomQuery){
  * @return {CompositeElementLite/CompositeElement}
  * @member Ext.Element
  * @method select
+ * @static
  */
 Ext.Element.select = function(selector, root){
     var els;
@@ -6410,7 +6495,7 @@ Ext.Ajax.request({
                     url = Ext.urlAppend(url, dcp + '=' + (new Date().getTime()));
                 }
 
-                o.headers = Ext.apply(o.headers || {}, me.defaultHeaders || {});
+                o.headers = Ext.applyIf(o.headers || {}, me.defaultHeaders || {});
 
                 if(o.autoAbort === true || me.autoAbort) {
                     me.abort();
@@ -6739,7 +6824,7 @@ Ext.util.JSON = new (function(){
             return n < 10 ? "0" + n : n;
         },
         doDecode = function(json){
-            return eval("(" + json + ")");    
+            return json ? eval("(" + json + ")") : "";    
         },
         doEncode = function(o){
             if(!Ext.isDefined(o) || o === null){
@@ -6910,7 +6995,7 @@ Ext.EventManager = function(){
     var docReadyEvent,
         docReadyProcId,
         docReadyState = false,
-        DETECT_NATIVE = Ext.isGecko || Ext.isWebKit || Ext.isSafari,
+        DETECT_NATIVE = Ext.isGecko || Ext.isWebKit || Ext.isSafari || Ext.isIE10p,
         E = Ext.lib.Event,
         D = Ext.lib.Dom,
         DOC = document,
@@ -6930,7 +7015,7 @@ Ext.EventManager = function(){
             len = specialElCache.length,
             skip = false,
             o;
-            
+
         if (el) {
             if (el.getElementById || el.navigator) {
                 // look up the id
@@ -7023,7 +7108,7 @@ Ext.EventManager = function(){
      */
     function checkReadyState(e){
 
-        if(Ext.isIE && doScrollChk()){
+        if(Ext.isIE9m && doScrollChk()){
             return true;
         }
         if(DOC.readyState == COMPLETE){
@@ -7060,7 +7145,7 @@ Ext.EventManager = function(){
             if(DETECT_NATIVE) {
                 DOC.removeEventListener(DOMCONTENTLOADED, fireDocReady, false);
             }
-            if(Ext.isIE && checkReadyState.bindIE){  //was this was actually set ??
+            if(Ext.isIE9m && checkReadyState.bindIE){  //was this was actually set ??
                 DOC.detachEvent('onreadystatechange', checkReadyState);
             }
             E.un(WINDOW, "load", arguments.callee);
@@ -7081,7 +7166,7 @@ Ext.EventManager = function(){
         /*
          * Handle additional (exceptional) detection strategies here
          */
-        if (Ext.isIE){
+        if (Ext.isIE9m){
             //Use readystatechange as a backup AND primary detection mechanism for a FRAME/IFRAME
             //See if page is already loaded
             if(!checkReadyState()){
@@ -7373,6 +7458,17 @@ Ext.EventManager = function(){
                 return null;
             }
         },
+        
+        removeFromSpecialCache: function(o) {
+            var i = 0,
+                len = specialElCache.length;
+                
+            for (; i < len; ++i) {
+                if (specialElCache[i].el == o) {
+                    specialElCache.splice(i, 1); 
+                }
+            }
+        },
 
         purgeElement : function(el, recurse, eventName) {
             el = Ext.getDom(el);
@@ -7495,12 +7591,42 @@ Ext.onReady = Ext.EventManager.onDocumentReady;
         if (!bd) {
             return false;
         }
+
+        var cls = [];
         
-        var cls = [' ',
-                Ext.isIE ? "ext-ie " + (Ext.isIE6 ? 'ext-ie6' : (Ext.isIE7 ? 'ext-ie7' : 'ext-ie8'))
-                : Ext.isGecko ? "ext-gecko " + (Ext.isGecko2 ? 'ext-gecko2' : 'ext-gecko3')
-                : Ext.isOpera ? "ext-opera"
-                : Ext.isWebKit ? "ext-webkit" : ""];
+        if (Ext.isIE) {
+            // Only treat IE9 and less like IE in the css
+            if (!Ext.isIE10p) {
+                cls.push('ext-ie');
+            }
+            if (Ext.isIE6) {
+                cls.push('ext-ie6');
+            } else if (Ext.isIE7) {
+                cls.push('ext-ie7', 'ext-ie7m');
+            } else if (Ext.isIE8) {
+                cls.push('ext-ie8', 'ext-ie8m');
+            } else if (Ext.isIE9) {
+                cls.push('ext-ie9', 'ext-ie9m');
+            } else if (Ext.isIE10) {
+                cls.push('ext-ie10');
+            }
+        }
+        
+        if (Ext.isGecko) {
+            if (Ext.isGecko2) {
+                cls.push('ext-gecko2');
+            } else {
+                cls.push('ext-gecko3');
+            }
+        }
+        
+        if (Ext.isOpera) {
+            cls.push('ext-opera');
+        }
+        
+        if (Ext.isWebKit) {
+            cls.push('ext-webkit');
+        }
 
         if (Ext.isSafari) {
             cls.push("ext-safari " + (Ext.isSafari2 ? 'ext-safari2' : (Ext.isSafari3 ? 'ext-safari3' : 'ext-safari4')));
@@ -7519,6 +7645,12 @@ Ext.onReady = Ext.EventManager.onDocumentReady;
         if (Ext.isStrict || Ext.isBorderBox) {
             var p = bd.parentNode;
             if (p) {
+                if (!Ext.isStrict) {
+                    Ext.fly(p, '_internal').addClass('x-quirks');
+                    if (Ext.isIE9m && !Ext.isStrict) {
+                        Ext.isIEQuirks = true;
+                    }
+                }
                 Ext.fly(p, '_internal').addClass(((Ext.isStrict && Ext.isIE ) || (!Ext.enableForcedBoxModel && !Ext.isIE)) ? ' ext-strict' : ' ext-border-box');
             }
         }
@@ -7528,54 +7660,50 @@ Ext.onReady = Ext.EventManager.onDocumentReady;
             Ext.isForcedBorderBox = true;
             cls.push("ext-forced-border-box");
         }
-        
+
         Ext.fly(bd, '_internal').addClass(cls);
         return true;
     };
 
-    /*
-     * Assert Ext.isReady here. If Ext is loaded after the document is ready, none of the native 
-     * DOM onReady events will fire, because they have already passed.
-     */
-    Ext.isReady = initExtCss();
-    
-    if (!Ext.isReady) {
+    if (!initExtCss()) {
         Ext.onReady(initExtCss);
     }
 })();
 
-/**
- * Code used to detect certain browser feature/quirks/bugs at startup.
- */
+// Code used to detect certain browser feature/quirks/bugs at startup.
 (function(){
+    /**
+     * @class Ext.supports
+     * @ignore
+     */
     var supports = Ext.apply(Ext.supports, {
         /**
          * In Webkit, there is an issue with getting the margin right property, see
          * https://bugs.webkit.org/show_bug.cgi?id=13343
          */
         correctRightMargin: true,
-        
+
         /**
          * Webkit browsers return rgba(0, 0, 0) when a transparent color is used
          */
         correctTransparentColor: true,
-        
+
         /**
          * IE uses styleFloat, not cssFloat for the float property.
          */
         cssFloat: true
     });
-    
+
     var supportTests = function(){
             var div = document.createElement('div'),
                 doc = document,
                 view,
                 last;
-                
+
             div.innerHTML = '<div style="height:30px;width:50px;"><div style="height:20px;width:20px;"></div></div><div style="float:left;background-color:transparent;">';
             doc.body.appendChild(div);
             last = div.lastChild;
-            
+
             if((view = doc.defaultView)){
                 if(view.getComputedStyle(div.firstChild.firstChild, null).marginRight != '0px'){
                     supports.correctRightMargin = false;
@@ -7587,9 +7715,9 @@ Ext.onReady = Ext.EventManager.onDocumentReady;
             supports.cssFloat = !!last.style.cssFloat;
             doc.body.removeChild(div);
     };
-    
+
     if (Ext.isReady) {
-        supportTests();    
+        supportTests();
     } else {
         Ext.onReady(supportTests);
     }
@@ -7818,7 +7946,7 @@ Ext.EventObject = function(){
         </code></pre>
          * @param {Mixed} el The id, DOM element or Ext.Element to check
          * @param {Boolean} related (optional) true to test if the related target is within el instead of the target
-         * @param {Boolean} allowEl {optional} true to also check if the passed element is the target or related target
+         * @param {Boolean} allowEl (optional) true to also check if the passed element is the target or related target
          * @return {Boolean}
          */
         within : function(el, related, allowEl){
@@ -7831,13 +7959,102 @@ Ext.EventObject = function(){
      };
 
     return new Ext.EventObjectImpl();
-}();
+}();/**
+ * @class Ext.Loader
+ * @singleton
+ * Simple class to help load JavaScript files on demand
+ */
+Ext.Loader = Ext.apply({}, {
+    /**
+     * Loads a given set of .js files. Calls the callback function when all files have been loaded
+     * Set preserveOrder to true to ensure non-parallel loading of files if load order is important
+     * @param {Array} fileList Array of all files to load
+     * @param {Function} callback Callback to call after all files have been loaded
+     * @param {Object} scope The scope to call the callback in
+     * @param {Boolean} preserveOrder True to make files load in serial, one after the other (defaults to false)
+     */
+    load: function(fileList, callback, scope, preserveOrder) {
+        var scope       = scope || this,
+            head        = document.getElementsByTagName("head")[0],
+            fragment    = document.createDocumentFragment(),
+            numFiles    = fileList.length,
+            loadedFiles = 0,
+            me          = this;
+        
+        /**
+         * Loads a particular file from the fileList by index. This is used when preserving order
+         */
+        var loadFileIndex = function(index) {
+            head.appendChild(
+                me.buildScriptTag(fileList[index], onFileLoaded)
+            );
+        };
+        
+        /**
+         * Callback function which is called after each file has been loaded. This calls the callback
+         * passed to load once the final file in the fileList has been loaded
+         */
+        var onFileLoaded = function() {
+            loadedFiles ++;
+            
+            //if this was the last file, call the callback, otherwise load the next file
+            if (numFiles == loadedFiles && typeof callback == 'function') {
+                callback.call(scope);
+            } else {
+                if (preserveOrder === true) {
+                    loadFileIndex(loadedFiles);
+                }
+            }
+        };
+        
+        if (preserveOrder === true) {
+            loadFileIndex.call(this, 0);
+        } else {
+            //load each file (most browsers will do this in parallel)
+            Ext.each(fileList, function(file, index) {
+                fragment.appendChild(
+                    this.buildScriptTag(file, onFileLoaded)
+                );  
+            }, this);
+            
+            head.appendChild(fragment);
+        }
+    },
+    
+    /**
+     * @private
+     * Creates and returns a script tag, but does not place it into the document. If a callback function
+     * is passed, this is called when the script has been loaded
+     * @param {String} filename The name of the file to create a script tag for
+     * @param {Function} callback Optional callback, which is called when the script has been loaded
+     * @return {Element} The new script ta
+     */
+    buildScriptTag: function(filename, callback) {
+        var script  = document.createElement('script');
+        script.type = "text/javascript";
+        script.src  = filename;
+        
+        //IE has a different way of handling &lt;script&gt; loads, so we need to check for it here
+        if (script.readyState) {
+            script.onreadystatechange = function() {
+                if (script.readyState == "loaded" || script.readyState == "complete") {
+                    script.onreadystatechange = null;
+                    callback();
+                }
+            };
+        } else {
+            script.onload = callback;
+        }    
+        
+        return script;
+    }
+});
 /**
  * @class Ext
  */
 
 Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
-       "Ext.state", "Ext.layout", "Ext.app", "Ext.ux", "Ext.chart", "Ext.direct");
+       "Ext.state", "Ext.layout.boxOverflow", "Ext.app", "Ext.ux", "Ext.chart", "Ext.direct", "Ext.slider");
     /**
      * Namespace alloted for extensions to the framework.
      * @property ux
@@ -8038,9 +8255,7 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
          * intended for arguments of type {@link Ext.Element} and {@link Ext.Component}, but any subclass of
          * {@link Ext.util.Observable} can be passed in.  Any number of elements and/or components can be
          * passed into this function in a single call as separate arguments.
-         * @param {Mixed} arg1 An {@link Ext.Element}, {@link Ext.Component}, or an Array of either of these to destroy
-         * @param {Mixed} arg2 (optional)
-         * @param {Mixed} etc... (optional)
+         * @param {Mixed...} args An {@link Ext.Element}, {@link Ext.Component}, or an Array of either of these to destroy
          */
         destroy : function(){
             Ext.each(arguments, function(arg){
@@ -8784,7 +8999,7 @@ var t = new Ext.Template(
      * @property
      * @hide repeat doc
      */
-    re : /\{([\w-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g,
+    re : /\{([\w\-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g,
     argsRe : /^\s*['"](.*)["']\s*$/,
     compileARe : /\\/g,
     compileBRe : /(\r\n|\n)/g,
@@ -9083,7 +9298,7 @@ Ext.defer = Ext.util.Functions.defer;
  * <b>If omitted, defaults to the scope in which the original function is called or the browser window.</b>
  * @return {Function} The new function
  * @member Ext
- * @method defer
+ * @method createInterceptor
  */
 
 Ext.createInterceptor = Ext.util.Functions.createInterceptor;
@@ -9096,7 +9311,7 @@ Ext.createInterceptor = Ext.util.Functions.createInterceptor;
  * If omitted, defaults to the scope in which the original function is called or the browser window.
  * @return {Function} The new function
  * @member Ext
- * @method defer
+ * @method createSequence
  */
 
 Ext.createSequence = Ext.util.Functions.createSequence;
@@ -9111,7 +9326,7 @@ Ext.createSequence = Ext.util.Functions.createSequence;
  * if a number the args are inserted at the specified position
  * @return {Function} The new function
  * @member Ext
- * @method defer
+ * @method createDelegate
  */
 Ext.createDelegate = Ext.util.Functions.createDelegate;
 /**
@@ -9344,6 +9559,7 @@ Ext.apply(Ext.EventManager, function(){
        textSize,
        D = Ext.lib.Dom,
        propRe = /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate)$/,
+       unload = Ext.EventManager._unload,
        curWidth = 0,
        curHeight = 0,
        // note 1: IE fires ONLY the keydown event on specialkey autorepeat
@@ -9354,6 +9570,11 @@ Ext.apply(Ext.EventManager, function(){
                    !((Ext.isGecko && !Ext.isWindows) || Ext.isOpera);
 
    return {
+       _unload: function(){
+           Ext.EventManager.un(window, "resize", this.fireWindowResize, this);
+           unload.call(Ext.EventManager);    
+       },
+       
        // private
        doResizeEvent: function(){
            var h = D.getViewHeight(),
@@ -9910,7 +10131,7 @@ Ext.Element.addMethods({
      * @param {Boolean/Object} animate (optional) True for the default animation or a standard Element animation config object
      * @param {Boolean/Number} monitorScroll (optional) True to monitor body scroll and reposition. If this parameter
      * is a number, it is used as the buffer delay (defaults to 50ms).
-     * @param {Function} callback The function to call after the animation finishes
+     * @param {Function} callback (optional) The function to call after the animation finishes
      * @return {Ext.Element} this
      */
     anchorTo : function(el, alignment, offsets, animate, monitorScroll, callback){        
@@ -10657,7 +10878,6 @@ Ext.Element.addMethods(function(){
         unselectable : function(){
             this.dom.unselectable = "on";
             return this.swallowEvent("selectstart", true).
-                        applyStyles("-moz-user-select:none;-khtml-user-select:none;").
                         addClass("x-unselectable");
         },
 
@@ -11038,7 +11258,7 @@ Ext.Element.addMethods(
                     el,
                     mask;
 
-                if (!(/^body/i.test(dom.tagName) && me.getStyle('position') == 'static')) {
+                if (!/^body/i.test(dom.tagName) && me.getStyle('position') == 'static') {
                     me.addClass(XMASKEDRELATIVE);
                 }
                 if (el = data(dom, 'maskMsg')) {
@@ -11255,18 +11475,18 @@ els.setWidth(100).hide(true);
 </code></pre>
  */
 Ext.CompositeElement = Ext.extend(Ext.CompositeElementLite, {
-    
+
     constructor : function(els, root){
         this.elements = [];
         this.add(els, root);
     },
-    
+
     // private
     getElement : function(el){
         // In this case just return it, since we already have a reference to it
         return el;
     },
-    
+
     // private
     transformElement : function(el){
         return Ext.get(el);
@@ -11276,12 +11496,14 @@ Ext.CompositeElement = Ext.extend(Ext.CompositeElementLite, {
     * Adds elements to this composite.
     * @param {String/Array} els A string CSS selector, an array of elements or an element
     * @return {CompositeElement} this
+    * @ignore
     */
 
     /**
      * Returns the Element object at the specified index
      * @param {Number} index
      * @return {Ext.Element}
+     * @ignore
      */
 
     /**
@@ -11300,6 +11522,7 @@ Ext.CompositeElement = Ext.extend(Ext.CompositeElementLite, {
      * Defaults to the <code>element</code> at the current <code>index</code>
      * within the composite.
      * @return {CompositeElement} this
+     * @ignore
      */
 });
 
@@ -11313,6 +11536,7 @@ Ext.CompositeElement = Ext.extend(Ext.CompositeElementLite, {
  * @return {CompositeElementLite/CompositeElement}
  * @member Ext.Element
  * @method select
+ * @static
  */
 Ext.Element.select = function(selector, unique, root){
     var els;
@@ -12282,6 +12506,20 @@ Date.monthNumbers = {
         // handle camel casing for english month names (since the keys for the Date.monthNumbers hash are case sensitive)
         return Date.monthNumbers[name.substring(0, 1).toUpperCase() + name.substring(1, 3).toLowerCase()];
     },
+    
+    /**
+     * Checks if the specified format contains hour information
+     * @param {Object} format The format to check
+     * @return {Boolean} True if the format contains hour information
+     * @static
+     */
+    formatContainsHourInfo : (function(){
+        var stripEscapeRe = /(\\.)/g,
+            hourInfoRe = /([gGhHisucUOPZ]|M\$)/;
+        return function(format){
+            return hourInfoRe.test(format.replace(stripEscapeRe, ''));
+        };
+    })(),
 
     /**
      * The base format-code to formatting-function hashmap used by the {@link #format} method.
@@ -12528,9 +12766,12 @@ dt = Date.parseDate("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
                 calc = [],
                 regex = [],
                 special = false,
-                ch = "";
+                ch = "",
+                i = 0,
+                obj,
+                last;
 
-            for (var i = 0; i < format.length; ++i) {
+            for (; i < format.length; ++i) {
                 ch = format.charAt(i);
                 if (!special && ch == "\\") {
                     special = true;
@@ -12538,13 +12779,21 @@ dt = Date.parseDate("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
                     special = false;
                     regex.push(String.escape(ch));
                 } else {
-                    var obj = $f(ch, currentGroup);
+                    obj = $f(ch, currentGroup);
                     currentGroup += obj.g;
                     regex.push(obj.s);
                     if (obj.g && obj.c) {
-                        calc.push(obj.c);
+                        if (obj.calcLast) {
+                            last = obj.c;
+                        } else {
+                            calc.push(obj.c);
+                        }
                     }
                 }
+            }
+            
+            if (last) {
+                calc.push(last);
             }
 
             Date.parseRegexes[regexNum] = new RegExp("^" + regex.join('') + "$", 'i');
@@ -12662,14 +12911,12 @@ dt = Date.parseDate("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
          * even though it doesn't exactly match the spec. It gives much more flexibility
          * in being able to specify case insensitive regexes.
          */
-        a: {
-            g:1,
-            c:"if (/(am)/i.test(results[{0}])) {\n"
-                + "if (!h || h == 12) { h = 0; }\n"
-                + "} else { if (!h || h < 12) { h = (h || 0) + 12; }}",
-            s:"(am|pm|AM|PM)"
+        a: function(){
+            return $f("A");
         },
         A: {
+            // We need to calculate the hour before we apply AM/PM when parsing
+            calcLast: true,
             g:1,
             c:"if (/(am)/i.test(results[{0}])) {\n"
                 + "if (!h || h == 12) { h = 0; }\n"
@@ -14003,10 +14250,13 @@ Ext.util.Format = function() {
         /**
          * Checks a reference and converts it to the default value if it's empty
          * @param {Mixed} value Reference to check
-         * @param {String} defaultValue The value to insert of it's undefined (defaults to "")
+         * @param {String} defaultValue The value to insert if it's undefined (defaults to "")
          * @return {String}
          */
         defaultValue : function(value, defaultValue) {
+            if (!defaultValue && defaultValue !== 0) {
+                defaultValue = '';
+            }
             return value !== undefined && value !== '' ? value : defaultValue;
         },
 
@@ -14654,7 +14904,7 @@ Ext.XTemplate = function(){
 };
 Ext.extend(Ext.XTemplate, Ext.Template, {
     // private
-    re : /\{([\w-\.\#]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?(\s?[\+\-\*\\]\s?[\d\.\+\-\*\\\(\)]+)?\}/g,
+    re : /\{([\w\-\.\#]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?(\s?[\+\-\*\\]\s?[\d\.\+\-\*\\\(\)]+)?\}/g,
     // private
     codeRe : /\{\[((?:\\\]|.|\n)*?)\]\}/g,
 
@@ -15233,6 +15483,7 @@ Ext.KeyNav.prototype = {
     del : false,
     home : false,
     end : false,
+    space : false,
 
     // quick lookup hash
     keyToHandler : {
@@ -15247,7 +15498,8 @@ Ext.KeyNav.prototype = {
         35 : "end",
         13 : "enter",
         27 : "esc",
-        9  : "tab"
+        9  : "tab",
+        32 : "space"
     },
     
     stopKeyUp: function(e) {
@@ -15769,6 +16021,7 @@ Ext.util.Cookies = {
  * custom exception-handling.  Framework errors will often extend from the base
  * Ext.Error class.
  * @param {Object/Error} e The thrown exception object.
+ * @member Ext
  */
 Ext.handleError = function(e) {
     throw e;
@@ -16117,6 +16370,7 @@ textarea         {@link Ext.form.TextArea}
 textfield        {@link Ext.form.TextField}
 timefield        {@link Ext.form.TimeField}
 trigger          {@link Ext.form.TriggerField}
+twintrigger      {@link Ext.form.TwinTriggerField}
 
 Chart components
 ---------------------------------------
@@ -16789,7 +17043,7 @@ new Ext.Panel({
     }
 });
 </code></pre>
-     * <p>See also <tt>{@link #getEl getEl}</p>
+     * <p>See also <tt>{@link #getEl getEl}</tt></p>
      * @type Ext.Element
      * @property el
      */
@@ -16862,7 +17116,7 @@ new Ext.Panel({
      * The initial set of data to apply to the <code>{@link #tpl}</code> to
      * update the content area of the Component.
      */
-    
+
     /**
      * @cfg {Array} bubbleEvents
      * <p>An array of events that, when fired, should be bubbled to any parent container.
@@ -17590,7 +17844,7 @@ var isBoxInstance = t.isXType('box', true); // false, not a direct BoxComponent 
      * <pre><code>
 var c = new Ext.Component();
 console.log(c.isXType(c));
-console.log(c.isXType(Ext.Component)); 
+console.log(c.isXType(Ext.Component));
 </code></pre>
      * @param {Boolean} shallow (optional) False to check whether this Component is descended from the xtype (this is
      * the default), or true to check whether this Component is directly of the specified xtype.
@@ -17657,7 +17911,7 @@ alert(t.getXTypes());  // alerts 'component/box/field/textfield'
             return c.isXType(xtype, shallow);
         });
     },
-    
+
     /**
      * Bubbles up the component/container heirarchy, calling the specified function with each component. The scope (<i>this</i>) of
      * function call will be the scope provided or the current component. The arguments to the function
@@ -18062,9 +18316,7 @@ Ext.Action = Ext.extend(Object, {
      * Executes this action manually using the handler function specified in the original config object
      * or the handler function set with <code>{@link #setHandler}</code>.  Any arguments passed to this
      * function will be passed on to the handler function.
-     * @param {Mixed} arg1 (optional) Variable number of arguments passed to the handler function
-     * @param {Mixed} arg2 (optional)
-     * @param {Mixed} etc... (optional)
+     * @param {Mixed...} args Variable number of arguments passed to the handler function
      */
     execute : function(){
         this.initialConfig.handler.apply(this.initialConfig.scope || window, arguments);
@@ -18183,8 +18435,10 @@ Ext.extend(Ext.Layer, Ext.Element, {
     enableShadow : function(show){
         if(this.shadow){
             this.shadowDisabled = false;
-            this.shadowOffset = this.lastShadowOffset;
-            delete this.lastShadowOffset;
+            if(Ext.isDefined(this.lastShadowOffset)) {
+                this.shadowOffset = this.lastShadowOffset;
+                delete this.lastShadowOffset;
+            }
             if(show){
                 this.sync(true);
             }
@@ -18558,7 +18812,7 @@ Ext.Shadow = function(config) {
             a.w = 0;
             a.l = a.t = o;
             a.t -= 1;
-            if (Ext.isIE) {
+            if (Ext.isIE9m) {
                 a.l -= this.offset + rad;
                 a.t -= this.offset + rad;
                 a.w -= rad;
@@ -18570,7 +18824,7 @@ Ext.Shadow = function(config) {
             a.w = (o * 2);
             a.l = -o;
             a.t = o - 1;
-            if (Ext.isIE) {
+            if (Ext.isIE9m) {
                 a.l -= (this.offset - rad);
                 a.t -= this.offset + rad;
                 a.l += 1;
@@ -18584,7 +18838,7 @@ Ext.Shadow = function(config) {
             a.l = a.t = -o;
             a.t += 1;
             a.h -= 2;
-            if (Ext.isIE) {
+            if (Ext.isIE9m) {
                 a.l -= (this.offset - rad);
                 a.t -= (this.offset - rad);
                 a.l += 1;
@@ -18629,7 +18883,7 @@ Ext.Shadow.prototype = {
             }
         }
         this.el.setStyle("z-index", this.zIndex || parseInt(target.getStyle("z-index"), 10) - 1);
-        if (Ext.isIE) {
+        if (Ext.isIE9m) {
             this.el.dom.style.filter = "progid:DXImageTransform.Microsoft.alpha(opacity=50) progid:DXImageTransform.Microsoft.Blur(pixelradius=" + (this.offset) + ")";
         }
         this.realign(
@@ -18675,7 +18929,7 @@ Ext.Shadow.prototype = {
         if (s.width != sws || s.height != shs) {
             s.width = sws;
             s.height = shs;
-            if (!Ext.isIE) {
+            if (!Ext.isIE9m) {
                 cn = d.childNodes;
                 sww = Math.max(0, (sw - 12)) + "px";
                 cn[0].childNodes[1].style.width = sww;
@@ -18712,7 +18966,7 @@ Ext.Shadow.prototype = {
 // Private utility class that manages the internal Shadow cache
 Ext.Shadow.Pool = function() {
     var p = [],
-        markup = Ext.isIE ?
+        markup = Ext.isIE9m ?
             '<div class="x-ie-shadow"></div>':
             '<div class="x-shadow"><div class="xst"><div class="xstl"></div><div class="xstc"></div><div class="xstr"></div></div><div class="xsc"><div class="xsml"></div><div class="xsmc"></div><div class="xsmr"></div></div><div class="xsb"><div class="xsbl"></div><div class="xsbc"></div><div class="xsbr"></div></div></div>';
     return {
@@ -18766,7 +19020,7 @@ Ext.BoxComponent = Ext.extend(Ext.Component, {
      * by a Container which has been configured to use a <b>{@link Ext.layout.BoxLayout BoxLayout}.</b>
      * Each child Component with a <code>flex</code> property will be flexed either vertically (by a VBoxLayout)
      * or horizontally (by an HBoxLayout) according to the item's <b>relative</b> <code>flex</code> value
-     * compared to the sum of all Components with <code>flex</flex> value specified. Any child items that have
+     * compared to the sum of all Components with <code>flex</code> value specified. Any child items that have
      * either a <code>flex = 0</code> or <code>flex = undefined</code> will not be 'flexed' (the initial size will not be changed).
      */
     // Configs below are used for all Components when rendered by AnchorLayout.
@@ -19341,7 +19595,7 @@ Ext.SplitBar = function(dragElement, resizingElement, orientation, placement, ex
 
     /** @private */
     this.el = Ext.get(dragElement, true);
-    this.el.dom.unselectable = "on";
+    this.el.unselectable();
     /** @private */
     this.resizingEl = Ext.get(resizingElement, true);
 
@@ -19410,11 +19664,11 @@ Ext.SplitBar = function(dragElement, resizingElement, orientation, placement, ex
     this.adapter.init(this);
 
     if(this.orientation == Ext.SplitBar.HORIZONTAL){
-        /** @private */
+        /** @ignore */
         this.placement = placement || (this.el.getX() > this.resizingEl.getX() ? Ext.SplitBar.LEFT : Ext.SplitBar.RIGHT);
         this.el.addClass("x-splitbar-h");
     }else{
-        /** @private */
+        /** @ignore */
         this.placement = placement || (this.el.getY() > this.resizingEl.getY() ? Ext.SplitBar.TOP : Ext.SplitBar.BOTTOM);
         this.el.addClass("x-splitbar-v");
     }
@@ -20389,7 +20643,7 @@ tb.{@link #doLayout}();             // refresh the layout
                 c = Ext.ComponentMgr.get(c);
                 Ext.apply(c, d);
             }else if(!c.events){
-                Ext.applyIf(c, d);
+                Ext.applyIf(c.isAction ? c.initialConfig : c, d);
             }else{
                 Ext.apply(c, d);
             }
@@ -20865,7 +21119,7 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
                 if (Ext.isNumber(position)) {
                     position = target.dom.childNodes[position];
                 }
-                
+
                 target.dom.insertBefore(c.getPositionEl().dom, position || null);
                 c.container = target;
                 this.configureItem(c);
@@ -20894,7 +21148,7 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
             var t = c.getPositionEl ? c.getPositionEl() : c;
             t.addClass(this.extraCls);
         }
-        
+
         // If we are forcing a layout, do so *before* we hide so elements have height/width
         if (c.doLayout && this.forceLayout) {
             c.doLayout();
@@ -20949,7 +21203,7 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
 
     // private
     setContainer : function(ct){
-        /**
+        /*
          * This monitorResize flag will be renamed soon as to avoid confusion
          * with the Container version which hooks onWindowResize to doLayout
          *
@@ -20980,7 +21234,7 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
         }
         var ms  = v.split(' '),
             len = ms.length;
-            
+
         if (len == 1) {
             ms[1] = ms[2] = ms[3] = ms[0];
         } else if(len == 2) {
@@ -20989,7 +21243,7 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
         } else if(len == 3) {
             ms[3] = ms[1];
         }
-        
+
         return {
             top   :parseInt(ms[0], 10) || 0,
             right :parseInt(ms[1], 10) || 0,
@@ -21028,6 +21282,9 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
         // Stop any buffered layout tasks
         if(this.resizeTask && this.resizeTask.cancel){
             this.resizeTask.cancel();
+        }
+        if(this.container) {
+            this.container.un(this.container.resizeEvent, this.onResize, this);
         }
         if(!Ext.isEmpty(this.targetCls)){
             var target = this.container.getLayoutTarget();
@@ -21364,7 +21621,7 @@ anchor: '-50 75%'
             // IE in strict mode will return a width of 0 on the 1st pass of getViewSize.
             // Use getStyleSize to verify the 0 width, the adjustment pass will then work properly
             // with getViewSize
-            if (Ext.isIE && Ext.isStrict && ret.width == 0){
+            if (Ext.isIE9m && Ext.isStrict && ret.width == 0){
                 ret =  target.getStyleSize();
             }
             ret.width -= target.getPadding('lr');
@@ -21598,7 +21855,7 @@ Ext.layout.ColumnLayout = Ext.extend(Ext.layout.ContainerLayout, {
             // IE in strict mode will return a width of 0 on the 1st pass of getViewSize.
             // Use getStyleSize to verify the 0 width, the adjustment pass will then work properly
             // with getViewSize
-            if (Ext.isIE && Ext.isStrict && ret.width == 0){
+            if (Ext.isIE9m && Ext.isStrict && ret.width == 0){
                 ret =  target.getStyleSize();
             }
 
@@ -21631,7 +21888,7 @@ Ext.layout.ColumnLayout = Ext.extend(Ext.layout.ContainerLayout, {
 
         var size = this.getLayoutTargetSize();
 
-        if(size.width < 1 && size.height < 1){ // display none?
+        if (Ext.isIE9m && (size.width < 1 && size.height < 1)) { // display none?
             return;
         }
 
@@ -21665,7 +21922,7 @@ Ext.layout.ColumnLayout = Ext.extend(Ext.layout.ContainerLayout, {
 
         // Browsers differ as to when they account for scrollbars.  We need to re-measure to see if the scrollbar
         // spaces were accounted for properly.  If not, re-layout.
-        if (Ext.isIE) {
+        if (Ext.isIE9m) {
             if (i = target.getStyle('overflow') && i != 'hidden' && !this.adjustmentPass) {
                 var ts = this.getLayoutTargetSize();
                 if (ts.width != size.width){
@@ -21877,7 +22134,7 @@ Ext.layout.BorderLayout = Ext.extend(Ext.layout.ContainerLayout, {
                 collapsed[i].collapse(false);
             }
         }
-        if(Ext.isIE && Ext.isStrict){ // workaround IE strict repainting issue
+        if(Ext.isIE9m && Ext.isStrict){ // workaround IE strict repainting issue
             target.repaint();
         }
         // Putting a border layout into an overflowed container is NOT correct and will make a second layout pass necessary.
@@ -21915,8 +22172,9 @@ Ext.layout.BorderLayout = Ext.extend(Ext.layout.ContainerLayout, {
 /**
  * @class Ext.layout.BorderLayout.Region
  * <p>This is a region of a {@link Ext.layout.BorderLayout BorderLayout} that acts as a subcontainer
- * within the layout.  Each region has its own {@link Ext.layout.ContainerLayout layout} that is
- * independent of other regions and the containing BorderLayout, and can be any of the
+ * within the layout. Each region in the layout is a component, the region itself is constructed on top
+ * of that component, acting like a mixin. Each region has its own {@link Ext.layout.ContainerLayout layout} 
+ * that is independent of other regions and the containing BorderLayout, and can be any of the
  * {@link Ext.layout.ContainerLayout valid Ext layout types}.</p>
  * <p>Region size is managed automatically and cannot be changed by the user -- for
  * {@link #split resizable regions}, see {@link Ext.layout.BorderLayout.SplitRegion}.</p>
@@ -22972,21 +23230,23 @@ Ext.layout.FormLayout = Ext.extend(Ext.layout.AnchorLayout, {
     // private
     setContainer : function(ct){
         Ext.layout.FormLayout.superclass.setContainer.call(this, ct);
-        if(ct.labelAlign){
-            ct.addClass('x-form-label-'+ct.labelAlign);
+        ct.labelAlign = ct.labelAlign || this.labelAlign;
+        if (ct.labelAlign) {
+            ct.addClass('x-form-label-' + ct.labelAlign);
         }
 
-        if(ct.hideLabels){
+        if (ct.hideLabels || this.hideLabels) { 
             Ext.apply(this, {
                 labelStyle: 'display:none',
                 elementStyle: 'padding-left:0;',
                 labelAdjust: 0
             });
-        }else{
+        } else {
             this.labelSeparator = Ext.isDefined(ct.labelSeparator) ? ct.labelSeparator : this.labelSeparator;
-            ct.labelWidth = ct.labelWidth || 100;
+            ct.labelWidth = ct.labelWidth || this.labelWidth || 100;
             if(Ext.isNumber(ct.labelWidth)){
-                var pad = Ext.isNumber(ct.labelPad) ? ct.labelPad : 5;
+                var pad = ct.labelPad || this.labelPad;
+                pad = Ext.isNumber(pad) ? pad : 5;
                 Ext.apply(this, {
                     labelAdjust: ct.labelWidth + pad,
                     labelStyle: 'width:' + ct.labelWidth + 'px;',
@@ -23142,12 +23402,18 @@ new Ext.Template(
      * @return {Object} An object hash containing the properties required to render the Field.
      */
     getTemplateArgs: function(field) {
-        var noLabelSep = !field.fieldLabel || field.hideLabel;
+        var noLabelSep = !field.fieldLabel || field.hideLabel,
+            itemCls = (field.itemCls || this.container.itemCls || '') + (field.hideLabel ? ' x-hide-label' : '');
+
+        // IE9 quirks needs an extra, identifying class on wrappers of TextFields
+        if (Ext.isIE9 && Ext.isIEQuirks && field instanceof Ext.form.TextField) {
+            itemCls += ' x-input-wrapper';
+        }
 
         return {
             id            : field.id,
             label         : field.fieldLabel,
-            itemCls       : (field.itemCls || this.container.itemCls || '') + (field.hideLabel ? ' x-hide-label' : ''),
+            itemCls       : itemCls,
             clearCls      : field.clearCls || 'x-form-clear-left',
             labelStyle    : this.getLabelStyle(field.labelStyle),
             elementStyle  : this.elementStyle || '',
@@ -23158,7 +23424,7 @@ new Ext.Template(
     // private
     adjustWidthAnchor: function(value, c){
         if(c.label && !this.isHide(c) && (this.container.labelAlign != 'top')){
-            var adjust = Ext.isIE6 || (Ext.isIE && !Ext.isStrict);
+            var adjust = Ext.isIE6 || Ext.isIEQuirks;
             return value - this.labelAdjust + (adjust ? -3 : 0);
         }
         return value;
@@ -23939,7 +24205,7 @@ Ext.layout.BoxLayout = Ext.extend(Ext.layout.ContainerLayout, {
             // IE in strict mode will return a width of 0 on the 1st pass of getViewSize.
             // Use getStyleSize to verify the 0 width, the adjustment pass will then work properly
             // with getViewSize
-            if (Ext.isIE && Ext.isStrict && ret.width == 0){
+            if (Ext.isIE9m && Ext.isStrict && ret.width == 0){
                 ret =  target.getStyleSize();
             }
 
@@ -23969,10 +24235,6 @@ Ext.layout.BoxLayout = Ext.extend(Ext.layout.ContainerLayout, {
         Ext.layout.BoxLayout.superclass.destroy.apply(this, arguments);
     }
 });
-
-
-
-Ext.ns('Ext.layout.boxOverflow');
 
 /**
  * @class Ext.layout.boxOverflow.None
@@ -24861,6 +25123,7 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
      * the height of the container</div></li>
      * <li><b><tt>stretchmax</tt></b> : <div class="sub-desc">child items are stretched vertically to
      * the height of the largest item.</div></li>
+     * </ul></div>
      */
     align: 'top', // top, middle, stretch, strechmax
 
@@ -24924,7 +25187,7 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
             boxes        = [],
 
             //used in the for loops below, just declared here for brevity
-            child, childWidth, childHeight, childSize, childMargins, canLayout, i, calcs, flexedWidth, 
+            child, childWidth, childHeight, childSize, childMargins, canLayout, i, calcs, flexedWidth,
             horizMargins, vertMargins, stretchHeight;
 
         //gather the total flex of all flexed items and the width taken up by fixed width items
@@ -24979,13 +25242,13 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                 width    : childWidth  || undefined
             });
         }
-                
+
         var shortfall = desiredWidth - width,
             tooNarrow = minimumWidth > width;
-            
+
         //the width available to the flexed items
         var availableWidth = Math.max(0, width - nonFlexWidth - paddingHoriz);
-        
+
         if (tooNarrow) {
             for (i = 0; i < visibleCount; i++) {
                 boxes[i].width = visibleItems[i].minWidth || visibleItems[i].width || boxes[i].width;
@@ -24995,12 +25258,10 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
             //the shortfall has been accounted for
             if (shortfall > 0) {
                 var minWidths = [];
-                
-                /**
-                 * When we have a shortfall but are not tooNarrow, we need to shrink the width of each non-flexed item.
-                 * Flexed items are immediately reduced to their minWidth and anything already at minWidth is ignored.
-                 * The remaining items are collected into the minWidths array, which is later used to distribute the shortfall.
-                 */
+
+                // When we have a shortfall but are not tooNarrow, we need to shrink the width of each non-flexed item.
+                // Flexed items are immediately reduced to their minWidth and anything already at minWidth is ignored.
+                // The remaining items are collected into the minWidths array, which is later used to distribute the shortfall.
                 for (var index = 0, length = visibleCount; index < length; index++) {
                     var item     = visibleItems[index],
                         minWidth = item.minWidth || 0;
@@ -25017,12 +25278,12 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                         });
                     }
                 }
-                
+
                 //sort by descending amount of width remaining before minWidth is reached
                 minWidths.sort(function(a, b) {
                     return a.available > b.available ? 1 : -1;
                 });
-                
+
                 /*
                  * Distribute the shortfall (difference between total desired with of all items and actual width available)
                  * between the non-flexed items. We try to distribute the shortfall evenly, but apply it to items with the
@@ -25031,20 +25292,20 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                  */
                 for (var i = 0, length = minWidths.length; i < length; i++) {
                     var itemIndex = minWidths[i].index;
-                    
+
                     if (itemIndex == undefined) {
                         continue;
                     }
-                        
+
                     var item      = visibleItems[itemIndex],
                         box       = boxes[itemIndex],
                         oldWidth  = box.width,
                         minWidth  = item.minWidth,
                         newWidth  = Math.max(minWidth, oldWidth - Math.ceil(shortfall / (length - i))),
                         reduction = oldWidth - newWidth;
-                    
+
                     boxes[itemIndex].width = newWidth;
-                    shortfall -= reduction;                    
+                    shortfall -= reduction;
                 }
             } else {
                 //temporary variables used in the flex width calculations below
@@ -25070,22 +25331,22 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                 }
             }
         }
-        
+
         if (isCenter) {
             leftOffset += availableWidth / 2;
         } else if (isEnd) {
             leftOffset += availableWidth;
         }
-        
+
         //finally, calculate the left and top position of each item
         for (i = 0; i < visibleCount; i++) {
             child = visibleItems[i];
             calcs = boxes[i];
-            
+
             childMargins = child.margins;
             leftOffset  += childMargins.left;
             vertMargins  = childMargins.top + childMargins.bottom;
-            
+
             calcs.left = leftOffset;
             calcs.top  = topOffset + childMargins.top;
 
@@ -25106,7 +25367,7 @@ Ext.layout.HBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                         calcs.top = topOffset + vertMargins + (diff / 2);
                     }
             }
-            
+
             leftOffset += calcs.width + childMargins.right;
         }
 
@@ -25207,10 +25468,10 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
 
             //used to cache the calculated size and position values for each child item
             boxes        = [],
-            
+
             //used in the for loops below, just declared here for brevity
-            child, childWidth, childHeight, childSize, childMargins, canLayout, i, calcs, flexedWidth, 
-            horizMargins, vertMargins, stretchWidth;
+            child, childWidth, childHeight, childSize, childMargins, canLayout, i, calcs, flexedHeight,
+            horizMargins, vertMargins, stretchWidth, length;
 
         //gather the total flex of all flexed items and the width taken up by fixed width items
         for (i = 0; i < visibleCount; i++) {
@@ -25239,7 +25500,7 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                     childHeight = childSize.height;
                 }
             }
-            
+
             childMargins = child.margins;
             vertMargins  = childMargins.top + childMargins.bottom;
 
@@ -25264,13 +25525,13 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                 width    : childWidth || undefined
             });
         }
-                
+
         var shortfall = desiredHeight - height,
             tooNarrow = minimumHeight > height;
 
         //the height available to the flexed items
         var availableHeight = Math.max(0, (height - nonFlexHeight - paddingVert));
-        
+
         if (tooNarrow) {
             for (i = 0, length = visibleCount; i < length; i++) {
                 boxes[i].height = visibleItems[i].minHeight || visibleItems[i].height || boxes[i].height;
@@ -25281,11 +25542,9 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
             if (shortfall > 0) {
                 var minHeights = [];
 
-                /**
-                 * When we have a shortfall but are not tooNarrow, we need to shrink the height of each non-flexed item.
-                 * Flexed items are immediately reduced to their minHeight and anything already at minHeight is ignored.
-                 * The remaining items are collected into the minHeights array, which is later used to distribute the shortfall.
-                 */
+                // When we have a shortfall but are not tooNarrow, we need to shrink the height of each non-flexed item.
+                // Flexed items are immediately reduced to their minHeight and anything already at minHeight is ignored.
+                // The remaining items are collected into the minHeights array, which is later used to distribute the shortfall.
                 for (var index = 0, length = visibleCount; index < length; index++) {
                     var item      = visibleItems[index],
                         minHeight = item.minHeight || 0;
@@ -25296,7 +25555,7 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                         boxes[index].height = minHeight;
                     } else {
                         minHeights.push({
-                            minHeight: minHeight, 
+                            minHeight: minHeight,
                             available: boxes[index].height - minHeight,
                             index    : index
                         });
@@ -25335,7 +25594,7 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
                 //temporary variables used in the flex height calculations below
                 var remainingHeight = availableHeight,
                     remainingFlex   = totalFlex;
-                
+
                 //calculate the height of each flexed item
                 for (i = 0; i < visibleCount; i++) {
                     child = visibleItems[i];
@@ -25370,11 +25629,11 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
             childMargins = child.margins;
             topOffset   += childMargins.top;
             horizMargins = childMargins.left + childMargins.right;
-            
+
 
             calcs.left = leftOffset + childMargins.left;
             calcs.top  = topOffset;
-            
+
             switch (this.align) {
                 case 'stretch':
                     stretchWidth = availWidth - horizMargins;
@@ -25395,7 +25654,7 @@ Ext.layout.VBoxLayout = Ext.extend(Ext.layout.BoxLayout, {
 
             topOffset += calcs.height + childMargins.bottom;
         }
-        
+
         return {
             boxes: boxes,
             meta : {
@@ -25931,8 +26190,8 @@ Ext.Container.LAYOUTS.toolbar = Ext.layout.ToolbarLayout;
         if(ct.floating){
             if(w){
                 ct.setWidth(w);
-            }else if(Ext.isIE){
-                ct.setWidth(Ext.isStrict && (Ext.isIE7 || Ext.isIE8) ? 'auto' : ct.minWidth);
+            }else if(Ext.isIE9m){
+                ct.setWidth(Ext.isStrict && (Ext.isIE7 || Ext.isIE8 || Ext.isIE9) ? 'auto' : ct.minWidth);
                 var el = ct.getEl(), t = el.dom.offsetWidth; // force recalc
                 ct.setWidth(ct.getLayoutTarget().getWidth() + el.getFrameWidth('lr'));
             }
@@ -26016,9 +26275,6 @@ Ext.Viewport = Ext.extend(Ext.Container, {
      */
     /**
      * @cfg {Mixed} renderTo @hide
-     */
-    /**
-     * @cfg {Boolean} hideParent @hide
      */
     /**
      * @cfg {Number} height @hide
@@ -26762,8 +27018,8 @@ new Ext.Panel({
              * @event iconchange
              * Fires after the Panel icon class has been {@link #iconCls set} or {@link #setIconClass changed}.
              * @param {Ext.Panel} p the Panel which has had its {@link #iconCls icon class} changed.
-             * @param {String} The new icon class.
-             * @param {String} The old icon class.
+             * @param {String} newIcon The new icon class.
+             * @param {String} oldIcon The old icon class.
              */
             'iconchange',
             /**
@@ -27359,7 +27615,7 @@ new Ext.Panel({
          * an instance of {@link Ext.dd.DragSource} which handles dragging the Panel.</p>
          * The developer must provide implementations of the abstract methods of {@link Ext.dd.DragSource}
          * in order to supply behaviour for each stage of the drag/drop process. See {@link #draggable}.
-         * @type Ext.dd.DragSource.
+         * @type Ext.dd.DragSource
          * @property dd
          */
         this.dd = new Ext.Panel.DD(this, Ext.isBoolean(this.draggable) ? null : this.draggable);
@@ -27549,7 +27805,7 @@ new Ext.Panel({
                     if(this.bottomToolbar){
                         this.bottomToolbar.setSize(w);
                         // The bbar does not move on resize without this.
-                        if (Ext.isIE) {
+                        if (Ext.isIE9m) {
                             this.bbar.setStyle('position', 'static');
                             this.bbar.setStyle('position', '');
                         }
@@ -27558,7 +27814,7 @@ new Ext.Panel({
                 if(this.footer){
                     this.footer.setWidth(w);
                     if(this.fbar){
-                        this.fbar.setSize(Ext.isIE ? (w - this.footer.getFrameWidth('lr')) : 'auto');
+                        this.fbar.setSize(Ext.isIE9m ? (w - this.footer.getFrameWidth('lr')) : 'auto');
                     }
                 }
 
@@ -28360,7 +28616,7 @@ cp.colors = ['000000', '993300', '333300'];
         };
         Ext.ColorPalette.superclass.onRender.call(this, container, position);
         var t = this.tpl || new Ext.XTemplate(
-            '<tpl for="."><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" unselectable="on">&#160;</span></em></a></tpl>'
+            '<tpl for="."><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" class="x-unselectable" unselectable="on">&#160;</span></em></a></tpl>'
         );
         t.overwrite(this.el, this.colors);
         this.mon(this.el, this.clickEvent, this.handleClick, this, {delegate: 'a'});
@@ -28676,7 +28932,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
         Ext.DatePicker.superclass.onEnable.call(this);
         this.doDisabled(false);
         this.update(initial ? this.value : this.activeDate);
-        if(Ext.isIE){
+        if(Ext.isIE9m){
             this.el.repaint();
         }
 
@@ -28686,7 +28942,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     onDisable : function(){
         Ext.DatePicker.superclass.onDisable.call(this);
         this.doDisabled(true);
-        if(Ext.isIE && !Ext.isIE8){
+        if(Ext.isIE9m && !Ext.isIE8){
             /* Really strange problem in IE6/7, when disabled, have to explicitly
              * repaint each of the nodes to get them to display correctly, simply
              * calling repaint on the main element doesn't appear to be enough.
@@ -29323,9 +29579,7 @@ Ext.LoadMask.prototype = {
             um.un('failure', this.onLoad, this);
         }
     }
-};Ext.ns('Ext.slider');
-
-/**
+};/**
  * @class Ext.slider.Thumb
  * @extends Object
  * Represents a single thumb element on a Slider. This would not usually be created manually and would instead
@@ -30326,8 +30580,8 @@ Ext.ProgressBar = Ext.extend(Ext.BoxComponent, {
              * @event update
              * Fires after each update interval
              * @param {Ext.ProgressBar} this
-             * @param {Number} The current progress value
-             * @param {String} The current progress text
+             * @param {Number} value  The current progress value
+             * @param {String} text The current progress text
              */
             "update"
         );
@@ -31440,7 +31694,16 @@ Ext.dd.DragDrop.prototype = {
 
                 this.DDM.handleMouseDown(e, this);
 
-                this.DDM.stopEvent(e);
+                if (this.preventDefault || this.stopPropagation) {
+                    if (this.preventDefault) {
+                        e.preventDefault();
+                    }
+                    if (this.stopPropagation) {
+                        e.stopPropagation();
+                    }
+                } else {
+                    this.DDM.stopEvent(e);
+                }
             } else {
 
 
@@ -31791,7 +32054,6 @@ Ext.dd.DragDropMgr = function() {
          * @property ids
          * @type String[]
          * @private
-         * @static
          */
         ids: {},
 
@@ -31802,7 +32064,6 @@ Ext.dd.DragDropMgr = function() {
          * @property handleIds
          * @type String[]
          * @private
-         * @static
          */
         handleIds: {},
 
@@ -31811,7 +32072,6 @@ Ext.dd.DragDropMgr = function() {
          * @property dragCurrent
          * @type DragDrop
          * @private
-         * @static
          **/
         dragCurrent: null,
 
@@ -31820,7 +32080,6 @@ Ext.dd.DragDropMgr = function() {
          * @property dragOvers
          * @type Array
          * @private
-         * @static
          */
         dragOvers: {},
 
@@ -31829,7 +32088,6 @@ Ext.dd.DragDropMgr = function() {
          * @property deltaX
          * @type int
          * @private
-         * @static
          */
         deltaX: 0,
 
@@ -31838,7 +32096,6 @@ Ext.dd.DragDropMgr = function() {
          * @property deltaY
          * @type int
          * @private
-         * @static
          */
         deltaY: 0,
 
@@ -31848,7 +32105,6 @@ Ext.dd.DragDropMgr = function() {
          * false if you need the default behavior (not recommended)
          * @property preventDefault
          * @type boolean
-         * @static
          */
         preventDefault: true,
 
@@ -31859,7 +32115,6 @@ Ext.dd.DragDropMgr = function() {
          * mouse click.
          * @property stopPropagation
          * @type boolean
-         * @static
          */
         stopPropagation: true,
 
@@ -31868,7 +32123,6 @@ Ext.dd.DragDropMgr = function() {
          * intialized
          * @property initialized
          * @private
-         * @static
          */
         initialized: false,
 
@@ -31876,7 +32130,6 @@ Ext.dd.DragDropMgr = function() {
          * All drag and drop can be disabled.
          * @property locked
          * @private
-         * @static
          */
         locked: false,
 
@@ -31884,7 +32137,6 @@ Ext.dd.DragDropMgr = function() {
          * Called the first time an element is registered.
          * @method init
          * @private
-         * @static
          */
         init: function() {
             this.initialized = true;
@@ -31895,7 +32147,6 @@ Ext.dd.DragDropMgr = function() {
          * location of the cursor during the drag/drop
          * @property POINT
          * @type int
-         * @static
          */
         POINT: 0,
 
@@ -31904,7 +32155,6 @@ Ext.dd.DragDropMgr = function() {
          * overlap of two or more drag and drop objects.
          * @property INTERSECT
          * @type int
-         * @static
          */
         INTERSECT: 1,
 
@@ -31912,15 +32162,26 @@ Ext.dd.DragDropMgr = function() {
          * The current drag and drop mode.  Default: POINT
          * @property mode
          * @type int
-         * @static
          */
         mode: 0,
+        
+        /**
+         * @property {Boolean} [notifyOccluded=false]
+         * This config is only provided to provide old, usually unwanted drag/drop behaviour.
+         *
+         * From ExtJS 4.1.0 onwards, when drop targets are contained in floating, absolutely positioned elements
+         * such as in {@link Ext.window.Window Windows}, which may overlap each other, `over` and `drop` events
+         * are only delivered to the topmost drop target at the mouse position.
+         *
+         * If all targets below that in zIndex order should also receive notifications, set
+         * `notifyOccluded` to `true`.
+         */
+        notifyOccluded: false,
 
         /**
          * Runs method on all drag and drop objects
          * @method _execOnAll
          * @private
-         * @static
          */
         _execOnAll: function(sMethod, args) {
             for (var i in this.ids) {
@@ -31938,7 +32199,6 @@ Ext.dd.DragDropMgr = function() {
          * Drag and drop initialization.  Sets up the global event handlers
          * @method _onLoad
          * @private
-         * @static
          */
         _onLoad: function() {
 
@@ -31957,7 +32217,6 @@ Ext.dd.DragDropMgr = function() {
          * Reset constraints on all drag and drop objs
          * @method _onResize
          * @private
-         * @static
          */
         _onResize: function(e) {
             this._execOnAll("resetConstraints", []);
@@ -31966,14 +32225,12 @@ Ext.dd.DragDropMgr = function() {
         /**
          * Lock all drag and drop functionality
          * @method lock
-         * @static
          */
         lock: function() { this.locked = true; },
 
         /**
          * Unlock all drag and drop functionality
          * @method unlock
-         * @static
          */
         unlock: function() { this.locked = false; },
 
@@ -31981,7 +32238,6 @@ Ext.dd.DragDropMgr = function() {
          * Is drag and drop locked?
          * @method isLocked
          * @return {boolean} True if drag and drop is locked, false otherwise.
-         * @static
          */
         isLocked: function() { return this.locked; },
 
@@ -31990,7 +32246,6 @@ Ext.dd.DragDropMgr = function() {
          * initiated, cleared when the drag is finished.
          * @property locationCache
          * @private
-         * @static
          */
         locationCache: {},
 
@@ -31999,7 +32254,6 @@ Ext.dd.DragDropMgr = function() {
          * drag and drop linked element constantly during a drag.
          * @property useCache
          * @type boolean
-         * @static
          */
         useCache: true,
 
@@ -32008,7 +32262,6 @@ Ext.dd.DragDropMgr = function() {
          * mousedown before the drag is initiated.  Default=3;
          * @property clickPixelThresh
          * @type int
-         * @static
          */
         clickPixelThresh: 3,
 
@@ -32017,7 +32270,6 @@ Ext.dd.DragDropMgr = function() {
          * drag if we don't get a mouseup event. Default=350
          * @property clickTimeThresh
          * @type int
-         * @static
          */
         clickTimeThresh: 350,
 
@@ -32027,7 +32279,6 @@ Ext.dd.DragDropMgr = function() {
          * @property dragThreshMet
          * @type boolean
          * @private
-         * @static
          */
         dragThreshMet: false,
 
@@ -32036,7 +32287,6 @@ Ext.dd.DragDropMgr = function() {
          * @property clickTimeout
          * @type Object
          * @private
-         * @static
          */
         clickTimeout: null,
 
@@ -32046,7 +32296,6 @@ Ext.dd.DragDropMgr = function() {
          * @property startX
          * @type int
          * @private
-         * @static
          */
         startX: 0,
 
@@ -32056,7 +32305,6 @@ Ext.dd.DragDropMgr = function() {
          * @property startY
          * @type int
          * @private
-         * @static
          */
         startY: 0,
 
@@ -32066,7 +32314,6 @@ Ext.dd.DragDropMgr = function() {
          * @method regDragDrop
          * @param {DragDrop} oDD the DragDrop object to register
          * @param {String} sGroup the name of the group this element belongs to
-         * @static
          */
         regDragDrop: function(oDD, sGroup) {
             if (!this.initialized) { this.init(); }
@@ -32082,7 +32329,6 @@ Ext.dd.DragDropMgr = function() {
          * by DragDrop.removeFromGroup, so don't call this function directly.
          * @method removeDDFromGroup
          * @private
-         * @static
          */
         removeDDFromGroup: function(oDD, sGroup) {
             if (!this.ids[sGroup]) {
@@ -32100,7 +32346,6 @@ Ext.dd.DragDropMgr = function() {
          * DragDrop.unreg, use that method instead of calling this directly.
          * @method _remove
          * @private
-         * @static
          */
         _remove: function(oDD) {
             for (var g in oDD.groups) {
@@ -32118,7 +32363,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {String} sDDId the DragDrop id this element is a handle for
          * @param {String} sHandleId the id of the element that is the drag
          * handle
-         * @static
          */
         regHandle: function(sDDId, sHandleId) {
             if (!this.handleIds[sDDId]) {
@@ -32134,7 +32378,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {String} id the element id to check
          * @return {boolean} true if this element is a DragDrop item,
          * false otherwise
-         * @static
          */
         isDragDrop: function(id) {
             return ( this.getDDById(id) ) ? true : false;
@@ -32147,7 +32390,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {DragDrop} p_oDD the obj to get related data for
          * @param {boolean} bTargetsOnly if true, only return targetable objs
          * @return {DragDrop[]} the related instances
-         * @static
          */
         getRelated: function(p_oDD, bTargetsOnly) {
             var oDDs = [];
@@ -32174,7 +32416,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {DragDrop} oTargetDD the target
          * @return {boolean} true if the target is a legal target for the
          * dd obj
-         * @static
          */
         isLegalTarget: function (oDD, oTargetDD) {
             var targets = this.getRelated(oDD, true);
@@ -32196,7 +32437,6 @@ Ext.dd.DragDropMgr = function() {
          * @method isTypeOfDD
          * @param {Object} the object to evaluate
          * @return {boolean} true if typeof oDD = DragDrop
-         * @static
          */
         isTypeOfDD: function (oDD) {
             return (oDD && oDD.__ygDragDrop);
@@ -32209,7 +32449,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {String} id the element id to check
          * @return {boolean} true if this element is a DragDrop handle, false
          * otherwise
-         * @static
          */
         isHandle: function(sDDId, sHandleId) {
             return ( this.handleIds[sDDId] &&
@@ -32221,7 +32460,6 @@ Ext.dd.DragDropMgr = function() {
          * @method getDDById
          * @param {String} id the id of the DragDrop object
          * @return {DragDrop} the drag drop object, null if it is not found
-         * @static
          */
         getDDById: function(id) {
             for (var i in this.ids) {
@@ -32239,7 +32477,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {Event} e the event
          * @param oDD the DragDrop object being dragged
          * @private
-         * @static
          */
         handleMouseDown: function(e, oDD) {
             if(Ext.QuickTips){
@@ -32279,7 +32516,6 @@ Ext.dd.DragDropMgr = function() {
          * @method startDrag
          * @param x {int} the X position of the original mousedown
          * @param y {int} the Y position of the original mousedown
-         * @static
          */
         startDrag: function(x, y) {
             clearTimeout(this.clickTimeout);
@@ -32296,7 +32532,6 @@ Ext.dd.DragDropMgr = function() {
          * @method handleMouseUp
          * @param {Event} e the event
          * @private
-         * @static
          */
         handleMouseUp: function(e) {
 
@@ -32324,7 +32559,6 @@ Ext.dd.DragDropMgr = function() {
          * features are turned on.
          * @method stopEvent
          * @param {Event} e the event as returned by this.getEvent()
-         * @static
          */
         stopEvent: function(e){
             if(this.stopPropagation) {
@@ -32342,7 +32576,6 @@ Ext.dd.DragDropMgr = function() {
          * @method stopDrag
          * @param {Event} e the event
          * @private
-         * @static
          */
         stopDrag: function(e) {
             // Fire the drag end event for the item that was dragged
@@ -32371,7 +32604,6 @@ Ext.dd.DragDropMgr = function() {
          * @method handleMouseMove
          * @param {Event} e the event
          * @private
-         * @static
          */
         handleMouseMove: function(e) {
             if (! this.dragCurrent) {
@@ -32414,133 +32646,198 @@ Ext.dd.DragDropMgr = function() {
          * @param {Event} e the event
          * @param {boolean} isDrop is this a drop op or a mouseover op?
          * @private
-         * @static
          */
         fireEvents: function(e, isDrop) {
-            var dc = this.dragCurrent;
+            var me = this,
+                dragCurrent = me.dragCurrent,
+                mousePoint = e.getPoint(),
+                overTarget,
+                overTargetEl,
+                allTargets = [],
+                oldOvers  = [],  // cache the previous dragOver array
+                outEvts   = [],
+                overEvts  = [],
+                dropEvts  = [],
+                enterEvts = [],
+                needsSort,
+                i,
+                len,
+                sGroup;
 
             // If the user did the mouse up outside of the window, we could
             // get here even though we have ended the drag.
-            if (!dc || dc.isLocked()) {
+            if (!dragCurrent || dragCurrent.isLocked()) {
                 return;
             }
 
-            var pt = e.getPoint();
-
-            // cache the previous dragOver array
-            var oldOvers = [];
-
-            var outEvts   = [];
-            var overEvts  = [];
-            var dropEvts  = [];
-            var enterEvts = [];
-
             // Check to see if the object(s) we were hovering over is no longer
             // being hovered over so we can fire the onDragOut event
-            for (var i in this.dragOvers) {
+            for (i in me.dragOvers) {
+                overTarget = me.dragOvers[i];
 
-                var ddo = this.dragOvers[i];
-
-                if (! this.isTypeOfDD(ddo)) {
+                if (! me.isTypeOfDD(overTarget)) {
                     continue;
                 }
 
-                if (! this.isOverTarget(pt, ddo, this.mode)) {
-                    outEvts.push( ddo );
+                if (! this.isOverTarget(mousePoint, overTarget, me.mode)) {
+                    outEvts.push( overTarget );
                 }
 
                 oldOvers[i] = true;
-                delete this.dragOvers[i];
+                delete me.dragOvers[i];
             }
 
-            for (var sGroup in dc.groups) {
+            // Collect all targets which are members of the same ddGoups that the dragCurrent is a member of, and which may recieve mouseover and drop notifications.
+            // This is preparatory to seeing which one(s) we are currently over
+            // Begin by iterating through the ddGroups of which the dragCurrent is a member
+            for (sGroup in dragCurrent.groups) {
 
                 if ("string" != typeof sGroup) {
                     continue;
                 }
 
-                for (i in this.ids[sGroup]) {
-                    var oDD = this.ids[sGroup][i];
-                    if (! this.isTypeOfDD(oDD)) {
-                        continue;
-                    }
+                // Loop over the registered members of each group, testing each as a potential target
+                for (i in me.ids[sGroup]) {
+                    overTarget = me.ids[sGroup][i];
 
-                    if (oDD.isTarget && !oDD.isLocked() && ((oDD != dc) || (dc.ignoreSelf === false))) {
-                        if (this.isOverTarget(pt, oDD, this.mode)) {
-                            // look for drop interactions
-                            if (isDrop) {
-                                dropEvts.push( oDD );
-                            // look for drag enter and drag over interactions
-                            } else {
+                    // The target is valid if it is a DD type
+                    // And it's got a DOM element
+                    // And it's configured to be a drop target
+                    // And it's not locked
+                    // And it's either not the dragCurrent, or, if it is, tha dragCurrent is configured to not ignore itself.
+                    if (me.isTypeOfDD(overTarget) &&
+                        (overTargetEl = overTarget.getEl()) &&
+                        (overTarget.isTarget) &&
+                        (!overTarget.isLocked()) &&
+                        ((overTarget != dragCurrent) || (dragCurrent.ignoreSelf === false))) {
 
-                                // initial drag over: dragEnter fires
-                                if (!oldOvers[oDD.id]) {
-                                    enterEvts.push( oDD );
-                                // subsequent drag overs: dragOver fires
-                                } else {
-                                    overEvts.push( oDD );
-                                }
-
-                                this.dragOvers[oDD.id] = oDD;
-                            }
+                        // Only sort by zIndex if there were some which had a floating zIndex value
+                        if ((overTarget.zIndex = me.getZIndex(overTargetEl)) !== -1) {
+                            needsSort = true;
                         }
+                        allTargets.push(overTarget);
                     }
                 }
             }
 
-            if (this.mode) {
-                if (outEvts.length) {
-                    dc.b4DragOut(e, outEvts);
-                    dc.onDragOut(e, outEvts);
-                }
+            // If there were floating targets, sort the highest zIndex to the top
+            if (needsSort) {
+                allTargets.sort(me.byZIndex);
+            }
 
+            // Loop through possible targets, notifying the one(s) we are over.
+            // Usually we only deliver events to the topmost.
+            for (i = 0, len = allTargets.length; i < len; i++) {
+                overTarget = allTargets[i];
+
+                // If we are over the overTarget, queue it up to recieve an event of whatever type we are handling
+                if (me.isOverTarget(mousePoint, overTarget, me.mode)) {
+                    // look for drop interactions
+                    if (isDrop) {
+                        dropEvts.push( overTarget );
+                    // look for drag enter and drag over interactions
+                    } else {
+                        // initial drag over: dragEnter fires
+                        if (!oldOvers[overTarget.id]) {
+                            enterEvts.push( overTarget );
+                        // subsequent drag overs: dragOver fires
+                        } else {
+                            overEvts.push( overTarget );
+                        }
+                        me.dragOvers[overTarget.id] = overTarget;
+                    }
+
+                    // Unless this DragDropManager has been explicitly configured to deliver events to multiple targets, then we are done.
+                    if (!me.notifyOccluded) {
+                        break;
+                    }
+                }
+            }
+
+            if (me.mode) {
+                if (outEvts.length) {
+                    dragCurrent.b4DragOut(e, outEvts);
+                    dragCurrent.onDragOut(e, outEvts);
+                }
+    
                 if (enterEvts.length) {
-                    dc.onDragEnter(e, enterEvts);
+                    dragCurrent.onDragEnter(e, enterEvts);
                 }
 
                 if (overEvts.length) {
-                    dc.b4DragOver(e, overEvts);
-                    dc.onDragOver(e, overEvts);
+                    dragCurrent.b4DragOver(e, overEvts);
+                    dragCurrent.onDragOver(e, overEvts);
                 }
 
                 if (dropEvts.length) {
-                    dc.b4DragDrop(e, dropEvts);
-                    dc.onDragDrop(e, dropEvts);
+                    dragCurrent.b4DragDrop(e, dropEvts);
+                    dragCurrent.onDragDrop(e, dropEvts);
                 }
 
             } else {
                 // fire dragout events
-                var len = 0;
                 for (i=0, len=outEvts.length; i<len; ++i) {
-                    dc.b4DragOut(e, outEvts[i].id);
-                    dc.onDragOut(e, outEvts[i].id);
+                    dragCurrent.b4DragOut(e, outEvts[i].id);
+                    dragCurrent.onDragOut(e, outEvts[i].id);
                 }
 
                 // fire enter events
                 for (i=0,len=enterEvts.length; i<len; ++i) {
                     // dc.b4DragEnter(e, oDD.id);
-                    dc.onDragEnter(e, enterEvts[i].id);
+                    dragCurrent.onDragEnter(e, enterEvts[i].id);
                 }
 
                 // fire over events
                 for (i=0,len=overEvts.length; i<len; ++i) {
-                    dc.b4DragOver(e, overEvts[i].id);
-                    dc.onDragOver(e, overEvts[i].id);
-                }
+                    dragCurrent.b4DragOver(e, overEvts[i].id);
+                    dragCurrent.onDragOver(e, overEvts[i].id);
+                }   
 
                 // fire drop events
                 for (i=0, len=dropEvts.length; i<len; ++i) {
-                    dc.b4DragDrop(e, dropEvts[i].id);
-                    dc.onDragDrop(e, dropEvts[i].id);
+                    dragCurrent.b4DragDrop(e, dropEvts[i].id);
+                    dragCurrent.onDragDrop(e, dropEvts[i].id);
                 }
 
             }
 
             // notify about a drop that did not find a target
             if (isDrop && !dropEvts.length) {
-                dc.onInvalidDrop(e);
+                dragCurrent.onInvalidDrop(e);
             }
+        },
+        
+        /**
+         * @private
+         * Collects the z-index of the passed element, looking up the parentNode axis to find an absolutely positioned ancestor
+         * which is able to yield a z-index. If found to be not absolutely positionedm returns -1.
+         *
+         * This is used when sorting potential drop targets into z-index order so that only the topmost receives `over` and `drop` events.
+         *
+         * @return {Number} The z-index of the element, or of its topmost absolutely positioned ancestor. Returns -1 if the element is not
+         * absolutely positioned.
+         */
+        getZIndex: function(element) {
+            var body = document.body,
+                z,
+                zIndex = -1;
 
+            element = Ext.getDom(element);
+            while (element !== body) {
+                if (!isNaN(z = Number(Ext.fly(element).getStyle('zIndex')))) {
+                    zIndex = z;
+                }
+                element = element.parentNode;
+            }
+            return zIndex;
+        },
+
+        /**
+        * @private
+        * Utility method to pass to {@link Ext.Array#sort} when sorting potential drop targets by z-index.
+        */
+        byZIndex: function(d1, d2) {
+            return d1.zIndex < d2.zIndex;
         },
 
         /**
@@ -32553,7 +32850,6 @@ Ext.dd.DragDropMgr = function() {
          * @param  {DragDrop[]} dds The array of drag and drop objects
          * targeted
          * @return {DragDrop}       The best single match
-         * @static
          */
         getBestMatch: function(dds) {
             var winner = null;
@@ -32606,7 +32902,6 @@ Ext.dd.DragDropMgr = function() {
          * method could accept both.
          * @method refreshCache
          * @param {Object} groups an associative array of groups to refresh
-         * @static
          */
         refreshCache: function(groups) {
             for (var sGroup in groups) {
@@ -32640,7 +32935,6 @@ Ext.dd.DragDropMgr = function() {
          * @method verifyEl
          * @param {HTMLElement} el the element to check
          * @return {boolean} true if the element looks usable
-         * @static
          */
         verifyEl: function(el) {
             if (el) {
@@ -32669,14 +32963,13 @@ Ext.dd.DragDropMgr = function() {
          * @return {Ext.lib.Region} a Region object representing the total area
          *                             the element occupies, including any padding
          *                             the instance is configured for.
-         * @static
          */
         getLocation: function(oDD) {
             if (! this.isTypeOfDD(oDD)) {
                 return null;
             }
 
-            var el = oDD.getEl(), pos, x1, x2, y1, y2, t, r, b, l;
+            var el = oDD.getEl(), pos, x1, x2, y1, y2, t, r, b, l, region;
 
             try {
                 pos= Ext.lib.Dom.getXY(el);
@@ -32706,7 +32999,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {DragDrop} oTarget the DragDrop object we are inspecting
          * @return {boolean} true if the mouse is over the target
          * @private
-         * @static
          */
         isOverTarget: function(pt, oTarget, intersect) {
             // use cache if available
@@ -32762,9 +33054,11 @@ Ext.dd.DragDropMgr = function() {
          * unload event handler
          * @method _onUnload
          * @private
-         * @static
          */
         _onUnload: function(e, me) {
+            Event.removeListener(document, "mouseup",   this.handleMouseUp, this);
+            Event.removeListener(document, "mousemove", this.handleMouseMove, this);
+            Event.removeListener(window,   "resize",    this._onResize, this);
             Ext.dd.DragDropMgr.unregAll();
         },
 
@@ -32772,7 +33066,6 @@ Ext.dd.DragDropMgr = function() {
          * Cleans up the drag and drop events and objects.
          * @method unregAll
          * @private
-         * @static
          */
         unregAll: function() {
 
@@ -32795,7 +33088,6 @@ Ext.dd.DragDropMgr = function() {
          * A cache of DOM elements
          * @property elementCache
          * @private
-         * @static
          */
         elementCache: {},
 
@@ -32806,7 +33098,6 @@ Ext.dd.DragDropMgr = function() {
          * @return {Ext.dd.DDM.ElementWrapper} the wrapped element
          * @private
          * @deprecated This wrapper isn't that useful
-         * @static
          */
         getElWrapper: function(id) {
             var oWrapper = this.elementCache[id];
@@ -32823,7 +33114,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {String} id the id of the elment to get
          * @return {Object} The element
          * @deprecated use Ext.lib.Ext.getDom instead
-         * @static
          */
         getElement: function(id) {
             return Ext.getDom(id);
@@ -32836,7 +33126,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {String} id the id of the elment to get
          * @return {Object} The style property of the element
          * @deprecated use Ext.lib.Dom instead
-         * @static
          */
         getCss: function(id) {
             var el = Ext.getDom(id);
@@ -32875,7 +33164,6 @@ Ext.dd.DragDropMgr = function() {
          * @return {int} the X coordinate
          * @for DragDropMgr
          * @deprecated use Ext.lib.Dom.getX instead
-         * @static
          */
         getPosX: function(el) {
             return Ext.lib.Dom.getX(el);
@@ -32887,7 +33175,6 @@ Ext.dd.DragDropMgr = function() {
          * @param el the element for which to get the position
          * @return {int} the Y coordinate
          * @deprecated use Ext.lib.Dom.getY instead
-         * @static
          */
         getPosY: function(el) {
             return Ext.lib.Dom.getY(el);
@@ -32899,7 +33186,6 @@ Ext.dd.DragDropMgr = function() {
          * @method swapNode
          * @param n1 the first node to swap
          * @param n2 the other node to swap
-         * @static
          */
         swapNode: function(n1, n2) {
             if (n1.swapNode) {
@@ -32923,7 +33209,6 @@ Ext.dd.DragDropMgr = function() {
          * Returns the current scroll position
          * @method getScroll
          * @private
-         * @static
          */
         getScroll: function () {
             var t, l, dde=document.documentElement, db=document.body;
@@ -32946,7 +33231,6 @@ Ext.dd.DragDropMgr = function() {
          * @param {string}      styleProp   the style property
          * @return {string} The value of the style property
          * @deprecated use Ext.lib.Dom.getStyle
-         * @static
          */
         getStyle: function(el, styleProp) {
             return Ext.fly(el).getStyle(styleProp);
@@ -32956,7 +33240,6 @@ Ext.dd.DragDropMgr = function() {
          * Gets the scrollTop
          * @method getScrollTop
          * @return {int} the document's scrollTop
-         * @static
          */
         getScrollTop: function () {
             return this.getScroll().top;
@@ -32966,7 +33249,6 @@ Ext.dd.DragDropMgr = function() {
          * Gets the scrollLeft
          * @method getScrollLeft
          * @return {int} the document's scrollTop
-         * @static
          */
         getScrollLeft: function () {
             return this.getScroll().left;
@@ -32978,7 +33260,6 @@ Ext.dd.DragDropMgr = function() {
          * @method moveToEl
          * @param {HTMLElement} moveEl      The element to move
          * @param {HTMLElement} targetEl    The position reference element
-         * @static
          */
         moveToEl: function (moveEl, targetEl) {
             var aCoord = Ext.lib.Dom.getXY(targetEl);
@@ -32988,7 +33269,6 @@ Ext.dd.DragDropMgr = function() {
         /**
          * Numeric array sort function
          * @method numericSort
-         * @static
          */
         numericSort: function(a, b) {
             return (a - b);
@@ -32998,7 +33278,6 @@ Ext.dd.DragDropMgr = function() {
          * Internal counter
          * @property _timeoutCount
          * @private
-         * @static
          */
         _timeoutCount: 0,
 
@@ -33007,7 +33286,6 @@ Ext.dd.DragDropMgr = function() {
          * an error if this file is loaded before the Event Utility.
          * @method _addListeners
          * @private
-         * @static
          */
         _addListeners: function() {
             var DDM = Ext.dd.DDM;
@@ -33030,7 +33308,6 @@ Ext.dd.DragDropMgr = function() {
          * clicked.
          * @method handleWasClicked
          * @param node the html element to inspect
-         * @static
          */
         handleWasClicked: function(node, id) {
             if (this.isHandle(id, node.id)) {
@@ -33842,8 +34119,9 @@ Ext.dd.DragTracker = Ext.extend(Ext.util.Observable,  {
     },
 
     onMouseMove: function(e, target){
-        // HACK: IE hack to see if button was released outside of window. */
-        if(this.active && Ext.isIE && !e.browserEvent.button){
+        // HACK: IE hack to see if button was released outside of window. Resolved in IE9.
+        var ieCheck = Ext.isIE6 || Ext.isIE7 || Ext.isIE8;
+        if(this.active && ieCheck && !e.browserEvent.button){
             e.preventDefault();
             this.onMouseUp(e);
             return;
@@ -34687,7 +34965,7 @@ Ext.extend(Ext.dd.DragSource, Ext.dd.DDProxy, {
              * @param {Object} target The target DD 
              * @param {Event} e The event object
              * @param {String} id The id of the dropped element
-             * @method afterInvalidDrop
+             * @method afterValidDrop
              */
             this.afterValidDrop(target, e, id);
         }
@@ -35452,7 +35730,7 @@ restActions : {
          * convention if desired.  However, the framework internally calls methods based upon the KEY so a way of retreiving the the words "create", "read", "update" and "destroy" is
          * required.  This method will cache discovered KEYS into the private validActions hash.
          * @param {String} name The runtime name of the action.
-         * @return {String||null} returns the action-key, or verb of the user-action or null if invalid.
+         * @return {String/null} returns the action-key, or verb of the user-action or null if invalid.
          * @nodoc
          */
         getVerb : function(name) {
@@ -36164,9 +36442,7 @@ Ext.StoreMgr = Ext.apply(new Ext.util.MixedCollection(), {
     /**
      * Registers one or more Stores with the StoreMgr. You do not normally need to register stores
      * manually.  Any store initialized with a {@link Ext.data.Store#storeId} will be auto-registered. 
-     * @param {Ext.data.Store} store1 A Store instance
-     * @param {Ext.data.Store} store2 (optional)
-     * @param {Ext.data.Store} etc... (optional)
+     * @param {Ext.data.Store...} stores Any number of Store instances
      */
     register : function(){
         for(var i = 0, s; (s = arguments[i]); i++){
@@ -36176,9 +36452,7 @@ Ext.StoreMgr = Ext.apply(new Ext.util.MixedCollection(), {
 
     /**
      * Unregisters one or more Stores with the StoreMgr
-     * @param {String/Object} id1 The id of the Store, or a Store instance
-     * @param {String/Object} id2 (optional)
-     * @param {String/Object} etc... (optional)
+     * @param {String/Object} ids IDs of the Stores, or Store instances
      */
     unregister : function(){
         for(var i = 0, s; (s = arguments[i]); i++){
@@ -36356,7 +36630,6 @@ var store = new Ext.data.Store({
      * for more details.</p>
      * This property may be modified after creation using the <code>{@link #setBaseParam}</code>
      * method.
-     * @property
      */
     /**
      * @cfg {Object} sortInfo A config object to specify the sort order in the request of a Store's
@@ -36469,7 +36742,7 @@ sortInfo: {
         dir : 'dir'
     },
 
-    isDestroyed: false,    
+    isDestroyed: false,
     hasMultiSort: false,
 
     // private
@@ -36477,22 +36750,22 @@ sortInfo: {
 
     constructor : function(config){
         /**
-         * @property multiSort
+         * @property hasMultiSort
          * @type Boolean
          * True if this store is currently sorted by more than one field/direction combination.
          */
-        
+
         /**
          * @property isDestroyed
          * @type Boolean
          * True if the store has been destroyed already. Read only
          */
-        
+
         this.data = new Ext.util.MixedCollection(false);
         this.data.getKey = function(o){
             return o.id;
         };
-        
+
 
         // temporary removed-records cache
         this.removed = [];
@@ -36837,30 +37110,30 @@ sortInfo: {
      * to add to the cache. See {@link #recordType}.
      */
     add : function(records) {
-        var i, record, index;
-        
+        var i, len, record, index;
+
         records = [].concat(records);
         if (records.length < 1) {
             return;
         }
-        
+
         for (i = 0, len = records.length; i < len; i++) {
             record = records[i];
-            
+
             record.join(this);
-            
+
             if (record.dirty || record.phantom) {
                 this.modified.push(record);
             }
         }
-        
+
         index = this.data.length;
         this.data.addAll(records);
-        
+
         if (this.snapshot) {
             this.snapshot.addAll(records);
         }
-        
+
         this.fireEvent('add', this, records, index);
     },
 
@@ -36873,16 +37146,21 @@ sortInfo: {
         var index = this.findInsertIndex(record);
         this.insert(index, record);
     },
-    
+
     /**
      * @private
      * Update a record within the store with a new reference
      */
-    doUpdate : function(rec){
-        this.data.replace(rec.id, rec);
-        if(this.snapshot){
-            this.snapshot.replace(rec.id, rec);
+    doUpdate: function(rec){
+        var id = rec.id;
+        // unjoin the old record
+        this.getById(id).join(null);
+
+        this.data.replace(id, rec);
+        if (this.snapshot) {
+            this.snapshot.replace(id, rec);
         }
+        rec.join(this);
         this.fireEvent('update', this, rec, Ext.data.Record.COMMIT);
     },
 
@@ -36956,24 +37234,24 @@ sortInfo: {
      * @param {Ext.data.Record[]} records An Array of Ext.data.Record objects to add to the cache.
      */
     insert : function(index, records) {
-        var i, record;
-        
+        var i, len, record;
+
         records = [].concat(records);
         for (i = 0, len = records.length; i < len; i++) {
             record = records[i];
-            
+
             this.data.insert(index + i, record);
             record.join(this);
-            
+
             if (record.dirty || record.phantom) {
                 this.modified.push(record);
             }
         }
-        
+
         if (this.snapshot) {
             this.snapshot.addAll(records);
         }
-        
+
         this.fireEvent('add', this, records, index);
     },
 
@@ -37112,13 +37390,13 @@ sortInfo: {
         var modified = this.modified,
             length   = records.length,
             record, i;
-        
+
         for (i = 0; i < length; i++) {
             record = records[i];
-            
+
             if (record.phantom && record.isValid()) {
                 record.markDirty();  // <-- Mark new records dirty (Ed: why?)
-                
+
                 if (modified.indexOf(record) == -1) {
                     modified.push(record);
                 }
@@ -37390,7 +37668,6 @@ sortInfo: {
         if (success === true) {
             try {
                 this.reader.realize(rs, data);
-                this.reMap(rs);
             }
             catch (e) {
                 this.handleException(e);
@@ -37464,8 +37741,8 @@ myStore.reload(lastOptions);
     // private
     // Called as a callback by the Reader during a load operation.
     loadRecords : function(o, options, success){
-        var i;
-        
+        var i, len;
+
         if (this.isDestroyed === true) {
             return;
         }
@@ -37563,8 +37840,8 @@ myStore.reload(lastOptions);
     /**
      * Returns an object describing the current sort state of this Store.
      * @return {Object} The sort state of the Store. An object with two properties:<ul>
-     * <li><b>field : String<p class="sub-desc">The name of the field by which the Records are sorted.</p></li>
-     * <li><b>direction : String<p class="sub-desc">The sort order, 'ASC' or 'DESC' (case-sensitive).</p></li>
+     * <li><b>field : String</b><p class="sub-desc">The name of the field by which the Records are sorted.</p></li>
+     * <li><b>direction : String</b><p class="sub-desc">The sort order, 'ASC' or 'DESC' (case-sensitive).</p></li>
      * </ul>
      * See <tt>{@link #sortInfo}</tt> for additional details.
      */
@@ -37603,7 +37880,7 @@ myStore.reload(lastOptions);
         for (var i=0, j = sorters.length; i < j; i++) {
             sortFns.push(this.createSortFunction(sorters[i].field, sorters[i].direction));
         }
-        
+
         if (sortFns.length == 0) {
             return;
         }
@@ -37770,7 +38047,7 @@ myStore.reload(lastOptions);
             sorters  : sorters,
             direction: direction
         };
-        
+
         if (this.remoteSort) {
             this.singleSort(sorters[0].field, sorters[0].direction);
 
@@ -37895,7 +38172,7 @@ myStore.reload(lastOptions);
      * against the field.
      * @param {Boolean} anyMatch (optional) <tt>true</tt> to match any part not just the beginning
      * @param {Boolean} caseSensitive (optional) <tt>true</tt> for case sensitive comparison
-     * @param {Boolean} exactMatch True to force exact match (^ and $ characters added to the regex). Defaults to false. Ignored if anyMatch is true.
+     * @param {Boolean} exactMatch (optional) True to force exact match (^ and $ characters added to the regex). Defaults to false. Ignored if anyMatch is true.
      */
     filter : function(property, value, anyMatch, caseSensitive, exactMatch){
         var fn;
@@ -38096,11 +38373,11 @@ myStore.reload(lastOptions);
         var modified = this.modified.slice(0),
             length   = modified.length,
             i;
-            
+
         for (i = 0; i < length; i++){
             modified[i].commit();
         }
-        
+
         this.modified = [];
         this.removed  = [];
     },
@@ -38114,16 +38391,16 @@ myStore.reload(lastOptions);
             mLength  = modified.length,
             rLength  = removed.length,
             i;
-        
+
         for (i = 0; i < mLength; i++) {
             modified[i].reject();
         }
-        
+
         for (i = 0; i < rLength; i++) {
             this.insert(removed[i].lastIndex || 0, removed[i]);
             removed[i].reject();
         }
-        
+
         this.modified = [];
         this.removed  = [];
     },
@@ -38491,6 +38768,7 @@ Ext.data.DataReader.prototype = {
             rs.data = data;
 
             rs.commit();
+            rs.store.reMap(rs);
         }
     },
 
@@ -38800,7 +39078,7 @@ Ext.data.DataWriter.prototype = {
      * {@link Ext.data.Record#phantom Phantom} records will have had their idProperty omitted in {@link #toHash} if determined to be auto-generated.
      * Non AUTOINCREMENT pks should have been protected.
      * @param {Hash} data Hashed by Ext.data.DataWriter#toHash
-     * @return {[Object]} Array of attribute-objects.
+     * @return {Object[]} Array of attribute-objects.
      * @protected
      */
     toArray : function(data) {
@@ -39162,7 +39440,7 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
      * request.  If all API-actions are routed to unique urls, the xaction parameter is unecessary.  However, if no api is defined
      * and all Proxy actions are routed to DataProxy#url, the server-side will require the xaction parameter to perform a switch to
      * the corresponding code for CRUD action.
-     * @param {String [Ext.data.Api.CREATE|READ|UPDATE|DESTROY]} action
+     * @param {String} action CREATE READ UPDATE or DESTROY
      * @return {Boolean}
      */
     isApiAction : function(action) {
@@ -39805,13 +40083,9 @@ Ext.extend(Ext.data.HttpProxy, Ext.data.DataProxy, {
 
             Ext.applyIf(o, this.conn);
 
-            // If a currently running request is found for this action, abort it.
-            if (this.activeRequest[action]) {
-                ////
-                // Disabled aborting activeRequest while implementing REST.  activeRequest[action] will have to become an array
-                // TODO ideas anyone?
-                //
-                //Ext.Ajax.abort(this.activeRequest[action]);
+            // If a currently running read request is found, abort it
+            if (action == Ext.data.Api.actions.read && this.activeRequest[action]) {
+                Ext.Ajax.abort(this.activeRequest[action]);
             }
             this.activeRequest[action] = Ext.Ajax.request(o);
         }else{
@@ -40054,7 +40328,7 @@ Ext.data.Types = new function(){
         stripRe: /[\$,%]/g,
         
         /**
-         * @type Object.
+         * @type Object
          * @property AUTO
          * This data type means that no conversion is applied to the raw data before it is placed into a Record.
          */
@@ -40065,7 +40339,7 @@ Ext.data.Types = new function(){
         },
 
         /**
-         * @type Object.
+         * @type Object
          * @property STRING
          * This data type means that the raw data is converted into a String before it is placed into a Record.
          */
@@ -40076,7 +40350,7 @@ Ext.data.Types = new function(){
         },
 
         /**
-         * @type Object.
+         * @type Object
          * @property INT
          * This data type means that the raw data is converted into an integer before it is placed into a Record.
          * <p>The synonym <code>INTEGER</code> is equivalent.</p>
@@ -40091,7 +40365,7 @@ Ext.data.Types = new function(){
         },
         
         /**
-         * @type Object.
+         * @type Object
          * @property FLOAT
          * This data type means that the raw data is converted into a number before it is placed into a Record.
          * <p>The synonym <code>NUMBER</code> is equivalent.</p>
@@ -40106,7 +40380,7 @@ Ext.data.Types = new function(){
         },
         
         /**
-         * @type Object.
+         * @type Object
          * @property BOOL
          * <p>This data type means that the raw data is converted into a boolean before it is placed into
          * a Record. The string "true" and the number 1 are converted to boolean <code>true</code>.</p>
@@ -40119,7 +40393,7 @@ Ext.data.Types = new function(){
         },
         
         /**
-         * @type Object.
+         * @type Object
          * @property DATE
          * This data type means that the raw data is converted into a Date before it is placed into a Record.
          * The date format is specified in the constructor of the {@link Ext.data.Field} to which this type is
@@ -40153,7 +40427,7 @@ Ext.data.Types = new function(){
     
     Ext.apply(this, {
         /**
-         * @type Object.
+         * @type Object
          * @property BOOLEAN
          * <p>This data type means that the raw data is converted into a boolean before it is placed into
          * a Record. The string "true" and the number 1 are converted to boolean <code>true</code>.</p>
@@ -40161,14 +40435,14 @@ Ext.data.Types = new function(){
          */
         BOOLEAN: this.BOOL,
         /**
-         * @type Object.
+         * @type Object
          * @property INTEGER
          * This data type means that the raw data is converted into an integer before it is placed into a Record.
          * <p>The synonym <code>INT</code> is equivalent.</p>
          */
         INTEGER: this.INT,
         /**
-         * @type Object.
+         * @type Object
          * @property NUMBER
          * This data type means that the raw data is converted into a number before it is placed into a Record.
          * <p>The synonym <code>FLOAT</code> is equivalent.</p>
@@ -40441,8 +40715,9 @@ Ext.extend(Ext.data.JsonReader, Ext.data.DataReader, {
             throw new Ext.data.JsonReader.Error('response');
         }
 
-        var root = this.getRoot(o);
-        if (action === Ext.data.Api.actions.create) {
+        var root = this.getRoot(o),
+            success = this.getSuccess(o);
+        if (success && action === Ext.data.Api.actions.create) {
             var def = Ext.isDefined(root);
             if (def && Ext.isEmpty(root)) {
                 throw new Ext.data.JsonReader.Error('root-empty', this.meta.root);
@@ -40455,7 +40730,7 @@ Ext.extend(Ext.data.JsonReader, Ext.data.DataReader, {
         // instantiate response object
         var res = new Ext.data.Response({
             action: action,
-            success: this.getSuccess(o),
+            success: success,
             data: (root) ? this.extractData(root, false) : [],
             message: this.getMessage(o),
             raw: o
@@ -41011,7 +41286,6 @@ var myReader = new Ext.data.XmlReader({
  * in the dataset. This is only needed if the whole dataset is not passed in one go, but is being
  * paged from the remote server.
  * @cfg {String} record The DomQuery path to the repeated element which contains record information.
- * @cfg {String} record The DomQuery path to the repeated element which contains record information.
  * @cfg {String} successProperty The DomQuery path to the success attribute used by forms.
  * @cfg {String} idPath The DomQuery path relative from the record element to the element that contains
  * a record identifier value.
@@ -41179,6 +41453,9 @@ Ext.extend(Ext.data.XmlReader, Ext.data.DataReader, {
     createAccessor : function(){
         var q = Ext.DomQuery;
         return function(key) {
+            if (Ext.isFunction(key)) {
+                return key;
+            }
             switch(key) {
                 case this.meta.totalProperty:
                     return function(root, def){
@@ -41367,6 +41644,10 @@ Ext.data.GroupingStore = Ext.extend(Ext.data.Store, {
      */
     groupOnSort:false,
 
+    /**
+     * @cfg {String} groupDir
+     * The direction to sort the groups. Defaults to <tt>'ASC'</tt>.
+     */
     groupDir : 'ASC',
 
     /**
@@ -41691,7 +41972,7 @@ paramOrder: 'param1|param2|param'
      * @param {Object} trans The request transaction object
      * @param {Object} result Data object picked out of the server-response.
      * @param {Object} res The server response
-     * @param {Ext.data.Record/[Ext.data.Record]} rs The Store resultset associated with the action.
+     * @param {Ext.data.Record/Ext.data.Record[]} rs The Store resultset associated with the action.
      * @protected
      */
     onWrite : function(action, trans, result, res, rs) {
@@ -42184,7 +42465,7 @@ Ext.direct.JsonProvider = Ext.extend(Ext.direct.Provider, {
  * <p>Provides for repetitive polling of the server at distinct {@link #interval intervals}.
  * The initial request for data originates from the client, and then is responded to by the
  * server.</p>
- * 
+ *
  * <p>All configurations for the PollingProvider should be generated by the server-side
  * API portion of the Ext.Direct stack.</p>
  *
@@ -42215,7 +42496,7 @@ Ext.direct.PollingProvider = Ext.extend(Ext.direct.JsonProvider, {
      */
     // override default priority
     priority: 3,
-    
+
     /**
      * @cfg {Number} interval
      * How often to poll the server-side in milliseconds (defaults to <tt>3000</tt> - every
@@ -42227,7 +42508,7 @@ Ext.direct.PollingProvider = Ext.extend(Ext.direct.JsonProvider, {
      * @cfg {Object} baseParams An object containing properties which are to be sent as parameters
      * on every polling request
      */
-    
+
     /**
      * @cfg {String/Function} url
      * The url which the PollingProvider should contact with each request. This can also be
@@ -42242,13 +42523,13 @@ Ext.direct.PollingProvider = Ext.extend(Ext.direct.JsonProvider, {
              * @event beforepoll
              * Fired immediately before a poll takes place, an event handler can return false
              * in order to cancel the poll.
-             * @param {Ext.direct.PollingProvider}
+             * @param {Ext.direct.PollingProvider} this
              */
-            'beforepoll',            
+            'beforepoll',
             /**
              * @event poll
              * This event has not yet been implemented.
-             * @param {Ext.direct.PollingProvider}
+             * @param {Ext.direct.PollingProvider} this
              */
             'poll'
         );
@@ -42758,7 +43039,7 @@ Ext.Resizable = Ext.extend(Ext.util.Observable, {
          * The proxy Element that is resized in place of the real Element during the resize operation.
          * This may be queried using {@link Ext.Element#getBox} to provide the new area to resize to.
          * Read only.
-         * @type Ext.Element.
+         * @type Ext.Element
          * @property proxy
          */
         this.proxy = this.el.createProxy({tag: 'div', cls: 'x-resizable-proxy', id: this.el.id + '-rzproxy'}, Ext.getBody());
@@ -43074,7 +43355,7 @@ Ext.Resizable = Ext.extend(Ext.util.Observable, {
             // The first call enables instant resizing and
             // the second call corrects scroll bars if they
             // exist
-            if(Ext.isIE){
+            if(Ext.isIE9m){
                 setTimeout(function(){
                     if(el.dom.offsetWidth){
                         var b = el.getSize(true);
@@ -43811,6 +44092,9 @@ Ext.Window = Ext.extend(Ext.Panel, {
 
    // private
     onEsc : function(k, e){
+        if (this.activeGhost) {
+            this.unghost();
+        }
         e.stopEvent();
         this[this.closeAction]();
     },
@@ -43883,7 +44167,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
 
     // private
     updateHandles : function(){
-        if(Ext.isIE && this.resizer){
+        if(Ext.isIE9m && this.resizer){
             this.resizer.syncHandleHeight();
             this.el.repaint();
         }
@@ -44151,7 +44435,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
                 var s = this.getSize();
                 offsets = {
                     right:-(s.width - 100),
-                    bottom:-(s.height - 25)
+                    bottom:-(s.height - 25 + this.el.getConstrainOffset())
                 };
             }
 
@@ -44882,7 +45166,7 @@ Ext.MessageBox = function(){
             if(opt.progress === true || opt.wait === true){
                 progressBar.setSize(w-iw-fw-bw);
             }
-            if(Ext.isIE && w == bwidth){
+            if(Ext.isIE9m && w == bwidth){
                 w += 4; //Add offset when the content width is smaller than the buttons.    
             }
             msgEl.update(text || '&#160;');
@@ -46741,7 +47025,7 @@ Ext.list.ListView = Ext.extend(Ext.DataView, {
     /*
      * IE has issues when setting percentage based widths to 100%. Default to 99.
      */
-    maxColumnWidth: Ext.isIE ? 99 : 100,
+    maxColumnWidth: Ext.isIE9m ? 99 : 100,
 
     initComponent : function(){
         if(this.columnResize){
@@ -46756,7 +47040,7 @@ Ext.list.ListView = Ext.extend(Ext.DataView, {
             this.internalTpl = new Ext.XTemplate(
                 '<div class="x-list-header"><div class="x-list-header-inner">',
                     '<tpl for="columns">',
-                    '<div style="width:{[values.width*100]}%;text-align:{align};"><em unselectable="on" id="',this.id, '-xlhd-{#}">',
+                    '<div style="width:{[values.width*100]}%;text-align:{align};"><em class="x-unselectable" unselectable="on" id="',this.id, '-xlhd-{#}">',
                         '{header}',
                     '</em></div>',
                     '</tpl>',
@@ -47966,6 +48250,7 @@ new Ext.TabPanel({
         var el = this.getTabEl(item);
         if(el){
             Ext.fly(el).child('span.x-tab-strip-text', true).innerHTML = item.title;
+            this.delegateUpdates();
         }
     },
 
@@ -47976,6 +48261,7 @@ new Ext.TabPanel({
             el = Ext.get(el);
             el.child('span.x-tab-strip-text').replaceClass(oldCls, iconCls);
             el[Ext.isEmpty(iconCls) ? 'removeClass' : 'addClass']('x-tab-with-icon');
+            this.delegateUpdates();
         }
     },
 
@@ -48620,6 +48906,23 @@ Ext.Button = Ext.extend(Ext.BoxComponent, {
      */
 
     initComponent : function(){
+        if(this.menu){
+            // If array of items, turn it into an object config so we
+            // can set the ownerCt property in the config
+            if (Ext.isArray(this.menu)){
+                this.menu = { items: this.menu };
+            }
+            
+            // An object config will work here, but an instance of a menu
+            // will have already setup its ref's and have no effect
+            if (Ext.isObject(this.menu)){
+                this.menu.ownerCt = this;
+            }
+            
+            this.menu = Ext.menu.MenuMgr.get(this.menu);
+            this.menu.ownerCt = undefined;
+        }
+        
         Ext.Button.superclass.initComponent.call(this);
 
         this.addEvents(
@@ -48682,9 +48985,7 @@ Ext.Button = Ext.extend(Ext.BoxComponent, {
              */
             'menutriggerout'
         );
-        if(this.menu){
-            this.menu = Ext.menu.MenuMgr.get(this.menu);
-        }
+        
         if(Ext.isString(this.toggleGroup)){
             this.enableToggle = true;
         }
@@ -48733,7 +49034,7 @@ Ext.Button = Ext.extend(Ext.BoxComponent, {
                 Ext.Button.buttonTemplate = new Ext.Template(
                     '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
                     '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
-                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
+                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2} x-unselectable" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
                     '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
                     '</tbody></table>');
                 Ext.Button.buttonTemplate.compile();
@@ -49470,7 +49771,7 @@ Ext.CycleButton = Ext.extend(Ext.SplitButton, {
             }
             this.activeItem = item;
             if(!item.checked){
-                item.setChecked(true, false);
+                item.setChecked(true, suppressEvent);
             }
             if(this.forceIcon){
                 this.setIconClass(this.forceIcon);
@@ -50787,8 +51088,13 @@ Ext.History = (function () {
     var currentToken;
 
     function getHash() {
-        var href = location.href, i = href.indexOf("#");
-        return i >= 0 ? href.substr(i + 1) : null;
+        var href = location.href, i = href.indexOf("#"),
+            hash = i >= 0 ? href.substr(i + 1) : null;
+             
+        if (Ext.isGecko) {
+            hash = decodeURIComponent(hash);
+        }
+        return hash;
     }
 
     function doSave() {
@@ -50837,7 +51143,7 @@ Ext.History = (function () {
             if (newtoken !== token) {
                 token = newtoken;
                 handleStateChange(token);
-                top.location.hash = token;
+                location.hash = token;
                 hash = token;
                 doSave();
             } else if (newHash !== hash) {
@@ -50953,7 +51259,7 @@ tabPanel.on('tabchange', function(tabPanel, tab){
             if (Ext.isIE) {
                 return updateIFrame(token);
             } else {
-                top.location.hash = token;
+                location.hash = token;
                 return true;
             }
         },
@@ -51641,7 +51947,7 @@ myGrid.on('render', function(grid) {
 
     // private
     adjustPosition : function(x, y){
-        if(this.contstrainPosition){
+        if(this.constrainPosition){
             var ay = this.targetXY[1], h = this.getSize().height;
             if(y <= ay && (y+h) >= ay){
                 y = ay-h-5;
@@ -53025,14 +53331,6 @@ new Ext.tree.TreePanel({
      * @event beforeadd
      * @hide
      */
-    /**
-     * @event beforeremove
-     * @hide
-     */
-    /**
-     * @event remove
-     * @hide
-     */
 
 
 
@@ -53308,8 +53606,8 @@ Ext.tree.DefaultSelectionModel = Ext.extend(Ext.util.Observable, {
              * @event beforeselect
              * Fires before the selected node changes, return false to cancel the change
              * @param {DefaultSelectionModel} this
-             * @param {TreeNode} node the new selection
-             * @param {TreeNode} node the old selection
+             * @param {TreeNode} newNode the new selection
+             * @param {TreeNode} oldNode the old selection
              */
             'beforeselect'
         );
@@ -53528,7 +53826,7 @@ Ext.tree.MultiSelectionModel = Ext.extend(Ext.util.Observable, {
      * Select a node.
      * @param {TreeNode} node The node to select
      * @param {EventObject} e (optional) An event associated with the selection
-     * @param {Boolean} keepExisting True to retain existing selections
+     * @param {Boolean} keepExisting (optional) True to retain existing selections
      * @return {TreeNode} The selected node
      */
     select : function(node, e, keepExisting){
@@ -56292,7 +56590,7 @@ Ext.tree.TreeFilter.prototype = {
 new Ext.tree.TreeSorter(myTree, {
     folderSort: true,
     dir: "desc",
-    sortType: function(node) {
+    sortType: function(value, node) {
         // sort by a custom, typed attribute:
         return parseInt(node.id, 10);
     }
@@ -56323,10 +56621,10 @@ Ext.tree.TreeSorter = Ext.extend(Object, {
      */
     /**
      * @cfg {Function} sortType A custom "casting" function used to convert node values before sorting.  The function
-     * will be called with a single parameter (the {@link Ext.tree.TreeNode} being evaluated) and is expected to return
-     * the node's sort value cast to the specific data type required for sorting.  This could be used, for example, when
+     * will be called with a two parameters, the {@link #property} value for the node and the {@link Ext.tree.TreeNode} being evaluated. 
+     * It is expected to return the node's sort value cast to the specific data type required for sorting.  This could be used, for example, when
      * a node's text (or other attribute) should be sorted as a date or numeric value.  See the class description for
-     * example usage.  Note that if a sortType is specified, any {@link #property} config will be ignored.
+     * example usage.
      */
 
     Ext.apply(this, config);
@@ -56339,10 +56637,10 @@ Ext.tree.TreeSorter = Ext.extend(Object, {
     });
 
     var desc = this.dir && this.dir.toLowerCase() == 'desc',
-        prop = this.property || 'text';
-        sortType = this.sortType;
-        folderSort = this.folderSort;
-        caseSensitive = this.caseSensitive === true;
+        prop = this.property || 'text',
+        sortType = this.sortType,
+        folderSort = this.folderSort,
+        caseSensitive = this.caseSensitive === true,
         leafAttr = this.leafAttr || 'leaf';
 
     if(Ext.isString(sortType)){
@@ -56362,8 +56660,8 @@ Ext.tree.TreeSorter = Ext.extend(Object, {
         }
         var prop1 = attr1[prop],
             prop2 = attr2[prop],
-            v1 = sortType ? sortType(prop1) : (caseSensitive ? prop1 : prop1.toUpperCase());
-            v2 = sortType ? sortType(prop2) : (caseSensitive ? prop2 : prop2.toUpperCase());
+            v1 = sortType ? sortType(prop1, n1) : (caseSensitive ? prop1 : prop1.toUpperCase()),
+            v2 = sortType ? sortType(prop2, n2) : (caseSensitive ? prop2 : prop2.toUpperCase());
             
         if(v1 < v2){
             return desc ? 1 : -1;
@@ -56390,7 +56688,8 @@ Ext.tree.TreeSorter = Ext.extend(Object, {
             this.doSort.defer(1, this, [p]);
         }
     }    
-});/**
+});
+/**
  * @class Ext.tree.TreeDropZone
  * @extends Ext.dd.DropZone
  * @constructor
@@ -57571,6 +57870,7 @@ var swfobject = function() {
                     swfobject[l] = null;
                 }
                 swfobject = null;
+                window.detachEvent('onunload', arguments.callee);
             });
         }
     }();
@@ -58276,7 +58576,7 @@ Ext.chart.Chart.proxyFunction = {};
  * @static
  * @type String
  */
-Ext.chart.Chart.CHART_URL = 'http:/' + '/yui.yahooapis.com/2.8.0/build/charts/assets/charts.swf';
+Ext.chart.Chart.CHART_URL = 'http:/' + '/yui.yahooapis.com/2.8.2/build/charts/assets/charts.swf';
 
 /**
  * @class Ext.chart.PieChart
@@ -58688,7 +58988,7 @@ Ext.chart.TimeAxis = Ext.extend(Ext.chart.Axis, {
     /**
      * The spacing between minor intervals on this axis.
      *
-     * @property majorUnit
+     * @property minorUnit
      * @type Number
      */
     minorUnit: NaN,
@@ -58696,7 +58996,7 @@ Ext.chart.TimeAxis = Ext.extend(Ext.chart.Axis, {
     /**
      * The time unit used by the minorUnit.
      *
-     * @property majorTimeUnit
+     * @property minorTimeUnit
      * @type String
      */
     minorTimeUnit: null,
@@ -59263,7 +59563,7 @@ Ext.menu.Menu = Ext.extend(Ext.Container, {
             this.el.setXY(xy);
             this.el.show();
             Ext.menu.Menu.superclass.onShow.call(this);
-            if(Ext.isIE){
+            if(Ext.isIE9m){
                 // internal event, used so we don't couple the layout to the menu
                 this.fireEvent('autosize', this);
                 if(!Ext.isIE8){
@@ -59432,6 +59732,8 @@ Ext.menu.Menu = Ext.extend(Ext.Container, {
 
     // private
     getMenuItem : function(config) {
+        config.ownerCt = this;
+        
         if (!config.isXType) {
             if (!config.xtype && Ext.isBoolean(config.checked)) {
                 return new Ext.menu.CheckItem(config);
@@ -59587,17 +59889,20 @@ Ext.menu.MenuNav = Ext.extend(Ext.KeyNav, function(){
  * @singleton
  */
 Ext.menu.MenuMgr = function(){
-   var menus, active, groups = {}, attached = false, lastShow = new Date();
+   var menus, 
+       active, 
+       map,
+       groups = {}, 
+       attached = false, 
+       lastShow = new Date();
+   
 
    // private - called when first menu is created
    function init(){
        menus = {};
        active = new Ext.util.MixedCollection();
-       Ext.getDoc().addKeyListener(27, function(){
-           if(active.length > 0){
-               hideAll();
-           }
-       });
+       map = Ext.getDoc().addKeyListener(27, hideAll);
+       map.disable();
    }
 
    // private
@@ -59616,6 +59921,7 @@ Ext.menu.MenuMgr = function(){
    function onHide(m){
        active.remove(m);
        if(active.length < 1){
+           map.disable();
            Ext.getDoc().un("mousedown", onMouseDown);
            attached = false;
        }
@@ -59627,6 +59933,7 @@ Ext.menu.MenuMgr = function(){
        lastShow = new Date();
        active.add(m);
        if(!attached){
+           map.enable();
            Ext.getDoc().on("mousedown", onMouseDown);
            attached = true;
        }
@@ -59927,11 +60234,16 @@ Ext.menu.BaseItem = Ext.extend(Ext.Component, {
         var pm = this.parentMenu;
         if(this.hideOnClick){
             if(pm.floating){
-                pm.hide.defer(this.clickHideDelay, pm, [true]);
+                this.clickHideDelayTimer = pm.hide.defer(this.clickHideDelay, pm, [true]);
             }else{
                 pm.deactivateActive();
             }
         }
+    },
+    
+    beforeDestroy: function(){
+        clearTimeout(this.clickHideDelayTimer);
+        Ext.menu.BaseItem.superclass.beforeDestroy.call(this);    
     },
 
     // private. Do nothing
@@ -60081,8 +60393,20 @@ Ext.menu.Item = Ext.extend(Ext.menu.BaseItem, {
     initComponent : function(){
         Ext.menu.Item.superclass.initComponent.call(this);
         if(this.menu){
+            // If array of items, turn it into an object config so we
+            // can set the ownerCt property in the config
+            if (Ext.isArray(this.menu)){
+                this.menu = { items: this.menu };
+            }
+            
+            // An object config will work here, but an instance of a menu
+            // will have already setup its ref's and have no effect
+            if (Ext.isObject(this.menu)){
+                this.menu.ownerCt = this;
+            }
+            
             this.menu = Ext.menu.MenuMgr.get(this.menu);
-            this.menu.ownerCt = this;
+            this.menu.ownerCt = undefined;
         }
     },
 
@@ -60090,7 +60414,7 @@ Ext.menu.Item = Ext.extend(Ext.menu.BaseItem, {
     onRender : function(container, position){
         if (!this.itemTpl) {
             this.itemTpl = Ext.menu.Item.prototype.itemTpl = new Ext.XTemplate(
-                '<a id="{id}" class="{cls}" hidefocus="true" unselectable="on" href="{href}"',
+                '<a id="{id}" class="{cls} x-unselectable" hidefocus="true" unselectable="on" href="{href}"',
                     '<tpl if="hrefTarget">',
                         ' target="{hrefTarget}"',
                     '</tpl>',
@@ -60149,6 +60473,8 @@ Ext.menu.Item = Ext.extend(Ext.menu.BaseItem, {
 
     //private
     beforeDestroy: function(){
+        clearTimeout(this.showTimer);
+        clearTimeout(this.hideTimer);
         if (this.menu){
             delete this.menu.ownerCt;
             this.menu.destroy();
@@ -60422,7 +60748,7 @@ Ext.reg('menucheckitem', Ext.menu.CheckItem);/**
             plain: true,
             showSeparator: false,
             items: this.picker = new Ext.DatePicker(Ext.applyIf({
-                internalRender: this.strict || !Ext.isIE,
+                internalRender: this.strict || !Ext.isIE9m,
                 ctCls: 'x-menu-date-item',
                 id: this.pickerId
             }, this.initialConfig))
@@ -60954,7 +61280,7 @@ var form = new Ext.form.FormPanel({
         }
         var restore = this.preventMark;
         this.preventMark = preventMark === true;
-        var v = this.validateValue(this.processValue(this.getRawValue()));
+        var v = this.validateValue(this.processValue(this.getRawValue()), preventMark);
         this.preventMark = restore;
         return v;
     },
@@ -61366,7 +61692,7 @@ Ext.form.TextField = Ext.extend(Ext.form.Field,  {
     vtype : null,
     /**
      * @cfg {RegExp} maskRe An input mask regular expression that will be used to filter keystrokes that do
-     * not match (defaults to <tt>null</tt>)
+     * not match (defaults to <tt>null</tt>). The maskRe will not operate on any paste events.
      */
     maskRe : null,
     /**
@@ -62251,7 +62577,7 @@ Ext.form.TwinTriggerField = Ext.extend(Ext.form.TriggerField, {
     onTrigger2Click : Ext.emptyFn
 });
 Ext.reg('trigger', Ext.form.TriggerField);
-/**
+Ext.reg('twintrigger', Ext.form.TwinTriggerField);/**
  * @class Ext.form.TextArea
  * @extends Ext.form.TextField
  * Multiline text field.  Can be used as a direct replacement for traditional textarea fields, plus adds
@@ -62500,8 +62826,8 @@ Ext.form.NumberField = Ext.extend(Ext.form.TextField,  {
     },
 
     setValue : function(v) {
-        v = this.fixPrecision(v);
     	v = Ext.isNumber(v) ? v : parseFloat(String(v).replace(this.decimalSeparator, "."));
+        v = this.fixPrecision(v);
         v = isNaN(v) ? '' : String(v).replace(".", this.decimalSeparator);
         return Ext.form.NumberField.superclass.setValue.call(this, v);
     },
@@ -62680,13 +63006,13 @@ disabledDates: ["^03"]
 
     // PUBLIC -- to be documented
     safeParse : function(value, format) {
-        if (/[gGhH]/.test(format.replace(/(\\.)/g, ''))) {
+        if (Date.formatContainsHourInfo(format)) {
             // if parse format contains hour information, no DST adjustment is necessary
             return Date.parseDate(value, format);
         } else {
             // set time to 12 noon, then clear the time
             var parsedDate = Date.parseDate(value + ' ' + this.initTime, format + ' ' + this.initTimeFormat);
-
+ 
             if (parsedDate) {
                 return parsedDate.clearTime();
             }
@@ -63202,7 +63528,7 @@ Ext.form.ComboBox = Ext.extend(Ext.form.TriggerField, {
     defaultAutoCreate : {tag: "input", type: "text", size: "24", autocomplete: "off"},
     /**
      * @cfg {Number} listWidth The width (used as a parameter to {@link Ext.Element#setWidth}) of the dropdown
-     * list (defaults to the width of the ComboBox field).  See also <tt>{@link #minListWidth}
+     * list (defaults to the width of the ComboBox field).  See also <tt>{@link #minListWidth}</tt>
      */
     /**
      * @cfg {String} displayField The underlying {@link Ext.data.Field#name data field name} to bind to this
@@ -63229,7 +63555,7 @@ Ext.form.ComboBox = Ext.extend(Ext.form.TriggerField, {
      */
     /**
      * @cfg {String} hiddenId If <tt>{@link #hiddenName}</tt> is specified, <tt>hiddenId</tt> can also be provided
-     * to give the hidden field a unique id.  The <tt>hiddenId</tt> and combo {@link Ext.Component#id id} should be 
+     * to give the hidden field a unique id.  The <tt>hiddenId</tt> and combo {@link Ext.Component#id id} should be
      * different, since no two DOM nodes should share the same id.
      */
     /**
@@ -63599,7 +63925,7 @@ var combo = new Ext.form.ComboBox({
         }
         return zindex;
     },
-    
+
     getZIndex : function(listParent){
         listParent = listParent || Ext.getDom(this.getListParent() || Ext.getBody());
         var zindex = parseInt(Ext.fly(listParent).getStyle('z-index'), 10);
@@ -63877,7 +64203,7 @@ myCombo.keyNav.tab = function() {   // Override TAB handling function
                 if(hname == 'down' || this.scope.isExpanded()){
                     // this MUST be called before ComboBox#fireKey()
                     var relay = Ext.KeyNav.prototype.doRelay.apply(this, arguments);
-                    if(!Ext.isIE && Ext.EventManager.useKeydown){
+                    if((((Ext.isIE9 && Ext.isStrict) || Ext.isIE10p) || !Ext.isIE) && Ext.EventManager.useKeydown){
                         // call Combo#fireKey() for browsers which use keydown event (except IE)
                         this.scope.fireKey(e);
                     }
@@ -64015,10 +64341,16 @@ myCombo.keyNav.tab = function() {   // Override TAB handling function
     },
 
     // private
-    assertValue  : function(){
+    assertValue : function(){
         var val = this.getRawValue(),
-            rec = this.findRecord(this.displayField, val);
+            rec;
 
+        if(this.valueField && Ext.isDefined(this.value)){
+            rec = this.findRecord(this.valueField, this.value);
+        }
+        if(!rec || rec.get(this.displayField) != val){
+            rec = this.findRecord(this.displayField, val);
+        }
         if(!rec && this.forceSelection){
             if(val.length > 0 && val != this.emptyText){
                 this.el.dom.value = Ext.value(this.lastSelectionText, '');
@@ -64027,11 +64359,11 @@ myCombo.keyNav.tab = function() {   // Override TAB handling function
                 this.clearValue();
             }
         }else{
-            if(rec){
+            if(rec && this.valueField){
                 // onSelect may have already set the value and by doing so
                 // set the display field properly.  Let's not wipe out the
                 // valueField here by just sending the displayField.
-                if (val == rec.get(this.displayField) && this.value == rec.get(this.valueField)){
+                if (this.value == val){
                     return;
                 }
                 val = rec.get(this.valueField || this.displayField);
@@ -64462,9 +64794,6 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field,  {
      */
     defaultAutoCreate : { tag: 'input', type: 'checkbox', autocomplete: 'off'},
     /**
-     * @cfg {String} boxLabel The text that appears beside the checkbox
-     */
-    /**
      * @cfg {String} inputValue The value that should go into the generated input element's value attribute
      */
     /**
@@ -64544,7 +64873,7 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field,  {
             this.checked = this.el.dom.checked;
         }
         // Need to repaint for IE, otherwise positioning is broken
-        if (Ext.isIE && !Ext.isStrict) {
+        if (Ext.isIEQuirks) {
             this.wrap.repaint();
         }
         this.resizeEl = this.positionEl = this.wrap;
@@ -64590,7 +64919,12 @@ Ext.form.Checkbox = Ext.extend(Ext.form.Field,  {
         var checked = this.checked,
             inputVal = this.inputValue;
             
-        this.checked = (v === true || v === 'true' || v == '1' || (inputVal ? v == inputVal : String(v).toLowerCase() == 'on'));
+        if (v === false) {
+            this.checked = false;
+        } else {
+            this.checked = (v === true || v === 'true' || v == '1' || (inputVal ? v == inputVal : String(v).toLowerCase() == 'on'));
+        }
+        
         if(this.rendered){
             this.el.dom.checked = this.checked;
             this.el.dom.defaultChecked = this.checked;
@@ -65182,6 +65516,10 @@ Ext.form.CompositeField = Ext.extend(Ext.form.Field, {
 
         for (var i=0, j = items.length; i < j; i++) {
             item = items[i];
+            
+            if (!Ext.isEmpty(item.ref)){
+                item.ref = '../' + item.ref;
+            }
 
             labels.push(item.fieldLabel);
 
@@ -65220,9 +65558,11 @@ Ext.form.CompositeField = Ext.extend(Ext.form.Field, {
             layout  : 'hbox',
             items   : this.items,
             cls     : 'x-form-composite',
-            defaultMargins: '0 3 0 0'
+            defaultMargins: '0 3 0 0',
+            ownerCt: this
         });
-        
+        delete this.innerCt.ownerCt;
+
         var fields = this.innerCt.findBy(function(c) {
             return c.isFormField;
         }, this);
@@ -65250,6 +65590,7 @@ Ext.form.CompositeField = Ext.extend(Ext.form.Field, {
              */
             var innerCt = this.innerCt;
             innerCt.render(ct);
+            this.innerCt.ownerCt = this;
 
             this.el = innerCt.getEl();
 
@@ -65290,7 +65631,9 @@ Ext.form.CompositeField = Ext.extend(Ext.form.Field, {
 
         this.fieldErrors.replace(name, error);
 
-        field.el.addClass(field.invalidClass);
+        if (!field.preventMark) {
+            field.el.addClass(field.invalidClass);
+        }
     },
 
     /**
@@ -65337,11 +65680,13 @@ Ext.form.CompositeField = Ext.extend(Ext.form.Field, {
      * Performs validation checks on each subfield and returns false if any of them fail validation.
      * @return {Boolean} False if any subfield failed validation
      */
-    validateValue: function() {
+    validateValue: function(value, preventMark) {
         var valid = true;
 
         this.eachItem(function(field) {
-            if (!field.isValid()) valid = false;
+            if (!field.isValid(preventMark)) {
+                valid = false;
+            }
         });
 
         return valid;
@@ -65557,7 +65902,7 @@ Ext.form.Radio = Ext.extend(Ext.form.Checkbox, {
      */
     getGroupValue : function(){
     	var p = this.el.up('form') || Ext.getBody();
-        var c = p.child('input[name='+this.el.dom.name+']:checked', true);
+        var c = p.child('input[name="'+this.el.dom.name+'"]:checked', true);
         return c ? c.value : null;
     },
 
@@ -65575,14 +65920,14 @@ Ext.form.Radio = Ext.extend(Ext.form.Checkbox, {
             Ext.form.Radio.superclass.setValue.call(this, v);
         } else if (this.rendered) {
             checkEl = this.getCheckEl();
-            radio = checkEl.child('input[name=' + this.el.dom.name + '][value=' + v + ']', true);
+            radio = checkEl.child('input[name="' + this.el.dom.name + '"][value="' + v + '"]', true);
             if(radio){
                 Ext.getCmp(radio.id).setValue(true);
             }
         }
         if(this.rendered && this.checked){
             checkEl = checkEl || this.getCheckEl();
-            els = this.getCheckEl().select('input[name=' + this.el.dom.name + ']');
+            els = this.getCheckEl().select('input[name="' + this.el.dom.name + '"]');
 			els.each(function(el){
 				if(el.dom.id != this.id){
 					Ext.getCmp(el.dom.id).setValue(false);
@@ -66222,12 +66567,14 @@ myFormPanel.getForm().submit({
      */
     updateRecord : function(record){
         record.beginEdit();
-        var fs = record.fields;
+        var fs = record.fields,
+            field,
+            value;
         fs.each(function(f){
-            var field = this.findField(f.name);
+            field = this.findField(f.name);
             if(field){
-                var value = field.getValue();
-                if ( value.getGroupValue ) {
+                value = field.getValue();
+                if (Ext.type(value) !== false && value.getGroupValue) {
                     value = value.getGroupValue();
                 } else if ( field.eachItem ) {
                     value = [];
@@ -67665,11 +68012,11 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         doc.write(this.getDocMarkup());
         doc.close();
 
-        var task = { // must defer to wait for browser to be ready
+        this.readyTask = { // must defer to wait for browser to be ready
             run : function(){
                 var doc = this.getDoc();
                 if(doc.body || doc.readyState == 'complete'){
-                    Ext.TaskMgr.stop(task);
+                    Ext.TaskMgr.stop(this.readyTask);
                     this.setDesignMode(true);
                     this.initEditor.defer(10, this);
                 }
@@ -67678,7 +68025,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
             duration:10000,
             scope: this
         };
-        Ext.TaskMgr.start(task);
+        Ext.TaskMgr.start(this.readyTask);
     },
 
 
@@ -67978,9 +68325,13 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         if(this.monitorTask){
             Ext.TaskMgr.stop(this.monitorTask);
         }
+        if(this.readyTask){
+            Ext.TaskMgr.stop(this.readyTask);
+        }
         if(this.rendered){
             Ext.destroy(this.tb);
             var doc = this.getDoc();
+            Ext.EventManager.removeFromSpecialCache(doc);
             if(doc){
                 try{
                     Ext.EventManager.removeAll(doc);
@@ -69073,6 +69424,14 @@ buttons: [{
         this.result = this.handleResponse(response);
         return this.result;
     },
+    
+    decodeResponse: function(response) {
+        try {
+            return Ext.decode(response.responseText);
+        } catch(e) {
+            return false;
+        } 
+    },
 
     // utility functions used internally
     getUrl : function(appendParams){
@@ -69271,7 +69630,7 @@ Ext.extend(Ext.form.Action.Submit, Ext.form.Action, {
                 errors : errors
             };
         }
-        return Ext.decode(response.responseText);
+        return this.decodeResponse(response);
     }
 });
 
@@ -69377,7 +69736,7 @@ Ext.extend(Ext.form.Action.Load, Ext.form.Action, {
                 data : data
             };
         }
-        return Ext.decode(response.responseText);
+        return this.decodeResponse(response);
     }
 });
 
@@ -69676,7 +70035,7 @@ Ext.form.VTypes = function(){
     // closure these in so they are only created once.
     var alpha = /^[a-zA-Z_]+$/,
         alphanum = /^[a-zA-Z0-9_]+$/,
-        email = /^(\w+)([\-+.][\w]+)*@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/,
+        email = /^(\w+)([\-+.\'][\w]+)*@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/,
         url = /(((^https?)|(^ftp)):\/\/([\-\w]+\.)+\w{2,3}(\/[%\-\w]+(\.\w{2,})?)*(([\w\-\.\?\\\/+@&#;`~=%!]*)(\.\w{2,})?)*\/?)/i;
 
     // All these messages and functions are configurable
@@ -69704,10 +70063,10 @@ Ext.form.VTypes = function(){
         /**
          * The keystroke filter mask to be applied on email input.  See the {@link #email} method for
          * information about more complex email validation. Defaults to:
-         * <tt>/[a-z0-9_\.\-@]/i</tt>
+         * <tt>/[a-z0-9_\.\-\+\'@]/i</tt>
          * @type RegExp
          */
-        'emailMask' : /[a-z0-9_\.\-@\+]/i,
+        'emailMask' : /[a-z0-9_\.\-\+\'@]/i,
 
         /**
          * The function used to validate URLs
@@ -69805,7 +70164,7 @@ var grid = new Ext.grid.GridPanel({
                 header: 'Last Updated', width: 135, dataIndex: 'lastChange',
                 xtype: 'datecolumn', format: 'M d, Y'
             }
-        ],
+        ]
     }),
     {@link #viewConfig}: {
         {@link Ext.grid.GridView#forceFit forceFit}: true,
@@ -69902,7 +70261,13 @@ Ext.grid.GridPanel = Ext.extend(Ext.Panel, {
      * <tt>{0}</tt> is replaced with the number of selected rows.
      */
     ddText : '{0} selected row{1}',
-    
+
+    /**
+     * @cfg {Boolean} dragCell Defaults to <code>false</code>. If using {@link #enableDragDrop} with a CellSelectionModel,
+     * set this to true to have the {@link #getView view}'s {@link Ext.grid.GridView#dragZone dragZone}'s <code>getDragData</code>
+     * method reference the selected <b>cell</b> using <code>[rowIndex, cellIndex]</code>
+     */
+
     /**
      * @cfg {Boolean} deferRowRender <P>Defaults to <tt>true</tt> to enable deferred row rendering.</p>
      * <p>This allows the GridPanel to be initially rendered empty, with the expensive update of the row
@@ -70428,20 +70793,22 @@ function(grid, rowIndex, columnIndex, e) {
             store = this.store,
             s,
             c,
-            oldIndex;
+            colIndex;
 
         if(cs){
             for(var i = 0, len = cs.length; i < len; i++){
                 s = cs[i];
                 c = cm.getColumnById(s.id);
                 if(c){
-                    cm.setState(s.id, {
+                    colIndex = cm.getIndexById(s.id);
+                    cm.setState(colIndex, {
                         hidden: s.hidden,
-                        width: s.width    
+                        width: s.width,
+                        sortable: c.sortable,
+                        editable: c.editable
                     });
-                    oldIndex = cm.getIndexById(s.id);
-                    if(oldIndex != i){
-                        cm.moveColumn(oldIndex, i);
+                    if(colIndex != i){
+                        cm.moveColumn(colIndex, i);
                     }
                 }
             }
@@ -70691,7 +71058,7 @@ function(grid, rowIndex, columnIndex, e) {
      * @return {String} The text
      */
     getDragDropText : function(){
-        var count = this.selModel.getCount();
+        var count = this.selModel.getCount ? this.selModel.getCount() : 1;
         return String.format(this.ddText, count, count == 1 ? '' : 's');
     }
 
@@ -71372,11 +71739,14 @@ viewConfig: {
 
     /**
      * @cfg {Boolean} forceFit
-     * Defaults to <tt>false</tt>.  Specify <tt>true</tt> to have the column widths re-proportioned
-     * at <b>all times</b>.  The {@link Ext.grid.Column#width initially configured width}</tt> of each
+     * <p>Defaults to <tt>false</tt>.  Specify <tt>true</tt> to have the column widths re-proportioned
+     * at <b>all times</b>.</p>
+     * <p>The {@link Ext.grid.Column#width initially configured width}</tt> of each
      * column will be adjusted to fit the grid width and prevent horizontal scrolling. If columns are
      * later resized (manually or programmatically), the other columns in the grid <b>will</b> be resized
-     * to fit the grid width. See <tt>{@link #autoFill}</tt> also.
+     * to fit the grid width.</p>
+     * <p>Columns which are configured with <code>fixed: true</code> are omitted from being resized.</p>
+     * <p>See <tt>{@link #autoFill}</tt>.</p>
      */
     forceFit : false,
 
@@ -71394,6 +71764,11 @@ viewConfig: {
      * @cfg {String} sortDescText The text displayed in the 'Sort Descending' menu item (defaults to <tt>'Sort Descending'</tt>)
      */
     sortDescText : 'Sort Descending',
+    
+    /**
+     * @cfg {Boolean} hideSortIcons True to hide the sorting icons if sorting is disabled for a column. Defaults to <tt>false</tt>
+     */
+    hideSortIcons: false,
 
     /**
      * @cfg {String} columnsText The text displayed in the 'Columns' menu item (defaults to <tt>'Columns'</tt>)
@@ -71594,7 +71969,7 @@ viewConfig: {
      */
     cellTpl: new Ext.Template(
         '<td class="x-grid3-col x-grid3-cell x-grid3-td-{id} {css}" style="{style}" tabIndex="0" {cellAttr}>',
-            '<div class="x-grid3-cell-inner x-grid3-col-{id}" unselectable="on" {attr}>{value}</div>',
+            '<div class="x-grid3-cell-inner x-grid3-col-{id} x-unselectable" unselectable="on" {attr}>{value}</div>',
         '</td>'
     ),
     
@@ -72215,7 +72590,10 @@ viewConfig: {
                     beforeshow: this.beforeColMenuShow,
                     itemclick : this.handleHdMenuClick
                 });
-                this.hmenu.add('-', {
+                this.hmenu.add({
+                    itemId: 'sortSep',
+                    xtype: 'menuseparator'
+                }, {
                     itemId:'columns',
                     hideOnClick: false,
                     text: this.columnsText,
@@ -72673,8 +73051,8 @@ viewConfig: {
                 Ext.DomHelper.insertHtml('beforeEnd', this.mainBody.dom, html);
             }
             if (!isUpdate) {
-                this.fireEvent('rowsinserted', this, firstRow, lastRow);
                 this.processRows(firstRow);
+                this.fireEvent('rowsinserted', this, firstRow, lastRow);
             } else if (firstRow === 0 || firstRow >= last) {
                 //ensure first/last row is kept after an update.
                 Ext.fly(this.getRow(firstRow)).addClass(firstRow === 0 ? this.firstRowCls : this.lastRowCls);
@@ -72737,7 +73115,7 @@ viewConfig: {
             borderWidth = this.borderWidth;
         
         if (Ext.isNumber(columnWidth)) {
-            if (Ext.isBorderBox || (Ext.isWebKit && !Ext.isSafari2)) {
+            if (Ext.isBorderBox) {
                 return columnWidth + "px";
             } else {
                 return Math.max(columnWidth - borderWidth, 0) + "px";
@@ -73525,13 +73903,23 @@ viewConfig: {
                 sortable  = colModel.isSortable(index),
                 menu      = this.hmenu,
                 menuItems = menu.items,
-                menuCls   = this.headerMenuOpenCls;
+                menuCls   = this.headerMenuOpenCls,
+                sep;
             
             this.hdCtxIndex = index;
             
             Ext.fly(header).addClass(menuCls);
-            menuItems.get('asc').setDisabled(!sortable);
-            menuItems.get('desc').setDisabled(!sortable);
+            if (this.hideSortIcons) {
+                menuItems.get('asc').setVisible(sortable);
+                menuItems.get('desc').setVisible(sortable);
+                sep = menuItems.get('sortSep');
+                if (sep) {
+                    sep.setVisible(sortable);    
+                }
+            } else {
+                menuItems.get('asc').setDisabled(!sortable);
+                menuItems.get('desc').setDisabled(!sortable);
+            }
             
             menu.on('hide', function() {
                 Ext.fly(header).removeClass(menuCls);
@@ -73626,7 +74014,7 @@ viewConfig: {
     handleHdOut : function(e, target) {
         var header = this.findHeaderCell(target);
         
-        if (header && (!Ext.isIE || !e.within(header, true))) {
+        if (header && (!Ext.isIE9m || !e.within(header, true))) {
             this.activeHdRef = null;
             this.fly(header).removeClass('x-grid3-hd-over');
             header.style.cursor = '';
@@ -73890,7 +74278,7 @@ Ext.grid.PivotGridView = Ext.extend(Ext.grid.GridView, {
             rowBuffer     = [],
             meta          = {},
             tstyle        = 'width:' + this.getGridInnerWidth() + 'px;',
-            colBuffer, column, i;
+            colBuffer, colCount, column, i, row;
         
         startRow = startRow || 0;
         endRow   = Ext.isDefined(endRow) ? endRow : rowCount - 1;
@@ -73900,15 +74288,13 @@ Ext.grid.PivotGridView = Ext.extend(Ext.grid.GridView, {
             colCount  = row.length;
             colBuffer = [];
             
-            rowIndex = startRow + i;
-
             //build up each column's HTML
-            for (j = 0; j < colCount; j++) {
-                cell = row[j];
-
+            for (var j = 0; j < colCount; j++) {
+                
+                meta.id    = i + '-' + j;
                 meta.css   = j === 0 ? 'x-grid3-cell-first ' : (j == (colCount - 1) ? 'x-grid3-cell-last ' : '');
                 meta.attr  = meta.cellAttr = '';
-                meta.value = cell;
+                meta.value = row[j];
 
                 if (Ext.isEmpty(meta.value)) {
                     meta.value = '&#160;';
@@ -73973,7 +74359,7 @@ Ext.grid.PivotGridView = Ext.extend(Ext.grid.GridView, {
         if (!templates.gcell) {
             templates.gcell = new Ext.XTemplate(
                 '<td class="x-grid3-hd x-grid3-gcell x-grid3-td-{id} ux-grid-hd-group-row-{row} ' + this.colHeaderCellCls + '" style="{style}">',
-                    '<div {tooltip} class="x-grid3-hd-inner x-grid3-hd-{id}" unselectable="on" style="{istyle}">', 
+                    '<div {tooltip} class="x-grid3-hd-inner x-grid3-hd-{id} x-unselectable" unselectable="on" style="{istyle}">', 
                         this.grid.enableHdMenu ? '<a class="x-grid3-hd-btn" href="#"></a>' : '', '{value}',
                     '</div>',
                 '</td>'
@@ -74041,6 +74427,24 @@ Ext.grid.PivotGridView = Ext.extend(Ext.grid.GridView, {
     getTotalColumnHeaderHeight: function() {
         return this.getColumnHeaders().length * 21;
     },
+    
+    /**
+     * Inherit docs
+     * @private
+     * @param {HTMLElement} el
+     */
+    getCellIndex : function(el) {
+        if (el) {
+            var match = el.className.match(this.colRe),
+                data;
+ 
+            if (match && (data = match[1])) {
+                return parseInt(data.split('-')[1], 10);
+            }
+        }
+        return false;
+    },
+    
     
     /**
      * @private
@@ -74447,6 +74851,7 @@ Ext.grid.PivotAxis = Ext.extend(Ext.Component, {
         var tuples     = this.getTuples(),
             rowCount   = tuples.length,
             dimensions = this.dimensions,
+            dimension,
             colCount   = dimensions.length,
             headers    = [],
             tuple, rows, currentHeader, previousHeader, span, start, isLast, changed, i, j;
@@ -74782,6 +75187,8 @@ Ext.grid.GridDragZone = function(grid, config){
     this.grid = grid;
     this.ddel = document.createElement('div');
     this.ddel.className = 'x-grid-dd-wrap';
+    // prevent the default action, but don't stop propagation
+    this.preventDefault = true;
 };
 
 Ext.extend(Ext.grid.GridDragZone, Ext.dd.DragZone, {
@@ -74795,18 +75202,47 @@ Ext.extend(Ext.grid.GridDragZone, Ext.dd.DragZone, {
      * <li><b>grid</b> : Ext.Grid.GridPanel<div class="sub-desc">The GridPanel from which the data is being dragged.</div></li>
      * <li><b>ddel</b> : htmlElement<div class="sub-desc">An htmlElement which provides the "picture" of the data being dragged.</div></li>
      * <li><b>rowIndex</b> : Number<div class="sub-desc">The index of the row which receieved the mousedown gesture which triggered the drag.</div></li>
-     * <li><b>selections</b> : Array<div class="sub-desc">An Array of the selected Records which are being dragged from the GridPanel.</div></li>
+     * <li><b>selections</b> : Array<div class="sub-desc">Array of the selected Records which are being dragged from the GridPanel.
+     * Unless a CellSelectionModel is being used and the grid is configured <code>dragCell: true</code>, in which case, this will be
+     * an Array containing the single selected cell data as <code>[rowIndex, cellIndex]</code>.</div></li>
      * </ul></p>
      */
     getDragData : function(e){
-        var t = Ext.lib.Event.getTarget(e);
-        var rowIndex = this.view.findRowIndex(t);
-        if(rowIndex !== false){
-            var sm = this.grid.selModel;
-            if(!sm.isSelected(rowIndex) || e.hasModifier()){
-                sm.handleMouseDown(this.grid, rowIndex, e);
+        var t = Ext.lib.Event.getTarget(e),
+            sm,
+            rowIndex = this.view.findRowIndex(t),
+            cellIndex,
+            selectedCell,
+            selection;
+
+        if (rowIndex !== false){
+            sm = this.grid.selModel;
+
+            // Handle mousedown on unselected items (depending on what kind of selection we are using)
+            // Select the mousedowned item
+            if (sm.getSelectedCell) {
+                cellIndex = this.view.findCellIndex(t);
+                selectedCell = sm.getSelectedCell();
+                if (!selectedCell || selectedCell[0] !== rowIndex || selectedCell[1] !== cellIndex) {
+                    sm.handleMouseDown(this.grid, rowIndex, cellIndex, e);
+                }
+                if (this.grid.dragCell) {
+                    // Selection is the cell coordinates
+                    selection = sm.getSelectedCell();
+                    if (!this.grid.hasOwnProperty('ddText')) {
+                        this.grid.ddText = '{0} selected cell{1}';
+                    }
+                } else {
+                    // Selection is the mousedowned row
+                    selection = [this.grid.store.getAt(rowIndex)];
+                }
+            } else {
+                if(!sm.isSelected(rowIndex) || e.hasModifier()){
+                    sm.handleMouseDown(this.grid, rowIndex, e);
+                }
+                selection = sm.getSelections();
             }
-            return {grid: this.grid, ddel: this.ddel, rowIndex: rowIndex, selections:sm.getSelections()};
+            return {grid: this.grid, ddel: this.ddel, rowIndex: rowIndex, selections: selection};
         }
         return false;
     },
@@ -75709,7 +76145,7 @@ Ext.grid.RowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel,  {
             s = this.getSelections(),
             i = 0,
             len = s.length, 
-            index;
+            index, r;
             
         this.silent = true;
         this.clearSelections(true);
@@ -76104,9 +76540,7 @@ Ext.grid.RowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel,  {
             r = newCell[0];
             c = newCell[1];
 
-            if(last.row != r){
-                this.selectRow(r); // *** highlight newly-selected cell and update selection
-            }
+            this.onEditorSelect(r, last.row);
 
             if(g.isEditor && g.editing){ // *** handle tabbing while editorgrid is in edit mode
                 ae = g.activeEditor;
@@ -76119,12 +76553,19 @@ Ext.grid.RowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel,  {
         }
     },
     
+    onEditorSelect: function(row, lastRow){
+        if(lastRow != row){
+            this.selectRow(row); // *** highlight newly-selected cell and update selection
+        }
+    },
+    
     destroy : function(){
         Ext.destroy(this.rowNav);
         this.rowNav = null;
         Ext.grid.RowSelectionModel.superclass.destroy.call(this);
     }
-});/**
+});
+/**
  * @class Ext.grid.Column
  * <p>This class encapsulates column configuration data to be used in the initialization of a
  * {@link Ext.grid.ColumnModel ColumnModel}.</p>
@@ -76666,7 +77107,7 @@ Ext.grid.ActionColumn = Ext.extend(Ext.grid.Column, {
      */
     /**
      * @cfg {Function} getClass A function which returns the CSS class to apply to the icon image.
-     * The function is passed the following parameters:<ul>
+     * The function is passed the following parameters:<div class="mdetail-params"><ul>
      *     <li><b>v</b> : Object<p class="sub-desc">The value of the column's configured field (if any).</p></li>
      *     <li><b>metadata</b> : Object<p class="sub-desc">An object in which you may set the following attributes:<ul>
      *         <li><b>css</b> : String<p class="sub-desc">A CSS class name to add to the cell's TD element.</p></li>
@@ -76677,7 +77118,7 @@ Ext.grid.ActionColumn = Ext.extend(Ext.grid.Column, {
      *     <li><b>rowIndex</b> : Number<p class="sub-desc">The row index..</p></li>
      *     <li><b>colIndex</b> : Number<p class="sub-desc">The column index.</p></li>
      *     <li><b>store</b> : Ext.data.Store<p class="sub-desc">The Store which is providing the data Model.</p></li>
-     * </ul>
+     * </ul></div>
      */
     /**
      * @cfg {Array} items An Array which may contain multiple icon definitions, each element of which may contain:
@@ -76734,7 +77175,7 @@ Ext.grid.ActionColumn = Ext.extend(Ext.grid.Column, {
             meta.css += ' x-action-col-cell';
             for (i = 0; i < l; i++) {
                 item = items[i];
-                v += '<img alt="' + me.altText + '" src="' + (item.icon || Ext.BLANK_IMAGE_URL) +
+                v += '<img alt="' + (item.altText || me.altText) + '" src="' + (item.icon || Ext.BLANK_IMAGE_URL) +
                     '" class="x-action-col-icon x-action-col-' + String(i) + ' ' + (item.iconCls || '') +
                     ' ' + (Ext.isFunction(item.getClass) ? item.getClass.apply(item.scope||this.scope||this, arguments) : '') + '"' +
                     ((item.tooltip) ? ' ext:qtip="' + item.tooltip + '"' : '') + ' />';
@@ -76953,6 +77394,12 @@ Ext.grid.CheckboxSelectionModel = Ext.extend(Ext.grid.RowSelectionModel, {
     // private
     renderer : function(v, p, record){
         return '<div class="x-grid3-row-checker">&#160;</div>';
+    },
+    
+    onEditorSelect: function(row, lastRow){
+        if(lastRow != row && !this.checkOnly){
+            this.selectRow(row); // *** highlight newly-selected cell and update selection
+        }
     }
 });/**
  * @class Ext.grid.CellSelectionModel
@@ -77512,6 +77959,10 @@ grid.on('validateedit', function(e) {
                     col: col
                 };
                 this.activeEditor = ed;
+                if (ed.field.isXType('checkbox')) {
+                    ed.allowBlur = false;
+                    this.setupCheckbox(ed.field);    
+                }
                 // Set the selectSameEditor flag if we are reusing the same editor again and
                 // need to prevent the editor from firing onBlur on itself.
                 ed.selectSameEditor = (this.activeEditor == this.lastActiveEditor);
@@ -77524,6 +77975,24 @@ grid.on('validateedit', function(e) {
                 }).defer(50);
             }
         }
+    },
+    
+    setupCheckbox: function(field){
+        var me = this,
+            fn = function() {
+                field.el.on('click', me.onCheckClick, me, {single: true});
+            };
+        if (field.rendered) {
+            fn();
+        } else {
+            field.on('render', fn, null, {single: true});
+        }
+    },
+    
+    onCheckClick: function(){
+        var ed = this.activeEditor;
+        ed.allowBlur = true;
+        ed.field.focus(false, 10);   
     },
 
     // private
@@ -77866,9 +78335,6 @@ var grid = new Ext.grid.PropertyGrid({
     }
 });
 </code></pre>
-    */
-    /**
-    * @cfg {Object} source A data object to use as the data source of the grid (see {@link #setSource} for details).
     */
     /**
     * @cfg {Object} customRenderers An object containing name/value pairs of custom renderer type definitions that allow
@@ -78313,9 +78779,10 @@ var grid = new Ext.grid.GridPanel({
 
     // private
     onGroupByClick : function(){
+        var grid = this.grid;
         this.enableGrouping = true;
-        this.grid.store.groupBy(this.cm.getDataIndex(this.hdCtxIndex));
-        this.grid.fireEvent('groupchange', this, this.grid.store.getGroupState());
+        grid.store.groupBy(this.cm.getDataIndex(this.hdCtxIndex));
+        grid.fireEvent('groupchange', grid, grid.store.getGroupState());
         this.beforeMenuShow(); // Make sure the checkboxes get properly set when changing groups
         this.refresh();
     },
@@ -78352,13 +78819,15 @@ var grid = new Ext.grid.GridPanel({
      * @param {Boolean} expanded (optional)
      */
     toggleGroup : function(group, expanded){
-        var gel = Ext.get(group);
+        var gel = Ext.get(group),
+            id = Ext.util.Format.htmlEncode(gel.id);
+ 
         expanded = Ext.isDefined(expanded) ? expanded : gel.hasClass('x-grid-group-collapsed');
-        if(this.state[gel.id] !== expanded){
+        if(this.state[id] !== expanded){
             if (this.cancelEditOnToggle !== false) {
                 this.grid.stopEditing(true);
             }
-            this.state[gel.id] = expanded;
+            this.state[id] = expanded;
             gel[expanded ? 'removeClass' : 'addClass']('x-grid-group-collapsed');
         }
     },

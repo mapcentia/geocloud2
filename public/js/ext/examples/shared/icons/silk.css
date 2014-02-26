@@ -1,9 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 /**
 * this css is for the free "silk" icon library
 * http://www.fanfanfan.com
@@ -57,7 +71,6 @@
 .silk-bricks { background-image: url(fam/bricks.png) !important; background-repeat: no-repeat; }
 .silk-brick { background-image: url(fam/brick.png) !important; background-repeat: no-repeat; }
 .silk-cog { background-image: url(fam/cog.png) !important; background-repeat: no-repeat; }
-.silk-cog-edit{ background-image: url(fam/cog_edit.png) !important; background-repeat: no-repeat; }
 .silk-calendar { background-image: url(fam/calendar.png) !important; background-repeat: no-repeat; }
 .silk-calculator { background-image: url(fam/calculator.png) !important; background-repeat: no-repeat; }
 .silk-calculator-edit { background-image: url(fam/calculator_edit.png) !important; background-repeat: no-repeat; }
@@ -143,8 +156,6 @@
 .silk-page-white-stack { background-image: url(fam/page_white_stack.png) !important; background-repeat: no-repeat; }
 .silk-page-white-code { background-image: url(fam/page_white_code.png) !important; background-repeat: no-repeat; }
 .silk-page-white-code-red { background-image: url(fam/page_white_code_red.png) !important; background-repeat: no-repeat; }
-.silk-palette { background-image: url(fam/palette.png) !important; background-repeat: no-repeat; }
-
 .silk-pencil { background-image: url(fam/pencil.png) !important; background-repeat: no-repeat; }
 .silk-phone { background-image: url(fam/phone.png) !important; background-repeat: no-repeat; }
 .silk-picture { background-image: url(fam/picture.png) !important; background-repeat: no-repeat; }
@@ -186,4 +197,3 @@
 .silk-wrench { background-image: url(fam/wrench.png) !important; background-repeat: no-repeat; }
 .silk-world { background-image: url(fam/world.png) !important; background-repeat: no-repeat; }
 .silk-zoom { background-image: url(fam/zoom.png) !important; background-repeat: no-repeat; }
-.silk-layers { background-image: url(fam/layers.png) !important; background-repeat: no-repeat; }

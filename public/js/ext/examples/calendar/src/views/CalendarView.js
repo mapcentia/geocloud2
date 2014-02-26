@@ -1,9 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 /**
  * @class Ext.calendar.CalendarView
  * @extends Ext.BoxComponent
@@ -721,7 +735,7 @@ Ext.calendar.CalendarView = Ext.extend(Ext.BoxComponent, {
     // private
     setViewBounds: function(startDate) {
         var start = startDate || this.startDate,
-        offset = start.getDay() - this.startDay;
+            offset = start.getDay() - this.startDay;
 
         switch (this.weekCount) {
         case 0:
@@ -734,13 +748,20 @@ Ext.calendar.CalendarView = Ext.extend(Ext.BoxComponent, {
             // auto by month
             start = start.getFirstDateOfMonth();
             offset = start.getDay() - this.startDay;
-
+            if (offset < 0) {
+                offset += 7;
+            }
             this.viewStart = start.add(Date.DAY, -offset).clearTime(true);
 
             // start from current month start, not view start:
             var end = start.add(Date.MONTH, 1).add(Date.SECOND, -1);
             // fill out to the end of the week:
-            this.viewEnd = end.add(Date.DAY, 6 - end.getDay());
+            offset = this.startDay;
+            if (offset > end.getDay()){
+                // if the offset is larger than the end day index then the last row will be empty so skip it
+                offset -= 7;
+            }
+            this.viewEnd = end.add(Date.DAY, 6 - end.getDay() + offset);
             return;
 
         default:

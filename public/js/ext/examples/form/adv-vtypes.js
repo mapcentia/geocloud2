@@ -1,9 +1,23 @@
-/*!
- * Ext JS Library 3.3.0
- * Copyright(c) 2006-2010 Ext JS, Inc.
- * licensing@extjs.com
- * http://www.extjs.com/license
- */
+/*
+This file is part of Ext JS 3.4
+
+Copyright (c) 2011-2013 Sencha Inc
+
+Contact:  http://www.sencha.com/contact
+
+GNU General Public License Usage
+This file may be used under the terms of the GNU General Public License version 3.0 as
+published by the Free Software Foundation and appearing in the file LICENSE included in the
+packaging of this file.
+
+Please review the following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+If you are unsure which license is appropriate for your use, please contact the sales department
+at http://www.sencha.com/contact.
+
+Build date: 2013-04-03 15:07:25
+*/
 // Add the additional 'advanced' VTypes
 Ext.apply(Ext.form.VTypes, {
     daterange : function(val, field) {
@@ -12,17 +26,19 @@ Ext.apply(Ext.form.VTypes, {
         if(!date){
             return false;
         }
-        if (field.startDateField && (!this.dateRangeMax || (date.getTime() != this.dateRangeMax.getTime()))) {
+        if (field.startDateField) {
             var start = Ext.getCmp(field.startDateField);
-            start.setMaxValue(date);
-            start.validate();
-            this.dateRangeMax = date;
+            if (!start.maxValue || (date.getTime() != start.maxValue.getTime())) {
+                start.setMaxValue(date);
+                start.validate();
+            }
         }
-        else if (field.endDateField && (!this.dateRangeMin || (date.getTime() != this.dateRangeMin.getTime()))) {
+        else if (field.endDateField) {
             var end = Ext.getCmp(field.endDateField);
-            end.setMinValue(date);
-            end.validate();
-            this.dateRangeMin = date;
+            if (!end.minValue || (date.getTime() != end.minValue.getTime())) {
+                end.setMinValue(date);
+                end.validate();
+            }
         }
         /*
          * Always return true since we're only using this vtype to set the
