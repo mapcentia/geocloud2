@@ -5,10 +5,10 @@ class App
 {
     static $param = array(
         // The hostname of the server
-        "host" => "http://myserver.com",
+        "host" => "",
 
         // The hostname of the user module. Normally this is the same as the host above
-        "userHostName" => "http://myserver.com",
+        "userHostName" => "",
 
         //Server path where GeoCLoud is installed.
         "path" => "/var/www/geocloud2/",
@@ -17,7 +17,7 @@ class App
         "databaseTemplate" => "template_geocloud",
 
         // The host of Elasticsearch serveren
-        "esHost" => "http://myserver.com",
+        "esHost" => "",
 
         // Encrypt api key in database
         "encryptSettings" => false
