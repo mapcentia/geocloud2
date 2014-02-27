@@ -11,7 +11,7 @@ class App
         "userHostName" => "http://myserver.com",
 
         //Server path where GeoCLoud is installed.
-        "path" => "/var/www/geocloud2",
+        "path" => "/var/www/geocloud2/",
 
         // When creating new databases use this db as template
         "databaseTemplate" => "template_geocloud",
