@@ -20,16 +20,17 @@ addShape.init = function () {
         bodyStyle: 'padding: 0',
         border: false,
         autoHeight: true,
-        html: "<div id='shape_uploader'></div>",
+        html: "<div id='shape_uploader'>You need Flash or a modern browser, which supports HTML5</div>",
         afterRender: function () {
             var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif"], geoType, srs;
             $("#shape_uploader").pluploadQueue({
                 // General settings
-                runtimes: 'html5,html4',
+                runtimes: 'html5, flash',
                 url: '/controllers/upload/file',
                 max_file_size: '200mb',
                 chunk_size: '1mb',
                 unique_names: true,
+                urlstream_upload: true,
                 init: {
                     UploadComplete: function (up, files) {
                         Ext.each(arr, function (e) {
@@ -69,7 +70,9 @@ addShape.init = function () {
                             name: file.name
                         };
                     }
-                }
+                },
+                // Flash settings
+                flash_swf_url : '/js/plupload/js/Moxie.swf'
             });
         },
         tbar: [

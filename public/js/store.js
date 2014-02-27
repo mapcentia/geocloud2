@@ -422,23 +422,28 @@ $(window).ready(function () {
             }
         });
     }
+
     onAdd = function (btn, ev) {
         addShape.init();
         var p = new Ext.Panel({
-            id: "uploadpanel",
-            frame: false,
-            layout: 'border',
-            items: [new Ext.Panel({
-                region: "center"
-            })]
-        });
-        var add = function () {
-            addShape.init();
-            var c = p.getComponent(0);
-            c.remove(0);
-            c.add(addShape.form);
-            c.doLayout();
-        };
+                id: "uploadpanel",
+                frame: false,
+                layout: 'border',
+                items: [new Ext.Panel({
+                    region: "center"
+                })]
+            }),
+            add = function () {
+                addShape.init();
+                var c = p.getComponent(0);
+                c.remove(0);
+                c.add(addShape.form);
+                try {
+                    c.doLayout();
+                } catch (e) {
+                }
+
+            };
         winAdd = new Ext.Window({
             title: 'Add new layer',
             layout: 'fit',
@@ -994,7 +999,7 @@ $(window).ready(function () {
                     {
                         xtype: "panel",
                         //title: "Tile layer setup",
-                        autoScroll:true,
+                        autoScroll: true,
                         region: 'east',
                         collapsible: true,
                         collapsed: true,
