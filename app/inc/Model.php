@@ -44,7 +44,7 @@ class Model
     function fetchAll($result, $result_type = "both")
     {
         if ($this->PDOerror) {
-            //throw new Exception($this->PDOerror[0]);
+            throw new \Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :

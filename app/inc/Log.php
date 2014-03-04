@@ -12,15 +12,9 @@ class Log
      * @return unknown
      */
 
-    function write($the_string)
+    static function write($the_string)
     {
-        /*if ($fh = fopen("/var/log/mygeocloud.log", "a+")) {
-            fputs($fh, $the_string, strlen($the_string));
-            fclose($fh);
-            return true;
-        } else {
-            return false;
-        }*/
+        error_log($the_string);
 
     }
 

@@ -335,10 +335,10 @@ geocloud = (function () {
         var parts, l, url, urlArray;
         parts = layer.split(".");
         if (!defaults.tileCached) {
-            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
+            url = host + "/wms/" + defaults.db + "?";
             urlArray = [url];
         } else {
-            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
+            url = host + "/wmsc/" + defaults.db + "?";
             var url1 = url;
             var url2 = url;
             var url3 = url;
@@ -346,7 +346,7 @@ geocloud = (function () {
             urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
 
             // For leaflet
-            url = url1.replace("cdn.", "{s}.");
+            url = url.replace("cdn.", "{s}.");
         }
         switch (MAPLIB) {
             case "ol2":
@@ -405,6 +405,7 @@ geocloud = (function () {
 
         this.bingApiKey = null;
         //ol2, ol3
+        // extent array
         this.zoomToExtent = function (extent, closest) {
             switch (MAPLIB) {
                 case "ol2":
@@ -428,7 +429,7 @@ geocloud = (function () {
                     }
                     else {
                         //Check it!
-                        this.map.fitBounds(extent)
+                        this.map.fitBounds(extent);
                     }
                     break;
             }
@@ -440,7 +441,7 @@ geocloud = (function () {
                     this.map.zoomToExtent(store.layer.getDataExtent());
                     break;
                 case "leaflet":
-                    this.map.fitBounds(store.layer.getBounds())
+                    this.map.fitBounds(store.layer.getBounds());
                     break;
             }
         }

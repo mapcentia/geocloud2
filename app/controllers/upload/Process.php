@@ -41,7 +41,7 @@ class Process extends \app\inc\Controller
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=postgres dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln {$safeName} " .
             "-nlt {$type}";
@@ -81,6 +81,7 @@ class Process extends \app\inc\Controller
             $response['success'] = false;
             $response['message'] = $out[0];
         }
+        $response['cmd'] = $cmd;
         return Response::json($response);
     }
 }

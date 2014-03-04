@@ -1,17 +1,19 @@
 <?php
 namespace app\inc;
 
+use \app\inc\Util;
+
 class Route
 {
     static function add($uri, $func = "")
     {
-        $time_start = \app\inc\Util::microtime_float();
+        $time_start = Util::microtime_float();
         $requestUri = strtok($_SERVER["REQUEST_URI"], '?');
         if (strpos($requestUri, $uri) !== false) {
             if ($func) {
                 $func();
             }
-            $uri = rtrim($uri, "/");
+            $uri = trim($uri, "/");
             $e = explode("/", $uri);
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
             $uri = implode($e, "/");
@@ -39,11 +41,12 @@ class Route
             $code = (isset($response["code"])) ? $response["code"] : "200";
             header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
             if (isset($response["json"])) {
-                echo $response["json"];
+                echo Response::passthru($response["json"]);
             } else {
-                $response["_execution_time"] = round((\app\inc\Util::microtime_float() - $time_start),3);
+                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
                 echo Response::toJson($response);
             }
+            exit();
         }
     }
 }

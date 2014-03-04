@@ -1,10 +1,10 @@
 <?php
-use \app\inc\Log;
 use \app\inc\Input;
-$settings_viewer = new \app\models\Setting();
-$response = $settings_viewer->get();
 
-if (!$_SESSION['auth'] || ($_SESSION['screen_name'] != Input::getPath()->part(2))) {
+if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2)) {
+    $settings_viewer = new \app\models\Setting();
+    $response = $settings_viewer->get();
+    \app\inc\Log::write("Auth");
     // mod_php
     if (isset($_SERVER['PHP_AUTH_USER'])) {
         $username = $_SERVER['PHP_AUTH_USER'];

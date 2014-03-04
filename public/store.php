@@ -33,9 +33,9 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css"/>
-<script type="text/javascript" src="/js/plupload/js/plupload.full.js"></script>
-<script type="text/javascript"
-        src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.js"></script>
+<script type="text/javascript" src="/js/plupload/js/moxie.min.js"></script>
+<script type="text/javascript" src="/js/plupload/js/plupload.min.js"></script>
+<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js"></script>
 <style>
     .btn-gc {
         margin-top: -1px !important;

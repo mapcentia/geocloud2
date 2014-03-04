@@ -28,7 +28,7 @@ class Database extends \app\inc\Controller
 
     public function get_exist()
     {
-        Connection::$param['postgisdb'] = "postgres";
+        \app\models\Database::setDb("postgres");
         $this->db = new \app\models\Database();
         return Response::json($this->db->doesDbExist(Input::getPath()->part(4)));
     }

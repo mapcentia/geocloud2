@@ -470,9 +470,9 @@ var mygeocloud_ol = (function () {
         this.createTileLayer = function (layer, defaults) {
             var parts = layer.split(".");
             if (!defaults.tileCached) {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/?";
+                var url = host + "/wms/" + this.db + "?";
             } else {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/tilecache/?";
+                var url = host + "/wmsc/" + this.db + "?";
             }
             var l = new OpenLayers.Layer.WMS(defaults.name, url, {
                 layers: layer,
@@ -760,4 +760,5 @@ var mygeocloud_ol = (function () {
         })(),
         pathName: window.location.pathname.split("/")
     };
+
 })();

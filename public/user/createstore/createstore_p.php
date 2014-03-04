@@ -4,7 +4,7 @@ use \app\conf\App;
 
 include("../header.php");
 $postgisdb = $databaseTemplate;
-\app\conf\Connection::$param["postgisdb"] = 'postgres';
+\app\models\Database::setDb("postgres");
 if (!$_SESSION['screen_name']) {
 
 

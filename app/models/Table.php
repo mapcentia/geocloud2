@@ -183,7 +183,7 @@ class Table extends Model
             } else {
                 $response['success'] = false;
                 $response['message'] = $this->PDOerror;
-                $response['code'] = 406;
+                //$response['code'] = 406;
             }
             unset($pairArr);
             unset($keyArr);

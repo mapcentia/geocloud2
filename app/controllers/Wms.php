@@ -7,13 +7,35 @@ class Wms extends \app\inc\Controller
 {
     function __construct()
     {
-        $path = App::$param['path']."/app/wms/mapfiles/";
-        $name = \app\inc\Input::getPath()->part(2)."_".\app\inc\Input::getPath()->part(3).".map";
+        $schema = \app\inc\Input::getPath()->part(3);
+        $db = \app\inc\Input::getPath()->part(2);
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+        $name = $db . "_" . $schema . ".map";
 
-        $oMap = ms_newMapobj($path.$name);
+
+        $oMap = ms_newMapobj($path . $name);
         $request = ms_newowsrequestobj();
         foreach ($_GET as $k => $v) {
+            if (strtolower($k) == "layers" || strtolower($k) == "layer") {
+                $layer = $v;
+            }
             $request->setParameter($k, $v);
+        }
+
+        //\app\inc\Log::write($_SERVER["REMOTE_ADDR"]);
+        //\app\inc\Log::write($_SERVER["SERVER_ADDR"]);
+
+        // If remote ip is = server ip, then the request is coming from tileCache and we do not authenticate.
+        if ($_SERVER["REMOTE_ADDR"] != $_SERVER["SERVER_ADDR"]) {
+            if ($_SESSION['http_auth'] != \app\inc\Input::getPath()->part(2)) {
+                \app\models\Database::setDb($db);
+                $postgisObject = new \app\inc\Model();
+                $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+                if ($auth == "Read/write") {
+                    include('inc/http_basic_authen.php');
+                }
+            }
+            $_SESSION['http_auth'] = \app\inc\Input::getPath()->part(2);
         }
 
         if ($_GET['sql_layer']) {

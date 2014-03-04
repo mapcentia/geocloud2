@@ -258,7 +258,7 @@ $(window).ready(function () {
     cloud.addMapQuestAerial();
     cloud.addOSM();
     cloud.setBaseLayer(cloud.addMapQuestOSM());
-    ;
+
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
     var layers = {};
@@ -499,7 +499,7 @@ $(window).ready(function () {
                                 map: map,
                                 zoom: 5,
                                 split: true,
-                                tbar: wfsTools,
+                                tbar: wfsTools
                             },
                             {
                                 region: "south",

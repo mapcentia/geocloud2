@@ -127,8 +127,6 @@ include("html_header.php");
 </style>
 </head>
 <body>
-<div id="mb7"></div>
-<div id="mapel" style=""></div>
 <div id="instructions">
     <p style="padding: 10px">
         Make a layer name in the layer tree active and click 'Start edit'. Only Features in the view port will be

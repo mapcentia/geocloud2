@@ -86,7 +86,7 @@
 
 			if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template") {
 				echo "<tr><td>{$db}</td>";
-                \app\conf\Connection::$param["postgisdb"] = $db;
+                \app\models\Database::setDb($db);
 				$dbc = new app\models\Dbcheck();
 
 				// Check if postgis is installed
