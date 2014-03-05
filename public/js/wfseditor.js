@@ -249,18 +249,19 @@ $(window).ready(function () {
     cloud = new mygeocloud_ol.map(null, screenName);
     map = cloud.map;
     cloud.click.activate();
-    if (typeof window.setBaseLayers !== 'function') {
-        window.setBaseLayers = function () {
-            cloud.addGoogleTerrain();
-            cloud.addGoogleSatellite();
-            cloud.addGoogleHybrid();
-            cloud.addGoogleStreets();
-            cloud.addMapQuestAerial();
-            cloud.addOSM();
-            cloud.setBaseLayer(cloud.addMapQuestOSM());
-        };
+    if (typeof window.setBaseLayers !== 'object') {
+        window.setBaseLayers = [
+            {"id": "mapQuestOSM", "name": "MapQuset OSM"},
+            {"id": "osm", "name": "OSM"}
+
+        ];
     }
-    window.setBaseLayers();
+    cloud.bingApiKey = window.bingApiKey;
+    window.setBaseLayers =  window.setBaseLayers.reverse();
+    for (var i = 0; i < window.setBaseLayers.length; i++) {
+        var bl = cloud.addBaseLayer(window.setBaseLayers[i].id);
+    }
+    cloud.setBaseLayer(bl);
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
     var layers = {};

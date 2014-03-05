@@ -179,19 +179,19 @@ var mygeocloud_ol = (function () {
             }
             //console.log(layerArr);
             return layerArr.join(";");
-        }
+        };
         this.getZoom = function () {
             return this.getZoom();
-        }
+        };
         this.getPixelCoord = function (x, y) {
             var p = {};
             p.x = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).x;
             p.y = this.map.getPixelFromLonLat(new OpenLayers.LonLat(x, y)).y;
             return p;
-        }
+        };
         this.zoomToPoint = function (x, y, z) {
             this.map.setCenter(new OpenLayers.LonLat(x, y), z);
-        }
+        };
 
         this.clickController = OpenLayers.Class(OpenLayers.Control, {
             defaultHandlerOptions: {
@@ -391,6 +391,45 @@ var mygeocloud_ol = (function () {
         };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
+        };
+        this.addBaseLayer = function (l) {
+            var o;
+            switch (l) {
+                case "osm":
+                    o = this.addOSM();
+                    break;
+                case "mapQuestOSM":
+                    o = this.addMapQuestOSM();
+                    break;
+                case "mapBoxNaturalEarth":
+                    o = this.addMapBoxNaturalEarth();
+                    break;
+                case "stamenToner":
+                    o = this.addStamenToner();
+                    break;
+                case "googleStreets":
+                    o = this.addGoogleStreets();
+                    break;
+                case "googleHybrid":
+                    o = this.addGoogleHybrid();
+                    break;
+                case "googleSatellite":
+                    o = this.addGoogleSatellite();
+                    break;
+                case "googleTerrain":
+                    o = this.addGoogleTerrain();
+                    break;
+                case "bingRoad":
+                    o = this.addBing("Road");
+                    break;
+                case "bingAerial":
+                    o = this.addBing("Aerial");
+                    break;
+                case "bingAerialWithLabels":
+                    o = this.addBing("AerialWithLabels");
+                    break;
+            }
+            return o;
         };
         this.addTileLayers = function (layers, config) {
             var defaults = {

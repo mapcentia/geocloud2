@@ -444,7 +444,27 @@ geocloud = (function () {
                     this.map.fitBounds(store.layer.getBounds());
                     break;
             }
-        }
+        };
+        this.getBaseLayers = function() {
+            var layerArr = [];
+            switch (MAPLIB) {
+                case "leaflet":
+
+                    var layers = this.map._layers;
+                    console.log(layers)
+
+                    for (var key in layers) {
+
+                        if (layers.hasOwnProperty(key)) {
+                            if (layers[key].baseLayer === true) {
+                                layerArr.push(layers);
+                            }
+                        }
+                    }
+                    break;
+            }
+            return layerArr;
+        };
         //ol2, ol3 and leaflet
         this.getVisibleLayers = function () {
             var layerArr = [];
@@ -945,44 +965,46 @@ geocloud = (function () {
                     }
                     break;
             }
-        }
+        };
         this.addBaseLayer = function (l) {
+            var o;
             switch (l) {
                 case "osm":
-                    this.addOSM();
+                    o = this.addOSM();
                     break;
                 case "mapQuestOSM":
-                    this.addMapQuestOSM();
+                    o = this.addMapQuestOSM();
                     break;
                 case "mapBoxNaturalEarth":
-                    this.addMapBoxNaturalEarth();
+                    o = this.addMapBoxNaturalEarth();
                     break;
                 case "stamenToner":
-                    this.addStamenToner();
+                    o = this.addStamenToner();
                     break;
                 case "googleStreets":
-                    this.addGoogleStreets();
+                    o = this.addGoogleStreets();
                     break;
                 case "googleHybrid":
-                    this.addGoogleHybrid();
+                    o = this.addGoogleHybrid();
                     break;
                 case "googleSatellite":
-                    this.addGoogleSatellite();
+                    o = this.addGoogleSatellite();
                     break;
                 case "googleTerrain":
-                    this.addGoogleTerrain();
+                    o = this.addGoogleTerrain();
                     break;
                 case "bingRoad":
-                    this.addBing("Road");
+                    o = this.addBing("Road");
                     break;
                 case "bingAerial":
-                    this.addBing("Aerial");
+                    o = this.addBing("Aerial");
                     break;
                 case "bingAerialWithLabels":
-                    this.addBing("AerialWithLabels");
+                    o = this.addBing("AerialWithLabels");
                     break;
             }
-        }
+            return o;
+        };
         //ol2, ol3 and leaflet
         this.addTileLayers = function (config) {
             var defaults = {

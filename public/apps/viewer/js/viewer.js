@@ -1,7 +1,7 @@
 var MapCentia;
 MapCentia = (function () {
     "use strict";
-    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, mapQuestOSM, mapQuestAerial, stamenToner, GNORMAL, GHYBRID, GSATELLITE, GTERRAIN, showInfoModal, qstore = [];
+    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [];
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -43,29 +43,29 @@ MapCentia = (function () {
             center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(center.x, center.y, 10);
     });
+    cloud = new geocloud.map({
+        el: "map"
+    });
     $(document).ready(function () {
         var metaData, metaDataKeys, metaDataKeysTitle, layers, jRes, node, modalFlag;
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
-        cloud = new geocloud.map({
-            el: "map"
-        });
-        osm = cloud.addOSM();
-        mapQuestOSM = cloud.addMapQuestOSM();
-        mapQuestAerial = cloud.addMapQuestAerial();
-        stamenToner = cloud.addStamenToner();
-        /*GNORMAL = cloud.addGoogleStreets();
-         GHYBRID = cloud.addGoogleHybrid();
-         GSATELLITE = cloud.addGoogleSatellite();
-         GTERRAIN = cloud.addGoogleTerrain();*/
-        //setBaseLayer("osm");
 
-
-
-        // we add two click controllers for desktop and handheld
-        //cloud.map.addControl(clickPopUp = new popUpClickController);
-        //cloud.map.addControl(clickModal = new modalClickController);
+        if (typeof window.setBaseLayers !== 'object') {
+            window.setBaseLayers = [
+                {"id": "mapQuestOSM", "name": "MapQuset OSM"},
+                {"id": "osm", "name": "OSM"},
+                {"id": "stamenToner", "name": "Stamen toner"}
+            ];
+        }
+        cloud.bingApiKey = window.bingApiKey;
+        for (var i = 0; i < window.setBaseLayers.length; i++) {
+            cloud.addBaseLayer(window.setBaseLayers[i].id);
+            $("#base-layer-list").append(
+                "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\"><img class=\"img-rounded images-base-map\" src=\"/apps/viewer/img/mqosm.png\">" + window.setBaseLayers[i].name + "</a></li>"
+            );
+        }
 
         $("#locate-btn").on("click", function () {
             cloud.locate();
@@ -212,7 +212,7 @@ MapCentia = (function () {
                 }
             }
             else {
-                setBaseLayer("osm");
+                setBaseLayer(window.setBaseLayers[0].id);
                 cloud.zoomToExtent();
             }
         })();
@@ -332,5 +332,5 @@ MapCentia = (function () {
         switchLayer: switchLayer,
         setBaseLayer: setBaseLayer,
         schema: schema
-    }
-})();
+    };
+}());
