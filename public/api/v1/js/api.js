@@ -18,11 +18,6 @@ if (typeof jQuery === "undefined") {
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 }
 document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/openlayers/AnimatedCluster.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/msg.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/GeoExt/lib/GeoExt.js'><\/script>");
 
 var mygeocloud_ol = (function () {
     "use strict";
@@ -77,75 +72,6 @@ var mygeocloud_ol = (function () {
             this.layer.setVisibility(true);
         };
 
-        /*
-         this.layer.strategies[0].activate = function() {
-         var activated = OpenLayers.Strategy.prototype.activate.call(this);
-         if (activated) {
-         var features = [];
-         var clusters = this.layer.features;
-         for (var i = 0; i < clusters.length; i++) {
-         var cluster = clusters[i];
-         if (cluster.cluster) {
-         for (var j = 0; j < cluster.cluster.length; j++) {
-         features.push(cluster.cluster[j]);
-         }
-         } else {
-         features.push(cluster);
-         }
-         }
-         this.layer.removeAllFeatures();
-         this.layer.events.on({
-         "beforefeaturesadded" : this.cacheFeatures,
-         "moveend" : this.cluster,
-         scope : this
-         });
-         this.layer.addFeatures(features);
-         this.clearCache();
-         }
-         return activated;
-         }
-
-         this.layer.strategies[0].deactivate = function() {
-         var deactivated = OpenLayers.Strategy.prototype.deactivate.call(this);
-         if (deactivated) {
-         var features = [];
-         var clusters = this.layer.features;
-         for (var i = 0; i < clusters.length; i++) {
-         var cluster = clusters[i];
-         if (cluster.cluster) {
-         for (var j = 0; j < cluster.cluster.length; j++) {
-         features.push(cluster.cluster[j]);
-         }
-         } else {
-         features.push(cluster);
-         }
-         }
-         this.layer.removeAllFeatures();
-         this.layer.events.un({
-         "beforefeaturesadded" : this.cacheFeatures,
-         "moveend" : this.cluster,
-         scope : this
-         });
-         this.layer.addFeatures(features);
-         this.clearCache();
-         }
-         return deactivated;
-         };
-         */
-        this.clusterDeactivate = function () {
-            parentThis.layer.strategies[0].deactivate();
-            parentThis.layer.refresh({
-                forces: true
-            });
-        };
-        this.clusterActivate = function () {
-            parentThis.layer.strategies[0].activate();
-            parentThis.layer.refresh({
-                forces: true
-            });
-        };
-
-        //this.clusterDeactivate();
         this.pointControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Point);
         this.lineControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Path);
         this.polygonControl = new OpenLayers.Control.DrawFeature(this.layer, OpenLayers.Handler.Polygon);
@@ -208,7 +134,7 @@ var mygeocloud_ol = (function () {
                 projection: "EPSG:900913",
                 maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
                 controls: [
-                //new OpenLayers.Control.Navigation(),
+                    //new OpenLayers.Control.Navigation(),
                     //new OpenLayers.Control.PanZoomBar(),
                     //new OpenLayers.Control.LayerSwitcher(),
                     //new OpenLayers.Control.PanZoom(),
@@ -223,6 +149,7 @@ var mygeocloud_ol = (function () {
             }
         }
         parentMap = this;
+        this.bingApiKey = null;
         this.layerStr = "";
         this.db = db;
         this.geoLocation = {
@@ -329,7 +256,7 @@ var mygeocloud_ol = (function () {
             }
         });
         this.map = new OpenLayers.Map(el, {
-            controls : defaults.controls,
+            controls: defaults.controls,
             numZoomLevels: defaults.numZoomLevels,
             projection: defaults.projection,
             maxResolution: defaults.maxResolution,
@@ -349,19 +276,19 @@ var mygeocloud_ol = (function () {
             //this.mapQuestOSM.wrapDateLine = false;
             this.map.addLayer(this.mapQuestOSM);
             return (this.mapQuestOSM);
-        }
+        };
         this.addMapQuestAerial = function () {
             this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
             this.mapQuestAerial.wrapDateLine = true;
             this.map.addLayer(this.mapQuestAerial);
             return (this.mapQuestAerial);
-        }
+        };
         this.addOSM = function () {
             this.osm = new OpenLayers.Layer.OSM("OSM");
             this.osm.wrapDateLine = true;
             this.map.addLayer(this.osm);
             return (this.osm);
-        }
+        };
         this.addGoogleStreets = function () {
             // v2
             try {
@@ -374,7 +301,6 @@ var mygeocloud_ol = (function () {
 
             } catch (e) {
             }
-            ;
             // v3
             try {
                 this.baseGNORMAL = new OpenLayers.Layer.Google("Google Streets", {// the default
@@ -385,7 +311,7 @@ var mygeocloud_ol = (function () {
             }
             this.map.addLayer(this.baseGNORMAL);
             return (this.baseGNORMAL);
-        }
+        };
         this.addGoogleHybrid = function () {
             // v2
             try {
@@ -397,7 +323,6 @@ var mygeocloud_ol = (function () {
                 });
             } catch (e) {
             }
-            ;
             // v3
             try {
                 this.baseGHYBRID = new OpenLayers.Layer.Google("Google Hybrid", {
@@ -410,7 +335,7 @@ var mygeocloud_ol = (function () {
             }
             this.map.addLayer(this.baseGHYBRID);
             return (this.baseGHYBRID);
-        }
+        };
         this.addGoogleSatellite = function () {
             // v3
             try {
@@ -438,10 +363,35 @@ var mygeocloud_ol = (function () {
             }
             this.map.addLayer(this.baseGTERRAIN);
             return (this.baseGTERRAIN);
-        }
+        };
+        this.addBing = function (type) {
+            var l, name;
+            switch (type) {
+                case "Road":
+                    name = "Bing Road";
+                    break;
+                case "Aerial":
+                    name = "Bing Aerial";
+                    break;
+                case "AerialWithLabels":
+                    name = "Bing Aerial With Labels";
+                    break;
+            }
+            l = new OpenLayers.Layer.Bing({
+                name: name,
+                wrapDateLine: true,
+                key: this.bingApiKey,
+                type: type
+            });
+            this.map.addLayer(l);
+            l.setVisibility(false);
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
+        };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
-        }
+        };
         this.addTileLayers = function (layers, config) {
             var defaults = {
                 singleTile: false,

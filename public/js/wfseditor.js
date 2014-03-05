@@ -1,5 +1,6 @@
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({});
+var cloud;
 var layer;
 var grid;
 var store;
@@ -14,7 +15,7 @@ var viewerSettings;
 var loadTree;
 var reLoadTree;
 var layerBeingEditing;
-
+var saveStrategy;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 function startWfsEdition(layerName, geomField) {
@@ -240,25 +241,26 @@ function startWfsEdition(layerName, geomField) {
     Ext.getCmp('editstopbutton').setDisabled(false);
     Ext.getCmp('filterbutton').setDisabled(false);
     Ext.getCmp('infobutton').setDisabled(false);
-
-
 }
 $(window).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
     });
-    var cloud = new mygeocloud_ol.map(null, screenName);
+    cloud = new mygeocloud_ol.map(null, screenName);
     map = cloud.map;
-
     cloud.click.activate();
-    cloud.addGoogleTerrain();
-    cloud.addGoogleSatellite();
-    cloud.addGoogleHybrid();
-    cloud.addGoogleStreets();
-    cloud.addMapQuestAerial();
-    cloud.addOSM();
-    cloud.setBaseLayer(cloud.addMapQuestOSM());
-
+    if (typeof window.setBaseLayers !== 'function') {
+        window.setBaseLayers = function () {
+            cloud.addGoogleTerrain();
+            cloud.addGoogleSatellite();
+            cloud.addGoogleHybrid();
+            cloud.addGoogleStreets();
+            cloud.addMapQuestAerial();
+            cloud.addOSM();
+            cloud.setBaseLayer(cloud.addMapQuestOSM());
+        };
+    }
+    window.setBaseLayers();
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
     var layers = {};
@@ -380,9 +382,7 @@ $(window).ready(function () {
             }
         });
     };
-
     loadTree();
-
     reLoadTree = function () {
         var west = Ext.getCmp("treepanel");
         west.remove(tree);
@@ -479,7 +479,6 @@ $(window).ready(function () {
             }
         }
     ];
-
     viewport = new Ext.Viewport({
         layout: 'border',
         items: [
@@ -545,7 +544,6 @@ $(window).ready(function () {
     setTimeout(function () {
         reLoadTree();
     }, 300);
-
     cloud.map.zoomToMaxExtent();
 });
 function stopEdit() {
@@ -565,7 +563,6 @@ function stopEdit() {
     }
     Ext.getCmp("attrtable").collapse(true);
 }
-
 function onInsert() {
     var pos = grid.getStore().getCount() - 1;
     grid.selModel.selectRow(pos);
@@ -583,8 +580,6 @@ function array_unique(ar) {
     }
     return out || ar;
 }
-
-var saveStrategy;
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
         if (!response.success()) {

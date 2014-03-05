@@ -709,7 +709,7 @@ function altFieldValue($field, $value)
 function altUseCdataOnStrings($value, $name)
 {
     if (!is_numeric($value) && ($value)) {
-        //if ($name == "entities") $value = "<![CDATA[".$value."]]>";
+        //$value = "<![CDATA[".$value."]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
     } else {

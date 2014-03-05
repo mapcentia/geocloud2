@@ -62,6 +62,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/tilecache/");
     Route::add("controllers/upload/file");
     Route::add("controllers/upload/process");
+    Route::add("controllers/baselayerjs");
 } elseif (Input::getPath()->part(1) == "wms") {
     Session::start();
     Database::setDb(Input::getPath()->part(2));

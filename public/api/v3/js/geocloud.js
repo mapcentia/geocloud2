@@ -891,7 +891,6 @@ geocloud = (function () {
                     name = "bingAerialWithLabels";
                     break;
             }
-            ;
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.Bing({
