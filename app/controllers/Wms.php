@@ -22,8 +22,10 @@ class Wms extends \app\inc\Controller
             $request->setParameter($k, $v);
         }
 
-        //\app\inc\Log::write($_SERVER["REMOTE_ADDR"]);
-        //\app\inc\Log::write($_SERVER["SERVER_ADDR"]);
+        /*\app\inc\Log::write($_SERVER["REMOTE_ADDR"]);
+        \app\inc\Log::write($_SERVER["SERVER_ADDR"]);
+        \app\inc\Log::write(\app\inc\Input::getPath()->part(2));
+        \app\inc\Log::write($_SESSION['http_auth']);*/
 
         // If remote ip is = server ip, then the request is coming from tileCache and we do not authenticate.
         if ($_SERVER["REMOTE_ADDR"] != $_SERVER["SERVER_ADDR"]) {
@@ -35,7 +37,6 @@ class Wms extends \app\inc\Controller
                     include('inc/http_basic_authen.php');
                 }
             }
-            $_SESSION['http_auth'] = \app\inc\Input::getPath()->part(2);
         }
 
         if ($_GET['sql_layer']) {

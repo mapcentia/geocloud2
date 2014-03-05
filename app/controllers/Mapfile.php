@@ -49,6 +49,7 @@ class Mapfile extends \app\inc\Controller
         "wms_format"    "image/png"
         "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
+        "wms_enable_request" "*"
         END
         END
         #
@@ -337,11 +338,15 @@ class Mapfile extends \app\inc\Controller
             "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
             "appformap_queryable"    "true"
             "appformap_loader"    "true"
+            "wms_enable_request"    "*"
+            "gml_include_items" "all"
+            "wms_include_items" "all"
             <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
             END
             PROJECTION
             "init=epsg:<?php echo $row['srid']; ?>"
             END
+            TEMPLATE "test"
             <?php
             if (is_array($classArr['data'])) {
                 foreach ($classArr['data'] as $class) {

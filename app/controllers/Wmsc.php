@@ -16,7 +16,6 @@ class Wmsc extends \app\inc\Controller
                 include('inc/http_basic_authen.php');
             }
         }
-        $_SESSION['http_auth'] = \app\inc\Input::getPath()->part(2);
         $this->get_wms();
     }
 

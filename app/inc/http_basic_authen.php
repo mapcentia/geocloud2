@@ -45,4 +45,7 @@ if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2))
         // Date in the past
         die("Could not authenticate you 3");
     }
+    else {
+        $_SESSION['http_auth'] = \app\inc\Input::getPath()->part(2);
+    }
 }
