@@ -52,7 +52,7 @@ class Elasticsearch extends \app\inc\Controller
         $buffer = curl_exec($ch);
         curl_close($ch);
         $json = ($call_back) ? $call_back . "(" . $buffer . ")" : $buffer;
-        $response['json'] = $json;
+        $response['json'] = $buffer;
         return $response;
     }
 
