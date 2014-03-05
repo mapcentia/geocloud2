@@ -22,7 +22,9 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/elasticsearch", function () {
         Database::setDb(Input::getPath()->part(5));
     });
-    Route::add("api/v1/meta");
+    Route::add("api/v1/meta", function(){
+        Session::start();
+    });
     Route::add("api/v1/schema");
     Route::add("api/v1/twitter");
     Route::add("api/v1/cartomobile");

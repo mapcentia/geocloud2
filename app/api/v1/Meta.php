@@ -3,7 +3,7 @@ namespace app\api\v1;
 
 use \app\inc\Response;
 use \app\inc\Input;
-use app\inc\Session;
+use \app\inc\Session;
 
 class Meta extends \app\inc\Controller
 {
