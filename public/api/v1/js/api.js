@@ -56,14 +56,7 @@ var mygeocloud_ol = (function () {
             styleMap: defaults.styleMap,
             visibility: defaults.visibility,
             renderers: ['Canvas', 'SVG', 'VML'],
-            rendererOptions: defaults.rendererOptions,
-            strategies: [new OpenLayers.Strategy.AnimatedCluster({
-                //strategies : [new OpenLayers.Strategy.Cluster({
-                distance: 45,
-                animationMethod: OpenLayers.Easing.Expo.easeOut,
-                animationDuration: 10,
-                autoActivate: false
-            })]
+            rendererOptions: defaults.rendererOptions
         });
         this.hide = function () {
             this.layer.setVisibility(false);
