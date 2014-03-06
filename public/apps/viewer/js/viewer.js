@@ -73,9 +73,9 @@ MapCentia = (function () {
         showInfoModal = function () {
             modalFlag = true;
             $('#modal-info').modal({"backdrop": false});
-        }
+        };
         $.ajax({
-            url: '/api/v1/meta/' + db + '/' + schema,
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + schema,
             async: false,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
