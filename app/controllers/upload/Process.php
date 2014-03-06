@@ -40,6 +40,7 @@ class Process extends \app\inc\Controller
             "-dim 2 " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
+            "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .

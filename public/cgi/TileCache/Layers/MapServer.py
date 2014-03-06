@@ -7,12 +7,14 @@ class MapServer(MetaLayer):
     config_properties = [
       {'name':'name', 'description': 'Name of Layer'}, 
       {'name':'mapfile', 'description': 'Location of MapServer map file.'},
-    ] + MetaLayer.config_properties 
+      {'name':'expire', 'description': 'Location of MapServer map file.'}
+    ] + MetaLayer.config_properties
     
-    def __init__ (self, name, mapfile = None, styles = "", **kwargs):
+    def __init__ (self, name, mapfile = None, styles = "", expire=0, **kwargs):
         MetaLayer.__init__(self, name, **kwargs) 
         self.mapfile = mapfile
         self.styles = styles
+        self.expire = expire
 
     def get_map(self, tile):
         # tile is unused here but might be used in a subclass

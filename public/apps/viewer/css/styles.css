@@ -40,7 +40,7 @@ body {
     width: inherit !important;
 }
 
-.leaflet-top {
+.leaflet-control-zoom {
     bottom: 50px !important;
     top: auto !important;
 }
@@ -112,7 +112,7 @@ input[type="radio"], input[type="checkbox"] {
         position: absolute;
         margin: 0;
     }
-    .leaflet-top{
+    .leaflet-control-zoom{
         display: none;
     }
 }

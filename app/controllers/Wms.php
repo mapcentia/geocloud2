@@ -21,24 +21,14 @@ class Wms extends \app\inc\Controller
             }
             $request->setParameter($k, $v);
         }
-
-        /*\app\inc\Log::write($_SERVER["REMOTE_ADDR"]);
-        \app\inc\Log::write($_SERVER["SERVER_ADDR"]);
-        \app\inc\Log::write(\app\inc\Input::getPath()->part(2));
-        \app\inc\Log::write($_SESSION['http_auth']);*/
-
-        // If remote ip is = server ip, then the request is coming from tileCache and we do not authenticate.
-        if ($_SERVER["REMOTE_ADDR"] != $_SERVER["SERVER_ADDR"]) {
-            if ($_SESSION['http_auth'] != \app\inc\Input::getPath()->part(2)) {
-                \app\models\Database::setDb($db);
-                $postgisObject = new \app\inc\Model();
-                $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-                if ($auth == "Read/write") {
-                    include('inc/http_basic_authen.php');
-                }
+        if ($_SESSION['http_auth'] != \app\inc\Input::getPath()->part(2)) {
+            \app\models\Database::setDb($db);
+            $postgisObject = new \app\inc\Model();
+            $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+            if ($auth == "Read/write") {
+                include('inc/http_basic_authen.php');
             }
         }
-
         if ($_GET['sql_layer']) {
             include '../libs/functions.php';
             include '../conf/main.php';

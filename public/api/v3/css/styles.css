@@ -3,10 +3,14 @@
 }
 
 .leaflet-top {
-    right: 20px;
-    left: auto;
-    top: 7px;
+    right: 0px !important;
+    left: auto !important;
     opacity: 0.8;
+}
+
+.leaflet-control-zoom {
+    right: 10px !important;
+    top: 50px !important;
 }
 
 .leaflet-control-zoom a, .leaflet-control-zoom a:hover {
@@ -41,3 +45,4 @@
     text-decoration: none;
     color: white;
 }
+
