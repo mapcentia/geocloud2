@@ -53,7 +53,7 @@ geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
-        document.write("<script src='/js/leaflet/leaflet-google.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
         document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
         document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js'><\/script>");
         document.write("<script src='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js'><\/script>");
@@ -401,7 +401,7 @@ geocloud = (function () {
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
 
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/api/v3/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/api/v3/css/styles.css' }).appendTo('head');
 
         this.bingApiKey = null;
         //ol2, ol3
