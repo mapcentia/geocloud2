@@ -396,7 +396,7 @@ def handler (apacheReq):
     myGeoCloudDB = getReqDict['cfg']
     cfgs    = cfgfiles
     fileChanged = False
-    configFile = '/mnt/hgfs/Documents/www/geocloud2/app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
+    configFile = '/var/www/app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
     lastRead[configFile] = time.time()
     cfgs = cfgs + (configFile,)
     try:
