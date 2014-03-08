@@ -21,7 +21,7 @@ class Wmsc extends \app\inc\Controller
 
     public function get_wms()
     {
-        $url = \app\conf\App::$param['host'] . "/cgi/tilecache.fcgi?cfg=" . $this->db . "&" . $_SERVER["QUERY_STRING"];
+        $url = \app\conf\App::$param['host'] . "/cgi/tilecache.py?cfg=" . $this->db . "&" . $_SERVER["QUERY_STRING"];
         $res = imagecreatefrompng($url);
         if (!$res) {
             $response['success'] = false;

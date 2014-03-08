@@ -1,0 +1,5 @@
+AddHandler python-program .py
+PythonHandler TileCache.Service
+#PythonPath "['/mnt/hgfs/Documents/www/geocloud2/public/cgi'] + sys.path"
+PythonPath "['/var/www/geocloud2/public/cgi'] + sys.path"
+#PythonOption TileCacheConfig /mnt/hgfs/Documents/www/geocloud2/app/wms/cfgfiles/mydb.tilecache.cfg

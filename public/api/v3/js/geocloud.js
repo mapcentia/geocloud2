@@ -330,6 +330,7 @@ geocloud = (function () {
         }
         return createTileLayer(defaults.layer, defaults);
     };
+
     //ol2, ol3 and leaflet
     createTileLayer = function (layer, defaults) {
         var parts, l, url, urlArray;
@@ -338,7 +339,7 @@ geocloud = (function () {
             url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
             urlArray = [url];
         } else {
-            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/tilecache/?";
+            url = host + "/cgi/tilecache.py?cfg=" + defaults.db;
             var url1 = url;
             var url2 = url;
             var url3 = url;

@@ -8,8 +8,9 @@ import sys, cgi, time, os, traceback, email, ConfigParser
 import Cache, Caches
 import Layer, Layers
 
-# Windows doesn't always do the 'working directory' check correctly.
 
+# Windows doesn't always do the 'working directory' check correctly.
+cfgfiles = ("/etc/tilecache.cfg", os.path.join("..", "tilecache.cfg"), "tilecache.cfg")
 class Capabilities (object):
     def __init__ (self, format, data):
         self.format = format
@@ -18,13 +19,13 @@ class Capabilities (object):
 class Request (object):
     def __init__ (self, service):
         self.service = service
-    def getLayer(self, layername):    
+    def getLayer(self, layername):
         try:
             return self.service.layers[layername]
         except:
-            raise TileCacheException("The requested layer (%s) does not exist. Available layers are: \n * %s" % (layername, "\n * ".join(self.service.layers.keys()))) 
+            raise TileCacheException("The requested layer (%s) does not exist. Available layers are: \n * %s" % (layername, "\n * ".join(self.service.layers.keys())))
 
-    
+
 def import_module(name):
     """Helper module to import any module based on a name, and return the module."""
     mod = __import__(name)
@@ -40,18 +41,18 @@ class Service (object):
         self.cache    = cache
         self.layers   = layers
         self.metadata = metadata
- 
+
     def _loadFromSection (cls, config, section, module, **objargs):
         type  = config.get(section, "type")
         for opt in config.options(section):
             if opt not in ["type", "module"]:
                 objargs[opt] = config.get(section, opt)
-        
+
         object_module = None
-        
+
         if config.has_option(section, "module"):
             object_module = import_module(config.get(section, "module"))
-        else: 
+        else:
             if module is Layer:
                 type = type.replace("Layer", "")
                 object_module = import_module("TileCache.Layers.%s" % type)
@@ -60,9 +61,9 @@ class Service (object):
                 object_module = import_module("TileCache.Caches.%s" % type)
         if object_module == None:
             raise TileCacheException("Attempt to load %s failed." % type)
-        
+
         section_object = getattr(object_module, type)
-        
+
         if module is Layer:
             return section_object(section, **objargs)
         else:
@@ -77,23 +78,23 @@ class Service (object):
         try:
             config = ConfigParser.ConfigParser()
             config.read(files)
-            
+
             if config.has_section("metadata"):
                 for key in config.options("metadata"):
                     metadata[key] = config.get("metadata", key)
-            
+
             if config.has_section("tilecache_options"):
-                if 'path' in config.options("tilecache_options"): 
+                if 'path' in config.options("tilecache_options"):
                     for path in config.get("tilecache_options", "path").split(","):
                         sys.path.insert(0, path)
-            
+
             cache = cls.loadFromSection(config, "cache", Cache)
 
             layers = {}
             for section in config.sections():
                 if section in cls.__slots__: continue
                 layers[section] = cls.loadFromSection(
-                                        config, section, Layer, 
+                                        config, section, Layer,
                                         cache = cache)
         except Exception, E:
             metadata['exception'] = E
@@ -101,7 +102,7 @@ class Service (object):
         service = cls(cache, layers, metadata)
         service.files = files
         service.config = config
-        return service 
+        return service
     load = classmethod(_load)
 
     def generate_crossdomain_xml(self):
@@ -116,14 +117,14 @@ class Service (object):
             sites = self.metadata['crossdomain_sites'].split(',')
             for site in sites:
                 xml.append('  <allow-access-from domain="%s" />' % site)
-        xml.append("</cross-domain-policy>")        
-        return ('text/xml', "\n".join(xml))       
+        xml.append("</cross-domain-policy>")
+        return ('text/xml', "\n".join(xml))
 
     def renderTile (self, tile, force = False):
         from warnings import warn
         start = time.time()
 
-        # do more cache checking here: SRS, width, height, layers 
+        # do more cache checking here: SRS, width, height, layers
 
         layer = tile.layer
         image = None
@@ -141,12 +142,12 @@ class Service (object):
                 sys.stderr.write(
                 "Cache hit: %s, Tile: x: %s, y: %s, z: %s, time: %s, debug: %s\n" % (
                     tile.bbox(), tile.x, tile.y, tile.z, (time.time() - start), layer.debug) )
-        
+
         return (layer.mime_type, image)
 
     def expireTile (self, tile):
         bbox  = tile.bounds()
-        layer = tile.layer 
+        layer = tile.layer
         for z in range(len(layer.resolutions)):
             bottomleft = layer.getClosestCell(z, bbox[0:2])
             topright   = layer.getClosestCell(z, bbox[2:4])
@@ -162,15 +163,15 @@ class Service (object):
             return self.generate_crossdomain_xml()
 
         if path_info.split(".")[-1] == "kml":
-            from TileCache.Services.KML import KML 
+            from TileCache.Services.KML import KML
             return KML(self).parse(params, path_info, host)
-        
-        if params.has_key("scale") or params.has_key("SCALE"): 
+
+        if params.has_key("scale") or params.has_key("SCALE"):
             from TileCache.Services.WMTS import WMTS
             tile = WMTS(self).parse(params, path_info, host)
         elif params.has_key("service") or params.has_key("SERVICE") or \
            params.has_key("REQUEST") and params['REQUEST'] == "GetMap" or \
-           params.has_key("request") and params['request'] == "GetMap": 
+           params.has_key("request") and params['request'] == "GetMap":
             from TileCache.Services.WMS import WMS
             tile = WMS(self).parse(params, path_info, host)
         elif params.has_key("L") or params.has_key("l") or \
@@ -182,18 +183,18 @@ class Service (object):
             tile = TileService(self).parse(params, path_info, host)
         elif params.has_key("v") and \
              (params['v'] == "mgm" or params['v'] == "mgmaps"):
-            from TileCache.Services.MGMaps import MGMaps 
+            from TileCache.Services.MGMaps import MGMaps
             tile = MGMaps(self).parse(params, path_info, host)
         elif params.has_key("tile"):
-            from TileCache.Services.VETMS import VETMS 
+            from TileCache.Services.VETMS import VETMS
             tile = VETMS(self).parse(params, path_info, host)
         elif params.has_key("format") and params['format'].lower() == "json":
-            from TileCache.Services.JSON import JSON 
+            from TileCache.Services.JSON import JSON
             return JSON(self).parse(params, path_info, host)
         else:
             from TileCache.Services.TMS import TMS
             tile = TMS(self).parse(params, path_info, host)
-        
+
         if isinstance(tile, Layer.Tile):
             if req_method == 'DELETE':
                 self.expireTile(tile)
@@ -213,9 +214,9 @@ class Service (object):
                     import cStringIO as StringIO
                 except ImportError:
                     import StringIO
-                
+
                 result = None
-                
+
                 for t in tile:
                     (format, data) = self.renderTile(t, params.has_key('FORCE'))
                     image = Image.open(StringIO.StringIO(data))
@@ -225,14 +226,16 @@ class Service (object):
                         try:
                             result.paste(image, None, image)
                         except Exception, E:
-                            raise Exception("Could not combine images: Is it possible that some layers are not \n8-bit transparent images? \n(Error was: %s)" % E) 
-                
+                            raise Exception("Could not combine images: Is it possible that some layers are not \n8-bit transparent images? \n(Error was: %s)" % E)
+
                 buffer = StringIO.StringIO()
                 result.save(buffer, result.format)
                 buffer.seek(0)
+                sys.stderr.write("hej")
 
                 return (format, buffer.read())
         else:
+            sys.stderr.write("hej")
             return (tile.format, tile.data)
 
 def modPythonHandler (apacheReq, service):
@@ -243,8 +246,8 @@ def modPythonHandler (apacheReq, service):
         else:
             host = "http://" + apacheReq.headers_in["Host"]
         host += apacheReq.uri[:-len(apacheReq.path_info)]
-        format, image = service.dispatchRequest( 
-                                util.FieldStorage(apacheReq), 
+        format, image = service.dispatchRequest(
+                                util.FieldStorage(apacheReq),
                                 apacheReq.path_info,
                                 apacheReq.method,
                                 host )
@@ -255,12 +258,12 @@ def modPythonHandler (apacheReq, service):
                 apacheReq.headers_out['X-SendFile'] = image
             if service.cache.expire:
                 apacheReq.headers_out['Expires'] = email.Utils.formatdate(time.time() + service.cache.expire, False, True)
-                
+
         apacheReq.set_content_length(len(image))
         apacheReq.send_http_header()
         if format.startswith("image/") and service.cache.sendfile:
             apacheReq.write("")
-        else: 
+        else:
             apacheReq.write(image)
     except TileCacheException, E:
         apacheReq.content_type = "text/plain"
@@ -272,18 +275,18 @@ def modPythonHandler (apacheReq, service):
         apacheReq.status = apache.HTTP_INTERNAL_SERVER_ERROR
         apacheReq.send_http_header()
         apacheReq.write("An error occurred: %s\n%s\n" % (
-            str(E), 
+            str(E),
             "".join(traceback.format_tb(sys.exc_traceback))))
     return apache.OK
 
 def wsgiHandler (environ, start_response, service):
     from paste.request import parse_formvars
-    
+
     try:
         path_info = host = ""
 
 
-        if "PATH_INFO" in environ: 
+        if "PATH_INFO" in environ:
             path_info = environ["PATH_INFO"]
 
         if "HTTP_X_FORWARDED_HOST" in environ:
@@ -297,13 +300,13 @@ def wsgiHandler (environ, start_response, service):
 
         format, image = service.dispatchRequest( fields, path_info, req_method, host )
         headers = [('Content-Type',format)]
-        
+
         if format.startswith("image/"):
             if service.cache.sendfile:
                 headers.append(('X-SendFile', image))
             if service.cache.expire:
                 headers.append(('Expires', email.Utils.formatdate(time.time() + service.cache.expire, False, True)))
-        
+
         # Hack start. Expire added to layers
         if format.startswith("image/"):
             if service.cache.sendfile:
@@ -333,7 +336,7 @@ def wsgiHandler (environ, start_response, service):
     except Exception, E:
         start_response("500 Internal Server Error", [('Content-Type','text/plain')])
         return ["An error occurred: %s\n%s\n" % (
-            str(E), 
+            str(E),
             "".join(traceback.format_tb(sys.exc_traceback)))]
 
 def cgiHandler (service):
@@ -343,7 +346,7 @@ def cgiHandler (service):
         for key in input.keys(): params[key] = input[key].value
         path_info = host = ""
 
-        if "PATH_INFO" in os.environ: 
+        if "PATH_INFO" in os.environ:
             path_info = os.environ["PATH_INFO"]
 
         if "HTTP_X_FORWARDED_HOST" in os.environ:
@@ -364,17 +367,17 @@ def cgiHandler (service):
         if (not service.cache.sendfile) or (not format.startswith("image/")):
             if sys.platform == "win32":
                 binaryPrint(image)
-            else:    
+            else:
                 print image
     except TileCacheException, E:
-        print "Cache-Control: max-age=10, must-revalidate" # make the client reload        
+        print "Cache-Control: max-age=10, must-revalidate" # make the client reload
         print "Content-type: text/plain\n"
         print "An error occurred: %s\n" % (str(E))
     except Exception, E:
-        print "Cache-Control: max-age=10, must-revalidate" # make the client reload        
+        print "Cache-Control: max-age=10, must-revalidate" # make the client reload
         print "Content-type: text/plain\n"
         print "An error occurred: %s\n%s\n" % (
-            str(E), 
+            str(E),
             "".join(traceback.format_tb(sys.exc_traceback)))
 
 theService = {}
@@ -382,34 +385,44 @@ lastRead = {}
 def handler (apacheReq):
     global theService, lastRead
     options = apacheReq.get_options()
+    apacheReq.add_common_vars()
+    env_vars = apacheReq.subprocess_env
+    getReqStr = env_vars['QUERY_STRING']
+    getReqArr = getReqStr.split('&')
+    getReqDict = {}
+    for item in getReqArr:
+       tempArr = item.split('=')
+       getReqDict[tempArr[0]] = tempArr[1]
+    myGeoCloudDB = getReqDict['cfg']
     cfgs    = cfgfiles
     fileChanged = False
-    if options.has_key("TileCacheConfig"):
-        configFile = options["TileCacheConfig"]
-        lastRead[configFile] = time.time()
-        
-        cfgs = cfgs + (configFile,)
-        try:
-            cfgTime = os.stat(configFile)[8]
-            fileChanged = lastRead[configFile] < cfgTime
-        except:
-            pass
-    else:
-        configFile = 'default'
-        
+    configFile = '/mnt/hgfs/Documents/www/geocloud2/app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
+    lastRead[configFile] = time.time()
+    cfgs = cfgs + (configFile,)
+    try:
+        cfgTime = os.stat(configFile)[8]
+        fileChanged = lastRead[configFile] < cfgTime
+    except:
+        pass
     if not theService.has_key(configFile) or fileChanged:
         theService[configFile] = Service.load(*cfgs)
-        
     return modPythonHandler(apacheReq, theService[configFile])
 
 def wsgiApp (environ, start_response):
     global theService, myGeoCloudDB
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ)
     myGeoCloudDB = form['cfg'].value
+    if 'temp' not in locals():
+        temp = myGeoCloudDB
+
+    sys.stderr.write("Temp="+temp+"\n")
+    sys.stderr.write(myGeoCloudDB+"\n")
+
     cfgfiles = ("","../../app/wms/cfgfiles/" + myGeoCloudDB + ".tilecache.cfg")
     cfgs = cfgfiles
-    #if not theService: # We have to reload the cfg cos the different cfg files
-    theService = Service.load(*cfgs)
+    if temp != myGeoCloudDB or not theService: # We have to reload the cfg cos the different cfg files
+        temp = myGeoCloudDB
+        theService = Service.load(*cfgs)
     return wsgiHandler(environ, start_response, theService)
 
 def binaryPrint(binary_data):
