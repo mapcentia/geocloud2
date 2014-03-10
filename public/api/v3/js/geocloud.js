@@ -336,10 +336,10 @@ geocloud = (function () {
         var parts, l, url, urlArray;
         parts = layer.split(".");
         if (!defaults.tileCached) {
-            url = host + "/wms/" + defaults.db + "/" + parts[0] + "/?";
+            url = host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
-            url = host + "/cgi/tilecache.py?cfg=" + defaults.db;
+            var url = host + "/wms/" + defaults.db + "/tilecache";
             var url1 = url;
             var url2 = url;
             var url3 = url;

@@ -444,9 +444,9 @@ var mygeocloud_ol = (function () {
         this.createTileLayer = function (layer, defaults) {
             var parts = layer.split(".");
             if (!defaults.tileCached) {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/?";
+                var url = host + "/wms/" + this.db + "/" + parts[0] + "?";
             } else {
-                var url = host + "/wms/" + this.db + "/" + parts[0] + "/tilecache/";
+                var url = host + "/wms/" + this.db + "/tilecache";
             }
             var l = new OpenLayers.Layer.WMS(defaults.name, url, {
                 layers: layer,

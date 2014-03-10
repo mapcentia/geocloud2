@@ -12,7 +12,7 @@
    RewriteRule user/edit/p$ user/edit/edit_p.php [L]
 
    # Rewrite URL so tile request is going direct to TileCache cgi
-   RewriteRule wms/(.*)/(.*)/tilecache/ /cgi/tilecache.py?cfg=$1 [QSA,L]
+   RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
 
    # Rewrite URL to HTLM map viewer
    RewriteCond %{REQUEST_FILENAME} !-f

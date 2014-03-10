@@ -391,12 +391,13 @@ def handler (apacheReq):
     getReqArr = getReqStr.split('&')
     getReqDict = {}
     for item in getReqArr:
-       tempArr = item.split('=')
-       getReqDict[tempArr[0]] = tempArr[1]
+        if item:
+            tempArr = item.split('=')
+            getReqDict[tempArr[0]] = tempArr[1]
     myGeoCloudDB = getReqDict['cfg']
     cfgs    = cfgfiles
     fileChanged = False
-    configFile = '/var/www/geocloud2/app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
+    configFile = os.path.dirname(__file__) + '/../../../app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
     lastRead[configFile] = time.time()
     cfgs = cfgs + (configFile,)
     try:

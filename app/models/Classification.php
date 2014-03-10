@@ -255,7 +255,7 @@ class Classification extends \app\inc\Model
             if ($i == $num) {
                 $top++;
             }
-            $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
+            $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
             $name = " < " . round(($top - 1), 2);
             $class = self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data);
             $res = $this->update(($i - 1), $class);
@@ -319,7 +319,7 @@ class Classification extends \app\inc\Model
                 if ($i == $count) {
                     $top++;
                 }
-                $expression = "[{$field}]>=" . round($bottom, 4) . " AND [{$field}]<" . round($top, 4);
+                $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
                 $name = " < " . round(($top), 2);
                 $tops[] = array($top, $grad[$u]);
                 //echo $expression . "\n";
