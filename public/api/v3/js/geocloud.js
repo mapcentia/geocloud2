@@ -397,12 +397,12 @@ geocloud = (function () {
         // Load js and css
         if (MAPLIB === "leaflet") {
             // The css
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/leaflet.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/MarkerCluster.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
 
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/api/v3/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/api/v3/css/styles.css' }).appendTo('head');
 
         this.bingApiKey = null;
         //ol2, ol3
