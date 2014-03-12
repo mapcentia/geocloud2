@@ -34,7 +34,9 @@ geocloud = (function () {
         GOOGLETERRAIN = "googleTerrain",
         BINGROAD = "bingRoad",
         BINGAERIAL = "bingAerial",
-        BINGAERIALWITHLABELS = "bingAerialWithLabels";
+        BINGAERIALWITHLABELS = "bingAerialWithLabels",
+        attribution = (window.mapAttribution === undefined) ? "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> " : window.mapAttribution;
+
     // In IE7 host name is missing if script url is relative
     geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 
@@ -446,7 +448,7 @@ geocloud = (function () {
                     break;
             }
         };
-        this.getBaseLayers = function() {
+        this.getBaseLayers = function () {
             var layerArr = [];
             switch (MAPLIB) {
                 case "leaflet":
@@ -640,7 +642,7 @@ geocloud = (function () {
                 this.map = new L.map(defaults.el);
                 lControl = L.control.layers([], [])
                 this.map.addControl(lControl);
-                this.map.attributionControl.setPrefix("Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> ");
+                this.map.attributionControl.setPrefix(attribution);
                 break;
         }
         var _map = this.map;
