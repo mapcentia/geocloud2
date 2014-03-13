@@ -405,8 +405,8 @@ def handler (apacheReq):
         fileChanged = lastRead[configFile] < cfgTime
     except:
         pass
-    if not theService.has_key(configFile) or fileChanged:
-        theService[configFile] = Service.load(*cfgs)
+    #if not theService.has_key(configFile) or fileChanged:
+    theService[configFile] = Service.load(*cfgs)
     return modPythonHandler(apacheReq, theService[configFile])
 
 def wsgiApp (environ, start_response):
