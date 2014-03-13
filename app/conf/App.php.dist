@@ -20,7 +20,10 @@ class App
         "esHost" => "",
 
         // Encrypt api key in database
-        "encryptSettings" => false
+        "encryptSettings" => false,
+
+        // Map attribution
+        "mapAttribution" => "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> ",
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.
