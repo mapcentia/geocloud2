@@ -395,18 +395,25 @@ def handler (apacheReq):
             tempArr = item.split('=')
             getReqDict[tempArr[0]] = tempArr[1]
     myGeoCloudDB = getReqDict['cfg']
-    cfgs    = cfgfiles
+    cfgs = cfgfiles
     fileChanged = False
     configFile = os.path.dirname(__file__) + '/../../../app/wms/cfgfiles/' +myGeoCloudDB +'.tilecache.cfg'
-    lastRead[configFile] = time.time()
     cfgs = cfgs + (configFile,)
     try:
         cfgTime = os.stat(configFile)[8]
         fileChanged = lastRead[configFile] < cfgTime
+        sys.stderr.write("lastRead %s\n" % lastRead[configFile])
+        sys.stderr.write("cfgTime  %s\n" % cfgTime)
+        sys.stderr.write("fileChanged %s\n" % fileChanged)
+        sys.stderr.write("\n")
     except:
         pass
-    #if not theService.has_key(configFile) or fileChanged:
-    theService[configFile] = Service.load(*cfgs)
+    if not theService.has_key(configFile) or fileChanged:
+        lastRead[configFile] = time.time()
+        theService[configFile] = Service.load(*cfgs)
+        sys.stderr.write("\n")
+        sys.stderr.write("Load\n")
+        sys.stderr.write("\n")
     return modPythonHandler(apacheReq, theService[configFile])
 
 def wsgiApp (environ, start_response):
