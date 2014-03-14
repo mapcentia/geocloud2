@@ -9,6 +9,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/filterbuilder.js?format=txt"></script>
 <script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-DSPlhVi52zBadpyTRa4cOtSr6WKDOgA&sensor=false"></script>
+<script src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>

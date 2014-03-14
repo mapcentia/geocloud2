@@ -374,6 +374,13 @@ var mygeocloud_ol = (function () {
             l.id = name;
             return (l);
         };
+        this.addStamenToner = function () {
+            this.stamenToner = new OpenLayers.Layer.Stamen("toner");
+            this.stamenToner.name = "Stamen Toner";
+            this.stamenToner.wrapDateLine = true;
+            this.map.addLayer(this.stamenToner);
+            return (this.stamenToner);
+        };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
