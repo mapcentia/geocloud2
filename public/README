@@ -1,5 +1,0 @@
-Install in a web root folder on an Apache web server, rename conf/main.default.php to conf/main.php and edit.
-
-Run http://mysite.com//install/dbs.php
-
-The script will check some (not yet all) dependencies and enable you to install MyGeoCloud in existing dbs. It will ONLY create a new schema called "settings". For an uninstall just drop the schema.
