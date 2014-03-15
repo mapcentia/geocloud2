@@ -1,42 +1,16 @@
+/*global Ext:false */
+/*global $:false */
+/*global OpenLayers:false */
+/*global GeoExt:false */
+/*global mygeocloud_ol:false */
+/*global schema:false */
+/*global screenName:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-var App = new Ext.App({});
-var cloud;
-var layer;
-var grid;
-var store;
-var map;
-var wfsTools;
-var viewport;
-var drawControl;
-var gridPanel;
-var modifyControl;
-var tree;
-var viewerSettings;
-var loadTree;
-var reLoadTree;
-var layerBeingEditing;
-var saveStrategy;
-
-// We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
+var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy;
 function startWfsEdition(layerName, geomField) {
-
-    var fieldsForStore;
-    var columnsForGrid;
-    var type;
-    var multi;
-    var handlerType;
-    var loadMessage = Ext.MessageBox;
-    var editable = true;
-    var sm;
+    'use strict';
+    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable");
     layerBeingEditing = layerName;
-    // allow testing of specific renderers via "?renderer=Canvas", etc
-    /*
-     var renderer = OpenLayers.Util.getParameters(window.location.href).renderer;
-
-     renderer = (renderer) ? [ renderer ]
-     : OpenLayers.Layer.Vector.prototype.renderers;
-     */
-
     try {
         drawControl.deactivate();
         layer.removeAllFeatures();
@@ -44,19 +18,17 @@ function startWfsEdition(layerName, geomField) {
     } catch (e) {
         //alert(e.message);
     }
-    var south = Ext.getCmp("attrtable");
     south.expand(true);
     south.remove(grid);
-
     $.ajax({
         url: '/controllers/table/columns/' + layerName,
         async: false,
         dataType: 'json',
         type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
-                    var response = eval('(' + http.responseText + ')');
+            if (http.readyState === 4) {
+                if (http.status === 200) {
+                    var response = data;
                     // JSON
                     fieldsForStore = response.forStore;
                     columnsForGrid = response.forGrid;
@@ -65,31 +37,26 @@ function startWfsEdition(layerName, geomField) {
                     // We add an editor to the fields
                     for (var i in columnsForGrid) {
                         columnsForGrid[i].editable = editable;
-                        // alert(columnsForGrid[i].header+"
-                        // "+columnsForGrid[i].typeObj.type);
                         if (columnsForGrid[i].typeObj !== undefined) {
-                            if (columnsForGrid[i].typeObj.type == "int") {
+                            if (columnsForGrid[i].typeObj.type === "int") {
                                 columnsForGrid[i].editor = new Ext.form.NumberField({
                                     decimalPrecision: 0,
-                                    decimalSeparator: '¤'// Some strange char nobody is
-                                    // using
+                                    decimalSeparator: '¤'// Some strange char nobody is using
                                 });
-                            } else if (columnsForGrid[i].typeObj.type == "decimal") {
+                            } else if (columnsForGrid[i].typeObj.type === "decimal") {
                                 columnsForGrid[i].editor = new Ext.form.NumberField({
                                     decimalPrecision: columnsForGrid[i].typeObj.scale,
                                     decimalSeparator: '.'
-                                    // maxLength: columnsForGrid[i].type.precision
                                 });
-                            } else if (columnsForGrid[i].typeObj.type == "string") {
+                            } else if (columnsForGrid[i].typeObj.type === "string") {
                                 columnsForGrid[i].editor = new Ext.form.TextField();
-                            } else if (columnsForGrid[i].typeObj.type == "text") {
+                            } else if (columnsForGrid[i].typeObj.type === "text") {
                                 columnsForGrid[i].editor = new Ext.form.TextArea();
                             }
                         }
                     }
                 }
             }
-
         }
     });
     var styleMap = new OpenLayers.StyleMap({
@@ -243,6 +210,8 @@ function startWfsEdition(layerName, geomField) {
     Ext.getCmp('infobutton').setDisabled(false);
 }
 $(window).ready(function () {
+    'use strict';
+    var bl = null;
     $("#upload").click(function () {
         window.parent.onAdd();
     });
@@ -253,15 +222,17 @@ $(window).ready(function () {
         window.setBaseLayers = [
             {"id": "mapQuestOSM", "name": "MapQuset OSM"},
             {"id": "osm", "name": "OSM"}
-
         ];
     }
     cloud.bingApiKey = window.bingApiKey;
-    window.setBaseLayers =  window.setBaseLayers.reverse();
+    window.setBaseLayers = window.setBaseLayers.reverse();
     for (var i = 0; i < window.setBaseLayers.length; i++) {
-        var bl = cloud.addBaseLayer(window.setBaseLayers[i].id);
+        bl = cloud.addBaseLayer(window.setBaseLayers[i].id);
     }
-    cloud.setBaseLayer(bl);
+    if (bl !== null) {
+        cloud.setBaseLayer(bl);
+    }
+
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
     var layers = {};
@@ -278,7 +249,7 @@ $(window).ready(function () {
             dataType: 'json',
             type: 'GET',
             success: function (response, textStatus, http) {
-                var groups = [];
+                var groups = [], isBaseLayer;
                 if (http.readyState === 4) {
                     if (http.status === 200) {
                         if (response.data !== undefined) {
@@ -288,9 +259,9 @@ $(window).ready(function () {
                             var arr = array_unique(groups);
                             for (var u = 0; u < response.data.length; ++u) {
                                 if (response.data[u].baselayer) {
-                                    var isBaseLayer = true;
+                                    isBaseLayer = true;
                                 } else {
-                                    var isBaseLayer = false;
+                                    isBaseLayer = false;
                                 }
                                 // Try to remove layer before adding it
                                 try {
@@ -375,7 +346,6 @@ $(window).ready(function () {
                 // layer id are still only schema.table in map file
                 var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
                 if (checked) {
-
                     layers[layerId][0].setVisibility(true);
                 } else {
                     layers[layerId][0].setVisibility(false);
@@ -451,14 +421,52 @@ $(window).ready(function () {
             handler: stopEdit
         },
         '->',
-
+        {
+            text: "<i class='icon-refresh btn-gc'></i> Reload tree",
+            handler: function () {
+                stopEdit();
+                reLoadTree();
+            }
+        },
+        '-',
+        {
+            text: "<i class='icon-globe btn-gc'></i> Save extent",
+            id: "extentbutton",
+            disabled: false,
+            handler: function () {
+                Ext.Ajax.request({
+                    url: '/controllers/setting/extent/',
+                    method: 'put',
+                    params: Ext.util.JSON.encode({data: {
+                        schema: schema,
+                        extent: cloud.getExtent()
+                    }}),
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    success: function (response) {
+                        window.parent.App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                    },
+                    failure: function (response) {
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: eval('(' + response.responseText + ')').message,
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                });
+            }
+        },
+        '-',
         {
             text: "<i class='icon-th-list btn-gc'></i> Attributes",
             id: "infobutton",
             disabled: true,
             handler: function () {
                 attributeForm.win.show();
-
             }
         },
         '-',
@@ -468,17 +476,8 @@ $(window).ready(function () {
             disabled: true,
             handler: function () {
                 filter.win.show();
-
             }
         },
-        '-',
-        {
-            text: "<i class='icon-refresh btn-gc'></i> Reload",
-            handler: function () {
-                stopEdit();
-                reLoadTree();
-            }
-        }
     ];
     viewport = new Ext.Viewport({
         layout: 'border',
@@ -538,14 +537,19 @@ $(window).ready(function () {
                     })
                 ]
             })
-
         ]
     });
     // HACK. reload tree after the view has rendered
     setTimeout(function () {
         reLoadTree();
-    }, 300);
-    cloud.map.zoomToMaxExtent();
+
+    }, 700);
+    if (window.parent.initExtent !== null) {
+        cloud.map.zoomToExtent(window.parent.initExtent, false);
+    } else {
+        cloud.map.zoomToMaxExtent();
+    }
+
 });
 function stopEdit() {
     Ext.getCmp('editcreatebutton').toggle(false);
@@ -569,9 +573,8 @@ function onInsert() {
     grid.selModel.selectRow(pos);
 }
 function array_unique(ar) {
+    var sorter = {}, out = [];
     if (ar.length && typeof ar !== 'string') {
-        var sorter = {};
-        var out = [];
         for (var i = 0, j = ar.length; i < j; i++) {
             if (!sorter[ar[i] + typeof ar[i]]) {
                 out.push(ar[i]);

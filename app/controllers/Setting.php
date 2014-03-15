@@ -28,4 +28,8 @@ class Setting extends \app\inc\Controller
     {
         return Response::json($this->settings->updateApiKey());
     }
+    public function put_extent()
+    {
+        return $this->settings->updateExtent(json_decode(Input::get())->data);
+    }
 }

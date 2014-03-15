@@ -30,30 +30,6 @@ class Setting extends Model
         return (array)json_decode($arr['viewer']);
     }
 
-    /*public function update($post)
-    {
-        $arr = $this->getArray();
-        foreach ($post as $key => $value) {
-            if (!$value) {
-                $value = false;
-            }
-            if (is_numeric($value)) {
-                $value = (int)$value;
-            }
-            $arr[$key] = $value;
-        }
-        $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
-        $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Default extent updated";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-        }
-        return $response;
-    }*/
-
     public function updateApiKey()
     {
         $apiKey = md5(microtime() . rand());
@@ -73,6 +49,7 @@ class Setting extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
         }
         return $response;
     }
@@ -94,6 +71,29 @@ class Setting extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
+        }
+        return $response;
+    }
+    public function updateExtent($extent){
+        $arr = $this->getArray();
+        $obj = (array)$arr['extents'];
+        $obj[\app\conf\Connection::$param['postgisschema']] = $extent->extent;
+        $arr['extents'] = $obj;
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = "Extent saved";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
         }
         return $response;
     }
@@ -110,6 +110,7 @@ class Setting extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
         }
         return $response;
     }

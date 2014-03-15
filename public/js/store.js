@@ -1,3 +1,11 @@
+/*global Ext:false */
+/*global $:false */
+/*global jQuery:false */
+/*global OpenLayers:false */
+/*global GeoExt:false */
+/*global mygeocloud_ol:false */
+/*global schema:false */
+/*global document:false */
 var form;
 var store;
 Ext.Ajax.disableCaching = false;
@@ -9,6 +17,7 @@ var updateLegend;
 var activeLayer;
 var onEditWMSClasses;
 var onAdd;
+var initExtent = null;
 
 // We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
 $(window).ready(function () {
@@ -35,17 +44,19 @@ $(window).ready(function () {
             }
         }
     });
-
     $.ajax({
         url: '/controllers/setting',
         async: false,
         dataType: 'json',
         type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
+            if (http.readyState === 4) {
+                if (http.status === 200) {
                     settings = data.data;
-                    $("#apikeyholder").html(settings.api_key)
+                    $("#apikeyholder").html(settings.api_key);
+                    if (settings.extents[schema] !== undefined) {
+                        initExtent = settings.extents[schema];
+                    }
                 }
             }
         }

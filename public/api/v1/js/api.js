@@ -1,6 +1,14 @@
+/*global Ext:false */
+/*global $:false */
+/*global jQuery:false */
+/*global OpenLayers:false */
+/*global GeoExt:false */
+/*global mygeocloud_ol:false */
+/*global schema:false */
+/*global document:false */
 var mygeocloud_host, popup;
 var scriptSource = (function (scripts) {
-    "use strict";
+    'use strict';
     scripts = document.getElementsByTagName('script');
     var script = scripts[scripts.length - 1];
     if (script.getAttribute.length !== undefined) {
@@ -381,6 +389,11 @@ var mygeocloud_ol = (function () {
             this.map.addLayer(this.stamenToner);
             return (this.stamenToner);
         };
+        this.addYandex = function () {
+            //this.yandexMaps = new OpenLayers.Layer.Yandex("Яndex", {sphericalMercator: true});
+            //this.map.addLayer(this.yandexMaps);
+            //return (this.yandexMaps);
+        };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
@@ -419,6 +432,9 @@ var mygeocloud_ol = (function () {
                     break;
                 case "bingAerialWithLabels":
                     o = this.addBing("AerialWithLabels");
+                    break;
+                case "yandex":
+                    o = this.addYandex();
                     break;
             }
             return o;
@@ -556,10 +572,10 @@ var mygeocloud_ol = (function () {
         this.getExtent = function () {
             var mapBounds = this.map.getExtent();
             return mapBounds.toArray();
-        }
+        };
         this.getBbox = function () {
             return this.map.getExtent().toString();
-        }
+        };
         // Geolocation stuff starts here
         var geolocation_layer = new OpenLayers.Layer.Vector('geolocation_layer', {
             displayInLayerSwitcher: false
@@ -736,4 +752,5 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/")
     };
 
-})();
+})
+    ();
