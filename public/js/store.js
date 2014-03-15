@@ -54,8 +54,10 @@ $(window).ready(function () {
                 if (http.status === 200) {
                     settings = data.data;
                     $("#apikeyholder").html(settings.api_key);
-                    if (typeof settings.extents[schema] !== "undefined") {
-                        initExtent = settings.extents[schema];
+                    if (typeof settings.extents !== "undefined") {
+                        if (settings.extents[schema] !== undefined) {
+                            initExtent = settings.extents[schema];
+                        }
                     }
                 }
             }
