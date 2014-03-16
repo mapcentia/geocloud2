@@ -55,10 +55,10 @@ geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-google.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet-bing.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.markercluster-src.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-google.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-bing.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-yandex.js'><\/script>");
+        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.min.js'><\/script>");
     }
 
     // Helper for extending classes
@@ -111,6 +111,14 @@ geocloud = (function () {
                         rendererOptions: this.defaults.rendererOptions
                     });
                     break;
+                case 'ol3':
+                    this.layer = new ol.layer.Vector({
+                        source: new ol.source.GeoJSON(),
+                        style: this.defaults.styleMap
+                    });
+                    this.layer.id = this.defaults.name;
+                    break
+
                 case 'leaflet':
                     this.layer = L.geoJson(null, {
                         style: this.defaults.styleMap,
@@ -187,6 +195,14 @@ geocloud = (function () {
                             switch (MAPLIB) {
                                 case "ol2":
                                     me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                    break;
+                                case "ol3":
+                                    me.layer.getSource().addFeatures(new ol.source.GeoJSON(
+                                        {
+                                            object: response.features[0]
+                                        }
+                                    ));
+
                                     break;
                                 case "leaflet":
                                     me.layer.addData(response);
@@ -360,9 +376,9 @@ geocloud = (function () {
                 l.id = layer;
                 break;
             case "ol3":
-                l = new ol.layer.TileLayer({
-                    source: new ol.source.TiledWMS({
-                        url: urlArray,
+                l = new ol.layer.Tile({
+                    source: new ol.source.TileWMS({
+                        url: url,
                         params: {LAYERS: layer}
                     }),
                     visible: defaults.visibility
@@ -400,9 +416,7 @@ geocloud = (function () {
         if (MAPLIB === "leaflet") {
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/MarkerCluster.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css' }).appendTo('head');
-
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
         }
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://eu1.mapcentia.com/api/v3/css/styles.css' }).appendTo('head');
 
@@ -452,12 +466,8 @@ geocloud = (function () {
             var layerArr = [];
             switch (MAPLIB) {
                 case "leaflet":
-
                     var layers = this.map._layers;
-                    console.log(layers)
-
                     for (var key in layers) {
-
                         if (layers.hasOwnProperty(key)) {
                             if (layers[key].baseLayer === true) {
                                 layerArr.push(layers);
@@ -481,7 +491,8 @@ geocloud = (function () {
                     break;
                 case "ol3":
                     for (var i = 0; i < this.map.getLayers().getLength(); i++) {
-                        if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
+
+                        if (this.map.getLayers().a[i].e.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
                             layerArr.push(this.map.getLayers().a[i].id);
                         }
                     }
@@ -712,7 +723,7 @@ geocloud = (function () {
                     this.osm.setVisibility(false);
                     break;
                 case "ol3":
-                    this.osm = new ol.layer.TileLayer({
+                    this.osm = new ol.layer.Tile({
                         source: new ol.source.OSM(),
                         visible: false
                     });
@@ -923,6 +934,30 @@ geocloud = (function () {
             l.id = name;
             return (l);
         };
+        this.addYandex = function () {
+            switch (MAPLIB) {
+                case "ol2":
+                    this.osm = new OpenLayers.Layer.OSM("osm");
+                    this.osm.wrapDateLine = false;
+                    this.map.addLayer(this.osm);
+                    this.osm.setVisibility(false);
+                    break;
+                case "ol3":
+                    this.osm = new ol.layer.TileLayer({
+                        source: new ol.source.OSM(),
+                        visible: false
+                    });
+                    this.map.addLayer(this.osm);
+                    break;
+                case "leaflet":
+                    this.yandex = new L.Yandex();
+                    lControl.addBaseLayer(this.yandex);
+                    break;
+            }
+            this.yandex.baseLayer = true;
+            this.yandex.id = "yandex";
+            return (this.yandex);
+        };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
             switch (MAPLIB) {
@@ -994,6 +1029,9 @@ geocloud = (function () {
                 case "bingAerialWithLabels":
                     o = this.addBing("AerialWithLabels");
                     break;
+                case "yandex":
+                    o = this.addYandex();
+                    break;
             }
             return o;
         };
@@ -1057,6 +1095,9 @@ geocloud = (function () {
             switch (MAPLIB) {
                 case "ol2":
                     this.map.addLayers([store.layer]);
+                    break;
+                case "ol3":
+                    this.map.addLayer(store.layer);
                     break;
                 case "leaflet":
                     lControl.addOverlay(store.layer);
@@ -1189,7 +1230,6 @@ geocloud = (function () {
                     break;
             }
             return (bounds);
-            //console.log(bounds);
         };
 
         //ol2
@@ -1312,8 +1352,8 @@ geocloud = (function () {
                     this.map.on(event, callBack);
                     break;
             }
-        }
-    }
+        };
+    };
     // ol2, ol3 and leaflet
     // Input map coordinates (900913)
     clickEvent = function (e, map) {
@@ -1325,14 +1365,14 @@ geocloud = (function () {
                     return {
                         x: point.lon,
                         y: point.lat
-                    }
+                    };
                     break;
                 case "ol3":
-                    point = e.getCoordinate();
+                    point = e.coordinate;
                     return {
                         x: point[0],
                         y: point[1]
-                    }
+                    };
                     break;
                 case "leaflet":
                     point = e.latlng;
@@ -1340,10 +1380,10 @@ geocloud = (function () {
                     return {
                         x: p.x,
                         y: p.y
-                    }
+                    };
                     break;
             }
-        }
+        };
     };
     transformPoint = function (lat, lon, s, d) {
         var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
