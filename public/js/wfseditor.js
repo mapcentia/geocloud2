@@ -477,7 +477,7 @@ $(window).ready(function () {
             handler: function () {
                 filter.win.show();
             }
-        },
+        }
     ];
     viewport = new Ext.Viewport({
         layout: 'border',
