@@ -99,6 +99,7 @@ geocloud = (function () {
             this.layer.setVisibility(true);
         };
         this.map = null;
+
         // Initiate base class settings
         this.init = function () {
             this.onLoad = this.defaults.onLoad;
@@ -399,7 +400,6 @@ geocloud = (function () {
         return l;
     };
 
-
     // Set map constructor
     map = function (config) {
         var prop, queryLayers = [],
@@ -539,8 +539,8 @@ geocloud = (function () {
                     }
                     break;
             }
-
-            return layerArr.join(",");
+            if (layerArr.length>0) return layerArr.join(",");
+            else return layerArr;
         };
         //ol2
         this.getBaseLayer = function () {
@@ -620,6 +620,10 @@ geocloud = (function () {
                     this.map.setView([p.y, p.x], r);
                     break;
             }
+        };
+        // Leaflet only
+        this.setView = function (xy, r) {
+            this.map.setView(xy, r);
         };
         // map init
         switch (MAPLIB) {
@@ -1194,22 +1198,24 @@ geocloud = (function () {
                     return {
                         x: point.lon,
                         y: point.lat
-                    }
+                    };
                     break;
                 case "ol3":
                     point = this.map.getView().getCenter();
                     return {
                         x: point[0],
                         y: point[1]
-                    }
+                    };
                     break;
                 case "leaflet":
                     point = this.map.getCenter();
                     var p = transformPoint(point.lng, point.lat, "EPSG:4326", "EPSG:900913");
                     return {
                         x: p.x,
-                        y: p.y
-                    }
+                        y: p.y,
+                        lon: point.lng,
+                        lat: point.lat
+                    };
                     break;
             }
         };
@@ -1386,10 +1392,17 @@ geocloud = (function () {
         };
     };
     transformPoint = function (lat, lon, s, d) {
-        var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
-        var dest = new Proj4js.Proj(d);
-        var p = new Proj4js.Point(lat, lon);
-        Proj4js.transform(source, dest, p);
+        var p = [];
+        if (typeof Proj4js === "object") {
+            var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+            var dest = new Proj4js.Proj(d);
+            var p = new Proj4js.Point(lat, lon);
+            Proj4js.transform(source, dest, p);
+        }
+        else{
+            p.x = null;
+            p.y = null;
+        }
         return p;
     };
 
@@ -1424,5 +1437,4 @@ geocloud = (function () {
         BINGAERIAL: BINGAERIAL,
         BINGAERIALWITHLABELS: BINGAERIALWITHLABELS
     };
-})
-    ();
+}());

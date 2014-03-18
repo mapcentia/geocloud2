@@ -102,18 +102,17 @@ class Table extends Model
             $sql .= " WHERE {$whereClause}";
         }
         $result = $this->execQuery($sql);
-        $check = array();
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {
                 $arr = $this->array_push_assoc($arr, $key, $value);
             }
+
             if ($createKeyFrom) {
                 $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-                $arr = $this->array_push_assoc($arr, "pkey", $this->primeryKey['attname']);
-
+                $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
+                $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
             }
-
             $response['data'][] = $arr;
         }
         return $response;

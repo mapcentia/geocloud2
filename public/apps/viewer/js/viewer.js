@@ -1,7 +1,7 @@
 var MapCentia;
 MapCentia = (function () {
     "use strict";
-    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [];
+    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -37,6 +37,67 @@ MapCentia = (function () {
             }
         });
     };
+    share = function () {
+        var url = hostname + permaLink(), layers, arr = [], layersStr = "", i;
+        $("#modal-share").modal();
+        $("#share-url").val(url);
+        $("#share-iframe").val("<iframe width='100%' height='500px' frameBorder='0' src='" + url + "'></iframe>");
+
+        layers = cloud.getNamesOfVisibleLayers();
+        if (layers.length > 0) {
+            for (i = 0; i < layers.split(",").length; i++) {
+                arr.push("'" + layers.split(",")[i] + "'");
+            }
+            layersStr = arr.join(",");
+        }
+        var javascript =
+            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
+                "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
+                "<div id='map' style='width: 100%; height: 500px'></div>\n" +
+                "<script>\n" +
+                "(function () {\n" +
+                "      var map = new geocloud.map({\n" +
+                "      el: 'map'\n" +
+                "   });\n" +
+                "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+                "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+                "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
+                "   map.addTileLayers({\n" +
+                "      db: '" + db + "',\n" +
+                "      layers: [" + layersStr + "],\n" +
+                "   });\n" +
+                "}())\n" +
+                "</script>";
+        $("#share-javascript").val(javascript);
+    };
+    shareTwitter = function () {
+        var url = hostname + permaLink();
+        window.open("https://twitter.com/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    shareLinkedIn = function () {
+        var url = hostname + permaLink();
+        window.open("https://www.linkedin.com/cws/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    shareGooglePlus = function () {
+        var url = hostname + permaLink();
+        window.open("https://plus.google.com/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    shareFacebook = function () {
+        var url = hostname + permaLink();
+        window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    shareTumblr = function () {
+        var url = hostname + permaLink();
+        window.open("http://www.tumblr.com/share?v=3&t=My%20map&u=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    shareStumbleupon = function () {
+        var url = hostname + permaLink();
+        window.open("http://www.stumbleupon.com/submit?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
+    };
+    permaLink = function () {
+        var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+        return "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
+    };
     autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'));
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace(),
@@ -51,6 +112,13 @@ MapCentia = (function () {
         metaDataKeys = [];
         metaDataKeysTitle = [];
         layers = {};
+
+        $('.share-text').mouseup(function () {
+            return false;
+        });
+        $(".share-text").focus(function () {
+            $(this).select();
+        });
 
         if (typeof window.setBaseLayers !== 'object') {
             window.setBaseLayers = [
@@ -191,6 +259,7 @@ MapCentia = (function () {
                 addLegend();
             }
         });
+
         //Set up the state from the URI
         (function () {
             var p, arr, i, hashArr;
@@ -216,11 +285,11 @@ MapCentia = (function () {
                 cloud.zoomToExtent();
             }
         })();
+
         var moveEndCallBack = function () {
-            var p;
-            p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+
             try {
-                history.pushState(null, null, "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers());
+                history.pushState(null, null, permaLink());
             }
             catch (e) {
             }
@@ -331,6 +400,13 @@ MapCentia = (function () {
         cloud: cloud,
         switchLayer: switchLayer,
         setBaseLayer: setBaseLayer,
-        schema: schema
+        schema: schema,
+        share: share,
+        shareTwitter: shareTwitter,
+        shareFacebook: shareFacebook,
+        shareLinkedIn: shareLinkedIn,
+        shareGooglePlus: shareGooglePlus,
+        shareTumblr: shareTumblr,
+        shareStumbleupon: shareStumbleupon
     };
 }());

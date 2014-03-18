@@ -14,12 +14,12 @@
 }
 
 .leaflet-control-zoom a, .leaflet-control-zoom a:hover {
-    height: 50px !important;
-    width: 50px !important;
-    font-size: 30px;
+    height: 30px !important;
+    width: 30px !important;
+    font-size: 15px;
     font-weight: normal;
     text-decoration: none;
-    line-height: 45px !important;
+    line-height: 30px !important;
 }
 
 .ol-zoom, .olControlZoom {

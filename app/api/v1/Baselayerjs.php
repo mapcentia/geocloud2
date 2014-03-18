@@ -5,6 +5,7 @@ class Baselayerjs extends \app\inc\Controller
 {
     function __construct()
     {
+        header("content-type: application/javascript");
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '".\app\conf\App::$param['bingApiKey']."';\n";
         }

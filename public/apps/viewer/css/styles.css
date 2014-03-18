@@ -38,7 +38,7 @@ body {
     z-index: 1;
 }
 
-.modal-dialog {
+.modal-infobox {
     width: inherit !important;
 }
 
@@ -81,7 +81,7 @@ input[type="radio"], input[type="checkbox"] {
     margin-bottom: 0 !important;
 }
 
-.modal {
+.infobox {
     bottom: auto !important;
     bottom: auto !important;
     overflow-y: hidden !important;
@@ -117,6 +117,12 @@ input[type="radio"], input[type="checkbox"] {
     .leaflet-control-zoom{
         display: none;
     }
+    #group-iframe {
+        display: none;
+    }
+    #group-javascript {
+        display: none;
+    }
 }
 
 @media (min-width: 768px) {
@@ -128,9 +134,8 @@ input[type="radio"], input[type="checkbox"] {
     #locate-btn {
         margin-left: 5px;
     }
-
-    .modal {
-        top: 50px !important;
+    .infobox {
+        top: 100px !important;
         right: 10px !important;
         width: 360px !important;
         position: absolute !important;
@@ -228,11 +233,16 @@ input[type="radio"], input[type="checkbox"] {
 .table > thead > tr > th {
     border-bottom: 0px;
 }
+/*
 .modal-footer {
     border-top: 1px solid #CCC !important;
 }
 .modal-header {
     border-bottom: 1px solid #CCC !important;
+}
+*/
+.btn-share {
+    width: 50px;
 }
 
 
