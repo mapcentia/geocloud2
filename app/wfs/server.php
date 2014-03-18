@@ -67,6 +67,7 @@ $unserializer = new XML_Unserializer($unserializer_options);
 
 // Post method is used
 if ($HTTP_RAW_POST_DATA) {
+    Log::write($HTTP_RAW_POST_DATA);
     //$forUseInSpatialFilter = $HTTP_RAW_POST_DATA; // We store a unaltered version of the raw request
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
 
@@ -854,11 +855,9 @@ function doParse($arr)
         }
     }
 
-    echo '<wfs:WFS_TransactionResponse
-        version="1.0.0"
-	service="WFS"
-	xmlns:wfs="http://www.opengis.net/wfs"
-	xmlns:ogc="http://www.opengis.net/ogc">';
+    echo '<wfs:WFS_TransactionResponse version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs"
+  xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd">';
     // First we loop through inserts
     if (sizeof($forSql['tables']) > 0) for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
@@ -953,10 +952,10 @@ function doParse($arr)
 
     // TransactionResult
     if (sizeof($postgisObject->PDOerror) == 0) {
-        echo '<wfs:TransactionResult><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
+        echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
         $postgisObject->commit();
     } else {
-        echo '<wfs:TransactionResult><wfs:Status><wfs:FAILURE/></wfs:Status></wfs:TransactionResult>';
+        echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:FAILURE/></wfs:Status></wfs:TransactionResult>';
         Log::write("Error in\n");
         foreach ($postgisObject->PDOerror as $str) {
             Log::write("{$str}\n");
@@ -971,7 +970,7 @@ function doParse($arr)
     // InsertResult
     if (sizeof($results['insert']) > 0) {
         reset($forSql['tables']);
-        echo '<wfs:InsertResults handle="mygeocloud-WFS-default-handle">';
+        echo '<wfs:InsertResult>';
         foreach ($results['insert'] as $res) {
             echo '<ogc:FeatureId fid="';
             echo current($forSql['tables']) . ".";
@@ -980,7 +979,7 @@ function doParse($arr)
             echo '"/>';
             next($forSql['tables']);
         }
-        echo '</wfs:InsertResults>';
+        echo '</wfs:InsertResult>';
     }
     // UpdateResult
     if (sizeof($results['update']) > 0) {
