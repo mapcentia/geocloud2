@@ -32,7 +32,7 @@ class Staticmap extends \app\inc\Controller
             $file = \app\conf\App::$param["path"] . "/app/tmp/_" . time() . ".png";
             $cmd = "xvfb-run --server-args='-screen 0, 1024x768x24' wkhtmltoimage " .
                 "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 100 " .
-                "\"http://local2.mapcentia.com/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}\" " .
+                "\"".\app\conf\App::$param['host']."/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}\" " .
                 $file;
             //die($cmd);
             exec($cmd);
