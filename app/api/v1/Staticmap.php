@@ -72,8 +72,8 @@ class Staticmap extends \app\inc\Controller
 
         echo "
         <script src='http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places' type='text/javascript'></script>
-        <script src='http://local2.mapcentia.com/js/leaflet/leaflet.js'></script>
-        <script src='http://local2.mapcentia.com/api/v3/js/geocloud.js'></script>
+        <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
+        <script src='".\app\conf\App::$param['host']."/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
         body {margin: 0px; padding: 0px;}
