@@ -539,7 +539,7 @@ geocloud = (function () {
                     }
                     break;
             }
-            if (layerArr.length>0) return layerArr.join(",");
+            if (layerArr.length > 0) return layerArr.join(",");
             else return layerArr;
         };
         //ol2
@@ -654,8 +654,8 @@ geocloud = (function () {
                 });
                 break;
             case "leaflet":
-                this.map = new L.map(defaults.el);
-                lControl = L.control.layers([], [])
+                this.map = new L.map(defaults.el, {fadeAnimation: false, zoomAnimation: false});
+                lControl = L.control.layers([], []);
                 this.map.addControl(lControl);
                 this.map.attributionControl.setPrefix(attribution);
                 break;
@@ -1399,7 +1399,7 @@ geocloud = (function () {
             var p = new Proj4js.Point(lat, lon);
             Proj4js.transform(source, dest, p);
         }
-        else{
+        else {
             p.x = null;
             p.y = null;
         }
