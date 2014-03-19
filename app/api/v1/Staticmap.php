@@ -66,44 +66,28 @@ class Staticmap extends \app\inc\Controller
         $db = Input::getPath()->part(5);
         $baseLayer = Input::get("baselayer");
         $layers = json_encode(explode(",", Input::get("layers")));
-        //$center = str_replace('"', '', json_encode(explode(",", Input::get("center"))));
-        $center = explode(",", Input::get("center"));
+        $center = str_replace('"', '', json_encode(explode(",", Input::get("center"))));
+        //$center = explode(",", Input::get("center"));
         $zoom = Input::get("zoom");
         $size = explode("x", Input::get("size"));
 
         echo "
         <script src='http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places' type='text/javascript'></script>
-        <script src='http://eu1.mapcentia.com/js/openlayers/OpenLayers.js' type='text/javascript'></script>
-        <script src='http://eu1.mapcentia.com/js/openlayers/proj4js-combined.js' type='text/javascript'></script>
+        <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
         <script src='".\app\conf\App::$param['host']."/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
         body {margin: 0px; padding: 0px;}
-        .olControlZoom {display: none}
+        .leaflet-control-zoom{display: none}
         </style>
         <script>
             (function () {
-                var transformPoint = function (lat, lon, s, d) {
-                    var p = [];
-                    if (typeof Proj4js === 'object') {
-                        var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
-                        var dest = new Proj4js.Proj(d);
-                        var p = new Proj4js.Point(lat, lon);
-                        Proj4js.transform(source, dest, p);
-                    }
-                    else{
-                        p.x = null;
-                        p.y = null;
-                    }
-                    return p;
-                };
-                var p = transformPoint({$center[1]}, {$center[0]}, 'EPSG:4326', 'EPSG:900913');
                 var map = new geocloud.map({
                     el: 'map'
                 });
                 map.addBaseLayer(geocloud.{$baseLayer});
                 map.setBaseLayer(geocloud.{$baseLayer});
-                map.zoomToPoint(p.x,p.y,{$zoom});
+                map.setView({$center},{$zoom});
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}
