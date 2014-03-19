@@ -34,6 +34,7 @@ if (Input::getPath()->part(1) == "api") {
         Connection::$param["postgisschema"] = "trackunit";
     });
     Route::add("api/v1/baselayerjs");
+    Route::add("api/v1/staticmap");
 } elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
