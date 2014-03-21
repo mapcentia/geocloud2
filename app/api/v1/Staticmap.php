@@ -11,10 +11,20 @@ class Staticmap extends \app\inc\Controller
     {
     }
 
-    public function get_index()
+    public function get_png()
+    {
+        $this->get_file("png");
+    }
+
+    public function get_jpg()
+    {
+        $this->get_file("jpg");
+    }
+
+    private function get_file($type)
     {
         include_once 'Cache_Lite/Lite.php';
-        $id =$_SERVER["QUERY_STRING"].Input::getPath()->part(4);
+        $id = $_SERVER["QUERY_STRING"] . Input::getPath()->part(5);
         $lifetime = (Input::get('lifetime')) ? : 0;
         $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
         $Cache_Lite = new \Cache_Lite($options);
@@ -22,24 +32,34 @@ class Staticmap extends \app\inc\Controller
             //echo "Cached";
         } else {
             ob_start();
-            $db = Input::getPath()->part(4);
+            $db = Input::getPath()->part(5);
             $baseLayer = Input::get("baselayer");
             $layers = Input::get("layers");
             $center = Input::get("center");
             $zoom = Input::get("zoom");
             $size = Input::get("size");
             $sizeArr = explode("x", Input::get("size"));
-            $file = \app\conf\App::$param["path"] . "/app/tmp/_" . time() . ".png";
-            $cmd = "xvfb-run --server-args='-screen 0, 1024x768x24' wkhtmltoimage " .
-                "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 100 --javascript-delay 2000 " .
-                "\"".\app\conf\App::$param['host']."/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}\" " .
+            $bbox = Input::get("bbox");
+            $fileName = md5(time() . rand(10000, 99999) . microtime());
+            $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
+            $cmd = "wkhtmltoimage " .
+                "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
+                "\"" . \app\conf\App::$param['host'] . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}\" " .
                 $file;
             //die($cmd);
             exec($cmd);
-            $res = imagecreatefrompng($file);
+            switch ($type) {
+                case "png":
+                    $res = imagecreatefrompng($file);
+                    break;
+                case "jpg":
+                    $res = imagecreatefromjpeg($file);
+                    break;
+            }
+
             if (!$res) {
                 $response['success'] = false;
-                $response['message'] = "Could create image";
+                $response['message'] = "Could not create image";
                 $response['code'] = 406;
                 header("HTTP/1.0 {$response['code']} " . \app\inc\Util::httpCodeText($response['code']));
                 echo \app\inc\Response::toJson($response);
@@ -67,14 +87,14 @@ class Staticmap extends \app\inc\Controller
         $baseLayer = Input::get("baselayer");
         $layers = json_encode(explode(",", Input::get("layers")));
         $center = str_replace('"', '', json_encode(explode(",", Input::get("center"))));
-        //$center = explode(",", Input::get("center"));
         $zoom = Input::get("zoom");
         $size = explode("x", Input::get("size"));
+        $bbox = Input::get("bbox");
 
         echo "
         <script src='http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places' type='text/javascript'></script>
         <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
-        <script src='".\app\conf\App::$param['host']."/api/v3/js/geocloud.js'></script>
+        <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
         body {margin: 0px; padding: 0px;}
@@ -86,8 +106,18 @@ class Staticmap extends \app\inc\Controller
                     el: 'map'
                 });
                 map.addBaseLayer(geocloud.{$baseLayer});
-                map.setBaseLayer(geocloud.{$baseLayer});
-                map.setView({$center},{$zoom});
+                map.setBaseLayer(geocloud.{$baseLayer});";
+        if ($bbox) {
+            $bboxArr = explode(",", Input::get("bbox"));
+            $bbox = "[[$bboxArr[0],$bboxArr[1]],[$bboxArr[2],$bboxArr[3]]]";
+            echo "map.zoomToExtent({$bbox});";
+        } else {
+            echo
+            "map.setView({$center},{$zoom});";
+        }
+
+        echo "
+                console.log(map.map.getSize())
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}

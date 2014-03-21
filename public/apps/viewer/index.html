@@ -165,21 +165,28 @@
                         <label for="share-url" class="col-sm-1 control-label"><i class="fa fa-link"></i></label>
 
                         <div class="col-sm-10">
-                            <input type="text" class="form-control share-text" id="share-url" value="">
+                            <input data-toggle="tooltip" data-placement="top" title="URL to this map" type="text" class="form-control share-text" id="share-url" value="">
                         </div>
                     </div>
                     <div class="form-group" id="group-iframe">
                         <label for="share-iframe" class="col-sm-1 control-label"><i class="fa fa-code"></i></label>
 
                         <div class="col-sm-10">
-                            <input type="text" class="form-control share-text" id="share-iframe" value="">
+                            <input data-toggle="tooltip" data-placement="top" title="Iframe with this map to embed on web page" type="text" class="form-control share-text" id="share-iframe" value="">
+                        </div>
+                    </div>
+                    <div class="form-group" id="group-static">
+                        <label for="share-static" class="col-sm-1 control-label"><i class="fa fa-picture-o"></i></label>
+
+                        <div class="col-sm-10">
+                            <input data-toggle="tooltip" data-placement="top" title="URL to a static PNG image of this map" type="text" class="form-control share-text" id="share-static" value="">
                         </div>
                     </div>
                     <div class="form-group" id="group-javascript">
                         <label for="share-javascript" class="col-sm-1 control-label">js</label>
 
                         <div class="col-sm-10">
-                            <textarea class="form-control share-text" id="share-javascript" rows="6" value=""></textarea>
+                            <textarea data-toggle="tooltip" data-placement="top" title="JavaScript for an application" class="form-control share-text" id="share-javascript" rows="6" value=""></textarea>
                         </div>
                     </div>
 

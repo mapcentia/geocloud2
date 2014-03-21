@@ -761,8 +761,11 @@ geocloud = (function () {
                     this.map.addLayer(this.stamenToner);
                     break;
                 case "leaflet":
+                    try {
                     this.stamenToner = new L.StamenTileLayer("toner");
                     lControl.addBaseLayer(this.stamenToner);
+                    }
+                    catch (e){}
                     break;
             }
             this.stamenToner.baseLayer = true;

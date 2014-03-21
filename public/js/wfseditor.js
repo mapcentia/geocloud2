@@ -542,7 +542,6 @@ $(window).ready(function () {
     // HACK. reload tree after the view has rendered
     setTimeout(function () {
         reLoadTree();
-
     }, 700);
     if (window.parent.initExtent !== null) {
         cloud.map.zoomToExtent(window.parent.initExtent, false);
@@ -586,16 +585,17 @@ function array_unique(ar) {
 }
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
+        var format, doc, error;
         if (!response.success()) {
-            var format = new OpenLayers.Format.XML();
-            var doc = format.read(response.priv.responseText);
+            format = new OpenLayers.Format.XML();
+            doc = format.read(response.priv.responseText);
             try {
-                var error = doc
+                error = doc
                     .getElementsByTagName('ServiceException')[0].firstChild.data;
             } catch (e) {
             }
             try {
-                var error = doc
+                error = doc
                     .getElementsByTagName('wfs:ServiceException')[0].firstChild.data;
             } catch (e) {
             }
@@ -611,7 +611,7 @@ saveStrategy = new OpenLayers.Strategy.Save({
         } else {
             saveStrategy.layer.refresh();
             format = new OpenLayers.Format.XML();
-            var doc = format.read(response.priv.responseText);
+            doc = format.read(response.priv.responseText);
             try {
                 var inserted = doc
                     .getElementsByTagName('wfs:totalInserted')[0].firstChild.data;
