@@ -24,7 +24,16 @@ class Staticmap extends \app\inc\Controller
     private function get_file($type)
     {
         include_once 'Cache_Lite/Lite.php';
-        $id = $_SERVER["QUERY_STRING"] . Input::getPath()->part(5);
+        $db = Input::getPath()->part(5);
+        $baseLayer = Input::get("baselayer");
+        $layers = Input::get("layers");
+        $center = Input::get("center");
+        $zoom = Input::get("zoom");
+        $size = Input::get("size");
+        $sizeArr = explode("x", Input::get("size"));
+        $bbox = Input::get("bbox");
+
+        $id = $db."_".$baseLayer."_".$layers."_".$center."_".$zoom."_".$size."_".$bbox;
         $lifetime = (Input::get('lifetime')) ? : 0;
         $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
         $Cache_Lite = new \Cache_Lite($options);
@@ -32,14 +41,6 @@ class Staticmap extends \app\inc\Controller
             //echo "Cached";
         } else {
             ob_start();
-            $db = Input::getPath()->part(5);
-            $baseLayer = Input::get("baselayer");
-            $layers = Input::get("layers");
-            $center = Input::get("center");
-            $zoom = Input::get("zoom");
-            $size = Input::get("size");
-            $sizeArr = explode("x", Input::get("size"));
-            $bbox = Input::get("bbox");
             $fileName = md5(time() . rand(10000, 99999) . microtime());
             $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
             $cmd = "wkhtmltoimage " .
@@ -94,6 +95,7 @@ class Staticmap extends \app\inc\Controller
         echo "
         <script src='http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places' type='text/javascript'></script>
         <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
+        <script src='http://maps.stamen.com/js/tile.stamen.js?v1.2.0' type='text/javascript'></script>
         <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
@@ -105,6 +107,7 @@ class Staticmap extends \app\inc\Controller
                 var map = new geocloud.map({
                     el: 'map'
                 });
+                map.bingApiKey = '".\app\conf\App::$param['bingApiKey']."'
                 map.addBaseLayer(geocloud.{$baseLayer});
                 map.setBaseLayer(geocloud.{$baseLayer});";
         if ($bbox) {
