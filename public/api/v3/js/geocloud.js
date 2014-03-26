@@ -355,7 +355,7 @@ geocloud = (function () {
         var parts, l, url, urlArray;
         parts = layer.split(".");
         if (!defaults.tileCached) {
-            url = host + "/wms/" + defaults.db + "/" + parts[0] + "?";
+            url = geocloud_host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
             var url = host + "/wms/" + defaults.db + "/tilecache";
