@@ -358,7 +358,7 @@ geocloud = (function () {
             url = geocloud_host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
-            var url = host + "/wms/" + defaults.db + "/tilecache";
+            var url = geocloud_host + "/wms/" + defaults.db + "/tilecache";
             var url1 = url;
             var url2 = url;
             var url3 = url;
