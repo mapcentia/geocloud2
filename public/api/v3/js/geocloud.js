@@ -424,6 +424,7 @@ geocloud = (function () {
         //ol2, ol3
         // extent array
         this.zoomToExtent = function (extent, closest) {
+            var p1, p2;
             switch (MAPLIB) {
                 case "ol2":
                     if (!extent) {
@@ -446,7 +447,9 @@ geocloud = (function () {
                     }
                     else {
                         //Check it!
-                        this.map.fitBounds(extent);
+                        p1 = transformPoint(extent[0],extent[1], "EPSG:900913", "EPSG:4326");
+                        p2 = transformPoint(extent[2],extent[3], "EPSG:900913", "EPSG:4326");
+                        this.map.fitBounds([[p1.y, p1.x],[p2.y,p2.x]]);
                     }
                     break;
             }
@@ -941,7 +944,7 @@ geocloud = (function () {
             l.id = name;
             return (l);
         };
-        this.addYandex = function () {
+        this.addYandex = function () {/*
             switch (MAPLIB) {
                 case "ol2":
                     this.osm = new OpenLayers.Layer.OSM("osm");
@@ -963,7 +966,7 @@ geocloud = (function () {
             }
             this.yandex.baseLayer = true;
             this.yandex.id = "yandex";
-            return (this.yandex);
+            return (this.yandex);*/
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {

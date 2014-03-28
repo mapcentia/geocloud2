@@ -115,6 +115,24 @@ class Setting extends Model
         return $response;
     }
 
+    public function getForPublic()
+    {
+        $arr = $this->getArray();
+
+        unset($arr['pw']);
+        unset($arr['api_key']);
+
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['data'] = $arr;
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
+        }
+        return $response;
+    }
+
     public function encryptPw($pass)
     {
         $pass = strip_tags($pass);

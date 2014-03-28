@@ -26,6 +26,7 @@ if (Input::getPath()->part(1) == "api") {
         Session::start();
     });
     Route::add("api/v1/schema");
+    Route::add("api/v1/setting");
     Route::add("api/v1/twitter");
     Route::add("api/v1/cartomobile");
     Route::add("api/v1/user");

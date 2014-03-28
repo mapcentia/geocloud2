@@ -24,6 +24,21 @@ class App
 
         // Map attribution
         "mapAttribution" => "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> ",
+
+        // Available baselayer
+        "baseLayers" => array(
+            array("id" => "googleStreets", "name" => "Google Street"),
+            array("id" => "googleHybrid", "name" => "Google Hybrid"),
+            array("id" => "googleSatellite", "name" => "Google Satellite"),
+            array("id" => "googleTerrain", "name" => "Google Terrain"),
+            array("id" => "bingRoad", "name" => "Bing Road"),
+            array("id" => "bingAerial", "name" => "Bing Aerial"),
+            array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
+            array("id" => "osm", "name" => "OSM"),
+            array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
+            array("id" => "stamenToner", "name" => "Stamen Toner"),
+        ),
+        "bingApiKey" => 'your_bing_map_key',
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

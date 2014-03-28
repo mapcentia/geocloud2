@@ -111,10 +111,7 @@ MapCentia = (function () {
         el: "map"
     });
     $(document).ready(function () {
-        var metaData, metaDataKeys, metaDataKeysTitle, layers, jRes, node, modalFlag;
-        metaDataKeys = [];
-        metaDataKeysTitle = [];
-        layers = {};
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null;
 
         $('.share-text').mouseup(function () {
             return false;
@@ -222,6 +219,19 @@ MapCentia = (function () {
                 });
             }
         }); // Ajax call end
+        $.ajax({
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/setting/' + db,
+            async: false,
+            dataType: 'jsonp',
+            jsonp: 'jsonp_callback',
+            success: function (response) {
+                if (typeof response.data.extents === "object") {
+                    if (typeof response.data.extents[schema] === "object") {
+                        extent = response.data.extents[schema];
+                    }
+                }
+            }
+        }); // Ajax call end
         jRes = jRespond([
             {
                 label: 'handheld',
@@ -285,12 +295,15 @@ MapCentia = (function () {
             }
             else {
                 setBaseLayer(window.setBaseLayers[0].id);
-                cloud.zoomToExtent();
+                if (extent !== null) {
+                    cloud.zoomToExtent(extent);
+                }
+                else {
+                    cloud.zoomToExtent();
+                }
             }
         })();
-
         var moveEndCallBack = function () {
-
             try {
                 history.pushState(null, null, permaLink());
             }
