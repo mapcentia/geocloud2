@@ -17,13 +17,11 @@ class Legend extends \app\inc\Controller
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
                 $map = ms_newMapobj($path . $mapFile);
-
                 $layer = $map->getLayerByName($layerName);
                 if ($layer) {
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
                     for ($i = 0; $i < $layer->numclasses; $i++) {
                         $class = $layer->getClass($i);
-
                         $icon = $class->createLegendIcon(17, 17);
                         ob_start();
                         $icon->saveImage("", $map);
@@ -36,6 +34,35 @@ class Legend extends \app\inc\Controller
                 }
             }
         }
+    }
+
+    public function get_png()
+    {
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+        if (!\app\inc\Input::getPath()->part(6)) {
+            $response['success'] = false;
+            $response['message'] = "Need to specify schema when using PNG";
+            $response['code'] = 400;
+            return $response;
+        }
+
+        if (\app\inc\Input::get("l")) {
+            $layerNames = explode(";", \app\inc\Input::get("l"));
+            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . \app\inc\Input::getPath()->part(6) . ".map";
+            $map = ms_newMapobj($path . $mapFile);
+            foreach ($layerNames as $layerName) {
+                $layer = $map->getLayerByName($layerName);
+                if ($layer) {
+                    $layer->status = MS_ON;
+                }
+            }
+        }
+        header('Content-type: image/png');
+        $legend = $map->drawLegend();
+        ob_start();
+        $legend->saveImage("", $map);
+        $data = ob_get_clean();
+        exit($data);
     }
 
     public function get_html()
@@ -65,25 +92,28 @@ class Legend extends \app\inc\Controller
         $json = array();
         $classes = array();
         if (is_array($this->legendArr)) {
-            foreach ($this->legendArr as $key=>$layer) {
+            foreach ($this->legendArr as $key => $layer) {
                 {
                     if (is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
                             $classes[] = array(
-                                "name"=>$class['name'],
-                                "expression"=>$class['expression'],
-                                "img"=>$class['img']
+                                "name" => $class['name'],
+                                "expression" => $class['expression'],
+                                "img" => $class['img']
                             );
                         }
                     }
-                    $json[] = array("id"=>$key,"classes"=>$classes);
+                    $json[] = array("id" => $key, "classes" => $classes);
                     $classes = array();
                 }
             }
         }
         return $json;
     }
-    public function get_quantile(){
+
+    public function get_quantile()
+    {
         $this->class = new \app\models\Classification(Input::get("l"));
-        return $this->class->createQuantile(Input::get("f"),Input::get("n"),"#".Input::get(s),"#".Input::get(e),null,false);
-    }}
+        return $this->class->createQuantile(Input::get("f"), Input::get("n"), "#" . Input::get(s), "#" . Input::get(e), null, false);
+    }
+}
