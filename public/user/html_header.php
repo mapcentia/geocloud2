@@ -7,18 +7,19 @@
     <meta name="description" content="Store geographical data and make online maps"/>
     <meta name="keywords" content="GIS, geographical data, maps, web mapping, shape file, GPX, MapInfo, WMS, OGC"/>
     <meta name="author" content="Martin Hoegh"/>
+
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <link href="/styles/banner-ie.css" rel="stylesheet">
     <![endif]-->
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="/js/bootstrap/js/bootstrap.js"></script>
+    <script src="/js/jqote2/jquery.jqote2.js"></script>
+
     <link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-
-    <link href="http://twitter.github.com/bootstrap/assets/css/docs.css" rel="stylesheet">
     <link href="/css/banner.css" rel="stylesheet">
-    <script src="http://beta.mygeocloud.cowi.webhouse.dk/js/jqote2/jquery.jqote2.js"></script>
     <style type="text/css">
         body {
             background: url(/theme/images/bg_iso.png) repeat top left;
