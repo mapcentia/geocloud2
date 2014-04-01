@@ -60,7 +60,14 @@ wmsLayer.init = function (record) {
             },
             {
                 name: 'ttl'
+            },
+            {
+                name: 'maxscaledenom'
+            },
+            {
+                name: 'minscaledenom'
             }
+
         ],
         listeners: {
             load: {
@@ -99,7 +106,9 @@ wmsLayer.init = function (record) {
             meta_tiles: 'Use meta tiles',
             meta_size: 'Meta tile size',
             meta_buffer: 'Meta buffer size (px)',
-            ttl: 'Time to live (TTL)'
+            ttl: 'Time to live (TTL)',
+            maxscaledenom: 'Max scale',
+            minscaledenom: 'Min scale'
         },
 
         customRenderers: {
@@ -149,6 +158,14 @@ wmsLayer.init = function (record) {
                 decimalSeparator: '¤'// Some strange char nobody is using
             }), {}),
             'meta_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char nobody is using
+            }), {}),
+            'maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char nobody is using
+            }), {}),
+            'minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char nobody is using
             }), {})

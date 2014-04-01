@@ -327,6 +327,11 @@ class Mapfile extends \app\inc\Controller
             #OPACITY
             <?php if ($layerArr['data'][0]['opacity']) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
 
+            #MAXSCALEDENOM
+            <?php if ($layerArr['data'][0]['maxscaledenom']) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
+
+            #MINSCALEDENOM
+            <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
 
             #LABELMAXSCALE
             METADATA

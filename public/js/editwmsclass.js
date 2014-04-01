@@ -369,7 +369,7 @@ wmsClass.init = function (id) {
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
-                maxValue: 100,
+                maxValue: 9999,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
