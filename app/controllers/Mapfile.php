@@ -371,6 +371,12 @@ class Mapfile extends \app\inc\Controller
                     #TEXT
                     <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
 
+                    #MAXSCALEDENOM
+                    <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
+
+                    #MINSCALEDENOM
+                    <?php if ($class['class_minscaledenom']) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
+
                     STYLE
                     #SYMBOL
                     <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>

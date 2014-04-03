@@ -197,10 +197,10 @@ wmsClass.init = function (id) {
                 name: 'expression'
             },
             {
-                name: 'minscaledenom'
+                name: 'class_minscaledenom'
             },
             {
-                name: 'maxscaledenom'
+                name: 'class_maxscaledenom'
             },
 
             // Base style start
@@ -335,8 +335,8 @@ wmsClass.init = function (id) {
             label: 'Label: on',
             label_force: 'Label: force',
             expression: 'Expression',
-            minscaledenom: 'min scale',
-            maxscaledenom: 'max scale',
+            class_minscaledenom: 'Min scale',
+            class_maxscaledenom: 'Max scale',
             label_minscaledenom: 'Label: min. scale',
             label_maxscaledenom: 'Label: max scale',
             label_position: 'Label: position',
@@ -396,12 +396,12 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
