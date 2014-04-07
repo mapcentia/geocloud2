@@ -1,3 +1,16 @@
+/*global Ext:false */
+/*global $:false */
+/*global jQuery:false */
+/*global OpenLayers:false */
+/*global ol:false */
+/*global L:false */
+/*global google:false */
+/*global GeoExt:false */
+/*global mygeocloud_ol:false */
+/*global schema:false */
+/*global document:false */
+/*global window:false */
+
 var geocloud_host; // Global var
 var geocloud;
 geocloud = (function () {
@@ -35,6 +48,7 @@ geocloud = (function () {
         BINGROAD = "bingRoad",
         BINGAERIAL = "bingAerial",
         BINGAERIALWITHLABELS = "bingAerialWithLabels",
+        DTKSKAERMKORT = "dtkSkaermkort",
         attribution = (window.mapAttribution === undefined) ? "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> " : window.mapAttribution;
 
     // In IE7 host name is missing if script url is relative
@@ -302,7 +316,7 @@ geocloud = (function () {
                     var features = [];
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
-                    })
+                    });
                     response.features = features;
                     if (response.features !== null) {
                         me.geoJSON = response;
@@ -446,14 +460,15 @@ geocloud = (function () {
                         this.map.fitWorld();
                     }
                     else {
-                        //Check it!
-                        p1 = transformPoint(extent[0],extent[1], "EPSG:900913", "EPSG:4326");
-                        p2 = transformPoint(extent[2],extent[3], "EPSG:900913", "EPSG:4326");
-                        this.map.fitBounds([[p1.y, p1.x],[p2.y,p2.x]]);
+                        p1 = transformPoint(extent[0], extent[1], "EPSG:900913", "EPSG:4326");
+                        p2 = transformPoint(extent[2], extent[3], "EPSG:900913", "EPSG:4326");
+                        this.map.fitBounds([
+                            [p1.y, p1.x],
+                            [p2.y, p2.x]
+                        ]);
                     }
                     break;
             }
-
         };
         this.zoomToExtentOfgeoJsonStore = function (store) {
             switch (MAPLIB) {
@@ -483,17 +498,17 @@ geocloud = (function () {
         };
         //ol2, ol3 and leaflet
         this.getVisibleLayers = function () {
-            var layerArr = [];
+            var layerArr = [], i;
             switch (MAPLIB) {
                 case "ol2":
-                    for (var i = 0; i < this.map.layers.length; i++) {
+                    for (i = 0; i < this.map.layers.length; i++) {
                         if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                             layerArr.push(this.map.layers[i].params.LAYERS);
                         }
                     }
                     break;
                 case "ol3":
-                    for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                    for (i = 0; i < this.map.getLayers().getLength(); i++) {
 
                         if (this.map.getLayers().a[i].e.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
                             layerArr.push(this.map.getLayers().a[i].id);
@@ -515,17 +530,17 @@ geocloud = (function () {
         };
         //ol2, ol3 and leaflet
         this.getNamesOfVisibleLayers = function () {
-            var layerArr = [];
+            var layerArr = [], i;
             switch (MAPLIB) {
                 case "ol2":
-                    for (var i = 0; i < this.map.layers.length; i++) {
+                    for (i = 0; i < this.map.layers.length; i++) {
                         if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                             layerArr.push(this.map.layers[i].name);
                         }
                     }
                     break;
                 case "ol3":
-                    for (var i = 0; i < this.map.getLayers().getLength(); i++) {
+                    for (i = 0; i < this.map.getLayers().getLength(); i++) {
                         if (this.map.getLayers().a[i].t.visible === true && this.map.getLayers().a[i].baseLayer !== true) {
                             layerArr.push(this.map.getLayers().a[i].id);
                         }
@@ -542,8 +557,12 @@ geocloud = (function () {
                     }
                     break;
             }
-            if (layerArr.length > 0) return layerArr.join(",");
-            else return layerArr;
+            if (layerArr.length > 0) {
+                return layerArr.join(",");
+            }
+            else {
+                return layerArr;
+            }
         };
         //ol2
         this.getBaseLayer = function () {
@@ -709,7 +728,7 @@ geocloud = (function () {
                         visible: false
                     });
                     this.map.addLayer(this.mapQuestAerial);
-                    break
+                    break;
                 case "leaflet":
                     this.mapQuestAerial = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg");
                     lControl.addBaseLayer(this.mapQuestAerial);
@@ -765,10 +784,11 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     try {
-                    this.stamenToner = new L.StamenTileLayer("toner");
-                    lControl.addBaseLayer(this.stamenToner);
+                        this.stamenToner = new L.StamenTileLayer("toner");
+                        lControl.addBaseLayer(this.stamenToner);
                     }
-                    catch (e){}
+                    catch (e) {
+                    }
                     break;
             }
             this.stamenToner.baseLayer = true;
@@ -827,7 +847,7 @@ geocloud = (function () {
             this.baseGNORMAL.baseLayer = true;
             this.baseGNORMAL.id = "googleStreets";
             return (this.baseGNORMAL);
-        }
+        };
         this.addGoogleHybrid = function () {
             switch (MAPLIB) {
                 case "ol2":
@@ -944,39 +964,66 @@ geocloud = (function () {
             l.id = name;
             return (l);
         };
-        this.addYandex = function () {/*
+        this.addDtkSkaermkort = function () {
+            var l, name = "dtkSkaermkort", layer = "dtk_skaermkort",
+                url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache";
             switch (MAPLIB) {
                 case "ol2":
-                    this.osm = new OpenLayers.Layer.OSM("osm");
-                    this.osm.wrapDateLine = false;
-                    this.map.addLayer(this.osm);
-                    this.osm.setVisibility(false);
-                    break;
-                case "ol3":
-                    this.osm = new ol.layer.TileLayer({
-                        source: new ol.source.OSM(),
-                        visible: false
-                    });
-                    this.map.addLayer(this.osm);
+                    l = new OpenLayers.Layer.WMS(name, url, {
+                        layers: layer
+                    }, {wrapDateLine: true});
+                    this.map.addLayer(l);
+                    l.setVisibility(false);
                     break;
                 case "leaflet":
-                    this.yandex = new L.Yandex();
-                    lControl.addBaseLayer(this.yandex);
+                    url = url.replace("cdn.", "{s}.");
+                    l = new L.TileLayer.WMS(url, {
+                        layers: layer,
+                        format: 'image/png',
+                        transparent: true,
+                        subdomains: ["cdn1", "cdn2", "cdn3"]
+                    });
+                    lControl.addBaseLayer(l);
                     break;
             }
-            this.yandex.baseLayer = true;
-            this.yandex.id = "yandex";
-            return (this.yandex);*/
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
+        };
+        this.addYandex = function () {/*
+         switch (MAPLIB) {
+         case "ol2":
+         this.osm = new OpenLayers.Layer.OSM("osm");
+         this.osm.wrapDateLine = false;
+         this.map.addLayer(this.osm);
+         this.osm.setVisibility(false);
+         break;
+         case "ol3":
+         this.osm = new ol.layer.TileLayer({
+         source: new ol.source.OSM(),
+         visible: false
+         });
+         this.map.addLayer(this.osm);
+         break;
+         case "leaflet":
+         this.yandex = new L.Yandex();
+         lControl.addBaseLayer(this.yandex);
+         break;
+         }
+         this.yandex.baseLayer = true;
+         this.yandex.id = "yandex";
+         return (this.yandex);*/
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
+            var layers;
             switch (MAPLIB) {
                 case "ol2":
                     this.showLayer(baseLayerName);
                     this.map.setBaseLayer(this.getLayersByName(baseLayerName));
-                    break
+                    break;
                 case "ol3":
-                    var layers = this.map.getLayers();
+                    layers = this.map.getLayers();
                     for (var i = 0; i < layers.getLength(); i++) {
                         if (layers.a[i].baseLayer === true) {
                             layers.a[i].set("visible", false);
@@ -985,8 +1032,7 @@ geocloud = (function () {
                     this.getLayersByName(baseLayerName).set("visible", true);
                     break;
                 case "leaflet":
-                    var layers = lControl._layers;
-
+                    layers = lControl._layers;
                     for (var key in layers) {
 
                         if (layers.hasOwnProperty(key)) {
@@ -1041,6 +1087,9 @@ geocloud = (function () {
                     break;
                 case "yandex":
                     o = this.addYandex();
+                    break;
+                case "dtkSkaermkort":
+                    o = this.addDtkSkaermkort();
                     break;
             }
             return o;
@@ -1346,7 +1395,7 @@ geocloud = (function () {
                                 }, this.handlerOptions);
                             },
                             trigger: function (e) {
-                                callBack(e)
+                                callBack(e);
                             }
                         });
                         var click = new OpenLayers.Control.Click()
@@ -1402,7 +1451,7 @@ geocloud = (function () {
         if (typeof Proj4js === "object") {
             var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
             var dest = new Proj4js.Proj(d);
-            var p = new Proj4js.Point(lat, lon);
+            p = new Proj4js.Point(lat, lon);
             Proj4js.transform(source, dest, p);
         }
         else {
@@ -1441,6 +1490,7 @@ geocloud = (function () {
         GOOGLETERRAIN: GOOGLETERRAIN,
         BINGROAD: BINGROAD,
         BINGAERIAL: BINGAERIAL,
-        BINGAERIALWITHLABELS: BINGAERIALWITHLABELS
+        BINGAERIALWITHLABELS: BINGAERIALWITHLABELS,
+        DTKSKAERMKORT: DTKSKAERMKORT
     };
 }());

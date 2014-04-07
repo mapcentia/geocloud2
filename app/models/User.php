@@ -30,6 +30,12 @@ class User extends Model {
 		$res = $this -> prepare($query);
 		$res -> execute(array(":sUserID" => $this->userId));
 		$row = $this -> fetchRow($res);
+        if (!$row['userid']) {
+            $response['success'] = false;
+            $response['message'] = "Userid not found";
+            //$response['code'] = 406;
+            return $response;
+        }
 		if (!$this -> PDOerror) {
 			$response['success'] = true;
 			$response['data'] = $row;

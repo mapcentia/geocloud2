@@ -395,6 +395,18 @@ var mygeocloud_ol = (function () {
             //this.map.addLayer(this.yandexMaps);
             //return (this.yandexMaps);
         };
+        this.addDtkSkaermkort = function () {
+            var l, name = "dtkskaermkort", layer = "dtk_skaermkort",
+                url = "http://eu1.mapcentia.com/wms/dk/tilecache";
+            l = new OpenLayers.Layer.WMS(name, url, {
+                layers: layer
+            }, {wrapDateLine: true});
+            this.map.addLayer(l);
+            l.setVisibility(false);
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
+        };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
@@ -436,6 +448,9 @@ var mygeocloud_ol = (function () {
                     break;
                 case "yandex":
                     o = this.addYandex();
+                    break;
+                case "dtkSkaermkort":
+                    o = this.addDtkSkaermkort();
                     break;
             }
             return o;

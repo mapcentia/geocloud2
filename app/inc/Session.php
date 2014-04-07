@@ -28,4 +28,23 @@ class Session
     {
         return $_SESSION['auth'];
     }
+
+    static function getLog()
+    {
+        return $_SESSION["log"];
+    }
+
+    static function createLog($lines, $file)
+    {
+        $num = 15;
+        $_SESSION["log"] .= "<br/<br/>";
+        $_SESSION["log"] .= "<i>{$file} @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
+        for ($i = 0; $i <= sizeof($lines); $i++) {
+            $_SESSION["log"] .= $lines[$i] . "</br>";
+            if ($i >= $num) {
+                $_SESSION["log"] .= "<i>" . (sizeof($lines) - $num - 1) . " more lines</i><br/>";
+                return;
+            }
+        }
+    }
 }

@@ -5,31 +5,16 @@
 /*global GeoExt:false */
 /*global mygeocloud_ol:false */
 /*global schema:false */
+/*global window:false */
 /*global document:false */
-var form;
-var store;
+
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var App = new Ext.App({});
-var writeFiles;
-var clearTileCache;
-var updateLegend;
-var activeLayer;
-var onEditWMSClasses;
-var onAdd;
-var initExtent = null;
-
-// We need to use jQuery load function to make sure that document.namespaces are ready. Only IE
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, initExtent = null, App = new Ext.App({});
 $(window).ready(function () {
+    "use strict";
     Ext.Container.prototype.bufferResize = false;
-    var winAdd;
-    var winAddSchema;
-    var winCartomobile;
-    var winMoreSettings;
-    var winGlobalSettings;
-    var fieldsForStore;
-    var settings;
-    var groups;
+    var winAdd, winAddSchema, winCartomobile, winMoreSettings, winGlobalSettings, fieldsForStore = {}, settings, groups, groupsStore;
 
     $.ajax({
         url: '/controllers/layer/columnswithkey',
@@ -37,8 +22,8 @@ $(window).ready(function () {
         dataType: 'json',
         type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
+            if (http.readyState === 4) {
+                if (http.status === 200) {
                     fieldsForStore = data.forStore;
                 }
             }
@@ -126,7 +111,7 @@ $(window).ready(function () {
     });
     store.load();
 
-    var groupsStore = new Ext.data.Store({
+    groupsStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
             successProperty: 'success',
             root: 'data'
@@ -304,6 +289,7 @@ $(window).ready(function () {
                     renderer: function (value, id, r) {
                         return ('<a href="#">Clear</a>');
                     },
+
                     width: 70
                 }
             ]
@@ -612,7 +598,7 @@ $(window).ready(function () {
     }
 
     onEditWMSClasses = function (e) {
-        var record;
+        var record, markup;
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
             if (row._key_ === e) {
@@ -624,7 +610,7 @@ $(window).ready(function () {
             return false;
         }
         activeLayer = record.f_table_schema + "." + record.f_table_name;
-        var markup = [
+        markup = [
             '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>A SQL must return a primary key and a geometry. Naming and srid must match this: </td></tr></table>' +
                 '<table>' +
                 '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_schema}.{f_table_name}</td></tr>' +
@@ -754,10 +740,12 @@ $(window).ready(function () {
                                 if (f.form.isValid()) {
                                     var values = f.form.getValues();
 
-                                    for (key in values) {
-                                        values[key] = encodeURIComponent(values[key]);
+                                    for (var key in values) {
+                                        if (values.hasOwnProperty(key)) {
+                                            values[key] = encodeURIComponent(values[key]);
+                                        }
                                     }
-                                    ;
+
                                     var param = {
                                         data: values
                                     };
@@ -1011,7 +999,6 @@ $(window).ready(function () {
                     },
                     {
                         xtype: "panel",
-                        //title: "Tile layer setup",
                         autoScroll: true,
                         region: 'east',
                         collapsible: true,
@@ -1087,7 +1074,7 @@ $(window).ready(function () {
                                     {
                                         xtype: "panel",
                                         title: 'Settings',
-                                        height: 570,
+                                        height: 600,
                                         defaults: {
                                             border: false
                                         },
@@ -1117,7 +1104,44 @@ $(window).ready(function () {
                         ]
                     }
                 ]},
-            ct
+            ct,
+            {
+                xtype: "panel",
+                title: 'Log',
+                layout: 'border',
+                listeners: {
+                    activate: function () {
+                        Ext.fly(this.ownerCt.getTabEl(this)).on({
+                            click: function () {
+                                Ext.Ajax.request({
+                                    url: '/controllers/session/log',
+                                    method: 'get',
+                                    headers: {
+                                        'Content-Type': 'application/json; charset=utf-8'
+                                    },
+                                    success: function (response) {
+                                        console.log(response)
+                                        $("#gc-log").html(Ext.decode(response.responseText).data);
+                                    }
+                                    //failure: test
+                                });
+                            }
+                        });
+                    },
+                    single: true
+                },
+                items: [
+                    {
+                        xtype: "panel",
+                        autoScroll: true,
+                        region: 'center',
+                        frame: true,
+                        plain: true,
+                        border: true,
+                        html: "<div id='gc-log'></div>"
+                    }
+                ]
+            }
         ]
     });
     new Ext.Viewport({

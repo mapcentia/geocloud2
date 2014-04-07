@@ -223,14 +223,13 @@ class Model
                 break;
             case "PDO" :
                 try {
+
                     $this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
                     $this->execQuery("set client_encoding='UTF8'", "PDO");
-                } catch (PDOException $e) {
+                } catch (\PDOException $e) {
                     $this->db = NULL;
                     $this->connectionFailed = true;
                     $this->PDOerror[] = "Could not connect to database";
-                    print_r($this->PDOerror);
-                    die();
                 }
                 break;
         }

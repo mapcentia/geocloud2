@@ -4,6 +4,7 @@ namespace app\controllers\upload;
 use \app\conf\App;
 use \app\inc\Response;
 use \app\conf\Connection;
+use \app\inc\Session;
 
 class Process extends \app\inc\Controller
 {
@@ -17,6 +18,7 @@ class Process extends \app\inc\Controller
         }
 
         $srid = ($_REQUEST['srid']) ? : "4326";
+        $encoding = ($_REQUEST['encoding']) ? : "LATIN1";
 
         switch ($_REQUEST['type']) {
             case "Point":
@@ -35,7 +37,7 @@ class Process extends \app\inc\Controller
                 $type = "PROMOTE_TO_MULTI";
                 break;
         }
-        $cmd = "PGCLIENTENCODING=LATIN1 ogr2ogr " .
+        $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
             "-overwrite " .
             "-dim 2 " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
@@ -79,8 +81,10 @@ class Process extends \app\inc\Controller
             $response['message'] = "Layer <b>{$safeName}</b> is created";
             $response['type'] = $geoType;
         } else {
+
             $response['success'] = false;
-            $response['message'] = $out[0];
+            $response['message'] = "Some thing went wrong. Check the log.";
+            Session::createLog($out, $_REQUEST['file']);
         }
         $response['cmd'] = $cmd;
         return Response::json($response);

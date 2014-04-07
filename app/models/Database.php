@@ -44,7 +44,7 @@ class Database extends \app\inc\Model
         $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
         $this->execQuery($sql);
 
-        $this->changeOwner($screenName,$screenName);
+        $this->changeOwner($screenName, $screenName);
 
         if (!$this->PDOerror) {
             return true;
@@ -101,10 +101,13 @@ class Database extends \app\inc\Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
+            $response['code'] = 406;
         }
         return $response;
     }
-    private function changeOwner($db, $newOwner){
+
+    private function changeOwner($db, $newOwner)
+    {
         $this->db = null;
         $this->postgisdb = $db;
 
@@ -112,40 +115,40 @@ class Database extends \app\inc\Model
         $this->begin();
 
         // Schema
-        $sql = "select schema_name from information_schema.schemata where schema_name not like 'pg_%' AND schema_name<>'information_schema'";
+        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows1 = $this->fetchAll($res);
 
         // tables
-        $sql = "select schemaname||'.'||tablename as table from pg_tables WHERE schemaname not like 'pg_%' AND schemaname<>'information_schema'";
+        $sql = "SELECT schemaname||'.'||tablename AS table FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows2 = $this->fetchAll($res);
 
 
-        $sql = "select table_schema||'.'||table_name as table from information_schema.views where table_schema not like 'pg_%' AND table_schema<>'information_schema'";
+        $sql = "SELECT table_schema||'.'||table_name AS table FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows3 = $this->fetchAll($res);
 
 
-        $sql = "select sequence_schema||'.'||sequence_name as table from information_schema.sequences where sequence_schema not like 'pg_%' AND sequence_schema<>'information_schema'";
+        $sql = "SELECT sequence_schema||'.'||sequence_name AS table FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows4 = $this->fetchAll($res);
 
 
-        foreach ($rows1 as $row){
+        foreach ($rows1 as $row) {
             $sql = "alter schema {$row["schema_name"]} owner to {$newOwner}";
             $this->execQuery($sql);
         }
-        foreach ($rows2 as $row){
-            $sql = "alter table {$row["table"]} owner to {$newOwner}";
+        foreach ($rows2 as $row) {
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
         }
-        foreach ($rows3 as $row){
-            $sql = "alter table {$row["table"]} owner to {$newOwner}";
+        foreach ($rows3 as $row) {
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
         }
-        foreach ($rows4 as $row){
-            $sql = "alter table {$row["table"]} owner to {$newOwner}";
+        foreach ($rows4 as $row) {
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
         }
 
@@ -161,7 +164,9 @@ class Database extends \app\inc\Model
         }
         return $response;
     }
-    static function setDb($db){
+
+    static function setDb($db)
+    {
         \app\conf\Connection::$param["postgisdb"] = $db;
     }
 }
