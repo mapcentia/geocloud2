@@ -31,6 +31,9 @@ class Session
 
     static function getLog()
     {
+        if (!$_SESSION["log"]){
+            $_SESSION["log"] = "<i>Log started @ ". date('l jS \of F Y h:i:s A')."</i><br/>";
+        }
         return $_SESSION["log"];
     }
 
