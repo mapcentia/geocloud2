@@ -38,7 +38,7 @@ class Session
     {
         $num = 15;
         $_SESSION["log"] .= "<br/<br/>";
-        $_SESSION["log"] .= "<i>{$file} @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
+        $_SESSION["log"] .= "<i>Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
         for ($i = 0; $i <= sizeof($lines); $i++) {
             $_SESSION["log"] .= $lines[$i] . "</br>";
             if ($i >= $num) {
