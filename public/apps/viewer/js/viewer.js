@@ -54,7 +54,8 @@ MapCentia = (function () {
             layersStr = arr.join(",");
         }
         var javascript =
-            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
+            "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
+                "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
                 "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
                 "<div id='map' style='width: 100%; height: 500px'></div>\n" +
                 "<script>\n" +
