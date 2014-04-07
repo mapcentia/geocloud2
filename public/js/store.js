@@ -1120,7 +1120,6 @@ $(window).ready(function () {
                                         'Content-Type': 'application/json; charset=utf-8'
                                     },
                                     success: function (response) {
-                                        console.log(response)
                                         $("#gc-log").html(Ext.decode(response.responseText).data);
                                     }
                                     //failure: test
