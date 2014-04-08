@@ -1,0 +1,15 @@
+.. module:: textfield.js
+    :synopsis: Overrides for Ext.form.TextField and subclasses.
+
+:mod:`textfield.js`
+===================
+
+{% if override is defined %}
+
+{% for (name, desc) in override|dictsort %}
+* {{ name }}
+
+    {{ desc|indent(4) }}
+{% endfor %}
+{% endif %}
+

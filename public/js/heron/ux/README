@@ -1,0 +1,20 @@
+This directory contains User Extensions (ux).
+
+In general these are third-party components
+that extend the ExtJS, GeoExt and OpenLayers frameworks.
+Most are maintained externally in their own project repository.
+
+One of the goals of Heron is to incorporate GeoExt and OpenLayers components,
+mainly adding/extending these for configurability and Heron compatibility.
+For more structural changes we work as much as possible with the master project.
+
+Most extensions are prebuilt, so only the minified JS and some CSS needs to
+be included in your HTML file.
+
+The following extensions are available.
+
+gxp: OpenGeo GXP is a powerful framework by itself based on GeoExt
+
+oleditor: OpenLayers Editor by GeOps. Additions developed by Heron integrated in official master.
+
+printpreview: a copy of the official version, currently many Heron-specific changes, maintained here

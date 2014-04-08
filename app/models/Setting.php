@@ -77,9 +77,19 @@ class Setting extends Model
     }
     public function updateExtent($extent){
         $arr = $this->getArray();
+
         $obj = (array)$arr['extents'];
         $obj[\app\conf\Connection::$param['postgisschema']] = $extent->extent;
         $arr['extents'] = $obj;
+
+        $obj = (array)$arr['center'];
+        $obj[\app\conf\Connection::$param['postgisschema']] = $extent->center;
+        $arr['center'] = $obj;
+
+        $obj = (array)$arr['zoom'];
+        $obj[\app\conf\Connection::$param['postgisschema']] = $extent->zoom;
+        $arr['zoom'] = $obj;
+
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
             $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";

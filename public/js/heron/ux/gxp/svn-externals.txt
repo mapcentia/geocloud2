@@ -1,0 +1,2 @@
+# svn propset svn:externals . -F svn-externals.txt
+git https://github.com/justb4/gxp/trunk

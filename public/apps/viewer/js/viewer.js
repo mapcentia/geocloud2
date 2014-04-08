@@ -1,3 +1,19 @@
+/*global geocloud:false */
+/*global geocloud_host:false */
+/*global $:false */
+/*global jQuery:false */
+/*global OpenLayers:false */
+/*global ol:false */
+/*global L:false */
+/*global jRespond:false */
+/*global Base64:false */
+/*global array_unique:false */
+/*global google:false */
+/*global GeoExt:false */
+/*global mygeocloud_ol:false */
+/*global schema:false */
+/*global document:false */
+/*global window:false */
 var MapCentia;
 MapCentia = (function () {
     "use strict";
@@ -38,12 +54,12 @@ MapCentia = (function () {
         });
     };
     share = function () {
-        var url = hostname + permaLink(), layers, arr = [], layersStr = "", i;
+        var url = hostname + permaLink(), layers, arr = [], layersStr = "", i, p, javascript;
         $("#modal-share").modal();
         $("#share-url").val(url);
         $("#share-iframe").val("<iframe width='100%' height='500px' frameBorder='0' src='" + url + "'></iframe>");
         //var bbox = cloud.getExtent();
-        var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+        p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
         $("#share-static").val(hostname + "/api/v1/staticmap/png/" + db + "?baselayer=" + cloud.getBaseLayerName().toUpperCase() + "&layers=" + cloud.getNamesOfVisibleLayers() + "&size=" + cloud.map.getSize().x + "x" + cloud.map.getSize().y + "&zoom=" + Math.round(cloud.getZoom()).toString() + "&center=" + (Math.round(p.y * 10000) / 10000).toString() + "," + (Math.round(p.x * 10000) / 10000).toString() + "&lifetime=3600");
 
         layers = cloud.getNamesOfVisibleLayers();
@@ -53,25 +69,24 @@ MapCentia = (function () {
             }
             layersStr = arr.join(",");
         }
-        var javascript =
-            "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
-                "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
-                "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
-                "<div id='map' style='width: 100%; height: 500px'></div>\n" +
-                "<script>\n" +
-                "(function () {\n" +
-                "      var map = new geocloud.map({\n" +
-                "      el: 'map'\n" +
-                "   });\n" +
-                "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-                "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-                "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
-                "   map.addTileLayers({\n" +
-                "      db: '" + db + "',\n" +
-                "      layers: [" + layersStr + "],\n" +
-                "   });\n" +
-                "}())\n" +
-                "</script>";
+        javascript = "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
+            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
+            "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
+            "<div id='map' style='width: 100%; height: 500px'></div>\n" +
+            "<script>\n" +
+            "(function () {\n" +
+            "      var map = new geocloud.map({\n" +
+            "      el: 'map'\n" +
+            "   });\n" +
+            "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+            "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+            "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
+            "   map.addTileLayers({\n" +
+            "      db: '" + db + "',\n" +
+            "      layers: [" + layersStr + "],\n" +
+            "   });\n" +
+            "}())\n" +
+            "</script>";
         $("#share-javascript").val(javascript);
     };
     shareTwitter = function () {
@@ -145,7 +160,6 @@ MapCentia = (function () {
         };
         $.ajax({
             url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + schema,
-            async: false,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {

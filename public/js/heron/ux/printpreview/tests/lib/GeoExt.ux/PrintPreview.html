@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html debug="true">
+  <head>
+    <script type="text/javascript" src="http://www.openlayers.org/api/2.8/OpenLayers.js"></script>
+    <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.2.1/adapter/ext/ext-base.js"></script>
+    <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.2.1/ext-all.js"></script>
+    <script type="text/javascript" src="../../../../../../geoext/lib/GeoExt.js"></script>
+    <script type="text/javascript" src="../../../lib/GeoExt.ux/PrintPreview.js"></script>
+
+    <script type="text/javascript">
+        var printCapabilities = {"scales":[{"name":"1:25,000","value":"25000"},{"name":"1:50,000","value":"50000"},{"name":"1:100,000","value":"100000"},{"name":"1:200,000","value":"200000"},{"name":"1:500,000","value":"500000"},{"name":"1:1,000,000","value":"1000000"},{"name":"1:2,000,000","value":"2000000"},{"name":"1:4,000,000","value":"4000000"}],"dpis":[{"name":"75","value":"75"},{"name":"150","value":"150"},{"name":"300","value":"300"}],"layouts":[{"name":"A4 portrait","map":{"width":440,"height":483},"rotation":true},{"name":"Legal","map":{"width":440,"height":483},"rotation":false}],"printURL":"http://demo.opengeo.org/geoserver/pdf/print.pdf","createURL":"http://demo.opengeo.org/geoserver/pdf/create.json"};
+       
+        function test_initComponent(t) {
+            t.plan(12);
+            
+            var mapPanel = new GeoExt.MapPanel({
+                renderTo: "mappanel",
+                width: 256,
+                height: 256,
+                layers: [new OpenLayers.Layer.WMS("Tasmania State Boundaries",
+                    "http://demo.opengeo.org/geoserver/wms",
+                    {layers: "topp:tasmania_state_boundaries"}, {singleTile: true})],
+                center: [146.56, -41.56],
+                zoom: 7
+            });
+            
+            var log = {};
+            var printPreview = new GeoExt.ux.PrintPreview({
+                renderTo: "printpreview",
+                printMapPanel: {
+                    map: {
+                        controls: [new OpenLayers.Control.PanPanel()],
+                        eventListeners: {
+                            preaddlayer: function() {
+                                log.preaddlayer = true;
+                            }
+                        }
+                    },
+                    printProvider: {
+                        capabilities: printCapabilities
+                    },
+                    sourceMap: mapPanel,
+                    items: [{
+                        xtype: "gx_zoomslider"
+                    }]
+                }
+            });
+            
+            var size = printPreview.printProvider.layout.get("size");
+            var center = mapPanel.map.getCenter();
+            
+            t.eq(printPreview.printMapPanel.map.controls.length, printPreview.printMapPanel.map.controls[0].controls.length+2, "Preview map has only the controls we added,");
+            t.ok(printPreview.printMapPanel.map.controls[0] instanceof OpenLayers.Control.PanPanel, "which is a PanPanel");
+            t.ok(log.preaddlayer, "preaddlayer listener registered.");
+            t.eq(printPreview.printMapPanel.items.getCount(), 2, "PrintMapPanel has two items,");
+            t.eq(printPreview.printMapPanel.items.get(0).getXType(), "gx_zoomslider", "a ZoomSlider");
+            t.eq(printPreview.printMapPanel.items.get(1).getXType(), "panel", "and our map overlay with scaleline etc.");
+            t.ok(printPreview.printProvider, "PrintProvider taken from printMapPanel config.");
+            t.ok(printPreview.sourceMap, "sourceMap taken from printMapPanel config.");
+            
+            var content = printPreview.items.get(1);
+            t.eq(content.items.getCount(), 2, "PrintPreview content has two items,");
+            t.eq(content.items.get(0).getXType(), "form", "a FormPanel");
+            t.eq(content.items.get(1).getXType(), "gx_printmappanel", "and a PrintMapPanel,");
+            t.eq(content.items.get(0).getWidth(), printPreview.items.get(1).getWidth(), "with the form having the same width as the map.");
+            
+            printPreview.destroy();
+            mapPanel.destroy();
+        }
+        
+        function test_createForm(t) {
+            t.plan(3);
+            
+            var mapPanel = new GeoExt.MapPanel({
+                renderTo: "mappanel",
+                width: 256,
+                height: 256,
+                layers: [new OpenLayers.Layer.WMS("Tasmania State Boundaries",
+                    "http://demo.opengeo.org/geoserver/wms",
+                    {layers: "topp:tasmania_state_boundaries"}, {singleTile: true})],
+                center: [146.56, -41.56],
+                zoom: 7
+            });
+            
+            var printPreview = new GeoExt.ux.PrintPreview({
+                renderTo: "printpreview",
+                printProvider: {
+                    capabilities: printCapabilities
+                },
+                sourceMap: mapPanel
+            });
+            t.eq(printPreview.items.get(1).items.get(0).items.get(0).getXType(), "textfield", "textfield line created correctly without legend checkbox.");
+            printPreview.destroy();
+
+            var printPreview = new GeoExt.ux.PrintPreview({
+                renderTo: "printpreview",
+                printProvider: {
+                    capabilities: printCapabilities
+                },
+                sourceMap: mapPanel,
+                legend: "fake_legend",
+                includeLegend: true
+            });
+            t.eq(printPreview.items.get(1).items.get(0).items.get(0).getXType(), "container", "textfield line created correctly with legend checkbox.");
+            t.eq(printPreview.items.get(1).items.get(0).items.get(0).items.get(1).getValue(), true, "legend checkbox checked when includeLegend is set to true.");
+            printPreview.destroy();
+            
+            mapPanel.destroy();
+        }
+
+    </script>
+  <body>
+    <div id="mappanel"></div>
+    <div id="printpreview"></div>
+  </body>
+</html>

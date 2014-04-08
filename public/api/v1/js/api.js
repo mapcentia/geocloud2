@@ -179,7 +179,7 @@ var mygeocloud_ol = (function () {
             return layerArr.join(";");
         };
         this.getZoom = function () {
-            return this.getZoom();
+            return this.map.getZoom();
         };
         this.getPixelCoord = function (x, y) {
             var p = {};

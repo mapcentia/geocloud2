@@ -1,0 +1,189 @@
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#hr-menu-bar, #hr-menu-bar  .x-btn button, #hr-menu-bar x-toolbar-ct, #hr-menu-bar x-toolbar-cell {
+	font-family: tahoma, arial, verdana, sans-serif;
+	font-size: 12px !important;
+	font-weight: bold;
+	color: #00387D !important;
+}
+
+#hr-menu-bar {
+	border-top: 1px solid #00387D;
+}
+
+#hr-framed-page {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.hr-page-content {
+	background-color: #FFFFFF;
+	margin: 50px;
+}
+
+.hr-page-title {
+	color: #007EA9;
+	font-family: Verdana, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 3px;
+	margin-top: 0;
+	border-bottom: 1px solid #00387D;
+}
+
+.hr-page-text {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	text-decoration: none;
+	color: #000000;
+	margin-top: 25px;
+	display: block;
+}
+
+.hr-page-text br {
+	page-break-after: always;
+}
+
+.hr-page-text div, .hr-page-text ul, .hr-page-text ol, .hr-page-text h1, .hr-page-text h2, .hr-page-text h3 {
+	display: block
+}
+
+.hr-page-text ul li {
+	display: list-item
+}
+
+.hr-page-text ul li a {
+	display: inline
+}
+
+.hr-page-text ul {
+	list-style-type: disc
+}
+
+/* LINKS */
+
+.hr-page-text a.direct:link {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: none;
+	color: #FFFFFF;
+	border-style: none;
+	border-width: 0px;
+	font-weight: bold;
+}
+
+.hr-page-text a.direct:visited {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: none;
+	color: #FFFFFF;
+	border-style: none;
+	border-width: 0px;
+	font-weight: bold;
+}
+
+.hr-page-text a.direct:active {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: underline;
+	color: #FFFFFF;
+	border-style: none;
+	border-width: 0px;
+	font-weight: bold;
+}
+
+.hr-page-text a.direct:hover {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: underline;
+	color: #D9C900;
+	border-style: none;
+	border-width: 0px;
+	font-weight: bold;
+}
+
+.hr-page-text a:link {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: none;
+	color: #007EA9;
+	border-style: none;
+	border-width: 0px;
+	line-height: 0;
+}
+
+.hr-page-text a:visited {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: none;
+	color: #007EA9;
+	border-style: none;
+	border-width: 0px;
+	line-height: 0;
+}
+
+.hr-page-text a:active {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: underline;
+	color: #007EA9;
+	border-style: none;
+	border-width: 0px;
+	line-height: 0;
+}
+
+.hr-page-text a:hover {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-decoration: underline;
+	color: #00387D;
+	border-style: none;
+	border-width: 0px;
+	line-height: 0;
+}
+
+.hr-page-text ul {
+	margin-left: 40px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.hr-page-text li {
+	display: list-item;
+}
+
+.hr-page-text h1 {
+	margin-bottom: 0;
+	font-weight: bold;
+	margin-top: 5px;
+	font-size: 14px;
+}
+
+.hr-page-text h2 {
+	margin-bottom: 0;
+	font-weight: bold;
+	margin-top: 5px;
+	font-size: 12px;
+}
+
+.hr-page-text p {
+	display: block;
+	margin-top: 8px;
+}
+
+.hr-page-text pre {
+	display: block;
+	font-family: monospace;
+	white-space: pre;
+}
+
+.hr-page-text a.hr-external {
+	background: url("../images/external.png") no-repeat scroll 99.5% 4px transparent;
+	padding-right: 15px;
+}

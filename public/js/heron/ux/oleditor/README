@@ -1,0 +1,31 @@
+The OpenLayers Editor (OLE) is a set of OpenLayers widgets developed by GeOps http://www.geops.de.
+
+The source repository is on GitHub https://github.com/geops/ole.
+The original set of widgets has been extended (Upload/Download/Text Labels and some more) for use in Heron,
+but possibly in any OpenLayers app.
+These extensions are maintained in GitHub as well:
+https://github.com/justb4/ole as a fork of the GeOps master branch.
+At the moment (14.mrt.2013) this fork is awaiting inclusion into the master branch.
+
+The directory 'client' below contains only the OLE client library.
+It is synchronized via svn:externals from https://github.com/justb4/ole/trunk/client.
+The SVN link is: https://github.com/justb4/ole/trunk/client
+(GitHub support SVN access)
+
+The command used to set the svn:externals is (onder ole dir):
+
+svn propset svn:externals . -F svn-ext-val.txt
+
+If you checkout Heron via SVN the OLEditor client will automatically be included.
+
+Use the minimized ole/ole.min.js version in your production app.
+
+See also the Heron example "editorbasics" how to use. Only CSS and minifed JS needs to be included:
+
+    <link rel="stylesheet" href="../../ux/oleditor/ole/client/theme/geosilk/geosilk.css" type="text/css" />
+    <script type="text/javascript" src="../../ux/oleditor/ole/ole.min.js"></script>
+
+
+
+
+

@@ -1,0 +1,998 @@
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* ------------------------------------------------------------------- */
+/* --- Heron --------------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+#hr-mainpanel {
+    /*  position: absolute;
+            top: 0px;
+            left: 0px;     debugging IE */
+    height: 100%;
+    width: 100%;
+}
+
+.hr-html-panel-body {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    color: #000000;
+    margin: 5px;
+}
+
+.hr-html-panel-font-size-11 {
+    font-size: 11px;
+}
+.hr-html-panel-font-size-12 {
+    font-size: 11px;
+}
+
+.hr-legend-panel-header {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold; 
+    text-decoration: none;
+    color: #000000;
+    margin-top: 2px;
+    margin-bottom: 2px;    
+}
+
+.hr-bookmark-panel-body {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    color: #000000;
+    margin: 5px;
+}
+
+.hr-bookmark-title-description {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    color: #000000;
+    margin: 5px;
+}
+
+.hr-bookmark-title-header {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold; 
+    text-decoration: none;
+    color: #000000;
+    margin: 5px;
+    margin-top: 2px;
+    margin-bottom: 4px;    
+}
+
+.hr-bookmark-title-hr {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold; 
+    text-decoration: none;
+    color: #000000;
+    margin: 5px;
+    margin-top: 10px;
+    margin-bottom: 0px;    
+}
+
+.hr-bookmark-link-project {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    color: #000000;
+    margin-left: 5px;
+    margin-top: 1px;
+    margin-bottom: 1px;    
+}
+
+.hr-bookmark-link-user {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    float: left;
+    color: #000000;
+    margin-left: 5px;
+    margin-top: 1px;
+    margin-bottom: 1px;    
+}
+
+.hr-bookmark-link-invalid {
+    background-color: #ffffff;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    float: left;
+    color: gray;
+    margin-left: 5px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.hr-bookmark-close-icon {
+    margin: 0 !important;
+    background-image: url('../images/silk/bullet_delete.png') !important;
+    background-repeat: no-repeat;
+    background-position: 0px;
+}
+
+/** LayerTree icons. */
+.hr-treenode-legend {
+  padding-left: 58px;
+}
+
+.hr-tree-node-icon-none {
+	margin: 0 !important;
+	background-image: url(../images/blanc.gif) !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.hr-tree-node-icon-layer-vector {
+	margin: 0 !important;
+	background-image: url(../images/silk/bullet_vector.png) !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.hr-tree-node-icon-layer-raster {
+	margin: 0 !important;
+	background-image: url(../images/silk/bullet_raster.png) !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.hr-tree-node-icon-layer-atom {
+	margin: 0 !important;
+	background-image: url(../images/silk/feed.png) !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+#viewer_north_img {
+    position: absolute;
+    top: 4px;
+    left: 24px;
+    text-align: left;
+    float: left
+}
+
+#viewer_north_text {
+    position: absolute;
+    top: 20px;
+    left: 180px;
+    font-size: 14px;
+    color: #007EA9;
+    display: inline-block
+}
+
+img.kad_logo {
+    height: 41px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+/**
+ * Download Features
+ */
+.olEditorControlEditorPanel .olEditorControlStyleFeatureItemActive,
+.olEditorControlEditorPanel .olEditorControlStyleFeatureItemInactive {
+    background-image: url("../images/silk/palette.png");
+}
+
+/** To make grid cell text by default selectable, see http://www.sencha.com/learn/grid-faq/
+See also override-ext.js for GridView cell Template adaptation.
+*/
+.x-selectable, .x-selectable * {
+    -moz-user-select: text!important;
+    -khtml-user-select: text!important;
+    -webkit-user-select: text!important;
+}
+
+/** Override x-color-palette (vector styling). */
+.x-color-palette {
+    width: 456px;
+    height: 248px;
+    cursor: pointer;
+}
+
+/* From ExtJs - blue theme */
+/* Could be in the App-css */
+/* Somehow this needs to be in to get the right blue style...*/
+.x-panel-header {
+    color:#15428b;
+    font-weight:bold;
+    font-size: 11px;
+    font-family: tahoma,arial,verdana,sans-serif;
+    border-color:#99bbe8;
+
+    /** In order to align with map panel toolbar http://code.google.com/p/geoext-viewer/issues/detail?id=162 */
+    padding-top: 5px;
+    padding-bottom: 6px;
+    /* height: 19px; see issue #162 */
+    /* background-image: url(../images/default/panel/white-top-bottom.gif); */
+}
+
+
+/* don't wrap lines on any tooltips */
+.x-tip {
+    white-space: nowrap;
+}
+
+/* get images on buttons with text to line up with those with no text */
+.x-btn-text-icon .x-btn-center .x-btn-text {
+    background-position: 0 3px;
+}
+
+/* apply some margin when using the row expander */
+.x-grid3-row-body p {
+    margin: 5px !important;
+}
+
+.x-grid3-row-selected {
+    background-color: #EAEAEA !important;
+    border-color: #444444 !important;
+    border-width: 1px !important;
+    border-style: dotted;
+}
+
+/* workaround for semi-alpha pixels in IE7: background needs to be the same
+ * as the toolbar's background color */
+.ext-ie .x-item-disabled .x-btn-text {
+    background-color: #EAEAEA;
+}
+
+.x-tree-node img.gx-folder, .x-tree-node-collapsed img.gx-folder {
+    background: url("../images/default/tree/folder.gif");
+}
+
+.x-tree-node-expanded img.gx-folder {
+    background: url("../images/default/tree/folder-open.gif");
+}
+
+.x-menu-group-item .x-menu-item-icon {
+    background: transparent url("../images/default/form/radio.gif") no-repeat 0 0;
+    height: 13px;
+    width: 13px;
+    margin: 2px;
+}
+
+.x-menu-item-checked .x-menu-group-item .x-menu-item-icon {
+    background: transparent url("../images/default/form/radio.gif") no-repeat -13px -13px;
+    height: 13px;
+    width: 13px;
+    margin: 2px;
+}
+
+.x-btn .icon-about {
+    background-image: url("../images/silk/help.png") !important;
+}
+
+.x-btn .icon-addlayers {
+    background-image: url("../images/silk/add.png") !important;
+}
+
+.x-btn .icon-removelayers {
+    background-image: url("../images/silk/delete.png") !important;
+}
+
+.x-btn .icon-addserver {
+    background-image: url("../images/silk/server_add.png") !important;
+}
+
+.x-btn .icon-getfeatureinfo {
+    background-image: url("../images/silk/information.png") !important;
+}
+.icon-getfeatureinfo {
+    background: url("../images/silk/information.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-information {
+    background-image: url("../images/silk/information.png") !important;
+}
+.icon-information {
+    background: url("../images/silk/information.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-help {
+    background-image: url("../images/silk/help.png") !important;
+}
+.icon-help {
+    background: url("../images/silk/help.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-opacity {
+    background-image: url("../images/silk/layers.png") !important;
+}
+.icon-opacity {
+    background: url("../images/silk/layers.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-featuretooltip {
+    background-image: url("../images/silk/comment.png") !important;
+}
+.icon-featuretooltip {
+    background: url("../images/silk/comment.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-bookmark {
+    background-image: url("../images/star.png") !important;
+}
+.icon-bookmark {
+    background: url("../images/star.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* more specific icon: ../images/silk/map_save.png */ 
+.x-btn .icon-map-save {
+    background-image: url("../images/silk/disk.png") !important;
+}
+.icon-map-save {
+    background: url("../images/silk/disk.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* more specific icon: ../images/silk/map_open.png */ 
+.x-btn .icon-map-open {
+    background-image: url("../images/default/tree/folder-open.gif") !important;
+}
+.icon-map-open {
+    background: url("../images/default/tree/folder-open.gif") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+
+.x-btn .icon-export {
+    background-image: url("../images/silk/map_go.png") !important;
+}
+.icon-export {
+    background: url("../images/silk/map_go.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-measure {
+    background-image: url("../images/geosilk/ruler.png") !important;
+}
+.icon-measure {
+    background: url("../images/geosilk/ruler.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-measure-length {
+    background-image: url("../images/geosilk/ruler.png") !important;
+}
+.icon-measure-length {
+    background: url("../images/geosilk/ruler.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-measure-area {
+    background-image: url("../images/geosilk/ruler_square.png") !important;
+}
+.icon-measure-area {
+    background: url("../images/geosilk/ruler_square.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-layer-switcher {
+    background-image: url("../images/silk/layers.png") !important;
+}
+.icon-layer-switcher {
+    background: url("../images/silk/layers.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-zoom-in {
+    background-image: url("../images/silk/magnifier_zoom_in.png") !important;
+}
+.icon-zoom-in {
+    background: url("../images/silk/magnifier_zoom_in.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-zoom-out {
+    background-image: url("../images/silk/magnifier_zoom_out.png") !important;
+}
+.icon-zoom-out {
+    background: url("../images/silk/magnifier_zoom_out.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-find {
+    background-image: url("../images/silk/find.png") !important;
+}
+.icon-find {
+    background: url("../images/silk/find.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-zoom-previous {
+    background-image: url("../images/silk/arrow_left.png") !important;
+}
+.icon-zoom-previous {
+    background: url("../images/silk/arrow_left.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-zoom-next {
+    background-image: url("../images/silk/arrow_right.png") !important;
+}
+.icon-zoom-next {
+    background: url("../images/silk/arrow_right.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-zoom-visible {
+    background-image: url("../images/silk/arrow_out.png") !important;
+}
+.icon-zoom-visible {
+    background: url("../images/silk/arrow_out.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-hand {
+    background-image: url("../images/momentum/handtool3.png") !important;
+}
+.icon-hand {
+    background: url('../images/momentum/handtool3.png') no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-pan {
+    background-image: url("../images/geosilk/pan.png") !important;
+}
+.icon-pan {
+    background: url('../images/geosilk/pan.png') no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-save-features {
+    background-image: url("../images/silk/disk.png") !important;
+}
+.icon-save-features {
+    background: url("../images/silk/disk.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-download {
+    background-image: url("../images/silk/basket_put.png") !important;
+}
+.icon-download {
+    background: url("../images/silk/basket_put.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-upload {
+    background-image: url("../images/upload.png") !important;
+}
+.icon-upload {
+    background: url("../images/upload.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.icon-mapedit {
+    background: url("../images/silk/map_edit.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-printer {
+    background-image: url("../images/silk/printer.png") !important;
+}
+
+.icon-printer {
+    background: url("../images/silk/printer.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-print-direct {
+    background-image: url("../images/print-direct.png") !important;
+}
+
+.icon-print-direct {
+    background: url("../images/print-direct.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-palette {
+    background-image: url("../images/silk/palette.png") !important;
+}
+
+.icon-palette {
+    background: url("../images/silk/palette.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-arrow-left {
+    background-image: url("../images/silk/arrow_left.png") !important;
+}
+
+.x-btn .icon-arrow-right {
+    background-image: url("../images/silk/arrow_right.png") !important;
+}
+
+
+.x-btn .icon-detail {
+    background-image: url("../images/silk/detail.png") !important;
+}
+
+.x-btn .icon-table {
+    background-image: url("../images/silk/table.png") !important;
+}
+
+.x-btn .icon-table-save {
+    background-image: url("../images/silk/table_save.png") !important;
+}
+
+.x-btn .icon-table-clear {
+    background-image: url("../images/silk/delete.png") !important;
+}
+
+.x-btn .icon-table-export {
+    background-image: url("../images/silk/table_go.png") !important;
+}
+.icon-table-export {
+    background: transparent url("../images/silk/table_go.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.x-btn .icon-map-pin {
+    background-image: url("../images/map_pin.png") !important;
+}
+.icon-map-pin {
+    background: url("../images/map_pin.png") no-repeat 0 0 !important;
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.legend-item {
+    margin: 0.5em 10px;
+}
+
+div.map-overlay {
+    z-index: 1000;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
+
+div.map-overlay div.overlay-element {
+    display: inline;
+    float: left;
+    margin: 5px;
+}
+
+.overlay-scaleline {
+    bottom: 0px;
+    left: 0px;
+    margin-top: 0px;
+}
+
+/* ------------------------------------------------------------------- */
+/* --- OpenLayers ---------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+
+.olHandlerBoxZoomBox {
+    border: 2px solid red;
+    position: absolute;
+    background-color: white;
+    opacity: 0.50;
+    font-size: 1px;
+    filter: alpha(opacity = 50);
+}
+
+/* ------------------------------------------------------------------- */
+/* OL - Pan- and Zoombar Panel Styles                                  */
+/* ------------------------------------------------------------------- */
+.olControlPanPanel div {
+    /* ExtJS-3.4.0 - xtheme-blue */
+    background-image: url('../images/default/panel/tool-sprites.gif') !important;
+    /* ExtJS-3.4.0 - xtheme-gray  */
+    /* background-image: url('../images/default/panel/tool-sprites-gray.gif') !important; */
+    height: 15px !important;
+    width: 15px !important;
+    /* workaround for button height in IE */
+    font-size: 0 !important;
+}
+.olControlPanPanel .olControlPanNorthItemInactive {
+    background-position: 15px -60px !important;
+    left: 16px !important;
+}
+.olControlPanPanel .olControlPanEastItemInactive {
+    background-position: 15px -120px !important;
+    left: 30px !important;
+    top: 16px !important;
+}
+.olControlPanPanel .olControlPanSouthItemInactive {
+    background-position: 15px -75px !important;
+    left: 16px !important;
+    top: 32px !important;
+}
+.olControlPanPanel .olControlPanWestItemInactive {
+    background-position: 15px -105px !important;
+    left: 2px !important;
+    top: 16px !important;
+}
+
+.olControlZoomPanel {
+    left:21px !important;
+}
+.olControlZoomPanel div {
+    /* ExtJS-3.4.0 - xtheme-blue */
+    background-image: url('../images/default/panel/tool-sprites.gif') !important;
+    /* ExtJS-3.4.0 - xtheme-gray  */
+    /* background-image: url('../images/default/panel/tool-sprites-gray.gif') !important; */
+    height: 15px !important;
+    width: 15px !important;
+    /* workaround for button height in IE */
+    font-size: 0 !important;
+}
+.olControlZoomPanel .olControlZoomInItemInactive {
+    background-position: 15px -240px !important;
+    top: -5px !important;
+}
+.olControlZoomPanel .olControlZoomToMaxExtentItemInactive {
+    display: none !important;
+}
+.olControlZoomPanel .olControlZoomOutItemInactive {
+    background-position: 15px -255px !important;
+    top: 168px !important;
+}
+
+/*div.olControlZoom {*/
+    /*position: absolute;*/
+    /*top: 63px !important;*/
+    /*left: 20px !important;*/
+    /*border-radius: 4px;*/
+    /*padding: 0px;*/
+/*}*/
+/*div.olControlZoom a {*/
+    /* ExtJS-3.4.0 - xtheme-gray  */
+    /* color: #15428b; */   /* ExtJS-3.4.0 - xtheme-blue */
+    /* color: #333; */      /* ExtJS-3.4.0 - xtheme-gray */
+    /*color: #15428b;*/
+    /* background-color: #D3E1F1; */  /* ExtJS-3.4.0 - xtheme-blue */
+    /* background-color: #E9E9E9; */  /* ExtJS-3.4.0 - xtheme-gray */
+    /*background-color: #D3E1F1;*/
+    /*border: solid 1px;*/
+    /* border-color: #849CBD; */    /* ExtJS-3.4.0 - xtheme-blue */
+    /* border-color: #aaaaaa; */    /* ExtJS-3.4.0 - xtheme-gray */
+    /*border-color: #849CBD;*/
+    /*display: block;*/
+    /*margin: 1px;*/
+    /*font-size: 11px;*/
+    /*font-family: Verdana, Arial, Helvetica, sans-serif;*/
+    /*font-weight: bold;*/
+    /*text-decoration: none;*/
+    /*text-align: center;*/
+    /*height: 15px;*/
+    /*width:15px;*/
+    /*line-height: 15px;*/
+    /*filter: alpha(opacity=100);*/
+/*}*/
+/*div.olControlZoom a:hover {*/
+    /* background-color: #D3E1F1; */  /* ExtJS-3.4.0 - xtheme-blue */
+    /* background-color: #E9E9E9; */  /* ExtJS-3.4.0 - xtheme-gray */
+    /*background-color: #D3E1F1;*/
+    /*filter: alpha(opacity=80);*/
+/*}*/
+/*a.olControlZoomIn {*/
+    /*border-radius: 4px 4px 0 0;*/
+/*}*/
+/*a.olControlZoomOut {*/
+    /*border-radius: 0 0 4px 4px;*/
+/*}*/
+
+.olControlScaleLine {
+    font-family: tahoma, arial, helvetica, sans-serif;
+}
+
+.olControlLoadingPanel {
+    /* background-color: #D3E1F1; */  /* ExtJS-3.4.0 - xtheme-blue  */
+    /* background-color: #E9E9E9; */  /* ExtJS-3.4.0 - xtheme-gray  */
+    /* background-color: #D9ECFF; */  /* for tool-sprite.gif - blue */
+    background-color: #D3E1F1;
+    background-image: url('../images/loading-transparent.gif') !important;
+    background-repeat: no-repeat;
+    background-position: 5px;
+    display: none;
+    color: #000000;
+    margin-left: 65px;
+    margin-top: 15px;
+    padding-left: 30px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    border: solid 1px;
+
+    /* for tool-sprite.gif - blue */
+    border-bottom-color: #849CBD;
+    border-right-color: #849CBD;
+    border-top-color: #849CBD;
+    border-left-color: #849CBD;
+
+    /* for tool-sprite-gray.gif - gray */
+    /*
+    border-bottom-color: #aaaaaa;
+    border-right-color: #aaaaaa;
+    border-top-color: #aaaaaa;
+    border-left-color: #aaaaaa;
+    */
+
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    box-shadow: 2px 2px 2px #000;
+    -moz-box-shadow: 2px 2px 2px #000;
+    -webkit-box-shadow: 2px 2px 2px #000;
+}
+
+.olControlAttribution {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    right: 3px;
+    bottom: 3.5em;
+    position: absolute;
+    display: block;
+}
+
+.olControlMeasureDistanceActive { cursor: crosshair; }
+.olControlPanel .olControlMeasureDistanceItemInactive { cursor: pointer; }
+
+.olControlMeasureAreaActive { cursor: crosshair; }
+.olControlPanel .olControlMeasureAreaItemInactive { cursor: pointer; }
+
+.olLayerGooglePoweredBy.olLayerGoogleV3.gmnoprint {
+    visibility: hidden;
+}
+
+/** EditingToolbar for SpatialSearchPanel settings, extra rectangle drawer. and position left. */
+
+/* layouts */
+.olControlEditingToolbar div {
+    background-image: url("../images/openlayers/editing_tool_bar_circle.png");
+    float: left;
+}
+
+.olControlEditingToolbar .olControlDrawRectangleItemInactive{
+    background-position: -128px -1px;
+}
+
+.olControlEditingToolbar .olControlDrawRectangleItemActive {
+    background-position: -128px -24px;
+}
+
+.olControlEditingToolbar .olControlDrawCircleItemInactive{
+    background-position: -1px -1px;
+}
+
+.olControlEditingToolbar .olControlDrawCircleItemActive {
+    background-position: -1px -24px;
+}
+
+.olControlLayerSwitcher {
+  font-weight: normal;
+}
+
+/* ------------------------------------------------------------------- */
+/* --- GeoExt -------------------------------------------------------- */
+/* ------------------------------------------------------------------- */
+
+/* position the zoom slider within the OL Zoombar panel */
+.gx-zoomslider {
+    top: 85px !important;
+    left: 18px !important;
+}
+
+.gx-layer-menu {
+    background: #F0F0F0;
+}
+
+.gx-field-label {
+    font-weight: bold;
+    margin: 4px;
+    vertical-align: baseline;
+}
+
+.gx-snippet-area textarea {
+    color: black;
+    opacity: 1;
+}
+
+.gx-info-panel {
+    margin: 1em;
+}
+
+.gx-info-panel h2 {
+    margin-top: 1em;
+}
+
+.gx-wizard-description p {
+    margin: 4px auto;
+    background: none;
+}
+
+.gx-wizard-pane {
+    padding: 4px;
+}
+
+.gx-grid-true {
+    background: red;
+}
+
+.gx-grid-false {
+    background: blue;
+}
+
+.gx-wizard-active button {
+    font-weight: bold;
+}
+
+.gx-wizard-pane .x-panel-body {
+    background: none;
+}
+
+.gx-wizard-pane .x-grid3-dirty-cell {
+    background-image: none;
+}
+
+.gx-layer-visibility {
+    background-image: url("../images/silk/eye.png");
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.gx-activelayer-drag-icon {
+    margin: 0 !important;
+    /* background-image: url("../images/drag.png") !important; */
+    background-image: url('../images/drag_v.png') !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.gx-tree-layer-actions {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    float: left !important;
+}
+.gx-tree-layer-action {
+    background-position: center center;
+    background-repeat: no-repeat;
+    border: 0 none;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+    width: 16px;
+}
+.gx-tree-layer-actions .up {
+    background: transparent url('../images/silk/bullet_arrow_up.png') !important;
+}
+.gx-tree-layer-actions .down {
+    background: transparent url('../images/silk/bullet_arrow_down.png') !important;
+}
+.gx-tree-layer-actions .opacity {
+    background: transparent url('../images/silk/bullet_picture.png') !important;
+}
+.gx-tree-layer-actions .tools {
+    background: transparent url('../images/silk/bullet_wrench.png') !important;
+}
+.gx-tree-layer-actions .remove {
+    background: transparent url('../images/silk/bullet_delete.png') !important;
+}
+.gx-tree-layer-actions .disabled {
+    opacity: 0.6;
+}
+/*
+.x-tree-node-el {
+    border-bottom: 1px solid #ddd;
+}
+.x-tree-no-lines .x-tree-elbow,
+.x-tree-no-lines .x-tree-elbow-end,
+.x-tree-node-collapsed .x-tree-node-icon,
+.x-tree-node-expanded .x-tree-node-icon,
+.x-tree-node-leaf .gx-tree-layer-icon {
+    width: 0px; !important;
+}
+*/
+
+/* ------------------------ */
+/* GeoExt - ux.PrintPreview */
+/* ------------------------ */
+.gx-map-overlay .x-panel-body {
+    /* from ExtJS - xtheme-blue.css - .ext-el-mask-msg */
+    background-color: #c3daf9;
+}

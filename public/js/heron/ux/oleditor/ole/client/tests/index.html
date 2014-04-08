@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>OpenLayers.Editor Test Suite</title>
+        <link rel="stylesheet" href="qunit.css" type="text/css" media="screen">
+        <script src="qunit.js"></script>
+        <!-- OLE dependencies -->
+        <script src="http://openlayers.org/api/OpenLayers.js"></script>
+        <!-- OLE files -->
+        <script>
+            var wkt = new OpenLayers.Format.WKT();
+        </script>
+        <script src="../lib/loader.js"></script>
+        <!-- Tests -->
+        <script src="testEditor.js"></script>
+<!--        <script src="Control/testCleanFeature.js"></script>-->
+        <script src="Control/testDeleteFeature.js"></script>
+        <script src="Control/testDrawHole.js"></script>
+        <script src="Control/testDrawPolygon.js"></script>
+        <script src="Control/testEditorPanel.js"></script>
+        <script src="Control/testImportFeature.js"></script>
+        <script src="Control/testLayerSettings.js"></script>
+        <script src="Control/testTransformFeature.js"></script>
+    </head>
+    <body>
+        <h1 id="qunit-header">OpenLayers.Editor Test Suite</h1>
+        <h2 id="qunit-banner"></h2>
+        <div id="qunit-testrunner-toolbar"></div>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+    </body>
+</html>

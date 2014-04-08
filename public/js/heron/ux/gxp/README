@@ -1,0 +1,18 @@
+This is a clone of the GXP project maintained by OpenGeo (gxp.opengeo.org).
+
+The files are not maintained here but included as a submodule from an external repo.
+
+This is effected as follows:
+
+1. via SVN externals property the repo: https://github.com/justb4/gxp (master) is included automatically
+2. https://github.com/justb4/gxp/ is a clone of https://github.com/opengeo/gxp (master)
+3. in https://github.com/justb4/gxp small fixes are made for Heron compat
+4. any structural changes will be offered to the GXP project via GitHub "pull"
+5. the file gxp.js is a minified build of https://github.com/justb4/gxp, checked in only on changes
+and using the original GXP build tools (Buildkit, Ringo via "ant buildjs" command).
+
+To include GXP see example "querybuilder":
+
+    <link rel="stylesheet" type="text/css" href="../../ux/gxp/git/src/theme/all.css"/>
+    <script type="text/javascript" src="../../ux/gxp/gxp.js"></script>
+

@@ -14,9 +14,13 @@
    # Rewrite URL so tile request is going direct to TileCache cgi
    RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
 
-   # Rewrite URL to HTLM map viewer
+   # Rewrite URL to HTML map viewer
    RewriteCond %{REQUEST_FILENAME} !-f
    RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
+
+   # Rewrite URL to HTLM Heron map viewer
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteRule apps/hviewer/(.*)/(.*) apps/hviewer/index.html [L]
 
    # Rewrite all other URLs to index.php/URL
    RewriteCond %{REQUEST_FILENAME} !-f

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>OpenLayers.Editor</title>
+    <meta charset="utf-8">
+
+    <script src="http://openlayers.org/api/2.12/OpenLayers.js"></script>
+    <script type="text/javascript" src="../lib/loader.js"></script>
+    <script type="text/javascript">
+
+        function init() {
+
+            var map, editor;
+            OpenLayers.Lang.setCode(language);
+
+            map = new OpenLayers.Map('map');
+            map.addLayer(new OpenLayers.Layer.OSM());
+            map.setCenter(new OpenLayers.LonLat(10, 50), 5);
+
+            editor = new OpenLayers.Editor(map, {
+                activeControls: ['Navigation', 'SnappingSettings', 'CADTools', 'TransformFeature', 'Separator', 'DeleteFeature', 'DragFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature', 'Separator'],
+                featureTypes: ['regular', 'polygon', 'path', 'point']
+            });
+            editor.startEditMode();
+        }
+    </script>
+    <style type="text/css">
+    /* Make map consume all available space */
+    html, body, #map {
+        height:100%;
+        margin:0;
+    }
+    </style>
+    <link rel="stylesheet" href="../theme/geosilk/geosilk.css" type="text/css" />
+</head>
+<body onload="init()">
+    <div id="map"></div>
+</body>
+</html>

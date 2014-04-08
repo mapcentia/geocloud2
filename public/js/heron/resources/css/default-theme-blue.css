@@ -1,0 +1,338 @@
+ /*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
+/* ------------------------------------------------------------------- */
+/* --- OpenLayers ---------------------------------------------------- */
+/* --- Pan / Zoombar / ControlZoom / Panel styles -------------------- */
+/* ------------------------------------------------------------------- */
+.olControlPanPanel div {
+    /* ExtJS-3.4.x - xtheme-blue */
+    background-image: url('../images/default/panel/tool-sprites-blue.gif') !important;
+    height: 15px !important;
+    width: 15px !important;
+    /* workaround for button height in IE */
+    font-size: 0 !important;        
+}
+.olControlZoomPanel div {
+    /* ExtJS-3.4.0 - xtheme-blue */
+    background-image: url('../images/default/panel/tool-sprites-blue.gif') !important;
+    height: 15px !important;
+    width: 15px !important;
+    /* workaround for button height in IE */
+    font-size: 0 !important;        
+}
+
+div.olControlZoom a {
+    display: block;
+    margin: 1px;
+    padding: 0;
+    /* OL */
+	/* color: white; */
+	/* ExtJS-3.4.x */
+    /* color: #15428b; */               /* ExtJS-3.4.x - xtheme-blue */
+    /* color: #333; */                  /* ExtJS-3.4.x - xtheme-gray */
+    /* color: #fff; */                  /* ExtJS-3.4.x - xtheme-access */
+    /* color: #144603; */               /* ExtJS-3.4.x - xtheme-greenery */
+    color: #15428b !important;
+    font-size: 18px;
+    font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    text-decoration: none;
+    text-align: center;
+    height: 22px;
+    width:22px;
+    line-height: 19px;
+    /* OL */
+    /* background: #130085; */ /* fallback for IE - IE6 requires background shorthand*/
+    /* background: rgba(0, 60, 136, 0.5); */
+	/* ExtJS-3.4.x */
+    /* background-color: #D3E1F1; */    /* ExtJS-3.4.x - xtheme-blue */
+    /* background-color: #E9E9E9; */    /* ExtJS-3.4.x - xtheme-gray */
+    /* background-color: #232D38; */    /* ExtJS-3.4.x - xtheme-access */
+    /* background-color: #e2f2c3; */    /* ExtJS-3.4.x - xtheme-greenery */
+    background-color: #D3E1F1 !important;
+    filter: alpha(opacity=80);
+	/* ExtJS-3.4.x */
+    /* border-color: #849CBD; */        /* ExtJS-3.4.x - xtheme-blue */
+    /* border-color: #aaaaaa; */        /* ExtJS-3.4.x - xtheme-gray */
+    /* border-color: #737b8c; */        /* ExtJS-3.4.x - xtheme-access */
+    /* border-color: #9eae7f; */        /* ExtJS-3.4.x - xtheme-greenery */
+    border: solid 1px;
+    border-color: #aaaaaa;
+}
+div.olControlZoom a:hover {
+    /* OL */
+    /* background: #130085; */ /* fallback for IE */
+    /* background: rgba(0, 60, 136, 0.7); */
+	/* ExtJS-3.4.x */
+    /* background-color: #c3daf9; */    /* ExtJS-3.4.0 - xtheme-blue */
+    /* background-color: #dbdbdb; */    /* ExtJS-3.4.0 - xtheme-gray */
+    /* background-color: #e5872c; */    /* ExtJS-3.4.0 - xtheme-access */
+    /* background-color: #9eae7f; */    /* ExtJS-3.4.0 - xtheme-greenery */
+    font-weight: bold;
+    color: #15428b !important;
+    background-color: #c3daf9 !important;
+    filter: alpha(opacity=100);
+}
+
+.olControlLoadingPanel {
+    /* background-color: #D3E1F1; */    /* ExtJS-3.4.x - xtheme-blue  */
+    /* background-color: #E9E9E9; */    /* ExtJS-3.4.x - xtheme-gray  */
+    /* background-color: #232d38; */    /* ExtJS-3.4.x - xtheme-access  */
+    /* background-color: #e2f2c3; */    /* ExtJS-3.4.x - xtheme-greenery */
+    /* background-color: #D9ECFF; */    /* for tool-sprite.gif - blue */
+    background-color: #D3E1F1;
+    background-image: url('../images/loading-transparent.gif') !important;
+    background-repeat: no-repeat;
+    background-position: 5px;
+    display: none;
+    /* color: #000000; */  				/* ExtJS-3.4.x - xtheme-blue  */
+    /* color: #000000; */               /* ExtJS-3.4.x - xtheme-gray */
+    /* color: #fff; */                  /* ExtJS-3.4.x - xtheme-access */
+    /* color: #144603; */				/* ExtJS-3.4.x - xtheme-greenery */
+    color: #000000;
+    margin-left: 65px;
+    margin-top: 15px;
+    padding-left: 30px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;	
+    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    border: solid 1px;
+
+    /* for tool-sprite.gif - blue */
+    border-bottom-color: #849CBD;
+    border-right-color: #849CBD;
+    border-top-color: #849CBD;
+    border-left-color: #849CBD;
+    
+    /* for tool-sprite-gray.gif - gray */
+    /*
+	border-bottom-color: #aaaaaa;
+	border-right-color: #aaaaaa;
+	border-top-color: #aaaaaa;
+	border-left-color: #aaaaaa;
+    */
+
+    /* for tool-sprite-gray.gif - access */
+    /*
+    border-bottom-color: #aaaaaa;
+    border-right-color: #aaaaaa;
+    border-top-color: #aaaaaa;
+    border-left-color: #aaaaaa;
+    */
+
+    /* for tool-sprite-gray.gif - greenery */
+    /*
+    border-bottom-color: #9eae7f;
+    border-right-color: #9eae7f;
+    border-top-color: #9eae7f;
+    border-left-color: #9eae7f;
+    */
+
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    box-shadow: 2px 2px 2px #000;
+    -moz-box-shadow: 2px 2px 2px #000;
+    -webkit-box-shadow: 2px 2px 2px #000;
+}
+
+.olHandlerBoxZoomBox {
+     /* background-color: gray; */          /* theme blue */
+     /* background-color: gray; */          /* theme gray */
+     /* background-color: gray; */          /* theme access */
+     /* background-color: darkgreen; */     /* theme greenery */
+     border: 2px solid red;
+}
+
+.olHandlerBoxZoomBox {
+     /* border: 2px solid red; */           /* theme blue */
+     /* border: 2px solid red; */           /* theme gray */
+     /* border: 2px solid #ff3300; */       /* theme access */
+     /* border: 2px solid #144603; */       /* theme greenery */
+     border: 2px solid red;
+}
+
+/* ------------------------------------------------------------------- */
+/* --- ExtJs --------------------------------------------------------- */
+/* --- panel / form styles ------------------------------------------- */
+/* ------------------------------------------------------------------- */
+.x-panel {                                  /* from ExtJS - theme blue - panel.css */
+    border-color: #99bbe8;
+}
+.x-panel-header {                           /* from ExtJS - theme blue - panel.css */
+    color: #15428b;                         /* overwrites struct in default.css !! */
+	font-weight: bold; 
+    font-size: 11px;
+    font-family: tahoma,arial,verdana,sans-serif;
+    border-color: #99bbe8;
+    /* background-image: url(../images/default/panel/white-top-bottom.gif); */
+    /** In order to align with map panel toolbar http://code.google.com/p/geoext-viewer/issues/detail?id=162 */
+    padding-top: 5px;
+    padding-bottom: 6px;
+}
+.x-panel-body {                             /* from ExtJS - xtheme-blue.css - .x-panel-body */
+    border-color:#99bbe8;
+    background-color:#fff;
+}
+/* ------------------------------------------------------------------- */
+.x-form-back-default {
+    /* background-color: #fff; */           /* from ExtJS - xtheme-blue.css - .x-panel-body */
+    /* background-color: #fff; */           /* from ExtJS - xtheme-gray.css - .x-panel-body */ 
+    /* background-color: #232d38; */        /* from ExtJS - xtheme-access.css - .x-panel-body */ 
+    /* background-color: #e2f2c3; */        /* theme greenery */
+    background-color: #fff;
+    font:normal 12px arial,tahoma, helvetica, sans-serif;
+}
+.x-form-back {
+    /* background-color: #c3daf9; */        /* from ExtJS - xtheme-blue.css - .ext-el-mask-msg */
+    /* background-color: #dbdbdb; */        /* from ExtJS - xtheme-gray.css - .ext-el-mask-msg */
+    /* background-color: #3f4757; */        /* from ExtJS - xtheme-access.css - .ext-el-mask-msg */
+    /* background-color: #9eae7f; */        /* theme greenery */
+    background-color: #c3daf9;
+    font:normal 12px arial,tahoma, helvetica, sans-serif;
+}
+/* ------------------------------------------------------------------- */
+.x-grid-panel a:link {                      /* hover links inside a grid */
+    color: #0066FF !important;              /* see hr-bookmark links too */
+    text-decoration: underline;
+}
+.x-grid-panel a:visited {
+    color: #0066FF !important;
+    text-decoration: underline;
+}
+.x-grid-panel a:hover {
+    color: #15428b !important;
+    text-decoration: none;
+}
+
+/* ------------------------------------------------------------------- */
+/* --- GeoExt -------------------------------------------------------- */
+/* --- ux.PrintPreview ----------------------------------------------- */
+/* ------------------------------------------------------------------- */
+.gx-map-overlay .x-panel-body {
+    /* background-color: #c3daf9; */        /* from ExtJS - xtheme-blue.css - .ext-el-mask-msg */
+    /* background-color: #dbdbdb; */        /* from ExtJS - xtheme-gray.css - .ext-el-mask-msg */
+    /* background-color: #3f4757; */        /* from ExtJS - xtheme-access.css - .ext-el-mask-msg */
+    /* background-color: #e2f2c3; */        /* theme greenery */
+    background-color: #c3daf9;
+}
+
+/* ------------------------------------------------------------------- */
+/* --- Heron --------------------------------------------------------- */
+/* --- Overrides of default.css -------------------------------------- */
+/* ------------------------------------------------------------------- */
+/* background-color: #ffffff; */         /* theme blue */ 
+/* background-color: #ffffff; */         /* theme gray */ 
+/* background-color: #1f2730; */         /* theme access */ 
+/* background-color: #e2f2c3; */         /* theme greenery */
+.hr-html-panel-body {                    /* - HTMLPanel.js ----------- */ 
+    background-color: #ffffff;
+}
+.hr-html-panel-body a:link {
+    color: #0066FF !important;
+    text-decoration: underline;
+}
+.hr-html-panel-body a:visited {
+    color: #0066FF !important;
+    text-decoration: underline;
+}
+.hr-html-panel-body a:hover {
+    color: #15428b !important;
+    text-decoration: none;
+}
+/* ------------------------------------------------------------------- */
+.hr-legend-panel-header {                /* - LayerLegendPanel.js ---- */ 
+    color: #15428b;                      /* see GeoExt API: 'labelCls' */
+    background-color: #ffffff;           /* from 'GeoExt.LegendPanel'  */
+}
+      /* The font color '0x000000' of the legend could be adapted in the 'LayerLegendPanel' definition
+         If you use GeoServer have a look at:
+         http://docs.geoserver.org/latest/en/user/services/wms/get_legend_graphic/legendgraphic.html
+      */ 
+      /*
+      xtype: 'hr_layerlegendpanel',
+      id: 'gui_Legend',
+      bodyStyle: 'padding:10px 10px',
+      border: false,
+      title: 'Legend',
+      defaults: {
+        // see GeoExt API: 'GeoExt.LegendPanel'
+        labelCls: 'hr-legend-panel-header',
+        useScaleParameter: true,
+        baseParams: {
+          // Override default image/gif in WMS GetLegendGraphic
+          FORMAT: 'image/png',
+          // legend parameters
+          LEGEND_OPTIONS: 'forceLabels:on;fontName=Verdana;fontSize:11;fontColor:0x000000'
+      } }
+      */
+/* ------------------------------------------------------------------- */
+.hr-bookmark-panel-body {                /* - BookmarksPanel.js ------ */ 
+    background-color: #ffffff;
+}
+.hr-bookmark-title-description {
+    background-color: #ffffff;
+}
+.hr-bookmark-title-header {
+    color: #15428b;
+    background-color: #ffffff;
+}
+.hr-bookmark-title-hr {
+    color: #15428b;
+    background-color: #ffffff;
+}
+.hr-bookmark-link-project {
+    background-color: #ffffff;
+}
+.hr-bookmark-link-project a:link {
+    font-weight: normal; 
+    color: #0066FF !important;
+    text-decoration: underline;
+}
+.hr-bookmark-link-project a:visited {
+    font-weight: normal; 
+    color: #0066FF !important;
+    text-decoration: none;
+}
+.hr-bookmark-link-project a:hover {
+    font-weight: bold; 
+    color: #15428b !important;
+    text-decoration: none;
+}
+.hr-bookmark-link-user {
+    background-color: #ffffff;
+}
+.hr-bookmark-link-user a:link {
+    font-weight: normal; 
+    color: #0066FF !important;
+    text-decoration: underline;
+}
+.hr-bookmark-link-user a:visited {
+    font-weight: normal; 
+    color: #0066FF !important;
+    text-decoration: none;
+}
+.hr-bookmark-link-user a:hover {
+    font-weight: bold; 
+    color: #15428b !important;
+    text-decoration: none;
+}
+.hr-bookmark-link-invalid {
+    color: gray;
+    background-color: #ffffff;
+}
+/* ------------------------------------------------------------------- */

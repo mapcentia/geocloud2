@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title>OpenLayers.Editor</title>
+
+    <script src="http://openlayers.org/api/2.12/OpenLayers.js"></script>
+    <script type="text/javascript" src="../lib/Editor/Lang/en.js"></script>
+    <script type="text/javascript" src="../lib/loader.js"></script>
+    <script type="text/javascript">
+
+        function init() {
+
+            var map, editor;
+            OpenLayers.Lang.setCode('en');
+
+            map = new OpenLayers.Map('map');
+            map.addLayer(new OpenLayers.Layer.OSM());
+            map.setCenter(new OpenLayers.LonLat(10, 50), 5);
+
+            // Persist drawn or modified features instantly
+            var saveStrategy = new OpenLayers.Strategy.Save({
+                auto:true
+            });
+            // Create a vector layer that is bound to a WFS for editing
+            var wfsLayer = new OpenLayers.Layer.Vector("Test Polygons", {
+                strategies: [
+                    // Load existing features
+                    new OpenLayers.Strategy.BBOX(),
+                    // Persist edits
+                    saveStrategy
+                ],
+                projection : "EPSG:4326",
+                // Connection parameters for WFS (need to be adjusted to your WFS)
+                protocol: new OpenLayers.Protocol.WFS({
+                    version: "1.0.0",
+                    srsName: "EPSG:4326",
+                    url: "/geoserver/ole-test/ows",
+                    featurePrefix: "wfst",
+                    featureNS :  "ole-test",
+                    featureType: "WaterBody",
+                    geometryName: "geo"
+                }),
+                extractAttributes: true,
+                visibility: true
+            });
+
+            editor = new OpenLayers.Editor(map, {
+                activeControls: ['Navigation', 'SnappingSettings', 'CADTools', 'Separator', 'DeleteFeature', 'TransformFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature', 'Separator'],
+                featureTypes: ['polygon', 'path', 'point'],
+                // Pass your pre-configured layer to OLE to be used for feature editing
+                editLayer: wfsLayer
+            });
+            editor.startEditMode();
+        }
+    </script>
+    <style type="text/css">
+    /* Make map consume all available space */
+    html, body, #map {
+        height:100%;
+        margin:0;
+    }
+    </style>
+    <link rel="stylesheet" href="../theme/geosilk/geosilk.css" type="text/css" />
+</head>
+<body onload="init()">
+    <div id="map"></div>
+</body>
+</html>
