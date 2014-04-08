@@ -20,7 +20,7 @@
 
    # Rewrite URL to HTLM Heron map viewer
    RewriteCond %{REQUEST_FILENAME} !-f
-   RewriteRule apps/hviewer/(.*)/(.*) apps/hviewer/index.html [L]
+   RewriteRule apps/heron/(.*)/(.*) apps/heron/index.html [L]
 
    # Rewrite all other URLs to index.php/URL
    RewriteCond %{REQUEST_FILENAME} !-f
