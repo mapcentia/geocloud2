@@ -7,7 +7,12 @@ class Wms extends \app\inc\Controller
 {
     function __construct()
     {
-        $schema = \app\inc\Input::getPath()->part(3);
+        if (\app\inc\Input::getPath()->part(3) == "tilecache") {
+            $schema = \app\inc\Input::getPath()->part(4);
+        }
+        else {
+            $schema = \app\inc\Input::getPath()->part(3);
+        }
         $db = \app\inc\Input::getPath()->part(2);
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $name = $db . "_" . $schema . ".map";
