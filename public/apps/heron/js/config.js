@@ -21,7 +21,7 @@ MapCentia.setup = function () {
         db = uri[3],
         schema = uri[4],
 
-        url = 'http://local2.mapcentia.com/wms/' + db + '/tilecache/' + schema;
+        url = '/wms/' + db + '/tilecache/' + schema;
        // url = 'http://local2.mapcentia.com/wms/' + db + '/' + schema;
     Heron.options.map.layers = [
         [
