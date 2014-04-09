@@ -9,6 +9,7 @@ class Wms extends \app\inc\Controller
     {
         if (\app\inc\Input::getPath()->part(3) == "tilecache") {
             $schema = \app\inc\Input::getPath()->part(4);
+            
         }
         else {
             $schema = \app\inc\Input::getPath()->part(3);
