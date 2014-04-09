@@ -1,32 +1,36 @@
 <IfModule mod_rewrite.c>
-   RewriteEngine On
+RewriteEngine On
+#RewriteRule index\.php - [L]
 
-   # Rewrite URLs for user module
-   RewriteRule user/login/p$ user/login/login_p.php [L]
-   RewriteRule user/login/$ user/login/login_f.php [L]
-   RewriteRule user/logout/$ user/logout/logout_p.php [L]
-   RewriteRule user/signup/$ user/signup/signup_f.php [L]
-   RewriteRule user/signup/p$ user/signup/signup_p.php [L]
-   RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
-   RewriteRule user/edit/$ user/edit/edit_f.php [L]
-   RewriteRule user/edit/p$ user/edit/edit_p.php [L]
+# Rewrite URLs for user module
+RewriteRule user/login/p$ user/login/login_p.php [L]
+RewriteRule user/login/$ user/login/login_f.php [L]
+RewriteRule user/logout/$ user/logout/logout_p.php [L]
+RewriteRule user/signup/$ user/signup/signup_f.php [L]
+RewriteRule user/signup/p$ user/signup/signup_p.php [L]
+RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
+RewriteRule user/edit/$ user/edit/edit_f.php [L]
+RewriteRule user/edit/p$ user/edit/edit_p.php [L]
 
-   # Rewrite URL so tile request is going direct to TileCache cgi
-   RewriteCond %{QUERY_STRING} !(^|&)REQUEST=GetLegendGraphic($|&)
-   RewriteCond %{QUERY_STRING} !(^|&)REQUEST=GetFeatureInfo($|&)
-   RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
+# Always rewrite GetLegendGraphic and GetFeatureInfo to WMS
+RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetLegendGraphic($|&) [NC,OR]
+RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetFeatureInfo($|&) [NC]
+RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
-   # Rewrite URL to HTML map viewer
-   RewriteCond %{REQUEST_FILENAME} !-f
-   RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
+# Rewrite URL so tile request is going direct to TileCache cgi
+RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
 
-   # Rewrite URL to HTLM Heron map viewer
-   RewriteCond %{REQUEST_FILENAME} !-f
-   RewriteRule apps/heron/(.*)/(.*) apps/heron/index.html [L]
+# Rewrite URL to HTML map viewer
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
 
-   # Rewrite all other URLs to index.php/URL
-   RewriteCond %{REQUEST_FILENAME} !-f
-   RewriteCond %{REQUEST_FILENAME} !-d
-   RewriteRule ^(.*)$ index.php/$1 [L]
+# Rewrite URL to HTLM Heron map viewer
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule apps/heron/(.*)/(.*) apps/heron/index.html [L]
+
+# Rewrite all other URLs to index.php/URL
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [L]
 
 </IfModule>
