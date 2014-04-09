@@ -439,7 +439,9 @@ $(window).ready(function () {
                     method: 'put',
                     params: Ext.util.JSON.encode({data: {
                         schema: schema,
-                        extent: cloud.getExtent()
+                        extent: cloud.getExtent(),
+                        zoom: cloud.getZoom(),
+                        center: [cloud.getCenter().x, cloud.getCenter().y]
                     }}),
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8'
