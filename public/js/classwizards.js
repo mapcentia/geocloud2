@@ -78,7 +78,7 @@ classWizards.init = function (record) {
                 defaults: {
                     border: false
                 },
-                layout: 'column',
+                layout: 'hbox',
                 items: [
                     {
                         xtype: "form",
@@ -87,7 +87,7 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'container',
-                                layout: 'hbox',
+
                                 defaults: {
                                     width: 100
                                 },
@@ -166,7 +166,6 @@ classWizards.init = function (record) {
                 defaults: {
                     border: false
                 },
-                //layout: 'column',
                 items: [
                     {
                         xtype: "form",

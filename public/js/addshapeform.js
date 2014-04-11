@@ -26,7 +26,7 @@ addShape.init = function () {
             $("#shape_uploader").pluploadQueue({
                 // General settings
                 runtimes: 'html5, flash',
-                url: '/controllers/upload/file',
+                url: '/controllers/upload/vector',
                 max_file_size: '200mb',
                 chunk_size: '1mb',
                 unique_names: true,
@@ -36,7 +36,7 @@ addShape.init = function () {
                         Ext.each(arr, function (e) {
                             geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
                             $.ajax({
-                                url: '/controllers/upload/process',
+                                url: '/controllers/upload/processvector',
                                 data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding,
                                 dataType: 'json',
                                 type: 'GET',

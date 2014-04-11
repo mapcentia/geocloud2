@@ -31,13 +31,12 @@ class Table extends Model
             }
         }
         $this->tableWithOutSchema = $_table;
-
+        $this->table = $table;
         $sql = "SELECT 1 FROM {$table}";
         $this->execQuery($sql);
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
-            $this->table = $table;
             $this->metaData = $this->getMetaData($this->table);
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
@@ -76,6 +75,9 @@ class Table extends Model
         } elseif (preg_match("/geometry/", $field['type'])) {
             $field['typeObj'] = array("type" => "geometry");
             $field['type'] = "geometry";
+        } elseif (preg_match("/raster/", $field['type'])) {
+            $field['typeObj'] = array("type" => "raster");
+            $field['type'] = "raster";
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
@@ -372,6 +374,32 @@ class Table extends Model
         $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT) WITH OIDS;";
         $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
         $sql .= "COMMIT;";
+        $this->execQuery($sql, "PDO", "transaction");
+        if ((!$this->PDOerror)) {
+            $response['success'] = true;
+            $response['tableName'] = $table;
+            $response['message'] = "Layer created";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror[0];
+        }
+        return $response;
+    }
+
+    function createAsRasterTable($srid = 4326)
+    {
+        $this->PDOerror = NULL;
+        $table = $this->tableWithOutSchema;
+        $table = $this->toAscii($table, array(), "_");
+        if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
+            $table = "_" . $table;
+        }
+        $sql = "CREATE TABLE {$this->postgisschema}.{$table}(rast raster);";
+        $this->execQuery($sql, "PDO", "transaction");
+        $sql = "INSERT INTO {$this->postgisschema}.{$table}(rast)
+                SELECT ST_AddBand(ST_MakeEmptyRaster(1000, 1000, 0.3, -0.3, 2, 2, 0, 0,{$srid}), 1, '8BSI'::TEXT, -129, NULL);";
+        $this->execQuery($sql, "PDO", "transaction");
+        $sql = "SELECT AddRasterConstraints('{$this->postgisschema}'::name,'{$table}'::name, 'rast'::name);";
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror)) {
             $response['success'] = true;

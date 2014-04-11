@@ -6,11 +6,11 @@ use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
 
-class Process extends \app\inc\Controller
+class Processvector extends \app\inc\Controller
 {
     public function get_index()
     {
-        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"];
+        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
 
         if (is_numeric($safeName[0])) {
@@ -72,7 +72,17 @@ class Process extends \app\inc\Controller
         $def = new \app\models\Tile($key);
         $arr = $def->get();
         if (empty($arr['data'][0])) {
-            $json = '{"theme_column":"","label_column":"","query_buffer":"","opacity":"","label_max_scale":"","label_min_scale":"","meta_tiles":false,"meta_size":"3","meta_buffer":"10","ttl":""}';
+            $json = '{
+            "theme_column":"",
+            "label_column":"",
+            "query_buffer":"",
+            "opacity":"",
+            "label_max_scale":"",
+            "label_min_scale":"",
+            "meta_tiles":false,
+            "meta_size":"3",
+            "meta_buffer":"10",
+            "ttl":""}';
             $def->update($json);
         }
 

@@ -161,6 +161,7 @@ MapCentia = (function () {
         $.ajax({
             url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + schema,
             dataType: 'jsonp',
+            async: false,
             jsonp: 'jsonp_callback',
             success: function (response) {
                 var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "";

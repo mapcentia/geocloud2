@@ -269,11 +269,9 @@ class Mapfile extends \app\inc\Controller
             NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
             STATUS off
             PROCESSING "CLOSE_CONNECTION=DEFER"
-            <?php $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
-            echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
-            ?>
+
             <?php if ($row['filter']) { ?>
-            FILTER "<?php echo $row['filter']; ?>"
+                FILTER "<?php echo $row['filter']; ?>"
             <?php } ?>
             <?php
             switch ($row['type']) {
@@ -298,18 +296,37 @@ class Mapfile extends \app\inc\Controller
                 case "GEOMETRY":
                     $type = "LINE";
                     break;
+                case "RASTER":
+                    $type = "RASTER";
+                    break;
             }
-            if (!$row['wmssource']) {
-                ?>
-                TYPE <?php echo $type . "\n"; ?>
-                CONNECTIONTYPE POSTGIS
-                CONNECTION "user=postgres dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> options='-c client_encoding=UTF8'"
-            <?php
-            } else {
+
+
+            if ($row['wmssource']) {
                 ?>
                 TYPE RASTER
                 CONNECTIONTYPE WMS
                 CONNECTION "<?php echo $row['wmssource']; ?>"
+
+            <?php
+            } elseif ($row['bitmapsource']) {
+                ?>
+                TYPE RASTER
+                DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"]."/__bitmaps/".$row['bitmapsource']; ?>"
+            <?php
+            }  else {
+                if ($type != "RASTER") {
+                    $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
+                    echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
+                } else {
+                    echo "DATA \"PG:host=" . Connection::$param['postgishost'] . " port=5432 dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
+		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
+                }
+                ?>
+                TYPE <?php echo $type . "\n"; ?>
+                CONNECTIONTYPE POSTGIS
+                CONNECTION "user=postgres dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> options='-c client_encoding=UTF8'"
+
             <?php } ?>
 
             #CLASSITEM

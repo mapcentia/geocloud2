@@ -3,21 +3,26 @@ namespace app\controllers\upload;
 
 use \app\conf\Connection;
 use \app\conf\App;
+use \app\inc\Model;
 
-class File extends \app\inc\Controller
+
+class Bitmap extends \app\inc\Controller
 {
     protected $file;
-    protected $safeFileWithOutSchema;
     public $response;
 
     function post_index()
     {
         @set_time_limit(5 * 60);
-        $targetDir = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"];
+        $mainDir = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"];
+        $targetDir = $mainDir ."/__bitmaps";
 
         $cleanupTargetDir = true;
         $maxFileAge = 5 * 3600;
 
+        if (!file_exists($mainDir)) {
+            @mkdir($mainDir);
+        }
         if (!file_exists($targetDir)) {
             @mkdir($targetDir);
         }
@@ -30,6 +35,7 @@ class File extends \app\inc\Controller
             $fileName = uniqid("file_");
         }
 
+        //$filePath = $targetDir . DIRECTORY_SEPARATOR . Model::toAscii($fileName);
         $filePath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
 
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
@@ -85,6 +91,10 @@ class File extends \app\inc\Controller
         if (!$chunks || $chunk == $chunks - 1) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
+
+
+
+
         }
         die('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
     }

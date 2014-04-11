@@ -64,8 +64,12 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/tile/");
     Route::add("controllers/tilecache/");
     Route::add("controllers/session/");
-    Route::add("controllers/upload/file");
-    Route::add("controllers/upload/process");
+    Route::add("controllers/upload/vector");
+    Route::add("controllers/upload/bitmap");
+    Route::add("controllers/upload/raster");
+    Route::add("controllers/upload/processvector");
+    Route::add("controllers/upload/processbitmap");
+    Route::add("controllers/upload/processraster");
 } elseif (Input::getPath()->part(1) == "wms") {
     Session::start();
     Database::setDb(Input::getPath()->part(2));

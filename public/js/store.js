@@ -432,11 +432,33 @@ $(window).ready(function () {
                     region: "center"
                 })]
             }),
-            add = function () {
+            addVector = function () {
                 addShape.init();
                 var c = p.getComponent(0);
                 c.remove(0);
                 c.add(addShape.form);
+                try {
+                    c.doLayout();
+                } catch (e) {
+                }
+
+            },
+            addImage = function () {
+                addBitmap.init();
+                var c = p.getComponent(0);
+                c.remove(0);
+                c.add(addBitmap.form);
+                try {
+                    c.doLayout();
+                } catch (e) {
+                }
+
+            },
+            addRaster = function () {
+                addRasterFile.init();
+                var c = p.getComponent(0);
+                c.remove(0);
+                c.add(addRasterFile.form);
                 try {
                     c.doLayout();
                 } catch (e) {
@@ -454,11 +476,20 @@ $(window).ready(function () {
             items: [p],
             tbar: [
                 {
-                    text: 'Upload files',
-                    id: 'addBtn',
-                    handler: add
+                    text: 'Add vector',
+                    handler: addVector
                 },
                 '-',
+                /*{
+                    text: 'Add image',
+                    handler: addImage
+                },
+                '-',
+                {
+                    text: 'Add raster',
+                    handler: addRaster
+                },
+                '-',*/
                 {
                     text: 'Blank layer',
                     handler: function () {
@@ -472,7 +503,7 @@ $(window).ready(function () {
             ]
         });
         winAdd.show(this);
-        add();
+        addVector();
     };
 
     function onAddSchema(btn, ev) {
