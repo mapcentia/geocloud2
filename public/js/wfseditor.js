@@ -5,6 +5,7 @@
 /*global mygeocloud_ol:false */
 /*global schema:false */
 /*global screenName:false */
+/*global attributeForm:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy;
 function startWfsEdition(layerName, geomField) {
@@ -179,11 +180,9 @@ function startWfsEdition(layerName, geomField) {
     });
 
     attributeForm.init(layerName);
-
     south.add(grid);
     gridPanel = Ext.getCmp("gridpanel");
     south.doLayout();
-
     attributeForm.win = new Ext.Window({
         title: "Attributes",
         modal: false,
@@ -209,7 +208,7 @@ function startWfsEdition(layerName, geomField) {
     Ext.getCmp('filterbutton').setDisabled(false);
     Ext.getCmp('infobutton').setDisabled(false);
 }
-$(window).ready(function () {
+$(document).ready(function () {
     'use strict';
     var bl = null;
     $("#upload").click(function () {
@@ -232,9 +231,7 @@ $(window).ready(function () {
     if (bl !== null) {
         cloud.setBaseLayer(bl);
     }
-
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
-
     var layers = {};
     loadTree = function () {
         var treeConfig = [
@@ -245,123 +242,180 @@ $(window).ready(function () {
         ];
         $.ajax({
             url: '/controllers/layer/records',
-            async: false,
             dataType: 'json',
             type: 'GET',
-            success: function (response, textStatus, http) {
+            success: function (response) {
                 var groups = [], isBaseLayer;
-                if (http.readyState === 4) {
-                    if (http.status === 200) {
-                        if (response.data !== undefined) {
-                            for (var i = 0; i < response.data.length; ++i) {
-                                groups[i] = response.data[i].layergroup;
-                            }
-                            var arr = array_unique(groups);
-                            for (var u = 0; u < response.data.length; ++u) {
-                                if (response.data[u].baselayer) {
-                                    isBaseLayer = true;
-                                } else {
-                                    isBaseLayer = false;
-                                }
-                                // Try to remove layer before adding it
-                                try {
-                                    cloud.removeTileLayerByName([
-                                        [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
-                                    ]);
-                                }
-                                catch (e) {
-                                }
-                                layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                                    singleTile: false,
-                                    isBaseLayer: isBaseLayer,
-                                    visibility: false,
-                                    wrapDateLine: false,
-                                    tileCached: true,
-                                    displayInLayerSwitcher: true,
-                                    name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
-                                });
-                            }
-                            for (var i = 0; i < arr.length; ++i) {
-                                var l = [];
-                                for (var u = 0; u < response.data.length; ++u) {
-                                    if (response.data[u].layergroup === arr[i]) {
-                                        l.push({
-                                            text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                            id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
-                                            leaf: true,
-                                            checked: false,
-                                            geomField: response.data[u].f_geometry_column
-                                        });
-                                    }
-                                }
-                                treeConfig.push({
-                                    text: arr[i],
-                                    isLeaf: false,
-                                    expanded: false,
-                                    children: l
-                                });
-                            }
-                        }
+                if (response.data !== undefined) {
+                    for (var i = 0; i < response.data.length; ++i) {
+                        groups[i] = response.data[i].layergroup;
                     }
-                }
-            }
-        });
-
-        // create the tree with the configuration from above
-        tree = new Ext.tree.TreePanel({
-            id: "tree",
-            border: false,
-            region: "center",
-            width: 200,
-            split: true,
-            autoScroll: true,
-            root: {
-                text: 'Ext JS',
-                children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
-                id: 'source'
-            },
-            loader: new Ext.tree.TreeLoader({
-                applyLoader: false,
-                uiProviders: {
-                    "layernodeui": LayerNodeUI
-                }
-            }),
-            listeners: {
-                click: {
-                    fn: function (e) {
-                        if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                            window.parent.onEditWMSClasses(e.id);
-                            Ext.getCmp('editlayerbutton').setDisabled(false);
+                    var arr = array_unique(groups);
+                    for (var u = 0; u < response.data.length; ++u) {
+                        if (response.data[u].baselayer) {
+                            isBaseLayer = true;
                         } else {
-                            Ext.getCmp('editlayerbutton').setDisabled(true);
+                            isBaseLayer = false;
                         }
+                        // Try to remove layer before adding it
+                        try {
+                            cloud.removeTileLayerByName([
+                                [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
+                            ]);
+                        }
+                        catch (e) {
+                        }
+                        layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                            singleTile: false,
+                            isBaseLayer: isBaseLayer,
+                            visibility: false,
+                            wrapDateLine: false,
+                            tileCached: true,
+                            displayInLayerSwitcher: true,
+                            name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                        });
+                    }
+                    for (var i = 0; i < arr.length; ++i) {
+                        var l = [];
+                        for (var u = 0; u < response.data.length; ++u) {
+                            if (response.data[u].layergroup === arr[i]) {
+                                l.push({
+                                    text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
+                                    id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
+                                    leaf: true,
+                                    checked: false,
+                                    geomField: response.data[u].f_geometry_column
+                                });
+                            }
+                        }
+                        treeConfig.push({
+                            text: arr[i],
+                            isLeaf: false,
+                            expanded: false,
+                            children: l
+                        });
                     }
                 }
-            },
-            rootVisible: false,
-            lines: false
-        });
-        tree.on("checkchange", function (node, checked) {
-            if (node.lastChild === null && node.parentNode.id !== "baselayers") {
-                // layer id are still only schema.table in map file
-                var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
-                if (checked) {
-                    layers[layerId][0].setVisibility(true);
-                } else {
-                    layers[layerId][0].setVisibility(false);
+                // create the tree with the configuration from above
+                tree = new Ext.tree.TreePanel({
+                    id: "tree",
+                    border: false,
+                    region: "center",
+                    width: 200,
+                    split: true,
+                    autoScroll: true,
+                    root: {
+                        text: 'Ext JS',
+                        children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
+                        id: 'source'
+                    },
+                    loader: new Ext.tree.TreeLoader({
+                        applyLoader: false,
+                        uiProviders: {
+                            "layernodeui": LayerNodeUI
+                        }
+                    }),
+                    listeners: {
+                        click: {
+                            fn: function (e) {
+                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                    window.parent.onEditWMSClasses(e.id);
+                                    Ext.getCmp('editlayerbutton').setDisabled(false);
+                                } else {
+                                    Ext.getCmp('editlayerbutton').setDisabled(true);
+                                }
+                            }
+                        }
+                    },
+                    rootVisible: false,
+                    lines: false
+                });
+                tree.on("checkchange", function (node, checked) {
+                    if (node.lastChild === null && node.parentNode.id !== "baselayers") {
+                        // layer id are still only schema.table in map file
+                        var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
+                        if (checked) {
+                            layers[layerId][0].setVisibility(true);
+                        } else {
+                            layers[layerId][0].setVisibility(false);
+                        }
+                    }
+                });
+                if (typeof viewport === "undefined") {
+                    viewport = new Ext.Viewport({
+                        layout: 'border',
+                        items: [
+                            {
+                                region: "center",
+                                layout: "fit",
+                                border: false,
+                                items: [
+                                    new Ext.Panel({
+                                        layout: "border",
+                                        border: false,
+                                        items: [
+                                            {
+                                                region: "center",
+                                                id: "mappanel",
+                                                xtype: "gx_mappanel",
+                                                map: map,
+                                                zoom: 5,
+                                                split: true,
+                                                tbar: wfsTools
+                                            },
+                                            {
+                                                region: "south",
+                                                id: "attrtable",
+                                                title: "Attribute table",
+                                                split: true,
+                                                frame: false,
+                                                layout: 'fit',
+                                                height: 200,
+                                                collapsible: true,
+                                                collapsed: true,
+                                                contentEl: "instructions"
+                                            }
+                                        ]
+                                    })
+                                ]
+                            },
+                            new Ext.Panel({
+                                border: false,
+                                region: "west",
+                                collapsible: false,
+                                width: 200,
+                                items: [
+                                    {
+                                        xtype: "panel",
+                                        border: false,
+                                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
+                                        height: 70
+                                    },
+                                    new Ext.Panel({
+                                        border: false,
+                                        id: "treepanel",
+                                        collapsible: false,
+                                        width: 200
+                                    })
+                                ]
+                            })
+                        ]
+                    });
+                    if (window.parent.initExtent !== null) {
+                        cloud.map.zoomToExtent(window.parent.initExtent, false);
+                    } else {
+                        cloud.map.zoomToMaxExtent();
+                    }
                 }
+                else {
+                    window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree (re)loaded");
+                }
+                var west = Ext.getCmp("treepanel");
+                west.remove(tree);
+                west.add(tree);
+                west.doLayout();
             }
         });
-    };
-    loadTree();
-    reLoadTree = function () {
-        var west = Ext.getCmp("treepanel");
-        west.remove(tree);
-        tree = null;
-        loadTree();
-        window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree (re)loaded");
-        west.add(tree);
-        west.doLayout();
     };
     wfsTools = [
         {
@@ -481,78 +535,14 @@ $(window).ready(function () {
             }
         }
     ];
-    viewport = new Ext.Viewport({
-        layout: 'border',
-        items: [
-            {
-                region: "center",
-                layout: "fit",
-                border: false,
-                items: [
-                    new Ext.Panel({
-                        layout: "border",
-                        border: false,
-                        items: [
-                            {
-                                region: "center",
-                                id: "mappanel",
-                                xtype: "gx_mappanel",
-                                map: map,
-                                zoom: 5,
-                                split: true,
-                                tbar: wfsTools
-                            },
-                            {
-                                region: "south",
-                                id: "attrtable",
-                                title: "Attribute table",
-                                split: true,
-                                frame: false,
-                                layout: 'fit',
-                                height: 200,
-                                collapsible: true,
-                                collapsed: true,
-                                contentEl: "instructions"
-                            }
-                        ]
-                    })
-                ]
-            },
-            new Ext.Panel({
-                border: false,
-                region: "west",
-                collapsible: false,
-                width: 200,
-                items: [
-                    {
-                        xtype: "panel",
-                        border: false,
-                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
-                        height: 70
-                    },
-                    new Ext.Panel({
-                        border: false,
-                        id: "treepanel",
-                        collapsible: false,
-                        width: 200,
-                        items: [tree]
-                    })
-                ]
-            })
-        ]
-    });
-    // HACK. reload tree after the view has rendered
-    setTimeout(function () {
-        reLoadTree();
-    }, 700);
-    if (window.parent.initExtent !== null) {
-        cloud.map.zoomToExtent(window.parent.initExtent, false);
-    } else {
-        cloud.map.zoomToMaxExtent();
-    }
-
+    reLoadTree = function () {
+        loadTree();
+    };
+    // Load the layer tree
+    loadTree();
 });
 function stopEdit() {
+    "use strict";
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(true);
     Ext.getCmp('editdeletebutton').setDisabled(true);
