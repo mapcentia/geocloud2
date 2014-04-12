@@ -346,7 +346,7 @@ class Classification extends \app\inc\Model
     static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
     {
         $symbol = ($data->symbol) ? : "";
-        $size = ($data->symbolSize) ? : null;
+        $size = ($data->symbolSize) ? : "";
         $color = ($color) ? : Util::randHexColor();
         if ($type == "POINT" || $type == "MULTIPOINT") {
             $symbol = ($data->symbol) ? : "circle";
@@ -371,7 +371,7 @@ class Classification extends \app\inc\Model
             "overlaysymbol" => "",
             "overlaysize" => "",
             "overlaywidth" => "",
-            "label_text" => $data->labelText
+            "label_text" => ($data->labelText) ? : ""
         );
     }
 

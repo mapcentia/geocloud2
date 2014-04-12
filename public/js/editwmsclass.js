@@ -258,6 +258,10 @@ wmsClass.init = function (id) {
             {
                 name: "label_text"
             },
+            {
+                name: "label_angle"
+            }
+            ,
             // Leader start
             {
                 name: 'leader',
@@ -344,6 +348,7 @@ wmsClass.init = function (id) {
             label_outlinecolor: 'Label: outline color',
             label_buffer: 'Label: buffer',
             label_text: 'Label: text',
+            label_angle: 'Label: angle',
 
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',
@@ -468,6 +473,11 @@ wmsClass.init = function (id) {
             }), {}),
             'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'label_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.fieldsForStoreBrackets,
                 editable: true,
                 triggerAction: 'all'
             }), {}),

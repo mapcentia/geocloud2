@@ -507,6 +507,16 @@ class Mapfile extends \app\inc\Controller
                         <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
                         <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                         <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
+                        #ANGLE
+                        <?php
+                        if ($class['label_angle']) {
+                            if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2')
+                                echo "ANGLE " . $class['label_angle'];
+                            else
+                                echo "ANGLE [{$class['label_angle']}]";
+                        }
+                        echo "\n";
+                        ?>
                         END #Label
                     <?php } ?>
 

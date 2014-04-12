@@ -479,17 +479,17 @@ $(window).ready(function () {
                     text: 'Add vector',
                     handler: addVector
                 },
-                '-',
-                /*{
-                    text: 'Add image',
-                    handler: addImage
-                },
-                '-',
+                /*'-',
                 {
                     text: 'Add raster',
                     handler: addRaster
                 },
-                '-',*/
+                '-',
+                {
+                    text: 'Add imagery',
+                    handler: addImage
+                },*/
+                '-',
                 {
                     text: 'Blank layer',
                     handler: function () {
