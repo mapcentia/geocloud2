@@ -510,7 +510,8 @@ class Mapfile extends \app\inc\Controller
                         #ANGLE
                         <?php
                         if ($class['label_angle']) {
-                            if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2')
+                            if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
+                                or $class['label_angle'] == 'follow')
                                 echo "ANGLE " . $class['label_angle'];
                             else
                                 echo "ANGLE [{$class['label_angle']}]";
