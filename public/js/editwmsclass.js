@@ -259,9 +259,17 @@ wmsClass.init = function (id) {
                 name: "label_text"
             },
             {
+                name: "label_repeatdistance"
+            },
+            {
                 name: "label_angle"
-            }
-            ,
+            },
+            {
+                name: "label_backgroundcolor"
+            },
+            {
+                name: "label_backgroundpadding"
+            },
             // Leader start
             {
                 name: 'leader',
@@ -349,6 +357,9 @@ wmsClass.init = function (id) {
             label_buffer: 'Label: buffer',
             label_text: 'Label: text',
             label_angle: 'Label: angle',
+            label_repeatdistance: 'Label: repeat distance',
+            label_backgroundcolor: 'Label: background color',
+            label_backgroundpadding: 'Label: background padding',
 
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',
@@ -378,7 +389,8 @@ wmsClass.init = function (id) {
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
-                accelerate: true}), { }),
+                accelerate: true
+            }), { }),
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
@@ -446,7 +458,21 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
+            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
             'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                maxValue: 15,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            }), { }),
             'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),

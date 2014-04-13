@@ -312,9 +312,9 @@ class Mapfile extends \app\inc\Controller
             } elseif ($row['bitmapsource']) {
                 ?>
                 TYPE RASTER
-                DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"]."/__bitmaps/".$row['bitmapsource']; ?>"
+                DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
             <?php
-            }  else {
+            } else {
                 if ($type != "RASTER") {
                     $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
                     echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
@@ -494,7 +494,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
                         echo "\n"; ?>
-                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
+                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ?  Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
                         echo "\n"; ?>
                         SHADOWSIZE 2 2
                         ANTIALIAS true
@@ -507,17 +507,34 @@ class Mapfile extends \app\inc\Controller
                         <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
                         <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                         <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
+                        <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
                         #ANGLE
                         <?php
                         if ($class['label_angle']) {
                             if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
-                                or $class['label_angle'] == 'follow')
+                                or $class['label_angle'] == 'follow'
+                            )
                                 echo "ANGLE " . $class['label_angle'];
                             else
                                 echo "ANGLE [{$class['label_angle']}]";
                         }
                         echo "\n";
                         ?>
+                        STYLE
+                        <?php if ($class['label_backgroundcolor']) {
+                            $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
+                            echo
+                                "GEOMTRANSFORM 'labelpoly'\n" .
+                                "COLOR {$labelBackgroundColor}\n";
+
+                            if ($class['label_backgroundpadding']) {
+                                echo
+                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                    "WIDTH {$class['label_backgroundpadding']}\n";
+                            }
+                        }
+                        ?>
+                        END # STYLE
                         END #Label
                     <?php } ?>
 
