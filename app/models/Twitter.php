@@ -22,7 +22,7 @@ class Twitter extends Model
     public function search($search, $store = false, $schema = null)
     {
         $schema = ($schema) ? : "public";
-        $sql = file_get_contents(\app\conf\App::$param['path'] . "public/maintenance/tweets.sql");
+        $sql = file_get_contents(\app\conf\App::$param['path'] . "public/migration/tweets.sql");
 
         if ($store) {
             // Using native PG driver for multi commands
@@ -44,11 +44,11 @@ class Twitter extends Model
             ->setGetfield($getfield)
             ->buildOauth($url, $requestMethod)
             ->performRequest();
-        $res = file_get_contents("kv13_parsed.json");
+        //$res = file_get_contents("kv13_parsed.json");
         //echo $res;
         $arr = json_decode($res);
         //print_r($arr);
-        foreach ($arr as $value) {
+        foreach ($arr->statuses as $value) {
             /*if (!is_object($value->coordinates)) {
                 $value->coordinates = new \stdClass();
                 $value->coordinates->type = "point";
@@ -96,7 +96,7 @@ class Twitter extends Model
                     try {
                         $res->execute($bindings);
                     } catch (PDOException $e) {
-                        //print_r($e);
+                        print_r($e);
                     }
 
                 }

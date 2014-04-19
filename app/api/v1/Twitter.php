@@ -14,6 +14,6 @@ class Twitter extends \app\inc\Controller
     }
     public function get_index($lifetime = 0)
     {
-        return Response::json($this->tweet->search(urldecode(Input::get('search')),Input::get('store'),Input::getPath()->part(5)));
+        return $this->tweet->search(urldecode(Input::get('search')),Input::get('store'),Input::getPath()->part(5));
     }
 }
