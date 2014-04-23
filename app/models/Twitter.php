@@ -95,8 +95,10 @@ class Twitter extends Model
                     $res = $this->prepare($sql);
                     try {
                         $res->execute($bindings);
-                    } catch (PDOException $e) {
-                        print_r($e);
+                    } catch (\PDOException $e) {
+                        //print_r($e);
+                    } catch (\Exception $e) {
+                        //print_r($e);
                     }
 
                 }
