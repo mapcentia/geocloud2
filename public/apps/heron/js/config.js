@@ -22,7 +22,7 @@ MapCentia.setup = function () {
         schema = uri[4],
 
         url = '/wms/' + db + '/tilecache/' + schema;
-       // url = 'http://local2.mapcentia.com/wms/' + db + '/' + schema;
+    // url = 'http://local2.mapcentia.com/wms/' + db + '/' + schema;
     Heron.options.map.layers = [
         [
             "OpenLayers.Layer.Bing",
@@ -50,7 +50,9 @@ MapCentia.setup = function () {
                 name = v.f_table_schema + "." + v.f_table_name;
                 Heron.options.map.layers.push(
                     [
-                        "OpenLayers.Layer.WMS", name, url,
+                        "OpenLayers.Layer.WMS",
+                        name,
+                        url,
                         {
                             layers: name,
                             format: 'image/png',
@@ -62,6 +64,7 @@ MapCentia.setup = function () {
                             visibility: false,
                             transitionEffect: 'resize',
                             featureInfoFormat: 'application/vnd.ogc.gml'
+
                         }
                     ]
                 );
@@ -70,7 +73,7 @@ MapCentia.setup = function () {
                         nodeType: "gx_layer",
                         layer: name,
                         text: text,
-                        legend: true
+                        legend: false
                     }
                 );
             });
@@ -243,7 +246,7 @@ MapCentia.init = function () {
                 pressed: false,
                 // Options for OLEditor
                 olEditorOptions: {
-                    activeControls: ['UploadFeature', 'DownloadFeature', 'Separator', 'Navigation', 'SnappingSettings', 'CADTools', 'Separator', 'DeleteAllFeatures', 'DeleteFeature', 'DragFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature', 'Separator'],
+                    activeControls: ['UploadFeature', 'DownloadFeature', 'Separator', 'Navigation', 'SnappingSettings', /*'CADTools',*/ 'Separator', 'DeleteAllFeatures', 'DeleteFeature', 'DragFeature', 'SelectFeature', 'Separator', 'DrawHole', 'ModifyFeature', 'Separator'],
                     featureTypes: ['text', 'regular', 'polygon', 'path', 'point'],
                     language: 'en',
                     DownloadFeature: {
@@ -342,37 +345,37 @@ MapCentia.init = function () {
                         hropts: Heron.options.map
                     }
                 ]
-            }/*,
-             {
-             xtype: 'panel',
-             id: 'hr-menu-right-container',
-             layout: 'accordion',
-             region: "east",
-             width: 240,
-             collapsible: true,
-             split: false,
-             border: false,
-             items: [
-             {
-             xtype: 'hr_layerlegendpanel',
-             id: 'hr-layerlegend-panel',
-             border: true,
-             defaults: {
-             useScaleParameter: true,
-             baseParams: {
-             FORMAT: 'image/png'
-             }
-             },
-             hropts: {
-             // Preload Legends on initial startup
-             // Will fire WMS GetLegendGraphic's for WMS Legends
-             // Otherwise Legends will be loaded only when Layer
-             // becomes visible. Default: false
-             prefetchLegends: false
-             }
-             }
-             ]
-             }*/
+            },
+            {
+                xtype: 'panel',
+                id: 'hr-menu-right-container',
+                layout: 'accordion',
+                region: "east",
+                width: 240,
+                collapsible: true,
+                split: false,
+                border: false,
+                items: [
+                    {
+                        xtype: 'hr_layerlegendpanel',
+                        id: 'hr-layerlegend-panel',
+                        border: true,
+                        defaults: {
+                            useScaleParameter: true,
+                            baseParams: {
+                                FORMAT: 'image/png'
+                            }
+                        },
+                        hropts: {
+                            // Preload Legends on initial startup
+                            // Will fire WMS GetLegendGraphic's for WMS Legends
+                            // Otherwise Legends will be loaded only when Layer
+                            // becomes visible. Default: false
+                            prefetchLegends: false
+                        }
+                    }
+                ]
+            }
         ]
     };
 };

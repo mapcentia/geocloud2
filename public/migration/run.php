@@ -1,7 +1,7 @@
 <?php
 header("Content-type: text/plain");
 include_once("../../app/conf/App.php");
-include_once("sql.php");
+include_once("Sql.php");
 new \app\conf\App();
 
 // Set the host names if they are not set in App.php
