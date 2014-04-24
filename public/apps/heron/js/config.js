@@ -137,6 +137,7 @@ MapCentia.init = function () {
             prettyLayerNames: true
         }
     };
+    Heron.options.bookmarks = [];
 
     Heron.options.wfs.downloadFormats = [
         {
@@ -322,6 +323,13 @@ MapCentia.init = function () {
                             }
                         ],
                         hropts: Heron.options.layertree
+                    },
+                    {
+                        xtype: 'hr_bookmarkspanel',
+                        id: 'hr-bookmarks',
+                        border: true,
+                        /** The map contexts to show links for in the BookmarksPanel. */
+                        hropts: Heron.options.bookmarks
                     }
                 ]
             },
