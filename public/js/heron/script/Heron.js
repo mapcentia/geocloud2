@@ -31,7 +31,7 @@ if (!gxp.QueryPanel) {
         this.protocol.filter = filter;
         this.protocol.options.filter = filter;
     }, constructor: function (config) {
-        Ext.applyIf(config, {version: "1.1.0"});
+        Ext.applyIf(config, {version: "1.0.0"});
         if (!(this.protocol && this.protocol instanceof OpenLayers.Protocol)) {
             config.protocol = new OpenLayers.Protocol.WFS(Ext.apply({version: config.version, srsName: config.srsName, url: config.url, featureType: config.featureType, featureNS: config.featureNS, geometryName: config.geometryName, schema: config.schema, filter: config.filter, maxFeatures: config.maxFeatures, outputFormat: config.url.indexOf('nationaalgeoregister') > 0 ? 'GML2' : undefined, multi: config.multi}, config.protocol));
         }
@@ -5209,7 +5209,7 @@ Heron.widgets.search.FormSearchPanel = Ext.extend(GeoExt.form.FormPanel, {onSear
         var filter = GeoExt.form.toFilter(action.form, action.options);
         var filterFormat = new OpenLayers.Format.Filter.v1_1_0({srsName: this.protocol.srsName});
         var filterStr = OpenLayers.Format.XML.prototype.write.apply(filterFormat, [filterFormat.write(filter)]);
-        result.downloadInfo = {type: 'wfs', url: this.protocol.options.url, downloadFormats: this.downloadFormats, params: {typename: this.protocol.featureType, maxFeatures: this.protocol.maxFeatures, "Content-Disposition": "attachment", filename: this.protocol.featureType, srsName: this.protocol.srsName, service: "WFS", version: "1.1.0", request: "GetFeature", filter: filterStr}};
+        result.downloadInfo = {type: 'wfs', url: this.protocol.options.url, downloadFormats: this.downloadFormats, params: {typename: this.protocol.featureType, maxFeatures: this.protocol.maxFeatures, "Content-Disposition": "attachment", filename: this.protocol.featureType, srsName: this.protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
         if (this.onSearchCompleteAction) {
             var lropts = this.layerOpts;
             if (lropts) {
@@ -5510,7 +5510,7 @@ Heron.widgets.search.SpatialSearchPanel = Ext.extend(Ext.Panel, {layout: 'form',
         if (!this.protocol) {
             return;
         }
-        var downloadInfo = {type: 'wfs', url: this.protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: this.protocol.featureType, maxFeatures: maxFeatures, "Content-Disposition": "attachment", filename: targetLayer.name, srsName: this.protocol.srsName, service: "WFS", version: "1.1.0", request: "GetFeature", filter: filterStr}};
+        var downloadInfo = {type: 'wfs', url: this.protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: this.protocol.featureType, maxFeatures: maxFeatures, "Content-Disposition": "attachment", filename: targetLayer.name, srsName: this.protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
         var result = {olResponse: olResponse, downloadInfo: downloadInfo, layer: targetLayer};
         this.fireEvent('searchcomplete', this, result);
     }, scope: this});
@@ -5729,7 +5729,7 @@ Heron.widgets.search.SearchByFeaturePanel = Ext.extend(Heron.widgets.search.Spat
 Ext.reg('hr_searchbyfeaturepanel', Heron.widgets.search.SearchByFeaturePanel);
 Ext.namespace("Heron.widgets.search");
 Heron.widgets.GXP_QueryPanel_Empty = Ext.extend(Ext.Panel, {});
-Heron.widgets.search.GXP_QueryPanel = Ext.extend(gxp.QueryPanel, {statusReady: __('Ready'), statusNoQueryLayers: __('No query layers found'), wfsVersion: '1.1.0', title: __('Query Panel'), bodyStyle: 'padding: 12px', layerSortOrder: 'ASC', caseInsensitiveMatch: false, autoWildCardAttach: false, downloadFormats: null, wfsLayers: undefined, layerFilter: function (map) {
+Heron.widgets.search.GXP_QueryPanel = Ext.extend(gxp.QueryPanel, {statusReady: __('Ready'), statusNoQueryLayers: __('No query layers found'), wfsVersion: '1.0.0', title: __('Query Panel'), bodyStyle: 'padding: 12px', layerSortOrder: 'ASC', caseInsensitiveMatch: false, autoWildCardAttach: false, downloadFormats: null, wfsLayers: undefined, layerFilter: function (map) {
     return map.getLayersBy('metadata', {test: function (metadata) {
         return metadata && metadata.wfs && !metadata.wfs.noBBOX;
     }})
@@ -5755,7 +5755,7 @@ Heron.widgets.search.GXP_QueryPanel = Ext.extend(gxp.QueryPanel, {statusReady: _
         var wfsOptions = this.layerRecord.get('options');
         var filterFormat = new OpenLayers.Format.Filter.v1_1_0({srsName: protocol.srsName});
         var filterStr = protocol.filter ? OpenLayers.Format.XML.prototype.write.apply(filterFormat, [filterFormat.write(protocol.filter)]) : null;
-        var downloadInfo = {type: 'wfs', url: protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: protocol.featureType, maxFeatures: undefined, "Content-Disposition": "attachment", filename: protocol.featureType, srsName: protocol.srsName, service: "WFS", version: "1.1.0", request: "GetFeature", filter: filterStr}};
+        var downloadInfo = {type: 'wfs', url: protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: protocol.featureType, maxFeatures: undefined, "Content-Disposition": "attachment", filename: protocol.featureType, srsName: protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
         var result = {olResponse: store.proxy.response, downloadInfo: downloadInfo};
         this.fireEvent('searchcomplete', panel, result);
         store.removeListener("exception", this.onQueryException, this);

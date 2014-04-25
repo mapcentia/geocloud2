@@ -63,7 +63,20 @@ MapCentia.setup = function () {
                             singleTile: false,
                             visibility: false,
                             transitionEffect: 'resize',
-                            featureInfoFormat: 'application/vnd.ogc.gml'
+                            featureInfoFormat: 'application/vnd.ogc.gml',
+                            metadata: {
+                                wfs: {
+                                    protocol: new OpenLayers.Protocol.WFS({
+                                        version: "1.0.0",
+                                        //url: '/wms/' + db + '/' + schema,
+                                        url: '/wfs/' + db + '/' + schema + '/900913?',
+                                        srsName: "EPSG:3857",
+                                        featureType: v.f_table_name,
+                                        //featureType: name,
+                                        featureNS: "http://twitter/mydb"
+                                    })
+                                }
+                            }
 
                         }
                     ]
@@ -144,24 +157,107 @@ MapCentia.init = function () {
             name: 'CSV',
             outputFormat: 'csv',
             fileExt: '.csv'
+        },
+        {
+            name: 'GML (version 2.1.2)',
+            outputFormat: 'text/xml; subtype=gml/2.1.2',
+            fileExt: '.gml'
+        },
+        {
+            name: 'ESRI Shapefile (zipped)',
+            outputFormat: 'SHAPE-ZIP',
+            fileExt: '.zip'
+        },
+        {
+            name: 'GeoJSON',
+            outputFormat: 'json',
+            fileExt: '.json'
         }
-//    {
-//        name: 'GML (version 2.1.2)',
-//        outputFormat: 'text/xml; subtype=gml/2.1.2',
-//        fileExt: '.gml'
-//    },
-//    {
-//        name: 'ESRI Shapefile (zipped)',
-//        outputFormat: 'SHAPE-ZIP',
-//        fileExt: '.zip'
-//    },
-//    {
-//        name: 'GeoJSON',
-//        outputFormat: 'json',
-//        fileExt: '.json'
-//    }
     ];
+    Heron.options.searchPanelConfig = {
+        xtype: 'hr_multisearchcenterpanel',
+        height: 600,
+        hropts: [
 
+            {
+                searchPanel: {
+                    xtype: 'hr_searchbydrawpanel',
+                    name: __('Search by Drawing'),
+                    header: false
+                },
+                resultPanel: {
+                    xtype: 'hr_featuregridpanel',
+                    id: 'hr-featuregridpanel',
+                    header: false,
+                    autoConfig: true,
+                    autoConfigMaxSniff: 100,
+                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    gridCellRenderers: Heron.options.gridCellRenderers,
+                    hropts: {
+                        zoomOnRowDoubleClick: true,
+                        zoomOnFeatureSelect: false,
+                        zoomLevelPointSelect: 8,
+                        zoomToDataExtent: false
+                    }
+                }
+            },
+            {
+                searchPanel: {
+                    xtype: 'hr_searchbyfeaturepanel',
+                    name: __('Search by Feature Selection'),
+                    description: 'Select feature-geometries from one layer and use these to perform a spatial search in another layer.',
+                    header: false,
+                    border: false,
+                    bodyStyle: 'padding: 6px',
+                    style: {
+                        fontFamily: 'Verdana, Arial, Helvetica, sans-serif',
+                        fontSize: '12px'
+                    }
+                },
+                resultPanel: {
+                    xtype: 'hr_featuregridpanel',
+                    id: 'hr-featuregridpanel',
+                    header: false,
+                    border: false,
+                    autoConfig: true,
+                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    gridCellRenderers: Heron.options.gridCellRenderers,
+                    hropts: {
+                        zoomOnRowDoubleClick: true,
+                        zoomOnFeatureSelect: false,
+                        zoomLevelPointSelect: 8,
+                        zoomToDataExtent: false
+                    }
+                }
+            }/*,
+            {
+                searchPanel: {
+                    xtype: 'hr_gxpquerypanel',
+                    name: __('Build your own searches'),
+                    description: 'This search uses both search within Map extent and/or your own attribute criteria',
+                    header: false,
+                    border: false,
+                    caseInsensitiveMatch: true,
+                    autoWildCardAttach: true
+                },
+                resultPanel: {
+                    xtype: 'hr_featuregridpanel',
+                    id: 'hr-featuregridpanel',
+                    header: false,
+                    border: false,
+                    autoConfig: true,
+                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    gridCellRenderers: Heron.options.gridCellRenderers,
+                    hropts: {
+                        zoomOnRowDoubleClick: true,
+                        zoomOnFeatureSelect: false,
+                        zoomLevelPointSelect: 8,
+                        zoomToDataExtent: true
+                    }
+                }
+            }*/
+        ]
+    };
     Heron.options.map.toolbar = [
         {
             type: "featureinfo",
@@ -197,23 +293,23 @@ MapCentia.init = function () {
                                 fileExt: '.gpx',
                                 mimeType: 'text/plain'
                             },
-                            {
-                                name: 'OGC GeoPackage (EPSG:28992)',
-                                formatter: 'OpenLayersFormatter',
-                                format: 'OpenLayers.Format.GeoJSON',
-                                targetFormat: 'GPKG',
-                                fileExt: '.gpkg',
-                                mimeType: 'application/binary'
-                            },
-                            {
-                                name: 'OGC GeoPackage (WGS84)',
-                                formatter: 'OpenLayersFormatter',
-                                format: 'OpenLayers.Format.GeoJSON',
-                                targetFormat: 'GPKG',
-                                targetSrs: 'EPSG:4326',
-                                fileExt: '.gpkg',
-                                mimeType: 'application/binary'
-                            },
+                            /*{
+                             name: 'OGC GeoPackage (EPSG:28992)',
+                             formatter: 'OpenLayersFormatter',
+                             format: 'OpenLayers.Format.GeoJSON',
+                             targetFormat: 'GPKG',
+                             fileExt: '.gpkg',
+                             mimeType: 'application/binary'
+                             },
+                             {
+                             name: 'OGC GeoPackage (WGS84)',
+                             formatter: 'OpenLayersFormatter',
+                             format: 'OpenLayers.Format.GeoJSON',
+                             targetFormat: 'GPKG',
+                             targetSrs: 'EPSG:4326',
+                             fileExt: '.gpkg',
+                             mimeType: 'application/binary'
+                             },*/
                             'GeoJSON', 'WellKnownText'],
 // Export to download file. Option values are 'CSV', 'XLS', default is no export (results in no export menu).
 // exportFormats: ['CSV', 'XLS'],
@@ -227,7 +323,6 @@ MapCentia.init = function () {
         },
         {type: "-"},
         {type: "pan"},
-//    {type: "pan", options: {iconCls: "icon-hand"}},
         {type: "zoomin"},
         {type: "zoomout"},
         {type: "zoomvisible"},
@@ -237,8 +332,8 @@ MapCentia.init = function () {
         {type: "zoomnext"},
         {type: "-"},
     /** Use "geodesic: true" for non-linear/Mercator projections like Google, Bing etc */
-        {type: "measurelength", options: {geodesic: false}},
-        {type: "measurearea", options: {geodesic: false}},
+        {type: "measurelength", options: {geodesic: true}},
+        {type: "measurearea", options: {geodesic: true}},
         {type: "-"},
         {type: "addbookmark"},
         {type: "help", options: {tooltip: 'Help and info for this example', contentUrl: 'help.html'}},
@@ -259,9 +354,9 @@ MapCentia.init = function () {
                             {name: 'GPS Exchange Format (GPX)', fileExt: '.gpx', mimeType: 'text/xml', formatter: 'OpenLayers.Format.GPX', fileProjection: new OpenLayers.Projection('EPSG:4326')},
                             {name: 'Keyhole Markup Language (KML)', fileExt: '.kml', mimeType: 'text/xml', formatter: 'OpenLayers.Format.KML', fileProjection: new OpenLayers.Projection('EPSG:4326')},
                             {name: 'ESRI Shapefile (zipped, Google projection)', fileExt: '.zip', mimeType: 'application/zip', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'ESRI Shapefile', fileProjection: new OpenLayers.Projection('EPSG:900913')},
-                            {name: 'ESRI Shapefile (zipped, WGS84)', fileExt: '.zip', mimeType: 'application/zip', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'ESRI Shapefile', fileProjection: new OpenLayers.Projection('EPSG:4326')},
-                            {name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:900913')},
-                            {name: 'OGC GeoPackage (WGS84)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:4326')}
+                            {name: 'ESRI Shapefile (zipped, WGS84)', fileExt: '.zip', mimeType: 'application/zip', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'ESRI Shapefile', fileProjection: new OpenLayers.Projection('EPSG:4326')}
+                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:900913')},
+                            //{name: 'OGC GeoPackage (WGS84)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:4326')}
 
                         ],
                         fileProjection: new OpenLayers.Projection('EPSG:4326')
@@ -276,15 +371,33 @@ MapCentia.init = function () {
                             {name: 'Keyhole Markup Language (KML)', fileExt: '.kml', mimeType: 'text/xml', formatter: 'OpenLayers.Format.KML', fileProjection: new OpenLayers.Projection('EPSG:4326')},
                             {name: 'CSV (with X,Y in WGS84)', fileExt: '.csv', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')},
                             {name: 'ESRI Shapefile (zipped, Google projection)', fileExt: '.zip', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:900913')},
-                            {name: 'ESRI Shapefile (zipped, WGS84)', fileExt: '.zip', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')},
-                            {name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:900913')},
-                            {name: 'OGC GeoPackage (1 layer, WGS84)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')}
+                            {name: 'ESRI Shapefile (zipped, WGS84)', fileExt: '.zip', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')}
+                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:900913')},
+                            //{name: 'OGC GeoPackage (1 layer, WGS84)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')}
 
                         ],
                         fileProjection: new OpenLayers.Projection('EPSG:4326')
                     }
                 }
-            }}
+            }},
+        {
+            type: "searchcenter",
+            // Options for SearchPanel window
+            options: {
+                show: false,
+
+                searchWindow: {
+                    title: __('Multiple Searches'),
+                    x: 100,
+                    y: undefined,
+                    width: 360,
+                    height: 440,
+                    items: [
+                        Heron.options.searchPanelConfig
+                    ]
+                }
+            }
+        }
     ];
 
     Heron.layout = {
