@@ -98,7 +98,7 @@ if ($HTTP_RAW_POST_DATA) {
                         }
                     }
                 }
-                if (is_array($queries['Filter']) && $arr['version'] == "1.0.0") {
+                if (is_array($queries['Filter']) /*&& $arr['version'] == "1.0.0"*/) {
                     @$checkXml = simplexml_load_string($queries['Filter']);
                     if ($checkXml === FALSE) {
                         makeExceptionReport("Filter is not valid");

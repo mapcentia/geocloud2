@@ -44,10 +44,14 @@ class Mapfile extends \app\inc\Controller
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
         "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
+        "wfs_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WFS"
         "wms_srs"    "EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:3857 EPSG:900913"
+        "wfs_srs"    "EPSG:3857 EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:900913"
         "wms_name"    "<?php echo $user; ?>"
+        "wfs_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
         "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
         END
@@ -176,7 +180,7 @@ class Mapfile extends \app\inc\Controller
         NAME "dashed-line-short"
         TYPE ELLIPSE
         FILLED TRUE
-        POINTS 1 1 END
+        POINTS 10 1 END
         #STYLE 5 5 END
         END
 
@@ -186,7 +190,7 @@ class Mapfile extends \app\inc\Controller
         NAME "dashed-line-long"
         TYPE ELLIPSE
         FILLED TRUE
-        POINTS 1 1 END
+        POINTS 10 10 END
         #STYLE 10 10 END
         END
 
@@ -196,7 +200,7 @@ class Mapfile extends \app\inc\Controller
         NAME "dash-dot"
         TYPE ELLIPSE
         FILLED TRUE
-        POINTS 1 1 END
+        POINTS 20 6 2 6 END
         #STYLE 20 6 2 6 END
         END
 
@@ -387,8 +391,7 @@ class Mapfile extends \app\inc\Controller
                     } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                     ?>
 
-                    #TEXT
-                    <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
+
 
                     #MAXSCALEDENOM
                     <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
@@ -399,6 +402,12 @@ class Mapfile extends \app\inc\Controller
                     STYLE
                     #SYMBOL
                     <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
+
+                    #PATTERN
+                    <?php if ($class['pattern']) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
+
+                    #LINECAP
+                    <?php if ($class['linecap']) echo "LINECAP " . $class['linecap'] . "\n"; ?>
 
                     #WIDTH
                     <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
@@ -440,6 +449,12 @@ class Mapfile extends \app\inc\Controller
                     #SYMBOL
                     <?php if ($class['overlaysymbol']) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
 
+                    #PATTERN
+                    <?php if ($class['overlaypattern']) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
+
+                    #LINECAP
+                    <?php if ($class['overlaylinecap']) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
+
                     #WIDTH
                     <?php if ($class['overlaywidth']) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
 
@@ -479,6 +494,7 @@ class Mapfile extends \app\inc\Controller
                     #LABEL
                     <?php if ($class['label']) { ?>
                         LABEL
+                        <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                         TYPE truetype
                         FONT "arialbd"
                         SIZE <?php
@@ -520,6 +536,7 @@ class Mapfile extends \app\inc\Controller
                         }
                         echo "\n";
                         ?>
+                        OFFSET <?php echo ($class['label_offsetx']) ? : "0";?> <?php echo ($class['label_offsety']) ? : "0";?>
                         STYLE
                         <?php if ($class['label_backgroundcolor']) {
                             $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
@@ -531,6 +548,70 @@ class Mapfile extends \app\inc\Controller
                                 echo
                                     "OUTLINECOLOR {$labelBackgroundColor}\n" .
                                     "WIDTH {$class['label_backgroundpadding']}\n";
+                            }
+                        }
+                        ?>
+                        END # STYLE
+                        END #Label
+                    <?php } ?>
+                    #LABEL2
+                    <?php if ($class['label2']) { ?>
+                        LABEL
+                        <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
+                        TYPE truetype
+                        FONT "arialbd"
+                        SIZE <?php
+                        if ($class['label2_size']) {
+                            if (is_numeric($class['label2_size']))
+                                echo $class['label2_size'];
+                            else
+                                echo "[{$class['label2_size']}]";
+                        } else {
+                            echo "11";
+                        }
+                        echo "\n";
+                        ?>
+                        COLOR <?php echo ($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
+                        echo "\n"; ?>
+                        OUTLINECOLOR <?php echo ($class['label2_outlinecolor']) ?  Util::hex2RGB($class['label2_outlinecolor'], true, " ") : "255 255 255";
+                        echo "\n"; ?>
+                        SHADOWSIZE 2 2
+                        ANTIALIAS true
+                        FORCE <?php echo ($class['label2_force']) ? "true" : "false";
+                        echo "\n"; ?>
+                        POSITION <?php echo ($class['label2_position']) ? : "auto";
+                        echo "\n"; ?>
+                        PARTIALS false
+                        MINSIZE 6
+                        <?php if ($class['label2_maxscaledenom']) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
+                        <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
+                        <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
+                        <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+                        #ANGLE
+                        <?php
+                        if ($class['label2_angle']) {
+                            if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
+                                or $class['label2_angle'] == 'follow'
+                            )
+                                echo "ANGLE " . $class['label2_angle'];
+                            else
+                                echo "ANGLE [{$class['label2_angle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        <?php if ($class['label2_offset']) echo "OFFSET " . $class['label2_offset'] . "\n"; ?>
+                        OFFSET <?php echo ($class['label2_offsetx']) ? : "0";?> <?php echo ($class['label2_offsety']) ? : "0";?>
+                        STYLE
+                        <?php if ($class['label2_backgroundcolor']) {
+                            $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
+                            echo
+                                "GEOMTRANSFORM 'labelpoly'\n" .
+                                "COLOR {$labelBackgroundColor}\n";
+
+                            if ($class['label2_backgroundpadding']) {
+                                echo
+                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                    "WIDTH {$class['label2_backgroundpadding']}\n";
                             }
                         }
                         ?>
