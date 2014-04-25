@@ -69,7 +69,7 @@ MapCentia.setup = function () {
                                     protocol: new OpenLayers.Protocol.WFS({
                                         version: "1.0.0",
                                         //url: '/wms/' + db + '/' + schema,
-                                        url: '/wfs/' + db + '/' + schema + '/900913?',
+                                        url: '/wfs/' + db + '/' + schema + '/3857?',
                                         srsName: "EPSG:3857",
                                         featureType: v.f_table_name,
                                         //featureType: name,
