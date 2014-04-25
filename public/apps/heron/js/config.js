@@ -73,7 +73,7 @@ MapCentia.setup = function () {
                                         srsName: "EPSG:3857",
                                         featureType: v.f_table_name,
                                         //featureType: name,
-                                        featureNS: "http://twitter/mydb"
+                                        featureNS: "http://twitter/" + db
                                     })
                                 }
                             }
