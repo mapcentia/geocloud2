@@ -151,6 +151,17 @@ MapCentia.init = function () {
         }
     };
     Heron.options.bookmarks = [];
+    Heron.options.exportFormats = ['CSV', 'GMLv2', 'Shapefile',
+        {
+            name: 'Esri Shapefile (WGS84)',
+            formatter: 'OpenLayersFormatter',
+            format: 'OpenLayers.Format.GeoJSON',
+            targetFormat: 'ESRI Shapefile',
+            targetSrs: 'EPSG:4326',
+            fileExt: '.zip',
+            mimeType: 'application/zip'
+        },
+        'GeoJSON', 'WellKnownText'];
 
     Heron.options.wfs.downloadFormats = [
         {
@@ -191,7 +202,7 @@ MapCentia.init = function () {
                     header: false,
                     autoConfig: true,
                     autoConfigMaxSniff: 100,
-                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    exportFormats: Heron.options.exportFormats,
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -220,7 +231,7 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    exportFormats: Heron.options.exportFormats,
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -271,51 +282,8 @@ MapCentia.init = function () {
                         // Should column-names be capitalized? Default true.
                         columnCapitalize: true,
                         hideColumns: ['objectid', 'gid'],
-
-                        // Export to download file. Option values are 'CSV', 'XLS', or a Formatter object (see FeaturePanel) , default is no export (results in no export menu).
-                        exportFormats: ['CSV', 'XLS', 'GMLv2', 'Shapefile',
-                            {
-                                name: 'Esri Shapefile (WGS84)',
-                                formatter: 'OpenLayersFormatter',
-                                format: 'OpenLayers.Format.GeoJSON',
-                                targetFormat: 'ESRI Shapefile',
-                                targetSrs: 'EPSG:4326',
-                                fileExt: '.zip',
-                                mimeType: 'application/zip'
-                            },
-                            {
-                                // Try this with PDOK Streekpaden and Fietsroutes :-)
-                                name: 'GPS File (GPX)',
-                                formatter: 'OpenLayersFormatter',
-                                format: 'OpenLayers.Format.GeoJSON',
-                                targetSrs: 'EPSG:4326',
-                                targetFormat: 'GPX',
-                                fileExt: '.gpx',
-                                mimeType: 'text/plain'
-                            },
-                            /*{
-                             name: 'OGC GeoPackage (EPSG:28992)',
-                             formatter: 'OpenLayersFormatter',
-                             format: 'OpenLayers.Format.GeoJSON',
-                             targetFormat: 'GPKG',
-                             fileExt: '.gpkg',
-                             mimeType: 'application/binary'
-                             },
-                             {
-                             name: 'OGC GeoPackage (WGS84)',
-                             formatter: 'OpenLayersFormatter',
-                             format: 'OpenLayers.Format.GeoJSON',
-                             targetFormat: 'GPKG',
-                             targetSrs: 'EPSG:4326',
-                             fileExt: '.gpkg',
-                             mimeType: 'application/binary'
-                             },*/
-                            'GeoJSON', 'WellKnownText'],
-// Export to download file. Option values are 'CSV', 'XLS', default is no export (results in no export menu).
-// exportFormats: ['CSV', 'XLS'],
+                        exportFormats: Heron.options.exportFormats,
                         maxFeatures: 10,
-
-// In case that the same layer would be requested more than once: discard the styles
                         discardStylesForDups: true
                     }
                 }
