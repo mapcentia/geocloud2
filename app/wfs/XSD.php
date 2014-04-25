@@ -68,17 +68,9 @@ foreach($tables as $table)
 			$atts["name"] = changeFieldName($atts["name"]);
 		}
 		$atts["maxOccurs"]="1";
-		//$nillable=$meta->not_null;
-		//if($nillable==1){
-		//$atts["nillable"]="false";
-		//$atts["minOccurs"]="1";
-		//}
-		//else{
-		//}
 		$selfclose=true;
 		if($tableObj->metaData[$atts["name"]]['type']=="geometry")
 		{
-			//$geomType = $postgisObject -> getGeometryColumns($postgisschema.".".$table, "type");
 			$geomType = $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","type");
 			switch ($geomType) {
 				case "POINT":
@@ -101,11 +93,8 @@ foreach($tables as $table)
 				break;
 			}
 		}
-		//else $atts["type"]="xs:string";
-		else unset($atts["type"]);
-		
 		$atts["minOccurs"]="0";
-		writeTag("open","xs","element",$atts,True,True);
+
 		if($atts["name"] != $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}","f_geometry_column")) {
 			if ($tableObj->metaData[$atts["name"]]['type']=="number") {
 				$tableObj->metaData[$atts["name"]]['type']="decimal";
@@ -116,10 +105,9 @@ foreach($tables as $table)
 			if ($atts["name"] == $primeryKey['attname']) {
 				$tableObj->metaData[$atts["name"]]['type']="string";
 			}
-			echo '<xs:simpleType><xs:restriction base="xs:'.$tableObj->metaData[$atts["name"]]['type'].'">
-			
-			</xs:restriction></xs:simpleType>';
 		}
+        $atts["type"] = "xs:".$tableObj->metaData[$atts["name"]]['type'];
+        writeTag("open","xs","element",$atts,True,True);
 		writeTag("close","xs","element",NULL,False,True);
 		$atts=Null;
 	}
@@ -138,7 +126,7 @@ foreach($tables as $table){
 	$atts["name"] = $table;
 	$atts["type"] = $table."_Type";
         if ($gmlNameSpace) $atts["type"] = $gmlNameSpace.":".$atts["type"];
-	
+
 	$atts["substitutionGroup"]="gml:_Feature";
 	writeTag("selfclose","xs","element",$atts,True,True);
 }

@@ -10,8 +10,7 @@ class Wms extends \app\inc\Controller
         if (\app\inc\Input::getPath()->part(3) == "tilecache") {
             $schema = \app\inc\Input::getPath()->part(4);
 
-        }
-        else {
+        } else {
             $schema = \app\inc\Input::getPath()->part(3);
         }
         $db = \app\inc\Input::getPath()->part(2);
@@ -19,13 +18,18 @@ class Wms extends \app\inc\Controller
         $name = $db . "_" . $schema . ".map";
 
 
-        $oMap = ms_newMapobj($path . $name);
-        $request = ms_newowsrequestobj();
-        foreach ($_GET as $k => $v) {
-            if (strtolower($k) == "layers" || strtolower($k) == "layer") {
-                $layer = $v;
+        $oMap = new \mapObj($path . $name);
+        $request = new \OWSRequestObj();
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            foreach ($_GET as $k => $v) {
+                if (strtolower($k) == "layers" || strtolower($k) == "layer") {
+                    $layer = $v;
+                }
+                $request->setParameter($k, $v);
             }
-            $request->setParameter($k, $v);
+        }
+        else {
+            $request->loadParams();
         }
         if ($_SESSION['http_auth'] != \app\inc\Input::getPath()->part(2)) {
             \app\models\Database::setDb($db);
@@ -93,8 +97,8 @@ class Wms extends \app\inc\Controller
   		END
   	END
 	");
-        }
 
+        }
         ms_ioinstallstdouttobuffer();
         $oMap->owsdispatch($request);
 
