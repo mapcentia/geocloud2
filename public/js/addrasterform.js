@@ -2,6 +2,7 @@
 /*global $:false */
 /*global App:false */
 /*global document:false */
+/*global window:false */
 /*global writeFiles:false */
 /*global store:false */
 /*global addRasterFile:false */
@@ -71,6 +72,15 @@ addRasterFile.init = function () {
                 // Flash settings
                 flash_swf_url: '/js/plupload/js/Moxie.swf'
             });
+            window.setTimeout(function () {
+                var e = $(".plupload_droptext");
+                window.setTimeout(function () {
+                    e.fadeOut(500).fadeIn(500);
+                }, 1000);
+                window.setTimeout(function () {
+                    e.html("Raster formats: At the moment you can upload .tif, .asc and .gen");
+                }, 1500);
+            }, 200);
         },
         tbar: [
             {

@@ -463,7 +463,6 @@ $(window).ready(function () {
                     c.doLayout();
                 } catch (e) {
                 }
-
             };
         winAdd = new Ext.Window({
             title: 'Add new layer',

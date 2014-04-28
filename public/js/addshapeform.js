@@ -75,7 +75,15 @@ addShape.init = function () {
                 // Flash settings
                 flash_swf_url: '/js/plupload/js/Moxie.swf'
             });
-            $(".plupload_droptext").empty();
+            window.setTimeout(function () {
+                var e = $(".plupload_droptext");
+                window.setTimeout(function () {
+                    e.fadeOut(500).fadeIn(500);
+                }, 1000);
+                window.setTimeout(function () {
+                    e.html("Vector formats: .shp, .geojson, .gml, .kml, .tab and .mif");
+                }, 1500);
+            }, 200);
         },
         tbar: [
             {
