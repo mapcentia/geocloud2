@@ -20,7 +20,7 @@ foreach ($arr['data'] as $db) {
             foreach (Sql::get() as $sql) {
                 $result = $conn->execQuery($sql, "PDO", "transaction");
                 if ($conn->PDOerror[0]) {
-                    echo "An SQL did NOT run in {$db}:\n";
+                    echo "A SQL did NOT run in {$db}:\n";
                     echo $conn->PDOerror[0]."\n";
                 } else {
                     echo "SQL ran without errors in {$db}\n";
