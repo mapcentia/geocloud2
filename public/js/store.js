@@ -479,17 +479,17 @@ $(window).ready(function () {
                     text: 'Add vector',
                     handler: addVector
                 },
-                /*'-',
-                {
-                    text: 'Add raster',
-                    handler: addRaster
-                },
                 '-',
-                {
-                    text: 'Add imagery',
-                    handler: addImage
-                },*/
-                '-',
+                 {
+                 text: 'Add raster',
+                 handler: addRaster
+                 },
+                 '-',
+                 {
+                 text: 'Add imagery',
+                 handler: addImage
+                 },
+                 '-',
                 {
                     text: 'Blank layer',
                     handler: function () {
@@ -502,6 +502,7 @@ $(window).ready(function () {
                 }
             ]
         });
+
         winAdd.show(this);
         addVector();
     };
@@ -679,8 +680,20 @@ $(window).ready(function () {
         a2.add(wmsClasses.grid);
         a2.doLayout();
         var a3 = Ext.getCmp("a3");
+        var a8 = Ext.getCmp("a8");
+        var a9 = Ext.getCmp("a9");
+        var a10 = Ext.getCmp("a10");
+        var a11 = Ext.getCmp("a11");
         a3.remove(wmsClass.grid);
+        a8.remove(wmsClass.grid2);
+        a9.remove(wmsClass.grid3);
+        a10.remove(wmsClass.grid4);
+        a11.remove(wmsClass.grid5);
         a3.doLayout();
+        a8.doLayout();
+        a9.doLayout();
+        a10.doLayout();
+        a11.doLayout();
 
         Ext.getCmp("layerStyleTabs").activate(0);
         var a7 = Ext.getCmp("a7");
@@ -1056,7 +1069,6 @@ $(window).ready(function () {
                                         defaults: {
                                             border: false
                                         },
-                                        height: 610,
                                         items: [
                                             {
                                                 xtype: "panel",
@@ -1085,21 +1097,108 @@ $(window).ready(function () {
                                         xtype: "panel",
                                         title: 'Classes',
                                         defaults: {
-                                            height: 150,
                                             border: false
                                         },
                                         items: [
                                             {
                                                 xtype: "panel",
                                                 id: "a2",
-                                                layout: "fit"
+                                                layout: "fit",
+                                                height: 150
                                             },
-                                            {
-                                                xtype: "panel",
-                                                height: 360,
-                                                id: "a3"
 
-                                            }
+                                            new Ext.TabPanel({
+                                                activeTab: 0,
+                                                region: 'center',
+                                                plain: true,
+                                                id: "classTabs",
+                                                border: false,
+                                                height: 450,
+                                                defaults: {
+                                                    layout: "fit",
+                                                    border: false
+                                                },
+                                                items: [
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a3",
+                                                        title: "Base"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a8",
+                                                        title: "Symbol1"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a9",
+                                                        title: "Symbol2"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a10",
+                                                        title: "Label1"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a11",
+                                                        title: "Label2"
+                                                    }
+
+                                                ],
+                                                tbar: [
+                                                    {
+                                                        text: '<i class="icon-ok btn-gc"></i> Update',
+                                                        handler: function () {
+                                                            var grid = Ext.getCmp("propGrid");
+                                                            var grid2 = Ext.getCmp("propGrid2");
+                                                            var grid3 = Ext.getCmp("propGrid3");
+                                                            var grid4 = Ext.getCmp("propGrid4");
+                                                            var grid5 = Ext.getCmp("propGrid5");
+                                                            var source = grid.getSource();
+                                                            jQuery.extend(source, grid2.getSource());
+                                                            jQuery.extend(source, grid3.getSource());
+                                                            jQuery.extend(source, grid4.getSource());
+                                                            jQuery.extend(source, grid5.getSource());
+                                                            console.log(source);
+                                                            var param = {
+                                                                data: source
+                                                            };
+                                                            param = Ext.util.JSON.encode(param);
+
+                                                            // Encode the json because it can contain "="
+                                                            param = encodeURIComponent(param);
+
+                                                            Ext.Ajax.request({
+                                                                url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
+                                                                method: 'put',
+                                                                params: param,
+                                                                headers: {
+                                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                                },
+                                                                success: function (response) {
+                                                                    App.setAlert(App.STATUS_OK, "Style is updated");
+                                                                    writeFiles();
+                                                                    wmsClasses.store.load();
+                                                                    clearTileCache(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
+                                                                },
+                                                                failure: function (response) {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'Failure',
+                                                                        msg: eval('(' + response.responseText + ')').message,
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                ]
+                                            })
+
+
                                         ]
                                     },
                                     {
