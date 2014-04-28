@@ -4,9 +4,9 @@ class Sql
     public static function get()
     {
         $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
-        //$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter TEXT";
-        //$sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN cartomobile TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN bitmapsource varchar(255)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN cartomobile TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN bitmapsource VARCHAR(255)";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -44,8 +44,8 @@ class Sql
                         settings.geometry_columns_join ON
                                                          geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text =
                                                          geometry_columns_join._key_::text
-UNION
-SELECT
+                      UNION
+                      SELECT
                         raster_columns.r_table_schema as f_table_schema,
                         raster_columns.r_table_name as f_table_name,
                         raster_columns.r_raster_column as f_geometry_column,
