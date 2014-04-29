@@ -20,7 +20,7 @@ addRasterFile.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>You need Flash or a modern browser, which supports HTML5</div>",
         afterRender: function () {
-            var arr = [], ext = ["asc", "tif", "tiff", "gen", "pdf"], srs, flag = false;
+            var arr = [], ext = ["asc", "tif", "tiff", "gen", "php"], srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/raster',

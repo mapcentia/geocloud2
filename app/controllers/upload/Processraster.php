@@ -35,7 +35,7 @@ class Processraster extends \app\inc\Controller
             " -h " .
             Connection::$param["postgishost"];
 
-        exec($cmd . ' 2>&1', $out, $out);
+        exec($cmd . ' 2>&1', $out);
         $err = false;
         foreach ($out as $line) {
             if (strpos($line, 'ERROR') !== false) {
