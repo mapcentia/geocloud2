@@ -23,8 +23,8 @@ class Processraster extends \app\inc\Controller
         $cmd = "raster2pgsql " .
             "-s " .
             $srid .
-            " -I -C -M " .
-            $dir."/".$_REQUEST['file'] .
+            " -I -C -M -d" .
+            $dir . "/" . $_REQUEST['file'] .
             " -F " .
             " -t 100x100 " .
             Connection::$param["postgisschema"] . "." . $safeName .
@@ -35,17 +35,22 @@ class Processraster extends \app\inc\Controller
             " -h " .
             Connection::$param["postgishost"];
 
-        //echo $cmd;
-        exec($cmd . ' 2>&1', $out, $err);
-
-        if ($err[0] == "") {
+        exec($cmd . ' 2>&1', $out);
+        $err = false;
+        foreach ($out as $line) {
+            if (strpos($line, 'ERROR') !== false) {
+                $err = true;
+                break;
+            }
+        }
+        if (!$err) {
             $response['success'] = true;
+            $response['cmd'] = $cmd;
             $response['message'] = "Raster layer <b>{$safeName}</b> is created";
         } else {
-
             $response['success'] = false;
             $response['message'] = "Some thing went wrong. Check the log.";
-            Session::createLog($err, $_REQUEST['file']);
+            Session::createLog($out, $_REQUEST['file']);
         }
         $response['cmd'] = $cmd;
         return Response::json($response);
