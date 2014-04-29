@@ -23,7 +23,7 @@ class Processraster extends \app\inc\Controller
         $cmd = "raster2pgsql " .
             "-s " .
             $srid .
-            " -I -C -M -d" .
+            " -I -C -M -d " .
             $dir . "/" . $_REQUEST['file'] .
             " -F " .
             " -t 100x100 " .
