@@ -235,410 +235,415 @@ class Mapfile extends \app\inc\Controller
             makeExceptionReport($postgisObject->PDOerror);
         }
         while ($row = $postgisObject->fetchRow($result)) {
-            $arr = (array)json_decode($row['def']); // Cast stdclass to array
-            $props = array("label_column", "theme_column");
-            foreach ($props as $field) {
-                if (!$arr[$field]) {
-                    $arr[$field] = "";
-                }
-            }
-            $layerArr = array("data" => array($arr));
-            $sortedArr = array();
-
-            // Sort classes
-            $arr = $arr2 = (array)json_decode($row['class']);
-            for ($i = 0; $i < sizeof($arr); $i++) {
-                $last = 1000;
-                foreach ($arr2 as $key => $value) {
-                    if ($value->sortid < $last) {
-                        $temp = $value;
-                        $del = $key;
-                        $last = $value->sortid;
+            if ($row['srid'] > 1) {
+                $arr = (array)json_decode($row['def']); // Cast stdclass to array
+                $props = array("label_column", "theme_column");
+                foreach ($props as $field) {
+                    if (!$arr[$field]) {
+                        $arr[$field] = "";
                     }
                 }
-                array_push($sortedArr, $temp);
-                unset($arr2[$del]);
-                $temp = null;
-            }
-            $arr = $sortedArr;
-            for ($i = 0; $i < sizeof($arr); $i++) {
-                $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
-                $arrNew[$i]['id'] = $i;
-            }
-            $classArr = array("data" => $arrNew);
-            $primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-            unset($arrNew);
-            ?>
-            LAYER
-            NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
-            STATUS off
-            PROCESSING "CLOSE_CONNECTION=DEFER"
+                $layerArr = array("data" => array($arr));
+                $sortedArr = array();
 
-            <?php if ($row['filter']) { ?>
-                FILTER "<?php echo $row['filter']; ?>"
-            <?php } ?>
-            <?php
-            switch ($row['type']) {
-                case "POINT":
-                    $type = "POINT";
-                    break;
-                case "LINESTRING":
-                    $type = "LINE";
-                    break;
-                case "POLYGON":
-                    $type = "POLYGON";
-                    break;
-                case "MULTIPOINT":
-                    $type = "POINT";
-                    break;
-                case "MULTILINESTRING":
-                    $type = "LINE";
-                    break;
-                case "MULTIPOLYGON":
-                    $type = "POLYGON";
-                    break;
-                case "GEOMETRY":
-                    $type = "LINE";
-                    break;
-                case "RASTER":
-                    $type = "RASTER";
-                    break;
-            }
-
-
-            if ($row['wmssource']) {
-                ?>
-                TYPE RASTER
-                CONNECTIONTYPE WMS
-                CONNECTION "<?php echo $row['wmssource']; ?>"
-
-            <?php
-            } elseif ($row['bitmapsource']) {
-                ?>
-                TYPE RASTER
-                DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
-            <?php
-            } else {
-                if ($type != "RASTER") {
-                    $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
-                    echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
-                } else {
-                    echo "DATA \"PG:host=" . Connection::$param['postgishost'] . " port=5432 dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
-		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
+                // Sort classes
+                $arr = $arr2 = (array)json_decode($row['class']);
+                for ($i = 0; $i < sizeof($arr); $i++) {
+                    $last = 1000;
+                    foreach ($arr2 as $key => $value) {
+                        if ($value->sortid < $last) {
+                            $temp = $value;
+                            $del = $key;
+                            $last = $value->sortid;
+                        }
+                    }
+                    array_push($sortedArr, $temp);
+                    unset($arr2[$del]);
+                    $temp = null;
                 }
+                $arr = $sortedArr;
+                for ($i = 0; $i < sizeof($arr); $i++) {
+                    $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                    $arrNew[$i]['id'] = $i;
+                }
+                $classArr = array("data" => $arrNew);
+                $primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
+                unset($arrNew);
                 ?>
-                TYPE <?php echo $type . "\n"; ?>
-                CONNECTIONTYPE POSTGIS
-                CONNECTION "user=postgres dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> options='-c client_encoding=UTF8'"
+                LAYER
+                NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
+                STATUS off
+                PROCESSING "CLOSE_CONNECTION=DEFER"
 
-            <?php } ?>
-
-            #CLASSITEM
-            <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
-
-            #LABELITEM
-            <?php if ($layerArr['data'][0]['label_column']) echo "LABELITEM '" . $layerArr['data'][0]['label_column'] . "'\n"; ?>
-
-            #LABELMAXSCALEDENOM
-            <?php if ($layerArr['data'][0]['label_max_scale']) echo "LABELMAXSCALEDENOM " . $layerArr['data'][0]['label_max_scale'] . "\n"; ?>
-
-            #LABELMINSCALEDENOM
-            <?php if ($layerArr['data'][0]['label_min_scale']) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
-
-            #OPACITY
-            <?php if ($layerArr['data'][0]['opacity']) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
-
-            #MAXSCALEDENOM
-            <?php if ($layerArr['data'][0]['maxscaledenom']) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
-
-            #MINSCALEDENOM
-            <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
-
-            #LABELMAXSCALE
-            METADATA
-            "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-            "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
-            "wms_name"    "<?php echo $row['f_table_name']; ?>"
-            "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
-            "wms_format"    "image/png"
-            "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
-            "appformap_queryable"    "true"
-            "appformap_loader"    "true"
-            "wms_enable_request"    "*"
-            "gml_include_items" "all"
-            "wms_include_items" "all"
-            "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-            "gml_the_geom_type" "<?php echo strtolower($type); ?>"
-            <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
-            END
-            PROJECTION
-            "init=epsg:<?php echo $row['srid']; ?>"
-            END
-            TEMPLATE "test"
-            <?php
-            if (is_array($classArr['data'])) {
-                foreach ($classArr['data'] as $class) {
-
-                    ?>
-                    CLASS
-                    #NAME
-                    <?php if ($class['name']) echo "NAME '" . $class['name'] . "'\n"; ?>
-
-                    #EXPRESSION
-                    <?php if ($class['expression']) {
-                        if ($layerArr['data'][0]['theme_column']) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
-                        else echo "EXPRESSION (" . $class['expression'] . ")\n";
-                    } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
-                    ?>
-
-
-
-                    #MAXSCALEDENOM
-                    <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
-
-                    #MINSCALEDENOM
-                    <?php if ($class['class_minscaledenom']) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
-
-                    STYLE
-                    #SYMBOL
-                    <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
-
-                    #PATTERN
-                    <?php if ($class['pattern']) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
-
-                    #LINECAP
-                    <?php if ($class['linecap']) echo "LINECAP " . $class['linecap'] . "\n"; ?>
-
-                    #WIDTH
-                    <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
-
-                    #COLOR
-                    <?php if ($class['color']) echo "COLOR " . Util::hex2RGB($class['color'], true, " ") . "\n"; ?>
-
-                    #OUTLINECOLOR
-                    <?php if ($class['outlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
-
-                    #OPACITY
-                    <?php if ($class['style_opacity']) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
-
-                    #SIZE
-                    <?php
-                    if ($class['size']) {
-                        if (is_numeric($class['size']))
-                            echo "SIZE " . $class['size'];
-                        else
-                            echo "SIZE [{$class['size']}]";
-                    }
-                    echo "\n";
-                    ?>
-
-                    #ANGLE
-                    <?php
-                    if ($class['angle']) {
-                        if (is_numeric($class['angle']))
-                            echo "ANGLE " . $class['angle'];
-                        else
-                            echo "ANGLE [{$class['angle']}]";
-                    }
-                    echo "\n";
-                    ?>
-
-                    END # style
-
-                    STYLE
-                    #SYMBOL
-                    <?php if ($class['overlaysymbol']) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
-
-                    #PATTERN
-                    <?php if ($class['overlaypattern']) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
-
-                    #LINECAP
-                    <?php if ($class['overlaylinecap']) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
-
-                    #WIDTH
-                    <?php if ($class['overlaywidth']) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
-
-                    #COLOR
-                    <?php if ($class['overlaycolor']) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
-
-                    #OUTLINECOLOR
-                    <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
-
-                    #OPACITY
-                    <?php if ($class['overlaystyle_opacity']) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
-                    #SIZE
-                    <?php
-                    if ($class['overlaysize']) {
-                        if (is_numeric($class['overlaysize']))
-                            echo "SIZE " . $class['overlaysize'];
-                        else
-                            echo "SIZE [{$class['overlaysize']}]";
-                    }
-                    echo "\n";
-                    ?>
-                    #ANGLE
-                    <?php
-                    if ($class['overlayangle']) {
-                        if (is_numeric($class['overlayangle']))
-                            echo "ANGLE " . $class['overlayangle'];
-                        else
-                            echo "ANGLE [{$class['overlayangle']}]";
-                    }
-                    echo "\n";
-                    ?>
-
-                    END # style
-
-                    #TEMPLATE "ttt"
-
-                    #LABEL
-                    <?php if ($class['label']) { ?>
-                        LABEL
-                        <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
-                        TYPE truetype
-                        FONT "arialbd"
-                        SIZE <?php
-                        if ($class['label_size']) {
-                            if (is_numeric($class['label_size']))
-                                echo $class['label_size'];
-                            else
-                                echo "[{$class['label_size']}]";
-                        } else {
-                            echo "11";
-                        }
-                        echo "\n";
-                        ?>
-                        COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
-                        echo "\n"; ?>
-                        OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ?  Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
-                        echo "\n"; ?>
-                        SHADOWSIZE 2 2
-                        ANTIALIAS true
-                        FORCE <?php echo ($class['label_force']) ? "true" : "false";
-                        echo "\n"; ?>
-                        POSITION <?php echo ($class['label_position']) ? : "auto";
-                        echo "\n"; ?>
-                        PARTIALS false
-                        MINSIZE 6
-                        <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
-                        <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
-                        <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
-                        <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
-                        #ANGLE
-                        <?php
-                        if ($class['label_angle']) {
-                            if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
-                                or $class['label_angle'] == 'follow'
-                            )
-                                echo "ANGLE " . $class['label_angle'];
-                            else
-                                echo "ANGLE [{$class['label_angle']}]";
-                        }
-                        echo "\n";
-                        ?>
-                        OFFSET <?php echo ($class['label_offsetx']) ? : "0";?> <?php echo ($class['label_offsety']) ? : "0";?>
-                        STYLE
-                        <?php if ($class['label_backgroundcolor']) {
-                            $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
-                            echo
-                                "GEOMTRANSFORM 'labelpoly'\n" .
-                                "COLOR {$labelBackgroundColor}\n";
-
-                            if ($class['label_backgroundpadding']) {
-                                echo
-                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                    "WIDTH {$class['label_backgroundpadding']}\n";
-                            }
-                        }
-                        ?>
-                        END # STYLE
-                        END #Label
-                    <?php } ?>
-                    #LABEL2
-                    <?php if ($class['label2']) { ?>
-                        LABEL
-                        <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
-                        TYPE truetype
-                        FONT "arialbd"
-                        SIZE <?php
-                        if ($class['label2_size']) {
-                            if (is_numeric($class['label2_size']))
-                                echo $class['label2_size'];
-                            else
-                                echo "[{$class['label2_size']}]";
-                        } else {
-                            echo "11";
-                        }
-                        echo "\n";
-                        ?>
-                        COLOR <?php echo ($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
-                        echo "\n"; ?>
-                        OUTLINECOLOR <?php echo ($class['label2_outlinecolor']) ?  Util::hex2RGB($class['label2_outlinecolor'], true, " ") : "255 255 255";
-                        echo "\n"; ?>
-                        SHADOWSIZE 2 2
-                        ANTIALIAS true
-                        FORCE <?php echo ($class['label2_force']) ? "true" : "false";
-                        echo "\n"; ?>
-                        POSITION <?php echo ($class['label2_position']) ? : "auto";
-                        echo "\n"; ?>
-                        PARTIALS false
-                        MINSIZE 6
-                        <?php if ($class['label2_maxscaledenom']) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
-                        <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
-                        <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
-                        <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
-                        #ANGLE
-                        <?php
-                        if ($class['label2_angle']) {
-                            if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
-                                or $class['label2_angle'] == 'follow'
-                            )
-                                echo "ANGLE " . $class['label2_angle'];
-                            else
-                                echo "ANGLE [{$class['label2_angle']}]";
-                        }
-                        echo "\n";
-                        ?>
-                        <?php if ($class['label2_offset']) echo "OFFSET " . $class['label2_offset'] . "\n"; ?>
-                        OFFSET <?php echo ($class['label2_offsetx']) ? : "0";?> <?php echo ($class['label2_offsety']) ? : "0";?>
-                        STYLE
-                        <?php if ($class['label2_backgroundcolor']) {
-                            $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
-                            echo
-                                "GEOMTRANSFORM 'labelpoly'\n" .
-                                "COLOR {$labelBackgroundColor}\n";
-
-                            if ($class['label2_backgroundpadding']) {
-                                echo
-                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                    "WIDTH {$class['label2_backgroundpadding']}\n";
-                            }
-                        }
-                        ?>
-                        END # STYLE
-                        END #Label
-                    <?php } ?>
-
-                    <?php if ($class['leader']) { ?>
-                        LEADER
-                        GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5";
-                        echo "\n"; ?>
-                        MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30";
-                        echo "\n"; ?>
-                        STYLE
-                        COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1";
-                        echo "\n"; ?>
-                        WIDTH 1
-                        END
-                        END
-                    <?php } ?>
-                    END # Class
+                <?php if ($row['filter']) { ?>
+                    FILTER "<?php echo $row['filter']; ?>"
+                <?php } ?>
                 <?php
+                switch ($row['type']) {
+                    case "POINT":
+                        $type = "POINT";
+                        break;
+                    case "LINESTRING":
+                        $type = "LINE";
+                        break;
+                    case "POLYGON":
+                        $type = "POLYGON";
+                        break;
+                    case "MULTIPOINT":
+                        $type = "POINT";
+                        break;
+                    case "MULTILINESTRING":
+                        $type = "LINE";
+                        break;
+                    case "MULTIPOLYGON":
+                        $type = "POLYGON";
+                        break;
+                    case "GEOMETRY":
+                        $type = "LINE";
+                        break;
+                    case "RASTER":
+                        $type = "RASTER";
+                        break;
                 }
+
+
+                if ($row['wmssource']) {
+                    ?>
+                    TYPE RASTER
+                    CONNECTIONTYPE WMS
+                    CONNECTION "<?php echo $row['wmssource']; ?>"
+
+                <?php
+                } elseif ($row['bitmapsource']) {
+                    ?>
+                    TYPE RASTER
+                    DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
+                <?php
+                } else {
+                    if ($type != "RASTER") {
+                        $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
+                        echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
+                    } else {
+                        echo "DATA \"PG:host=" . Connection::$param['postgishost'];
+                        if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
+                        echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
+		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
+                    }
+                    ?>
+                    TYPE <?php echo $type . "\n"; ?>
+                    CONNECTIONTYPE POSTGIS
+                    CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> options='-c client_encoding=UTF8'"
+
+                <?php } ?>
+
+                #CLASSITEM
+                <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
+
+                #LABELITEM
+                <?php if ($layerArr['data'][0]['label_column']) echo "LABELITEM '" . $layerArr['data'][0]['label_column'] . "'\n"; ?>
+
+                #LABELMAXSCALEDENOM
+                <?php if ($layerArr['data'][0]['label_max_scale']) echo "LABELMAXSCALEDENOM " . $layerArr['data'][0]['label_max_scale'] . "\n"; ?>
+
+                #LABELMINSCALEDENOM
+                <?php if ($layerArr['data'][0]['label_min_scale']) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
+
+                #OPACITY
+                <?php if ($layerArr['data'][0]['opacity']) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
+
+                #MAXSCALEDENOM
+                <?php if ($layerArr['data'][0]['maxscaledenom']) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
+
+                #MINSCALEDENOM
+                <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
+
+                #LABELMAXSCALE
+                METADATA
+                "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "wms_name"    "<?php echo $row['f_table_name']; ?>"
+                "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
+                "wms_format"    "image/png"
+                "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
+                "appformap_queryable"    "true"
+                "appformap_loader"    "true"
+                "wms_enable_request"    "*"
+                "gml_include_items" "all"
+                "wms_include_items" "all"
+                "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
+                "gml_the_geom_type" "<?php echo strtolower($type); ?>"
+                <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
+                END
+                PROJECTION
+                "init=epsg:<?php echo $row['srid']; ?>"
+                END
+                TEMPLATE "test"
+                <?php
+                if (is_array($classArr['data'])) {
+                    foreach ($classArr['data'] as $class) {
+
+                        ?>
+                        CLASS
+                        #NAME
+                        <?php if ($class['name']) echo "NAME '" . $class['name'] . "'\n"; ?>
+
+                        #EXPRESSION
+                        <?php if ($class['expression']) {
+                            if ($layerArr['data'][0]['theme_column']) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
+                            else echo "EXPRESSION (" . $class['expression'] . ")\n";
+                        } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
+                        ?>
+
+
+
+                        #MAXSCALEDENOM
+                        <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
+
+                        #MINSCALEDENOM
+                        <?php if ($class['class_minscaledenom']) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
+
+                        STYLE
+                        #SYMBOL
+                        <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
+
+                        #PATTERN
+                        <?php if ($class['pattern']) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
+
+                        #LINECAP
+                        <?php if ($class['linecap']) echo "LINECAP " . $class['linecap'] . "\n"; ?>
+
+                        #WIDTH
+                        <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
+
+                        #COLOR
+                        <?php if ($class['color']) echo "COLOR " . Util::hex2RGB($class['color'], true, " ") . "\n"; ?>
+
+                        #OUTLINECOLOR
+                        <?php if ($class['outlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
+
+                        #OPACITY
+                        <?php if ($class['style_opacity']) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
+
+                        #SIZE
+                        <?php
+                        if ($class['size']) {
+                            if (is_numeric($class['size']))
+                                echo "SIZE " . $class['size'];
+                            else
+                                echo "SIZE [{$class['size']}]";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #ANGLE
+                        <?php
+                        if ($class['angle']) {
+                            if (is_numeric($class['angle']))
+                                echo "ANGLE " . $class['angle'];
+                            else
+                                echo "ANGLE [{$class['angle']}]";
+                        }
+                        echo "\n";
+                        ?>
+
+                        END # style
+
+                        STYLE
+                        #SYMBOL
+                        <?php if ($class['overlaysymbol']) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
+
+                        #PATTERN
+                        <?php if ($class['overlaypattern']) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
+
+                        #LINECAP
+                        <?php if ($class['overlaylinecap']) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
+
+                        #WIDTH
+                        <?php if ($class['overlaywidth']) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
+
+                        #COLOR
+                        <?php if ($class['overlaycolor']) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
+
+                        #OUTLINECOLOR
+                        <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
+
+                        #OPACITY
+                        <?php if ($class['overlaystyle_opacity']) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
+                        #SIZE
+                        <?php
+                        if ($class['overlaysize']) {
+                            if (is_numeric($class['overlaysize']))
+                                echo "SIZE " . $class['overlaysize'];
+                            else
+                                echo "SIZE [{$class['overlaysize']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #ANGLE
+                        <?php
+                        if ($class['overlayangle']) {
+                            if (is_numeric($class['overlayangle']))
+                                echo "ANGLE " . $class['overlayangle'];
+                            else
+                                echo "ANGLE [{$class['overlayangle']}]";
+                        }
+                        echo "\n";
+                        ?>
+
+                        END # style
+
+                        #TEMPLATE "ttt"
+
+                        #LABEL
+                        <?php if ($class['label']) { ?>
+                            LABEL
+                            <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
+                            TYPE truetype
+                            FONT "arialbd"
+                            SIZE <?php
+                            if ($class['label_size']) {
+                                if (is_numeric($class['label_size']))
+                                    echo $class['label_size'];
+                                else
+                                    echo "[{$class['label_size']}]";
+                            } else {
+                                echo "11";
+                            }
+                            echo "\n";
+                            ?>
+                            COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
+                            echo "\n"; ?>
+                            SHADOWSIZE 2 2
+                            ANTIALIAS true
+                            FORCE <?php echo ($class['label_force']) ? "true" : "false";
+                            echo "\n"; ?>
+                            POSITION <?php echo ($class['label_position']) ? : "auto";
+                            echo "\n"; ?>
+                            PARTIALS false
+                            MINSIZE 6
+                            <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
+                            <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
+                            <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
+                            <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+                            #ANGLE
+                            <?php
+                            if ($class['label_angle']) {
+                                if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
+                                    or $class['label_angle'] == 'follow'
+                                )
+                                    echo "ANGLE " . $class['label_angle'];
+                                else
+                                    echo "ANGLE [{$class['label_angle']}]";
+                            }
+                            echo "\n";
+                            ?>
+                            OFFSET <?php echo ($class['label_offsetx']) ? : "0"; ?> <?php echo ($class['label_offsety']) ? : "0"; ?>
+                            STYLE
+                            <?php if ($class['label_backgroundcolor']) {
+                                $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
+                                echo
+                                    "GEOMTRANSFORM 'labelpoly'\n" .
+                                    "COLOR {$labelBackgroundColor}\n";
+
+                                if ($class['label_backgroundpadding']) {
+                                    echo
+                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                        "WIDTH {$class['label_backgroundpadding']}\n";
+                                }
+                            }
+                            ?>
+                            END # STYLE
+                            END #Label
+                        <?php } ?>
+                        #LABEL2
+                        <?php if ($class['label2']) { ?>
+                            LABEL
+                            <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
+                            TYPE truetype
+                            FONT "arialbd"
+                            SIZE <?php
+                            if ($class['label2_size']) {
+                                if (is_numeric($class['label2_size']))
+                                    echo $class['label2_size'];
+                                else
+                                    echo "[{$class['label2_size']}]";
+                            } else {
+                                echo "11";
+                            }
+                            echo "\n";
+                            ?>
+                            COLOR <?php echo ($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            OUTLINECOLOR <?php echo ($class['label2_outlinecolor']) ? Util::hex2RGB($class['label2_outlinecolor'], true, " ") : "255 255 255";
+                            echo "\n"; ?>
+                            SHADOWSIZE 2 2
+                            ANTIALIAS true
+                            FORCE <?php echo ($class['label2_force']) ? "true" : "false";
+                            echo "\n"; ?>
+                            POSITION <?php echo ($class['label2_position']) ? : "auto";
+                            echo "\n"; ?>
+                            PARTIALS false
+                            MINSIZE 6
+                            <?php if ($class['label2_maxscaledenom']) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
+                            <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
+                            <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
+                            <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+                            #ANGLE
+                            <?php
+                            if ($class['label2_angle']) {
+                                if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
+                                    or $class['label2_angle'] == 'follow'
+                                )
+                                    echo "ANGLE " . $class['label2_angle'];
+                                else
+                                    echo "ANGLE [{$class['label2_angle']}]";
+                            }
+                            echo "\n";
+                            ?>
+                            <?php if ($class['label2_offset']) echo "OFFSET " . $class['label2_offset'] . "\n"; ?>
+                            OFFSET <?php echo ($class['label2_offsetx']) ? : "0"; ?> <?php echo ($class['label2_offsety']) ? : "0"; ?>
+                            STYLE
+                            <?php if ($class['label2_backgroundcolor']) {
+                                $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
+                                echo
+                                    "GEOMTRANSFORM 'labelpoly'\n" .
+                                    "COLOR {$labelBackgroundColor}\n";
+
+                                if ($class['label2_backgroundpadding']) {
+                                    echo
+                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                        "WIDTH {$class['label2_backgroundpadding']}\n";
+                                }
+                            }
+                            ?>
+                            END # STYLE
+                            END #Label
+                        <?php } ?>
+
+                        <?php if ($class['leader']) { ?>
+                            LEADER
+                            GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5";
+                            echo "\n"; ?>
+                            MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30";
+                            echo "\n"; ?>
+                            STYLE
+                            COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            WIDTH 1
+                            END
+                            END
+                        <?php } ?>
+                        END # Class
+                    <?php
+                    }
+                }
+                ?>
+                END #Layer
+            <?php
             }
-            ?>
-            END #Layer
-        <?php } ?>
+        } ?>
         END #MapFile
         <?php
         $data = ob_get_clean();
