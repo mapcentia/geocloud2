@@ -5,7 +5,6 @@ use \app\conf\App;
 use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
-use \app\models\Table;
 
 class Processraster extends \app\inc\Controller
 {
@@ -37,6 +36,12 @@ class Processraster extends \app\inc\Controller
 
         exec($cmd . ' 2>&1', $out);
         $err = false;
+
+        // This is a HACK. raster2pgsql doesn't return the error to stdout or stderr.
+        if (!isset($out[0])){
+            $out[0] = "ERROR: Unable to read raster file";
+        }
+
         foreach ($out as $line) {
             if (strpos($line, 'ERROR') !== false) {
                 $err = true;
@@ -47,6 +52,7 @@ class Processraster extends \app\inc\Controller
             $response['success'] = true;
             $response['cmd'] = $cmd;
             $response['message'] = "Raster layer <b>{$safeName}</b> is created";
+
         } else {
             $response['success'] = false;
             $response['message'] = "Some thing went wrong. Check the log.";
