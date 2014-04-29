@@ -266,7 +266,7 @@ class Table extends Model
                 if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
                     $safeColumn = "_" . $safeColumn;
                 }
-                $sql .= "ALTER TABLE {$this->table} RENAME {$value->id} TO {$safeColumn};";
+                $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
             }
