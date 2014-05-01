@@ -558,28 +558,6 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }), { }),
-            'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1'],
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
-            'size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
             'class_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -589,31 +567,6 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
-            }), {}),
-            'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
-                editable: false,
-                triggerAction: 'all'
             }), {}),
             'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
@@ -625,60 +578,7 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                maxValue: 15,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), { }),
-            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
-            'overlaysize': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaywidth': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.fieldsForStoreBrackets,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {})
+            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {})
         },
         viewConfig: {
             forceFit: true
@@ -713,7 +613,7 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -870,7 +770,7 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),

@@ -30,9 +30,9 @@ class Sql extends \app\inc\Model
         }
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
-                $fieldsArr[] = "ST_asGeoJson(ST_Transform(" . $key . "," . $this->srs . ")) as " . $key;
+                $fieldsArr[] = "ST_asGeoJson(ST_Transform(\"" . $key . "\"," . $this->srs . ")) as \"" . $key."\"";
             } else {
-                $fieldsArr[] = $key;
+                $fieldsArr[] = "\"{$key}\"";
             }
         }
         $sql = implode(",", $fieldsArr);

@@ -66,6 +66,9 @@ wmsLayer.init = function (record) {
             },
             {
                 name: 'minscaledenom'
+            },
+            {
+                name: 'geotype'
             }
 
         ],
@@ -108,7 +111,8 @@ wmsLayer.init = function (record) {
             meta_buffer: 'Meta buffer size (px)',
             ttl: 'Time to live (TTL)',
             maxscaledenom: 'Max scale',
-            minscaledenom: 'Min scale'
+            minscaledenom: 'Min scale',
+            geotype: 'Geom type'
         },
 
         customRenderers: {
@@ -125,7 +129,6 @@ wmsLayer.init = function (record) {
                 return v;
             }
         },
-
         customEditors: {
             'label_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.fieldsForStore,
@@ -168,8 +171,12 @@ wmsLayer.init = function (record) {
             'minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char nobody is using
+            }), {}),
+            'geotype': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: ['Default','POINT','LINE','POLYGON'],
+                editable: false,
+                triggerAction: 'all'
             }), {})
-
         },
         viewConfig: {
             forceFit: true,

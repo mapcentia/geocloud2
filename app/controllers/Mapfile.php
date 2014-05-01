@@ -279,34 +279,36 @@ class Mapfile extends \app\inc\Controller
                     FILTER "<?php echo $row['filter']; ?>"
                 <?php } ?>
                 <?php
-                switch ($row['type']) {
-                    case "POINT":
-                        $type = "POINT";
-                        break;
-                    case "LINESTRING":
-                        $type = "LINE";
-                        break;
-                    case "POLYGON":
-                        $type = "POLYGON";
-                        break;
-                    case "MULTIPOINT":
-                        $type = "POINT";
-                        break;
-                    case "MULTILINESTRING":
-                        $type = "LINE";
-                        break;
-                    case "MULTIPOLYGON":
-                        $type = "POLYGON";
-                        break;
-                    case "GEOMETRY":
-                        $type = "LINE";
-                        break;
-                    case "RASTER":
-                        $type = "RASTER";
-                        break;
+                if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype']!="Default") {
+                    $type = $layerArr['data'][0]['geotype'];
+                } else {
+                    switch ($row['type']) {
+                        case "POINT":
+                            $type = "POINT";
+                            break;
+                        case "LINESTRING":
+                            $type = "LINE";
+                            break;
+                        case "POLYGON":
+                            $type = "POLYGON";
+                            break;
+                        case "MULTIPOINT":
+                            $type = "POINT";
+                            break;
+                        case "MULTILINESTRING":
+                            $type = "LINE";
+                            break;
+                        case "MULTIPOLYGON":
+                            $type = "POLYGON";
+                            break;
+                        case "GEOMETRY":
+                            $type = "LINE";
+                            break;
+                        case "RASTER":
+                            $type = "RASTER";
+                            break;
+                    }
                 }
-
-
                 if ($row['wmssource']) {
                     ?>
                     TYPE RASTER
@@ -321,8 +323,21 @@ class Mapfile extends \app\inc\Controller
                 <?php
                 } else {
                     if ($type != "RASTER") {
-                        $dataSql = ($row['data']) ? : "SELECT * FROM {$row['f_table_schema']}.{$row['f_table_name']}";
-                        echo "DATA \"{$row['f_geometry_column']} from ({$dataSql}) as foo  using unique {$primeryKey['attname']} using srid={$row['srid']}\"\n";
+                        if (!$row['data']) {
+                            $fieldsArr = array();
+                            $arrayWithFields = $postgisObject->getMetaData($row['f_table_schema'] . "." . $row['f_table_name']);
+                            foreach ($arrayWithFields as $key => $arr) {
+                                if ($arr['type'] == "geometry") {
+                                    $fieldsArr[] = "\\\"{$key}\\\" as " . strtolower($key);
+                                } else {
+                                    $fieldsArr[] = "\\\"{$key}\\\"";
+                                }
+                            }
+                            $dataSql = "SELECT " . implode(",", $fieldsArr) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+                        } else {
+                            $dataSql = $row['data'];
+                        }
+                        echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];

@@ -55,7 +55,8 @@ class Util
 
     static function httpCodeText($code)
     {
-        $codes = array(200 => "OK",
+        $codes = array(
+            200 => "OK",
             304 => "Not Modified",
             400 => "Bad Request",
             401 => "Unauthorized",
@@ -69,7 +70,8 @@ class Util
             500 => "Internal Server Error",
             502 => "Bad Gateway",
             503 => "Service Unavailable",
-            504 => "Gateway timeout");
+            504 => "Gateway timeout"
+        );
         return $codes[$code];
     }
 
@@ -95,6 +97,7 @@ class Util
                 return (($pBegin - $pEnd) * (1 - ($pStep / $pMax))) + $pEnd;
             }
         }
+
         $grad = array();
         for ($i = 0; $i <= $steps; $i++) {
             $theR = interpolate($theR0, $theR1, $i, $steps);
@@ -108,6 +111,7 @@ class Util
         return $grad;
 
     }
+
     static function microtime_float()
     {
         list($usec, $sec) = explode(" ", microtime());

@@ -51,14 +51,14 @@ $(window).ready(function () {
     // Write out mapfile and cfgfile
     $.ajax({
         dataType: 'json',
-        async: false,
+        async: true,
         url: '/controllers/mapfile',
         success: function (response) {
         }
     });
     $.ajax({
         dataType: 'json',
-        async: false,
+        async: true,
         url: '/controllers/cfgfile',
         success: function (response) {
         }
