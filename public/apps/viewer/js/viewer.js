@@ -83,7 +83,7 @@ MapCentia = (function () {
             "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
             "   map.addTileLayers({\n" +
             "      db: '" + db + "',\n" +
-            "      layers: [" + layersStr + "],\n" +
+            "      layers: [" + layersStr + "]\n" +
             "   });\n" +
             "}())\n" +
             "</script>";
