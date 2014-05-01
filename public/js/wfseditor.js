@@ -414,6 +414,7 @@ $(document).ready(function () {
                 west.remove(tree);
                 west.add(tree);
                 west.doLayout();
+                window.parent.writeFiles();
             }
         });
     };

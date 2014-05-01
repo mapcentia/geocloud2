@@ -279,7 +279,7 @@ class Mapfile extends \app\inc\Controller
                     FILTER "<?php echo $row['filter']; ?>"
                 <?php } ?>
                 <?php
-                if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype']!="Default") {
+                if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
@@ -324,7 +324,7 @@ class Mapfile extends \app\inc\Controller
                 } else {
                     if ($type != "RASTER") {
                         if (!$row['data']) {
-                            $fieldsArr = array();
+                            /*$fieldsArr = array();
                             $arrayWithFields = $postgisObject->getMetaData($row['f_table_schema'] . "." . $row['f_table_name']);
                             foreach ($arrayWithFields as $key => $arr) {
                                 if ($arr['type'] == "geometry") {
@@ -333,7 +333,13 @@ class Mapfile extends \app\inc\Controller
                                     $fieldsArr[] = "\\\"{$key}\\\"";
                                 }
                             }
-                            $dataSql = "SELECT " . implode(",", $fieldsArr) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+
+                            $dataSql = "SELECT " . implode(",", $fieldsArr) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";*/
+                            if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
+                                $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+                            } else {
+                                $dataSql = "SELECT * FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+                            }
                         } else {
                             $dataSql = $row['data'];
                         }

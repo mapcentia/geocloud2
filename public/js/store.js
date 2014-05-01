@@ -16,20 +16,6 @@ $(window).ready(function () {
     Ext.Container.prototype.bufferResize = false;
     var winAdd, winAddSchema, winCartomobile, winMoreSettings, winGlobalSettings, fieldsForStore = {}, settings, groups, groupsStore;
 
-    // Write out mapfile and cfgfile
-    $.ajax({
-        dataType: 'json',
-        url: '/controllers/mapfile',
-        success: function (response) {
-        }
-    });
-    $.ajax({
-        dataType: 'json',
-        url: '/controllers/cfgfile',
-        success: function (response) {
-        }
-    });
-    
     $.ajax({
         url: '/controllers/layer/columnswithkey',
         async: false,
