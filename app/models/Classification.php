@@ -8,6 +8,8 @@ class Classification extends \app\inc\Model
 {
     private $layer;
     private $table;
+    private $def;
+    private $geometryType;
 
     function __construct($table)
     {
@@ -15,6 +17,12 @@ class Classification extends \app\inc\Model
         $this->layer = $table;
         $bits = explode(".", $this->layer);
         $this->table = new \app\models\Table($bits[0] . "." . $bits[1]);
+        // Check if geom type is overridden
+        $def = new \app\models\Tile($table);
+        $this->def = $def->get();
+        if (($this->def['data'][0]['geotype']) && $this->def['data'][0]['geotype'] != "Default") {
+            $this->geometryType = $this->def['data'][0]['geotype'];
+        }
     }
 
     private function array_push_assoc($array, $key, $value)
@@ -43,11 +51,8 @@ class Classification extends \app\inc\Model
                 }
                 array_push($sortedArr, $temp);
                 unset($arr2[$del]);
-                //print_r($arr2);
                 $temp = null;
             }
-            //$arr = $sortedArr;
-            //print_r($arr);
             for ($i = 0; $i < sizeof($arr); $i++) {
                 $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                 $arrNew[$i]['id'] = $i;
@@ -172,7 +177,8 @@ class Classification extends \app\inc\Model
     {
         $this->reset();
         $layer = new \app\models\Layer();
-        $res = $this->update("0", self::createClass($layer->getValueFromKey($this->layer, type), "Single value", null, 10, null, $data));
+        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
+        $res = $this->update("0", self::createClass($geometryType, "Single value", null, 10, null, $data));
         if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Updated one class";
@@ -187,7 +193,7 @@ class Classification extends \app\inc\Model
     public function createUnique($field, $data)
     {
         $layer = new \app\models\Layer();
-        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
         $fieldObj = $this->table->metaData[$field];
         $query = "SELECT distinct({$field}) as value FROM " . $this->table->table . " ORDER BY {$field}";
         $res = $this->prepare($query);
@@ -224,7 +230,7 @@ class Classification extends \app\inc\Model
                 return $response;
             }
         }
-        $response['success'] = true;
+        $response['success'] = false;
         $response['message'] = "Updated " . sizeof($rows) . " classes";
         return $response;
     }
@@ -232,7 +238,7 @@ class Classification extends \app\inc\Model
     public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
     {
         $layer = new \app\models\Layer();
-        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
         $query = "SELECT max({$field}) as max, min({$field}) FROM " . $this->table->table;
         $res = $this->prepare($query);
         try {
@@ -322,7 +328,6 @@ class Classification extends \app\inc\Model
                 $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
                 $name = " < " . round(($top), 2);
                 $tops[] = array($top, $grad[$u]);
-                //echo $expression . "\n";
                 if ($update) {
                     $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
                     $r = $this->update($u, $class);
@@ -374,6 +379,4 @@ class Classification extends \app\inc\Model
             "label_text" => ($data->labelText) ? : ""
         );
     }
-
-
 }

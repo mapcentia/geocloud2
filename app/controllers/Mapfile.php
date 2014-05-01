@@ -333,12 +333,11 @@ class Mapfile extends \app\inc\Controller
                                     $fieldsArr[] = "\\\"{$key}\\\"";
                                 }
                             }
-
                             $dataSql = "SELECT " . implode(",", $fieldsArr) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";*/
                             if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
                                 $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             } else {
-                                $dataSql = "SELECT * FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+                                $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             }
                         } else {
                             $dataSql = $row['data'];
