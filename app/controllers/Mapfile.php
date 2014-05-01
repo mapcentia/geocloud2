@@ -602,7 +602,6 @@ class Mapfile extends \app\inc\Controller
                             }
                             echo "\n";
                             ?>
-                            <?php if ($class['label2_offset']) echo "OFFSET " . $class['label2_offset'] . "\n"; ?>
                             OFFSET <?php echo ($class['label2_offsetx']) ? : "0"; ?> <?php echo ($class['label2_offsety']) ? : "0"; ?>
                             STYLE
                             <?php if ($class['label2_backgroundcolor']) {
