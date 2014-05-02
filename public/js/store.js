@@ -1296,7 +1296,7 @@ $(window).ready(function () {
                     l.url = l.url + "token=" + n;
                     setTimeout(function () {
                         l.redraw();
-                    }, 1000);
+                    }, 500);
 
                 }
                 else {
