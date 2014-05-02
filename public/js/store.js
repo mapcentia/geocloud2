@@ -465,16 +465,16 @@ $(window).ready(function () {
                     handler: addVector
                 },
                 '-',
-                 {
-                 text: 'Add raster',
-                 handler: addRaster
-                 },
-                 '-',
-                 {
-                 text: 'Add imagery',
-                 handler: addImage
-                 },
-                 '-',
+                {
+                    text: 'Add raster',
+                    handler: addRaster
+                },
+                '-',
+                {
+                    text: 'Add imagery',
+                    handler: addImage
+                },
+                '-',
                 {
                     text: 'Blank layer',
                     handler: function () {
@@ -1293,7 +1293,10 @@ $(window).ready(function () {
                     });
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + "token=" + n;
-                    l.redraw();
+                    setTimeout(function () {
+                        l.redraw();
+                    }, 1000);
+
                 }
                 else {
                     App.setAlert(App.STATUS_NOTICE, response.message);
