@@ -76,6 +76,9 @@ class Sql extends \app\inc\Model
             $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj']);
         }
         $this->free($result);
+        $sql = "DROP VIEW {$view}";
+        $result = $this->execQuery($sql);
+        $this->free($result);
         $response['success'] = true;
         $response['forStore'] = $fieldsForStore;
         $response['forGrid'] = $columnsForGrid;
