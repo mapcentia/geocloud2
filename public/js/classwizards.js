@@ -45,8 +45,7 @@ classWizards.init = function (record) {
                                         success: function (response) {
                                             Ext.getCmp("a3").remove(wmsClass.grid);
                                             wmsClasses.store.load();
-                                            writeFiles();
-                                            clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                                            writeFiles(record.f_table_schema + "." + record.f_table_name);
                                             App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
                                         },
                                         failure: function (response) {
@@ -127,8 +126,7 @@ classWizards.init = function (record) {
                                             success: function (response) {
                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                 wmsClasses.store.load();
-                                                writeFiles();
-                                                clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                                                writeFiles(record.f_table_schema + "." + record.f_table_name);
                                                 App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
                                             },
                                             failure: function (response) {
@@ -269,8 +267,7 @@ classWizards.init = function (record) {
                                                             success: function (response) {
                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                 wmsClasses.store.load();
-                                                                writeFiles();
-                                                                clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                                                                writeFiles(record.f_table_schema + "." + record.f_table_name);
                                                                 App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
                                                             },
                                                             failure: function (response) {
@@ -491,3 +488,4 @@ classWizards.init = function (record) {
 
     });
 };
+

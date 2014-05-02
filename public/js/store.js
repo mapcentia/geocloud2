@@ -1145,7 +1145,6 @@ $(window).ready(function () {
                                                             jQuery.extend(source, grid3.getSource());
                                                             jQuery.extend(source, grid4.getSource());
                                                             jQuery.extend(source, grid5.getSource());
-                                                            console.log(source);
                                                             var param = {
                                                                 data: source
                                                             };
@@ -1163,9 +1162,8 @@ $(window).ready(function () {
                                                                 },
                                                                 success: function (response) {
                                                                     App.setAlert(App.STATUS_OK, "Style is updated");
-                                                                    writeFiles();
+                                                                    writeFiles(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
                                                                     wmsClasses.store.load();
-                                                                    clearTileCache(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
                                                                 },
                                                                 failure: function (response) {
                                                                     Ext.MessageBox.show({
@@ -1263,11 +1261,14 @@ $(window).ready(function () {
         items: [tabs]
     });
 
-    writeFiles = function () {
+    writeFiles = function (clearCachedLayer) {
         $.ajax({
             url: '/controllers/mapfile',
             success: function (response) {
                 updateLegend();
+                if (clearCachedLayer){
+                    clearTileCache(clearCachedLayer);
+                }
             }
         });
         $.ajax({

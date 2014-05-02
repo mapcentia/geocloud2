@@ -201,7 +201,7 @@ wmsLayer.init = function (record) {
                         timeout: 120000,
                         callback: function (options, success, http) {
                             var response = eval('(' + http.responseText + ')');
-                            clearTileCache(record.f_table_schema + "." + record.f_table_name);
+                            writeFiles(record.f_table_schema + "." + record.f_table_name);
                             wmsLayer.onSubmit(response);
                         }
                     };
@@ -260,9 +260,8 @@ wmsLayer.init = function (record) {
                             params: param,
                             success: function () {
                                 store.reload();
-                                writeFiles();
+                                writeFiles(record.f_table_schema + "." + record.f_table_name);
                                 App.setAlert(App.STATUS_NOTICE, "Sql updated");
-                                clearTileCache(record.f_table_schema + "." + record.f_table_name);
                             },
                             failure: function (response) {
                                 Ext.MessageBox.show({
@@ -302,6 +301,7 @@ wmsLayer.onSubmit = function (response) {
         });
     }
 };
+
 
 
 
