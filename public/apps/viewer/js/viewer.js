@@ -410,7 +410,7 @@ MapCentia = (function () {
                             }
                         });
                         cloud.addGeoJsonStore(qstore[index]);
-                        var sql, f_geometry_column = metaDataKeysTitle[value.split(".")[1]].f_geometry_column;
+                        var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\""+f_geometry_column+ "\")";
                         }
