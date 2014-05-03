@@ -30,6 +30,9 @@ class Table extends Model
                 $table = Connection::$param['postgisschema'] . "." . $table;
             }
         }
+        else {
+            $table = str_replace(".", "", $_schema) . "." . $_table;
+        }
         $this->tableWithOutSchema = $_table;
         $this->table = $table;
         $sql = "SELECT 1 FROM {$table}";
