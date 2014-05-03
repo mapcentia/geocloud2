@@ -273,7 +273,7 @@ class Mapfile extends \app\inc\Controller
                 LAYER
                 NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
                 STATUS off
-                PROCESSING "CLOSE_CONNECTION=DEFER"
+
 
                 <?php if ($row['filter']) { ?>
                     FILTER "<?php echo $row['filter']; ?>"
@@ -320,6 +320,7 @@ class Mapfile extends \app\inc\Controller
                     ?>
                     TYPE RASTER
                     DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
+                    PROCESSING "LOAD_WHOLE_IMAGE=YES"
                 <?php
                 } else {
                     if ($type != "RASTER") {
@@ -343,6 +344,7 @@ class Mapfile extends \app\inc\Controller
                             $dataSql = $row['data'];
                         }
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
+                        echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
