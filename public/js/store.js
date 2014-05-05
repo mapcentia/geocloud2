@@ -1276,6 +1276,11 @@ $(window).ready(function () {
             success: function (response) {
             }
         });
+        /*$.ajax({
+            url: '/controllers/tinyowsfile',
+            success: function (response) {
+            }
+        });*/
     };
     clearTileCache = function (layer) {
         $.ajax({

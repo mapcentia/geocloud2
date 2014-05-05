@@ -59,6 +59,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/database/");
     Route::add("controllers/layer/");
     Route::add("controllers/mapfile");
+    Route::add("controllers/tinyowsfile");
     Route::add("controllers/setting");
     Route::add("controllers/table/");
     Route::add("controllers/tile/");

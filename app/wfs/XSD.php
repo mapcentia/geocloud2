@@ -1,19 +1,19 @@
 <?php
 //$atts["targetNamespace"]="http://www.opengis.net/gml";
 $atts["targetNamespace"]=$gmlNameSpaceUri;
-$atts["xmlns:xs"]="http://www.w3.org/2001/XMLSchema";
+$atts["xmlns:xsd"]="http://www.w3.org/2001/XMLSchema";
 //$atts["xmlns:wfs"]="http://www.opengis.net/wfs";
 $atts["xmlns:gml"]="http://www.opengis.net/gml";
 $atts["xmlns:{$gmlNameSpace}"]=$gmlNameSpaceUri;
 $atts["elementFormDefault"]="qualified";
 //$atts["attributeFormDefault"]="unqualified";
 $atts["version"]="1.0";
-writeTag("open","xs","schema",$atts,True,True);
+writeTag("open","xsd","schema",$atts,True,True);
 $atts=null;
 $depth++;
 $atts["namespace"]="http://www.opengis.net/gml";
 $atts["schemaLocation"]="http://schemas.opengis.net/gml/2.1.2/feature.xsd";
-writeTag("selfclose","xs","import",$atts,True,True);
+writeTag("selfclose","xsd","import",$atts,True,True);
 $atts=null;
 if (!$tables[0]){
     $tables = array();
@@ -46,16 +46,16 @@ foreach($tables as $table)
 	}
 
 	$atts["name"]=$table."_Type";
-	writeTag("open","xs","complexType",$atts,True,True);
+	writeTag("open","xsd","complexType",$atts,True,True);
 	$atts=null;
 	$depth++;
-	writeTag("open","xs","complexContent",Null,True,True);
+	writeTag("open","xsd","complexContent",Null,True,True);
 	$depth++;
 	$atts["base"]="gml:AbstractFeatureType";
 
-	writeTag("open","xs","extension",$atts,True,True);
+	writeTag("open","xsd","extension",$atts,True,True);
 	$depth++;
-	writeTag("open","xs","sequence",NULL,True,True);
+	writeTag("open","xsd","sequence",NULL,True,True);
 
 	$atts=null;
 	$depth++;
@@ -106,19 +106,19 @@ foreach($tables as $table)
 				$tableObj->metaData[$atts["name"]]['type']="string";
 			}
 		}
-        $atts["type"] = "xs:".$tableObj->metaData[$atts["name"]]['type'];
-        writeTag("open","xs","element",$atts,True,True);
-		writeTag("close","xs","element",NULL,False,True);
+        $atts["type"] = "xsd:".$tableObj->metaData[$atts["name"]]['type'];
+        writeTag("open","xsd","element",$atts,True,True);
+		writeTag("close","xsd","element",NULL,False,True);
 		$atts=Null;
 	}
 	$depth--;
-	writeTag("close","xs","sequence",Null,True,True);
+	writeTag("close","xsd","sequence",Null,True,True);
 	$depth--;
-	writeTag("close","xs","extension",Null,True,True);
+	writeTag("close","xsd","extension",Null,True,True);
 	$depth--;
-	writeTag("close","xs","complexContent",Null,True,True);
+	writeTag("close","xsd","complexContent",Null,True,True);
 	$depth--;
-	writeTag("close","xs","complexType",Null,True,True);
+	writeTag("close","xsd","complexType",Null,True,True);
 	//$depth--;
 }
 $postgisObject->close();
@@ -128,8 +128,8 @@ foreach($tables as $table){
         if ($gmlNameSpace) $atts["type"] = $gmlNameSpace.":".$atts["type"];
 
 	$atts["substitutionGroup"]="gml:_Feature";
-	writeTag("selfclose","xs","element",$atts,True,True);
+	writeTag("selfclose","xsd","element",$atts,True,True);
 }
 $depth--;
-writeTag("close","xs","schema",Null,True,True);
+writeTag("close","xsd","schema",Null,True,True);
 

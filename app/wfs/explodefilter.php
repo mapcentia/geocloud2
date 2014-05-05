@@ -47,6 +47,42 @@ function parseFilter($filter, $table, $operator = "=")
         if (is_array($arr['PropertyIsNotEqualTo'])) foreach ($arr['PropertyIsNotEqualTo'] as $value) {
             $where[] = $value['PropertyName'] . "<>'" . $value['Literal'] . "'";
         }
+        // PropertyIsLessThan
+        $arr['PropertyIsLessThan'] = addDiminsionOnArray($arr['PropertyIsLessThan']);
+        if (is_array($arr['PropertyIsLessThan'])) foreach ($arr['PropertyIsLessThan'] as $value) {
+            $where[] = $value['PropertyName'] . "<'" . $value['Literal'] . "'";
+        }
+        // PropertyIsGreaterThan
+        $arr['PropertyIsGreaterThan'] = addDiminsionOnArray($arr['PropertyIsGreaterThan']);
+        if (is_array($arr['PropertyIsGreaterThan'])) foreach ($arr['PropertyIsGreaterThan'] as $value) {
+            $where[] = $value['PropertyName'] . ">'" . $value['Literal'] . "'";
+        }
+        // PropertyIsLessThanOrEqualTo
+        $arr['PropertyIsLessThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsLessThanOrEqualTo']);
+        if (is_array($arr['PropertyIsLessThanOrEqualTo'])) foreach ($arr['PropertyIsLessThanOrEqualTo'] as $value) {
+            $where[] = $value['PropertyName'] . "<='" . $value['Literal'] . "'";
+        }
+        //PropertyIsGreaterThanOrEqualTo
+        $arr['PropertyIsGreaterThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsGreaterThanOrEqualTo']);
+        if (is_array($arr['PropertyIsGreaterThanOrEqualTo'])) foreach ($arr['PropertyIsGreaterThanOrEqualTo'] as $value) {
+            $where[] = $value['PropertyName'] . ">='" . $value['Literal'] . "'";
+        }
+        //PropertyIsLike
+        $arr['PropertyIsLike'] = addDiminsionOnArray($arr['PropertyIsLike']);
+        if (is_array($arr['PropertyIsLike'])) foreach ($arr['PropertyIsLike'] as $value) {
+            $where[] = $value['PropertyName'] . " LIKE '%" . $value['Literal'] . "%'";
+        }
+        //PropertyIsBetween
+        $arr['PropertyIsBetween'] = addDiminsionOnArray($arr['PropertyIsBetween']);
+        if (is_array($arr['PropertyIsBetween'])) {
+            foreach ($arr['PropertyIsBetween'] as $value) {
+                if ($value['LowerBoundary'])
+                    $w[] = $value['PropertyName'] . " > '" . $value['LowerBoundary']['Literal'] . "'";
+                if ($value['UpperBoundary'])
+                    $w[] = $value['PropertyName'] . " < '" . $value['UpperBoundary']['Literal'] . "'";
+            }
+            $where[] = implode(" AND ", $w);
+        }
         // FeatureID
         if (!is_array($arr['FeatureId'][0]) && isset($arr['FeatureId'])) {
             $arr['FeatureId'] = array(0 => $arr['FeatureId']);
@@ -122,10 +158,10 @@ function parseFilter($filter, $table, $operator = "=")
 
             if ($axisOrder == "longitude") {
                 $where[] = "ST_Intersects"
-                    . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
-                    . $sridOfFilter
-                    . "),$sridOfTable),"
-                    . $arr['BBOX']['PropertyName'] . ")";
+                . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
+                . $sridOfFilter
+                . "),$sridOfTable),"
+                . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . ")";
             } else {
                 $where[] = "ST_Intersects"
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"

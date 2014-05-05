@@ -5207,7 +5207,7 @@ Heron.widgets.search.FormSearchPanel = Ext.extend(GeoExt.form.FormPanel, {onSear
         var featureCount = features ? features.length : 0;
         this.updateStatusPanel(__('Search Completed: ') + featureCount + ' ' + (featureCount != 1 ? __('Results') : __('Result')));
         var filter = GeoExt.form.toFilter(action.form, action.options);
-        var filterFormat = new OpenLayers.Format.Filter.v1_1_0({srsName: this.protocol.srsName});
+        var filterFormat = new OpenLayers.Format.Filter.v1_0_0({srsName: this.protocol.srsName});
         var filterStr = OpenLayers.Format.XML.prototype.write.apply(filterFormat, [filterFormat.write(filter)]);
         result.downloadInfo = {type: 'wfs', url: this.protocol.options.url, downloadFormats: this.downloadFormats, params: {typename: this.protocol.featureType, maxFeatures: this.protocol.maxFeatures, "Content-Disposition": "attachment", filename: this.protocol.featureType, srsName: this.protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
         if (this.onSearchCompleteAction) {
@@ -5503,7 +5503,7 @@ Heron.widgets.search.SpatialSearchPanel = Ext.extend(Ext.Panel, {layout: 'form',
             return false;
         }
     }
-    var filterFormat = new OpenLayers.Format.Filter.v1_1_0({srsName: this.protocol.srsName});
+    var filterFormat = new OpenLayers.Format.Filter.v1_0_0({srsName: this.protocol.srsName});
     var filterStr = OpenLayers.Format.XML.prototype.write.apply(filterFormat, [filterFormat.write(filter)]);
     var maxFeatures = this.single == true ? this.maxFeatures : undefined;
     this.response = this.protocol.read({maxFeatures: maxFeatures, filter: filter, callback: function (olResponse) {
@@ -5752,11 +5752,11 @@ Heron.widgets.search.GXP_QueryPanel = Ext.extend(gxp.QueryPanel, {statusReady: _
             features.push(record.get("feature"));
         });
         var protocol = store.proxy.protocol;
-        var wfsOptions = this.layerRecord.get('options');
-        var filterFormat = new OpenLayers.Format.Filter.v1_1_0({srsName: protocol.srsName});
+        //var wfsOptions = this.layerRecord.get('options');
+        var filterFormat = new OpenLayers.Format.Filter.v1_0_0({srsName: protocol.srsName});
         var filterStr = protocol.filter ? OpenLayers.Format.XML.prototype.write.apply(filterFormat, [filterFormat.write(protocol.filter)]) : null;
-        var downloadInfo = {type: 'wfs', url: protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: protocol.featureType, maxFeatures: undefined, "Content-Disposition": "attachment", filename: protocol.featureType, srsName: protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
-        var result = {olResponse: store.proxy.response, downloadInfo: downloadInfo};
+        //var downloadInfo = {type: 'wfs', url: protocol.options.url, downloadFormats: this.downloadFormats ? this.downloadFormats : wfsOptions.downloadFormats, params: {typename: protocol.featureType, maxFeatures: undefined, "Content-Disposition": "attachment", filename: protocol.featureType, srsName: protocol.srsName, service: "WFS", version: "1.0.0", request: "GetFeature", filter: filterStr}};
+        var result = {olResponse: store.proxy.response, downloadInfo: null};
         this.fireEvent('searchcomplete', panel, result);
         store.removeListener("exception", this.onQueryException, this);
     }}};

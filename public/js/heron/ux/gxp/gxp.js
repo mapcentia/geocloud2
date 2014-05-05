@@ -6348,7 +6348,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {builderTypeNames: ["any", "all", 
     0 === c.length && this.addCondition();
     this.fireEvent("change", this)
 }, createBuilderTypeCombo: function () {
-    for (var a = this.allowedBuilderTypes || [gxp.FilterBuilder.ANY_OF, gxp.FilterBuilder.ALL_OF, gxp.FilterBuilder.NONE_OF], b = a.length, c = Array(b), d, e = 0; e < b; ++e)d = a[e], c[e] = [d, this.builderTypeNames[d]];
+    for (var a = this.allowedBuilderTypes || [gxp.FilterBuilder.ANY_OF, gxp.FilterBuilder.ALL_OF/*, gxp.FilterBuilder.NONE_OF*/], b = a.length, c = Array(b), d, e = 0; e < b; ++e)d = a[e], c[e] = [d, this.builderTypeNames[d]];
     return{xtype: "combo", store: new Ext.data.SimpleStore({data: c, fields: ["value", "name"]}), value: this.builderType, ref: "../../builderTypeCombo", displayField: "name", valueField: "value", triggerAction: "all", mode: "local", listeners: {select: function (a, b) {
         this.changeBuilderType(b.get("value"));
         this.fireEvent("change", this)
@@ -7103,8 +7103,8 @@ gxp.QueryPanel = Ext.extend(Ext.Panel, {layout: "form", spatialQuery: !0, attrib
     var b = this.spatialQuery && new OpenLayers.Filter.Spatial({type: OpenLayers.Filter.Spatial.BBOX, value: this.map.getExtent()});
     return a && b ? new OpenLayers.Filter.Logical({type: OpenLayers.Filter.Logical.AND, filters: [b, a]}) : a || b
 }, wrapWildCards: function (a) {
-    if (a instanceof OpenLayers.Filter.Logical)for (var b =
-        0, c = a.filters.length; b < c; ++b)a = this.wrapWildCards(a.filters[b]); else if (a.type === OpenLayers.Filter.Comparison.LIKE)a.value = this.wildCardString + a.value + this.wildCardString;
+   // if (a instanceof OpenLayers.Filter.Logical)for (var b =
+     //   0, c = a.filters.length; b < c; ++b)a = this.wrapWildCards(a.filters[b]); else if (a.type === OpenLayers.Filter.Comparison.LIKE)a.value = this.wildCardString + a.value + this.wildCardString;
     return a
 }, getFieldType: function (a) {
     return{"xsd:boolean": "boolean", "xsd:int": "int", "xsd:integer": "int", "xsd:short": "int", "xsd:long": "int", "xsd:date": "date", "xsd:string": "string", "xsd:float": "float", "xsd:double": "float"}[a]

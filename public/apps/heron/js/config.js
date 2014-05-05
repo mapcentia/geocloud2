@@ -20,9 +20,7 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-
         url = '/wms/' + db + '/tilecache/' + schema;
-    // url = 'http://local2.mapcentia.com/wms/' + db + '/' + schema;
     Heron.options.map.layers = [
         [
             "OpenLayers.Layer.Bing",
@@ -70,6 +68,7 @@ MapCentia.setup = function () {
                                         version: "1.0.0",
                                         //url: '/wms/' + db + '/' + schema,
                                         url: '/wfs/' + db + '/' + schema + '/3857?',
+                                        //url: '/cgi/tinyows.cgi',
                                         srsName: "EPSG:3857",
                                         featureType: v.f_table_name,
                                         //featureType: name,
@@ -240,7 +239,7 @@ MapCentia.init = function () {
                         zoomToDataExtent: false
                     }
                 }
-            }/*,
+            },
             {
                 searchPanel: {
                     xtype: 'hr_gxpquerypanel',
@@ -266,7 +265,7 @@ MapCentia.init = function () {
                         zoomToDataExtent: true
                     }
                 }
-            }*/
+            }
         ]
     };
     Heron.options.map.toolbar = [

@@ -2,6 +2,10 @@
 RewriteEngine On
 #RewriteRule index\.php - [L]
 
+#SetEnv TINYOWS_CONFIG_FILE "/mnt/hgfs/Documents/www/geocloud2/app/wms/mapfiles/mydb_goddag.xml"
+
+#SetEnvIf Request_URI "tinyows/(.*)/(.*)" TINYOWS_CONFIG_FILE="/mnt/hgfs/Documents/www/geocloud2/app/wms/mapfiles/$1_$2.xml"
+
 # Rewrite URLs for user module
 RewriteRule user/login/p$ user/login/login_p.php [L]
 RewriteRule user/login/$ user/login/login_f.php [L]
@@ -12,7 +16,7 @@ RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
 RewriteRule user/edit/$ user/edit/edit_f.php [L]
 RewriteRule user/edit/p$ user/edit/edit_p.php [L]
 
-# Always rewrite GetLegendGraphic and GetFeatureInfo to WMS
+# Always rewrite GetLegendGraphic, GetFeatureInfo, DescribeFeatureType and all POST to WMS
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetLegendGraphic($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetFeatureInfo($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=DescribeFeatureType($|&) [NC,OR]
@@ -21,6 +25,9 @@ RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
 # Rewrite URL so tile request is going direct to TileCache cgi
 RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
+
+# Rewrite URL so tinyows request is going direct to tinyows cgi
+#RewriteRule tinyows/(.*)/(.*) /cgi/tinyows.cgi [QSA,L]
 
 # Rewrite URL to HTML map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
