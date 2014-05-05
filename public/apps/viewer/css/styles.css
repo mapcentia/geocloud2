@@ -42,14 +42,6 @@ body {
     width: inherit !important;
 }
 
-.leaflet-control-zoom {
-    bottom: 50px !important;
-    top: auto !important;
-}
-
-.ol-zoom, .olControlZoom {
-    top: 70px !important;
-}
 
 .popover {
     width: 225px;
@@ -135,7 +127,7 @@ input[type="radio"], input[type="checkbox"] {
         margin-left: 5px;
     }
     .infobox {
-        top: 100px !important;
+        top: 35px !important;
         right: 10px !important;
         width: 360px !important;
         position: absolute !important;
@@ -244,5 +236,58 @@ input[type="radio"], input[type="checkbox"] {
 .btn-share {
     width: 50px;
 }
+
+.leaflet-top {
+    right: 0px !important;
+    left: auto !important;
+    opacity: 0.8;
+    top: auto !important;
+    bottom: 0px !important;
+}
+
+.leaflet-control-zoom {
+    right: 10px !important;
+    bottom: 40px !important;
+}
+
+.leaflet-control-zoom a, .leaflet-control-zoom a:hover {
+    height: 30px !important;
+    width: 30px !important;
+    font-size: 15px;
+    font-weight: normal;
+    text-decoration: none;
+    line-height: 30px !important;
+}
+
+.ol-zoom, .olControlZoom {
+    right: 20px;
+    left: auto !important;
+    bottom: 30px;
+    background: #000000 !important;
+    opacity: 0.7;
+}
+
+.ol-zoom-in, .ol-zoom-out, .olControlZoomIn, .olControlZoomOut {
+    height: 30px !important;
+    width: 30px !important;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.ol-zoom a, .ol-zoom a:hover, .olControlZoom a {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    background: none !important;
+    line-height: 28px !important;
+    text-decoration: none;
+    color: white;
+
+}
+div.olControlZoom{
+    top: auto !important;
+}
+
+
+
 
 

@@ -23,7 +23,7 @@ RewriteCond %{QUERY_STRING} (^|&)REQUEST=DescribeFeatureType($|&) [NC,OR]
 RewriteCond %{THE_REQUEST} POST [NC]
 RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
-# Rewrite URL so tile request is going direct to TileCache cgi
+# Rewrite URL so tile request is going direct to TileCache mod_apache script
 RewriteRule wms/(.*)/tilecache /cgi/tilecache.py?cfg=$1 [QSA,L]
 
 # Rewrite URL so tinyows request is going direct to tinyows cgi

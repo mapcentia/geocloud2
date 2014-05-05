@@ -7,7 +7,7 @@ class Connection
         "postgishost" => "127.0.0.1",
         "postgisdb" => "postgres",
         "postgisuser" => "postgres",
-        "postgisport" => "",
+        "postgisport" => "5432",
         "postgispw" => "1234"
     );
 }
