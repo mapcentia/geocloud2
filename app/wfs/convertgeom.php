@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*
 This preliminary script is part of OpenSVGMapServer project, see

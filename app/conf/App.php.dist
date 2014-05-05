@@ -27,16 +27,16 @@ class App
 
         // Available baselayer
         "baseLayers" => array(
+            array("id" => "osm", "name" => "OSM"),
+            array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
+            array("id" => "stamenToner", "name" => "Stamen Toner"),
             array("id" => "googleStreets", "name" => "Google Street"),
             array("id" => "googleHybrid", "name" => "Google Hybrid"),
             array("id" => "googleSatellite", "name" => "Google Satellite"),
             array("id" => "googleTerrain", "name" => "Google Terrain"),
-            array("id" => "bingRoad", "name" => "Bing Road"),
-            array("id" => "bingAerial", "name" => "Bing Aerial"),
-            array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
-            array("id" => "osm", "name" => "OSM"),
-            array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
-            array("id" => "stamenToner", "name" => "Stamen Toner"),
+            //array("id" => "bingRoad", "name" => "Bing Road"),
+            //array("id" => "bingAerial", "name" => "Bing Aerial"),
+            //array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
         ),
         "bingApiKey" => 'your_bing_map_key',
     );
