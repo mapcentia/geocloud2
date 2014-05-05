@@ -23,7 +23,7 @@ class App
         "encryptSettings" => false,
 
         // Map attribution
-        "mapAttribution" => "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> ",
+        "mapAttribution" => "Powered by <a href=\"http://geocloud.mapcentia.com\">MapCentia</a> ",
 
         // Available baselayer
         "baseLayers" => array(
