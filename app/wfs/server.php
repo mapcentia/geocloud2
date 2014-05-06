@@ -356,7 +356,7 @@ function doQuery($queryType)
                     foreach ($fieldsArr[$table] as $key => $value) {
                         $fieldsArr[$table][$key] = "\"{$value}\"";
                     }
-                    $sql = $sql . implode(",", $fieldsArr[$table]) . ",{$primeryKey['attname']} as fid";
+                    $sql = $sql . implode(",", $fieldsArr[$table]) . ",\"{$primeryKey['attname']}\" as fid";
 
                     foreach ($tableObj->metaData as $key => $arr) {
                         if ($arr['type'] == "geometry") {
