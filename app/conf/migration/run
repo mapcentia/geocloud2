@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 header("Content-type: text/plain");
-include_once("../../app/conf/App.php");
+include_once("../App.php");
 include_once("Sql.php");
 new \app\conf\App();
 \app\conf\Connection::$param["postgisschema"] = "public";
