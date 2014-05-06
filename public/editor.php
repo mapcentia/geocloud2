@@ -119,12 +119,34 @@ include("html_header.php");
         font-size: 7.5pt;
 
     }
+
     .layer-desc {
         font-family: verdana, arial, sans-serif;
         font-size: 7.5pt;
         padding: 10px;
         color: #ffffff;
         background-color: rgb(119, 119, 119);
+    }
+
+    .ol-zoom, .olControlZoom {
+        background: #000000 !important;
+        opacity: 0.7;
+    }
+
+    .ol-zoom-in, .ol-zoom-out, .olControlZoomIn, .olControlZoomOut {
+        height: 30px !important;
+        width: 30px !important;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .ol-zoom a, .ol-zoom a:hover, .olControlZoom a {
+        font-size: 16px !important;
+        font-weight: bold !important;
+        background: none !important;
+        line-height: 28px !important;
+        text-decoration: none;
+        color: white;
     }
 </style>
 </head>

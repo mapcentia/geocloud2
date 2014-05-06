@@ -19,7 +19,6 @@ function startWfsEdition(layerName, geomField) {
     } catch (e) {
         //alert(e.message);
     }
-    south.expand(true);
     south.remove(grid);
     $.ajax({
         url: '/controllers/table/columns/' + layerName,
@@ -60,6 +59,28 @@ function startWfsEdition(layerName, geomField) {
             }
         }
     });
+    if (type === "Point") {
+        handlerType = OpenLayers.Handler.Point;
+    }
+    else if (type === "Polygon") {
+        handlerType = OpenLayers.Handler.Polygon;
+    }
+    else if (type === "Path") {
+        handlerType = OpenLayers.Handler.Path;
+    }
+    else {
+        stopEdit();
+        Ext.MessageBox.show({
+            title: 'No geometry type on layer',
+            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+            buttons: Ext.MessageBox.OK,
+            width: 400,
+            height: 300,
+            icon: Ext.MessageBox.ERROR
+        });
+        return false;
+    }
+    south.expand(true);
     var styleMap = new OpenLayers.StyleMap({
         temporary: OpenLayers.Util.applyDefaults({
             pointRadius: 5
@@ -92,15 +113,7 @@ function startWfsEdition(layerName, geomField) {
         //App.setAlert(App.STATUS_OK, "Start loading...");
     });
     map.addLayers([layer]);
-    if (type === "Point") {
-        handlerType = OpenLayers.Handler.Point;
-    }
-    if (type === "Polygon") {
-        handlerType = OpenLayers.Handler.Polygon;
-    }
-    if (type === "Path") {
-        handlerType = OpenLayers.Handler.Path;
-    }
+
     drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
         featureAdded: onInsert,
         handlerOptions: {

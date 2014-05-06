@@ -202,7 +202,7 @@ class Table extends Model
             $type = "Polygon";
         } elseif ($this->geomType == "POINT" || $this->geomType == "MULTIPOINT") {
             $type = "Point";
-        } elseif ($this->geomType == "LINESTRING" || $this->geomType == "MULTILINESTRING") {
+        } elseif ($this->geomType == "LINESTRING" || $this->geomType == "MULTILINESTRING" || $this->geomType == "LINE") {
             $type = "Path";
         }
         if (substr($this->geomType, 0, 5) == "MULTI") {

@@ -193,8 +193,7 @@ class Model
         }
         if (!$temp) {
             $arr = pg_meta_data($this->db, str_replace(".", "", $_schema) . "." . $_table);
-        }
-        else {
+        } else {
             $arr = pg_meta_data($this->db, $_table);
         }
         $this->close();
@@ -268,7 +267,7 @@ class Model
         $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
         if (!$row)
-            return $languageText['selectText'];
+            return false;
         elseif ($row)
             $this->theGeometry = $row['type'];
         if ($field == 'f_geometry_column') {
@@ -278,7 +277,12 @@ class Model
             return $row['srid'];
         }
         if ($field == 'type') {
-            return $row['type'];
+            $arr = (array)json_decode($row['def']);
+            if (($arr['geotype']) && $arr['geotype'] != "Default") {
+                return $arr['geotype'];
+            } else {
+                return $row['type'];
+            }
         }
         if ($field == 'tweet') {
             return $row['tweet'];

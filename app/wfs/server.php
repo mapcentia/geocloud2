@@ -7,7 +7,6 @@ header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
 include "libs/phpgeometry_class.php";
-//include "models/users.php";
 include "models/versions.php";
 include "libs/PEAR/XML/Unserializer.php";
 include "libs/PEAR/XML/Serializer.php";
@@ -68,13 +67,10 @@ $unserializer = new XML_Unserializer($unserializer_options);
 // Post method is used
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
-    //$forUseInSpatialFilter = $HTTP_RAW_POST_DATA; // We store a unaltered version of the raw request
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
-
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
     $request = $unserializer->getRootName();
-    //print_r($arr);
     switch ($request) {
         case "GetFeature":
             if (!is_array($arr['Query'][0])) {
@@ -112,7 +108,6 @@ if ($HTTP_RAW_POST_DATA) {
         case "DescribeFeatureType":
             $HTTP_FORM_VARS["REQUEST"] = "DescribeFeatureType";
             $HTTP_FORM_VARS["TYPENAME"] = $arr['TypeName'];
-            //if (!$HTTP_FORM_VARS["TYPENAME"]) $HTTP_FORM_VARS["TYPENAME"] = $arr['typeName'];
             break;
         case "GetCapabilities":
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
@@ -126,11 +121,10 @@ if ($HTTP_RAW_POST_DATA) {
                 $transactionType = "update";
             }
             if ($arr["Delete"]) $transactionType = "Delete";
-
             break;
     }
-} // Get method is used
-else {
+}
+else { // Get method is used
     if (sizeof($_GET) > 0) {
         Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
@@ -367,13 +361,12 @@ function doQuery($queryType)
                     foreach ($tableObj->metaData as $key => $arr) {
                         if ($arr['type'] == "geometry") {
                             if ($useWktToGmlInPHP) {
-                                $sql = str_replace("\"{$key}\"", "public.ST_AsText(public.ST_Transform(" . $key . "," . $srs . ")) as " . $key, $sql);
+                                $sql = str_replace("\"{$key}\"", "public.ST_AsText(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
                             } else {
-                                $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(" . $key . "," . $srs . ")) as " . $key, $sql);
+                                $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
 
                             }
-                            $sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(" . $key . ",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(" . $key . ",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(" . $key . ",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(" . $key . ",{$srs}))) AS TYMax ";
-
+                            $sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                         }
                     }
                 } else {
@@ -780,12 +773,10 @@ function doParse($arr)
                         $field = "";
                         $value = "";
                         // Start HTTP basic authentication
-                        //if(!$_SESSION["oauth_token"]) {
                         $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
                         if ($auth == "Write" OR $auth == "Read/write") {
                             include('inc/http_basic_authen.php');
                         }
-                        //	}
                         // End HTTP basic authentication
                     }
                 }
@@ -806,11 +797,9 @@ function doParse($arr)
                         // We serialize the geometry back to XML for parsing
                         $status = $Serializer->serialize($pair['Value']);
                         Log::write($Serializer->getSerializedData() . "\n\n");
-
                         $gmlCon = new gmlConverter();
                         $wktArr = $gmlCon->gmlToWKT($Serializer->getSerializedData(), array());
                         $values[$fid][] = (array("{$pair['Name']}" => current($wktArr[0]), "srid" => current($wktArr[1])));
-
                         unset($gmlCon);
                         unset($wktArr);
                     } else {
@@ -823,12 +812,10 @@ function doParse($arr)
                 $forSql2['wheres'][$fid] = parseFilter($hey['Filter'], $hey['typeName']);
                 $fid++;
                 // Start HTTP basic authentication
-                //if(!$_SESSION["oauth_token"]) {
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
                     include('inc/http_basic_authen.php');
                 }
-                //	}
                 // End HTTP basic authentication
             }
             $pair = array();
@@ -844,12 +831,10 @@ function doParse($arr)
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
                 // Start HTTP basic authentication
-                //if(!$_SESSION["oauth_token"]) {
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
                     include('inc/http_basic_authen.php');
                 }
-                //	}
                 // End HTTP basic authentication
             }
         }
@@ -870,7 +855,7 @@ function doParse($arr)
             $sql .= implode(",", $fields);
             unset($fields);
             $sql .= ") VALUES(";
-            foreach ($forSql['values'][$i] as $key => $value) {
+            foreach ($forSql['values'][$i] as $value) {
                 if (is_array($value)) {
                     $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
                 } elseif (!$value) {
@@ -889,7 +874,6 @@ function doParse($arr)
     }
     // Second we loop through updates
     if (sizeof($forSql2['tables']) > 0) for ($i = 0; $i < sizeof($forSql2['tables']); $i++) {
-        //$metaData = $postgisObject -> getMetaData($forSql2['tables'][$i]);
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "editable")) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
             $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
@@ -902,11 +886,8 @@ function doParse($arr)
                 } else {
                     $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
                 }
-                if (!is_array($forSql2['values'][$i][$key])) { // is not geometry. Adding "" around field names
-                    $pairs[] = "\"" . $field . "\"=" . $value;
-                } else {
-                    $pairs[] = $field . "=" . $value;
-                }
+                $pairs[] = "\"" . $field . "\" =" . $value;
+
             }
             $sql .= implode(",", $pairs);
             $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
@@ -1038,7 +1019,6 @@ function makeExceptionReport($value)
     Log::write($data);
     die();
 }
-
 $data = ob_get_clean();
 //Log::write($data);
 echo $data;

@@ -1,10 +1,4 @@
 <?php
-/**
- *
- *
- * @param unknown $arr
- * @return unknown
- */
 function parseFilter($filter, $table, $operator = "=")
 {
     global $postgisObject;
@@ -148,40 +142,29 @@ function parseFilter($filter, $table, $operator = "=")
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
-
-            /*
-            $coordsArr[0] = floor($coordsArr[0]/1000)*1000;
-            $coordsArr[1] = floor($coordsArr[1]/1000)*1000;
-            $coordsArr[2] = ceil($coordsArr[2]/1000)*1000;
-            $coordsArr[3] = ceil($coordsArr[3]/1000)*1000;
-             */
-
             if ($axisOrder == "longitude") {
                 $where[] = "ST_Intersects"
-                . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
-                . $sridOfFilter
-                . "),$sridOfTable),"
-                . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . ")";
+                    . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
+                    . $sridOfFilter
+                    . "),$sridOfTable),"
+                    . "\"" . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
-                    . $arr['BBOX']['PropertyName'] . ")";
-
+                    . "\"" . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             }
-
             /*$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
                 .$sridOfFilter
                 ."),$sridOfTable) && ".$arr['BBOX']['PropertyName'];*/
-
         }
         // End of filter parsing
         $i++;
     }
     ob_start();
     print_r($where);
-    $data = ob_get_clean();
+    ob_get_clean();
 
     if (!$BoolOperator) $BoolOperator = "OR";
     return "(" . implode(" " . $BoolOperator . " ", $where) . ")";
