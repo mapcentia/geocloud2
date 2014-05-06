@@ -121,7 +121,7 @@ class Model
 
     function execQuery($query, $conn = "PDO", $queryType = "select")
     {
-        //echo($query)."\n";
+        $result = null;
         switch ($conn) {
             case "PG" :
                 if (!$this->db) {
