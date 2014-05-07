@@ -320,7 +320,7 @@ class Mapfile extends \app\inc\Controller
                     ?>
                     TYPE RASTER
                     DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
-                    PROCESSING "LOAD_WHOLE_IMAGE=YES"
+                    #PROCESSING "LOAD_WHOLE_IMAGE=YES"
                 <?php
                 } else {
                     if ($type != "RASTER") {
