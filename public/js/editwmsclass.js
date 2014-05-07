@@ -747,15 +747,15 @@ wmsClass.init = function (id) {
         region: 'center',
         border: false,
         propertyNames: {
-            overlaywidth: 'Overlay: line width',
-            overlayoutlinecolor: 'Overlay: outline color',
-            overlaysymbol: 'Overlay: symbol',
-            overlaycolor: 'Overlay: color',
-            overlaysize: 'Overlay: symbol size',
-            overlayangle: 'Overlay: symbol angle',
-            overlaystyle_opacity: 'Overlay: opacity',
-            overlaylinecap: 'Overlay: line cap',
-            overlaypattern: 'Overlay: pattern'
+            overlaywidth: 'Style: line width',
+            overlayoutlinecolor: 'Style: outline color',
+            overlaysymbol: 'Style: symbol',
+            overlaycolor: 'Style: color',
+            overlaysize: 'Style: symbol size',
+            overlayangle: 'Style: symbol angle',
+            overlaystyle_opacity: 'Style: opacity',
+            overlaylinecap: 'Style: line cap',
+            overlaypattern: 'Style: pattern'
         },
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -904,6 +904,8 @@ wmsClass.init = function (id) {
         region: 'center',
         border: false,
         propertyNames: {
+            label: 'Label: on',
+            label_force: 'Label: force',
             label_minscaledenom: 'Label: min. scale',
             label_maxscaledenom: 'Label: max scale',
             label_position: 'Label: position',
@@ -994,6 +996,8 @@ wmsClass.init = function (id) {
         region: 'center',
         border: false,
         propertyNames: {
+            label2: 'Label: on',
+            label2_force: 'Label: force',
             label2_minscaledenom: 'Label: min. scale',
             label2_maxscaledenom: 'Label: max scale',
             label2_position: 'Label: position',
