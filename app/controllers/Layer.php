@@ -56,4 +56,8 @@ class Layer extends \app\inc\Controller
     {
         return $this->table->getValueFromKey($_key_, $column);
     }
+    public function put_schema(){
+        $input = json_decode(Input::get());
+        return $this->table->setSchema($input->data->table,$input->data->schema);
+    }
 }

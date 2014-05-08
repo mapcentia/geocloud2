@@ -3,6 +3,7 @@ wmsLayer.init = function (record) {
     wmsLayer.fieldsForStore = [];
     wmsLayer.numFieldsForStore = [];
     wmsLayer.fieldsForStoreBrackets = [];
+    wmsLayer.defaultSql = record.data || "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name;
     $.ajax({
         url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
         async: false,
@@ -173,7 +174,7 @@ wmsLayer.init = function (record) {
                 decimalSeparator: '¤'// Some strange char nobody is using
             }), {}),
             'geotype': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['Default','POINT','LINE','POLYGON'],
+                store: ['Default', 'POINT', 'LINE', 'POLYGON'],
                 editable: false,
                 triggerAction: 'all'
             }), {})
@@ -235,7 +236,7 @@ wmsLayer.init = function (record) {
                 height: 100,
                 labelAlign: 'top',
                 name: 'data',
-                value: (record.data) ? record.data : "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name
+                value: wmsLayer.defaultSql
             }
         ],
         buttons: [
@@ -246,6 +247,10 @@ wmsLayer.init = function (record) {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
+                        // Submit empty if default sql is not changed. Extjs3 is submitting EmptyText!
+                        if (values.data === wmsLayer.defaultSql){
+                            values.data = "";
+                        }
                         values.data = encodeURIComponent(values.data);
                         var param = {
                             data: values

@@ -86,7 +86,6 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'container',
-
                                 defaults: {
                                     width: 100
                                 },

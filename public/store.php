@@ -3,6 +3,16 @@ include("html_header.php");
 ?>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
+
+<!-- Ext 4.0 -->
+<!--<link rel="stylesheet" type="text/css" href="/js/ext4/resources/css/ext-all.css" />-->
+<!-- Stick to ext-all-debug.js (not bootstrap.js) while migrating. Legacy code will not work with bootstrap! -->
+<!--<script type="text/javascript" src="/js/ext4/ext-all-debug.js"></script>-->
+
+<!-- Ext 3.x compatibility -->
+<!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
+<!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
+
 <script type="text/javascript" src="/js/msg.js"></script>
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>
@@ -18,7 +28,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>
+<!--<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>-->
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>

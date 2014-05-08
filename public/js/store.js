@@ -10,7 +10,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, initExtent = null, App = new Ext.App({});
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, initExtent = null, App = new Ext.App({});
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -67,6 +67,7 @@ $(window).ready(function () {
     };
     var proxy = new Ext.data.HttpProxy({
         restful: true,
+        type: 'json',
         api: {
             read: '/controllers/layer/records',
             update: '/controllers/layer/records',
@@ -88,7 +89,18 @@ $(window).ready(function () {
             }
         }
     });
-
+    /*Ext.define('FieldsForStore', {
+     extend: 'Ext.data.Model',
+     fields: fieldsForStore
+     });
+     store = Ext.create('Ext.data.Store', {
+     model: 'FieldsForStore',
+     proxy: proxy,
+     autoSave: true,
+     writer: writer,
+     reader: reader,
+     autoLoad: true
+     });*/
     store = new Ext.data.Store({
         writer: writer,
         reader: reader,
@@ -122,7 +134,7 @@ $(window).ready(function () {
     });
     schemasStore.load();
 
-    var editor = new Ext.ux.grid.RowEditor();
+    //var editor = new Ext.ux.grid.RowEditor();
     var grid = new Ext.grid.EditorGridPanel({
         //plugins: [editor],
         store: store,
@@ -293,7 +305,7 @@ $(window).ready(function () {
                 text: '<i class="icon-cog btn-gc"></i> Advanced',
                 handler: onEditMoreSettings
             },
-            '->',
+
             {
                 text: '<i class="icon-remove btn-g"></i> Clear all tile cache',
                 handler: function () {
@@ -322,11 +334,18 @@ $(window).ready(function () {
                     });
                 }
             },
-            '-',
+            '->',
             {
                 text: '<i class="icon-plus btn-gc"></i> New layer',
                 handler: function () {
                     onAdd();
+                }
+            },
+            '-',
+            {
+                text: '<i class="icon-plus btn-gc"></i> Move layer',
+                handler: function () {
+                    onMove();
                 }
             },
             '-',
@@ -342,7 +361,6 @@ $(window).ready(function () {
                 editable: false,
                 mode: 'local',
                 triggerAction: 'all',
-                emptyText: 'Select a cloud...',
                 value: schema,
                 width: 135
             }),
@@ -490,6 +508,109 @@ $(window).ready(function () {
 
         winAdd.show(this);
         addVector();
+    };
+
+    onMove = function (btn, ev) {
+        var record = grid.getSelectionModel().getSelected();
+        if (!record) {
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            return false;
+        }
+        var r = record;
+        var winMoveTable = new Ext.Window({
+            title: "Move '" + record.get("f_table_name") + "' to another schema",
+            modal: true,
+            layout: 'fit',
+            width: 270,
+            height: 80,
+            closeAction: 'close',
+            plain: true,
+            items: [
+                {
+                    defaults: {
+                        border: false
+                    },
+                    layout: 'hbox',
+                    items: [
+                        {
+                            xtype: "form",
+                            id: "moveform",
+                            layout: "form",
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'container',
+
+                                    items: [
+                                        {
+                                            xtype: "combo",
+                                            store: schemasStore,
+                                            displayField: 'schema',
+                                            editable: false,
+                                            mode: 'local',
+                                            triggerAction: 'all',
+                                            value: schema,
+                                            name: 'schema',
+                                            width: 150
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            layout: 'form',
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Move',
+                                    handler: function () {
+                                        var f = Ext.getCmp('moveform');
+                                        if (f.form.isValid()) {
+                                            var values = f.form.getValues();
+                                            values.table = record.get("f_table_schema") + "." + record.get("f_table_name");
+                                            var param = {
+                                                data: values
+                                            };
+                                            param = Ext.util.JSON.encode(param);
+                                            Ext.Ajax.request({
+                                                url: '/controllers/layer/schema',
+                                                method: 'put',
+                                                headers: {
+                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                },
+                                                params: param,
+                                                success: function () {
+                                                    store.reload();
+                                                    winMoveTable.hide(this);
+                                                    App.setAlert(App.STATUS_OK, "Layer moved");
+                                                },
+                                                failure: function (response) {
+                                                    Ext.MessageBox.show({
+                                                        title: 'Failure',
+                                                        msg: eval('(' + response.responseText + ')').message,
+                                                        buttons: Ext.MessageBox.OK,
+                                                        width: 400,
+                                                        height: 300,
+                                                        icon: Ext.MessageBox.ERROR
+                                                    });
+                                                }
+                                            });
+                                        } else {
+                                            var s = '';
+                                            Ext.iterate(f.form.getValues(), function (key, value) {
+                                                s += String.format("{0} = {1}<br />", key, value);
+                                            }, this);
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+        winMoveTable.show(this);
     };
 
     function onAddSchema(btn, ev) {
@@ -1266,7 +1387,7 @@ $(window).ready(function () {
             url: '/controllers/mapfile',
             success: function (response) {
                 updateLegend();
-                if (clearCachedLayer){
+                if (clearCachedLayer) {
                     clearTileCache(clearCachedLayer);
                 }
             }
@@ -1277,10 +1398,10 @@ $(window).ready(function () {
             }
         });
         /*$.ajax({
-            url: '/controllers/tinyowsfile',
-            success: function (response) {
-            }
-        });*/
+         url: '/controllers/tinyowsfile',
+         success: function (response) {
+         }
+         });*/
     };
     clearTileCache = function (layer) {
         $.ajax({

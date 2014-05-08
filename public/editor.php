@@ -1,6 +1,15 @@
 <?php
 include("html_header.php");
 ?>
+<!-- Ext 4.0 -->
+<!--<link rel="stylesheet" type="text/css" href="/js/ext4/resources/css/ext-all.css" />-->
+<!-- Stick to ext-all-debug.js (not bootstrap.js) while migrating. Legacy code will not work with bootstrap! -->
+<!--<script type="text/javascript" src="/js/ext4/ext-all-debug.js"></script>-->
+
+<!-- Ext 3.x compatibility -->
+<!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
+<!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
+
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script type="text/javascript" src="/api/v1/js/api.js"></script>
 <script type="text/javascript" src="/js/wfseditor.js"></script>
