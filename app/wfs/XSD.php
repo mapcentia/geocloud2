@@ -12,7 +12,7 @@ $atts["namespace"] = "http://www.opengis.net/gml";
 $atts["schemaLocation"] = "http://schemas.opengis.net/gml/2.1.2/feature.xsd";
 writeTag("selfclose", "xsd", "import", $atts, True, True);
 $atts = null;
-$time = microtime_float();
+
 if (!$tables[0]) {
     $tables = array();
     $sql = "SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns WHERE f_table_schema='{$postgisschema}'";
@@ -27,18 +27,18 @@ if (!$tables[0]) {
 foreach ($tables as $table) {
     $tableObj = new \app\models\table($postgisschema . "." . $table);
     $primeryKey = $tableObj->primeryKey;
+
     foreach ($tableObj->metaData as $key => $value) {
         if ($key != $primeryKey['attname']) {
             $fieldsArr[$table][] = $key;
         }
     }
-    /*$fields = implode(",", $fieldsArr[$table]);
+    $fields = implode(",", $fieldsArr[$table]);
     $sql = "SELECT '{$fields}' FROM " . $postgisschema . "." . $table;
     $result = $postgisObject->execQuery($sql);
     if ($postgisObject->PDOerror) {
         makeExceptionReport($postgisObject->PDOerror);
-    }*/
-
+    }
     $atts["name"] = $table . "_Type";
     writeTag("open", "xsd", "complexType", $atts, True, True);
     $atts = null;
@@ -89,7 +89,8 @@ foreach ($tables as $table) {
         }
         $atts["minOccurs"] = "0";
         writeTag("open", "xsd", "element", $atts, True, True);
-        if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
+
+        if ($tableObj->metaData[$atts["name"]]['type'] != "geometry") {
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $tableObj->metaData[$atts["name"]]['type'] = "decimal";
             }
@@ -100,7 +101,7 @@ foreach ($tables as $table) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
             echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">
-			
+
 			</xsd:restriction></xsd:simpleType>';
         }
         writeTag("close", "xsd", "element", NULL, False, True);
