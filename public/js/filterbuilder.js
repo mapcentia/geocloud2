@@ -27,7 +27,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
      *  Default is ``["any", "all", "none", "not all"]``.
      */
     builderTypeNames: ["any", "all", "none", "not all"],
-	attributeQuery: true,
+	attributeQuery: false,
 	spatialQuery: true,
     
     /** api: config[allowedBuilderTypes]
@@ -443,9 +443,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
     
     createBuilderTypeCombo: function() {
         var types = this.allowedBuilderTypes || [
-            gxp.FilterBuilder.ANY_OF, gxp.FilterBuilder.ALL_OF,
-            gxp.FilterBuilder.NONE_OF
-        ];
+            gxp.FilterBuilder.ANY_OF, gxp.FilterBuilder.ALL_OF];
         var numTypes = types.length;
         var data = new Array(numTypes);
         var type;

@@ -1,6 +1,6 @@
 Ext.namespace('attributeForm');
 Ext.namespace("filter");
-attributeForm.init = function (layer) {
+attributeForm.init = function (layer, geomtype) {
     Ext.QuickTips.init();
     // create attributes store
     attributeForm.attributeStore = new GeoExt.data.AttributeStore({
@@ -26,7 +26,6 @@ attributeForm.init = function (layer) {
                 filter.filterBuilder = new gxp.FilterBuilder({
                     attributes: attributeForm.attributeStoreCopy,
                     allowGroups: false
-
                 });
                 filter.queryPanel = new Ext.Panel({
                     id: "uploadpanel",
@@ -38,7 +37,7 @@ attributeForm.init = function (layer) {
                     },
                     tbar: ["->",
                         {
-                            text: "<i class='icon-filter btn-gc'></i> Set filter",
+                            text: "<i class='icon-filter btn-gc'></i> Load",
                             //iconCls: "icon-find",
                             disabled: false,
                             handler: function () {
@@ -46,15 +45,32 @@ attributeForm.init = function (layer) {
                             }
                         }],
                     query: function () {
-                        var protocol = store.proxy.protocol;
-                        protocol.defaultFilter = filter.filterBuilder.getFilter();
-                        saveStrategy.layer.refresh();
-                        //layer;
+                        var filters = filter.filterBuilder.getFilter(), valid = true;
+                        if (typeof filters.filters === "object") {
+                            $.each(filters.filters, function (k, v) {
+                                if (v === false) {
+                                    valid = false;
+                                }
+                            });
+                        }
+                        if (valid) {
+                            if (layerBeingEditing) {
+                                var protocol = store.proxy.protocol;
+                                protocol.defaultFilter = filter.filterBuilder.getFilter();
+                                saveStrategy.layer.refresh();
+                            }
+                            else {
+                                startWfsEdition(layer, geomtype, filters);
+                            }
+                        }
+                        else {
+                            // console.log("Not valid");
+                        }
                     },
                     items: [filter.filterBuilder]
                 });
                 filter.win = new Ext.Window({
-                    title: "Feature filter",
+                    title: "Load features",
                     modal: false,
                     layout: 'fit',
                     initCenter: true,
@@ -96,6 +112,7 @@ attributeForm.init = function (layer) {
                 //iconCls: 'silk-add',
                 text: "<i class='icon-ok btn-gc'></i> Update table",
                 handler: function () {
+
                     if (attributeForm.form.form.isValid()) {
                         var record = grid.getSelectionModel().getSelected();
                         attributeForm.form.getForm().updateRecord(record);

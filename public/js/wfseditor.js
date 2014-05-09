@@ -8,7 +8,7 @@
 /*global attributeForm:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy;
-function startWfsEdition(layerName, geomField) {
+function startWfsEdition(layerName, geomField, wfsFilter) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable");
     layerBeingEditing = layerName;
@@ -97,10 +97,7 @@ function startWfsEdition(layerName, geomField) {
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic
             // Only load features in map extent
-            defaultFilter: new OpenLayers.Filter.Spatial({
-                type: OpenLayers.Filter.Spatial.BBOX,
-                value: map.getExtent()
-            })
+            defaultFilter: wfsFilter
         }),
         styleMap: styleMap
     });
@@ -192,7 +189,6 @@ function startWfsEdition(layerName, geomField) {
         })
     });
 
-    attributeForm.init(layerName);
     south.add(grid);
     gridPanel = Ext.getCmp("gridpanel");
     south.doLayout();
@@ -218,7 +214,6 @@ function startWfsEdition(layerName, geomField) {
     Ext.getCmp('editdeletebutton').setDisabled(false);
     Ext.getCmp('editsavebutton').setDisabled(false);
     Ext.getCmp('editstopbutton').setDisabled(false);
-    Ext.getCmp('filterbutton').setDisabled(false);
     Ext.getCmp('infobutton').setDisabled(false);
 }
 $(document).ready(function () {
@@ -331,6 +326,14 @@ $(document).ready(function () {
                     listeners: {
                         click: {
                             fn: function (e) {
+                                try {
+                                    stopEdit();
+                                    filter.win.hide();
+                                    filter.win = false;
+
+                                }
+                                catch (e){
+                                }
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                     window.parent.onEditWMSClasses(e.id);
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
@@ -437,10 +440,23 @@ $(document).ready(function () {
             id: "editlayerbutton",
             disabled: true,
             handler: function (thisBtn, event) {
+                try {
+                    stopEdit();
+                }
+                catch (e){}
                 var node = tree.getSelectionModel().getSelectedNode();
                 var id = node.id.split(".");
                 var geomField = node.attributes.geomField;
-                startWfsEdition(id[1], geomField);
+                attributeForm.init(id[1], geomField);
+                var poll = function () {
+                    if (typeof filter.win === "object") {
+                        filter.win.show();
+                    }
+                    else {
+                        setTimeout(poll, 10);
+                    }
+                };
+                poll();
             }
         },
         '-',
@@ -538,15 +554,6 @@ $(document).ready(function () {
             handler: function () {
                 attributeForm.win.show();
             }
-        },
-        '-',
-        {
-            text: "<i class='icon-filter btn-gc'></i> Filter",
-            id: "filterbutton",
-            disabled: true,
-            handler: function () {
-                filter.win.show();
-            }
         }
     ];
     reLoadTree = function () {
@@ -557,12 +564,14 @@ $(document).ready(function () {
 });
 function stopEdit() {
     "use strict";
+    layerBeingEditing = null;
+    filter.win.hide();
+    filter.win = false;
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(true);
     Ext.getCmp('editdeletebutton').setDisabled(true);
     Ext.getCmp('editsavebutton').setDisabled(true);
     Ext.getCmp('editstopbutton').setDisabled(true);
-    Ext.getCmp('filterbutton').setDisabled(true);
     Ext.getCmp('infobutton').setDisabled(true);
     try {
         drawControl.deactivate();
