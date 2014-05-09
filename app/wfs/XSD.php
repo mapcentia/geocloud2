@@ -62,8 +62,9 @@ foreach ($tables as $table) {
         $atts["maxOccurs"] = "1";
         $selfclose = true;
         if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
-            $geomType = $geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$atts["name"]}", "type");
-            switch ($geomType) {
+            $sql = "SELECT type FROM public.geometry_columns WHERE f_table_schema='{$postgisschema}' AND f_table_name='{$table}'";
+            $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
+            switch ($typeRow['type']) {
                 case "POINT":
                     $atts["type"] = "gml:PointPropertyType";
                     break;

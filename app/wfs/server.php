@@ -577,7 +577,6 @@ function doSelect($table, $sql, $sql2, $from)
     }
 
     $totalTime = microtime_float() - $startTime;
-    print "\n<!-- {$totalTime} -->";
     $postgisObject->execQuery("ROLLBACK");
 }
 
@@ -725,7 +724,7 @@ function getCartoMobilePictureUrl($table, $fieldName, $cartomobilePictureField, 
 $totalTime = microtime_float() - $startTime;
 Log::write("\nTotal time {$totalTime}\n");
 Log::write("==================\n");
-//echo "\n<!-- {$totalTime} -->";
+echo "\n<!-- {$totalTime} -->";
 
 function doParse($arr)
 {
