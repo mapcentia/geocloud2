@@ -343,7 +343,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-plus btn-gc"></i> Move layer',
+                text: '<i class="icon-arrow-right btn-gc"></i> Move layer',
                 handler: function () {
                     onMove();
                 }
