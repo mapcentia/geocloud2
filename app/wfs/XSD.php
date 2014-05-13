@@ -65,7 +65,10 @@ foreach ($tables as $table) {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}' AND f_table_name='{$table}'";
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
-            $typeRow['type'] = "MULTI".($def->geotype)?: $typeRow['type'];
+            if ($def->geotype) {
+                $typeRow['type'] = "MULTI".$def->geotype;
+            }
+
             switch ($typeRow['type']) {
                 case "POINT":
                     $atts["type"] = "gml:PointPropertyType";
