@@ -19,6 +19,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
 <script src="http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
 <script src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
+<script src="/api/v3/js/geocloud.js" type="text/javascript"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>

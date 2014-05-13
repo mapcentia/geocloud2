@@ -17,7 +17,6 @@ function startWfsEdition(layerName, geomField, wfsFilter) {
         layer.removeAllFeatures();
         map.removeLayer(layer);
     } catch (e) {
-        //alert(e.message);
     }
     south.remove(grid);
     $.ajax({
@@ -87,7 +86,6 @@ function startWfsEdition(layerName, geomField, wfsFilter) {
         }, OpenLayers.Feature.Vector.style.temporary)
     });
     layer = new OpenLayers.Layer.Vector("vector", {
-        //renderers : renderer,
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
             url: "/wfs/" + screenName + "/" + schema + "/900913?",
@@ -224,7 +222,138 @@ $(document).ready(function () {
     });
     cloud = new mygeocloud_ol.map(null, screenName);
     map = cloud.map;
-    cloud.click.activate();
+    var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
+    var gc2 = new geocloud.map({});
+    gc2.map = map;
+    $.ajax({
+        url: '/api/v1/meta/' + screenName + '/' + schema,
+        async: false,
+        dataType: 'json',
+        type: 'GET',
+        success: function (response) {
+            metaData = response;
+            for (var i = 0; i < metaData.data.length; i++) {
+                metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                if (!metaData.data[i].f_table_title) {
+                    metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                }
+                metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+            }
+        }
+    }); // Ajax call end
+    var clicktimer;
+    gc2.on("dblclick", function (e) {
+        clicktimer = undefined;
+    });
+    var qstore = [];
+    var queryWin = new Ext.Window({
+        title: "Query result",
+        modal: false,
+        layout: 'fit',
+        width: 500,
+        height: 400,
+        closeAction: 'hide',
+        plain: true,
+        items: [
+            new Ext.TabPanel({
+                activeTab: 0,
+                frame: true,
+                id: "queryTabs"
+            })
+        ]
+    });
+    gc2.on("click", function (e) {
+        /*var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = screenName;
+        if (clicktimer) {
+            clearTimeout(clicktimer);
+        }
+        else {
+            clicktimer = setTimeout(function (e) {
+                clicktimer = undefined;
+                var coords = event.getCoordinate();
+                $.each(qstore, function (index, st) {
+                    try {
+                        st.reset();
+                        gc2.removeGeoJsonStore(st);
+                    }
+                    catch (e) {
+
+                    }
+                });
+                layers = gc2.getVisibleLayers().split(";");
+                Ext.getCmp("queryTabs").removeAll();
+                queryWin.show();
+                $.each(layers, function (index, value) {
+                    var isEmpty = true;
+                    var srid = metaDataKeys[value.split(".")[1]].srid;
+                    var geoType = metaDataKeys[value.split(".")[1]].type;
+                    var layerTitel = metaDataKeys[value.split(".")[1]].f_table_name;
+                    if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                        var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                            4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                            76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                            1.19432856696, 0.597164283478, 0.298582141739];
+                        distance = 5 * res[cloud.getZoom()];
+                    }
+                    qstore[index] = new geocloud.sqlStore({
+                        db: db,
+                        id: index,
+                        onLoad: function () {
+                            var layerObj = qstore[this.id], out = [], fieldLabel;
+                            isEmpty = layerObj.isEmpty();
+                            if ((!isEmpty)) {
+                                Ext.getCmp("queryTabs").add(
+                                    {
+                                        title: layerTitel,
+                                        layout: "fit",
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                layout: "fit",
+                                                html: "sdd",
+                                                tbar: [
+                                                    {text: "Edit"}
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                );
+                                $.each(layerObj.geoJSON.features, function (i, feature) {
+                                    $.each(feature.properties, function (name, property) {
+                                        out.push([name, 0, name, property]);
+                                    });
+                                    out.sort(function (a, b) {
+                                        return a[1] - b[1];
+                                    });
+                                    //console.log(out);
+                                    $.each(out, function (name, property) {
+                                        console.log(property[2] + ":" + property[3]);
+                                        $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
+                                    });
+                                    out = [];
+                                    //$('#info-tab a:first').tab('show');
+                                });
+                                hit = true;
+                            }
+                            count++;
+                            Ext.getCmp("queryTabs").activate(0);
+                        }
+                    });
+                    gc2.addGeoJsonStore(qstore[index]);
+                    var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
+                    if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
+                    }
+                    else {
+                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
+                    }
+                    qstore[index].sql = sql;
+                    qstore[index].load();
+                });
+            }, 250);
+        }*/
+    });
+
     if (typeof window.setBaseLayers !== 'object') {
         window.setBaseLayers = [
             {"id": "mapQuestOSM", "name": "MapQuset OSM"},
@@ -332,7 +461,7 @@ $(document).ready(function () {
                                     filter.win = false;
 
                                 }
-                                catch (e){
+                                catch (e) {
                                 }
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                     window.parent.onEditWMSClasses(e.id);
@@ -443,7 +572,8 @@ $(document).ready(function () {
                 try {
                     stopEdit();
                 }
-                catch (e){}
+                catch (e) {
+                }
                 var node = tree.getSelectionModel().getSelectedNode();
                 var id = node.id.split(".");
                 var geomField = node.attributes.geomField;
@@ -559,7 +689,6 @@ $(document).ready(function () {
     reLoadTree = function () {
         loadTree();
     };
-    // Load the layer tree
     loadTree();
 });
 function stopEdit() {
