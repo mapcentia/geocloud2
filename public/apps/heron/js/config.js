@@ -21,6 +21,7 @@ MapCentia.setup = function () {
         db = uri[3],
         schema = uri[4],
         url = '/wms/' + db + '/tilecache/' + schema;
+
     Heron.options.map.layers = [
         [
             "OpenLayers.Layer.Bing",
@@ -28,6 +29,30 @@ MapCentia.setup = function () {
                 key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
                 type: "Road",
                 name: "Bing Road",
+                transitionEffect: 'resize'
+            },
+            {
+                isBaseLayer: true
+            }
+        ],
+        [
+            "OpenLayers.Layer.Bing",
+            {
+                key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
+                type: "Aerial",
+                name: "Bing Aerial",
+                transitionEffect: 'resize'
+            },
+            {
+                isBaseLayer: true
+            }
+        ],
+        [
+            "OpenLayers.Layer.Bing",
+            {
+                key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
+                type: "AerialWithLabels",
+                name: "Bing Aerial With Labels",
                 transitionEffect: 'resize'
             },
             {
@@ -98,6 +123,16 @@ MapCentia.setup = function () {
                             nodeType: "gx_layer",
                             layer: "Bing Road",
                             text: 'Bing Road'
+                        },
+                        {
+                            nodeType: "gx_layer",
+                            layer: "Bing Aerial",
+                            text: 'Bing Aerial'
+                        },
+                        {
+                            nodeType: "gx_layer",
+                            layer: "Bing Aerial With Labels",
+                            text: 'Bing Aerial With Labels'
                         }
                     ]
                 },
