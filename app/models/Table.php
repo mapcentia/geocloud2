@@ -110,6 +110,12 @@ class Table extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {
+                if ($key == "type" && $value == "GEOMETRY") {
+                    $def = json_decode($row['def']);
+                    if (($def->geotype) && $def->geotype != "Default") {
+                        $value = "MULTI" . $def->geotype;
+                    }
+                }
                 $arr = $this->array_push_assoc($arr, $key, $value);
             }
 

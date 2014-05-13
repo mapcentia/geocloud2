@@ -6,87 +6,88 @@ attributeForm.init = function (layer, geomtype) {
     attributeForm.attributeStore = new GeoExt.data.AttributeStore({
         url: '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer,
         listeners: {
-            load: {scope: this, fn: function (_store) {
-                attributeForm.attributeStoreCopy =
-                    new Ext.data.ArrayStore({
-                        fields: ['value', 'name'],
-                        data: [
+            load: {
+                scope: this, fn: function (_store) {
+                    attributeForm.attributeStoreCopy =
+                        new Ext.data.ArrayStore({
+                            fields: ['value', 'name'],
+                            data: [
 
-                        ]
-                    });
-                _store.each(function (record) {
-                    var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(record.get("type"));
-                    if (!match) {
-                        var newDataRow = {"name": record.get("name"), "value": getFieldType(record.get("type"))};
-                        var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
-                        attributeForm.attributeStoreCopy.add(newRecord);
-                    }
-                }, this);
-                filter.filterBuilder = new gxp.FilterBuilder({
-                    attributes: attributeForm.attributeStoreCopy,
-                    allowGroups: false
-                });
-                filter.queryPanel = new Ext.Panel({
-                    id: "uploadpanel",
-                    frame: false,
-                    region: "center",
-                    bodyStyle: {
-                        background: '#ffffff',
-                        padding: '7px'
-                    },
-                    tbar: ["->",
-                        {
-                            text: "<i class='icon-filter btn-gc'></i> Load",
-                            //iconCls: "icon-find",
-                            disabled: false,
-                            handler: function () {
-                                filter.queryPanel.query();
-                            }
-                        }],
-                    query: function () {
-                        var filters = filter.filterBuilder.getFilter(), valid = true;
-                        if (typeof filters.filters === "object") {
-                            $.each(filters.filters, function (k, v) {
-                                if (v === false) {
-                                    valid = false;
-                                }
-                            });
+                            ]
+                        });
+                    _store.each(function (record) {
+                        var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(record.get("type"));
+                        if (!match) {
+                            var newDataRow = {"name": record.get("name"), "value": getFieldType(record.get("type"))};
+                            var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
+                            attributeForm.attributeStoreCopy.add(newRecord);
                         }
-                        if (valid) {
-                            if (layerBeingEditing) {
-                                var protocol = store.proxy.protocol;
-                                protocol.defaultFilter = filter.filterBuilder.getFilter();
-                                saveStrategy.layer.refresh();
+                    }, this);
+                    filter.filterBuilder = new gxp.FilterBuilder({
+                        attributes: attributeForm.attributeStoreCopy,
+                        allowGroups: false
+                    });
+                    filter.queryPanel = new Ext.Panel({
+                        id: "uploadpanel",
+                        frame: false,
+                        region: "center",
+                        bodyStyle: {
+                            background: '#ffffff',
+                            padding: '7px'
+                        },
+                        tbar: ["->",
+                            {
+                                text: "<i class='icon-filter btn-gc'></i> Load",
+                                //iconCls: "icon-find",
+                                disabled: false,
+                                handler: function () {
+                                    filter.queryPanel.query();
+                                }
+                            }],
+                        query: function () {
+                            var filters = filter.filterBuilder.getFilter(), valid = true;
+                            if (typeof filters.filters === "object") {
+                                $.each(filters.filters, function (k, v) {
+                                    if (v === false) {
+                                        valid = false;
+                                    }
+                                });
+                            }
+                            if (valid) {
+                                if (layerBeingEditing) {
+                                    var protocol = store.proxy.protocol;
+                                    protocol.defaultFilter = filter.filterBuilder.getFilter();
+                                    saveStrategy.layer.refresh();
+                                }
+                                else {
+                                    startWfsEdition(layer, geomtype, filters);
+                                }
                             }
                             else {
-                                startWfsEdition(layer, geomtype, filters);
+                                // console.log("Not valid");
                             }
-                        }
-                        else {
-                            // console.log("Not valid");
-                        }
-                    },
-                    items: [filter.filterBuilder]
-                });
-                filter.win = new Ext.Window({
-                    title: "Load features",
-                    modal: false,
-                    layout: 'fit',
-                    initCenter: true,
-                    border: false,
-                    width: 400,
-                    height: 400,
-                    closeAction: 'hide',
-                    plain: true,
-                    items: [ new Ext.Panel({
-                        frame: false,
-                        layout: 'border',
-                        items: [filter.queryPanel]
-                    }) ]
-                });
+                        },
+                        items: [filter.filterBuilder]
+                    });
+                    filter.win = new Ext.Window({
+                        title: "Load features",
+                        modal: false,
+                        layout: 'fit',
+                        initCenter: true,
+                        border: false,
+                        width: 400,
+                        height: 400,
+                        closeAction: 'hide',
+                        plain: true,
+                        items: [ new Ext.Panel({
+                            frame: false,
+                            layout: 'border',
+                            items: [filter.queryPanel]
+                        }) ]
+                    });
+                }
             }
-            }}
-
+        }
     });
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,

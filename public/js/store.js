@@ -866,7 +866,6 @@ $(window).ready(function () {
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
         Ext.getCmp("layerStyleTabs").activate(1);
-        updateLegend();
 
         Ext.getCmp("layerStyleTabs").activate(3);
         var template = new Ext.Template(markup);

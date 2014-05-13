@@ -67,18 +67,6 @@ function startWfsEdition(layerName, geomField, wfsFilter) {
     else if (type === "Path") {
         handlerType = OpenLayers.Handler.Path;
     }
-    else {
-        stopEdit();
-        Ext.MessageBox.show({
-            title: 'No geometry type on layer',
-            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-            buttons: Ext.MessageBox.OK,
-            width: 400,
-            height: 300,
-            icon: Ext.MessageBox.ERROR
-        });
-        return false;
-    }
     south.expand(true);
     var styleMap = new OpenLayers.StyleMap({
         temporary: OpenLayers.Util.applyDefaults({
@@ -264,94 +252,94 @@ $(document).ready(function () {
     });
     gc2.on("click", function (e) {
         /*var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = screenName;
-        if (clicktimer) {
-            clearTimeout(clicktimer);
-        }
-        else {
-            clicktimer = setTimeout(function (e) {
-                clicktimer = undefined;
-                var coords = event.getCoordinate();
-                $.each(qstore, function (index, st) {
-                    try {
-                        st.reset();
-                        gc2.removeGeoJsonStore(st);
-                    }
-                    catch (e) {
+         if (clicktimer) {
+         clearTimeout(clicktimer);
+         }
+         else {
+         clicktimer = setTimeout(function (e) {
+         clicktimer = undefined;
+         var coords = event.getCoordinate();
+         $.each(qstore, function (index, st) {
+         try {
+         st.reset();
+         gc2.removeGeoJsonStore(st);
+         }
+         catch (e) {
 
-                    }
-                });
-                layers = gc2.getVisibleLayers().split(";");
-                Ext.getCmp("queryTabs").removeAll();
-                queryWin.show();
-                $.each(layers, function (index, value) {
-                    var isEmpty = true;
-                    var srid = metaDataKeys[value.split(".")[1]].srid;
-                    var geoType = metaDataKeys[value.split(".")[1]].type;
-                    var layerTitel = metaDataKeys[value.split(".")[1]].f_table_name;
-                    if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                        var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                            4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                            76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                            1.19432856696, 0.597164283478, 0.298582141739];
-                        distance = 5 * res[cloud.getZoom()];
-                    }
-                    qstore[index] = new geocloud.sqlStore({
-                        db: db,
-                        id: index,
-                        onLoad: function () {
-                            var layerObj = qstore[this.id], out = [], fieldLabel;
-                            isEmpty = layerObj.isEmpty();
-                            if ((!isEmpty)) {
-                                Ext.getCmp("queryTabs").add(
-                                    {
-                                        title: layerTitel,
-                                        layout: "fit",
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                layout: "fit",
-                                                html: "sdd",
-                                                tbar: [
-                                                    {text: "Edit"}
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                );
-                                $.each(layerObj.geoJSON.features, function (i, feature) {
-                                    $.each(feature.properties, function (name, property) {
-                                        out.push([name, 0, name, property]);
-                                    });
-                                    out.sort(function (a, b) {
-                                        return a[1] - b[1];
-                                    });
-                                    //console.log(out);
-                                    $.each(out, function (name, property) {
-                                        console.log(property[2] + ":" + property[3]);
-                                        $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
-                                    });
-                                    out = [];
-                                    //$('#info-tab a:first').tab('show');
-                                });
-                                hit = true;
-                            }
-                            count++;
-                            Ext.getCmp("queryTabs").activate(0);
-                        }
-                    });
-                    gc2.addGeoJsonStore(qstore[index]);
-                    var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
-                    if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
-                    }
-                    else {
-                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
-                    }
-                    qstore[index].sql = sql;
-                    qstore[index].load();
-                });
-            }, 250);
-        }*/
+         }
+         });
+         layers = gc2.getVisibleLayers().split(";");
+         Ext.getCmp("queryTabs").removeAll();
+         queryWin.show();
+         $.each(layers, function (index, value) {
+         var isEmpty = true;
+         var srid = metaDataKeys[value.split(".")[1]].srid;
+         var geoType = metaDataKeys[value.split(".")[1]].type;
+         var layerTitel = metaDataKeys[value.split(".")[1]].f_table_name;
+         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+         var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+         4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+         76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+         1.19432856696, 0.597164283478, 0.298582141739];
+         distance = 5 * res[cloud.getZoom()];
+         }
+         qstore[index] = new geocloud.sqlStore({
+         db: db,
+         id: index,
+         onLoad: function () {
+         var layerObj = qstore[this.id], out = [], fieldLabel;
+         isEmpty = layerObj.isEmpty();
+         if ((!isEmpty)) {
+         Ext.getCmp("queryTabs").add(
+         {
+         title: layerTitel,
+         layout: "fit",
+         items: [
+         {
+         xtype: "panel",
+         layout: "fit",
+         html: "sdd",
+         tbar: [
+         {text: "Edit"}
+         ]
+         }
+         ]
+         }
+         );
+         $.each(layerObj.geoJSON.features, function (i, feature) {
+         $.each(feature.properties, function (name, property) {
+         out.push([name, 0, name, property]);
+         });
+         out.sort(function (a, b) {
+         return a[1] - b[1];
+         });
+         //console.log(out);
+         $.each(out, function (name, property) {
+         console.log(property[2] + ":" + property[3]);
+         $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
+         });
+         out = [];
+         //$('#info-tab a:first').tab('show');
+         });
+         hit = true;
+         }
+         count++;
+         Ext.getCmp("queryTabs").activate(0);
+         }
+         });
+         gc2.addGeoJsonStore(qstore[index]);
+         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
+         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+         sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
+         }
+         else {
+         sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
+         }
+         qstore[index].sql = sql;
+         qstore[index].load();
+         });
+         }, 250);
+         }*/
     });
 
     if (typeof window.setBaseLayers !== 'object') {
@@ -421,7 +409,8 @@ $(document).ready(function () {
                                     id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
                                     leaf: true,
                                     checked: false,
-                                    geomField: response.data[u].f_geometry_column
+                                    geomField: response.data[u].f_geometry_column,
+                                    geomType: response.data[u].type
                                 });
                             }
                         }
@@ -577,16 +566,30 @@ $(document).ready(function () {
                 var node = tree.getSelectionModel().getSelectedNode();
                 var id = node.id.split(".");
                 var geomField = node.attributes.geomField;
+                var type = node.attributes.geomType;
                 attributeForm.init(id[1], geomField);
-                var poll = function () {
-                    if (typeof filter.win === "object") {
-                        filter.win.show();
-                    }
-                    else {
-                        setTimeout(poll, 10);
-                    }
-                };
-                poll();
+                if (type === "GEOMETRY" || type === "RASTER") {
+                    Ext.MessageBox.show({
+                        title: 'No geometry type on layer',
+                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.ERROR
+                    });
+
+                }
+                else {
+                    var poll = function () {
+                        if (typeof filter.win === "object") {
+                            filter.win.show();
+                        }
+                        else {
+                            setTimeout(poll, 10);
+                        }
+                    };
+                    poll();
+                }
             }
         },
         '-',
@@ -694,8 +697,12 @@ $(document).ready(function () {
 function stopEdit() {
     "use strict";
     layerBeingEditing = null;
-    filter.win.hide();
-    filter.win = false;
+    try {
+        filter.win.hide();
+        filter.win = false;
+    }
+    catch (e) {
+    }
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(true);
     Ext.getCmp('editdeletebutton').setDisabled(true);
