@@ -35,7 +35,6 @@ class Elasticsearch extends \app\inc\Controller
     {
         $get = Input::get();
         $q = $get['q'];
-        $call_back = $get['jsonp_callback'];
         $size = ($get['size']) ? : 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
@@ -51,7 +50,6 @@ class Elasticsearch extends \app\inc\Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         $buffer = curl_exec($ch);
         curl_close($ch);
-        $json = ($call_back) ? $call_back . "(" . $buffer . ")" : $buffer;
         $response['json'] = $buffer;
         return $response;
     }

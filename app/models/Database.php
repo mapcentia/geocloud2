@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+use app\inc\Model;
+
 class Database extends \app\inc\Model
 {
     private function createUser($name)
@@ -136,7 +138,7 @@ class Database extends \app\inc\Model
 
 
         foreach ($rows1 as $row) {
-            $sql = "alter schema {$row["schema_name"]} owner to {$newOwner}";
+            $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
         }
         foreach ($rows2 as $row) {
@@ -160,7 +162,6 @@ class Database extends \app\inc\Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
-            exit();
         }
         return $response;
     }
@@ -168,5 +169,121 @@ class Database extends \app\inc\Model
     static function setDb($db)
     {
         \app\conf\Connection::$param["postgisdb"] = $db;
+    }
+
+    public function renameSchema($schema, $name)
+    {
+        if ($schema == "public") {
+            $response['success'] = false;
+            $response['message'] = "You can't rename 'public'";
+            $response['code'] = 401;
+            return $response;
+        }
+        $newName = Model::toAscii($name, array(), "_");
+        $this->connect();
+        $this->begin();
+        $query = "SELECT * FROM geometry_columns WHERE f_table_schema='{$schema}'";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($res)) {
+            $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$newName}.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
+            $resUpdate = $this->prepare($query);
+            try {
+                $resUpdate->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+        }
+        $query = "ALTER SCHEMA {$schema} RENAME TO {$newName}";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $setObj = new \app\models\Setting();
+        $settings =  $setObj->getArray();
+        $extents = $settings['extents']->$schema;
+        $center = $settings['center']->$schema;
+        $zoom = $settings['zoom']->$schema;
+        if ($extents) {
+            $settings['extents']->$newName = $extents;
+            $settings['center']->$newName = $center;
+            $settings['zoom']->$newName = $zoom;
+            if (\app\conf\App::$param["encryptSettings"]) {
+                $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+                $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('{$pubKey}'))";
+            } else {
+                $sql = "UPDATE settings.viewer SET viewer='" . json_encode($settings) . "'";
+            }
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "{$schema} renamed to {$newName}";
+        $response['data']['name'] = $newName;
+        return $response;
+    }
+
+    public function deleteSchema($schema){
+        if ($schema == "public") {
+            $response['success'] = false;
+            $response['message'] = "You can't delete 'public'";
+            $response['code'] = 401;
+            return $response;
+        }
+        $this->connect();
+        $this->begin();
+        $query = "DROP SCHEMA {$schema} CASCADE";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '{$schema}.%'";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "{$schema} dropped";
+        return $response;
     }
 }

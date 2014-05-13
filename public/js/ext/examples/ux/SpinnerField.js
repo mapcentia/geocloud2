@@ -69,7 +69,7 @@ Ext.ux.form.SpinnerField = Ext.extend(Ext.form.NumberField, {
     }
 });
 
-Ext.reg('spinnerfield', Ext.ux.form.SpinnerField);
+Ext.reg('spinnerfield', 'Ext.ux.form.SpinnerField');
 
 //backwards compat
 Ext.form.SpinnerField = Ext.ux.form.SpinnerField;

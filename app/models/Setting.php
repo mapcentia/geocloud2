@@ -11,7 +11,7 @@ class Setting extends Model
         parent::__construct();
     }
 
-    private function getArray()
+    public function getArray()
     {
         if (\app\conf\App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/secret.key");

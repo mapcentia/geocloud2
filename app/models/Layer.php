@@ -125,5 +125,88 @@ class Layer extends \app\models\Table
         $array[$key] = $value;
         return $array;
     }
+    public function setSchema($tables, $schema)
+    {
+        $this->begin();
+        foreach ($tables as $table) {
+            $bits = explode(".", $table);
+
+            $query = "SELECT * FROM geometry_columns WHERE f_table_schema='{$bits[0]}' AND f_table_name='{$bits[1]}'";
+            $res = $this->prepare($query);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+            while ($row = $this->fetchRow($res)) {
+                // First delete keys from destination schema if they exists
+                $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}'";
+                $resDelete = $this->prepare($query);
+                try {
+                    $resDelete->execute();
+                } catch (\PDOException $e) {
+                    $this->rollback();
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 400;
+                    return $response;
+                }
+
+                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}' WHERE _key_ ='{$bits[0]}.{$bits[1]}.{$row['f_geometry_column']}'";
+                $resUpdate = $this->prepare($query);
+                try {
+                    $resUpdate->execute();
+                } catch (\PDOException $e) {
+                    $this->rollback();
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 400;
+                    return $response;
+                }
+            }
+            $query = "ALTER TABLE {$table} SET SCHEMA {$schema}";
+            $res = $this->prepare($query);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = sizeof($tables)." tables moved to {$schema}";
+        return $response;
+    }
+
+    public function delete($tables)
+    {
+        $this->begin();
+        foreach ($tables as $table) {
+            $bits = explode(".", $table);
+            $query = "DROP TABLE \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
+            $res = $this->prepare($query);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = sizeof($tables)." tables deleted";
+        return $response;
+    }
 
 }

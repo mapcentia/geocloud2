@@ -43,6 +43,8 @@ CREATE TABLE geometry_columns_join (
     bitmapsource VARCHAR(255)
 );
 
+ALTER TABLE geometry_columns_join ADD CONSTRAINT geometry_columns_join_key UNIQUE (_key_);
+
 CREATE TABLE viewer (
     viewer text
 );

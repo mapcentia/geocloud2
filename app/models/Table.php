@@ -100,6 +100,7 @@ class Table extends Model
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
+        $response['data'] = array();
         $sql = "SELECT {$fields} FROM {$this->table}";
 
         if ($whereClause) {
@@ -268,7 +269,7 @@ class Table extends Model
                 if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
                     $safeColumn = "_" . $safeColumn;
                 }
-                $sql .= "ALTER TABLE \"{$this->table}\" RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
+                $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
             }
@@ -422,52 +423,6 @@ class Table extends Model
             $nowArray = $notArray; // Input was array. Return it unaltered
         }
         return $nowArray;
-    }
-
-    public function setSchema($table, $schema)
-    {
-        $bits = explode(".", $table);
-        $this->begin();
-        $query = "SELECT * FROM geometry_columns WHERE f_table_schema='{$bits[0]}' AND f_table_name='{$bits[1]}'";
-        $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
-        while ($row = $this->fetchRow($res)) {
-            $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}' WHERE _key_ ='{$bits[0]}.{$bits[1]}.{$row['f_geometry_column']}'";
-            //echo $query;
-            $res = $this->prepare($query);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
-        }
-        $query = "ALTER TABLE {$table} SET SCHEMA {$schema}";
-        $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
-        $this->commit();
-        $response['success'] = true;
-        $response['message'] = "{$table} moved to {$schema}";
-        return $response;
     }
 }
 

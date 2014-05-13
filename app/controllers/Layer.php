@@ -16,12 +16,12 @@ class Layer extends \app\inc\Controller
 
     public function get_records()
     {
-        return Response::json($this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "' ORDER BY sort_id"));
+        return $this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "' ORDER BY sort_id");
     }
 
     public function get_groups()
     {
-        return Response::json($this->response = $this->table->getGroupBy("layergroup"));
+        return $this->response = $this->table->getGroupBy("layergroup");
     }
 
     public function put_records()
@@ -31,6 +31,11 @@ class Layer extends \app\inc\Controller
         $data["data"]->editable = ($data["data"]->editable) ? : "0";
         return $this->table->updateRecord($data, "_key_");
     }
+    public function delete_records(){
+        $input = json_decode(Input::get());
+        print_r($input);
+        return $this->table->delete($input->data);
+    }
 
     public function get_columns()
     {
@@ -39,17 +44,17 @@ class Layer extends \app\inc\Controller
 
     public function get_columnswithkey()
     {
-        return Response::json($this->table->getColumnsForExtGridAndStore(true));
+        return $this->table->getColumnsForExtGridAndStore(true);
     }
 
     public function get_cartomobile()
     {
-        return Response::json($this->table->getCartoMobileSettings(Input::getPath()->part(4)));
+        return $this->table->getCartoMobileSettings(Input::getPath()->part(4));
     }
 
     public function put_cartomobile()
     {
-        return Response::json($this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5)));
+        return $this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     public function getValueFromKey($_key_, $column)
@@ -58,6 +63,6 @@ class Layer extends \app\inc\Controller
     }
     public function put_schema(){
         $input = json_decode(Input::get());
-        return $this->table->setSchema($input->data->table,$input->data->schema);
+        return $this->table->setSchema($input->data->tables,$input->data->schema);
     }
 }

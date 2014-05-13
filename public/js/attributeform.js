@@ -22,7 +22,6 @@ attributeForm.init = function (layer, geomtype) {
                         attributeForm.attributeStoreCopy.add(newRecord);
                     }
                 }, this);
-                //console.log(attributeForm.attributeStoreCopy);
                 filter.filterBuilder = new gxp.FilterBuilder({
                     attributes: attributeForm.attributeStoreCopy,
                     allowGroups: false

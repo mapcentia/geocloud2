@@ -40,7 +40,7 @@ class Table extends \app\inc\Controller
 
     public function put_columns()
     {
-        return Response::json($this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5)));
+        return $this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     public function post_columns()

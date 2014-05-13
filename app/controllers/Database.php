@@ -2,7 +2,6 @@
 namespace app\controllers;
 
 use \app\inc\Input;
-use \app\inc\Response;
 use \app\conf\Connection;
 
 class Database extends \app\inc\Controller
@@ -18,18 +17,28 @@ class Database extends \app\inc\Controller
 
     public function get_schemas()
     {
-        return Response::json($this->db->listAllSchemas());
+        return $this->db->listAllSchemas();
     }
 
     public function post_schemas()
     {
-        return Response::json($this->db->createSchema(Input::get('schema')));
+        return $this->db->createSchema(Input::get('schema'));
+    }
+
+    public function put_schema()
+    {
+        return $this->db->renameSchema(Connection::$param['postgisschema'], json_decode(Input::get())->data->name);
+    }
+
+    public function delete_schema()
+    {
+        return $this->db->deleteSchema(Connection::$param['postgisschema']);
     }
 
     public function get_exist()
     {
         \app\models\Database::setDb("postgres");
         $this->db = new \app\models\Database();
-        return Response::json($this->db->doesDbExist(Input::getPath()->part(4)));
+        return $this->db->doesDbExist(Input::getPath()->part(4));
     }
 }

@@ -22,7 +22,7 @@ class Twitter extends Model
     public function search($search, $store = false, $schema = null)
     {
         $schema = ($schema) ? : "public";
-        $sql = file_get_contents(\app\conf\App::$param['path'] . "public/migration/tweets.sql");
+        $sql = file_get_contents(\app\conf\App::$param['path'] . "app/conf/migration/tweets.sql");
 
         if ($store) {
             // Using native PG driver for multi commands
@@ -107,7 +107,7 @@ class Twitter extends Model
         }
         $response['success'] = true;
         $response['type'] = "FeatureCollection";
-        $response['features'] = $features;
+        $response['features'] = "";
         return ($response);
     }
 }

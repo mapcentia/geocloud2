@@ -10,7 +10,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, initExtent = null, App = new Ext.App({});
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({});
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -147,7 +147,7 @@ $(window).ready(function () {
         frame: false,
         border: false,
         sm: new Ext.grid.RowSelectionModel({
-            singleSelect: true
+            singleSelect: false
         }),
         cm: new Ext.grid.ColumnModel({
             defaults: {
@@ -295,17 +295,21 @@ $(window).ready(function () {
         tbar: [
             {
                 text: '<i class="icon-camera btn-gc"></i> CartoMobile',
-                handler: onEditCartomobile
+                handler: onEditCartomobile,
+                id: 'cartomobile-btn',
+                disabled: true
+            },
+            {
+                text: '<i class="icon-cog btn-gc"></i> Advanced',
+                handler: onEditMoreSettings,
+                id: 'advanced-btn',
+                disabled: true
             },
             {
                 text: '<i class="icon-lock btn-gc"></i> Services',
                 handler: onGlobalSettings
-            },
-            {
-                text: '<i class="icon-cog btn-gc"></i> Advanced',
-                handler: onEditMoreSettings
-            },
 
+            },
             {
                 text: '<i class="icon-remove btn-g"></i> Clear all tile cache',
                 handler: function () {
@@ -343,17 +347,43 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-arrow-right btn-gc"></i> Move layer',
+                text: '<i class="icon-arrow-right btn-gc"></i> Move layers',
+                disabled: true,
+                id: 'movelayer-btn',
                 handler: function () {
                     onMove();
                 }
             },
             '-',
             {
-                text: '<i class="icon-trash btn-gc"></i> Delete layer',
-                handler: onDelete
+                text: '<i class="icon-trash btn-gc"></i> Delete layers',
+                disabled: true,
+                id: 'deletelayer-btn',
+                handler: function () {
+                    onDelete();
+                }
             },
             '-',
+            {
+                text: '<i class="icon-th btn-gc"></i> Schema',
+                menu: new Ext.menu.Menu({
+                    items: [
+                        {
+                            text: 'Rename schema',
+                            handler: function () {
+                                onSchemaRename();
+                            }
+                        },
+                        {
+                            text: 'Delete schema',
+                            handler: function () {
+                                onSchemaDelete();
+                            }
+                        }
+
+                    ]
+                })
+            },
             new Ext.form.ComboBox({
                 id: "schemabox",
                 store: schemasStore,
@@ -409,17 +439,43 @@ $(window).ready(function () {
         window.location = "/store/" + screenName + "/" + e.value;
     });
     function onDelete() {
-        var record = grid.getSelectionModel().getSelected();
-        if (!record) {
+        var records = grid.getSelectionModel().getSelections();
+        if (records.length === 0) {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
-        Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
+        Ext.MessageBox.confirm('Confirm', 'Are you sure you want to delete ' + records.length + ' tables?', function (btn) {
             if (btn === "yes") {
-                proxy.api.destroy.url = "/controllers/table/records/" + record.data.f_table_schema + "." + record.data.f_table_name;
-                grid.store.remove(record);
-                var s = Ext.getCmp("structurePanel");
-                s.removeAll();
+                var tables = [];
+                Ext.iterate(records, function (v) {
+                    tables.push(v.data.f_table_schema + "." + v.get("f_table_name"));
+                });
+                var param = {
+                    data: tables
+                };
+                param = Ext.util.JSON.encode(param);
+                Ext.Ajax.request({
+                    url: '/controllers/layer/records',
+                    method: 'delete',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    params: param,
+                    success: function () {
+                        store.reload();
+                        App.setAlert(App.STATUS_OK, records.length + " layers deleted");
+                    },
+                    failure: function (response) {
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: eval('(' + response.responseText + ')').message,
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                });
             } else {
                 return false;
             }
@@ -511,14 +567,13 @@ $(window).ready(function () {
     };
 
     onMove = function (btn, ev) {
-        var record = grid.getSelectionModel().getSelected();
-        if (!record) {
+        var records = grid.getSelectionModel().getSelections();
+        if (records.length === 0) {
             App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
             return false;
         }
-        var r = record;
         var winMoveTable = new Ext.Window({
-            title: "Move '" + record.get("f_table_name") + "' to another schema",
+            title: "Move " + records.length + " selected to another schema",
             modal: true,
             layout: 'fit',
             width: 270,
@@ -540,7 +595,6 @@ $(window).ready(function () {
                             items: [
                                 {
                                     xtype: 'container',
-
                                     items: [
                                         {
                                             xtype: "combo",
@@ -568,7 +622,11 @@ $(window).ready(function () {
                                         var f = Ext.getCmp('moveform');
                                         if (f.form.isValid()) {
                                             var values = f.form.getValues();
-                                            values.table = record.get("f_table_schema") + "." + record.get("f_table_name");
+                                            values.tables = [];
+                                            Ext.iterate(records, function (v) {
+                                                values.tables.push(v.data.f_table_schema + "." + v.get("f_table_name"));
+                                            });
+
                                             var param = {
                                                 data: values
                                             };
@@ -583,7 +641,7 @@ $(window).ready(function () {
                                                 success: function () {
                                                     store.reload();
                                                     winMoveTable.hide(this);
-                                                    App.setAlert(App.STATUS_OK, "Layer moved");
+                                                    App.setAlert(App.STATUS_OK, "Layers moved");
                                                 },
                                                 failure: function (response) {
                                                     Ext.MessageBox.show({
@@ -613,91 +671,139 @@ $(window).ready(function () {
         winMoveTable.show(this);
     };
 
-    function onAddSchema(btn, ev) {
-        winAddSchema = new Ext.Window({
-            title: 'Add new schema',
-            height: 170,
+    onSchemaRename = function (btn, ev) {
+        var winSchemaRename = new Ext.Window({
+            title: "Rename schema '" + schema + "'",
             modal: true,
-            items: [new Ext.Panel({
-                layout: 'border',
-                width: 320,
-                height: 150,
-                closeAction: 'close',
-                border: false,
-                frame: true,
-                items: [new Ext.FormPanel({
-                    method: 'post',
-                    labelWidth: 1,
-                    frame: false,
-                    border: false,
-                    autoHeight: false,
-                    region: 'center',
-                    id: "schemaform",
-
+            layout: 'fit',
+            width: 270,
+            height: 80,
+            closeAction: 'close',
+            plain: true,
+            items: [
+                {
                     defaults: {
-                        allowBlank: false
+                        border: false
                     },
+                    layout: 'hbox',
                     items: [
                         {
-                            width: 293,
-                            xtype: 'textfield',
-                            name: 'schema',
-                            emptyText: 'Name of new schema'
-                        }
-                    ],
-                    buttons: [
-                        {
-                            text: '<i class="icon-plus btn-gc"></i> Add new schema',
-                            handler: function () {
-                                var f = Ext.getCmp('schemaform');
-                                if (f.form.isValid()) {
-                                    f.getForm().submit({
-                                        url: '/controllers/database/schemas',
-                                        submitEmptyText: false,
-                                        waitMsg: 'Creating schema',
-                                        success: function () {
-                                            schemasStore.reload();
-                                            App.setAlert(App.STATUS_OK, "New schema created");
-                                        },
-                                        failure: function (form, action) {
-                                            var result = action.result;
-                                            App.setAlert(App.STATUS_ERROR, result.message);
+                            xtype: "form",
+                            id: "schemaRenameForm",
+                            layout: "form",
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'container',
+                                    items: [
+                                        {
+                                            xtype: "textfield",
+                                            name: 'name',
+                                            emptyText: 'New name',
+                                            allowBlank: false,
+                                            width: 150
                                         }
-                                    });
-                                } else {
-                                    var s = '';
-                                    Ext.iterate(schemaForm.form.getValues(), function (key, value) {
-                                        s += String.format("{0} = {1}<br />", key, value);
-                                    }, this);
+                                    ]
                                 }
-                            }
+                            ]
+                        },
+                        {
+                            layout: 'form',
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Rename',
+                                    handler: function () {
+                                        var f = Ext.getCmp('schemaRenameForm');
+                                        if (f.form.isValid()) {
+                                            var values = f.form.getValues();
+                                            var param = {
+                                                data: values
+                                            };
+                                            param = Ext.util.JSON.encode(param);
+                                            Ext.Ajax.request({
+                                                url: '/controllers/database/schema',
+                                                method: 'put',
+                                                headers: {
+                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                },
+                                                params: param,
+                                                success: function (response) {
+                                                    var data = eval('(' + response.responseText + ')');
+                                                    window.location = "/store/" + screenName + "/" + data.data.name;
+                                                },
+                                                failure: function (response) {
+                                                    Ext.MessageBox.show({
+                                                        title: 'Failure',
+                                                        msg: eval('(' + response.responseText + ')').message,
+                                                        buttons: Ext.MessageBox.OK,
+                                                        width: 400,
+                                                        height: 300,
+                                                        icon: Ext.MessageBox.ERROR
+                                                    });
+                                                }
+                                            });
+                                        } else {
+                                            var s = '';
+                                            Ext.iterate(f.form.getValues(), function (key, value) {
+                                                s += String.format("{0} = {1}<br />", key, value);
+                                            }, this);
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     ]
-                }), new Ext.Panel({
-                    region: "south",
-                    border: false,
-                    bodyStyle: "padding : 7px",
-                    height: 50,
-                    html: "Schemas are used to organize tables into logical groups to make them more manageable."
-                })]
-
-            })]
+                }
+            ]
         });
-        winAddSchema.show(this);
-    }
+        winSchemaRename.show(this);
+    };
+
+    onSchemaDelete = function (btn, ev) {
+        Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that? All layers in this schema will be deleted!', function (btn) {
+            if (btn === "yes") {
+                Ext.Ajax.request({
+                    url: '/controllers/database/schema',
+                    method: 'delete',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    success: function (response) {
+                        window.location = "/store/" + screenName + "/public";
+                    },
+                    failure: function (response) {
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: eval('(' + response.responseText + ')').message,
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                });
+            } else {
+                return false;
+            }
+        });
+    };
 
     function onEdit() {
-        var record = grid.getSelectionModel().getSelected();
-        if (!record) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
-            return false;
+        var records = grid.getSelectionModel().getSelections(),
+            s = Ext.getCmp("structurePanel"), detailPanel = Ext.getCmp('detailPanel');
+        if (records.length === 1) {
+            bookTpl.overwrite(detailPanel.body, records[0].data);
+            tableStructure.grid = null;
+            tableStructure.init(records[0], screenName);
+            s.removeAll();
+            s.add(tableStructure.grid);
+            s.doLayout();
+        } else {
+            s.removeAll();
+            s.doLayout();
         }
-        tableStructure.grid = null;
-        tableStructure.init(record, screenName);
-        var s = Ext.getCmp("structurePanel");
-        s.removeAll();
-        s.add(tableStructure.grid);
-        s.doLayout();
     }
 
     function onEditCartomobile(btn, ev) {
@@ -1040,8 +1146,19 @@ $(window).ready(function () {
         }]
     });
     grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
-        var detailPanel = Ext.getCmp('detailPanel');
-        bookTpl.overwrite(detailPanel.body, r.data);
+        var records = sm.getSelections();
+        if (records.length === 1) {
+            Ext.getCmp('cartomobile-btn').setDisabled(false);
+            Ext.getCmp('advanced-btn').setDisabled(false);
+        }
+        else {
+            Ext.getCmp('cartomobile-btn').setDisabled(true);
+            Ext.getCmp('advanced-btn').setDisabled(true);
+        }
+        if (records.length > 0) {
+            Ext.getCmp('deletelayer-btn').setDisabled(false);
+            Ext.getCmp('movelayer-btn').setDisabled(false);
+        }
         onEdit();
     });
 
@@ -1446,3 +1563,4 @@ $(window).ready(function () {
         }
     };
 });
+

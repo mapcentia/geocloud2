@@ -76,7 +76,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
 });
 
 // register ptype. Deprecate. Remove in 4.0
-Ext.preg('checkcolumn', Ext.ux.grid.CheckColumn);
+Ext.preg('checkcolumn', 'Ext.ux.grid.CheckColumn');
 
 // backwards compat. Remove in 4.0
 Ext.grid.CheckColumn = Ext.ux.grid.CheckColumn;
