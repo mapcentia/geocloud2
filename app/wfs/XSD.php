@@ -66,9 +66,11 @@ foreach ($tables as $table) {
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
             if ($def->geotype) {
+                if ($def->geotype == "LINE") {
+                    $def->geotype = "LINESTRING";
+                }
                 $typeRow['type'] = "MULTI".$def->geotype;
             }
-
             switch ($typeRow['type']) {
                 case "POINT":
                     $atts["type"] = "gml:PointPropertyType";
