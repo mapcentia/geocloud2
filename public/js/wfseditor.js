@@ -426,7 +426,7 @@ $(document).ready(function () {
                     gc2.addGeoJsonStore(qstore[index]);
                     var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                     if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                        sql = "SELECT *,round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) as afstand FROM " + value + " WHERE round(ST_Distance(ST_Transform(the_geom,3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance + " ORDER BY afstand LIMIT 1";
+                        sql = "SELECT *,round(ST_Distance(ST_Transform(" + f_geometry_column + ",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) as afstand FROM " + value + " WHERE round(ST_Distance(ST_Transform(" + f_geometry_column + ",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance + " ORDER BY afstand LIMIT 1";
                     }
                     else {
                         sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\") LIMIT 1";
