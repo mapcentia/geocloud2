@@ -426,7 +426,7 @@ $(document).ready(function () {
                                 );
                                 hit = true;
                             }
-                            else {
+                            if (!hit) {
                                 try {
                                     queryWin.hide();
                                 }
