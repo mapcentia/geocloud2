@@ -34,6 +34,12 @@ class Layer extends \app\models\Table
                 $arr = array();
                 $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
                 foreach ($row as $key => $value) {
+                    if ($key == "type" && $value == "GEOMETRY") {
+                        $def = json_decode($row['def']);
+                        if (($def->geotype) && $def->geotype != "Default") {
+                            $value = "MULTI" . $def->geotype;
+                        }
+                    }
                     $value = ($key == "layergroup" && (!$value))? "Default group":$value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
