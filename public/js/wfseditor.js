@@ -384,17 +384,31 @@ $(document).ready(function () {
                                                         text: "<i class='icon-pencil btn-gc'></i> Edit feature #" + pkeyValue,
                                                         handler: function () {
 
-                                                            var filter = new OpenLayers.Filter.Comparison({
-                                                                type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                                                                property: "\"" + pkey + "\"",
-                                                                value: pkeyValue
-                                                            });
-                                                            attributeForm.init(layerTitel, geoField);
-                                                            startWfsEdition(layerTitel, geoField, filter, true);
-                                                            Ext.iterate(qstore, function (v) {
-                                                                v.reset();
-                                                            });
-                                                            queryWin.hide();
+                                                            if (geoType === "GEOMETRY" || geoType === "RASTER") {
+                                                                Ext.MessageBox.show({
+                                                                    title: 'No geometry type on layer',
+                                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                                    buttons: Ext.MessageBox.OK,
+                                                                    width: 400,
+                                                                    height: 300,
+                                                                    icon: Ext.MessageBox.ERROR
+                                                                });
+                                                                return false;
+
+                                                            }
+                                                            else {
+                                                                var filter = new OpenLayers.Filter.Comparison({
+                                                                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                                    property: "\"" + pkey + "\"",
+                                                                    value: pkeyValue
+                                                                });
+                                                                attributeForm.init(layerTitel, geoField);
+                                                                startWfsEdition(layerTitel, geoField, filter, true);
+                                                                Ext.iterate(qstore, function (v) {
+                                                                    v.reset();
+                                                                });
+                                                                queryWin.hide();
+                                                            }
                                                         }
                                                     }
                                                 ],
