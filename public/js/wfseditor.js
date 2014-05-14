@@ -11,7 +11,7 @@ Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData;
 function startWfsEdition(layerName, geomField, wfsFilter, single) {
     'use strict';
-    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable");
+    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
     layerBeingEditing = layerName;
     try {
         drawControl.deactivate();
@@ -75,20 +75,20 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
                 fillColor: "#000000",
                 fillOpacity: 0.0,
                 pointRadius: 5,
-                strokeColor: "#00FF00",
+                strokeColor: "#0000FF",
                 strokeWidth: 3,
                 strokeOpacity: 0.7,
                 graphicZIndex: 3
             }
         ),
         temporary: new OpenLayers.Style({
-                fillColor: "#0000FF",
-                fillOpacity: 0.0,
+                fillColor: "#FFFFFF",
+                fillOpacity: 0.7,
                 pointRadius: 5,
                 strokeColor: "#0000FF",
-                strokeWidth: 2,
+                strokeWidth: 1,
                 strokeOpacity: 0.7,
-                graphicZIndex: 3
+                graphicZIndex: 1
             }
         ),
         select: new OpenLayers.Style({
@@ -119,10 +119,12 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
     layer.events.register("loadend", layer, function () {
         var count = layer.features.length;
         window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
-        map.zoomToExtent(layer.getDataExtent());
-        if (single) {
-
+        if (layer.features.length > 0) {
+            map.zoomToExtent(layer.getDataExtent());
+        }
+        if (singleEditing) {
             map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
+            singleEditing = false;
         }
     });
     layer.events.register("loadstart", layer, function () {
