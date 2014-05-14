@@ -14,7 +14,7 @@ var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWM
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
-    var winAdd, winAddSchema, winCartomobile, winMoreSettings, winGlobalSettings, fieldsForStore = {}, settings, groups, groupsStore;
+    var winAdd, winCartomobile, winMoreSettings, winGlobalSettings, fieldsForStore = {}, settings, groups, groupsStore;
 
     $.ajax({
         url: '/controllers/layer/columnswithkey',
@@ -842,7 +842,7 @@ $(window).ready(function () {
     }
 
     onEditWMSClasses = function (e) {
-        var record, markup;
+        var record = null, markup;
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
             if (row._key_ === e) {
@@ -914,6 +914,7 @@ $(window).ready(function () {
         a7.doLayout();
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
+        updateLegend();
     };
 
     function onEditMoreSettings(btn, ev) {
