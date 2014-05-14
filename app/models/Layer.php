@@ -32,9 +32,11 @@ class Layer extends \app\models\Table
         if (!$this->PDOerror) {
             while ($row = $this->fetchRow($result, "assoc")) {
                 $arr = array();
+                $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
                 foreach ($row as $key => $value) {
                     $value = ($key == "layergroup" && (!$value))? "Default group":$value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
+                    $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 }
                 $response['data'][] = $arr;
             }

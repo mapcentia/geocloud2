@@ -1498,13 +1498,14 @@ $(window).ready(function () {
         items: [tabs]
     });
 
-    writeFiles = function (clearCachedLayer) {
+    writeFiles = function (clearCachedLayer, map) {
         $.ajax({
             url: '/controllers/mapfile',
             success: function (response) {
                 updateLegend();
+                document.getElementById("wfseditor").contentWindow.window.getMetaData();
                 if (clearCachedLayer) {
-                    clearTileCache(clearCachedLayer);
+                    clearTileCache(clearCachedLayer, map);
                 }
             }
         });
@@ -1519,7 +1520,7 @@ $(window).ready(function () {
          }
          });*/
     };
-    clearTileCache = function (layer) {
+    clearTileCache = function (layer, map) {
         $.ajax({
             url: '/controllers/tilecache/index/' + layer,
             async: true,
@@ -1528,7 +1529,11 @@ $(window).ready(function () {
             success: function (response) {
                 if (response.success === true) {
                     App.setAlert(App.STATUS_NOTICE, response.message);
-                    var l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
+                    var l;
+                    l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
+                    if (l === undefined) { // If called from iframe
+                        l = map.getLayersByName(layer)[0];
+                    }
                     l.clearGrid();
                     var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
