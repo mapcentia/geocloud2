@@ -277,6 +277,8 @@ $(document).ready(function () {
         width: 400,
         height: 400,
         closeAction: 'hide',
+        x: 100,
+        y: 100,
         plain: true,
         listeners: {
             hide: {
