@@ -82,20 +82,20 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
             }
         ),
         temporary: new OpenLayers.Style({
-                fillColor: "#00FF00",
+                fillColor: "#0000FF",
                 fillOpacity: 0.0,
                 pointRadius: 5,
-                strokeColor: "#00FF00",
-                strokeWidth: 3,
+                strokeColor: "#0000FF",
+                strokeWidth: 2,
                 strokeOpacity: 0.7,
                 graphicZIndex: 3
             }
         ),
         select: new OpenLayers.Style({
-                fillColor: "#00FF00",
+                fillColor: "#000000",
                 fillOpacity: 0.2,
-                pointRadius: 5,
-                strokeColor: "#00FF00",
+                pointRadius: 6,
+                strokeColor: "#0000FF",
                 strokeWidth: 3,
                 strokeOpacity: 1,
                 graphicZIndex: 3
@@ -119,7 +119,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
     layer.events.register("loadend", layer, function () {
         var count = layer.features.length;
         window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
-        //map.zoomToExtent(layer.getDataExtent());
+        map.zoomToExtent(layer.getDataExtent());
         if (single) {
 
             map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
