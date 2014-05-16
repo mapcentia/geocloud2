@@ -344,7 +344,7 @@ class Mapfile extends \app\inc\Controller
                             $dataSql = $row['data'];
                         }
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
-                        echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
+                        //echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
