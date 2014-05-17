@@ -224,7 +224,7 @@ class Model
             case "PDO" :
                 try {
 
-                    $this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost}", "{$this->postgisuser}", "{$this->postgispw}");
+                    $this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost};port={$this->postgisport}", "{$this->postgisuser}", "{$this->postgispw}");
                     $this->execQuery("set client_encoding='UTF8'", "PDO");
                 } catch (\PDOException $e) {
                     $this->db = NULL;
