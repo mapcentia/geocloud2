@@ -8,6 +8,7 @@ class Connection
         "postgisdb" => "postgres",
         "postgisuser" => "postgres",
         "postgisport" => "5432",
-        "postgispw" => "1234"
+        "postgispw" => "1234",
+        "pgbouncer" => false,
     );
 }
