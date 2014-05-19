@@ -344,7 +344,7 @@ class Mapfile extends \app\inc\Controller
                             $dataSql = $row['data'];
                         }
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
-                        //echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
+                        echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
@@ -354,7 +354,7 @@ class Mapfile extends \app\inc\Controller
                     ?>
                     TYPE <?php echo $type . "\n"; ?>
                     CONNECTIONTYPE POSTGIS
-                    CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> options='-c client_encoding=UTF8'"
+                    CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'"?>"
 
                 <?php } ?>
 
