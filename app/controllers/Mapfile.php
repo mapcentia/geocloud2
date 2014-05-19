@@ -325,16 +325,6 @@ class Mapfile extends \app\inc\Controller
                 } else {
                     if ($type != "RASTER") {
                         if (!$row['data']) {
-                            /*$fieldsArr = array();
-                            $arrayWithFields = $postgisObject->getMetaData($row['f_table_schema'] . "." . $row['f_table_name']);
-                            foreach ($arrayWithFields as $key => $arr) {
-                                if ($arr['type'] == "geometry") {
-                                    $fieldsArr[] = "\\\"{$key}\\\" as " . strtolower($key);
-                                } else {
-                                    $fieldsArr[] = "\\\"{$key}\\\"";
-                                }
-                            }
-                            $dataSql = "SELECT " . implode(",", $fieldsArr) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";*/
                             if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
                                 $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             } else {
@@ -344,20 +334,21 @@ class Mapfile extends \app\inc\Controller
                             $dataSql = $row['data'];
                         }
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
-                        //echo "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n";
+                        ?>
+                        CONNECTIONTYPE POSTGIS
+                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'" ?>"
+                    <?php
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
+                        echo "PROCESSING \"CLOSE_CONNECTION=NORMAL\" \n";
                     }
                     ?>
                     TYPE <?php echo $type . "\n"; ?>
-                    CONNECTIONTYPE POSTGIS
-                    CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'"?>"
 
                 <?php } ?>
-
                 #CLASSITEM
                 <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
 
