@@ -29,13 +29,13 @@ class Mapfile extends \app\inc\Controller
         UNITS METERS
         INTERLACE OFF
         OUTPUTFORMAT
-            NAME "png"
-            DRIVER AGG/PNG
-            MIMETYPE "image/png"
-            IMAGEMODE RGBA
-            EXTENSION "png"
-            TRANSPARENT ON
-            FORMATOPTION "GAMMA=0.75"
+        NAME "png"
+        DRIVER AGG/PNG
+        MIMETYPE "image/png"
+        IMAGEMODE RGBA
+        EXTENSION "png"
+        TRANSPARENT ON
+        FORMATOPTION "GAMMA=0.75"
         END
         #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
         #DEBUG 5
@@ -385,7 +385,7 @@ class Mapfile extends \app\inc\Controller
                 "gml_include_items" "all"
                 "wms_include_items" "all"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-                "gml_the_geom_type" "<?php echo strtolower($type); ?>"
+                "gml_the_geom_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
                 PROJECTION
