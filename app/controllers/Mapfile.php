@@ -29,13 +29,13 @@ class Mapfile extends \app\inc\Controller
         UNITS METERS
         INTERLACE OFF
         OUTPUTFORMAT
-        NAME "png"
-        DRIVER AGG/PNG
-        MIMETYPE "image/png"
-        IMAGEMODE RGBA
-        EXTENSION "png"
-        TRANSPARENT ON
-        FORMATOPTION "GAMMA=0.75"
+            NAME "png"
+            DRIVER AGG/PNG
+            MIMETYPE "image/png"
+            IMAGEMODE RGBA
+            EXTENSION "png"
+            TRANSPARENT ON
+            FORMATOPTION "GAMMA=0.75"
         END
         #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
         #DEBUG 5
@@ -343,7 +343,7 @@ class Mapfile extends \app\inc\Controller
                         if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
-                        echo "PROCESSING \"CLOSE_CONNECTION=NORMAL\" \n";
+                        echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
                     }
                     ?>
                     TYPE <?php echo $type . "\n"; ?>

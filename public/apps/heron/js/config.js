@@ -22,6 +22,39 @@ MapCentia.setup = function () {
         schema = uri[4],
         url = '/wms/' + db + '/tilecache/' + schema;
 
+    $.ajax({
+        url: '/api/v1/setting/' + db,
+        async: false,
+        dataType: 'json',
+        success: function (response) {
+            if (typeof response.data.extents === "object") {
+                if (typeof response.data.center[schema] === "object") {
+                    Heron.options.zoom = response.data.zoom[schema];
+                    Heron.options.center = response.data.center[schema];
+                }
+            }
+        }
+    }); // Ajax call end
+
+    Heron.options.map.settings = {
+        projection: 'EPSG:900913',
+        displayProjection: new OpenLayers.Projection("EPSG:4326"),
+        units: 'm',
+        maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+        center: Heron.options.center,
+        maxResolution: 'auto',
+        //xy_precision: 5,
+        zoom: Heron.options.zoom + 1, // Why?
+        theme: null,
+        permalinks: {
+            /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
+            paramPrefix: 'map',
+            /** Encodes values of permalink parameters ? default false*/
+            encodeType: false,
+            /** Use Layer names i.s.o. OpenLayers-generated Layer Id's in Permalinks */
+            prettyLayerNames: true
+        }
+    };
     Heron.options.map.layers = [
         [
             "OpenLayers.Layer.Bing",
@@ -58,7 +91,18 @@ MapCentia.setup = function () {
             {
                 isBaseLayer: true
             }
-        ]
+        ],
+        new OpenLayers.Layer.Image(
+            "None",
+            Ext.BLANK_IMAGE_URL,
+            OpenLayers.Bounds.fromString(Heron.options.map.settings.maxExtent),
+            new OpenLayers.Size(10, 10),
+            {resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                1.19432856696, 0.597164283478, 0.298582141739], isBaseLayer: true, visibility: false, displayInLayerSwitcher: true, transitionEffect: 'resize'}
+        ),
+        new OpenLayers.Layer.OSM("osm")
     ];
     $.ajax({
         url: "/api/v1/meta/" + db + "/" + schema,
@@ -133,6 +177,16 @@ MapCentia.setup = function () {
                             nodeType: "gx_layer",
                             layer: "Bing Aerial With Labels",
                             text: 'Bing Aerial With Labels'
+                        },
+                        {
+                            nodeType: "gx_layer",
+                            layer: "osm",
+                            text: 'Osm'
+                        },
+                        {
+                            nodeType: "gx_layer",
+                            layer: "None",
+                            text: 'None'
                         }
                     ]
                 },
@@ -144,19 +198,6 @@ MapCentia.setup = function () {
             ];
         }
     });
-    $.ajax({
-        url: '/api/v1/setting/' + db,
-        async: false,
-        dataType: 'json',
-        success: function (response) {
-            if (typeof response.data.extents === "object") {
-                if (typeof response.data.center[schema] === "object") {
-                    Heron.options.zoom = response.data.zoom[schema];
-                    Heron.options.center = response.data.center[schema];
-                }
-            }
-        }
-    }); // Ajax call end
 };
 MapCentia.init = function () {
     "use strict";
@@ -165,25 +206,7 @@ MapCentia.init = function () {
 
     Ext.BLANK_IMAGE_URL = 'http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
 
-    Heron.options.map.settings = {
-        projection: 'EPSG:900913',
-        displayProjection: new OpenLayers.Projection("EPSG:4326"),
-        units: 'm',
-        maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
-        center: Heron.options.center,
-        maxResolution: 'auto',
-        //xy_precision: 5,
-        zoom: Heron.options.zoom + 1, // Why?
-        theme: null,
-        permalinks: {
-            /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
-            paramPrefix: 'map',
-            /** Encodes values of permalink parameters ? default false*/
-            encodeType: false,
-            /** Use Layer names i.s.o. OpenLayers-generated Layer Id's in Permalinks */
-            prettyLayerNames: true
-        }
-    };
+
     Heron.options.bookmarks = [];
     Heron.options.exportFormats = ['CSV', 'GMLv2', 'Shapefile',
         {
