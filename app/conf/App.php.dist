@@ -25,6 +25,9 @@ class App
         // Map attribution
         "mapAttribution" => "Powered by <a href=\"http://geocloud.mapcentia.com\">MapCentia</a> ",
 
+        // Master password for admin. MD5 hashed.
+        "masterPw" => null,
+
         // Available baselayer
         "baseLayers" => array(
             array("id" => "osm", "name" => "OSM"),

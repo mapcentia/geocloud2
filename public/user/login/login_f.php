@@ -23,7 +23,7 @@ function UserIDCheck($sValue, &$oStatus)
     $oStatus->bValid = false;
     $oStatus->sErrMsg = "User ID '$sValue' already exist";
 
-    if ($sPassword == Setting::encryptPw("hawk2000")) {
+    if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
         $sQuery = "SELECT * FROM {$sTable} WHERE screenname = :sUserID";
         $res = $postgisObject->prepare($sQuery);
         $res->execute(array(":sUserID" => $sUserID));
