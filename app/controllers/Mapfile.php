@@ -314,6 +314,7 @@ class Mapfile extends \app\inc\Controller
                     TYPE RASTER
                     CONNECTIONTYPE WMS
                     CONNECTION "<?php echo $row['wmssource']; ?>"
+                    PROCESSING "RESAMPLE=AVERAGE"
 
                 <?php
                 } elseif ($row['bitmapsource']) {
