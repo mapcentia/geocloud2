@@ -28,6 +28,9 @@ class App
         // Master password for admin. MD5 hashed.
         "masterPw" => null,
 
+        // Render backend for tile cache ["wms" | "python"]
+        "tileRenderBackend" => "wms",
+
         // Available baselayer
         "baseLayers" => array(
             array("id" => "osm", "name" => "OSM"),
