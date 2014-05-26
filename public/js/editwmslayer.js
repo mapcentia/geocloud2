@@ -183,7 +183,7 @@ wmsLayer.init = function (record) {
             forceFit: true,
             scrollOffset: 2 // the grid will never have scrollbars
         },
-        bbar: [
+        tbar: [
             {
                 text: '<i class="icon-ok btn-gc"></i> Update',
                 //iconCls : 'silk-accept',
@@ -241,8 +241,7 @@ wmsLayer.init = function (record) {
         ],
         buttons: [
             {
-                //iconCls : 'silk-add',
-                text: '<i class="icon-ok btn-gc"></i> Update',
+                text: '<i class="icon-ok btn-gc"></i> Update SQL',
                 handler: function () {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {

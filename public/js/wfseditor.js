@@ -70,7 +70,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
     }
     south.expand(true);
     var styleMap = new OpenLayers.StyleMap({
-
         default: new OpenLayers.Style({
                 fillColor: "#000000",
                 fillOpacity: 0.0,
@@ -123,7 +122,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
             map.zoomToExtent(layer.getDataExtent());
         }
         if (singleEditing) {
-            map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
+            setTimeout(function () {
+                map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
+            }, 600);
             singleEditing = false;
         }
     });

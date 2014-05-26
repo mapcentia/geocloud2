@@ -35,7 +35,8 @@ class Cfgfile extends \app\inc\Controller
                 $meta_buffer = ($def->meta_buffer) ? : $meta_buffer = 0;
                 $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
-                if (app::$param["tileRenderBackend"] == "wms"){
+                //if (app::$param["tileRenderBackend"] == "wms"){
+                if ($row['type'] == "RASTER"){
                     echo "type=WMS\n";
                     echo "url=".App::$param['host']."/wms/".Connection::$param['postgisdb']."/{$row['f_table_schema']}/?";
                 }
