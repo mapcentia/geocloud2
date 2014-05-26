@@ -68,7 +68,7 @@ var mygeocloud_ol = (function () {
         this.layer = new OpenLayers.Layer.Vector("Vector", {
             styleMap: defaults.styleMap,
             visibility: defaults.visibility,
-            renderers: ['Canvas', 'SVG', 'VML'],
+            //renderers: ['Canvas', 'SVG', 'VML'],
             rendererOptions: defaults.rendererOptions
         });
         this.hide = function () {
