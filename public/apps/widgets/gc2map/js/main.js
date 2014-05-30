@@ -162,9 +162,9 @@ MapCentia = function (globalId) {
     });
     init = function (conf) {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, modalFlag, extent = null, p, arr, prop,
-        defaults = {
-            baseLayers: null
-        };
+            defaults = {
+                baseLayers: null
+            };
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -214,6 +214,13 @@ MapCentia = function (globalId) {
         p = geocloud.transformPoint(defaults.zoom.split(",")[0], defaults.zoom.split(",")[1], "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
 
+        if (typeof defaults.extent !== "undefined") {
+            var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
+            var p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
+            cloud.zoomToExtent([p1.x, p1.y, p2.x, p2.y]);
+        }
+
+
         // If no base layers defaults at all
         if (typeof window.setBaseLayers !== 'object' || defaults.baseLayers === null) {
             defaults.baseLayers = [
@@ -221,7 +228,7 @@ MapCentia = function (globalId) {
                 {id: geocloud.OSM, name: "OSM"}
             ];
         }
-        if (defaults.baseLayers === null && typeof window.setBaseLayers === 'object'){
+        if (defaults.baseLayers === null && typeof window.setBaseLayers === 'object') {
             defaults.baseLayers = window.setBaseLayers;
         }
 
@@ -229,7 +236,7 @@ MapCentia = function (globalId) {
         for (var i = 0; i < defaults.baseLayers.length; i++) {
             cloud.addBaseLayer(defaults.baseLayers[i].id);
             $("#base-layer-list-" + id).append(
-                "<li><a href=\"#\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" +defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
+                "<li><a href=\"#\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
         }
         setBaseLayer(defaults.baseLayers[0].id);
