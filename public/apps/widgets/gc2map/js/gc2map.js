@@ -11,7 +11,10 @@ gc2Widget.scriptsLoaded = false;
             }
             return script.getAttribute('src', -1);
         }()),
+        scriptHost,
         host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+    scriptHost = host;
+    //host = "http://cowi.mapcentia.com";
     if (typeof jQuery === "undefined") {
         document.write("<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js'><\/script>");
     }
@@ -28,19 +31,19 @@ gc2Widget.scriptsLoaded = false;
         pollForDependencies();
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css' }).appendTo('head');
         //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/bootstrap3/css/bootstrap.min.css' }).appendTo('head');
-//        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap-theme.min.css' }).appendTo('head');
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
+        //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap-theme.min.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
 
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/non-responsive.css' }).appendTo('head');
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/non-responsive.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
     }
 
     function loadDependants() {
         //jQuery.getScript(host + "/api/v3/js/geocloud.js
         //jQuery.getScript("http://maps.stamen.com/js/tile.stamen.js?v1.2.0");
-        jQuery.getScript(host + "/apps/widgets/gc2map/js/main.js");
+        jQuery.getScript(scriptHost + "/apps/widgets/gc2map/js/main.js");
         pollForDependants();
     }
 
