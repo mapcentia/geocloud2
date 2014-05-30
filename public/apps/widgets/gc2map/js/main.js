@@ -233,7 +233,7 @@ MapCentia = function (globalId) {
             );
         }
         setBaseLayer(defaults.baseLayers[0].id);
-        arr = defaults.layers.split(",");
+        arr = defaults.layers;
         for (var i = 0; i < arr.length; i++) {
             layers[arr[i]] = cloud.addTileLayers({
                 layers: [arr[i]],
