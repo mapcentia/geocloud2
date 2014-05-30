@@ -25,42 +25,55 @@ class Layer extends \app\models\Table
         $where = ($auth) ?
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";
-        $sql = ($schema) ?
-            "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND _key_ LIKE '{$schema}%' order by sort_id" :
-            "SELECT * FROM settings.geometry_columns_view WHERE {$where} order by sort_id";
-        $result = $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result, "assoc")) {
-                $arr = array();
-                $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-                foreach ($row as $key => $value) {
-                    if ($key == "type" && $value == "GEOMETRY") {
-                        $def = json_decode($row['def']);
-                        if (($def->geotype) && $def->geotype != "Default") {
-                            $value = "MULTI" . $def->geotype;
-                        }
-                    }
-                    $value = ($key == "layergroup" && (!$value))? "Default group":$value;
-                    $arr = $this->array_push_assoc($arr, $key, $value);
-                    $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
-                }
-                $response['data'][] = $arr;
-            }
-            $response['data'] = ($response['data'])?:array();
+        if ($schema) {
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND _key_ LIKE :schema ORDER BY sort_id";
+        } else {
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
         }
+        $res = $this->prepare($sql);
+        try {
+            if ($schema) {
+                $res->execute(array("schema" => $schema . "%"));
+            } else {
+                $res->execute();
+            }
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $arr = array();
+            $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
+            foreach ($row as $key => $value) {
+                if ($key == "type" && $value == "GEOMETRY") {
+                    $def = json_decode($row['def']);
+                    if (($def->geotype) && $def->geotype != "Default") {
+                        $value = "MULTI" . $def->geotype;
+                    }
+                }
+                $value = ($key == "layergroup" && (!$value)) ? "Default group" : $value;
+                $arr = $this->array_push_assoc($arr, $key, $value);
+                $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+            }
+            $response['data'][] = $arr;
+        }
+        $response['data'] = ($response['data']) ? : array();
         if (!$this->PDOerror) {
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = 401;
         }
         return $response;
     }
 
     function getSchemas() // All tables
     {
-        $sql = "SELECT f_table_schema as schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
+        $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
             while ($row = $this->fetchRow($result, "assoc")) {
@@ -133,6 +146,7 @@ class Layer extends \app\models\Table
         $array[$key] = $value;
         return $array;
     }
+
     public function setSchema($tables, $schema)
     {
         $this->begin();
@@ -190,7 +204,7 @@ class Layer extends \app\models\Table
         }
         $this->commit();
         $response['success'] = true;
-        $response['message'] = sizeof($tables)." tables moved to {$schema}";
+        $response['message'] = sizeof($tables) . " tables moved to {$schema}";
         return $response;
     }
 
@@ -213,7 +227,7 @@ class Layer extends \app\models\Table
         }
         $this->commit();
         $response['success'] = true;
-        $response['message'] = sizeof($tables)." tables deleted";
+        $response['message'] = sizeof($tables) . " tables deleted";
         return $response;
     }
 

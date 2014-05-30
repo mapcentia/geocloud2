@@ -770,5 +770,4 @@ var mygeocloud_ol = (function () {
         pathName: window.location.pathname.split("/")
     };
 
-})
-    ();
+})();

@@ -34,7 +34,6 @@ geocloud = (function () {
         createTileLayer,
         clickEvent,
         transformPoint,
-        lControl,
         MAPLIB,
         host,
         OSM = "osm",
@@ -416,7 +415,7 @@ geocloud = (function () {
 
     // Set map constructor
     map = function (config) {
-        var prop, queryLayers = [],
+        var prop, lControl, queryLayers = [],
             defaults = {
                 numZoomLevels: 20,
                 projection: "EPSG:900913"
@@ -1038,7 +1037,6 @@ geocloud = (function () {
                         if (layers.hasOwnProperty(key)) {
                             if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) {
                                 this.map.removeLayer(layers[key].layer);
-
                             }
                             if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
                                 this.map.addLayer(layers[key].layer, false);
@@ -1234,7 +1232,7 @@ geocloud = (function () {
                     break;
             }
             return l;
-        }
+        };
         //ol2
         this.hideAllTileLayers = function () {
             for (var i = 0; i < this.map.layers.length; i++) {
@@ -1494,3 +1492,4 @@ geocloud = (function () {
         DTKSKAERMKORT: DTKSKAERMKORT
     };
 }());
+
