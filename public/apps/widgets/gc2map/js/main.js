@@ -18,11 +18,10 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, osm, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, osm, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     hostname = geocloud_host;
-    db = "mydb";
     switchLayer = function (name, visible) {
         if (visible) {
             cloud.showLayer(name);
@@ -166,6 +165,7 @@ MapCentia = function (globalId) {
         defaults = {
             baseLayers: null
         };
+        db = defaults.db;
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
