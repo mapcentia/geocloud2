@@ -187,7 +187,7 @@ MapCentia = function (globalId) {
             $('#modal-info-' + id).modal({"backdrop": false});
         };
         // Media queries
-        $("#modal-info-body-" + id).css({"height": (eHeight - 100) + "px"});
+        $("#modal-info-body-" + id).css({"height": (eHeight - 105) + "px"});
         $("#legend-popover-li-" + id).show();
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
         $("#legend-popover-" + id).on('click', function () {
