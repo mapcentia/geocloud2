@@ -165,12 +165,12 @@ MapCentia = function (globalId) {
         defaults = {
             baseLayers: null
         };
-        db = defaults.db;
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
             }
         }
+        db = defaults.db;
         $("[data-toggle=tooltip]").tooltip();
         $('.share-text').mouseup(function () {
             return false;
