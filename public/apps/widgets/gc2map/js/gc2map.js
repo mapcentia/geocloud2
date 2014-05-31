@@ -14,7 +14,7 @@ gc2Widget.scriptsLoaded = false;
         scriptHost,
         host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     scriptHost = host;
-    //host = "http://cowi.mapcentia.com";
+    host = "http://cowi.mapcentia.com";
     if (typeof jQuery === "undefined") {
         document.write("<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js'><\/script>");
     }

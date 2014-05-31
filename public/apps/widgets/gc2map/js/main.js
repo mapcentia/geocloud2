@@ -18,7 +18,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, osm, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     hostname = geocloud_host;
@@ -48,7 +48,7 @@ MapCentia = function (globalId) {
                         tr.append("<td><div class='layer-title'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
                         td = $("<td/>");
                         for (var u = 0; u < v.classes.length; u++) {
-                            td.append("<div class='class-title'><span><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></span><span class='legend-text'>" + v.classes[u].name + "</span></div>");
+                            td.append("<div class='class-title'><span><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></span><span class='legend-text'>rer" + v.classes[u].name + "</span></div>");
                         }
                         tr.append(td);
                     }
@@ -187,29 +187,34 @@ MapCentia = function (globalId) {
             $('#modal-info-' + id).modal({"backdrop": false});
         };
         // Media queries
-        $("#modal-info-body-" + id).css({"height": (eHeight - 105) + "px"});
         $("#legend-popover-li-" + id).show();
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
         $("#legend-popover-" + id).on('click', function () {
             addLegend();
         });
+        $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
         $("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
-        $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
 
+        var sub;
         if (eWidth < 400) {
+            sub = 115;
             $("#group-javascript-" + id).hide();
             $("#modal-info-" + id + " .modal-dialog").css({"width": "auto", "margin": "10px"});
             $("#modal-share-" + id + " .modal-dialog").css({"width": "auto", "margin": "10px"});
-            $("#modal-share-body-" + id).css({"height": (eHeight - 100) + "px"});
+            $("#modal-share-body-" + id).css({"height": (eHeight - sub) + "px"});
+            $("#modal-info-body-" + id).css({"height": (eHeight - sub) + "px"});
+
         } else {
-            $("#modal-info-body-" + id).css({"height": (eHeight < 350) ? (eHeight - 130) : (220) + "px"});
+            sub = 130;
             $("#modal-info-" + id).css({"width": "280px", "right": "10px", "left": "auto"});
-            $("#modal-info-" + id + " .modal-dialog").css({"margin": "35px 30px 0 0", "width": "280px"});
-            $("#modal-share-body-" + id).css({"max-height": (eHeight - 130) + "px"});
+            $("#modal-info-" + id + " .modal-dialog").css({"margin": "30px 30px 0 0", "width": "280px"});
+            $("#modal-info-body-" + id).css({"height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
+            $("#modal-share-" + id + " .modal-dialog").css({"margin-top": "30px"});
+            $("#modal-share-body-" + id).css({"max-height": (eHeight - sub) + "px"});
         }
         if (eWidth < 768 && eWidth >= 400) {
-            $("#modal-share-" + id + " .modal-dialog").css({"width": "auto", "margin": "35px 10px"});
+            $("#modal-share-" + id + " .modal-dialog").css({"width": "auto", "margin": "30px 10px"});
         }
         p = geocloud.transformPoint(defaults.zoom.split(",")[0], defaults.zoom.split(",")[1], "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
@@ -236,7 +241,7 @@ MapCentia = function (globalId) {
         for (var i = 0; i < defaults.baseLayers.length; i++) {
             cloud.addBaseLayer(defaults.baseLayers[i].id);
             $("#base-layer-list-" + id).append(
-                "<li><a href=\"#\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
+                "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
         }
         setBaseLayer(defaults.baseLayers[0].id);

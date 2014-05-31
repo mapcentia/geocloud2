@@ -16,9 +16,9 @@
     z-index: 0;
     width: 100%;
     height: 100%;
-    font-family: 'Open Sans Condensed', sans-serif, sans-serif;
-    font-size: 14px;
-    font-weight: normal;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
 }
 
 .tnav .navbar .container {
@@ -29,15 +29,18 @@
 .modal-info, .modal-share, .modal-legend {
     width: inherit;
 }
-.modal-header{
+
+.modal-header {
     padding: 10px 15px;
 
 }
+
 .modal-title {
     font-size: 16px;
     line-height: 1;
 }
-.modal-dialog{
+
+.modal-dialog {
     margin-top: 35px;
 }
 
@@ -61,6 +64,7 @@
     font-weight: normal;
     text-decoration: none;
     line-height: 30px !important;
+    text-decoration: none !important;
 }
 
 .popover {
@@ -71,11 +75,7 @@
     overflow: auto;
 }
 
-img {
-    max-width: none !important;
-}
-
-.modal-body{
+.modal-body {
     overflow: auto;
     padding: 10px;
 }
@@ -98,14 +98,17 @@ input[type="radio"], input[type="checkbox"] {
     overflow-y: hidden !important;
     z-index: 2 !important;
 }
+
 .modal {
     position: absolute;
 }
+
 .modal-footer {
     margin-top: 0;
     padding: 9px 10px 10px;
 }
-.modal-backdrop{
+
+.modal-backdrop {
     display: none;
 }
 
@@ -160,44 +163,72 @@ input[type="radio"], input[type="checkbox"] {
     font-size: 12px;
     line-height: 1.428571429;
     vertical-align: top;
-    border-top: 1px solid rgb(245, 245, 245)
-}
-
-.table > thead > tr > th {
+    border-top: 1px solid rgb(245, 245, 245);
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
     border-bottom: 0px;
 }
+
 .btn-share {
     width: 50px;
 }
-.navbar-nav>li>a {
-     padding-top: 2px;
-     padding-bottom: 2px;
+
+.navbar-nav > li > a {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    text-decoration: none !important;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
 }
-.nav-tabs>li>a {
-    padding: 6px 10px;
+
+.table {
 
 }
-.nav-tabs {
-    font-size: 12px;
+
+.nav > li, .dropdown-menu > li {
+    margin: -1px !important;
 }
+
+.nav-tabs > li > a, .dropdown-menu > li > a{
+    font-size: 14px !important;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+    padding: 6px 10px !important;
+    text-decoration: none !important;
+}
+
+.pane input,
+.pane textarea {
+    font-size: 12px !important;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+}
+
 .navbar-btn {
     margin-top: 2px;
     margin-bottom: 2px;
     margin-right: 15px;
 }
+
 .navbar {
     border-radius: 0;
     min-height: 0;
 }
+
 .locate-btn {
     padding: 0px 10px !important;
 }
-.btn-default {
-    padding: 2px 10px;
-}
+
 .legend-text {
     margin-left: 5px;
     font-size: 14px;
+}
+.btn {
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+}
+.popover-content td, .popover-content span{
+    vertical-align: top !important;
+    font-size: 1em;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+    font-size: 14px !important;
 }
 
 
