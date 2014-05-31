@@ -84,6 +84,7 @@ geocloud = (function () {
             styleMap: null,
             visibility: true,
             lifetime: 0,
+            host: host,
             db: null,
             sql: null,
             q: null,
@@ -181,7 +182,7 @@ geocloud = (function () {
         this.sql = this.defaults.sql;
         this.db = this.defaults.db;
         this.load = function (doNotShowAlertOnError) {
-            var url = host.replace("cdn.", "");
+            var url = this.defaults.host.replace("cdn.", "");
             try {
                 map = me.map;
                 sql = this.sql;
@@ -258,7 +259,7 @@ geocloud = (function () {
                 dataType: 'jsonp',
                 data: 'search=' + encodeURIComponent(q),
                 jsonp: 'jsonp_callback',
-                url: host + '/api/v1/twitter/' + this.db,
+                url: this.defaults.host + '/api/v1/twitter/' + this.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
@@ -310,7 +311,7 @@ geocloud = (function () {
                 dataType: 'jsonp',
                 data: 'q=' + encodeURIComponent(q) + "&size=" + this.defaults.size,
                 jsonp: 'jsonp_callback',
-                url: host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
+                url: this.defaults.host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
                     var features = [];
                     $.each(response.hits.hits, function (i, v) {
