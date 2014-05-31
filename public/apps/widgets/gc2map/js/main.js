@@ -299,6 +299,7 @@ MapCentia = function (globalId) {
                             distance = 5 * res[cloud.getZoom()];
                         }
                         qstore[index] = new geocloud.sqlStore({
+                            host: defaults.host,
                             db: db,
                             id: index,
                             onLoad: function () {
