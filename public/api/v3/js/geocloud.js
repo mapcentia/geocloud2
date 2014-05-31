@@ -346,6 +346,7 @@ geocloud = (function () {
     tileLayer = function (config) {
         var prop;
         var defaults = {
+            host: host,
             layer: null,
             db: null,
             singleTile: false,
@@ -368,16 +369,15 @@ geocloud = (function () {
         var parts, l, url, urlArray;
         parts = layer.split(".");
         if (!defaults.tileCached) {
-            url = geocloud_host + "/wms/" + defaults.db + "/" + parts[0] + "?";
+            url = defaults.host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
-            var url = geocloud_host + "/wms/" + defaults.db + "/tilecache";
+            url = defaults.host + "/wms/" + defaults.db + "/tilecache";
             var url1 = url;
             var url2 = url;
             var url3 = url;
             // For ol2
             urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
-
             // For leaflet
             url = url.replace("cdn.", "{s}.");
         }
@@ -1095,6 +1095,7 @@ geocloud = (function () {
         //ol2, ol3 and leaflet
         this.addTileLayers = function (config) {
             var defaults = {
+                host: host,
                 layers: [],
                 db: null,
                 singleTile: false,

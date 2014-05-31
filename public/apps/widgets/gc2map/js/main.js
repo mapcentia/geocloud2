@@ -18,7 +18,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     hostname = geocloud_host;
@@ -40,7 +40,7 @@ MapCentia = function (globalId) {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var table = $("<table/>", {border: '0'}), i, tr, td;
+                var table = $("<table border=1/>", {border: '0'}), i, tr, td;
                 $.each(response, function (i, v) {
                     if (typeof(v) === "object" && v.id !== 'public.komgr') {
                         i = v.id;
@@ -48,7 +48,7 @@ MapCentia = function (globalId) {
                         tr.append("<td><div class='layer-title'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
                         td = $("<td/>");
                         for (var u = 0; u < v.classes.length; u++) {
-                            td.append("<div class='class-title'><span><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></span><span class='legend-text'>rer" + v.classes[u].name + "</span></div>");
+                            td.append("<div class='class-title'><div style='float: left;clear: left'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></div><div style='float: right; clear: right'></div><span class='legend-text'>   " + v.classes[u].name + "</span></div></div>");
                         }
                         tr.append(td);
                     }
@@ -139,7 +139,6 @@ MapCentia = function (globalId) {
                 ",resizable=1,scrollbars=0,status=1,left=" +
                 popleft + ",top=" + poptop + ",screenX=" + popleft +
                 ",screenY=" + poptop + ",toolbar=0";
-
         if (MapappWin === null) {
             openWin = true;
         } else if (MapappWin.closed) {
@@ -147,7 +146,6 @@ MapCentia = function (globalId) {
         } else {
             openWin = false;
         }
-
         if (openWin) {
             MapappWin = window.open(page, strWinName, strParameters);
             MapappWin.focus();
@@ -161,7 +159,7 @@ MapCentia = function (globalId) {
         el: "map-" + id
     });
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, modalFlag, extent = null, p, arr, prop,
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, modalFlag, p, p1, p2, arr, prop, sub,
             defaults = {
                 baseLayers: null
             };
@@ -178,14 +176,9 @@ MapCentia = function (globalId) {
         $(".share-text").focus(function () {
             $(this).select();
         });
-
         $("#locate-btn-" + id).on("click", function () {
             cloud.locate();
         });
-        showInfoModal = function () {
-            modalFlag = true;
-            $('#modal-info-' + id).modal({"backdrop": false});
-        };
         // Media queries
         $("#legend-popover-li-" + id).show();
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
@@ -196,7 +189,6 @@ MapCentia = function (globalId) {
         $("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
 
-        var sub;
         if (eWidth < 400) {
             sub = 115;
             $("#group-javascript-" + id).hide();
@@ -220,12 +212,10 @@ MapCentia = function (globalId) {
         cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
 
         if (typeof defaults.extent !== "undefined") {
-            var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
-            var p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
+            p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
+            p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
             cloud.zoomToExtent([p1.x, p1.y, p2.x, p2.y]);
         }
-
-
         // If no base layers defaults at all
         if (typeof window.setBaseLayers !== 'object' || defaults.baseLayers === null) {
             defaults.baseLayers = [
@@ -233,10 +223,10 @@ MapCentia = function (globalId) {
                 {id: geocloud.OSM, name: "OSM"}
             ];
         }
+        // Base layers from server wide setting
         if (defaults.baseLayers === null && typeof window.setBaseLayers === 'object') {
             defaults.baseLayers = window.setBaseLayers;
         }
-
         cloud.bingApiKey = window.bingApiKey;
         for (var i = 0; i < defaults.baseLayers.length; i++) {
             cloud.addBaseLayer(defaults.baseLayers[i].id);
@@ -248,10 +238,9 @@ MapCentia = function (globalId) {
         arr = defaults.layers;
         for (var i = 0; i < arr.length; i++) {
             layers[arr[i]] = cloud.addTileLayers({
+                host: defaults.host,
                 layers: [arr[i]],
                 db: db,
-                tileCached: true,
-                visibility: false,
                 wrapDateLine: false,
                 displayInLayerSwitcher: true,
                 name: arr[i]
@@ -315,11 +304,10 @@ MapCentia = function (globalId) {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
                                 if ((!isEmpty)) {
-                                    showInfoModal();
+                                    $('#modal-info-' + id).modal({"backdrop": false});
                                     var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
                                     $("#info-tab-" + id).append('<li><a data-toggle="tab" href="#_' + index + '-' + id + '">' + layerTitel + '</a></li>');
                                     $("#info-pane-" + id).append('<div class="tab-pane" id="_' + index + '-' + id + '"><table class="table table-condensed"><thead><tr><th>Egenskab</th><th>V&aelig;rdi</th></tr></thead></table></div>');
-
                                     $.each(layerObj.geoJSON.features, function (i, feature) {
                                         if (fieldConf === null) {
                                             $.each(feature.properties, function (name, property) {

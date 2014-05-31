@@ -14,7 +14,7 @@ gc2Widget.scriptsLoaded = false;
         scriptHost,
         host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     scriptHost = host;
-    host = "http://cowi.mapcentia.com";
+    //host = "http://cowi.mapcentia.com";
     if (typeof jQuery === "undefined") {
         document.write("<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js'><\/script>");
     }
@@ -30,8 +30,6 @@ gc2Widget.scriptsLoaded = false;
 
         pollForDependencies();
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css' }).appendTo('head');
-        //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/bootstrap3/css/bootstrap.min.css' }).appendTo('head');
-        //$('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap-theme.min.css' }).appendTo('head');
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
 
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
@@ -77,7 +75,9 @@ gc2Widget.scriptsLoaded = false;
     pollForjQuery();
 
     gc2Widget.map = function (conf) {
-        var defaults = {}, prop, pollForScripts, init, divs = document.getElementsByTagName('div'),
+        var defaults = {
+                host: host
+            }, prop, pollForScripts, init, divs = document.getElementsByTagName('div'),
             div = divs[divs.length - 1],
             gc2RandId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);

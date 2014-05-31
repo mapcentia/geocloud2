@@ -29,7 +29,7 @@ class App
         "masterPw" => null,
 
         // Render backend for tile cache ["wms" | "python"]
-        "tileRenderBackend" => "wms",
+        "tileRenderBackend" => "python",
 
         // Available baselayer
         "baseLayers" => array(
