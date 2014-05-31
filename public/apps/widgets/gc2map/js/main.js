@@ -33,31 +33,7 @@ MapCentia = function (globalId) {
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
     };
-    addLegend = function () {
-        var param = 'l=' + cloud.getVisibleLayers();
-        $.ajax({
-            url: hostname + '/api/v1/legend/json/' + db + '/?' + param,
-            dataType: 'jsonp',
-            jsonp: 'jsonp_callback',
-            success: function (response) {
-                var table = $("<table border=1/>", {border: '0'}), i, tr, td;
-                $.each(response, function (i, v) {
-                    if (typeof(v) === "object" && v.id !== 'public.komgr') {
-                        i = v.id;
-                        tr = $("<tr/>");
-                        tr.append("<td><div class='layer-title'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
-                        td = $("<td/>");
-                        for (var u = 0; u < v.classes.length; u++) {
-                            td.append("<div class='class-title'><div style='float: left;clear: left'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></div><div style='float: right; clear: right'></div><span class='legend-text'>   " + v.classes[u].name + "</span></div></div>");
-                        }
-                        tr.append(td);
-                    }
-                    table.append(tr);
-                });
-                $('#legend-' + id).html(table);
-            }
-        });
-    };
+
     share = function () {
         var url = permaLink(), layers, arr = [], layersStr = "", i, p, javascript;
         $("#modal-share-" + id).modal();
@@ -247,7 +223,7 @@ MapCentia = function (globalId) {
             });
             switchLayer(arr[i], true);
             $.ajax({
-                    url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
+                    url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
                     dataType: 'jsonp',
                     jsonp: 'jsonp_callback',
                     success: function (response) {
@@ -264,6 +240,31 @@ MapCentia = function (globalId) {
                 }
             );
         }
+        addLegend = function () {
+            var param = 'l=' + cloud.getVisibleLayers();
+            $.ajax({
+                url: defaults.host + '/api/v1/legend/json/' + db + '/?' + param,
+                dataType: 'jsonp',
+                jsonp: 'jsonp_callback',
+                success: function (response) {
+                    var table = $("<table border=1/>", {border: '0'}), i, tr, td;
+                    $.each(response, function (i, v) {
+                        if (typeof(v) === "object" && v.id !== 'public.komgr') {
+                            i = v.id;
+                            tr = $("<tr/>");
+                            tr.append("<td><div class='layer-title'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
+                            td = $("<td/>");
+                            for (var u = 0; u < v.classes.length; u++) {
+                                td.append("<div class='class-title'><div style='float: left;clear: left'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></div><div style='float: right; clear: right'></div><span class='legend-text'>   " + v.classes[u].name + "</span></div></div>");
+                            }
+                            tr.append(td);
+                        }
+                        table.append(tr);
+                    });
+                    $('#legend-' + id).html(table);
+                }
+            });
+        };
         addLegend();
         var clicktimer;
         cloud.on("dblclick", function () {
