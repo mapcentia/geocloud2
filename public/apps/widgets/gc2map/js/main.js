@@ -126,7 +126,7 @@ MapCentia = function (globalId) {
                 MapappWin.document.write(
                     '<style>body{padding:0;margin:0}</style>' +
                         '<script src="http://local2.mapcentia.com/apps/widgets/gc2map/js/gc2map.js"></script>' +
-                        '<div style="width: 100%;height: 100%; float: left"></div>' +
+                        '<div style="width: 100%;height: 100%; position: absolute;"></div>' +
                         '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
                 );
             });

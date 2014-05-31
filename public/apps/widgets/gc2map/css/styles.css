@@ -215,7 +215,7 @@ input[type="radio"], input[type="checkbox"] {
 }
 
 .locate-btn {
-    padding: 0px 10px !important;
+    padding: 3px 10px !important;
 }
 
 .legend-text {
@@ -224,6 +224,7 @@ input[type="radio"], input[type="checkbox"] {
 }
 .btn {
     font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+    line-height: 1 !important;
 }
 .popover-content td, .popover-content span{
     vertical-align: top !important;
