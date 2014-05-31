@@ -18,17 +18,15 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, defaults, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
-    hostname = geocloud_host;
     switchLayer = function (name, visible) {
         if (visible) {
             cloud.showLayer(name);
         } else {
             cloud.hideLayer(name);
         }
-        //addLegend();
     };
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
@@ -104,7 +102,6 @@ MapCentia = function (globalId) {
      center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
      cloud.zoomToPoint(center.x, center.y, 10);
      });*/
-
     openMapWin = function (page, width, height) {
         var strWinName = "Map",
             popleft = (screen.width - width) / 2,
@@ -123,8 +120,16 @@ MapCentia = function (globalId) {
             openWin = false;
         }
         if (openWin) {
-            MapappWin = window.open(page, strWinName, strParameters);
+            MapappWin = window.open('', strWinName, strParameters);
             MapappWin.focus();
+            $(MapappWin.document).ready(function () {
+                MapappWin.document.write(
+                    '<style>body{padding:0;margin:0}</style>' +
+                        '<script src="http://local2.mapcentia.com/apps/widgets/gc2map/js/gc2map.js"></script>' +
+                        '<div style="width: 100%;height: 100%; float: left"></div>' +
+                        '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
+                );
+            });
         } else {
             if (!MapappWin.closed) {
                 MapappWin.focus();
@@ -135,16 +140,17 @@ MapCentia = function (globalId) {
         el: "map-" + id
     });
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, modalFlag, p, p1, p2, arr, prop, sub,
-            defaults = {
-                baseLayers: null
-            };
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub;
+        defaults = {
+            baseLayers: null
+        };
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
             }
         }
         db = defaults.db;
+        hostname = defaults.host;
         $("[data-toggle=tooltip]").tooltip();
         $('.share-text').mouseup(function () {
             return false;
@@ -184,13 +190,14 @@ MapCentia = function (globalId) {
         if (eWidth < 768 && eWidth >= 400) {
             $("#modal-share-" + id + " .modal-dialog").css({"width": "auto", "margin": "30px 10px"});
         }
-        p = geocloud.transformPoint(defaults.zoom.split(",")[0], defaults.zoom.split(",")[1], "EPSG:4326", "EPSG:900913");
-        cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
 
         if (typeof defaults.extent !== "undefined") {
             p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
             p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
             cloud.zoomToExtent([p1.x, p1.y, p2.x, p2.y]);
+        } else {
+            p = geocloud.transformPoint(defaults.zoom.split(",")[0], defaults.zoom.split(",")[1], "EPSG:4326", "EPSG:900913");
+            cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
         }
         // If no base layers defaults at all
         if (typeof window.setBaseLayers !== 'object' || defaults.baseLayers === null) {
@@ -266,7 +273,6 @@ MapCentia = function (globalId) {
             });
         };
         addLegend();
-        var clicktimer;
         cloud.on("dblclick", function () {
             clicktimer = undefined;
         });
