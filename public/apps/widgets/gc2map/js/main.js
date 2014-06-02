@@ -140,7 +140,7 @@ MapCentia = function (globalId) {
         el: "map-" + id
     });
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub;
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub, legendDirty = false;
         defaults = {
             baseLayers: null
         };
@@ -162,8 +162,14 @@ MapCentia = function (globalId) {
             cloud.locate();
         });
         // Media queries
-        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
+        $("#legend-popover-li-" + id).show();
+        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
+        $("#legend-popover-" + id).on('click', function () {
+            addLegend();
+            legendDirty = true;
+        });
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
+        $("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
 
         if (eWidth < 400) {
@@ -245,6 +251,9 @@ MapCentia = function (globalId) {
         }
         addLegend = function () {
             var param = 'l=' + cloud.getVisibleLayers();
+            if (legendDirty === true){
+               return false;
+            }
             $.ajax({
                 url: defaults.host + '/api/v1/legend/json/' + db + '/?' + param,
                 dataType: 'jsonp',
