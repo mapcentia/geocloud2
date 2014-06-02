@@ -73,6 +73,12 @@
 .popover-content td {
     padding: 0 !important;
 }
+
+.popover-content td div {
+    font-size: 14px !important;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
+}
+
 .modal-body {
     overflow: auto;
     padding: 10px;
