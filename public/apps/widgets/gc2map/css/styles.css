@@ -70,7 +70,9 @@
 .popover-content {
     overflow: auto;
 }
-
+.popover-content td {
+    padding: 0 !important;
+}
 .modal-body {
     overflow: auto;
     padding: 10px;
