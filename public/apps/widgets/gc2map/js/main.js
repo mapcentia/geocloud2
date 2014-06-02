@@ -181,7 +181,7 @@ MapCentia = function (globalId) {
 
         } else {
             sub = 130;
-            $("#modal-info-" + id).css({"width": "310px", "height": "370px", "left": "auto", "margin-right": "-5px"});
+            $("#modal-info-" + id).css({"width": "310px", "height": "370px", "left": "auto", "margin-right": "0px"});
             $("#modal-info-" + id + " .modal-dialog").css({"width": "280px"});
             //$(".modal-dialog").css({"margin": "30px 30px 0 0"});
             $("#modal-info-body-" + id).css({"height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
