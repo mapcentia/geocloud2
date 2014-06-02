@@ -162,13 +162,8 @@ MapCentia = function (globalId) {
             cloud.locate();
         });
         // Media queries
-        $("#legend-popover-li-" + id).show();
-        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
-        $("#legend-popover-" + id).on('click', function () {
-            addLegend();
-        });
+        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
-        $("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
 
         if (eWidth < 400) {
