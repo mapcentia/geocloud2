@@ -181,8 +181,9 @@ MapCentia = function (globalId) {
 
         } else {
             sub = 130;
-            $("#modal-info-" + id).css({"width": "280px", "right": "10px", "left": "auto"});
-            $("#modal-info-" + id + " .modal-dialog").css({"margin": "30px 30px 0 0", "width": "280px"});
+            $("#modal-info-" + id).css({"width": "310px", "height": "370px", "left": "auto", "margin-right": "-5px"});
+            $("#modal-info-" + id + " .modal-dialog").css({"width": "280px"});
+            //$(".modal-dialog").css({"margin": "30px 30px 0 0"});
             $("#modal-info-body-" + id).css({"height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
             $("#modal-share-" + id + " .modal-dialog").css({"margin-top": "30px"});
             $("#modal-share-body-" + id).css({"max-height": (eHeight - sub) + "px"});
@@ -254,15 +255,15 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var table = $("<table border=1/>", {border: '0'}), i, tr, td;
+                    var table = $("<table/>", {border: '0'}), i, tr, td;
                     $.each(response, function (i, v) {
                         if (typeof(v) === "object" && v.id !== 'public.komgr') {
                             i = v.id;
                             tr = $("<tr/>");
-                            tr.append("<td><div class='layer-title'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
+                            tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
                             td = $("<td/>");
                             for (var u = 0; u < v.classes.length; u++) {
-                                td.append("<div class='class-title'><div style='float: left;clear: left'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></div><div style='float: right; clear: right'></div><span class='legend-text'>   " + v.classes[u].name + "</span></div></div>");
+                                td.append("<div style='margin-top: 3px'><div class='class-title' style='float: left;'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "'></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
                             }
                             tr.append(td);
                         }

@@ -40,10 +40,6 @@
     line-height: 1;
 }
 
-.modal-dialog {
-    margin-top: 35px;
-}
-
 .leaflet-top {
     right: 0px !important;
     left: auto !important;
