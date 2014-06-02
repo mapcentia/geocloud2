@@ -263,11 +263,13 @@ MapCentia = function (globalId) {
                             tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
                             td = $("<td/>");
                             for (var u = 0; u < v.classes.length; u++) {
-                                td.append("<div style='margin-top: 1px; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                                td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
                             }
                             tr.append(td);
                         }
                         table.append(tr);
+                        // Spacer
+                        table.append($("<tr style='height: 5px'/>"));
                     });
                     $('#legend-' + id).html(table);
                 }
