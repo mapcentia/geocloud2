@@ -127,8 +127,12 @@ MapCentia = function (globalId) {
                     '<style>body{padding:0;margin:0}</style>' +
                         '<script>window.gc2host = ' + hostname + '</script>' +
                         '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
-                        '<div style="width: 100%;height: 100%; position: absolute;"></div>' +
-                        '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
+                        '<div style="width: 100%;height: 100%; position: absolute;"></div>'
+
+                );
+                // Must bee split in two parts. Yes, its f****** IE9
+                MapappWin.document.write(
+                    '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
                 );
             });
         } else {

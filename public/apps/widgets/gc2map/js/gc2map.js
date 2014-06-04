@@ -16,7 +16,7 @@ gc2Widget.scriptsLoaded = false;
     scriptHost = host;
     // HACK. IE9 has some issues geting host.
     if (typeof host === "undefined") {
-        host = window.gc2host;
+        host = scriptHost = window.gc2host;
     }
     //host = "http://cowi.mapcentia.com";
     if (typeof jQuery === "undefined") {
