@@ -125,6 +125,7 @@ MapCentia = function (globalId) {
             $(MapappWin.document).ready(function () {
                 MapappWin.document.write(
                     '<style>body{padding:0;margin:0}</style>' +
+                        '<script>window.gc2host = ' + hostname + '</script>' +
                         '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
                         '<div style="width: 100%;height: 100%; position: absolute;"></div>' +
                         '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
@@ -220,11 +221,11 @@ MapCentia = function (globalId) {
                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
         }
-        if (defaults.setBaseLayer){
+        if (defaults.setBaseLayer) {
             setBaseLayer(defaults.setBaseLayer);
 
         }
-        else{
+        else {
             setBaseLayer(defaults.baseLayers[0].id);
         }
         arr = defaults.layers;
@@ -258,8 +259,8 @@ MapCentia = function (globalId) {
         }
         addLegend = function () {
             var param = 'l=' + cloud.getVisibleLayers();
-            if (legendDirty === true){
-               return false;
+            if (legendDirty === true) {
+                return false;
             }
             $.ajax({
                 url: defaults.host + '/api/v1/legend/json/' + db + '/?' + param,

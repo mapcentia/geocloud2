@@ -14,6 +14,7 @@ gc2Widget.scriptsLoaded = false;
         scriptHost,
         host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     scriptHost = host;
+    // HACK. IE9 has some issues geting host.
     if (typeof host === "undefined") {
         host = window.gc2host;
     }
