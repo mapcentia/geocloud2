@@ -17,7 +17,7 @@
 var MapCentia;
 MapCentia = (function () {
     "use strict";
-    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon;
+    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -54,7 +54,7 @@ MapCentia = (function () {
         });
     };
     share = function () {
-        var url = hostname + permaLink(), layers, arr = [], layersStr = "", i, p, javascript;
+        var url = hostname + "/apps/widgets/gc2map/" + db + "/" + anchor(), layers, arr = [], layersStr = "", i, p, javascript;
         $("#modal-share").modal();
         $("#share-url").val(url);
         $("#share-iframe").val("<iframe width='100%' height='500px' frameBorder='0' src='" + url + "'></iframe>");
@@ -69,22 +69,16 @@ MapCentia = (function () {
             }
             layersStr = arr.join(",");
         }
-        javascript = "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
-            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
-            "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
-            "<div id='map' style='width: 100%; height: 500px'></div>\n" +
+        javascript = "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
+            "<div style='width: 100%; height: 500px'></div>\n" +
             "<script>\n" +
             "(function () {\n" +
-            "      var map = new geocloud.map({\n" +
-            "      el: 'map'\n" +
-            "   });\n" +
-            "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-            "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-            "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
-            "   map.addTileLayers({\n" +
-            "      db: '" + db + "',\n" +
-            "      layers: [" + layersStr + "]\n" +
-            "   });\n" +
+            "     gc2Widget.map({\n" +
+            "          db: '" + db + "',\n" +
+            "          layers: [" + layersStr + "],\n" +
+            "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
+            "          setBaseLayer: '" + cloud.getBaseLayerName() + "'\n" +
+            "     });\n" +
             "}())\n" +
             "</script>";
         $("#share-javascript").val(javascript);
@@ -116,6 +110,10 @@ MapCentia = (function () {
     permaLink = function () {
         var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
         return "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
+    };
+    anchor = function () {
+        var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
+        return "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
     };
     autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'));
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
@@ -412,10 +410,10 @@ MapCentia = (function () {
                         cloud.addGeoJsonStore(qstore[index]);
                         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\""+f_geometry_column+ "\")";
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
                         }
                         else {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\""+f_geometry_column+ "\")";
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
                         }
                         qstore[index].sql = sql;
                         qstore[index].load();
@@ -438,3 +436,5 @@ MapCentia = (function () {
         shareStumbleupon: shareStumbleupon
     };
 }());
+
+

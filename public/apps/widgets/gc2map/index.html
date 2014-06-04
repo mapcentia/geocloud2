@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="http://local2.mapcentia.com/apps/widgets/gc2map/js/gc2map.js"></script>
+</head>
+<body style="padding: 0; margin: 0">
+<div style="width: 100%;height: 100%; position: absolute"></div>
+<script>
+    (function () {
+        var p, layers = [], i, baseLayer,
+                hashArr = window.location.hash.replace("#", "").split("/"),
+                path = window.location.pathname.split("/");
+        if (hashArr[0]) {
+            if (hashArr[1] && hashArr[2] && hashArr[3]) {
+                if (hashArr[4]) {
+                    layers = hashArr[4].split(",");
+                }
+            }
+        }
+        else {
+
+        }
+        gc2Widget.map({
+            db: path[4],
+            layers: layers,
+            zoom: [hashArr[2], hashArr[3], hashArr[1]],
+            setBaseLayer: hashArr[0]
+        });
+    }());
+</script>
+</body>
+</html>

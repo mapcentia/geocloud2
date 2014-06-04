@@ -53,10 +53,6 @@ geocloud = (function () {
     // In IE7 host name is missing if script url is relative
     geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 
-    // Check if jQuery is loaded and load if not
-    if (typeof jQuery === "undefined") {
-        document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
-    }
     if (typeof ol !== "object" && typeof L !== "object" && typeof OpenLayers !== "object") {
         alert("You need to load neither OpenLayers.js, ol3,js or Leaflet.js");
     }
@@ -68,10 +64,15 @@ geocloud = (function () {
     }
     if (typeof L === "object") {
         MAPLIB = "leaflet";
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-google.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-bing.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/leaflet-yandex.js'><\/script>");
-        document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.min.js'><\/script>");
+    }
+    if (document.readyState === "loading") {
+
+        if (typeof jQuery === "undefined") {
+            document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+        }
+        if (typeof L === "object") {
+            document.write("<script src='http://cdn.eu1.mapcentia.com/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.min.js'><\/script>");
+        }
     }
 
     // Helper for extending classes
@@ -764,7 +765,7 @@ geocloud = (function () {
             this.osm.id = "osm";
             return (this.osm);
         };
-        //ol3 and leaflet
+        //ol2 and leaflet
         this.addStamenToner = function () {
             switch (MAPLIB) {
                 case "ol2":
@@ -795,7 +796,7 @@ geocloud = (function () {
             this.stamenToner.id = "stamenToner";
             return (this.stamenToner);
         };
-        //ol3 and leaflet
+        //ol2 and leaflet
         this.addMapBoxNaturalEarth = function () {
             switch (MAPLIB) {
                 case "ol2":
@@ -825,112 +826,59 @@ geocloud = (function () {
             this.mapBoxNaturalEarth.id = "mapBoxNaturalEarth";
             return (this.mapBoxNaturalEarth);
         };
-        this.addGoogleStreets = function () {
-            switch (MAPLIB) {
-                case "ol2":
-                    try {
-                        this.baseGNORMAL = new OpenLayers.Layer.Google("googleStreets", {// the default
-                            wrapDateLine: false,
-                            numZoomLevels: 20
-                        });
-                    } catch (e) {
-                    }
-                    this.map.addLayer(this.baseGNORMAL);
-                    this.baseGNORMAL.setVisibility(false);
+        //ol2 and leaflet
+        this.addGoogle = function (type) {
+            var l, name;
+            switch (type) {
+                case "ROADMAP":
+                    name = "googleStreets";
                     break;
-                case "leaflet":
-                    this.baseGNORMAL = new L.Google('ROADMAP');
-                    lControl.addBaseLayer(this.baseGNORMAL);
+                case "HYBRID":
+                    name = "googleHybrid";
                     break;
-
-            }
-            this.baseGNORMAL.baseLayer = true;
-            this.baseGNORMAL.id = "googleStreets";
-            return (this.baseGNORMAL);
-        };
-        this.addGoogleHybrid = function () {
-            switch (MAPLIB) {
-                case "ol2":
-                    // v2
-                    try {
-                        this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
-                            type: G_HYBRID_MAP,
-                            sphericalMercator: true,
-                            wrapDateLine: true,
-                            numZoomLevels: 20
-                        });
-                    } catch (e) {
-                    }
-
-                    // v3
-                    try {
-                        this.baseGHYBRID = new OpenLayers.Layer.Google("googleHybrid", {
-                            type: google.maps.MapTypeId.HYBRID,
-                            wrapDateLine: true,
-                            numZoomLevels: 20
-                        });
-                    } catch (e) {
-                        //alert(e.message)
-                    }
-                    this.map.addLayer(this.baseGHYBRID);
-                    this.baseGHYBRID.setVisibility(false);
+                case "SATELLITE":
+                    name = "googleSatellite";
                     break;
-                case "leaflet":
-                    this.baseGHYBRID = new L.Google('HYBRID');
-                    lControl.addBaseLayer(this.baseGHYBRID);
+                case "TERRAIN":
+                    name = "googleTerrain";
                     break;
             }
-            this.baseGHYBRID.baseLayer = true;
-            this.baseGHYBRID.id = "googleHybrid";
-            return (this.baseGHYBRID);
-        };
-        this.addGoogleSatellite = function () {
-            switch (MAPLIB) {
-                case "ol2":
-                    // v3
-                    try {
-                        this.baseGSATELLITE = new OpenLayers.Layer.Google("googleSatellite", {
-                            type: google.maps.MapTypeId.SATELLITE,
-                            wrapDateLine: true,
-                            numZoomLevels: 20
-                        });
-                    }
-                    catch
-                        (e) {
-                        // alert(e.message)
-                    }
-                    this.map.addLayer(this.baseGSATELLITE);
-                    this.baseGSATELLITE.setVisibility(false);
-                    break;
-                case "leaflet":
-                    this.baseGSATELLITE = new L.Google('SATELLITE');
-                    lControl.addBaseLayer(this.baseGSATELLITE);
-                    break;
+            // Load Google Maps API
+            if (typeof this.GoogleDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
+                this.GoogleDirty = true;
+                jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
+            // Google Maps API is loaded
+            } else if (typeof this.GoogleDirty === "undefined") {
+                window.gc2SetLGoogle();
             }
-            this.baseGSATELLITE.baseLayer = true;
-            this.baseGSATELLITE.id = "googleSatellite";
-            return (this.baseGSATELLITE);
+            (function poll() {
+                if (typeof L.Google !== "undefined" && typeof google !== "undefined" && typeof google.maps !== "undefined") {
+                    switch (MAPLIB) {
+                        case "ol2":
+                            l = new OpenLayers.Layer.Google(name, {
+                                type: google.maps.MapTypeId[type],
+                                wrapDateLine: true,
+                                numZoomLevels: 20
+                            });
+                            this.map.addLayer(l);
+                            l.setVisibility(false);
+                            l.baseLayer = true;
+                            l.id = name;
+                            break;
+                        case "leaflet":
+                            l = new L.Google(type);
+                            l.baseLayer = true;
+                            lControl.addBaseLayer(l);
+                            l.id = name;
+                            break;
+                    }
+                    return (l);
+                } else {
+                    setTimeout(poll, 10);
+                }
+            }());
         };
-        this.addGoogleTerrain = function () {
-            switch (MAPLIB) {
-                case "ol2":
-                    this.baseGTERRAIN = new OpenLayers.Layer.Google("googleTerrain", {
-                        type: google.maps.MapTypeId.TERRAIN,
-                        wrapDateLine: true,
-                        numZoomLevels: 20
-                    });
-                    this.map.addLayer(this.baseGTERRAIN);
-                    this.baseGTERRAIN.setVisibility(false);
-                    break;
-                case "leaflet":
-                    this.baseGTERRAIN = new L.Google('TERRAIN');
-                    lControl.addBaseLayer(this.baseGTERRAIN);
-                    break;
-            }
-            this.baseGTERRAIN.baseLayer = true;
-            this.baseGTERRAIN.id = "googleTerrain";
-            return (this.baseGTERRAIN);
-        };
+        //ol2 and leaflet
         this.addBing = function (type) {
             var l, name;
             switch (type) {
@@ -954,16 +902,19 @@ geocloud = (function () {
                     });
                     this.map.addLayer(l);
                     l.setVisibility(false);
-                    break;
+                    l.baseLayer = true;
+                    l.id = name;
+                    return (l);
                 case "leaflet":
                     l = new L.BingLayer(this.bingApiKey, {"type": type});
+                    l.baseLayer = true;
                     lControl.addBaseLayer(l);
+                    l.id = name;
+                    return (l);
                     break;
             }
-            l.baseLayer = true;
-            l.id = name;
-            return (l);
         };
+        //ol2 and leaflet
         this.addDtkSkaermkort = function () {
             var l, name = "dtkSkaermkort", layer = "dtk_skaermkort",
                 url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache";
@@ -1016,38 +967,59 @@ geocloud = (function () {
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
+            var me = this;
             var layers;
-            switch (MAPLIB) {
-                case "ol2":
-                    this.showLayer(baseLayerName);
-                    this.map.setBaseLayer(this.getLayersByName(baseLayerName));
-                    break;
-                case "ol3":
-                    layers = this.map.getLayers();
-                    for (var i = 0; i < layers.getLength(); i++) {
-                        if (layers.a[i].baseLayer === true) {
-                            layers.a[i].set("visible", false);
-                        }
-                    }
-                    this.getLayersByName(baseLayerName).set("visible", true);
-                    break;
-                case "leaflet":
-                    layers = lControl._layers;
-                    for (var key in layers) {
+            var set = function () {
+                switch (MAPLIB) {
 
-                        if (layers.hasOwnProperty(key)) {
-                            if (layers[key].layer.baseLayer === true && this.map.hasLayer(layers[key].layer)) {
-                                this.map.removeLayer(layers[key].layer);
-                            }
-                            if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
-                                this.map.addLayer(layers[key].layer, false);
-
+                    case "ol2":
+                        me.showLayer(baseLayerName);
+                        me.map.setBaseLayer(me.getLayersByName(baseLayerName));
+                        break;
+                    case "ol3":
+                        layers = me.map.getLayers();
+                        for (var i = 0; i < layers.getLength(); i++) {
+                            if (layers.a[i].baseLayer === true) {
+                                layers.a[i].set("visible", false);
                             }
                         }
+                        me.getLayersByName(baseLayerName).set("visible", true);
+                        break;
+                    case "leaflet":
+
+                        layers = lControl._layers;
+                        for (var key in layers) {
+                            if (layers.hasOwnProperty(key)) {
+                                if (layers[key].layer.baseLayer === true && me.map.hasLayer(layers[key].layer)) {
+                                    me.map.removeLayer(layers[key].layer);
+                                }
+                                if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
+                                    // Move Bing maps back, when they are dynamically loaded
+                                    if (baseLayerName.search("bing") > -1 || baseLayerName.search("stamen") > -1) {
+                                        layers[key].layer.setZIndex(1);
+                                    }
+                                    me.map.addLayer(layers[key].layer, false);
+                                }
+                            }
+                        }
+                        break;
+                }
+            };
+            // If Google layer poll for L.Google class
+            if (baseLayerName.search("google") > -1) {
+                (function poll() {
+                    if (typeof L.Google !== "undefined" && typeof google !== "undefined" && typeof google.maps !== "undefined") {
+                        set();
+                    } else {
+                        setTimeout(poll, 10);
                     }
-                    break;
+                }());
+            }
+            else {
+                set();
             }
         };
+
         this.addBaseLayer = function (l) {
             var o;
             switch (l) {
@@ -1064,16 +1036,16 @@ geocloud = (function () {
                     o = this.addStamenToner();
                     break;
                 case "googleStreets":
-                    o = this.addGoogleStreets();
+                    o = this.addGoogle("ROADMAP");
                     break;
                 case "googleHybrid":
-                    o = this.addGoogleHybrid();
+                    o = this.addGoogle("HYBRID");
                     break;
                 case "googleSatellite":
-                    o = this.addGoogleSatellite();
+                    o = this.addGoogle("SATELLITE");
                     break;
                 case "googleTerrain":
-                    o = this.addGoogleTerrain();
+                    o = this.addGoogle("TERRAIN");
                     break;
                 case "bingRoad":
                     o = this.addBing("Road");
@@ -1491,7 +1463,479 @@ geocloud = (function () {
         BINGROAD: BINGROAD,
         BINGAERIAL: BINGAERIAL,
         BINGAERIALWITHLABELS: BINGAERIALWITHLABELS,
-        DTKSKAERMKORT: DTKSKAERMKORT
+        DTKSKAERMKORT: DTKSKAERMKORT,
     };
 }());
+(function (exports) {
+
+    /*
+     * tile.stamen.js v1.2.4
+     */
+
+    var SUBDOMAINS = " a. b. c. d.".split(" "),
+        MAKE_PROVIDER = function (layer, type, minZoom, maxZoom) {
+            return {
+                "url": ["http://{S}tile.stamen.com/", layer, "/{Z}/{X}/{Y}.", type].join(""),
+                "type": type,
+                "subdomains": SUBDOMAINS.slice(),
+                "minZoom": minZoom,
+                "maxZoom": maxZoom,
+                "attribution": [
+                    'Map tiles by <a href="http://stamen.com">Stamen Design</a>, ',
+                    'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. ',
+                    'Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, ',
+                    'under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
+                ].join("")
+            };
+        },
+        PROVIDERS = {
+            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
+            "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
+            "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18),
+            "trees-cabs-crime": {
+                "url": "http://{S}.tiles.mapbox.com/v3/stamen.trees-cabs-crime/{Z}/{X}/{Y}.png",
+                "type": "png",
+                "subdomains": "a b c d".split(" "),
+                "minZoom": 11,
+                "maxZoom": 18,
+                "extent": [
+                    {"lat": 37.853, "lon": -122.577},
+                    {"lat": 37.684, "lon": -122.313}
+                ],
+                "attribution": [
+                    'Design by Shawn Allen at <a href="http://stamen.com">Stamen</a>.',
+                    'Data courtesy of <a href="http://fuf.net">FuF</a>,',
+                    '<a href="http://www.yellowcabsf.com">Yellow Cab</a>',
+                    '&amp; <a href="http://sf-police.org">SFPD</a>.'
+                ].join(" ")
+            }
+        };
+
+// set up toner and terrain flavors
+    setupFlavors("toner", ["hybrid", "labels", "lines", "background", "lite"]);
+// toner 2010
+    setupFlavors("toner", ["2010"]);
+// toner 2011 flavors
+    setupFlavors("toner", ["2011", "2011-lines", "2011-labels", "2011-lite"]);
+    setupFlavors("terrain", ["background"]);
+    setupFlavors("terrain", ["labels", "lines"], "png");
+
+    /*
+     * Export stamen.tile to the provided namespace.
+     */
+    exports.stamen = exports.stamen || {};
+    exports.stamen.tile = exports.stamen.tile || {};
+    exports.stamen.tile.providers = PROVIDERS;
+    exports.stamen.tile.getProvider = getProvider;
+
+    /*
+     * A shortcut for specifying "flavors" of a style, which are assumed to have the
+     * same type and zoom range.
+     */
+    function setupFlavors(base, flavors, type) {
+        var provider = getProvider(base);
+        for (var i = 0; i < flavors.length; i++) {
+            var flavor = [base, flavors[i]].join("-");
+            PROVIDERS[flavor] = MAKE_PROVIDER(flavor, type || provider.type, provider.minZoom, provider.maxZoom);
+        }
+    }
+
+    /*
+     * Get the named provider, or throw an exception if it doesn't exist.
+     */
+    function getProvider(name) {
+        if (name in PROVIDERS) {
+            return PROVIDERS[name];
+        } else {
+            throw 'No such provider (' + name + ')';
+        }
+    }
+
+    /*
+     * StamenTileLayer for Leaflet
+     * <http://leaflet.cloudmade.com/>
+     *
+     * Tested with version 0.3 and 0.4, but should work on all 0.x releases.
+     */
+    if (typeof L === "object") {
+        L.StamenTileLayer = L.TileLayer.extend({
+            initialize: function (name) {
+                var provider = getProvider(name),
+                    url = provider.url.replace(/({[A-Z]})/g, function (s) {
+                        return s.toLowerCase();
+                    });
+                L.TileLayer.prototype.initialize.call(this, url, {
+                    "minZoom": provider.minZoom,
+                    "maxZoom": provider.maxZoom,
+                    "subdomains": provider.subdomains,
+                    "scheme": "xyz",
+                    "attribution": provider.attribution
+                });
+            }
+        });
+    }
+
+    /*
+     * StamenTileLayer for OpenLayers
+     * <http://openlayers.org/>
+     *
+     * Tested with v2.1x.
+     */
+    if (typeof OpenLayers === "object") {
+        // make a tile URL template OpenLayers-compatible
+        function openlayerize(url) {
+            return url.replace(/({.})/g, function (v) {
+                return "$" + v.toLowerCase();
+            });
+        }
+
+        // based on http://www.bostongis.com/PrinterFriendly.aspx?content_name=using_custom_osm_tiles
+        OpenLayers.Layer.Stamen = OpenLayers.Class(OpenLayers.Layer.OSM, {
+            initialize: function (name, options) {
+                var provider = getProvider(name),
+                    url = provider.url,
+                    subdomains = provider.subdomains,
+                    hosts = [];
+                if (url.indexOf("{S}") > -1) {
+                    for (var i = 0; i < subdomains.length; i++) {
+                        hosts.push(openlayerize(url.replace("{S}", subdomains[i])));
+                    }
+                } else {
+                    hosts.push(openlayerize(url));
+                }
+                options = OpenLayers.Util.extend({
+                    "numZoomLevels": provider.maxZoom,
+                    "buffer": 0,
+                    "transitionEffect": "resize",
+                    // see: <http://dev.openlayers.org/apidocs/files/OpenLayers/Layer/OSM-js.html#OpenLayers.Layer.OSM.tileOptions>
+                    // and: <http://dev.openlayers.org/apidocs/files/OpenLayers/Tile/Image-js.html#OpenLayers.Tile.Image.crossOriginKeyword>
+                    "tileOptions": {
+                        "crossOriginKeyword": null
+                    }
+                }, options);
+                return OpenLayers.Layer.OSM.prototype.initialize.call(this, name, hosts, options);
+            }
+        });
+    }
+
+})(typeof exports === "undefined" ? this : exports);
+L.BingLayer = L.TileLayer.extend({
+    options: {
+        subdomains: [0, 1, 2, 3],
+        type: 'Aerial',
+        attribution: 'Bing',
+        culture: ''
+    },
+
+    initialize: function (key, options) {
+        L.Util.setOptions(this, options);
+
+        this._key = key;
+        this._url = null;
+        this.meta = {};
+        this.loadMetadata();
+    },
+
+    tile2quad: function (x, y, z) {
+        var quad = '';
+        for (var i = z; i > 0; i--) {
+            var digit = 0;
+            var mask = 1 << (i - 1);
+            if ((x & mask) != 0) digit += 1;
+            if ((y & mask) != 0) digit += 2;
+            quad = quad + digit;
+        }
+        return quad;
+    },
+
+    getTileUrl: function (p, z) {
+        var z = this._getZoomForUrl();
+        var subdomains = this.options.subdomains,
+            s = this.options.subdomains[Math.abs((p.x + p.y) % subdomains.length)];
+        return this._url.replace('{subdomain}', s)
+            .replace('{quadkey}', this.tile2quad(p.x, p.y, z))
+            .replace('{culture}', this.options.culture);
+    },
+
+    loadMetadata: function () {
+        var _this = this;
+        var cbid = '_bing_metadata_' + L.Util.stamp(this);
+        window[cbid] = function (meta) {
+            _this.meta = meta;
+            window[cbid] = undefined;
+            var e = document.getElementById(cbid);
+            e.parentNode.removeChild(e);
+            if (meta.errorDetails) {
+                alert("Got metadata" + meta.errorDetails);
+                return;
+            }
+            _this.initMetadata();
+        };
+        var url = "http://dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = url;
+        script.id = cbid;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    },
+
+    initMetadata: function () {
+        var r = this.meta.resourceSets[0].resources[0];
+        this.options.subdomains = r.imageUrlSubdomains;
+        this._url = r.imageUrl;
+        this._providers = [];
+        for (var i = 0; i < r.imageryProviders.length; i++) {
+            var p = r.imageryProviders[i];
+            for (var j = 0; j < p.coverageAreas.length; j++) {
+                var c = p.coverageAreas[j];
+                var coverage = {zoomMin: c.zoomMin, zoomMax: c.zoomMax, active: false};
+                var bounds = new L.LatLngBounds(
+                    new L.LatLng(c.bbox[0] + 0.01, c.bbox[1] + 0.01),
+                    new L.LatLng(c.bbox[2] - 0.01, c.bbox[3] - 0.01)
+                );
+                coverage.bounds = bounds;
+                coverage.attrib = p.attribution;
+                this._providers.push(coverage);
+            }
+        }
+        this._update();
+    },
+
+    _update: function () {
+        if (this._url == null || !this._map) return;
+        this._update_attribution();
+        L.TileLayer.prototype._update.apply(this, []);
+    },
+
+    _update_attribution: function () {
+        var bounds = this._map.getBounds();
+        var zoom = this._map.getZoom();
+        for (var i = 0; i < this._providers.length; i++) {
+            var p = this._providers[i];
+            if ((zoom <= p.zoomMax && zoom >= p.zoomMin) &&
+                bounds.intersects(p.bounds)) {
+                if (!p.active)
+                    this._map.attributionControl.addAttribution(p.attrib);
+                p.active = true;
+            } else {
+                if (p.active)
+                    this._map.attributionControl.removeAttribution(p.attrib);
+                p.active = false;
+            }
+        }
+    },
+
+    onRemove: function (map) {
+        for (var i = 0; i < this._providers.length; i++) {
+            var p = this._providers[i];
+            if (p.active) {
+                this._map.attributionControl.removeAttribution(p.attrib);
+                p.active = false;
+            }
+        }
+        L.TileLayer.prototype.onRemove.apply(this, [map]);
+    }
+});
+/*
+ * Google layer using Google Maps API
+ */
+var gc2SetLGoogle = function () {
+    L.Google = L.Class.extend({
+        includes: L.Mixin.Events,
+
+        options: {
+            minZoom: 0,
+            maxZoom: 18,
+            tileSize: 256,
+            subdomains: 'abc',
+            errorTileUrl: '',
+            attribution: '',
+            opacity: 1,
+            continuousWorld: false,
+            noWrap: false,
+            mapOptions: {
+                backgroundColor: '#dddddd'
+            }
+        },
+
+        // Possible types: SATELLITE, ROADMAP, HYBRID, TERRAIN
+        initialize: function (type, options) {
+            L.Util.setOptions(this, options);
+
+            this._ready = google.maps.Map != undefined;
+            if (!this._ready) L.Google.asyncWait.push(this);
+
+            this._type = type || 'SATELLITE';
+        },
+
+        onAdd: function (map, insertAtTheBottom) {
+            this._map = map;
+            this._insertAtTheBottom = insertAtTheBottom;
+
+            // create a container div for tiles
+            this._initContainer();
+            this._initMapObject();
+
+            // set up events
+            map.on('viewreset', this._resetCallback, this);
+
+            this._limitedUpdate = L.Util.limitExecByInterval(this._update, 150, this);
+            map.on('move', this._update, this);
+
+            map.on('zoomanim', this._handleZoomAnim, this);
+
+            //20px instead of 1em to avoid a slight overlap with google's attribution
+            map._controlCorners['bottomright'].style.marginBottom = "20px";
+
+            this._reset();
+            this._update();
+        },
+
+        onRemove: function (map) {
+            this._map._container.removeChild(this._container);
+            //this._container = null;
+
+            this._map.off('viewreset', this._resetCallback, this);
+
+            this._map.off('move', this._update, this);
+
+            this._map.off('zoomanim', this._handleZoomAnim, this);
+
+            map._controlCorners['bottomright'].style.marginBottom = "0em";
+            //this._map.off('moveend', this._update, this);
+        },
+
+        getAttribution: function () {
+            return this.options.attribution;
+        },
+
+        setOpacity: function (opacity) {
+            this.options.opacity = opacity;
+            if (opacity < 1) {
+                L.DomUtil.setOpacity(this._container, opacity);
+            }
+        },
+
+        setElementSize: function (e, size) {
+            e.style.width = size.x + "px";
+            e.style.height = size.y + "px";
+        },
+
+        _initContainer: function () {
+            var tilePane = this._map._container,
+                first = tilePane.firstChild;
+
+            if (!this._container) {
+                this._container = L.DomUtil.create('div', 'leaflet-google-layer leaflet-top leaflet-left');
+                this._container.id = "_GMapContainer_" + L.Util.stamp(this);
+                this._container.style.zIndex = "auto";
+            }
+
+            tilePane.insertBefore(this._container, first);
+
+            this.setOpacity(this.options.opacity);
+            this.setElementSize(this._container, this._map.getSize());
+        },
+
+        _initMapObject: function () {
+            if (!this._ready) return;
+            this._google_center = new google.maps.LatLng(0, 0);
+            var map = new google.maps.Map(this._container, {
+                center: this._google_center,
+                zoom: 0,
+                tilt: 0,
+                mapTypeId: google.maps.MapTypeId[this._type],
+                disableDefaultUI: true,
+                keyboardShortcuts: false,
+                draggable: false,
+                disableDoubleClickZoom: true,
+                scrollwheel: false,
+                streetViewControl: false,
+                styles: this.options.mapOptions.styles,
+                backgroundColor: this.options.mapOptions.backgroundColor
+            });
+
+            var _this = this;
+            this._reposition = google.maps.event.addListenerOnce(map, "center_changed",
+                function () {
+                    _this.onReposition();
+                });
+            this._google = map;
+
+            google.maps.event.addListenerOnce(map, "idle",
+                function () {
+                    _this._checkZoomLevels();
+                });
+        },
+
+        _checkZoomLevels: function () {
+            //setting the zoom level on the Google map may result in a different zoom level than the one requested
+            //(it won't go beyond the level for which they have data).
+            // verify and make sure the zoom levels on both Leaflet and Google maps are consistent
+            if (this._google.getZoom() !== this._map.getZoom()) {
+                //zoom levels are out of sync. Set the leaflet zoom level to match the google one
+                this._map.setZoom(this._google.getZoom());
+            }
+        },
+
+        _resetCallback: function (e) {
+            this._reset(e.hard);
+        },
+
+        _reset: function (clearOldContainer) {
+            this._initContainer();
+        },
+
+        _update: function (e) {
+            if (!this._google) return;
+            this._resize();
+
+            var center = e && e.latlng ? e.latlng : this._map.getCenter();
+            var _center = new google.maps.LatLng(center.lat, center.lng);
+
+            this._google.setCenter(_center);
+            this._google.setZoom(this._map.getZoom());
+
+            this._checkZoomLevels();
+            //this._google.fitBounds(google_bounds);
+        },
+
+        _resize: function () {
+            var size = this._map.getSize();
+            if (this._container.style.width == size.x &&
+                this._container.style.height == size.y)
+                return;
+            this.setElementSize(this._container, size);
+            this.onReposition();
+        },
+
+
+        _handleZoomAnim: function (e) {
+            var center = e.center;
+            var _center = new google.maps.LatLng(center.lat, center.lng);
+
+            this._google.setCenter(_center);
+            this._google.setZoom(e.zoom);
+        },
+
+
+        onReposition: function () {
+            if (!this._google) return;
+            google.maps.event.trigger(this._google, "resize");
+        }
+    });
+    L.Google.asyncWait = [];
+    L.Google.asyncInitialize = function () {
+        var i;
+        for (i = 0; i < L.Google.asyncWait.length; i++) {
+            var o = L.Google.asyncWait[i];
+            o._ready = true;
+            if (o._container) {
+                o._initMapObject();
+                o._update();
+            }
+        }
+        L.Google.asyncWait = [];
+    }
+}
 

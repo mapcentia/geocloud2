@@ -198,11 +198,12 @@ MapCentia = function (globalId) {
             p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
             cloud.zoomToExtent([p1.x, p1.y, p2.x, p2.y]);
         } else {
-            p = geocloud.transformPoint(defaults.zoom.split(",")[0], defaults.zoom.split(",")[1], "EPSG:4326", "EPSG:900913");
-            cloud.zoomToPoint(p.x, p.y, defaults.zoom.split(",")[2]);
+            p = geocloud.transformPoint(defaults.zoom[0], defaults.zoom[1], "EPSG:4326", "EPSG:900913");
+            cloud.zoomToPoint(p.x, p.y, defaults.zoom[2]);
         }
         // If no base layers defaults at all
-        if (typeof window.setBaseLayers !== 'object' || defaults.baseLayers === null) {
+
+        if (typeof window.setBaseLayers !== 'object' && defaults.baseLayers === null) {
             defaults.baseLayers = [
                 {id: geocloud.MAPQUESTOSM, name: "MapQuset OSM"},
                 {id: geocloud.OSM, name: "OSM"}
@@ -219,7 +220,13 @@ MapCentia = function (globalId) {
                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
         }
-        setBaseLayer(defaults.baseLayers[0].id);
+        if (defaults.setBaseLayer){
+            setBaseLayer(defaults.setBaseLayer);
+
+        }
+        else{
+            setBaseLayer(defaults.baseLayers[0].id);
+        }
         arr = defaults.layers;
         for (var i = 0; i < arr.length; i++) {
             layers[arr[i]] = cloud.addTileLayers({
