@@ -71,12 +71,12 @@ class Legend extends \app\inc\Controller
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
                 //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
-                $html .= "<table class=\"legend legend-body: 10px\">";
+                $html .= "<table class=\"legend legend-body\">";
                 if (is_array($layer['classes'])) {
                     foreach ($layer['classes'] as $class) {
                         if ($class['name']) {
-                            $html .= "<tr><td class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
-                            $html .= "<td class=\"legend legend-text\">" . $class['name'] . "</td></tr>";
+                            $html .= "<tr><td style=\"padding: 3px\" class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
+                            $html .= "<td style=\"padding: 3px\" class=\"legend legend-text\">" . $class['name'] . "</td></tr>";
                         }
                     }
                 }

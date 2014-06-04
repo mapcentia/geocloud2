@@ -45,11 +45,25 @@ MapCentia = (function () {
     addLegend = function () {
         var param = 'l=' + cloud.getVisibleLayers();
         $.ajax({
-            url: hostname + '/api/v1/legend/html/' + db + '/' + schema + '?' + param,
+            url: hostname + '/api/v1/legend/json/' + db + '/?' + param,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                $('#legend').html(response.html);
+                var table = $("<table/>", {border: '0'}), tr, td;
+                $.each(response, function (i, v) {
+                    if (typeof(v) === "object" && v.id !== 'public.komgr') {
+                        tr = $("<tr/>");
+                        td = $("<td/>");
+                        for (var u = 0; u < v.classes.length; u++) {
+                            td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                        }
+                        tr.append(td);
+                    }
+                    table.append(tr);
+                    // Spacer
+                    table.append($("<tr style='height: 5px'/>"));
+                });
+                $('#legend').html(table);
             }
         });
     };
@@ -145,7 +159,7 @@ MapCentia = (function () {
         for (var i = 0; i < window.setBaseLayers.length; i++) {
             cloud.addBaseLayer(window.setBaseLayers[i].id);
             $("#base-layer-list").append(
-                "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\"><img class=\"img-rounded images-base-map\" src=\"/apps/viewer/img/mqosm.png\">" + window.setBaseLayers[i].name + "</a></li>"
+                "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
             );
         }
 
@@ -246,23 +260,30 @@ MapCentia = (function () {
                 }
             }
         }); // Ajax call end
+        var sub, eWidth, eHeight;
         jRes = jRespond([
             {
                 label: 'handheld',
                 enter: 0,
-                exit: 768
+                exit: 400
             },
             {
                 label: 'desktop',
-                enter: 768,
+                enter: 401,
                 exit: 10000
             }
         ]);
         jRes.addFunc({
             breakpoint: ['handheld'],
             enter: function () {
+                sub = 115;
+                eWidth = $("#map").width();
+                eHeight = $("#map").height();
                 // We activate the modals
                 $("#modal-legend .modal-body").append($("#legend"));
+                $(".modal-body").css({"height": (eHeight - sub) + "px"});
+                //$("#modal-info-body").css({"max-height": (eHeight - sub) + "px"});
+                //$("#modal-share-body").css({"max-height": (eHeight - sub) + "px"});
             },
             exit: function () {
                 $('#modal-legend').modal('hide');
@@ -271,6 +292,9 @@ MapCentia = (function () {
         jRes.addFunc({
             breakpoint: ['desktop'],
             enter: function () {
+                sub = 175;
+                eWidth = $("#map").width();
+                eHeight = $("#map").height();
                 $("#legend-popover").popover({
                     offset: 10,
                     html: true,
@@ -278,8 +302,14 @@ MapCentia = (function () {
                 }).popover('show').popover('hide');
                 $('#legend-popover').on('click', function (e) {
                     addLegend();
+                    $("#legend").css({"max-height": (eHeight - 100) + "px"});
+
                 });
+                $(".modal-body").css({"max-height": (eHeight - sub) + "px"});
+                //$("#modal-info-body").css({"max-height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
+                //$("#modal-share-body").css({"max-height": (eHeight - sub) + "px"});
             },
+
             exit: function () {
                 // We activate the popovers, so the divs becomes visible once before screen resize.
                 $("#legend-popover").popover('show');

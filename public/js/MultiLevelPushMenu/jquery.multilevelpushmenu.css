@@ -22,9 +22,9 @@
 .multilevelpushmenu_wrapper .ltr {
 	margin-left: -100%;
 	left: 0;
-	-moz-box-shadow: 5px 0 5px -5px #1f4164;
-	-webkit-box-shadow: 5px 0 5px -5px #1f4164;
-	box-shadow: 5px 0 5px -5px #1f4164;
+	-moz-box-shadow: 5px -3px 5px -5px #1f4164;
+	-webkit-box-shadow: 3px -4px 5px -5px #1f4164;
+	box-shadow: 5px -3px 5px -5px #1f4164;
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#1f4164,direction=90,strength=2);
 }
 

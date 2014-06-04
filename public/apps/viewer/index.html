@@ -10,7 +10,8 @@
     <![endif]-->
     <link rel="stylesheet" href="/js/ol3/ol.css" type="text/css">
     <link rel="stylesheet" href="/js/leaflet/leaflet.css" type="text/css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/apps/viewer/css/bootstrap.css">
+    <link rel="stylesheet" href="/apps/viewer/css/non-responsive.css">
     <link rel="stylesheet" href="/js/MultiLevelPushMenu/jquery.multilevelpushmenu.css"/>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css">
     <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300'
@@ -59,7 +60,7 @@
                 </li>
                 <li id="legend-popover-li" class="gc-btn">
                     <a href="javascript:void(0)" id="legend-popover" rel="popover" data-placement="bottom"
-                       title="Legend">
+                       >
                         Legend </a>
                 </li>
                 <li id="legend-modal-li" class="gc-btn">
@@ -133,7 +134,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">Share the map</h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="modal-share-body">
                 <form class="form-horizontal" role="form">
                     <div class="form-group">
                         <label class="col-sm-1 control-label"><i class="fa fa-share"></i></label>
