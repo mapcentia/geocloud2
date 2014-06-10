@@ -1,3 +1,12 @@
+function __(string) {
+    "use strict";
+    if (typeof gc2i18n !== 'undefined') {
+        if (gc2i18n.dict[string]) {
+            return gc2i18n.dict[string];
+        }
+    }
+    return string;
+}
 var gc2Widget = {};
 gc2Widget.maps = [];
 gc2Widget.scriptsLoaded = false;
@@ -14,11 +23,10 @@ gc2Widget.scriptsLoaded = false;
         scriptHost,
         host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     scriptHost = host;
-    // HACK. IE9 has some issues geting host.
+    // HACK. IE9 has some issues getting host.
     if (typeof host === "undefined") {
         host = scriptHost = window.gc2host;
     }
-    //host = "http://cowi.mapcentia.com";
     if (typeof jQuery === "undefined") {
         var head = document.getElementsByTagName("head")[0],
             js = document.createElement("script");
@@ -140,7 +148,9 @@ gc2Widget.scriptsLoaded = false;
                 _.b("\n" + i);
                 _.b("                       data-placement=\"bottom\">");
                 _.b("\n" + i);
-                _.b("                        Signatur </a>");
+                _.b("                        ");
+                _.b(_.v(_.f("Legend", c, p, 0)));
+                _.b(" </a>");
                 _.b("\n" + i);
                 _.b("                </li>");
                 _.b("\n" + i);
@@ -168,13 +178,17 @@ gc2Widget.scriptsLoaded = false;
                 _.b(_.v(_.f("id", c, p, 0)));
                 _.b("'].openMapWin(decodeURIComponent(geocloud.urlHash),screen.width-20, screen.height-100);\">");
                 _.b("\n" + i);
-                _.b("                        Stort kort </a>");
+                _.b("                        ");
+                _.b(_.v(_.f("Pop up", c, p, 0)));
+                _.b(" </a>");
                 _.b("\n" + i);
                 _.b("                </li>");
                 _.b("\n" + i);
                 _.b("                <li class=\"dropdown\">");
                 _.b("\n" + i);
-                _.b("                    <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">Baggrund <b");
+                _.b("                    <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">");
+                _.b(_.v(_.f("Base layers", c, p, 0)));
+                _.b(" <b");
                 _.b("\n" + i);
                 _.b("                            class=\"caret\"></b></a>");
                 _.b("\n" + i);
@@ -268,7 +282,9 @@ gc2Widget.scriptsLoaded = false;
                 _.b("\n" + i);
                 _.b("                    <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>");
                 _.b("\n" + i);
-                _.b("                    <h4 class=\"modal-title\">Del kortet</h4>");
+                _.b("                    <h4 class=\"modal-title\">");
+                _.b(_.v(_.f("Share", c, p, 0)));
+                _.b("</h4>");
                 _.b("\n" + i);
                 _.b("                </div>");
                 _.b("\n" + i);
@@ -353,14 +369,20 @@ gc2Widget.scriptsLoaded = false;
                 _.b("\n" + i);
                 _.b("                        <div class=\"form-group\">");
                 _.b("\n" + i);
-                _.b("                            <label for=\"share-url\" class=\"col-sm-1 control-label\"><i");
+                _.b("                            <label for=\"share-url-");
+                _.b(_.v(_.f("id", c, p, 0)));
+                _.b("\" class=\"col-sm-1 control-label\"><i");
                 _.b("\n" + i);
                 _.b("                                    class=\"fa fa-link\"></i></label>");
                 _.b("\n" + i);
                 _.b("\n" + i);
                 _.b("                            <div class=\"col-sm-10\">");
                 _.b("\n" + i);
-                _.b("                                <input data-toggle=\"tooltip\" data-placement=\"top\" title=\"URL to this map\"");
+                _.b("                                <input data-toggle=\"tooltip\" data-placement=\"top\"");
+                _.b("\n" + i);
+                _.b("                                       title=\"");
+                _.b(_.v(_.f("URL to this map", c, p, 0)));
+                _.b("\"");
                 _.b("\n" + i);
                 _.b("                                       type=\"text\"");
                 _.b("\n" + i);
@@ -376,14 +398,18 @@ gc2Widget.scriptsLoaded = false;
                 _.b(_.v(_.f("id", c, p, 0)));
                 _.b("\">");
                 _.b("\n" + i);
-                _.b("                            <label for=\"share-iframe\" class=\"col-sm-1 control-label\"><i class=\"fa fa-code\"></i></label>");
+                _.b("                            <label for=\"share-iframe-");
+                _.b(_.v(_.f("id", c, p, 0)));
+                _.b("\" class=\"col-sm-1 control-label\"><i class=\"fa fa-code\"></i></label>");
                 _.b("\n" + i);
                 _.b("\n" + i);
                 _.b("                            <div class=\"col-sm-10\">");
                 _.b("\n" + i);
                 _.b("                                <input data-toggle=\"tooltip\" data-placement=\"top\"");
                 _.b("\n" + i);
-                _.b("                                       title=\"Iframe with this map to embed on web page\" type=\"text\"");
+                _.b("                                       title=\"");
+                _.b(_.v(_.f("Iframe with this map to embed on web page", c, p, 0)));
+                _.b("\" type=\"text\"");
                 _.b("\n" + i);
                 _.b("                                       class=\"form-control share-text\" id=\"share-iframe-");
                 _.b(_.v(_.f("id", c, p, 0)));
@@ -397,7 +423,9 @@ gc2Widget.scriptsLoaded = false;
                 _.b(_.v(_.f("id", c, p, 0)));
                 _.b("\">");
                 _.b("\n" + i);
-                _.b("                            <label for=\"share-static\" class=\"col-sm-1 control-label\"><i");
+                _.b("                            <label for=\"share-static-");
+                _.b(_.v(_.f("id", c, p, 0)));
+                _.b("\" class=\"col-sm-1 control-label\"><i");
                 _.b("\n" + i);
                 _.b("                                    class=\"fa fa-picture-o\"></i></label>");
                 _.b("\n" + i);
@@ -406,7 +434,9 @@ gc2Widget.scriptsLoaded = false;
                 _.b("\n" + i);
                 _.b("                                <input data-toggle=\"tooltip\" data-placement=\"top\"");
                 _.b("\n" + i);
-                _.b("                                       title=\"URL to a static PNG image of this map\" type=\"text\"");
+                _.b("                                       title=\"");
+                _.b(_.v(_.f("URL to a static PNG image of this map", c, p, 0)));
+                _.b("\" type=\"text\"");
                 _.b("\n" + i);
                 _.b("                                       class=\"form-control share-text\" id=\"share-static-");
                 _.b(_.v(_.f("id", c, p, 0)));
@@ -420,14 +450,18 @@ gc2Widget.scriptsLoaded = false;
                 _.b(_.v(_.f("id", c, p, 0)));
                 _.b("\">");
                 _.b("\n" + i);
-                _.b("                            <label for=\"share-javascript\" class=\"col-sm-1 control-label\">js</label>");
+                _.b("                            <label for=\"share-javascript-");
+                _.b(_.v(_.f("id", c, p, 0)));
+                _.b("\" class=\"col-sm-1 control-label\">js</label>");
                 _.b("\n" + i);
                 _.b("\n" + i);
                 _.b("                            <div class=\"col-sm-10\">");
                 _.b("\n" + i);
                 _.b("                                <textarea data-toggle=\"tooltip\" data-placement=\"top\"");
                 _.b("\n" + i);
-                _.b("                                          title=\"JavaScript for an application\"");
+                _.b("                                          title=\"");
+                _.b(_.v(_.f("JavaScript for an application", c, p, 0)));
+                _.b("\"");
                 _.b("\n" + i);
                 _.b("                                          class=\"form-control share-text\" id=\"share-javascript-");
                 _.b(_.v(_.f("id", c, p, 0)));
@@ -446,7 +480,9 @@ gc2Widget.scriptsLoaded = false;
                 _.b("\n" + i);
                 _.b("                <div class=\"modal-footer\">");
                 _.b("\n" + i);
-                _.b("                    <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Luk</button>");
+                _.b("                    <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">");
+                _.b(_.v(_.f("Close", c, p, 0)));
+                _.b("</button>");
                 _.b("\n" + i);
                 _.b("                </div>");
                 _.b("\n" + i);
@@ -464,7 +500,16 @@ gc2Widget.scriptsLoaded = false;
                 return _.fl();
                 ;
             });
-            $("#" + gc2RandId).html(templates.body.render({id: gc2RandId}));
+
+            var context;
+            if (typeof gc2i18n !== 'undefined') {
+                context = gc2i18n.dict;
+                context.id = gc2RandId;
+            }
+            else {
+                context = {id: gc2RandId};
+            }
+            $("#" + gc2RandId).html(templates.body.render(context));
             gc2Widget.maps[gc2RandId] = new MapCentia(gc2RandId);
             // Init the map
             gc2Widget.maps[gc2RandId].init(defaults);

@@ -9,6 +9,9 @@ class Baselayerjs extends \app\inc\Controller
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '".\app\conf\App::$param['bingApiKey']."';\n";
         }
+        if (\app\conf\App::$param['digitalGlobeKey']) {
+            echo "window.digitalGlobeKey = '".\app\conf\App::$param['digitalGlobeKey']."';\n";
+        }
         if (\app\conf\App::$param['baseLayers']) {
             echo "window.setBaseLayers = ".json_encode(\app\conf\App::$param['baseLayers']).";\n";
         }

@@ -15,7 +15,7 @@
                 <li id="legend-popover-li-{{id}}" class="gc-btn">
                     <a href="javascript:void(0)" id="legend-popover-{{id}}" rel="popover"
                        data-placement="bottom">
-                        Signatur </a>
+                        {{Legend}} </a>
                 </li>
                 <!--<li id="share-modal-li-{{id}}" class="gc-btn">
                     <a href="javascript:void(0)" title="Share"
@@ -25,10 +25,10 @@
                 <li id="open-win-li-{{id}}" class="gc-btn">
                     <a href="javascript:void(0)" title=""
                        onclick="gc2Widget.maps['{{id}}'].openMapWin(decodeURIComponent(geocloud.urlHash),screen.width-20, screen.height-100);">
-                        Stort kort </a>
+                        {{Pop up}} </a>
                 </li>
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Baggrund <b
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{Base layers}} <b
                             class="caret"></b></a>
                     <ul class="dropdown-menu" id="base-layer-list-{{id}}">
                     </ul>
@@ -67,7 +67,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Del kortet</h4>
+                    <h4 class="modal-title">{{Share}}</h4>
                 </div>
                 <div class="modal-body" id="modal-share-body-{{id}}">
                     <form class="form-horizontal" role="form">
@@ -104,40 +104,41 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="share-url" class="col-sm-1 control-label"><i
+                            <label for="share-url-{{id}}" class="col-sm-1 control-label"><i
                                     class="fa fa-link"></i></label>
 
                             <div class="col-sm-10">
-                                <input data-toggle="tooltip" data-placement="top" title="URL to this map"
+                                <input data-toggle="tooltip" data-placement="top"
+                                       title="{{URL to this map}}"
                                        type="text"
                                        class="form-control share-text" id="share-url-{{id}}" value="">
                             </div>
                         </div>
                         <div class="form-group" id="group-iframe-{{id}}">
-                            <label for="share-iframe" class="col-sm-1 control-label"><i class="fa fa-code"></i></label>
+                            <label for="share-iframe-{{id}}" class="col-sm-1 control-label"><i class="fa fa-code"></i></label>
 
                             <div class="col-sm-10">
                                 <input data-toggle="tooltip" data-placement="top"
-                                       title="Iframe with this map to embed on web page" type="text"
+                                       title="{{Iframe with this map to embed on web page}}" type="text"
                                        class="form-control share-text" id="share-iframe-{{id}}" value="">
                             </div>
                         </div>
                         <div class="form-group" id="group-static-{{id}}">
-                            <label for="share-static" class="col-sm-1 control-label"><i
+                            <label for="share-static-{{id}}" class="col-sm-1 control-label"><i
                                     class="fa fa-picture-o"></i></label>
 
                             <div class="col-sm-10">
                                 <input data-toggle="tooltip" data-placement="top"
-                                       title="URL to a static PNG image of this map" type="text"
+                                       title="{{URL to a static PNG image of this map}}" type="text"
                                        class="form-control share-text" id="share-static-{{id}}" value="">
                             </div>
                         </div>
                         <div class="form-group" id="group-javascript-{{id}}">
-                            <label for="share-javascript" class="col-sm-1 control-label">js</label>
+                            <label for="share-javascript-{{id}}" class="col-sm-1 control-label">js</label>
 
                             <div class="col-sm-10">
                                 <textarea data-toggle="tooltip" data-placement="top"
-                                          title="JavaScript for an application"
+                                          title="{{JavaScript for an application}}"
                                           class="form-control share-text" id="share-javascript-{{id}}" rows="6"
                                           value=""></textarea>
                             </div>
@@ -146,7 +147,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Luk</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{{Close}}</button>
                 </div>
             </div>
             <!-- /.modal-content -->

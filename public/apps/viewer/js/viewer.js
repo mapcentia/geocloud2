@@ -156,6 +156,7 @@ MapCentia = (function () {
             ];
         }
         cloud.bingApiKey = window.bingApiKey;
+        cloud.digitalGlobeKey = window.digitalGlobeKey;
         for (var i = 0; i < window.setBaseLayers.length; i++) {
             cloud.addBaseLayer(window.setBaseLayers[i].id);
             $("#base-layer-list").append(
@@ -191,7 +192,7 @@ MapCentia = (function () {
                 }
                 arr = array_unique(groups);
                 for (var u = 0; u < response.data.length; ++u) {
-                    isBaseLayer = (response.data[u].baselayer) ? true : false;
+                    isBaseLayer = response.data[u].baselayer;
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers({
                         layers: [response.data[u].f_table_schema + "." + response.data[u].f_table_name],
                         db: db,
@@ -225,18 +226,25 @@ MapCentia = (function () {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <i data-toggle='tooltip' title='first tooltip' class='fa fa-lock'></i>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
-                                l.push({
-                                    text: text,
-                                    id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
-                                    leaf: true,
-                                    checked: false
-                                });
-                                node.items[0].items.push({
-                                    name: cat,
-                                    metaIcon: 'fa fa-info-circle',
-                                    link: '#',
-                                    metaUrl: response.data[u].meta_url
-                                });
+                                if (response.data[u].baselayer) {
+                                    $("#base-layer-list").append(
+                                        "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
+                                    );
+                                }
+                                else {
+                                    l.push({
+                                        text: text,
+                                        id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                        leaf: true,
+                                        checked: false
+                                    });
+                                    node.items[0].items.push({
+                                        name: cat,
+                                        metaIcon: 'fa fa-info-circle',
+                                        link: '#',
+                                        metaUrl: response.data[u].meta_url
+                                    });
+                                }
                             }
                         }
                         arrMenu[0].items.push(node);
@@ -466,5 +474,4 @@ MapCentia = (function () {
         shareStumbleupon: shareStumbleupon
     };
 }());
-
 

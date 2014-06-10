@@ -34,7 +34,7 @@ class Table extends Model
         }
         $this->tableWithOutSchema = $_table;
         $this->table = $table;
-        $sql = "SELECT 1 FROM {$table}";
+        $sql = "SELECT 1 FROM {$table} LIMIT 1";
         $this->execQuery($sql);
         if ($this->PDOerror) {
             $this->exits = false;

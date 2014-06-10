@@ -102,7 +102,12 @@ MapCentia.setup = function () {
                 76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
                 1.19432856696, 0.597164283478, 0.298582141739], isBaseLayer: true, visibility: false, displayInLayerSwitcher: true, transitionEffect: 'resize'}
         ),
-        new OpenLayers.Layer.OSM("osm")
+        new OpenLayers.Layer.OSM("osm"),
+        new OpenLayers.Layer.XYZ(
+            "DigitalGlobe:Imagery",
+            "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + "cc512ac4-bbf1-4279-972d-b698b47a0e22" + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + "DigitalGlobe:ImageryTileService" + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}",
+            {numZoomLevels: 20}
+        )
     ];
     $.ajax({
         url: "/api/v1/meta/" + db + "/" + schema,
@@ -182,6 +187,11 @@ MapCentia.setup = function () {
                             nodeType: "gx_layer",
                             layer: "osm",
                             text: 'Osm'
+                        },
+                        {
+                            nodeType: "gx_layer",
+                            layer: "DigitalGlobe:Imagery",
+                            text: 'DigitalGlobe:Imagery'
                         },
                         {
                             nodeType: "gx_layer",
@@ -380,7 +390,7 @@ MapCentia.init = function () {
                             {name: 'Keyhole Markup Language (KML)', fileExt: '.kml', mimeType: 'text/xml', formatter: 'OpenLayers.Format.KML', fileProjection: new OpenLayers.Projection('EPSG:4326')},
                             {name: 'ESRI Shapefile (zipped, Google projection)', fileExt: '.zip', mimeType: 'application/zip', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'ESRI Shapefile', fileProjection: new OpenLayers.Projection('EPSG:900913')},
                             {name: 'ESRI Shapefile (zipped, WGS84)', fileExt: '.zip', mimeType: 'application/zip', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'ESRI Shapefile', fileProjection: new OpenLayers.Projection('EPSG:4326')}
-                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:900913')},
+                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:     ')},
                             //{name: 'OGC GeoPackage (WGS84)', fileExt: '.gpkg', mimeType: 'application/binary', formatter: 'OpenLayers.Format.GeoJSON', targetFormat: 'GPKG', fileProjection: new OpenLayers.Projection('EPSG:4326')}
 
                         ],

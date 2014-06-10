@@ -460,6 +460,7 @@ $(document).ready(function () {
         ];
     }
     cloud.bingApiKey = window.bingApiKey;
+    cloud.digitalGlobeKey = window.digitalGlobeKey;
     window.setBaseLayers = window.setBaseLayers.reverse();
     for (var i = 0; i < window.setBaseLayers.length; i++) {
         bl = cloud.addBaseLayer(window.setBaseLayers[i].id);
@@ -503,7 +504,7 @@ $(document).ready(function () {
                         }
                         layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
                             singleTile: false,
-                            isBaseLayer: isBaseLayer,
+                            //isBaseLayer: isBaseLayer,
                             visibility: false,
                             wrapDateLine: false,
                             tileCached: true,

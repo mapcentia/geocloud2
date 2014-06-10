@@ -409,6 +409,24 @@ var mygeocloud_ol = (function () {
             l.id = name;
             return (l);
         };
+        this.addDigitalGlobe = function (type) {
+            var l, name, key = this.digitalGlobeKey;
+            switch (type) {
+                case "DigitalGlobe:Imagery":
+                    name = "DigitalGlobe:ImageryTileService";
+                    break;
+            }
+            l = new OpenLayers.Layer.XYZ(
+                type,
+                "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}"
+            );
+            this.map.addLayer(l);
+            l.setVisibility(false);
+            l.baseLayer = true;
+            l.id = type;
+            return (l);
+
+        };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
@@ -453,6 +471,9 @@ var mygeocloud_ol = (function () {
                     break;
                 case "dtkSkaermkort":
                     o = this.addDtkSkaermkort();
+                    break;
+                case "DigitalGlobe:Imagery":
+                    o = this.addDigitalGlobe("DigitalGlobe:Imagery");
                     break;
             }
             return o;

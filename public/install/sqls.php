@@ -35,7 +35,7 @@ CREATE TABLE geometry_columns_join (
     baselayer bool,
     sort_id int,
     tilecache bool,
-    data varchar(255),
+    data text,
     not_querable bool,
     single_tile bool,
     cartomobile text,

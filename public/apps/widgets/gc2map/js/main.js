@@ -220,7 +220,20 @@ MapCentia = function (globalId) {
         }
         cloud.bingApiKey = window.bingApiKey;
         for (var i = 0; i < defaults.baseLayers.length; i++) {
-            cloud.addBaseLayer(defaults.baseLayers[i].id);
+            if (defaults.baseLayers[i].id.split(".").length > 1) {
+                cloud.addTileLayers({
+                    host: defaults.host,
+                    layers: [defaults.baseLayers[i].id],
+                    db: db,
+                    wrapDateLine: false,
+                    isBaseLayer: true,
+                    displayInLayerSwitcher: true,
+                    name: defaults.baseLayers[i].name
+                });
+            }
+            else {
+                cloud.addBaseLayer(defaults.baseLayers[i].id);
+            }
             $("#base-layer-list-" + id).append(
                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
@@ -334,7 +347,7 @@ MapCentia = function (globalId) {
                                     $('#modal-info-' + id).modal({"backdrop": false});
                                     var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
                                     $("#info-tab-" + id).append('<li><a data-toggle="tab" href="#_' + index + '-' + id + '">' + layerTitel + '</a></li>');
-                                    $("#info-pane-" + id).append('<div class="tab-pane" id="_' + index + '-' + id + '"><table class="table table-condensed"><thead><tr><th>Egenskab</th><th>V&aelig;rdi</th></tr></thead></table></div>');
+                                    $("#info-pane-" + id).append('<div class="tab-pane" id="_' + index + '-' + id + '"><table class="table table-condensed"><thead><tr><th>' + __("Property") + '</th><th>' + __("Value") + '</th></tr></thead></table></div>');
                                     $.each(layerObj.geoJSON.features, function (i, feature) {
                                         if (fieldConf === null) {
                                             $.each(feature.properties, function (name, property) {

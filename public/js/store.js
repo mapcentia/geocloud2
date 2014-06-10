@@ -986,6 +986,25 @@ $(window).ready(function () {
                             name: 'not_querable',
                             fieldLabel: 'Not querable',
                             value: r.data.not_querable
+                        },
+                        {
+                            xtype: 'combo',
+                            store: new Ext.data.ArrayStore({
+                                fields: ['name', 'value'],
+                                data: [
+                                    ['true', true],
+                                    ['false', false]
+                                ]
+                            }),
+                            displayField: 'name',
+                            valueField: 'value',
+                            mode: 'local',
+                            typeAhead: false,
+                            editable: false,
+                            triggerAction: 'all',
+                            name: 'baselayer',
+                            fieldLabel: 'Is baselayer',
+                            value: r.data.baselayer
                         }
                     ],
                     buttons: [
