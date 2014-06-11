@@ -397,8 +397,8 @@ var mygeocloud_ol = (function () {
             //this.map.addLayer(this.yandexMaps);
             //return (this.yandexMaps);
         };
-        this.addDtkSkaermkort = function () {
-            var l, name = "dtkskaermkort", layer = "dtk_skaermkort",
+        this.addDtkSkaermkort = function (name, layer) {
+            var l,
                 url = "http://eu1.mapcentia.com/wms/dk/tilecache";
             l = new OpenLayers.Layer.WMS(name, url, {
                 layers: layer
@@ -470,7 +470,10 @@ var mygeocloud_ol = (function () {
                     o = this.addYandex();
                     break;
                 case "dtkSkaermkort":
-                    o = this.addDtkSkaermkort();
+                    o = this.addDtkSkaermkort("dtkSkaermkort", "dtk_skaermkort");
+                    break;
+                case "dtkSkaermkortDaempet":
+                    o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "dtk_skaermkort_daempet");
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");

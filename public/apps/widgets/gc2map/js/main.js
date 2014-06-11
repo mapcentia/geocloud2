@@ -15,6 +15,7 @@
 /*global document:false */
 /*global window:false */
 /*global screen:false */
+/*global __:false */
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
@@ -145,7 +146,7 @@ MapCentia = function (globalId) {
         el: "map-" + id
     });
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub, legendDirty = false;
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
         defaults = {
             baseLayers: null
         };
@@ -219,7 +220,7 @@ MapCentia = function (globalId) {
             defaults.baseLayers = window.setBaseLayers;
         }
         cloud.bingApiKey = window.bingApiKey;
-        for (var i = 0; i < defaults.baseLayers.length; i++) {
+        for (i = 0; i < defaults.baseLayers.length; i++) {
             if (defaults.baseLayers[i].id.split(".").length > 1) {
                 cloud.addTileLayers({
                     host: defaults.host,
@@ -230,8 +231,7 @@ MapCentia = function (globalId) {
                     displayInLayerSwitcher: true,
                     name: defaults.baseLayers[i].name
                 });
-            }
-            else {
+            } else {
                 cloud.addBaseLayer(defaults.baseLayers[i].id);
             }
             $("#base-layer-list-" + id).append(
@@ -240,36 +240,42 @@ MapCentia = function (globalId) {
         }
         if (defaults.setBaseLayer) {
             setBaseLayer(defaults.setBaseLayer);
-
-        }
-        else {
+        } else {
             setBaseLayer(defaults.baseLayers[0].id);
         }
         arr = defaults.layers;
-        for (var i = 0; i < arr.length; i++) {
-            layers[arr[i]] = cloud.addTileLayers({
-                host: defaults.host,
-                layers: [arr[i]],
-                db: db,
-                wrapDateLine: false,
-                displayInLayerSwitcher: true,
-                name: arr[i]
-            });
-            switchLayer(arr[i], true);
-            $.ajax({
+        for (i = 0; i < arr.length; i = i + 1) {
+            $.ajax(
+                {
                     url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
                     dataType: 'jsonp',
                     jsonp: 'jsonp_callback',
                     success: function (response) {
                         metaData = response;
-                        for (var i = 0; i < metaData.data.length; i++) {
+                        for (i = 0; i < metaData.data.length; i = i + 1) {
                             metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
                             if (!metaData.data[i].f_table_title) {
                                 metaData.data[i].f_table_title = metaData.data[i].f_table_name;
                             }
                             metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+                            var layerName = metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name;
+                            layers[layerName] = cloud.addTileLayers({
+                                host: defaults.host,
+                                layers: [layerName],
+                                isBaseLayer: metaData.data[i].baselayer,
+                                visibility: !metaData.data[i].baselayer,
+                                db: db,
+                                wrapDateLine: false,
+                                name: layerName
+                            });
+                            cloud.setZIndexOfLayer(layers[layerName][0], metaData.data[i].sort_id + 1000);
+                            if (metaData.data[i].baselayer) {
+                                text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
+                                $("#base-layer-list-" + id).append(
+                                    "<li><a href=\"#\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
+                                );
+                            }
                         }
-
                     }
                 }
             );
