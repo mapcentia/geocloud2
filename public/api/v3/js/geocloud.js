@@ -1025,8 +1025,8 @@ geocloud = (function () {
                                 me.map.removeLayer(layers[key].layer);
                             }
                             if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
-                                // Move Bing maps back, when they are dynamically loaded
-                                if (baseLayerName.search("bing") > -1 || baseLayerName.search("stamen") > -1) {
+                                // Move all others than Google maps back
+                                if (baseLayerName.search("google") === -1) {
                                     layers[key].layer.setZIndex(1);
                                 }
                                 me.map.addLayer(layers[key].layer, false);
