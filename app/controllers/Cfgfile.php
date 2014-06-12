@@ -20,7 +20,7 @@ class Cfgfile extends \app\inc\Controller
         //echo "secret_access_key=******\n";
         //echo "db={$user}\n";
 
-        $sql = "SELECT * FROM settings.geometry_columns_view";
+        $sql = "SELECT * FROM settings.geometry_columns_view ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             makeExceptionReport($postgisObject->PDOerror);
