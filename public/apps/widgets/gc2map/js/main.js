@@ -220,7 +220,8 @@ MapCentia = function (globalId) {
             defaults.baseLayers = window.setBaseLayers;
         }
         cloud.bingApiKey = window.bingApiKey;
-        for (i = 0; i < defaults.baseLayers.length; i++) {
+        cloud.digitalGlobeKey = window.digitalGlobeKey;
+        for (i = 0; i < defaults.baseLayers.length; i = i + 1) {
             if (defaults.baseLayers[i].id.split(".").length > 1) {
                 cloud.addTileLayers({
                     host: defaults.host,
@@ -243,42 +244,59 @@ MapCentia = function (globalId) {
         } else {
             setBaseLayer(defaults.baseLayers[0].id);
         }
+
         arr = defaults.layers;
         for (i = 0; i < arr.length; i = i + 1) {
-            $.ajax(
-                {
-                    url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
-                    dataType: 'jsonp',
-                    jsonp: 'jsonp_callback',
-                    success: function (response) {
-                        metaData = response;
-                        for (i = 0; i < metaData.data.length; i = i + 1) {
-                            metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                            if (!metaData.data[i].f_table_title) {
-                                metaData.data[i].f_table_title = metaData.data[i].f_table_name;
-                            }
-                            metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
-                            var layerName = metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name;
-                            layers[layerName] = cloud.addTileLayers({
-                                host: defaults.host,
-                                layers: [layerName],
-                                isBaseLayer: metaData.data[i].baselayer,
-                                visibility: !metaData.data[i].baselayer,
-                                db: db,
-                                wrapDateLine: false,
-                                name: layerName
-                            });
-                            cloud.setZIndexOfLayer(layers[layerName][0], metaData.data[i].sort_id + 1000);
-                            if (metaData.data[i].baselayer) {
-                                text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
-                                $("#base-layer-list-" + id).append(
-                                    "<li><a href=\"#\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
-                                );
+            // If layer is schema, set as base layer
+            if (arr[i].split(".").length < 2) {
+                layers[arr[i]] = cloud.addTileLayers({
+                    host: defaults.host,
+                    layers: [arr[i]],
+                    isBaseLayer: true,
+                    visibility: false,
+                    db: db,
+                    wrapDateLine: false,
+                    name: "public"
+                });
+                $("#base-layer-list-" + id).append(
+                    "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
+                );
+            } else {
+                $.ajax(
+                    {
+                        url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
+                        dataType: 'jsonp',
+                        jsonp: 'jsonp_callback',
+                        success: function (response) {
+                            metaData = response;
+                            for (i = 0; i < metaData.data.length; i = i + 1) {
+                                metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                                if (!metaData.data[i].f_table_title) {
+                                    metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                                }
+                                metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+                                var layerName = metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name;
+                                layers[layerName] = cloud.addTileLayers({
+                                    host: defaults.host,
+                                    layers: [layerName],
+                                    isBaseLayer: metaData.data[i].baselayer,
+                                    visibility: !metaData.data[i].baselayer,
+                                    db: db,
+                                    wrapDateLine: false,
+                                    name: layerName
+                                });
+                                cloud.setZIndexOfLayer(layers[layerName][0], metaData.data[i].sort_id + 1000);
+                                if (metaData.data[i].baselayer) {
+                                    text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
+                                    $("#base-layer-list-" + id).append(
+                                        "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
+                                    );
+                                }
                             }
                         }
                     }
-                }
-            );
+                );
+            }
         }
         addLegend = function () {
             var param = 'l=' + cloud.getVisibleLayers();
