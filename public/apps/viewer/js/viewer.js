@@ -163,7 +163,6 @@ MapCentia = (function () {
                 "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
             );
         }
-
         $("#locate-btn").on("click", function () {
             cloud.locate();
         });
@@ -189,6 +188,7 @@ MapCentia = (function () {
                 }
                 for (i = 0; i < response.data.length; i = i + 1) {
                     groups[i] = response.data[i].layergroup;
+
                 }
                 arr = array_unique(groups);
                 for (u = 0; u < response.data.length; u = u + 1) {
@@ -249,7 +249,10 @@ MapCentia = (function () {
                                 }
                             }
                         }
-                        arrMenu[0].items.push(node);
+                        // Don't add empty group
+                        if (node.items[0].items.length > 0) {
+                            arrMenu[0].items.push(node);
+                        }
                     }
                 }
                 $('#menu').multilevelpushmenu({
