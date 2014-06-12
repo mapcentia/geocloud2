@@ -229,7 +229,7 @@ class Mapfile extends \app\inc\Controller
         # Start of layers
         #
         <?php
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "'";
+        $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='" . Connection::$param['postgisschema'] . "' ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             makeExceptionReport($postgisObject->PDOerror);

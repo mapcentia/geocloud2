@@ -43,7 +43,7 @@ MapCentia = (function () {
         cloud.setBaseLayer(str);
     };
     addLegend = function () {
-        var param = 'l=' + cloud.getVisibleLayers();
+        var param = 'l=' + cloud.getVisibleLayers(), u;
         $.ajax({
             url: hostname + '/api/v1/legend/json/' + db + '/?' + param,
             dataType: 'jsonp',
@@ -51,10 +51,10 @@ MapCentia = (function () {
             success: function (response) {
                 var table = $("<table/>", {border: '0'}), tr, td;
                 $.each(response, function (i, v) {
-                    if (typeof(v) === "object" && v.id !== 'public.komgr') {
+                    if (typeof v === "object" && v.id !== 'public.komgr') {
                         tr = $("<tr/>");
                         td = $("<td/>");
-                        for (var u = 0; u < v.classes.length; u++) {
+                        for (u = 0; u < v.classes.length; u = u + 1) {
                             td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
                         }
                         tr.append(td);
@@ -78,7 +78,7 @@ MapCentia = (function () {
 
         layers = cloud.getNamesOfVisibleLayers();
         if (layers.length > 0) {
-            for (i = 0; i < layers.split(",").length; i++) {
+            for (i = 0; i < layers.split(",").length; i = i + 1) {
                 arr.push("'" + layers.split(",")[i] + "'");
             }
             layersStr = arr.join(",");
@@ -139,7 +139,7 @@ MapCentia = (function () {
         el: "map"
     });
     $(document).ready(function () {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null;
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
             return false;
@@ -157,8 +157,8 @@ MapCentia = (function () {
         }
         cloud.bingApiKey = window.bingApiKey;
         cloud.digitalGlobeKey = window.digitalGlobeKey;
-        for (var i = 0; i < window.setBaseLayers.length; i++) {
-            cloud.addBaseLayer(window.setBaseLayers[i].id);
+        for (i = 0; i < window.setBaseLayers.length; i = i + 1) {
+            cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db);
             $("#base-layer-list").append(
                 "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
             );
@@ -177,36 +177,35 @@ MapCentia = (function () {
             async: false,
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "";
+                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "", i, u, l;
                 groups = [];
                 metaData = response;
-                for (var i = 0; i < metaData.data.length; i++) {
+                for (i = 0; i < metaData.data.length; i = i + 1) {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
-                for (i = 0; i < response.data.length; ++i) {
+                for (i = 0; i < response.data.length; i = i + 1) {
                     groups[i] = response.data[i].layergroup;
                 }
                 arr = array_unique(groups);
-                for (var u = 0; u < response.data.length; ++u) {
+                for (u = 0; u < response.data.length; u = u + 1) {
                     isBaseLayer = response.data[u].baselayer;
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers({
                         layers: [response.data[u].f_table_schema + "." + response.data[u].f_table_name],
                         db: db,
                         isBaseLayer: isBaseLayer,
-                        tileCached: true,
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
                         name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                     });
                 }
-                for (i = 0; i < arr.length; ++i) {
+                for (i = 0; i < arr.length; i = i + 1) {
                     if (arr[i]) {
-                        var l = [];
+                        l = [];
                         base64name = Base64.encode(arr[i]).replace(/=/g, "");
                         node = {
                             name: arr[i],
@@ -230,20 +229,23 @@ MapCentia = (function () {
                                     $("#base-layer-list").append(
                                         "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
                                     );
-                                }
-                                else {
-                                    l.push({
-                                        text: text,
-                                        id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
-                                        leaf: true,
-                                        checked: false
-                                    });
-                                    node.items[0].items.push({
-                                        name: cat,
-                                        metaIcon: 'fa fa-info-circle',
-                                        link: '#',
-                                        metaUrl: response.data[u].meta_url
-                                    });
+                                } else {
+                                    l.push(
+                                        {
+                                            text: text,
+                                            id: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                                            leaf: true,
+                                            checked: false
+                                        }
+                                    );
+                                    node.items[0].items.push(
+                                        {
+                                            name: cat,
+                                            metaIcon: 'fa fa-info-circle',
+                                            link: '#',
+                                            metaUrl: response.data[u].meta_url
+                                        }
+                                    );
                                 }
                             }
                         }
@@ -344,17 +346,15 @@ MapCentia = (function () {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 setBaseLayer(window.setBaseLayers[0].id);
                 if (extent !== null) {
                     cloud.zoomToExtent(extent);
-                }
-                else {
+                } else {
                     cloud.zoomToExtent();
                 }
             }
-        })();
+        }());
         var moveEndCallBack = function () {
             try {
                 history.pushState(null, null, permaLink());
@@ -474,4 +474,5 @@ MapCentia = (function () {
         shareStumbleupon: shareStumbleupon
     };
 }());
+
 

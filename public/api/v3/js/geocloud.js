@@ -1037,7 +1037,7 @@ geocloud = (function () {
             }
         };
 
-        this.addBaseLayer = function (l) {
+        this.addBaseLayer = function (l, db) {
             var o;
             switch (l) {
                 case "osm":
@@ -1084,6 +1084,17 @@ geocloud = (function () {
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");
+                    break;
+                default : // Try to add as tile layer
+                    this.addTileLayers({
+                        layers: [l],
+                        db: db,
+                        isBaseLayer: true,
+                        visibility: false,
+                        wrapDateLine: false,
+                        displayInLayerSwitcher: true,
+                        name: l
+                    });
                     break;
             }
             return o;
