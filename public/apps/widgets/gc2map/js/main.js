@@ -334,10 +334,10 @@ MapCentia = function (globalId) {
                                 }
                                 tr.append(td);
                             }
+                            table.append(tr);
+                            // Spacer
+                            table.append($("<tr style='height: 5px'/>"));
                         }
-                        table.append(tr);
-                        // Spacer
-                        table.append($("<tr style='height: 5px'/>"));
                     });
                     $('#legend-' + id).html(table);
                 }
