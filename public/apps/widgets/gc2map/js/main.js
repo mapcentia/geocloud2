@@ -127,7 +127,6 @@ MapCentia = function (globalId) {
                 MapappWin.document.write(
                     '<style>body{padding:0;margin:0}</style>' +
                         '<script>window.gc2host = ' + hostname + '</script>' +
-                        '<script src="' + hostname + '/js/i18n/da_DK.js"></script>' +
                         '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
                         '<div style="width: 100%;height: 100%; position: absolute;"></div>'
 

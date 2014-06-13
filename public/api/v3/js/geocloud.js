@@ -1003,38 +1003,45 @@ geocloud = (function () {
         this.setBaseLayer = function (baseLayerName) {
             var me = this;
             var layers;
-            switch (MAPLIB) {
-                case "ol2":
-                    me.showLayer(baseLayerName);
-                    me.map.setBaseLayer(me.getLayersByName(baseLayerName));
-                    break;
-                case "ol3":
-                    layers = me.map.getLayers();
-                    for (var i = 0; i < layers.getLength(); i++) {
-                        if (layers.a[i].baseLayer === true) {
-                            layers.a[i].set("visible", false);
-                        }
-                    }
-                    me.getLayersByName(baseLayerName).set("visible", true);
-                    break;
-                case "leaflet":
-                    layers = lControl._layers;
-                    for (var key in layers) {
-                        if (layers.hasOwnProperty(key)) {
-                            if (layers[key].layer.baseLayer === true && me.map.hasLayer(layers[key].layer)) {
-                                me.map.removeLayer(layers[key].layer);
-                            }
-                            if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
-                                // Move all others than Google maps back
-                                if (baseLayerName.search("google") === -1) {
-                                    layers[key].layer.setZIndex(1);
+            (function poll() {
+                if ((baseLayerName.search("google") > -1 && (typeof L.Google !== "undefined" && typeof google !== "undefined" && typeof google.maps !== "undefined")) || baseLayerName.search("google") === -1) {
+                    switch (MAPLIB) {
+                        case "ol2":
+                            me.showLayer(baseLayerName);
+                            me.map.setBaseLayer(me.getLayersByName(baseLayerName));
+                            break;
+                        case "ol3":
+                            layers = me.map.getLayers();
+                            for (var i = 0; i < layers.getLength(); i++) {
+                                if (layers.a[i].baseLayer === true) {
+                                    layers.a[i].set("visible", false);
                                 }
-                                me.map.addLayer(layers[key].layer, false);
                             }
-                        }
+                            me.getLayersByName(baseLayerName).set("visible", true);
+                            break;
+                        case "leaflet":
+                            layers = lControl._layers;
+                            for (var key in layers) {
+                                if (layers.hasOwnProperty(key)) {
+                                    if (layers[key].layer.baseLayer === true && me.map.hasLayer(layers[key].layer)) {
+                                        me.map.removeLayer(layers[key].layer);
+                                    }
+                                    if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
+                                        // Move all others than Google maps back
+                                        if (baseLayerName.search("google") === -1) {
+                                            layers[key].layer.setZIndex(1);
+                                        }
+                                        me.map.addLayer(layers[key].layer, false);
+                                    }
+                                }
+                            }
+                            break;
                     }
-                    break;
-            }
+                } else {
+                    console.log("sdsd")
+                    setTimeout(poll, 10);
+                }
+            }());
         };
 
         this.addBaseLayer = function (l, db) {

@@ -56,8 +56,9 @@ if (typeof gc2map === "undefined") {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js");
                         $.getScript(scriptHost + "/apps/widgets/gc2map/js/main.js");
+                        $.getScript(host + "/js/i18n/da_DK.js");
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined") {
+                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof gc2i18n !== "undefined") {
                                 scriptsLoaded = true;
                             } else {
                                 setTimeout(pollForDependants, 10);
