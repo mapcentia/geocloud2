@@ -1038,7 +1038,6 @@ geocloud = (function () {
                             break;
                     }
                 } else {
-                    console.log("sdsd")
                     setTimeout(poll, 10);
                 }
             }());
