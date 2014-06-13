@@ -16,9 +16,12 @@
     z-index: 0;
     width: 100%;
     height: 100%;
+}
+.pane, .modal-title {
     font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
     font-size: 14px !important;
     font-weight: normal !important;
+    font-style: normal !important;
 }
 
 .tnav .navbar .container {
@@ -163,14 +166,13 @@ input[type="radio"], input[type="checkbox"] {
     padding: 0 !important;
 }
 
-.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
-    padding: 4px;
-    font-size: 12px;
-    line-height: 1.428571429;
-    vertical-align: top;
-    border-top: 1px solid rgb(245, 245, 245);
+.gc2map .table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    padding: 4px !important;
+    font-size: 12px !important;
+    line-height: 1.428571429 !important;
+    vertical-align: top !important;
     font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
-    border-bottom: 0px;
+    border-bottom: 1px solid #EEEEEE !important;
 }
 
 .btn-share {
@@ -186,7 +188,8 @@ input[type="radio"], input[type="checkbox"] {
     font-weight: normal !important;
 }
 
-.table {
+.legend-container td {
+    border: none !important;
 
 }
 
@@ -236,6 +239,8 @@ input[type="radio"], input[type="checkbox"] {
     font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
     font-size: 14px !important;
 }
+
+
 
 
 

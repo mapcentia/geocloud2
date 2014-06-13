@@ -846,12 +846,12 @@ geocloud = (function () {
                     name = "googleTerrain";
                     break;
             }
-            // Load Google Maps API
-            if (typeof this.GoogleDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
-                this.GoogleDirty = true;
+            // Load Google Maps API and make sure its not loaded more than once
+            if (typeof window.GoogleMapsDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
+                window.GoogleMapsDirty = true;
                 jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
                 // Google Maps API is loaded
-            } else if (typeof this.GoogleDirty === "undefined") {
+            } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
             }
             (function poll() {

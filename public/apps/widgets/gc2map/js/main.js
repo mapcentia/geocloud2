@@ -127,13 +127,14 @@ MapCentia = function (globalId) {
                 MapappWin.document.write(
                     '<style>body{padding:0;margin:0}</style>' +
                         '<script>window.gc2host = ' + hostname + '</script>' +
+                        '<script src="' + hostname + '/js/i18n/da_DK.js"></script>' +
                         '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
                         '<div style="width: 100%;height: 100%; position: absolute;"></div>'
 
                 );
                 // Must bee split in two parts. Yes, its f****** IE9
                 MapappWin.document.write(
-                    '<script>gc2Widget.map(' + JSON.stringify(defaults) + ')</script>'
+                    '<script>gc2map.init(' + JSON.stringify(defaults) + ')</script>'
                 );
             });
         } else {
@@ -146,7 +147,7 @@ MapCentia = function (globalId) {
         el: "map-" + id
     });
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, modalFlag, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
+        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
         defaults = {
             baseLayers: null
         };
@@ -167,6 +168,13 @@ MapCentia = function (globalId) {
         $("#locate-btn-" + id).on("click", function () {
             cloud.locate();
         });
+
+        $("#modal-info-" + id).on('hidden.bs.modal', function (e) {
+            for (i = 0; i < qstore.length; i = i + 1) {
+                qstore[i].reset();
+            }
+        });
+
         // Media queries
         $("#legend-popover-li-" + id).show();
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
@@ -189,10 +197,10 @@ MapCentia = function (globalId) {
         } else {
             sub = 130;
             $("#modal-info-" + id).css({"width": "300px", "height": "370px", "left": "auto", "margin-right": "0px"});
-            $("#modal-info-" + id + " .modal-dialog").css({"width": "280px"});
+            $("#modal-info-" + id + " .modal-dialog").css({"width": "280px", "margin-top": "30px"});
             //$(".modal-dialog").css({"margin": "30px 30px 0 0"});
             $("#modal-info-body-" + id).css({"height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
-            $("#modal-share-" + id + " .modal-dialog").css({"margin-top": "30px"});
+            $("#modal-share-" + id + " .modal-dialog").css({"margin-top": "30px !important"});
             $("#modal-share-body-" + id).css({"max-height": (eHeight - sub) + "px"});
         }
         if (eWidth < 768 && eWidth >= 400) {
@@ -236,7 +244,7 @@ MapCentia = function (globalId) {
                 cloud.addBaseLayer(defaults.baseLayers[i].id);
             }
             $("#base-layer-list-" + id).append(
-                "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
+                "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
             );
         }
         if (defaults.setBaseLayer) {
@@ -259,7 +267,7 @@ MapCentia = function (globalId) {
                     name: "public"
                 });
                 $("#base-layer-list-" + id).append(
-                    "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
+                    "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
                 );
             } else {
                 $.ajax(
@@ -289,7 +297,7 @@ MapCentia = function (globalId) {
                                 if (metaData.data[i].baselayer) {
                                     text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
                                     $("#base-layer-list-" + id).append(
-                                        "<li><a href=\"javascript:void(0)\" onclick=\"gc2Widget.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
+                                        "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                                     );
                                 }
                             }
@@ -313,7 +321,7 @@ MapCentia = function (globalId) {
                         if (typeof(v) === "object" && v.id !== 'public.komgr') {
                             i = v.id;
                             tr = $("<tr/>");
-                            tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2Widget.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
+                            tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
                             td = $("<td/>");
                             for (var u = 0; u < v.classes.length; u++) {
                                 td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
@@ -402,9 +410,7 @@ MapCentia = function (globalId) {
                                 if (count === layers.length) {
                                     if (!hit) {
                                         // Do not try to hide a not initiated modal
-                                        if (modalFlag) {
-                                            $("#modal-info-" + id).modal('hide');
-                                        }
+                                        $("#modal-info-" + id).modal('hide');
                                     }
                                 }
                             }

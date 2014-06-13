@@ -19,12 +19,12 @@
                 </li>
                 <!--<li id="share-modal-li-{{id}}" class="gc-btn">
                     <a href="javascript:void(0)" title="Share"
-                       onclick="gc2Widget.maps['{{id}}'].share();">
+                       onclick="gc2map.maps['{{id}}'].share();">
                         Del </a>
                 </li>-->
                 <li id="open-win-li-{{id}}" class="gc-btn">
                     <a href="javascript:void(0)" title=""
-                       onclick="gc2Widget.maps['{{id}}'].openMapWin(decodeURIComponent(geocloud.urlHash),screen.width-20, screen.height-100);">
+                       onclick="gc2map.maps['{{id}}'].openMapWin(decodeURIComponent(geocloud.urlHash),screen.width-20, screen.height-100);">
                         {{Pop up}} </a>
                 </li>
                 <li class="dropdown">
@@ -39,7 +39,7 @@
     <!-- layers -->
     <div id="layers-{{id}}" class="panel-group"></div>
     <!-- legend -->
-    <div id="legend-{{id}}"></div>
+    <div id="legend-{{id}}" class="legend-container"></div>
     <!-- info modal -->
     <div id="modal-info-{{id}}" class="modal fade">
         <div class="modal-dialog modal-infobox">
@@ -77,27 +77,27 @@
                             <div class="col-sm-10">
                                 <button type="button" class="btn btn-default btn-share" data-toggle="tooltip"
                                         data-placement="top" title="Twitter"
-                                        onclick="gc2Widget.maps['{{id}}'].shareTwitter();"><i
+                                        onclick="gc2map.maps['{{id}}'].shareTwitter();"><i
                                         class="fa fa-twitter"></i>
                                 </button>
                                 <button type="button" class="btn btn-default btn-share" data-toggle="tooltip"
                                         data-placement="top" title="LinkedIn"
-                                        onclick="gc2Widget.maps['{{id}}'].shareLinkedIn();"><i
+                                        onclick="gc2map.maps['{{id}}'].shareLinkedIn();"><i
                                         class="fa fa-linkedin"></i>
                                 </button>
                                 <button type="button" class="btn btn-default btn-share" data-toggle="tooltip"
                                         data-placement="top" title="Google+"
-                                        onclick="gc2Widget.maps['{{id}}'].shareGooglePlus();"><i
+                                        onclick="gc2map.maps['{{id}}'].shareGooglePlus();"><i
                                         class="fa fa-google-plus"></i>
                                 </button>
                                 <button type="button" class="btn btn-default btn-share" data-toggle="tooltip"
                                         data-placement="top" title="Facebook"
-                                        onclick="gc2Widget.maps['{{id}}'].shareFacebook();"><i
+                                        onclick="gc2map.maps['{{id}}'].shareFacebook();"><i
                                         class="fa fa-facebook"></i>
                                 </button>
                                 <button type="button" class="btn btn-default btn-share" data-toggle="tooltip"
                                         data-placement="top" title="Tumblr"
-                                        onclick="gc2Widget.maps['{{id}}'].shareTumblr();">
+                                        onclick="gc2map.maps['{{id}}'].shareTumblr();">
                                     <i
                                             class="fa fa-tumblr"></i>
                                 </button>

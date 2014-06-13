@@ -42,23 +42,29 @@ textarea {
     overflow: auto;
 }
 
-table {
-    border-collapse: collapse;
-    border-spacing: 0;
+.gc2map table {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: none !important;
+    margin: 0 !important;
 }
 
-td,
-th {
-    padding: 0;
+.gc2map td,
+.gc2map th {
+    padding: 0 !important;
+    background-color: transparent;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
 }
 
-* {
+.gc2map * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
-*:before,
-*:after {
+.gc2map *:before,
+.gc2map *:after {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -3389,6 +3395,7 @@ input[type="button"].btn-block {
     margin-bottom: 0;
     padding-left: 0;
     list-style: none;
+    margin-left: 0 !important;
 }
 
 .nav > li {

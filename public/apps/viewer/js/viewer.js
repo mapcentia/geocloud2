@@ -87,7 +87,7 @@ MapCentia = (function () {
             "<div style='width: 100%; height: 500px'></div>\n" +
             "<script>\n" +
             "(function () {\n" +
-            "     gc2Widget.map({\n" +
+            "gc2map.init({\n" +
             "          db: '" + db + "',\n" +
             "          layers: [" + layersStr + "],\n" +
             "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
