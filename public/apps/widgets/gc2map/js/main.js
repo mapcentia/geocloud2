@@ -169,9 +169,9 @@ MapCentia = function (globalId) {
         });
 
         $("#modal-info-" + id).on('hidden.bs.modal', function (e) {
-            for (i = 0; i < qstore.length; i = i + 1) {
+            $.each(qstore, function (i, v) {
                 qstore[i].reset();
-            }
+            });
         });
 
         // Media queries
@@ -215,7 +215,6 @@ MapCentia = function (globalId) {
             cloud.zoomToPoint(p.x, p.y, defaults.zoom[2]);
         }
         // If no base layers defaults at all
-
         if (typeof window.setBaseLayers !== 'object' && defaults.baseLayers === null) {
             defaults.baseLayers = [
                 {id: geocloud.MAPQUESTOSM, name: "MapQuset OSM"},
@@ -315,17 +314,26 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var table = $("<table/>", {border: '0'}), i, tr, td;
+                    var table = $("<table/>", {border: '0'}), tr, td, showLayer = false;
                     $.each(response, function (i, v) {
-                        if (typeof(v) === "object" && v.id !== 'public.komgr') {
-                            i = v.id;
-                            tr = $("<tr/>");
-                            tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + i + "' type='checkbox' checked></span></div></td>");
-                            td = $("<td/>");
-                            for (var u = 0; u < v.classes.length; u++) {
-                                td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                        var u;
+                        if (typeof v === "object" && v.id !== 'public.komgr') {
+                            for (u = 0; u < v.classes.length; u = u + 1) {
+                                if (v.classes[u].name !== "") {
+                                    showLayer = true;
+                                }
                             }
-                            tr.append(td);
+                            if (showLayer) {
+                                tr = $("<tr/>");
+                                tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span></div></td>");
+                                td = $("<td/>");
+                                for (u = 0; u < v.classes.length; u = u + 1) {
+                                    if (v.classes[u].name !== "") {
+                                        td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                                    }
+                                }
+                                tr.append(td);
+                            }
                         }
                         table.append(tr);
                         // Spacer
@@ -340,11 +348,10 @@ MapCentia = function (globalId) {
             clicktimer = undefined;
         });
         cloud.on("click", function (e) {
-            var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance;
+            var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, sql;
             if (clicktimer) {
                 clearTimeout(clicktimer);
-            }
-            else {
+            } else {
                 clicktimer = setTimeout(function (e) {
                     clicktimer = undefined;
                     var coords = event.getCoordinate();
@@ -356,12 +363,14 @@ MapCentia = function (globalId) {
                     $("#info-tab-" + id).empty();
                     $("#info-pane-" + id).empty();
                     $.each(layers, function (index, value) {
-                        var isEmpty = true;
-                        var srid = metaDataKeys[value.split(".")[1]].srid;
-                        var geoType = metaDataKeys[value.split(".")[1]].type;
-                        var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
+                        var isEmpty = true,
+                            srid = metaDataKeys[value.split(".")[1]].srid,
+                            geoType = metaDataKeys[value.split(".")[1]].type,
+                            layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name,
+                            not_querable = metaDataKeys[value.split(".")[1]].not_querable,
+                            res;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                            res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                                 4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                                 76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
                                 1.19432856696, 0.597164283478, 0.298582141739];
@@ -374,18 +383,18 @@ MapCentia = function (globalId) {
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
-                                if ((!isEmpty)) {
+                                if (!isEmpty && !not_querable) {
                                     $('#modal-info-' + id).modal({"backdrop": false});
                                     var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
                                     $("#info-tab-" + id).append('<li><a data-toggle="tab" href="#_' + index + '-' + id + '">' + layerTitel + '</a></li>');
                                     $("#info-pane-" + id).append('<div class="tab-pane" id="_' + index + '-' + id + '"><table class="table table-condensed"><thead><tr><th>' + __("Property") + '</th><th>' + __("Value") + '</th></tr></thead></table></div>');
+
                                     $.each(layerObj.geoJSON.features, function (i, feature) {
                                         if (fieldConf === null) {
                                             $.each(feature.properties, function (name, property) {
                                                 out.push([name, 0, name, property]);
                                             });
-                                        }
-                                        else {
+                                        } else {
                                             $.each(fieldConf, function (name, property) {
                                                 if (property.querable) {
                                                     fieldLabel = (property.alias !== null && property.alias !== "") ? property.alias : name;
@@ -396,7 +405,6 @@ MapCentia = function (globalId) {
                                         out.sort(function (a, b) {
                                             return a[1] - b[1];
                                         });
-                                        //var test = [out[0]]
                                         $.each(out, function (name, property) {
                                             $("#_" + index + "-" + id + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
                                         });
@@ -404,8 +412,10 @@ MapCentia = function (globalId) {
                                         $('#info-tab-' + id + ' a:first').tab('show');
                                     });
                                     hit = true;
+                                } else {
+                                    layerObj.reset();
                                 }
-                                count++;
+                                count = count + 1;
                                 if (count === layers.length) {
                                     if (!hit) {
                                         // Do not try to hide a not initiated modal
@@ -415,11 +425,9 @@ MapCentia = function (globalId) {
                             }
                         });
                         cloud.addGeoJsonStore(qstore[index]);
-                        var sql;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),the_geom)";
-                        }
-                        else {
+                        } else {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),the_geom)";
                         }
                         qstore[index].sql = sql;
