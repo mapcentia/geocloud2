@@ -314,10 +314,10 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var table = $("<table/>", {border: '0'}), tr, td, showLayer = false;
+                    var table = $("<table/>", {border: '0'}), tr, td;
                     $.each(response, function (i, v) {
-                        var u;
-                        if (typeof v === "object" && v.id !== 'public.komgr') {
+                        var u, showLayer = false;
+                        if (typeof v === "object") {
                             for (u = 0; u < v.classes.length; u = u + 1) {
                                 if (v.classes[u].name !== "") {
                                     showLayer = true;
