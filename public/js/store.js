@@ -1005,6 +1005,13 @@ $(window).ready(function () {
                             name: 'baselayer',
                             fieldLabel: 'Is baselayer',
                             value: r.data.baselayer
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textfield',
+                            fieldLabel: 'SQL where clause',
+                            name: 'filter',
+                            value: r.data.filter
                         }
                     ],
                     buttons: [
