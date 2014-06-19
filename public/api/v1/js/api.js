@@ -6,7 +6,7 @@
 /*global mygeocloud_ol:false */
 /*global schema:false */
 /*global document:false */
-var mygeocloud_host, popup;
+var popup;
 var scriptSource = (function (scripts) {
     'use strict';
     scripts = document.getElementsByTagName('script');
@@ -17,11 +17,11 @@ var scriptSource = (function (scripts) {
     return script.getAttribute('src', -1);
 }());
 // In IE7 host name is missing if script url is relative
-if (!mygeocloud_host) {
+if (typeof mygeocloud_host === "undefined") {
 	if (scriptSource.charAt(0) === "/") {
-		mygeocloud_host = "";
+		window.mygeocloud_host = "";
 	} else {
-		mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+		window.mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
 	}
 }
 if (typeof jQuery === "undefined") {
