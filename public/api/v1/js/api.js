@@ -17,10 +17,12 @@ var scriptSource = (function (scripts) {
     return script.getAttribute('src', -1);
 }());
 // In IE7 host name is missing if script url is relative
-if (scriptSource.charAt(0) === "/") {
-    mygeocloud_host = "";
-} else {
-    mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+if (!mygeocloud_host) {
+	if (scriptSource.charAt(0) === "/") {
+		mygeocloud_host = "";
+	} else {
+		mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+	}
 }
 if (typeof jQuery === "undefined") {
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
@@ -380,7 +382,6 @@ var mygeocloud_ol = (function () {
                 type: type
             });
             this.map.addLayer(l);
-            l.setVisibility(false);
             l.baseLayer = true;
             l.id = name;
             return (l);
@@ -404,7 +405,6 @@ var mygeocloud_ol = (function () {
                 layers: layer
             }, {wrapDateLine: true});
             this.map.addLayer(l);
-            l.setVisibility(false);
             l.baseLayer = true;
             l.id = name;
             return (l);
@@ -421,7 +421,6 @@ var mygeocloud_ol = (function () {
                 "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}"
             );
             this.map.addLayer(l);
-            l.setVisibility(false);
             l.baseLayer = true;
             l.id = type;
             return (l);
