@@ -6,6 +6,7 @@ gc2i18n = {
         "Value": "V&aelig;rdi",
         "Pop up": "Stort kort",
         "Base layers": "Baggrund",
-        "Share": "Del"
+        "Share": "Del",
+        "Info text": "Vi har fået et nyt kort. Alle funktionerne er flyttet op i værktøjslinjen  øverst i kortet."
     }
 };
