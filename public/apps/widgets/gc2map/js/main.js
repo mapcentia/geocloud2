@@ -132,6 +132,8 @@ MapCentia = function (globalId) {
 
                 );
                 // Must bee split in two parts. Yes, its f****** IE9
+                defaults.width = "100%";
+                defaults.height = "100%";
                 MapappWin.document.write(
                     '<script>gc2map.init(' + JSON.stringify(defaults) + ')</script>'
                 );
