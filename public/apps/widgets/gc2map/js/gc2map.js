@@ -57,10 +57,9 @@ if (typeof gc2map === "undefined") {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js");
                         $.getScript(scriptHost + "/apps/widgets/gc2map/js/main.js");
-                        $.getScript(host + "/js/i18n/da_DK.js");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js");
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof gc2i18n !== "undefined" && typeof templates !== "undefined") {
+                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof templates !== "undefined") {
                                 scriptsLoaded = true;
                             } else {
                                 setTimeout(pollForDependants, 10);
@@ -87,7 +86,11 @@ if (typeof gc2map === "undefined") {
 
         init = function (conf) {
             var defaults = {
-                    host: host
+                    host: host,
+                    width: "100%",
+                    height: "100%",
+                    staticmap: false,
+                    locale: "en_US"
                 }, prop, divs = document.getElementsByTagName('div'),
                 div = divs[divs.length - 1],
                 gc2RandId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -101,24 +104,34 @@ if (typeof gc2map === "undefined") {
             }
             div.setAttribute("id", gc2RandId);
             div.setAttribute("class", "gc2map");
+            div.style.width = defaults.width;
+            div.style.height = defaults.height;
             if (div.style.position === "") {
                 div.style.position = "relative";
             }
             (function pollForScripts() {
                 if (scriptsLoaded) {
                     var context;
-                    if (typeof gc2i18n !== 'undefined') {
-                        context = gc2i18n.dict;
-                        context.id = gc2RandId;
-                    }
-                    else {
-                        context = {id: gc2RandId};
-                    }
-                    $("#" + gc2RandId).html(templates.body.render(context));
-                    $(".alert").alert();
-                    maps[gc2RandId] = new MapCentia(gc2RandId);
-                    // Init the map
-                    maps[gc2RandId].init(defaults);
+                    $.getScript(host + "/js/i18n/" + defaults.locale + ".js");
+                    (function pollForDict() {
+                        if (typeof gc2i18n !== "undefined") {
+                            context = gc2i18n.dict;
+                            context.id = gc2RandId;
+                            if (defaults.staticmap) {
+                                $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/mydb?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
+                            } else {
+                                $("#" + gc2RandId).html(templates.body.render(context));
+                                if (gc2i18n.dict["Info text"] !== "") {
+                                    $(".alert").show();
+                                }
+                                maps[gc2RandId] = new MapCentia(gc2RandId);
+                                // Init the map
+                                maps[gc2RandId].init(defaults);
+                            }
+                        } else {
+                            setTimeout(pollForDict, 10);
+                        }
+                    }());
                 } else {
                     setTimeout(pollForScripts, 10);
                 }

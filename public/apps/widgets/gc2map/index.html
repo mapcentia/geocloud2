@@ -11,7 +11,7 @@
     <script src="/apps/widgets/gc2map/js/gc2map.js"></script>
 </head>
 <body style="padding: 0; margin: 0">
-<div style="width: 100%;height: 100%; position: absolute"></div>
+<div style="position: absolute"/>
 <script>
     (function () {
         var layers = [],
@@ -24,14 +24,13 @@
                 }
             }
         }
-        else {
-
-        }
         gc2map.init({
             db: path[4],
             layers: layers,
+            locale: "da_DK",
             zoom: [hashArr[2], hashArr[3], hashArr[1]],
-            setBaseLayer: hashArr[0]
+            setBaseLayer: hashArr[0],
+            staticmap: false
         });
     }());
 </script>

@@ -93,9 +93,7 @@ class Staticmap extends \app\inc\Controller
         $bbox = Input::get("bbox");
 
         echo "
-        <script src='http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places' type='text/javascript'></script>
         <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
-        <script src='http://maps.stamen.com/js/tile.stamen.js?v1.2.0' type='text/javascript'></script>
         <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>

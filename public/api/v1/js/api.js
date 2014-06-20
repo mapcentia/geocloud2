@@ -18,11 +18,11 @@ var scriptSource = (function (scripts) {
 }());
 // In IE7 host name is missing if script url is relative
 if (typeof mygeocloud_host === "undefined") {
-	if (scriptSource.charAt(0) === "/") {
-		window.mygeocloud_host = "";
-	} else {
-		window.mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
-	}
+    if (scriptSource.charAt(0) === "/") {
+        window.mygeocloud_host = "";
+    } else {
+        window.mygeocloud_host = scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
+    }
 }
 if (typeof jQuery === "undefined") {
     document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
