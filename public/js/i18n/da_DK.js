@@ -5,8 +5,18 @@ gc2i18n = {
         "Property": "Egenskab",
         "Value": "V&aelig;rdi",
         "Pop up": "Stort kort",
-        "Base layers": "Baggrund",
+        "Baselayers": "Baggrund",
+        "Layers": "Kortlag",
+        "Info text": "Vi har f&aring;et et nyt kort. Alle funktionerne er flyttet op i v&aelig;rkt&oslash;jslinjen &oslash;verst i kortet.",
         "Share": "Del",
-        "Info text": "Vi har f&aring;et et nyt kort. Alle funktionerne er flyttet op i v&aelig;rkt&oslash;jslinjen &oslash;verst i kortet."
+        "Info": "Info",
+        "Close": "Luk",
+        "Back": "Tilbage",
+        "Share the map": "Del kortet",
+        "Search": "S&oslash;g",
+        "URL to this map": "URL til dette kort",
+        "Iframe with this map to embed on web page": "Iframe med dette kort til indlejring på web side",
+        "URL to a static PNG image of this map": "URL til et statisk PNG billede af dette kort",
+        "JavaScript for an application": "Indlejring ved hjælp af JavaScript"
     }
 };

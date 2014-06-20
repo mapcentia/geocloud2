@@ -14,10 +14,10 @@
 /*global schema:false */
 /*global document:false */
 /*global window:false */
-var MapCentia;
-MapCentia = (function () {
+var Viewer;
+Viewer = function () {
     "use strict";
-    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon;
+    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -25,7 +25,7 @@ MapCentia = (function () {
     schema = uri[4];
     arrMenu = [
         {
-            title: 'Layers',
+            title: __('Layers'),
             id: 'menuID',
             icon: 'fa fa-reorder',
             items: []
@@ -41,9 +41,14 @@ MapCentia = (function () {
     };
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
+        try {
+            history.pushState(null, null, permaLink());
+        }
+        catch (e) {
+        }
     };
     addLegend = function () {
-        var param = 'l=' + cloud.getVisibleLayers(), u;
+        var param = 'l=' + cloud.getVisibleLayers();
         $.ajax({
             url: hostname + '/api/v1/legend/json/' + db + '/?' + param,
             dataType: 'jsonp',
@@ -51,17 +56,28 @@ MapCentia = (function () {
             success: function (response) {
                 var table = $("<table/>", {border: '0'}), tr, td;
                 $.each(response, function (i, v) {
-                    if (typeof v === "object" && v.id !== 'public.komgr') {
-                        tr = $("<tr/>");
-                        td = $("<td/>");
+                    var u, showLayer = false;
+                    if (typeof v === "object") {
                         for (u = 0; u < v.classes.length; u = u + 1) {
-                            td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                            if (v.classes[u].name !== "") {
+                                showLayer = true;
+                            }
                         }
-                        tr.append(td);
+                        if (showLayer) {
+                            tr = $("<tr/>");
+                            tr.append("<td><div class='layer-title' style='width:15px;'></div></td>");
+                            td = $("<td/>");
+                            for (u = 0; u < v.classes.length; u = u + 1) {
+                                if (v.classes[u].name !== "") {
+                                    td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                                }
+                            }
+                            tr.append(td);
+                        }
+                        table.append(tr);
+                        // Spacer
+                        table.append($("<tr style='height: 5px'/>"));
                     }
-                    table.append(tr);
-                    // Spacer
-                    table.append($("<tr style='height: 5px'/>"));
                 });
                 $('#legend').html(table);
             }
@@ -84,7 +100,7 @@ MapCentia = (function () {
             layersStr = arr.join(",");
         }
         javascript = "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
-            "<div style='width: 100%; height: 500px'></div>\n" +
+            "<div/>\n" +
             "<script>\n" +
             "(function () {\n" +
             "gc2map.init({\n" +
@@ -92,38 +108,43 @@ MapCentia = (function () {
             "          layers: [" + layersStr + "],\n" +
             "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
             "          setBaseLayer: '" + cloud.getBaseLayerName() + "'\n" +
+            "          width: '100%'\n" +
+            "          height: '400px'\n" +
             "     });\n" +
             "}())\n" +
             "</script>";
         $("#share-javascript").val(javascript);
     };
     shareTwitter = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("https://twitter.com/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     shareLinkedIn = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("https://www.linkedin.com/cws/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     shareGooglePlus = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("https://plus.google.com/share?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     shareFacebook = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     shareTumblr = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("http://www.tumblr.com/share?v=3&t=My%20map&u=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     shareStumbleupon = function () {
-        var url = hostname + permaLink();
+        var url = hostname + linkToSimpleMap();
         window.open("http://www.stumbleupon.com/submit?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     permaLink = function () {
         var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-        return "/apps/viewer/" + db + "/" + schema + "/?fw=" + geocloud.MAPLIB + "#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
+        return "/apps/viewer/" + db + "/" + schema + "/#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
+    };
+    linkToSimpleMap = function () {
+        return "/apps/widgets/gc2map/" + db + "/" + anchor();
     };
     anchor = function () {
         var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
@@ -138,7 +159,7 @@ MapCentia = (function () {
     cloud = new geocloud.map({
         el: "map"
     });
-    $(document).ready(function () {
+    var init = function () {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
@@ -160,12 +181,19 @@ MapCentia = (function () {
         for (i = 0; i < window.setBaseLayers.length; i = i + 1) {
             cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db);
             $("#base-layer-list").append(
-                "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
+                "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
             );
         }
         $("#locate-btn").on("click", function () {
             cloud.locate();
         });
+
+        $("#modal-info").on('hidden.bs.modal', function (e) {
+            $.each(qstore, function (i, v) {
+                qstore[i].reset();
+            });
+        });
+
         showInfoModal = function () {
             modalFlag = true;
             $('#modal-info').modal({"backdrop": false});
@@ -227,7 +255,7 @@ MapCentia = (function () {
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
                                 if (response.data[u].baselayer) {
                                     $("#base-layer-list").append(
-                                        "<li><a href=\"#\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
+                                        "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
                                     );
                                 } else {
                                     l.push(
@@ -392,6 +420,8 @@ MapCentia = (function () {
                         var srid = metaDataKeys[value.split(".")[1]].srid;
                         var geoType = metaDataKeys[value.split(".")[1]].type;
                         var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
+                        var not_querable = metaDataKeys[value.split(".")[1]].not_querable;
+
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                                 4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
@@ -405,11 +435,11 @@ MapCentia = (function () {
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
-                                if ((!isEmpty)) {
+                                if (!isEmpty && !not_querable) {
                                     showInfoModal();
                                     var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
                                     $("#info-tab").append('<li><a data-toggle="tab" href="#_' + index + '">' + layerTitel + '</a></li>');
-                                    $("#info-pane").append('<div class="tab-pane" id="_' + index + '"><table class="table table-condensed"><thead><tr><th>Property</th><th>Value</th></tr></thead></table></div>');
+                                    $("#info-pane").append('<div class="tab-pane" id="_' + index + '"><table class="table table-condensed"><thead><tr><th>' + __("Property") + '</th><th>' + __("Value") + '</th></tr></thead></table></div>');
 
                                     $.each(layerObj.geoJSON.features, function (i, feature) {
                                         if (fieldConf === null) {
@@ -436,6 +466,8 @@ MapCentia = (function () {
                                         $('#info-tab a:first').tab('show');
                                     });
                                     hit = true;
+                                } else {
+                                    layerObj.reset();
                                 }
                                 count++;
                                 if (count === layers.length) {
@@ -462,8 +494,9 @@ MapCentia = (function () {
                 }, 250);
             }
         });
-    });
+    };
     return{
+        init: init,
         cloud: cloud,
         switchLayer: switchLayer,
         setBaseLayer: setBaseLayer,
@@ -476,6 +509,6 @@ MapCentia = (function () {
         shareTumblr: shareTumblr,
         shareStumbleupon: shareStumbleupon
     };
-}());
+};
 
 

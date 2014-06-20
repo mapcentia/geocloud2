@@ -34,7 +34,7 @@
                 collapsed: true,
                 fullCollapse: false,
                 direction: 'ltr',
-                backText: 'Back',
+                backText: __('Back'),
                 backItemClass: 'backItemClass',
                 backItemIcon: 'fa fa-angle-right',
                 groupIcon: 'fa fa-angle-left',

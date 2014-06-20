@@ -51,11 +51,10 @@ geocloud = (function () {
         DIGITALGLOBE = "DigitalGlobe:Imagery",
         attribution = (window.mapAttribution === undefined) ? "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> " : window.mapAttribution;
 
-    if (typeof window.mygeocloud_host === "undefined") {
-        // In IE7 host name is missing if script url is relative
+    if (typeof window.geocloud_host === "undefined") {
         window.geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
-
+    host = window.geocloud_host;
     if (typeof ol !== "object" && typeof L !== "object" && typeof OpenLayers !== "object") {
         alert("You need to load neither OpenLayers.js, ol3,js or Leaflet.js");
     }

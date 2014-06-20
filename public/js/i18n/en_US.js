@@ -5,8 +5,18 @@ gc2i18n = {
         "Property": "Property",
         "Value": "Value",
         "Pop up": "Pop up",
-        "Base layers": "Base layers",
+        "Layers": "Layers",
+        "Baselayers": "Baselayers",
         "Share": "Share",
-        "Info text": ""
+        "Info text": "",
+        "Info": "Info",
+        "Close": "Close",
+        "Back": "Back",
+        "Share the map": "Share the map",
+        "URL to this map": "URL to this map",
+        "Search": "Search",
+        "Iframe with this map to embed on web page": "Iframe with this map to embed on web page",
+        "URL to a static PNG image of this map": "URL to a static PNG image of this map",
+        "JavaScript for an application": "Embed this map as JavaScript"
     }
 };

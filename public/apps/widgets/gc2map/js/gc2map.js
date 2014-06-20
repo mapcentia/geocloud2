@@ -45,7 +45,6 @@ if (typeof gc2map === "undefined") {
                 $.getScript("http://cdn.eu1.mapcentia.com/js/hogan/hogan-2.0.0.js");
                 $.getScript(host + "/apps/widgets/gc2map/js/bootstrap-alert.js");
                 $.getScript(host + "/api/v1/baselayerjs");
-
                 (function pollForDependencies() {
                     if (typeof L !== "undefined" &&
                         typeof Proj4js !== "undefined" &&
@@ -68,7 +67,6 @@ if (typeof gc2map === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
-
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap-alert.css' }).appendTo('head');
@@ -77,7 +75,6 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
-
             } else {
                 setTimeout(pollForjQuery, 10);
             }
@@ -138,7 +135,6 @@ if (typeof gc2map === "undefined") {
         };
         return {
             maps: maps,
-            scriptsLoaded: scriptsLoaded,
             init: init
         };
     }());
