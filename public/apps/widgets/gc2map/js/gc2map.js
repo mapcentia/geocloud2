@@ -11,7 +11,7 @@ if (typeof gc2map === "undefined") {
             }
             return string;
         };
-        var init, maps = [],
+        var init, js, maps = [],
             scriptsLoaded = false,
             scriptSource = (function () {
                 var scripts = document.getElementsByTagName('script'),
@@ -22,18 +22,16 @@ if (typeof gc2map === "undefined") {
                 return script.getAttribute('src', -1);
             }()),
             scriptHost, host;
-        if (typeof mygeocloud_host === "undefined") {
-            // In IE7 host name is missing if script url is relative
+        if (typeof window.geocloud_host === "undefined") {
             window.geocloud_host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
         }
         //host = "http://local2.mapcentia.com";
         scriptHost = host = window.geocloud_host;
         if (typeof $ === "undefined") {
-            var head = document.getElementsByTagName("head")[0],
-                js = document.createElement("script");
+            js = document.createElement("script");
             js.type = "text/javascript";
             js.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
-            head.appendChild(js);
+            document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
@@ -67,7 +65,6 @@ if (typeof gc2map === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap-alert.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');

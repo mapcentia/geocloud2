@@ -107,8 +107,8 @@ Viewer = function () {
             "          db: '" + db + "',\n" +
             "          layers: [" + layersStr + "],\n" +
             "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
-            "          setBaseLayer: '" + cloud.getBaseLayerName() + "'\n" +
-            "          width: '100%'\n" +
+            "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
+            "          width: '100%',\n" +
             "          height: '400px'\n" +
             "     });\n" +
             "}())\n" +

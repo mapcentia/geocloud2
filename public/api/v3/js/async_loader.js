@@ -11,37 +11,27 @@ if (typeof gc2apiLoader === "undefined") {
             }
             return string;
         };
-        var scriptSource = (function () {
-                var scripts = document.getElementsByTagName('script'),
-                    script = scripts[scripts.length - 1];
-                if (script.getAttribute.length !== undefined) {
-                    return script.src;
-                }
-                return script.getAttribute('src', -1);
-            }()),
-            host;
-        if (typeof window.geocloud_host === "undefined") {
-            // In IE7 host name is missing if script url is relative
-            window.geocloud_host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
-        }
+        var host, js;
         host = window.geocloud_host;
         if (typeof $ === "undefined") {
-            var head = document.getElementsByTagName("head")[0],
-                js = document.createElement("script");
+            js = document.createElement("script");
             js.type = "text/javascript";
             js.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
-            head.appendChild(js);
+            document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
-                //$.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/OpenLayers.js");
-                $.getScript("http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js");
+                if (window.geocloud_maplib === "ol2") {
+                    $.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/OpenLayers.js");
+                }
+                else if (window.geocloud_maplib === "leaflet") {
+                    $.getScript("http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js");
+                }
                 $.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/api/v1/baselayerjs");
-
                 (function pollForDependencies() {
-                    if (typeof L !== "undefined" &&
+                    if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
                         typeof Proj4js !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                         ) {
@@ -52,8 +42,7 @@ if (typeof gc2apiLoader === "undefined") {
                                 $.getScript(host + "/js/i18n/da_DK.js");
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {
-                                        var context = gc2i18n.dict;
-                                        window.go();
+                                        window[window.geocloud_callback]();
                                     } else {
                                         setTimeout(pollForDict, 10);
                                     }
@@ -66,7 +55,6 @@ if (typeof gc2apiLoader === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css' }).appendTo('head');
             } else {
                 setTimeout(pollForjQuery, 10);
             }
