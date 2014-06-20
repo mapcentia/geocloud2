@@ -21,14 +21,13 @@ if (typeof gc2map === "undefined") {
                 }
                 return script.getAttribute('src', -1);
             }()),
-            scriptHost,
-            host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
-        //host = "http://local2.mapcentia.com";
-        scriptHost = host;
-        // HACK. IE9 has some issues getting host.
-        if (typeof host === "undefined") {
-            host = scriptHost = window.gc2host;
+            scriptHost, host;
+        if (typeof mygeocloud_host === "undefined") {
+            // In IE7 host name is missing if script url is relative
+            window.geocloud_host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
         }
+        //host = "http://local2.mapcentia.com";
+        scriptHost = host = window.geocloud_host;
         if (typeof $ === "undefined") {
             var head = document.getElementsByTagName("head")[0],
                 js = document.createElement("script");
