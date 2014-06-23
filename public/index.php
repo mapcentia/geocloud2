@@ -22,7 +22,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/elasticsearch", function () {
         Database::setDb(Input::getPath()->part(5));
     });
-    Route::add("api/v1/meta", function(){
+    Route::add("api/v1/meta", function () {
         Session::start();
     });
     Route::add("api/v1/schema");
@@ -86,7 +86,11 @@ if (Input::getPath()->part(1) == "api") {
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
     include_once("app/wfs/server.php");
 } elseif (!Input::getPath()->part(1)) {
-    \app\inc\Redirect::to("/user/login");
+    if (\app\conf\App::$param["redirectTo"]) {
+        \app\inc\Redirect::to(\app\conf\App::$param["redirectTo"]);
+    } else {
+        \app\inc\Redirect::to("/user/login");
+    }
 } else {
     header('HTTP/1.0 404 Not Found');
     echo "<h1>404 Not Found</h1>";
