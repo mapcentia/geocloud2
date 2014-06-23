@@ -1,9 +1,9 @@
 <div class="pane">
     <!-- map -->
     <div id="map-{{id}}" class="map"></div>
-    <div class="alert alert-success fade in" style="display:none; width: 250px; position: absolute; z-index: 3; top: 30px; right: 5px; margin-bottom: 0">
+    <div id="info-text-{{id}}" class="alert alert-success fade in" style="display:none; width: {{infoTextWidth}}; position: absolute; z-index: 3; top: 30px; right: 5px; margin-bottom: 0">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        {{{Info text}}}
+        {{{infoText}}}
     </div>
     <nav class="navbar navbar-default" role="navigation">
         <div class="navbar-header">

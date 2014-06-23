@@ -178,7 +178,9 @@ if (typeof gc2map === "undefined") {
                     host: host,
                     width: "100%",
                     height: "100%",
-                    staticmap: false
+                    staticmap: false,
+                    infoText: null,
+                    infoTextWidth: "200px"
                 }, prop, divs = document.getElementsByTagName('div'),
                 div = divs[divs.length - 1],
                 gc2RandId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -206,12 +208,14 @@ if (typeof gc2map === "undefined") {
                         if (typeof gc2i18n !== "undefined") {
                             context = gc2i18n.dict;
                             context.id = gc2RandId;
+                            context.infoText = defaults.infoText;
+                            context.infoTextWidth = defaults.infoTextWidth;
                             if (defaults.staticmap) {
                                 $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/mydb?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                             } else {
                                 $("#" + gc2RandId).html(templates.body.render(context));
-                                if (gc2i18n.dict["Info text"] !== "") {
-                                    $(".alert").show();
+                                if (defaults.infoText) {
+                                    $("#info-text-" + gc2RandId).show();
                                 }
                                 maps[gc2RandId] = new MapCentia(gc2RandId);
                                 maps[gc2RandId].init(defaults);

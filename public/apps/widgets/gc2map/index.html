@@ -16,7 +16,10 @@
     (function () {
         var layers = [],
                 hashArr = window.location.hash.replace("#", "").split("/"),
-                path = window.location.pathname.split("/");
+                path = window.location.pathname.split("/"), mapvars = {},
+                parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                    mapvars[key] = value;
+                });
         if (hashArr[0]) {
             if (hashArr[1] && hashArr[2] && hashArr[3]) {
                 if (hashArr[4]) {
@@ -29,7 +32,8 @@
             layers: layers,
             zoom: [hashArr[2], hashArr[3], hashArr[1]],
             setBaseLayer: hashArr[0],
-            staticmap: false
+            staticmap: false,
+            infoText: mapvars['infotext']
         });
     }());
 </script>

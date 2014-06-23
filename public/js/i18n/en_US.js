@@ -8,7 +8,6 @@ gc2i18n = {
         "Layers": "Layers",
         "Baselayers": "Baselayers",
         "Share": "Share",
-        "Info text": "",
         "Info": "Info",
         "Close": "Close",
         "Back": "Back",
