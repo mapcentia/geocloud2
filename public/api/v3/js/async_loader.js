@@ -39,7 +39,7 @@ if (typeof gc2apiLoader === "undefined") {
                         $.getScript(host + "/api/v3/js/geocloud.js");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined") {
-                                $.getScript(host + "/js/i18n/da_DK.js");
+                                $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {
                                         window[window.geocloud_callback]();
