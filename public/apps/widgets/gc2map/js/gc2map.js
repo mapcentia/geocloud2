@@ -180,8 +180,11 @@ if (typeof gc2map === "undefined") {
                     height: "100%",
                     staticmap: false,
                     infoText: null,
-                    infoTextWidth: "200px"
-                }, prop, divs = document.getElementsByTagName('div'),
+                    infoTextWidth: "200px",
+                    locale: null
+                },
+                prop,
+                divs = document.getElementsByTagName('div'),
                 div = divs[divs.length - 1],
                 gc2RandId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                     var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -223,9 +226,8 @@ if (typeof gc2map === "undefined") {
                         } else {
                             i = i + 1;
                             if (i > 100) {
-                                alert("Seems that i18n file " + ((defaults.locale) ? defaults.locale : window.gc2Al) + " is not loading.")
-                            }
-                            else {
+                                alert("Seems that i18n file " + (defaults.locale || window.gc2Al) + ".js is not loading. Please check your locale setting.");
+                            } else {
                                 setTimeout(pollForDict, 10);
                             }
                         }
