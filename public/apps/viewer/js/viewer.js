@@ -366,8 +366,6 @@ Viewer = function () {
                 $(".base-map-button").removeClass("active");
                 $("#" + hashArr[0]).addClass("active");
                 if (hashArr[1] && hashArr[2] && hashArr[3]) {
-                    p = geocloud.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
-                    cloud.zoomToPoint(p.x, p.y, hashArr[1]);
                     setBaseLayer(hashArr[0]);
                     if (hashArr[4]) {
                         arr = hashArr[4].split(",");
@@ -376,6 +374,8 @@ Viewer = function () {
                             $("#" + arr[i].replace(schema + ".", "")).attr('checked', true);
                         }
                     }
+                    p = geocloud.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");
+                    cloud.zoomToPoint(p.x, p.y, hashArr[1]);
                 }
             } else {
                 setBaseLayer(window.setBaseLayers[0].id);
@@ -483,7 +483,7 @@ Viewer = function () {
                         cloud.addGeoJsonStore(qstore[index]);
                         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\") LIMIT 5";
                         }
                         else {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";

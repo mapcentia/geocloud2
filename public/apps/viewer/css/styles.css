@@ -55,7 +55,7 @@ img {
 }
 
 #modal-info-body {
-    width: 280px;
+    /*width: 280px;*/
     height: 200px;
     overflow: auto;
 }
