@@ -178,7 +178,7 @@ if (typeof gc2map === "undefined") {
                     host: host,
                     width: "100%",
                     height: "100%",
-                    staticmap: false,
+                    staticMap: false,
                     infoText: null,
                     infoTextWidth: "200px",
                     locale: null
@@ -213,8 +213,15 @@ if (typeof gc2map === "undefined") {
                             context.id = gc2RandId;
                             context.infoText = defaults.infoText;
                             context.infoTextWidth = defaults.infoTextWidth;
-                            if (defaults.staticmap) {
-                                $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/mydb?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
+                            if (defaults.staticMap) {
+                                if (typeof defaults.extent === "object") {
+                                    var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
+                                    var p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
+                                    defaults.extent = [p1.x, p1.y, p2.x, p2.y];
+                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/mydb?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&bbox=" + defaults.extent.join(",") + "&lifetime=10'>");
+                                } else if (typeof defaults.zoom === "object") {
+                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/mydb?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
+                                }
                             } else {
                                 $("#" + gc2RandId).html(templates.body.render(context));
                                 if (defaults.infoText) {

@@ -93,7 +93,8 @@ class Staticmap extends \app\inc\Controller
         $bbox = Input::get("bbox");
 
         echo "
-        <script src='http://eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
+        <script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
+        <script src='http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-combined.js'></script>
         <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
@@ -110,7 +111,7 @@ class Staticmap extends \app\inc\Controller
                 map.setBaseLayer(geocloud.{$baseLayer});";
         if ($bbox) {
             $bboxArr = explode(",", Input::get("bbox"));
-            $bbox = "[[$bboxArr[0],$bboxArr[1]],[$bboxArr[2],$bboxArr[3]]]";
+            $bbox = "[{$bboxArr[0]},{$bboxArr[1]},{$bboxArr[2]},{$bboxArr[3]}]";
             echo "map.zoomToExtent({$bbox});";
         } else {
             echo
