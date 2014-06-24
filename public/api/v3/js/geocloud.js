@@ -13,7 +13,6 @@
 
 var geocloud;
 geocloud = (function () {
-    "use strict";
     var scriptSource = (function (scripts) {
             scripts = document.getElementsByTagName('script');
             var script = scripts[scripts.length - 1];
