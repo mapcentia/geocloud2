@@ -1520,10 +1520,10 @@ geocloud = (function () {
 // Adding extensions for several map providers
 
 // Stamen (Leaflet and OpenLayers)
-(function (exports) {
-    /*
+/*(function (exports) {
+    *//*
      * tile.stamen.js v1.2.4
-     */
+     *//*
 
     var SUBDOMAINS = " a. b. c. d.".split(" "),
         MAKE_PROVIDER = function (layer, type, minZoom, maxZoom) {
@@ -1573,18 +1573,18 @@ geocloud = (function () {
     setupFlavors("terrain", ["background"]);
     setupFlavors("terrain", ["labels", "lines"], "png");
 
-    /*
+    *//*
      * Export stamen.tile to the provided namespace.
-     */
+     *//*
     exports.stamen = exports.stamen || {};
     exports.stamen.tile = exports.stamen.tile || {};
     exports.stamen.tile.providers = PROVIDERS;
     exports.stamen.tile.getProvider = getProvider;
 
-    /*
+    *//*
      * A shortcut for specifying "flavors" of a style, which are assumed to have the
      * same type and zoom range.
-     */
+     *//*
     function setupFlavors(base, flavors, type) {
         var provider = getProvider(base);
         for (var i = 0; i < flavors.length; i++) {
@@ -1593,9 +1593,9 @@ geocloud = (function () {
         }
     }
 
-    /*
+    *//*
      * Get the named provider, or throw an exception if it doesn't exist.
-     */
+     *//*
     function getProvider(name) {
         if (name in PROVIDERS) {
             return PROVIDERS[name];
@@ -1604,12 +1604,12 @@ geocloud = (function () {
         }
     }
 
-    /*
+    *//*
      * StamenTileLayer for Leaflet
      * <http://leaflet.cloudmade.com/>
      *
      * Tested with version 0.3 and 0.4, but should work on all 0.x releases.
-     */
+     *//*
     if (typeof L === "object") {
         L.StamenTileLayer = L.TileLayer.extend({
             initialize: function (name) {
@@ -1628,12 +1628,12 @@ geocloud = (function () {
         });
     }
 
-    /*
+    *//*
      * StamenTileLayer for OpenLayers
      * <http://openlayers.org/>
      *
      * Tested with v2.1x.
-     */
+     *//*
     if (typeof OpenLayers === "object") {
         // make a tile URL template OpenLayers-compatible
         function openlayerize(url) {
@@ -1671,7 +1671,7 @@ geocloud = (function () {
         });
     }
 
-})(typeof exports === "undefined" ? this : exports);
+})(typeof exports === "undefined" ? this : exports);*/
 
 if (geocloud.MAPLIB === "leaflet") {
 // Bing Maps (Leaflet)
