@@ -1524,7 +1524,7 @@ geocloud = (function () {
     /*
      * tile.stamen.js v1.2.4
      */
-
+    "use strict";
     var SUBDOMAINS = " a. b. c. d.".split(" "),
         MAKE_PROVIDER = function (layer, type, minZoom, maxZoom) {
             return {
@@ -1563,7 +1563,28 @@ geocloud = (function () {
                 ].join(" ")
             }
         };
+    /*
+     * Get the named provider, or throw an exception if it doesn't exist.
+     */
+    var getProvider = function (name) {
+        if (name in PROVIDERS) {
+            return PROVIDERS[name];
+        } else {
+            throw 'No such provider (' + name + ')';
+        }
+    };
 
+    /*
+     * A shortcut for specifying "flavors" of a style, which are assumed to have the
+     * same type and zoom range.
+     */
+    var setupFlavors =function (base, flavors, type) {
+        var provider = getProvider(base);
+        for (var i = 0; i < flavors.length; i++) {
+            var flavor = [base, flavors[i]].join("-");
+            PROVIDERS[flavor] = MAKE_PROVIDER(flavor, type || provider.type, provider.minZoom, provider.maxZoom);
+        }
+    };
 // set up toner and terrain flavors
     setupFlavors("toner", ["hybrid", "labels", "lines", "background", "lite"]);
 // toner 2010
@@ -1581,28 +1602,9 @@ geocloud = (function () {
     exports.stamen.tile.providers = PROVIDERS;
     exports.stamen.tile.getProvider = getProvider;
 
-    /*
-     * A shortcut for specifying "flavors" of a style, which are assumed to have the
-     * same type and zoom range.
-     */
-    function setupFlavors(base, flavors, type) {
-        var provider = getProvider(base);
-        for (var i = 0; i < flavors.length; i++) {
-            var flavor = [base, flavors[i]].join("-");
-            PROVIDERS[flavor] = MAKE_PROVIDER(flavor, type || provider.type, provider.minZoom, provider.maxZoom);
-        }
-    }
 
-    /*
-     * Get the named provider, or throw an exception if it doesn't exist.
-     */
-    function getProvider(name) {
-        if (name in PROVIDERS) {
-            return PROVIDERS[name];
-        } else {
-            throw 'No such provider (' + name + ')';
-        }
-    }
+
+
 
     /*
      * StamenTileLayer for Leaflet
@@ -1636,11 +1638,11 @@ geocloud = (function () {
      */
     if (typeof OpenLayers === "object") {
         // make a tile URL template OpenLayers-compatible
-        function openlayerize(url) {
+        var openlayerize = function (url) {
             return url.replace(/({.})/g, function (v) {
                 return "$" + v.toLowerCase();
             });
-        }
+        };
 
         // based on http://www.bostongis.com/PrinterFriendly.aspx?content_name=using_custom_osm_tiles
         OpenLayers.Layer.Stamen = OpenLayers.Class(OpenLayers.Layer.OSM, {
