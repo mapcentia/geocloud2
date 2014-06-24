@@ -13,6 +13,7 @@
 
 var geocloud;
 geocloud = (function () {
+    "use strict";
     var scriptSource = (function (scripts) {
             scripts = document.getElementsByTagName('script');
             var script = scripts[scripts.length - 1];
@@ -1467,7 +1468,7 @@ geocloud = (function () {
     };
     transformPoint = function (lat, lon, s, d) {
         var p = [];
-        if (typeof Proj4js === "object") {
+        if (typeof Proj4js !== "undefined") {
             var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
             var dest = new Proj4js.Proj(d);
             p = new Proj4js.Point(lat, lon);
