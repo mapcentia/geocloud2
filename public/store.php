@@ -13,6 +13,7 @@ include("html_header.php");
 <!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
 <!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
 
+<script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script type="text/javascript" src="/js/msg.js"></script>
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>

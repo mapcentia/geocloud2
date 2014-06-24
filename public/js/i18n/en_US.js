@@ -1,6 +1,7 @@
 var gc2i18n;
 gc2i18n = {
     dict: {
+        /* Start of viewer and widget */
         "Legend": "Legend",
         "Property": "Property",
         "Value": "Value",
@@ -16,6 +17,15 @@ gc2i18n = {
         "Search": "Search",
         "Iframe with this map to embed on web page": "Iframe with this map to embed on web page",
         "URL to a static PNG image of this map": "URL to a static PNG image of this map",
-        "JavaScript for an application": "Embed this map as JavaScript"
+        "JavaScript for an application": "Embed this map as JavaScript",
+        /* Start of Admin */
+        "Map": "Map",
+        "Advanced": "Advanced",
+        "Services": "Services",
+        "Clear tile cache": "Clear tile cache",
+        "New layer": "New layer",
+        "Move layers": "Move layers",
+        "Delete layers": "Delete layers",
+        "Draw": "Draw"
     }
 };

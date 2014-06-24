@@ -8,6 +8,15 @@
 /*global attributeForm:false */
 /*global geocloud:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
+window.__ = function (string) {
+    if (typeof gc2i18n !== 'undefined') {
+        if (gc2i18n.dict[string]) {
+            return gc2i18n.dict[string];
+        }
+    }
+    return string;
+};
+document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData;
 function startWfsEdition(layerName, geomField, wfsFilter, single) {
     'use strict';
@@ -707,7 +716,7 @@ $(document).ready(function () {
         '-',
         new GeoExt.Action({
             control: drawControl,
-            text: "<i class='icon-pencil btn-gc'></i> Draw",
+            text: "<i class='icon-pencil btn-gc'></i>" + __("Draw"),
             id: "editcreatebutton",
             disabled: true,
             enableToggle: true

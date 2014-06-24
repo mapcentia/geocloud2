@@ -10,6 +10,15 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
+window.__ = function (string) {
+    if (typeof gc2i18n !== 'undefined') {
+        if (gc2i18n.dict[string]) {
+            return gc2i18n.dict[string];
+        }
+    }
+    return string;
+};
+document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({});
 $(window).ready(function () {
     "use strict";
@@ -294,24 +303,24 @@ $(window).ready(function () {
         }),
         tbar: [
             {
-                text: '<i class="icon-camera btn-gc"></i> CartoMobile',
+                text: '<i class="icon-camera btn-gc"></i>' + __('CartoMobile'),
                 handler: onEditCartomobile,
                 id: 'cartomobile-btn',
                 disabled: true
             },
             {
-                text: '<i class="icon-cog btn-gc"></i> Advanced',
+                text: '<i class="icon-cog btn-gc"></i>' + __('Advanced'),
                 handler: onEditMoreSettings,
                 id: 'advanced-btn',
                 disabled: true
             },
             {
-                text: '<i class="icon-lock btn-gc"></i> Services',
+                text: '<i class="icon-lock btn-gc"></i>' + __('Services'),
                 handler: onGlobalSettings
 
             },
             {
-                text: '<i class="icon-remove btn-g"></i> Clear all tile cache',
+                text: '<i class="icon-remove btn-gc"></i>' + __('Clear all tile cache'),
                 handler: function () {
                     Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
@@ -340,14 +349,14 @@ $(window).ready(function () {
             },
             '->',
             {
-                text: '<i class="icon-plus btn-gc"></i> New layer',
+                text: '<i class="icon-plus btn-gc"></i>' + __('New layer'),
                 handler: function () {
                     onAdd();
                 }
             },
             '-',
             {
-                text: '<i class="icon-arrow-right btn-gc"></i> Move layers',
+                text: '<i class="icon-arrow-right btn-gc"></i>' + __('Move layers'),
                 disabled: true,
                 id: 'movelayer-btn',
                 handler: function () {
@@ -356,7 +365,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-trash btn-gc"></i> Delete layers',
+                text: '<i class="icon-trash btn-gc"></i>' + __('Delete layers'),
                 disabled: true,
                 id: 'deletelayer-btn',
                 handler: function () {
@@ -1280,7 +1289,7 @@ $(window).ready(function () {
         items: [
             {
                 xtype: "panel",
-                title: 'Map',
+                title: __('Map'),
                 layout: 'border',
                 items: [
                     {
