@@ -18,7 +18,7 @@ class Baselayerjs extends \app\inc\Controller
         if (\app\conf\App::$param['mapAttribution']) {
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
         }
-        $locales = array("en_US", "da_DK");
+        $locales = array("en_US", "da_DK", "fr_FR");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         //echo $_SERVER['HTTP_ACCEPT_LANGUAGE'] . "\n";
         //echo $requestedLan."\n";

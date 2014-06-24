@@ -14,10 +14,11 @@
 <div style="position: absolute"/>
 <script>
     (function () {
-        var layers = [],
+        var url = window.location.href.match(/(^[^#]*)/),
+                layers = [],
                 hashArr = window.location.hash.replace("#", "").split("/"),
-                path = window.location.pathname.split("/"), mapvars = {},
-                parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                path = window.location.pathname.split("/"), mapvars = {};
+                url[0].replace(/[^#][?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
                     mapvars[key] = value;
                 });
         if (hashArr[0]) {
@@ -33,7 +34,7 @@
             zoom: [hashArr[2], hashArr[3], hashArr[1]],
             setBaseLayer: hashArr[0],
             staticmap: false,
-            infoText: mapvars['infotext']
+            infoText: decodeURIComponent(mapvars['infotext'])
         });
     }());
 </script>
