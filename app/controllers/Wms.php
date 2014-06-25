@@ -110,6 +110,9 @@ class Wms extends \app\inc\Controller
         if ($contenttype == 'image/png') {
             header('Content-type: image/png');
         }
+        else {
+            header('Content-type: text/xml');
+        }
         ms_iogetStdoutBufferBytes();
         ms_ioresethandlers();
     }
