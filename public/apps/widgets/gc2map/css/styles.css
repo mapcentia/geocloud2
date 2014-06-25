@@ -195,6 +195,7 @@ input[type="radio"], input[type="checkbox"] {
 
 .nav > li, .dropdown-menu > li {
     margin: -1px !important;
+    line-height: normal !important;
 }
 
 .nav-tabs > li > a, .dropdown-menu > li > a{
