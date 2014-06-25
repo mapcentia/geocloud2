@@ -18,9 +18,9 @@
                 layers = [],
                 hashArr = window.location.hash.replace("#", "").split("/"),
                 path = window.location.pathname.split("/"), mapvars = {};
-                url[0].replace(/[^#][?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-                    mapvars[key] = value;
-                });
+        url[0].replace(/[^#][?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            mapvars[key] = value;
+        });
         if (hashArr[0]) {
             if (hashArr[1] && hashArr[2] && hashArr[3]) {
                 if (hashArr[4]) {
@@ -34,7 +34,7 @@
             zoom: [hashArr[2], hashArr[3], hashArr[1]],
             setBaseLayer: hashArr[0],
             staticmap: false,
-            infoText: decodeURIComponent(mapvars['infotext'])
+            infoText: (mapvars['infotext']) ? decodeURIComponent(mapvars['infotext']) : null
         });
     }());
 </script>
