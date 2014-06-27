@@ -1,5 +1,6 @@
 <?php
 namespace app\models;
+
 class Layer extends \app\models\Table
 {
     function __construct()
@@ -30,6 +31,7 @@ class Layer extends \app\models\Table
         } else {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
         }
+        $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $res = $this->prepare($sql);
         try {
             if ($schema) {

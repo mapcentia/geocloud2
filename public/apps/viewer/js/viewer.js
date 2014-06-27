@@ -43,8 +43,7 @@ Viewer = function () {
         cloud.setBaseLayer(str);
         try {
             history.pushState(null, null, permaLink());
-        }
-        catch (e) {
+        } catch (e) {
         }
     };
     addLegend = function () {
@@ -279,10 +278,12 @@ Viewer = function () {
                         }
                         // Don't add empty group
                         if (node.items[0].items.length > 0) {
+                            node.items[0].items.reverse();
                             arrMenu[0].items.push(node);
                         }
                     }
                 }
+                arrMenu[0].items.reverse();
                 $('#menu').multilevelpushmenu({
                     menu: arrMenu
                 });

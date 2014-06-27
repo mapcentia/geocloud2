@@ -106,6 +106,7 @@ class Table extends Model
         if ($whereClause) {
             $sql .= " WHERE {$whereClause}";
         }
+        $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $result = $this->execQuery($sql);
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
@@ -163,6 +164,11 @@ class Table extends Model
     {
         $data = $this->makeArray($data);
         foreach ($data as $row) {
+            if (is_array($row)) { // Two or more records are send by client
+                $response['success'] = false;
+                $response['message'] = "An previous edit was not saved. This may be caused by a connection problem. Try refresh your browser.";
+                return $response;
+            }
             foreach ($row as $key => $value) {
                 if ($value === false) {
                     $value = null;

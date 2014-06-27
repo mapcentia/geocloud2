@@ -539,10 +539,11 @@ $(document).ready(function () {
                             text: arr[i],
                             isLeaf: false,
                             expanded: false,
-                            children: l
+                            children: l.reverse()
                         });
                     }
                 }
+                treeConfig.push(treeConfig.shift());
                 // create the tree with the configuration from above
                 tree = new Ext.tree.TreePanel({
                     id: "tree",
@@ -553,7 +554,7 @@ $(document).ready(function () {
                     autoScroll: true,
                     root: {
                         text: 'Ext JS',
-                        children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig, true)),
+                        children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig.reverse(), true)),
                         id: 'source'
                     },
                     loader: new Ext.tree.TreeLoader({

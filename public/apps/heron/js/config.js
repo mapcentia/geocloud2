@@ -163,6 +163,7 @@ MapCentia.setup = function () {
                     }
                 );
             });
+            children.reverse();
             Heron.options.layertree.tree = [
                 {
                     text: 'BaseLayers',

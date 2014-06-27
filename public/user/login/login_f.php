@@ -54,8 +54,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
 ?>
 <div class="container">
     <div class="dialog">
-        <img src="../assets/images/MapCentia_500.png" id="logo">
-
+        <img src="<?php echo \app\conf\App::$param['loginLogo']; ?>" id="logo">
         <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Login</h3>
             <div class="control-group first">
@@ -86,7 +85,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
             </div>
 
             <p>
-                Not using MapCentia GeoCloud? <b><a href="/user/signup/">Sign up</a></b>
+                Not using GeoCloud2? <b><a href="/user/signup/">Sign up</a></b>
             </p>
 
         </form>
