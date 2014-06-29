@@ -13,6 +13,7 @@ class Legend extends \app\inc\Controller
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         if (\app\inc\Input::get("l")) {
             $layerNames = explode(";", \app\inc\Input::get("l"));
+            $layerNames = array_reverse($layerNames);
             foreach ($layerNames as $layerName) {
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
