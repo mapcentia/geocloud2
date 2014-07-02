@@ -72,6 +72,11 @@ class Classification extends \app\inc\Model
             $response['success'] = true;
             $arr = $classes['data'][$id];
             unset($arr['id']);
+            foreach ($arr as $key => $value) {
+                if ($value === null) {
+                    $arr[$key] = "";
+                }
+            }
             $props = array(
                 "name" => "Unnamed Class",
                 "expression" => "",
@@ -84,10 +89,7 @@ class Classification extends \app\inc\Model
                 "symbol" => "",
                 "size" => "2",
                 "width" => "1");
-            foreach ($classes['data'][$id] as $key => $value) {
-                if ($value === null){
-                    $classes['data'][$id][$key] = "";
-                }
+            foreach ($arr as $value) {
                 foreach ($props as $key2 => $value2) {
                     if (!isset($arr[$key2])) {
                         $arr[$key2] = $value2;
@@ -103,7 +105,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    private function store($data)
+    private
+    function store($data)
     {
 
         // First we replace unicode escape sequence
@@ -121,7 +124,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function insert()
+    public
+    function insert()
     {
         $classes = $this->getAll();
         $classes['data'][] = array("name" => "Unnamed class");
@@ -136,7 +140,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function update($id, $data)
+    public
+    function update($id, $data)
     {
         $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
@@ -153,7 +158,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function destroy($id) // Geometry columns
+    public
+    function destroy($id) // Geometry columns
     {
         $classes = $this->getAll();
         unset($classes['data'][$id]);
@@ -173,12 +179,14 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    private function reset()
+    private
+    function reset()
     {
         $this->store(json_encode(array()));
     }
 
-    public function createSingle($data)
+    public
+    function createSingle($data)
     {
         $this->reset();
         $layer = new \app\models\Layer();
@@ -195,7 +203,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function createUnique($field, $data)
+    public
+    function createUnique($field, $data)
     {
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
@@ -240,7 +249,8 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
+    public
+    function createEqualIntervals($field, $num, $startColor, $endColor, $data)
     {
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
@@ -283,7 +293,8 @@ class Classification extends \app\inc\Model
 
     }
 
-    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
+    public
+    function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
     {
         $layer = new \app\models\Layer();
         $geometryType = $layer->getValueFromKey($this->layer, type);
