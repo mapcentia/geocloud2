@@ -106,7 +106,9 @@ class Table extends Model
         if ($whereClause) {
             $sql .= " WHERE {$whereClause}";
         }
-        $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+        if (strpos(strtolower($whereClause),strtolower("order by")) !== false) {
+            $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+        }
         $result = $this->execQuery($sql);
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
