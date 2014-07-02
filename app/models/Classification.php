@@ -73,20 +73,18 @@ class Classification extends \app\inc\Model
             $arr = $classes['data'][$id];
             unset($arr['id']);
             foreach ($arr as $key => $value) {
-                if ($value === null) {
+                if ($value === null) { // Never send null to client
                     $arr[$key] = "";
                 }
             }
             $props = array(
                 "name" => "Unnamed Class",
-                "expression" => "",
                 "label" => false,
                 "label_text" => "",
                 "label2_text" => "",
                 "force_label" => false,
                 "color" => "#FF0000",
                 "outlinecolor" => "#FF0000",
-                "symbol" => "",
                 "size" => "2",
                 "width" => "1");
             foreach ($arr as $value) {
