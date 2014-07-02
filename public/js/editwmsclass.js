@@ -498,7 +498,7 @@ wmsClass.init = function (id) {
                         ];
                         Ext.each(arr4, function (i, v) {
                             obj4[i] = store.getAt(0).data[i];
-                        })
+                        });
                         propGrid4.setSource(obj4);
                     }
                     if (propGrid5) {

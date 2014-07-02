@@ -84,7 +84,10 @@ class Classification extends \app\inc\Model
                 "symbol" => "",
                 "size" => "2",
                 "width" => "1");
-            foreach ($classes['data'][$id] as $value) {
+            foreach ($classes['data'][$id] as $key => $value) {
+                if ($value === null){
+                    $classes['data'][$id][$key] = "";
+                }
                 foreach ($props as $key2 => $value2) {
                     if (!isset($arr[$key2])) {
                         $arr[$key2] = $value2;

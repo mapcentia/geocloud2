@@ -16,7 +16,7 @@ class Classification extends \app\inc\Controller
     public function get_index()
     {
         $id = Input::getPath()->part(5);
-        return ($id) ? $this->class->get($id) : $this->class->getAll();
+        return ($id !== false && $id !== null && $id !== "") ? $this->class->get($id) : $this->class->getAll();
     }
 
     public function post_index()
