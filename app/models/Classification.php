@@ -76,6 +76,8 @@ class Classification extends \app\inc\Model
                 "name" => "Unnamed Class",
                 "expression" => "",
                 "label" => false,
+                "label_text" => "",
+                "label2_text" => "",
                 "force_label" => false,
                 "color" => "#FF0000",
                 "outlinecolor" => "#FF0000",
@@ -377,7 +379,8 @@ class Classification extends \app\inc\Model
             "overlaysymbol" => "",
             "overlaysize" => "",
             "overlaywidth" => "",
-            "label_text" => ($data->labelText) ? : ""
+            "label_text" => ($data->labelText) ? : "",
+            "label2_text" => ($data->labelText) ? : "",
         );
     }
 }
