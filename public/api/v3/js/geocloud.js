@@ -561,7 +561,7 @@ geocloud = (function () {
                 return layerArr.join(",");
             }
             else {
-                return layerArr;
+                return false;
             }
         };
         //ol2
