@@ -18,6 +18,10 @@ class Tilecache extends \app\inc\Controller
         //$dirReal = realpath($dir); // Do not work on *
         if ($dir) {
             exec("rm -R {$dir}");
+            if (strpos($dir,".*") !== false){
+                $dir = str_replace(".*","", $dir);
+                exec("rm -R {$dir}");
+            }
             $respons['success'] = true;
             $respons['message'] = "Tile cache deleted";
         } else {

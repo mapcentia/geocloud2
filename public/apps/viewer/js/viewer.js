@@ -41,13 +41,14 @@ Viewer = function () {
     };
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
+        addLegend();
         try {
             history.pushState(null, null, permaLink());
         } catch (e) {
         }
     };
     addLegend = function () {
-        var param = 'l=' + cloud.getVisibleLayers();
+        var param = 'l=' + cloud.getVisibleLayers(true);
         $.ajax({
             url: hostname + '/api/v1/legend/json/' + db + '/?' + param,
             dataType: 'jsonp',
@@ -511,5 +512,6 @@ Viewer = function () {
         shareStumbleupon: shareStumbleupon
     };
 };
+
 
 

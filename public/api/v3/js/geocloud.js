@@ -497,12 +497,13 @@ geocloud = (function () {
             return layerArr;
         };
         //ol2, ol3 and leaflet
-        this.getVisibleLayers = function () {
+        this.getVisibleLayers = function (getBaseLayers) {
+            getBaseLayers = (getBaseLayers === true) ? true : false;
             var layerArr = [], i;
             switch (MAPLIB) {
                 case "ol2":
                     for (i = 0; i < this.map.layers.length; i++) {
-                        if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                        if ((this.map.layers[i].isBaseLayer === getBaseLayers || this.map.layers[i].isBaseLayer === false) && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                             layerArr.push(this.map.layers[i].params.LAYERS);
                         }
                     }
@@ -519,7 +520,7 @@ geocloud = (function () {
                     var layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
-                            if (layers[key].baseLayer !== true && typeof layers[key]._tiles === "object") {
+                            if ((layers[key].baseLayer === getBaseLayers || layers[key].baseLayer === false) && typeof layers[key]._tiles === "object") {
                                 layerArr.push(layers[key].id);
                             }
                         }
@@ -1578,7 +1579,7 @@ geocloud = (function () {
      * A shortcut for specifying "flavors" of a style, which are assumed to have the
      * same type and zoom range.
      */
-    var setupFlavors =function (base, flavors, type) {
+    var setupFlavors = function (base, flavors, type) {
         var provider = getProvider(base);
         for (var i = 0; i < flavors.length; i++) {
             var flavor = [base, flavors[i]].join("-");
@@ -1601,9 +1602,6 @@ geocloud = (function () {
     exports.stamen.tile = exports.stamen.tile || {};
     exports.stamen.tile.providers = PROVIDERS;
     exports.stamen.tile.getProvider = getProvider;
-
-
-
 
 
     /*

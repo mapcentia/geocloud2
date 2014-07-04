@@ -14,7 +14,23 @@ class Legend extends \app\inc\Controller
         if (\app\inc\Input::get("l")) {
             $layerNames = explode(";", \app\inc\Input::get("l"));
             $layerNames = array_reverse($layerNames);
-            foreach ($layerNames as $layerName) {
+            $temp = $layerNames;
+            $newLayerNames = $arr = array();
+            // Check if schema is given as param and get the layer names
+            foreach ($temp as $layerName) {
+                $splitName = explode(".", $layerName);
+                if (sizeof($splitName) < 2) {
+                    $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
+                    if (file_exists($path . $mapFile)) {
+                        $map = ms_newMapobj($path . $mapFile);
+                        $arr = $map->getAllLayerNames();
+                    }
+                } else {
+                    $newLayerNames[] = $layerName;
+                }
+                $newLayerNames = array_merge($newLayerNames, $arr);
+            }
+            foreach ($newLayerNames as $layerName) {
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
                 $map = ms_newMapobj($path . $mapFile);

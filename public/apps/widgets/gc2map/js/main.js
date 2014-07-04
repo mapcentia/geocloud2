@@ -241,7 +241,7 @@ MapCentia = function (globalId) {
                     name: defaults.baseLayers[i].name
                 });
             } else {
-                cloud.addBaseLayer(defaults.baseLayers[i].id);
+                cloud.addBaseLayer(defaults.baseLayers[i].id, defaults.baseLayers[i].db);
             }
             $("#base-layer-list-" + id).append(
                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
@@ -307,7 +307,7 @@ MapCentia = function (globalId) {
             }
         }
         addLegend = function () {
-            var param = 'l=' + cloud.getVisibleLayers();
+            var param = 'l=' + cloud.getVisibleLayers(false);
             if (legendDirty === true) {
                 return false;
             }
