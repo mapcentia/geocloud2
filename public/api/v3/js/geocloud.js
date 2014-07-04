@@ -503,7 +503,7 @@ geocloud = (function () {
             switch (MAPLIB) {
                 case "ol2":
                     for (i = 0; i < this.map.layers.length; i++) {
-                        if ((this.map.layers[i].isBaseLayer === getBaseLayers || this.map.layers[i].isBaseLayer === false) && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
+                        if ((this.map.layers[i].isBaseLayer === getBaseLayers || this.map.layers[i].isBaseLayer === false || this.map.layers[i].isBaseLayer === null) && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                             layerArr.push(this.map.layers[i].params.LAYERS);
                         }
                     }
@@ -520,7 +520,7 @@ geocloud = (function () {
                     var layers = this.map._layers;
                     for (var key in layers) {
                         if (layers.hasOwnProperty(key)) {
-                            if ((layers[key].baseLayer === getBaseLayers || layers[key].baseLayer === false) && typeof layers[key]._tiles === "object") {
+                            if ((layers[key].baseLayer === getBaseLayers || layers[key].baseLayer === false || layers[key].baseLayer === null) && typeof layers[key]._tiles === "object") {
                                 layerArr.push(layers[key].id);
                             }
                         }

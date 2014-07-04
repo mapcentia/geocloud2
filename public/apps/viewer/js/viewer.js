@@ -84,7 +84,7 @@ Viewer = function () {
         });
     };
     share = function () {
-        var url = hostname + "/apps/widgets/gc2map/" + db + "/" + anchor(), layers, arr = [], layersStr = "", i, p, javascript;
+        var url = hostname + linkToSimpleMap(), layers, arr = [], layersStr = "", i, p, javascript;
         $("#modal-share").modal();
         $("#share-url").val(url);
         $("#share-iframe").val("<iframe width='100%' height='500px' frameBorder='0' src='" + url + "'></iframe>");
@@ -110,6 +110,7 @@ Viewer = function () {
             "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
             "          width: '100%',\n" +
             "          height: '400px'\n" +
+            "          schema: '" + schema + "'\n" +
             "     });\n" +
             "}())\n" +
             "</script>";
@@ -144,7 +145,7 @@ Viewer = function () {
         return "/apps/viewer/" + db + "/" + schema + "/" + anchor();
     };
     linkToSimpleMap = function () {
-        return "/apps/widgets/gc2map/" + db + "/" + anchor();
+        return "/apps/widgets/gc2map/" + db + "/" + schema + "/" + anchor();
     };
     anchor = function () {
         var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
@@ -179,10 +180,12 @@ Viewer = function () {
         cloud.bingApiKey = window.bingApiKey;
         cloud.digitalGlobeKey = window.digitalGlobeKey;
         for (i = 0; i < window.setBaseLayers.length; i = i + 1) {
-            cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db);
-            $("#base-layer-list").append(
-                "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
-            );
+            if (typeof window.setBaseLayers[i].restrictTo === "undefined" || window.setBaseLayers[i].restrictTo.indexOf(schema) > -1) {
+                cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db);
+                $("#base-layer-list").append(
+                    "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
+                );
+            }
         }
         $("#locate-btn").on("click", function () {
             cloud.locate();

@@ -19,7 +19,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, defaults, db, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -158,6 +158,7 @@ MapCentia = function (globalId) {
             }
         }
         db = defaults.db;
+        schema = defaults.schema;
         hostname = defaults.host;
         $("[data-toggle=tooltip]").tooltip();
         $('.share-text').mouseup(function () {
@@ -230,22 +231,24 @@ MapCentia = function (globalId) {
         cloud.bingApiKey = window.bingApiKey;
         cloud.digitalGlobeKey = window.digitalGlobeKey;
         for (i = 0; i < defaults.baseLayers.length; i = i + 1) {
-            if (defaults.baseLayers[i].id.split(".").length > 1) {
-                cloud.addTileLayers({
-                    host: defaults.host,
-                    layers: [defaults.baseLayers[i].id],
-                    db: db,
-                    wrapDateLine: false,
-                    isBaseLayer: true,
-                    displayInLayerSwitcher: true,
-                    name: defaults.baseLayers[i].name
-                });
-            } else {
-                cloud.addBaseLayer(defaults.baseLayers[i].id, defaults.baseLayers[i].db);
+            if (typeof defaults.baseLayers[i].restrictTo === "undefined" || defaults.baseLayers[i].restrictTo.indexOf(schema) > -1 || schema === undefined) {
+                if (defaults.baseLayers[i].id.split(".").length > 1) {
+                    cloud.addTileLayers({
+                        host: defaults.host,
+                        layers: [defaults.baseLayers[i].id],
+                        db: db,
+                        wrapDateLine: false,
+                        isBaseLayer: true,
+                        displayInLayerSwitcher: true,
+                        name: defaults.baseLayers[i].name
+                    });
+                } else {
+                    cloud.addBaseLayer(defaults.baseLayers[i].id, defaults.baseLayers[i].db);
+                }
+                $("#base-layer-list-" + id).append(
+                    "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
+                );
             }
-            $("#base-layer-list-" + id).append(
-                "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + defaults.baseLayers[i].id + "')\"><!--<img class=\"img-rounded images-base-map\" src=\"http://apps/viewer/img/mqosm.png\">-->" + defaults.baseLayers[i].name + "</a></li>"
-            );
         }
         if (defaults.setBaseLayer) {
             setBaseLayer(defaults.setBaseLayer);
@@ -264,7 +267,7 @@ MapCentia = function (globalId) {
                     visibility: false,
                     db: db,
                     wrapDateLine: false,
-                    name: "public"
+                    name: [arr[i]]
                 });
                 $("#base-layer-list-" + id).append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
