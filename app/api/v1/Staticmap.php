@@ -32,8 +32,9 @@ class Staticmap extends \app\inc\Controller
         $size = Input::get("size");
         $sizeArr = explode("x", Input::get("size"));
         $bbox = Input::get("bbox");
+        $sql = Input::get("sql");
 
-        $id = $db."_".$baseLayer."_".$layers."_".$center."_".$zoom."_".$size."_".$bbox;
+        $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox;
         $lifetime = (Input::get('lifetime')) ? : 0;
         $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
         $Cache_Lite = new \Cache_Lite($options);
@@ -45,7 +46,7 @@ class Staticmap extends \app\inc\Controller
             $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
             $cmd = "wkhtmltoimage " .
                 "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
-                "\"" . \app\conf\App::$param['host'] . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}\" " .
+                "\"" . \app\conf\App::$param['host'] . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}&sql={$sql}\" " .
                 $file;
             //die($cmd);
             exec($cmd);
@@ -91,6 +92,7 @@ class Staticmap extends \app\inc\Controller
         $zoom = Input::get("zoom");
         $size = explode("x", Input::get("size"));
         $bbox = Input::get("bbox");
+        $sql = Input::get("sql");
 
         echo "
         <script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
@@ -106,24 +108,35 @@ class Staticmap extends \app\inc\Controller
                 var map = new geocloud.map({
                     el: 'map'
                 });
-                map.bingApiKey = '".\app\conf\App::$param['bingApiKey']."'
+                map.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "'
                 map.addBaseLayer(geocloud.{$baseLayer});
                 map.setBaseLayer(geocloud.{$baseLayer});";
-        if ($bbox) {
-            $bboxArr = explode(",", Input::get("bbox"));
-            $bbox = "[{$bboxArr[0]},{$bboxArr[1]},{$bboxArr[2]},{$bboxArr[3]}]";
-            echo "map.zoomToExtent({$bbox});";
+        if (!$sql) {
+            if ($bbox) {
+                $bboxArr = explode(",", Input::get("bbox"));
+                $bbox = "[{$bboxArr[0]},{$bboxArr[1]},{$bboxArr[2]},{$bboxArr[3]}]";
+                echo "map.zoomToExtent({$bbox});";
+            } else {
+                echo
+                "map.setView({$center},{$zoom});";
+            }
         } else {
-            echo
-            "map.setView({$center},{$zoom});";
+            echo "
+                var store = new geocloud.sqlStore({
+                    db: '{$db}',
+                    sql: '{$sql}',
+                    async: false
+                });
+                map.addGeoJsonStore(store);
+                store.load();
+                map.zoomToExtentOfgeoJsonStore(store);";
         }
-
         echo "
-                console.log(map.map.getSize())
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}
                 });
+
             }())
         </script>
         ";

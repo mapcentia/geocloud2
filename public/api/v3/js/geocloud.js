@@ -103,7 +103,8 @@ geocloud = (function () {
             index: "",
             type: "",
             size: 3,
-            clientEncoding: "UTF8"
+            clientEncoding: "UTF8",
+            async: true
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -196,6 +197,7 @@ geocloud = (function () {
             }
             $.ajax({
                 dataType: 'jsonp',
+                async: this.defaults.async,
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: 'jsonp_callback',
                 url: url + '/api/v1/sql/' + this.db,

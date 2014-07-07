@@ -33,9 +33,9 @@ class App
 
         // Available baselayer
         "baseLayers" => array(
+            array("id" => "stamenToner", "name" => "Stamen Toner"),
             array("id" => "osm", "name" => "OSM"),
             array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
-            array("id" => "stamenToner", "name" => "Stamen Toner"),
             array("id" => "googleStreets", "name" => "Google Street"),
             array("id" => "googleHybrid", "name" => "Google Hybrid"),
             array("id" => "googleSatellite", "name" => "Google Satellite"),
