@@ -34,7 +34,7 @@ class Staticmap extends \app\inc\Controller
         $bbox = Input::get("bbox");
         $sql = Input::get("sql");
 
-        $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox;
+        $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox. "_" . $sql;
         $lifetime = (Input::get('lifetime')) ? : 0;
         $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
         $Cache_Lite = new \Cache_Lite($options);
