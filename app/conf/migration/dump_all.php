@@ -6,7 +6,7 @@ new \app\conf\App();
 $database = new \app\models\Database();
 $arr = $database->listAllDbs();
 $targetDir = \app\conf\App::$param["path"]."app/tmp/backup";
-if (!file_exists($mainDir)) {
+if (!file_exists($targetDir)) {
     @mkdir($targetDir);
 }
 foreach ($arr['data'] as $db) {
