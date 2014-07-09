@@ -19,7 +19,7 @@ if ($handle = opendir($targetDir)) {
             $cmd = "psql -d {$db} -c \"CREATE EXTENSION pgcrypto;\" -U postgres";
             echo $cmd."\n";
             exec($cmd);
-            $cmd = "/usr/share/postgresql/9.3/contrib/postgis-2.1/postgis_restore.pl {$entry} | psql {$db} -U postgres";
+            $cmd = "/usr/share/postgresql/9.3/contrib/postgis-2.1/postgis_restore.pl {$targetDir}/{$entry} | psql {$db} -U postgres";
             echo $cmd."\n";
             exec($cmd);
             echo "**************\n";
