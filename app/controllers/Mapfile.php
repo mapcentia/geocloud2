@@ -394,9 +394,8 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data'])) {
+                if (is_array($classArr['data']) && (!$row['bitmapsource'])) {
                     foreach ($classArr['data'] as $class) {
-
                         ?>
                         CLASS
                         #NAME
@@ -408,8 +407,6 @@ class Mapfile extends \app\inc\Controller
                             else echo "EXPRESSION (" . $class['expression'] . ")\n";
                         } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                         ?>
-
-
 
                         #MAXSCALEDENOM
                         <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>

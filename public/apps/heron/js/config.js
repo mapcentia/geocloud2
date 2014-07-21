@@ -116,10 +116,16 @@ MapCentia.setup = function () {
         async: false,
         dataType: 'json',
         success: function (response) {
-            var children = [], text, name;
+            var groups = [], children = [], text, name, group, arr, lArr = [];
             $.each(response.data, function (i, v) {
                 text = (v.f_table_title === null || v.f_table_title === "") ? v.f_table_name : v.f_table_title;
                 name = v.f_table_schema + "." + v.f_table_name;
+                group = v.layergroup;
+                lArr.push({text: text, name: name, group: group});
+                for (i = 0; i < response.data.length; i = i + 1) {
+                    groups[i] = response.data[i].layergroup;
+
+                }
                 Heron.options.map.layers.push(
                     [
                         "OpenLayers.Layer.WMS",
@@ -132,6 +138,7 @@ MapCentia.setup = function () {
                         },
                         {
                             isBaseLayer: false,
+                            title: (!v.bitmapsource) ? text : " ",
                             singleTile: false,
                             visibility: false,
                             transitionEffect: 'resize',
@@ -140,12 +147,9 @@ MapCentia.setup = function () {
                                 wfs: {
                                     protocol: new OpenLayers.Protocol.WFS({
                                         version: "1.0.0",
-                                        //url: '/wms/' + db + '/' + schema,
                                         url: '/wfs/' + db + '/' + schema + '/3857?',
-                                        //url: '/cgi/tinyows.cgi',
                                         srsName: "EPSG:3857",
                                         featureType: v.f_table_name,
-                                        //featureType: name,
                                         featureNS: "http://twitter/" + db
                                     })
                                 }
@@ -154,16 +158,31 @@ MapCentia.setup = function () {
                         }
                     ]
                 );
-                children.push(
-                    {
-                        nodeType: "gx_layer",
-                        layer: name,
-                        text: text,
-                        legend: false
-                    }
-                );
+
             });
-            children.reverse();
+            arr = array_unique(groups);
+            $.each(arr, function (u, m) {
+                var g;
+                g = {
+                    text: m,
+                    nodeType: 'hr_cascader',
+                    children: []
+                };
+                $.each(lArr, function (i, v) {
+                    if (m === v.group) {
+                        g.children.push(
+                            {
+                                nodeType: "gx_layer",
+                                layer: v.name,
+                                text: v.text,
+                                legend: false
+                            }
+                        );
+                    }
+                });
+                g.children.reverse();
+                children.push(g);
+            });
             Heron.options.layertree.tree = [
                 {
                     text: 'BaseLayers',
@@ -200,13 +219,8 @@ MapCentia.setup = function () {
                             text: 'None'
                         }
                     ]
-                },
-                {
-                    text: 'Themes',
-                    nodeType: 'hr_cascader',
-                    children: children
                 }
-            ];
+            ].concat(children);
         }
     });
 };

@@ -204,6 +204,7 @@ Viewer = function () {
         $.ajax({
             url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + schema,
             dataType: 'jsonp',
+            scriptCharset: "utf-8",
             async: false,
             jsonp: 'jsonp_callback',
             success: function (response) {
