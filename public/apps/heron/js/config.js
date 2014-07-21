@@ -183,6 +183,7 @@ MapCentia.setup = function () {
                 g.children.reverse();
                 children.push(g);
             });
+            children.reverse();
             Heron.options.layertree.tree = [
                 {
                     text: 'BaseLayers',
