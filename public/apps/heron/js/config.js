@@ -161,7 +161,7 @@ MapCentia.setup = function () {
                 );
                 Heron.options.map.layers.push(
                     new OpenLayers.Layer.Vector(name + "_v", {
-                        strategies: [new OpenLayers.Strategy.BBOX()],
+                        strategies: [new OpenLayers.Strategy.Fixed()],
                         visibility: false,
                         title: (!v.bitmapsource) ? text : " ",
                         protocol: new OpenLayers.Protocol.WFS({
