@@ -88,7 +88,7 @@ include('../html_header.php');
                             <input name="Agreement" type="checkbox" id="Agreement" value="1">
                             <vllabel errclass="error" validators="Agreement" for="Agreement"
                                      errtext="<span class='label label-important'>Agreement must be checked</span>">
-                                I agree with the terms of service
+                                I agree with the <a target="_blank" href="http://www.mapcentia.com/en/geocloud/geocloud.htm#terms">terms of service</a>
                             </vllabel>
                         </label>
 
