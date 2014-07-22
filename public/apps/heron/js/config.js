@@ -20,7 +20,7 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache/' + schema;
+        url = '/wms/' + db + '/tilecache';
 
     $.ajax({
         url: '/api/v1/setting/' + db,
