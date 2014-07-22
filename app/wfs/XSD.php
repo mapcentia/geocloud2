@@ -65,7 +65,7 @@ foreach ($tables as $table) {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}' AND f_table_name='{$table}'";
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
-            if ($def->geotype) {
+            if ($def->geotype && $def->geotype!=="Default") {
                 if ($def->geotype == "LINE") {
                     $def->geotype = "LINESTRING";
                 }

@@ -20,8 +20,8 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/' + schema;
-
+        url = '/wms/' + db + '/' + schema,
+        wfsUrl = '/wfs/' + db + '/' + schema;
     $.ajax({
         url: '/api/v1/setting/' + db,
         async: false,
@@ -116,12 +116,13 @@ MapCentia.setup = function () {
         async: false,
         dataType: 'json',
         success: function (response) {
-            var groups = [], children = [], text, name, group, arr, lArr = [];
+            var groups = [], children = [], text, name, group, type, arr, lArr = [];
             $.each(response.data, function (i, v) {
                 text = (v.f_table_title === null || v.f_table_title === "") ? v.f_table_name : v.f_table_title;
                 name = v.f_table_schema + "." + v.f_table_name;
                 group = v.layergroup;
-                lArr.push({text: text, name: name, group: group});
+                type = v.type;
+                lArr.push({text: text, name: name, group: group, type: type});
                 for (i = 0; i < response.data.length; i = i + 1) {
                     groups[i] = response.data[i].layergroup;
 
@@ -158,7 +159,21 @@ MapCentia.setup = function () {
                         }
                     ]
                 );
+                Heron.options.map.layers.push(
 
+                    new OpenLayers.Layer.Vector(name + "_v", {
+                        strategies: [new OpenLayers.Strategy.BBOX()],
+                        visibility: false,
+                        protocol: new OpenLayers.Protocol.WFS({
+                            version: "1.0.0",
+                            url: '/wfs/' + db + '/' + schema + '/3857?',
+                            srsName: "EPSG:3857",
+                            featureType: v.f_table_name,
+                            featureNS: "http://twitter/" + db
+                        })
+                    })
+
+                );
             });
             arr = array_unique(groups);
             $.each(arr, function (u, m) {
@@ -170,14 +185,25 @@ MapCentia.setup = function () {
                 };
                 $.each(lArr, function (i, v) {
                     if (m === v.group) {
+                        if (v.type !== "RASTER") {
+                            g.children.push(
+                                {
+                                    nodeType: "gx_layer",
+                                    layer: v.name + "_v",
+                                    text: v.text + " (WFS)",
+                                    legend: false
+                                }
+                            );
+                        }
                         g.children.push(
                             {
                                 nodeType: "gx_layer",
                                 layer: v.name,
-                                text: v.text,
+                                text: v.text + "(WMS)",
                                 legend: false
                             }
                         );
+
                     }
                 });
                 g.children.reverse();
