@@ -20,7 +20,7 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache';
+        url = '/wms/' + db + '/' + schema;
 
     $.ajax({
         url: '/api/v1/setting/' + db,
@@ -139,7 +139,7 @@ MapCentia.setup = function () {
                         {
                             isBaseLayer: false,
                             title: (!v.bitmapsource) ? text : " ",
-                            singleTile: false,
+                            singleTile: true,
                             visibility: false,
                             transitionEffect: 'resize',
                             featureInfoFormat: 'application/vnd.ogc.gml',
