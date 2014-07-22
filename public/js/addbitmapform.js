@@ -23,7 +23,7 @@ addBitmap.init = function () {
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/bitmap',
-                max_file_size: '200mb',
+                max_file_size: '1000mb',
                 chunk_size: '1mb',
                 unique_names: true,
                 urlstream_upload: true,
