@@ -228,6 +228,7 @@ MapCentia.setup = function () {
 MapCentia.init = function () {
     "use strict";
     OpenLayers.Util.onImageLoadErrorColor = "transparent";
+    OpenLayers.ProxyHost = "/cgi/proxy.cgi?url=";
     //OpenLayers.DOTS_PER_INCH = 25.4 / 0.28;
 
     Ext.BLANK_IMAGE_URL = 'http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
@@ -431,6 +432,27 @@ MapCentia.init = function () {
                     }
                 }
             }},
+        {type: "printdialog", options: {url: 'http://kademo.nl/print/pdf28992', windowWidth: 360
+            // , showTitle: true
+            // , mapTitle: 'My Header - Print Dialog'
+            // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
+            // , showComment: true
+            // , mapComment: 'My Comment - Print Dialog'
+            // , mapCommentYAML: "mapComment"	// MapFish - field name in config.yaml - default is: 'mapComment'
+            // , showFooter: true
+            // , mapFooter: 'My Footer - Print Dialog'
+            // , mapFooterYAML: "mapFooter"	    // MapFish - field name in config.yaml - default is: 'mapFooter'
+            // , printAttribution: true         // Flag for printing the attribution
+            // , mapAttribution: null           // Attribution text or null = visible layer attributions
+            // , mapAttributionYAML: "mapAttribution" // MapFish - field name in config.yaml - default is: 'mapAttribution'
+            , showOutputFormats: true
+            // , showRotation: true
+            // , showLegend: true
+            // , showLegendChecked: true
+            // , mapLimitScales: false
+            , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
+            // , mapPreviewHeight: 400
+        }},
         {
             type: "searchcenter",
             // Options for SearchPanel window
