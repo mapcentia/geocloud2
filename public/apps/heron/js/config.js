@@ -161,7 +161,7 @@ MapCentia.setup = function () {
                 );
                 Heron.options.map.layers.push(
                     new OpenLayers.Layer.Vector(name + "_v", {
-                        strategies: [new OpenLayers.Strategy.Fixed()],
+                        strategies: [new OpenLayers.Strategy.BBOX()],
                         visibility: false,
                         title: (!v.bitmapsource) ? text : " ",
                         protocol: new OpenLayers.Protocol.WFS({
@@ -199,7 +199,7 @@ MapCentia.setup = function () {
                             {
                                 nodeType: "gx_layer",
                                 layer: v.name,
-                                text: v.text + "(WMS)",
+                                text: v.text + " (WMS)",
                                 legend: false
                             }
                         );
