@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -158,9 +158,66 @@ Viewer = function () {
         cloud.zoomToPoint(center.x, center.y, 10);
     });
     cloud = new geocloud.map({
-        el: "map"
+        el: "map",
+        zoomControl: false
     });
-    var init = function () {
+    zoomControl = L.control.zoom({
+        position: 'bottomright'
+    });
+    cloud.map.addControl(zoomControl);
+    // Start of draw
+    $("#draw-button").on("click", function () {
+        if (!drawOn) {
+            drawnItems = new L.FeatureGroup();
+            drawControl = new L.Control.Draw({
+                position: 'bottomright',
+                draw: {
+                    polygon: {
+                        title: 'Draw a polygon!',
+                        allowIntersection: false,
+                        drawError: {
+                            color: '#b00b00',
+                            timeout: 1000
+                        },
+                        shapeOptions: {
+                            color: '#bada55'
+                        },
+                        showArea: true
+                    },
+                    polyline: {
+                        metric: true
+                    },
+                    circle: {
+                        shapeOptions: {
+                            color: '#662d91'
+                        }
+                    }
+                },
+                edit: {
+                    featureGroup: drawnItems
+                }
+            });
+            cloud.map.addLayer(drawnItems);
+            cloud.map.addControl(drawControl);
+            cloud.map.on('draw:created', function (e) {
+                var type = e.layerType;
+                drawLayer = e.layer;
+
+                if (type === 'marker') {
+                    drawLayer.bindPopup('A popup!');
+                }
+                drawnItems.addLayer(drawLayer);
+            });
+            drawOn = true;
+        } else {
+            cloud.map.removeControl(drawControl);
+            drawnItems.removeLayer(drawLayer);
+            cloud.map.removeLayer(drawnItems);
+            drawOn = false;
+        }
+    });
+    // Draw end
+    init = function () {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
@@ -196,7 +253,6 @@ Viewer = function () {
                 qstore[i].reset();
             });
         });
-
         showInfoModal = function () {
             modalFlag = true;
             $('#modal-info').modal({"backdrop": false});

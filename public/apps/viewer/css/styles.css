@@ -264,6 +264,7 @@ input[type="radio"], input[type="checkbox"] {
     font-size: 14px !important;
 }
 
+/*
 .leaflet-top {
     right: 0px !important;
     left: auto !important;
@@ -285,6 +286,8 @@ input[type="radio"], input[type="checkbox"] {
     text-decoration: none;
     line-height: 30px !important;
 }
+*/
+
 
 .ol-zoom, .olControlZoom {
     right: 20px;
@@ -313,4 +316,7 @@ input[type="radio"], input[type="checkbox"] {
 
 div.olControlZoom {
     top: auto !important;
+}
+.leaflet-draw-actions > li > a {
+    color: #ffffff;
 }

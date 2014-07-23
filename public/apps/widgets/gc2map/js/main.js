@@ -145,8 +145,12 @@ MapCentia = function (globalId) {
         }
     };
     cloud = new geocloud.map({
-        el: "map-" + id
+        el: "map-" + id,
+        zoomControl: false
     });
+    cloud.map.addControl(L.control.zoom({
+        position: 'bottomright'
+    }));
     init = function (conf) {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
         defaults = {

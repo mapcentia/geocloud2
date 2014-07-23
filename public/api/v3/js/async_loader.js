@@ -37,8 +37,9 @@ if (typeof gc2apiLoader === "undefined") {
                         ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js");
+                        $.getScript("http://leaflet.github.io/Leaflet.draw/leaflet.draw.js");
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined") {
+                            if (typeof geocloud !== "undefined" && typeof L.drawVersion !== "undefined") {
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {

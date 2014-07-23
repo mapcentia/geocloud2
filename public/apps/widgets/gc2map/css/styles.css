@@ -43,7 +43,7 @@
     line-height: 1;
 }
 
-.leaflet-top {
+/*.leaflet-top {
     right: 0px !important;
     left: auto !important;
     opacity: 0.8;
@@ -64,7 +64,7 @@
     text-decoration: none;
     line-height: 30px !important;
     text-decoration: none !important;
-}
+}*/
 
 .popover {
     width: 200px;

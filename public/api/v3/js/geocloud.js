@@ -679,7 +679,7 @@ geocloud = (function () {
                 });
                 break;
             case "leaflet":
-                this.map = new L.map(defaults.el, {});
+                this.map = new L.map(defaults.el, defaults);
                 lControl = L.control.layers([], []);
                 this.map.addControl(lControl);
                 this.map.attributionControl.setPrefix(attribution);
