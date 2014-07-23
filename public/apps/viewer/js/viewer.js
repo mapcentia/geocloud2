@@ -166,56 +166,59 @@ Viewer = function () {
     });
     cloud.map.addControl(zoomControl);
     // Start of draw
-    $("#draw-button").on("click", function () {
-        if (!drawOn) {
-            drawnItems = new L.FeatureGroup();
-            drawControl = new L.Control.Draw({
-                position: 'bottomright',
-                draw: {
-                    polygon: {
-                        title: 'Draw a polygon!',
-                        allowIntersection: false,
-                        drawError: {
-                            color: '#b00b00',
-                            timeout: 1000
+    if (window.gc2Options.leafletDraw) {
+        $("#draw-button-li").show();
+        $("#draw-button").on("click", function () {
+            if (!drawOn) {
+                drawnItems = new L.FeatureGroup();
+                drawControl = new L.Control.Draw({
+                    position: 'bottomright',
+                    draw: {
+                        polygon: {
+                            title: 'Draw a polygon!',
+                            allowIntersection: false,
+                            drawError: {
+                                color: '#b00b00',
+                                timeout: 1000
+                            },
+                            shapeOptions: {
+                                color: '#bada55'
+                            },
+                            showArea: true
                         },
-                        shapeOptions: {
-                            color: '#bada55'
+                        polyline: {
+                            metric: true
                         },
-                        showArea: true
-                    },
-                    polyline: {
-                        metric: true
-                    },
-                    circle: {
-                        shapeOptions: {
-                            color: '#662d91'
+                        circle: {
+                            shapeOptions: {
+                                color: '#662d91'
+                            }
                         }
+                    },
+                    edit: {
+                        featureGroup: drawnItems
                     }
-                },
-                edit: {
-                    featureGroup: drawnItems
-                }
-            });
-            cloud.map.addLayer(drawnItems);
-            cloud.map.addControl(drawControl);
-            cloud.map.on('draw:created', function (e) {
-                var type = e.layerType;
-                drawLayer = e.layer;
+                });
+                cloud.map.addLayer(drawnItems);
+                cloud.map.addControl(drawControl);
+                cloud.map.on('draw:created', function (e) {
+                    var type = e.layerType;
+                    drawLayer = e.layer;
 
-                if (type === 'marker') {
-                    drawLayer.bindPopup('A popup!');
-                }
-                drawnItems.addLayer(drawLayer);
-            });
-            drawOn = true;
-        } else {
-            cloud.map.removeControl(drawControl);
-            drawnItems.removeLayer(drawLayer);
-            cloud.map.removeLayer(drawnItems);
-            drawOn = false;
-        }
-    });
+                    if (type === 'marker') {
+                        drawLayer.bindPopup('A popup!');
+                    }
+                    drawnItems.addLayer(drawLayer);
+                });
+                drawOn = true;
+            } else {
+                cloud.map.removeControl(drawControl);
+                drawnItems.removeLayer(drawLayer);
+                cloud.map.removeLayer(drawnItems);
+                drawOn = false;
+            }
+        });
+    }
     // Draw end
     init = function () {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null, i;

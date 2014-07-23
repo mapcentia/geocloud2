@@ -253,11 +253,33 @@ def modPythonHandler (apacheReq, service):
                                 host )
         apacheReq.content_type = format
         apacheReq.status = apache.HTTP_OK
+
+        # Hack start. Expire added to layers
         if format.startswith("image/"):
+            apacheReq.add_common_vars()
+            env_vars = apacheReq.subprocess_env
+            getReqStr = env_vars['QUERY_STRING']
+            getReqArr = getReqStr.split('&')
+            getReqDict = {}
+            for item in getReqArr:
+                if item:
+                    tempArr = item.split('=')
+                    getReqDict[tempArr[0]] = tempArr[1]
+            fields = getReqDict
             if service.cache.sendfile:
-                apacheReq.headers_out['X-SendFile'] = image
-            if service.cache.expire:
+                headers.append(('X-SendFile', image))
+            layer_expire = None
+            if fields.has_key('layers') or fields.has_key('LAYERS'):
+                layers = fields.get('layers', fields.get('LAYERS'))
+                # single layers only
+                if not ',' in layers:
+                    layer = service.layers[layers]
+                    if layer.expire:
+                        layer_expire = long(layer.expire)
+                        apacheReq.headers_out['Expires'] = email.Utils.formatdate(time.time() + layer_expire, False, True)
+            if service.cache.expire and not layer_expire:
                 apacheReq.headers_out['Expires'] = email.Utils.formatdate(time.time() + service.cache.expire, False, True)
+        # Hack end
 
         apacheReq.set_content_length(len(image))
         apacheReq.send_http_header()
