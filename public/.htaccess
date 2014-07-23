@@ -16,15 +16,17 @@ RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
 RewriteRule user/edit/$ user/edit/edit_f.php [L]
 RewriteRule user/edit/p$ user/edit/edit_p.php [L]
 
-# Always rewrite GetLegendGraphic, GetFeatureInfo, DescribeFeatureType and all POST to WMS
+# Always rewrite GetLegendGraphic, GetFeatureInfo, DescribeFeatureType, format_options and all POST to WMS
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetLegendGraphic($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetFeatureInfo($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=DescribeFeatureType($|&) [NC,OR]
+RewriteCond %{QUERY_STRING} (^|&)format_options=(.*) [NC,OR]
 RewriteCond %{THE_REQUEST} POST [NC]
 RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
 # Rewrite URL so tile request is going direct to TileCache mod_apache script
 RewriteRule wms/(.*)/tilecache$ /cgi/tilecache.py?cfg=$1 [QSA,L]
+RewriteRule wms/(.*)/tilecache/(.*)$ /cgi/tilecache.py?cfg=$1 [QSA,L]
 RewriteRule wms/(.*)/tilecache/(.*)/(.*)/(.*)/(.*)/(.*) /cgi/tilecache.py/$2/$3/$4/$5/$6?cfg=$1 [QSA,L]
 
 # Rewrite URL so tinyows request is going direct to tinyows cgi

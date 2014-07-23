@@ -20,7 +20,8 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/' + schema,
+        //url = '/wms/' + db + '/' + schema,
+        url = '/wms/' + db + '/tilecache/' + schema,
         wfsUrl = '/wfs/' + db + '/' + schema;
     $.ajax({
         url: '/api/v1/setting/' + db,
@@ -140,7 +141,7 @@ MapCentia.setup = function () {
                         {
                             isBaseLayer: false,
                             title: (!v.bitmapsource) ? text : " ",
-                            singleTile: true,
+                            singleTile: false,
                             visibility: false,
                             transitionEffect: 'resize',
                             featureInfoFormat: 'application/vnd.ogc.gml',
@@ -185,7 +186,7 @@ MapCentia.setup = function () {
                 };
                 $.each(lArr, function (i, v) {
                     if (m === v.group) {
-                        if (v.type !== "RASTER") {
+                        /*if (v.type !== "RASTER") {
                             g.children.push(
                                 {
                                     nodeType: "gx_layer",
@@ -194,12 +195,13 @@ MapCentia.setup = function () {
                                     legend: false
                                 }
                             );
-                        }
+                        }*/
                         g.children.push(
                             {
                                 nodeType: "gx_layer",
                                 layer: v.name,
-                                text: v.text + " (WMS)",
+                                text: v.text,
+                                //text: v.text + " (WMS)",
                                 legend: false
                             }
                         );
