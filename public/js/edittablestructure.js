@@ -323,7 +323,7 @@ tableStructure.init = function (record, screenName) {
                 ]
             },
             {
-                text: '<i class="icon-plus btn-gc"></i> Add new column',
+                text: '<i class="icon-plus btn-gc"></i> ' + __('Add new column'),
                 handler: function () {
                     var form = Ext.getCmp("addColumnForm");
                     if (form.form.isValid()) {
@@ -342,11 +342,11 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-trash btn-gc"></i>' + __('Delete column'),
+                text: '<i class="icon-trash btn-gc"></i> ' + __('Delete column'),
                 handler: tableStructure.onDelete
             },
             {
-                text: '<i class="icon-trash btn-gc"></i>' + __('Add versioning'),
+                text: '<i class="icon-list-alt btn-gc"></i> ' + __('Add versioning'),
                 handler: function () {
                     tableStructure.onVersion(record)
                 }

@@ -105,6 +105,12 @@ foreach ($tables as $table) {
             if ($tableObj->metaData[$atts["name"]]['type'] == "text") {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
+                $tableObj->metaData[$atts["name"]]['type'] = "string";
+            }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+                $tableObj->metaData[$atts["name"]]['type'] = "string";
+            }
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }

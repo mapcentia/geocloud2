@@ -27,6 +27,15 @@ $postgisschema = Connection::$param["postgisschema"];
 
 $srs = \app\inc\Input::getPath()->part(4);
 $user = \app\inc\Input::getPath()->part(2);
+$timeSlice = \app\inc\Input::getPath()->part(5);
+if ($timeSlice != "all") {
+    $unixTime = strtotime(urldecode($timeSlice));
+    if ($unixTime) {
+        $timeSlice = date("Y-m-d G:i:s.u", $unixTime);
+    } else {
+        $timeSlice = false;
+    }
+}
 
 $postgisObject = new \app\inc\Model();
 
@@ -326,6 +335,7 @@ function doQuery($queryType)
     global $useWktToGmlInPHP;
     global $postgisschema;
     global $tableObj;
+    global $timeSlice;
     //global $fieldConfArr;
     global $geometryColumnsObj;
 
@@ -364,7 +374,6 @@ function doQuery($queryType)
                                 $sql = str_replace("\"{$key}\"", "public.ST_AsText(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
                             } else {
                                 $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
-
                             }
                             $sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                         }
@@ -373,29 +382,29 @@ function doQuery($queryType)
                     $sql .= "count(*) as count";
                 }
                 $from = " FROM {$postgisschema}.{$table}";
-
-
+                if ($tableObj->versioning && $timeSlice != false && $timeSlice != "all") {
+                    $from .= ",(SELECT gc2_version_gid as _gc2_version_gid,max(gc2_version_start_date) as max_gc2_version_start_date from version_test where gc2_version_start_date <= '{$timeSlice}' GROUP BY gc2_version_gid) as gc2_join";
+                }
                 if ((!(empty($BBox))) || (!(empty($wheres[$table]))) || (!(empty($filters[$table])))) {
                     $from .= " WHERE ";
                     $wheresFlag = true;
-
                 }
-
                 if (!(empty($wheres[$table]))) {
                     $from .= "(" . $wheres[$table] . ")";
 
                 }
-                if ($tableObj->versioning) {
+                if ($tableObj->versioning && $timeSlice != "all") {
                     if (!$wheresFlag) {
                         $from .= " WHERE ";
-                    }
-                    else {
+                    } else {
                         $from .= " AND ";
                     }
-                    $from .= "gc2_version_end_date is null";
+                    if (!$timeSlice) {
+                        $from .= "gc2_version_end_date is null";
+                    } else {
+                        $from .= "gc2_join._gc2_version_gid = gc2_version_gid AND gc2_version_start_date = gc2_join.max_gc2_version_start_date";
+                    }
                 }
-
-
                 if ((!(empty($BBox))) || (!(empty($wheres[$table])))) {
                     //$from =dropLastChrs($from, 5);
                     //$from.=")";
@@ -905,9 +914,9 @@ function doParse($arr)
                     }
                     // If updating a deleted record, the end date is reset
                     if ($field == "gc2_version_end_date" && $forSql2['values'][$i][$key]) {
-                            makeExceptionReport("You can't change the history!");
+                        makeExceptionReport("You can't change the history!");
                     }
-                    if ($field != "gc2_version_uuid" && $field != "gc2_version_start_date" ) {
+                    if ($field != "gc2_version_uuid" && $field != "gc2_version_start_date") {
                         $fields[] = "\"" . $field . "\"";
                     }
                 }
@@ -967,9 +976,9 @@ function doParse($arr)
             $tableObj = new table($postgisschema . "." . $forSql3['tables'][$i]);
             if ($tableObj->versioning) {
                 // Check if its history
-                $res = $postgisObject->execQuery("SELECT gc2_version_end_date FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]}" , "PDO", "select");
+                $res = $postgisObject->execQuery("SELECT gc2_version_end_date FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]}", "PDO", "select");
                 $checkRow = $postgisObject->fetchRow($res);
-                if ($checkRow["gc2_version_end_date"]){
+                if ($checkRow["gc2_version_end_date"]) {
                     makeExceptionReport("You can't change the history!");
                 }
 
@@ -978,8 +987,7 @@ function doParse($arr)
                 $sql .= " WHERE {$forSql3['wheres'][$i]}";
                 $sqls['update'][] = $sql;
                 // Update old record end
-            }
-            // delete start for not versioned
+            } // delete start for not versioned
             else {
                 $sqls['delete'][] = "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
             }
