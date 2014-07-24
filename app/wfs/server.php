@@ -26,6 +26,7 @@ $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
 
 $srs = \app\inc\Input::getPath()->part(4);
+$user = \app\inc\Input::getPath()->part(2);
 
 $postgisObject = new \app\inc\Model();
 
@@ -123,8 +124,7 @@ if ($HTTP_RAW_POST_DATA) {
             if ($arr["Delete"]) $transactionType = "Delete";
             break;
     }
-}
-else { // Get method is used
+} else { // Get method is used
     if (sizeof($_GET) > 0) {
         Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
@@ -374,14 +374,27 @@ function doQuery($queryType)
                 }
                 $from = " FROM {$postgisschema}.{$table}";
 
+
                 if ((!(empty($BBox))) || (!(empty($wheres[$table]))) || (!(empty($filters[$table])))) {
                     $from .= " WHERE ";
+                    $wheresFlag = true;
+
                 }
 
                 if (!(empty($wheres[$table]))) {
-                    $from .= "(" . $wheres[$table] . ")"; // White spaces HAS TO BE THERE
+                    $from .= "(" . $wheres[$table] . ")";
 
                 }
+                if ($tableObj->versioning) {
+                    if (!$wheresFlag) {
+                        $from .= " WHERE ";
+                    }
+                    else {
+                        $from .= " AND ";
+                    }
+                    $from .= "gc2_version_end_date is null";
+                }
+
 
                 if ((!(empty($BBox))) || (!(empty($wheres[$table])))) {
                     //$from =dropLastChrs($from, 5);
@@ -728,12 +741,9 @@ echo "\n<!-- {$totalTime} -->";
 
 function doParse($arr)
 {
-
     global $postgisObject;
     global $user;
-    global $version;
     global $postgisschema;
-    global $parts;
 
     $serializer_options = array(
         'indent' => '  ',
@@ -845,22 +855,32 @@ function doParse($arr)
     // First we loop through inserts
     if (sizeof($forSql['tables']) > 0) for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
+
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql['tables'][$i]);
-            //$metaData = $postgisObject -> getMetaData($forSql['tables'][$i]);
             $sql = "INSERT INTO {$postgisschema}.{$forSql['tables'][$i]} (";
-            foreach ($forSql['fields'][$i] as $field) {
-                $fields[] = "\"" . $field . "\"";
+
+            foreach ($forSql['fields'][$i] as $key => $field) {
+                if ($field == "gc2_version_user") {
+                    $forSql['values'][$i][$key] = $user;
+                }
+                if ($field != "gc2_version_uuid" && $field != "gc2_version_start_date" && $field != "gc2_version_gid") {
+                    $fields[] = "\"" . $field . "\"";
+                }
             }
+
             $sql .= implode(",", $fields);
             unset($fields);
             $sql .= ") VALUES(";
-            foreach ($forSql['values'][$i] as $value) {
-                if (is_array($value)) {
-                    $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
-                } elseif (!$value) {
-                    $values[] = "NULL";
-                } else {
-                    $values[] = $postgisObject->quote($value);
+            foreach ($forSql['values'][$i] as $key => $value) {
+                if ($forSql['fields'][$i][$key] != "gc2_version_uuid" && $forSql['fields'][$i][$key] != "gc2_version_start_date" && $forSql['fields'][$i][$key] != "gc2_version_gid") {
+                    if (is_array($value)) {
+                        $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
+                    } elseif (!$value) {
+                        $values[] = "NULL";
+                    } else {
+                        $values[] = $postgisObject->quote($value);
+
+                    }
                 }
             }
             $sql .= implode(",", $values);
@@ -875,23 +895,68 @@ function doParse($arr)
     if (sizeof($forSql2['tables']) > 0) for ($i = 0; $i < sizeof($forSql2['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "editable")) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
-            $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
-            foreach ($forSql2['fields'][$i] as $key => $field) {
-
-                if (is_array($forSql2['values'][$i][$key])) { // is geometry
-                    $value = "public.ST_Transform(public.ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
-                } elseif (!$forSql2['values'][$i][$key]) {
-                    $value = "NULL";
-                } else {
-                    $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
+            $tableObj = new table($postgisschema . "." . $forSql2['tables'][$i]);
+            if ($tableObj->versioning) {
+                // Insert start
+                $sql = "INSERT INTO {$postgisschema}.{$forSql2['tables'][$i]} (";
+                foreach ($forSql2['fields'][$i] as $key => $field) {
+                    if ($field == "gc2_version_user") {
+                        $forSql2['values'][$i][$key] = $user;
+                    }
+                    // If updating a deleted record, the end date is reset
+                    if ($field == "gc2_version_end_date" && $forSql2['values'][$i][$key]) {
+                            makeExceptionReport("You can't change the history!");
+                    }
+                    if ($field != "gc2_version_uuid" && $field != "gc2_version_start_date" ) {
+                        $fields[] = "\"" . $field . "\"";
+                    }
                 }
-                $pairs[] = "\"" . $field . "\" =" . $value;
+                $sql .= implode(",", $fields);
+                unset($fields);
+                $sql .= ") VALUES(";
+                foreach ($forSql2['values'][$i] as $key => $value) {
+                    if ($forSql2['fields'][$i][$key] != "gc2_version_uuid" && $forSql2['fields'][$i][$key] != "gc2_version_start_date") {
+                        if (is_array($value)) {
+                            $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
+                        } elseif (!$value) {
+                            $values[] = "NULL";
+                        } else {
+                            $values[] = $postgisObject->quote($value);
+                        }
+                    }
+                }
+                $sql .= implode(",", $values);
+                unset($values);
+                $sql .= ") RETURNING {$primeryKey['attname']} as gid"; // The query will return the new key
+                $sqls['insert'][] = $sql;
+                // Insert stop
 
+                // Update old record start
+                $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET gc2_version_end_date = now()";
+                $sql .= " WHERE {$forSql2['wheres'][$i]}";
+                $sqls['update'][] = $sql;
+                // Update old record stop
+
+            } else {
+                // Update start for not versioned
+                $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
+                foreach ($forSql2['fields'][$i] as $key => $field) {
+                    if (is_array($forSql2['values'][$i][$key])) { // is geometry
+                        $value = "public.ST_Transform(public.ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
+                    } elseif (!$forSql2['values'][$i][$key]) {
+                        $value = "NULL";
+                    } else {
+                        $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
+                    }
+                    $pairs[] = "\"" . $field . "\" =" . $value;
+                }
+                $sql .= implode(",", $pairs);
+                $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
+                unset($pairs);
+                $sqls['update'][] = $sql;
+                //Update end
             }
-            $sql .= implode(",", $pairs);
-            $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
-            unset($pairs);
-            $sqls['update'][] = $sql;
+
         } else {
             $notEditable[$forSql2['tables'][0]] = true;
         }
@@ -899,7 +964,25 @@ function doParse($arr)
     // Third we loop through deletes
     if (sizeof($forSql3['tables']) > 0) for ($i = 0; $i < sizeof($forSql3['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql3['tables'][$i], "editable")) {
-            $sqls['delete'][] = "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
+            $tableObj = new table($postgisschema . "." . $forSql3['tables'][$i]);
+            if ($tableObj->versioning) {
+                // Check if its history
+                $res = $postgisObject->execQuery("SELECT gc2_version_end_date FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]}" , "PDO", "select");
+                $checkRow = $postgisObject->fetchRow($res);
+                if ($checkRow["gc2_version_end_date"]){
+                    makeExceptionReport("You can't change the history!");
+                }
+
+                // Update old record start
+                $sql = "UPDATE {$postgisschema}.{$forSql3['tables'][$i]} SET gc2_version_end_date = now()";
+                $sql .= " WHERE {$forSql3['wheres'][$i]}";
+                $sqls['update'][] = $sql;
+                // Update old record end
+            }
+            // delete start for not versioned
+            else {
+                $sqls['delete'][] = "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
+            }
         } else {
             $notEditable[$forSql3['tables'][0]] = true;
         }
@@ -1018,6 +1101,7 @@ function makeExceptionReport($value)
     Log::write($data);
     die();
 }
+
 $data = ob_get_clean();
 //Log::write($data);
 echo $data;

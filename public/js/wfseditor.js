@@ -28,7 +28,11 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         map.removeLayer(layer);
     } catch (e) {
     }
-    south.remove(grid);
+    try {
+        south.remove(grid);
+    } catch (e) {
+
+    }
     $.ajax({
         url: '/controllers/table/columns/' + layerName,
         async: false,

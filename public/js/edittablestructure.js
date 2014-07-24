@@ -342,8 +342,14 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-trash btn-gc"></i> Delete column',
+                text: '<i class="icon-trash btn-gc"></i>' + __('Delete column'),
                 handler: tableStructure.onDelete
+            },
+            {
+                text: '<i class="icon-trash btn-gc"></i>' + __('Add versioning'),
+                handler: function () {
+                    tableStructure.onVersion(record)
+                }
             }
         ]
     });
@@ -354,7 +360,7 @@ tableStructure.onDelete = function () {
     if (!record) {
         return false;
     }
-    Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?',
+    Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to do that?'),
         function (btn) {
             if (btn === "yes") {
                 tableStructure.grid.store.remove(record);
@@ -365,11 +371,45 @@ tableStructure.onDelete = function () {
 };
 tableStructure.onAdd = function (btn, ev) {
     var field = tableStructure.grid.getStore().recordType,
-        u = new field({
-        column: "New_field",
-        type: "string"
-    });
+        u = new field(
+            {
+                column: "New_field",
+                type: "string"
+            }
+        );
     tableStructure.grid.store.insert(0, u);
+};
+tableStructure.onVersion = function (record) {
+    Ext.MessageBox.confirm(__('Confirm'), __('This will add versioning to the table. Do you want to proceed?'),
+        function (btn) {
+            if (btn === "yes") {
+                Ext.Ajax.request(
+                    {
+                        url: '/controllers/table/versions/' + record.data.f_table_schema + "." + record.data.f_table_name,
+                        method: 'put',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function () {
+                            tableStructure.grid.getStore().reload();
+                            //App.setAlert(App.STATUS_OK, records.length + " layers deleted");
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: eval('(' + response.responseText + ')').message,
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
+                        }
+                    }
+                );
+            } else {
+                return false;
+            }
+        });
 };
 tableStructure.onSave = function () {
     tableStructure.store.save();
@@ -395,3 +435,4 @@ tableStructure.onSubmit = function (form, action) {
         });
     }
 };
+
