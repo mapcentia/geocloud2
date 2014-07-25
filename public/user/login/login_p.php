@@ -110,7 +110,9 @@ if (!$_SESSION['subuser']) {
     $(window).ready(function () {
         if (subUsers) {
             $('#subusers-table').append($('#template-subuser-list').jqote(subUsers));
-            $("#subusers-el").delay(200).fadeIn(400);
+            if (subUsers.length > 0) {
+                $("#subusers-el").delay(200).fadeIn(400);
+            }
         }
         $.ajax({
             url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',
