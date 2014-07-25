@@ -34,8 +34,6 @@ if (!$_SESSION['subuser']) {
         $_SESSION['subusers'][] = $rowSubUSers["screenname"];
     };
 }
-print_r($_SESSION);
-
 ?>
 <div class="container">
     <div id="db_exists" style="display: none">
@@ -53,12 +51,17 @@ print_r($_SESSION);
                     <table class="table" id="schema-table"></table>
                 </div>
             </div>
+            <div class="span5" id="subusers-el" style="display: none">
+                <div><strong>Users in this database</strong></div>
+                <table class="table" id="subusers-table"></table>
+            </div>
         </div>
+
         <div style="position: absolute; right: 5px; top: 3px">
             <div><?php echo $_SESSION['screen_name'] ?>
                 <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
                 <?php if (!$_SESSION['subuser']) { ?>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New sub user</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New user</a>
                 <?php } ?>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
                     href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;
@@ -86,12 +89,29 @@ print_r($_SESSION);
         </a></td>
     </tr>
 </script>
+<script type="text/html" id="template-subuser-list">
+    <tr class="subuser-entry">
+        <td><%= this %></td>
+    </tr>
+</script>
 <script>
     var metaDataKeys = [];
     var metaDataKeysTitle = [];
     var db = "<?php echo $_SESSION['screen_name'];?>";
     var hostName = "<?php echo $host ?>";
+    <?php
+       if (!$_SESSION['subuser']){
+       echo "var subUsers = ".json_encode($_SESSION['subusers']).";\n";
+       }
+       else {
+       echo "var subUsers = null;\n";
+       }
+   ?>
     $(window).ready(function () {
+        if (subUsers) {
+            $('#subusers-table').append($('#template-subuser-list').jqote(subUsers));
+            $("#subusers-el").delay(200).fadeIn(400);
+        }
         $.ajax({
             url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',
             dataType: 'jsonp',

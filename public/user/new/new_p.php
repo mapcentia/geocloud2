@@ -24,19 +24,16 @@ function UserIDCheck($sValue, &$oStatus)
     $res->execute(array(":sUserID" => $sUserID));
     $rowScreenname = $postgisObject->fetchRow($res);
 
-
-
-    $sQuery = "SELECT COUNT(*) AS count FROM $sTable WHERE email = :sEmail";
+    /*$sQuery = "SELECT COUNT(*) AS count FROM $sTable WHERE email = :sEmail";
     $res = $postgisObject->prepare($sQuery);
     $res->execute(array(":sEmail" => $sEmail));
-    $rowEmail = $postgisObject->fetchRow($res);
-
+    $rowEmail = $postgisObject->fetchRow($res);*/
 
     if ($rowScreenname['count'] > 0 && $rowEmail['count'] == 0) {
         $oStatus->sErrMsg = "<span class='label label-warning'>User name already taken</span>";
-    } elseif ($rowEmail['count'] > 0 && $rowScreenname['count'] == 0) {
+    } /*elseif ($rowEmail['count'] > 0 && $rowScreenname['count'] == 0) {
         $oStatus->sErrMsg = "<span class='label label-warning'>Email already is use</span>";
-    } elseif ($rowScreenname['count'] > 0 && $rowEmail['count'] > 0) {
+    }*/ elseif ($rowScreenname['count'] > 0 && $rowEmail['count'] > 0) {
         $oStatus->sErrMsg = "<span class='label label-warning'>User name taken and email in use</span>";
     } else {
         $oStatus->bValid = 1;

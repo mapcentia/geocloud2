@@ -12,7 +12,10 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser']!=fal
 
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
-                    <h3>Create a sub user</h3>
+                    <h3>Create a new user for this database</h3>
+                    <div class="alert alert-success" style="text-align: center">
+                        The new user can log into this database in the same way as the super user.
+                    </div>
                     <div class="controls first">
                         <div style="height: 2em; float: right">
                             <vlsummary class="error" headertext="" displaymode="bulletlist">
