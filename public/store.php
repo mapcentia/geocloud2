@@ -1,7 +1,5 @@
 <?php
 include("html_header.php");
-print_r($_SESSION);
-die();
 ?>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>

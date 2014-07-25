@@ -26,7 +26,11 @@ $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
 
 $srs = \app\inc\Input::getPath()->part(4);
-$user = \app\inc\Input::getPath()->part(2);
+if ($_SESSION['subuser']) {
+    $user = $_SESSION['subuser'];
+} else {
+    $user = \app\inc\Input::getPath()->part(2);
+}
 $timeSlice = \app\inc\Input::getPath()->part(5);
 if ($timeSlice != "all") {
     $unixTime = strtotime(urldecode($timeSlice));
