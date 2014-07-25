@@ -1,12 +1,16 @@
 <?php
+use \app\inc\Model;
 use \app\conf\App;
 
 include '../header.php';
+$postgisObject = new Model();
 include '../html_header.php';
 // Check if user is logged in - and redirect if this is not the case
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='/user/login'</script>");
 }
+
+
 $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
 if (App::$param['domain']) {
     $host = "http://" . $prefix . App::$param['domain'];
@@ -14,13 +18,23 @@ if (App::$param['domain']) {
     $host = App::$param['host'];
 }
 
-if (App::$param['cdnSubDomain']){
+if (App::$param['cdnSubDomain']) {
     $bits = explode("://", $host);
-    $cdnHost = $bits[0]."://".App::$param['cdnSubDomain'].".".$bits[1];
-}
-else {
+    $cdnHost = $bits[0] . "://" . App::$param['cdnSubDomain'] . "." . $bits[1];
+} else {
     $cdnHost = $host;
 }
+// If main user fetch all sub users
+if (!$_SESSION['subuser']) {
+    $_SESSION['subusers'] = array();
+    $sQuery = "SELECT * FROM {$sTable} WHERE parentdb = :sUserID";
+    $res = $postgisObject->prepare($sQuery);
+    $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+    while ($rowSubUSers = $postgisObject->fetchRow($res)) {
+        $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+    };
+}
+print_r($_SESSION);
 
 ?>
 <div class="container">
@@ -41,8 +55,13 @@ else {
             </div>
         </div>
         <div style="position: absolute; right: 5px; top: 3px">
-            <div><?php echo $_SESSION['screen_name'] ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change
-                    password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;
+            <div><?php echo $_SESSION['screen_name'] ?>
+                <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
+                <?php if (!$_SESSION['subuser']) { ?>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New sub user</a>
+                <?php } ?>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
+                    href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;
             </div>
         </div>
     </div>
