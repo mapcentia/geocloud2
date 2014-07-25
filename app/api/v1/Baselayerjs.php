@@ -22,7 +22,7 @@ class Baselayerjs extends \app\inc\Controller
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
         }
 
-        $locales = array("en_US", "da_DK", "fr_FR");
+        $locales = array("en_US", "da_DK", "fr_FR", "es_ES");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         //echo $_SERVER['HTTP_ACCEPT_LANGUAGE'] . "\n";
         //echo $requestedLan."\n";
@@ -33,7 +33,7 @@ class Baselayerjs extends \app\inc\Controller
             // Match only language
         } else {
             foreach ($locales as $locale) {
-                if (substr($locale, 0, 1) == substr($requestedLan, 0, 1)) {
+                if (substr($locale, 0, 2) == substr($requestedLan, 0, 2)) {
                     echo "window.gc2Al='" . $locale . "'\n";
                     exit();
                 }
