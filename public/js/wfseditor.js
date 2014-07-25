@@ -18,7 +18,7 @@ window.__ = function (string) {
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData;
-function startWfsEdition(layerName, geomField, wfsFilter, single) {
+function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
     layerBeingEditing = layerName;
@@ -82,6 +82,41 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         handlerType = OpenLayers.Handler.Path;
     }
     south.expand(true);
+    var rules = {
+        rules: [
+            new OpenLayers.Rule({
+                filter: new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.NOT_EQUAL_TO,
+                    property: "gc2_version_end_date",
+                    value: 'null'
+                }),
+                symbolizer: {
+                    fillColor: "#000000",
+                    fillOpacity: 0.0,
+                    strokeColor: "#FF0000",
+                    strokeWidth: 2,
+                    strokeDashstyle: "dash",
+                    strokeOpacity: 0.7,
+                    graphicZIndex: 1
+                }
+            }),
+            new OpenLayers.Rule({
+                filter: new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                    property: "gc2_version_end_date",
+                    value: null
+                }),
+                symbolizer: {
+                    fillColor: "#000000",
+                    fillOpacity: 0.0,
+                    strokeColor: "#0000FF",
+                    strokeWidth: 3,
+                    strokeOpacity: 0.7,
+                    graphicZIndex: 3,
+                    strokeDashstyle: "solid"
+                }
+            })
+        ]};
     var styleMap = new OpenLayers.StyleMap({
         default: new OpenLayers.Style({
                 fillColor: "#000000",
@@ -91,7 +126,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
                 strokeWidth: 3,
                 strokeOpacity: 0.7,
                 graphicZIndex: 3
-            }
+
+            },
+            rules
         ),
         temporary: new OpenLayers.Style({
                 fillColor: "#FFFFFF",
@@ -106,18 +143,18 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         select: new OpenLayers.Style({
                 fillColor: "#000000",
                 fillOpacity: 0.2,
-                pointRadius: 6,
+                pointRadius: 8,
                 strokeColor: "#0000FF",
                 strokeWidth: 3,
                 strokeOpacity: 1,
                 graphicZIndex: 3
-            }
+            },rules
         )
     });
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + screenName + "/" + schema + "/900913?",
+            url: "/wfs/" + screenName + "/" + schema + "/900913" + ((timeSlice) ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
             featureNS: "http://twitter/" + screenName,
@@ -680,7 +717,7 @@ $(document).ready(function () {
     };
     wfsTools = [
         {
-            text: "<i class='icon-edit btn-gc'></i> Start edit",
+            text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
             id: "editlayerbutton",
             disabled: true,
             handler: function (thisBtn, event) {
@@ -703,7 +740,6 @@ $(document).ready(function () {
                         height: 300,
                         icon: Ext.MessageBox.ERROR
                     });
-
                 }
                 else {
                     var poll = function () {
@@ -807,7 +843,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-th-list btn-gc'></i> Attributes",
+            text: "<i class='icon-th-list btn-gc'></i> " + __("Attributes"),
             id: "infobutton",
             disabled: true,
             handler: function () {

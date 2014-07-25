@@ -45,7 +45,7 @@ attributeForm.init = function (layer, geomtype) {
                                 }
                             }],
                         query: function () {
-                            var filters = filter.filterBuilder.getFilter(), valid = true;
+                            var filters = filter.filterBuilder.getFilter(), valid = true, timeslice;
                             if (typeof filters.filters === "object") {
                                 $.each(filters.filters, function (k, v) {
                                     if (v === false) {
@@ -53,17 +53,18 @@ attributeForm.init = function (layer, geomtype) {
                                     }
                                 });
                             }
+                            if (typeof Ext.getCmp('timeSliceField').items.items[0].items.items[0].value !== "undefined" && filter.filterBuilder.timeSliceQuery === true) {
+                                timeslice = Ext.getCmp('timeSliceField').items.items[0].items.items[0].value;
+                            }
                             if (valid) {
-                                if (layerBeingEditing) {
+                                if ((layerBeingEditing) && (!timeslice)) {
                                     var protocol = store.proxy.protocol;
                                     protocol.defaultFilter = filter.filterBuilder.getFilter();
                                     saveStrategy.layer.refresh();
+                                } else {
+                                    startWfsEdition(layer, geomtype, filters, false, timeslice);
                                 }
-                                else {
-                                    startWfsEdition(layer, geomtype, filters);
-                                }
-                            }
-                            else {
+                            } else {
                                 // console.log("Not valid");
                             }
                         },
