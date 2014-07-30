@@ -17,7 +17,7 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData, searchWin, placeMarkers, placePopup;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -148,7 +148,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 strokeWidth: 3,
                 strokeOpacity: 1,
                 graphicZIndex: 3
-            },rules
+            }, rules
         )
     });
     layer = new OpenLayers.Layer.Vector("vector", {
@@ -800,6 +800,77 @@ $(document).ready(function () {
             handler: stopEdit
         },
         '->',
+        {
+            text: "<i class='icon-search btn-gc'></i> " + __("Search"),
+            handler: function (objRef) {
+                if (!searchWin) {
+                    searchWin = new Ext.Window({
+                        title: "Find",
+                        layout: 'fit',
+                        width: 300,
+                        height: 70,
+                        plain: true,
+                        closeAction: 'hide',
+                        html: '<div style="padding: 5px" id="searchContent"><input style="width: 270px" type="text" id="gAddress" name="gAddress" value="" /></div>',
+                        x: 250,
+                        y: 35
+                    });
+                }
+                if (typeof(objRef) === "object") {
+                    searchWin.show(objRef);
+                } else {
+                    searchWin.show();
+                }//end if object reference was passed
+                var input = document.getElementById('gAddress');
+                var options = {
+                    //bounds: defaultBounds
+                    //types: ['establishment']
+                };
+                var autocomplete = new google.maps.places.Autocomplete(input, options);
+                //console.log(autocomplete.getBounds());
+                google.maps.event.addListener(autocomplete, 'place_changed', function () {
+                    var place = autocomplete.getPlace();
+                    var transformPoint = function (lat, lon, s, d) {
+                        var p = [];
+                        if (typeof Proj4js === "object") {
+                            var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+                            var dest = new Proj4js.Proj(d);
+                            p = new Proj4js.Point(lat, lon);
+                            Proj4js.transform(source, dest, p);
+                        }
+                        else {
+                            p.x = null;
+                            p.y = null;
+                        }
+                        return p;
+                    };
+                    var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+                    var point = new OpenLayers.LonLat(p.x, p.y);
+                    map.setCenter(point, 17);
+                    try {
+                        placeMarkers.destroy();
+                    } catch (e) {
+                    }
+
+                    try {
+                        placePopup.destroy();
+                    } catch (e) {
+                    }
+
+                    placeMarkers = new OpenLayers.Layer.Markers("Markers");
+                    map.addLayer(placeMarkers);
+                    var size = new OpenLayers.Size(21, 25);
+                    var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+                    var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
+                    placeMarkers.addMarker(new OpenLayers.Marker(point, icon));
+                    placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
+                    map.addPopup(placePopup);
+                });
+
+            },
+            tooltip: "Search with Google Places"
+        },
+        '-',
         {
             text: "<i class='icon-refresh btn-gc'></i> Reload tree",
             handler: function () {

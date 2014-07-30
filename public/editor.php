@@ -17,6 +17,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/filterfield.js?format=txt"></script>
 <script type="text/javascript" src="/js/filterbuilder.js?format=txt"></script>
 <script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
 <script src="http://maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
 <script src="http://maps.stamen.com/js/tile.stamen.js?v1.2.0"></script>
 <script src="/api/v3/js/geocloud.js" type="text/javascript"></script>
@@ -157,6 +158,9 @@ include("html_header.php");
         line-height: 28px !important;
         text-decoration: none;
         color: white;
+    }
+    .pac-container{
+        z-index: 10000;
     }
 </style>
 </head>
