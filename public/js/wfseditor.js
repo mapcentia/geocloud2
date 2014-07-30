@@ -441,7 +441,6 @@ $(document).ready(function () {
                                                     {
                                                         text: "<i class='icon-pencil btn-gc'></i> Edit feature #" + pkeyValue,
                                                         handler: function () {
-
                                                             if (geoType === "GEOMETRY" || geoType === "RASTER") {
                                                                 Ext.MessageBox.show({
                                                                     title: 'No geometry type on layer',
@@ -625,8 +624,10 @@ $(document).ready(function () {
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                     window.parent.onEditWMSClasses(e.id);
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
                                 } else {
                                     Ext.getCmp('editlayerbutton').setDisabled(true);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
                                 }
                             }
                         }
@@ -805,6 +806,45 @@ $(document).ready(function () {
             disabled: true,
             id: "editstopbutton",
             handler: stopEdit
+        },
+        '-',
+        {
+            text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
+            id: "quickdrawbutton",
+            disabled: true,
+            handler : function () {
+                var node = tree.getSelectionModel().getSelectedNode();
+                var id = node.id.split(".");
+                var geomField = node.attributes.geomField;
+                var type = node.attributes.geomType;
+                if (type === "GEOMETRY" || type === "RASTER") {
+                    Ext.MessageBox.show({
+                        title: 'No geometry type on layer',
+                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                    return false;
+                }
+                else {
+                    var filter = new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "\"dummy\"",
+                        value: "-1"
+                    });
+
+                    attributeForm.init(id[1], geomField);
+                    startWfsEdition(id[1], geomField, filter);
+                    wfsTools[2].control.activate();
+                    Ext.getCmp('editcreatebutton').toggle(true);
+                    Ext.iterate(qstore, function (v) {
+                        v.reset();
+                    });
+                    queryWin.hide();
+                }
+            }
         },
         '->',
         {
