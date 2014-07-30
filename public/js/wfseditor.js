@@ -293,7 +293,14 @@ $(document).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
     });
-    cloud = new mygeocloud_ol.map(null, screenName);
+    cloud = new mygeocloud_ol.map(null, screenName,{
+        controls: [
+            new OpenLayers.Control.Navigation({
+                //zoomBoxEnabled: true
+            }),
+            new OpenLayers.Control.Zoom()
+        ]
+    });
     map = cloud.map;
     var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
     var gc2 = new geocloud.map({});
