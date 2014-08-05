@@ -208,7 +208,7 @@ Viewer = function () {
                     if (type === 'marker') {
                         var text = prompt("Enter a text for the marker or cancel to add without text", "");
                         if (text !== null) {
-                            drawLayer.bindLabel(text, { noHide: true}).on("click", function () {
+                            drawLayer.bindLabel(text, { noHide: true}).on("click",function () {
                             }).showLabel();
                         }
                     }
@@ -351,7 +351,9 @@ Viewer = function () {
                         }
                     }
                 }
-                arrMenu[0].items.reverse();
+                if (window.gc2Options.reverseLayerOrder) {
+                    arrMenu[0].items.reverse();
+                }
                 $('#menu').multilevelpushmenu({
                     menu: arrMenu
                 });
