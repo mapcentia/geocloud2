@@ -13,80 +13,67 @@ class Sql
         $sqls[] = "UPDATE settings.geometry_columns_join SET sort_id = 0 WHERE sort_id IS NULL";
 
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
-                      SELECT
-                        geometry_columns.f_table_schema,
-                        geometry_columns.f_table_name,
-                        geometry_columns.f_geometry_column,
-                        geometry_columns.coord_dimension,
-                        geometry_columns.srid,
-                        geometry_columns.type,
+                      (SELECT
+                          foo.f_table_schema,
+                          foo.f_table_name,
+                          foo.f_geometry_column,
+                          foo.coord_dimension,
+                          foo.srid,
+                          foo.type,
 
-                        geometry_columns_join._key_,
-                        geometry_columns_join.f_table_abstract,
-                        geometry_columns_join.f_table_title,
-                        geometry_columns_join.tweet,
-                        geometry_columns_join.editable,
-                        geometry_columns_join.created,
-                        geometry_columns_join.lastmodified,
-                        geometry_columns_join.authentication,
-                        geometry_columns_join.fieldconf,
-                        geometry_columns_join.meta_url,
-                        geometry_columns_join.layergroup,
-                        geometry_columns_join.def,
-                        geometry_columns_join.class,
-                        geometry_columns_join.wmssource,
-                        geometry_columns_join.baselayer,
-                        geometry_columns_join.sort_id,
-                        geometry_columns_join.tilecache,
-                        geometry_columns_join.data,
-                        geometry_columns_join.not_querable,
-                        geometry_columns_join.single_tile,
-                        geometry_columns_join.cartomobile,
-                        geometry_columns_join.filter,
-                        geometry_columns_join.bitmapsource
-                      FROM geometry_columns
-                        LEFT JOIN
-                        settings.geometry_columns_join ON
-                                                         geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text =
-                                                         geometry_columns_join._key_::text
-                      UNION ALL
-                      SELECT
-                        raster_columns.r_table_schema as f_table_schema,
-                        raster_columns.r_table_name as f_table_name,
-                        raster_columns.r_raster_column as f_geometry_column,
-                        2 as coord_dimension,
-                        raster_columns.srid,
-                        'RASTER' as type,
+                            _key_,
+                            f_table_abstract,
+                            f_table_title,
+                            tweet,
+                            editable,
+                            created,
+                            lastmodified,
+                            authentication,
+                            fieldconf,
+                            meta_url,
+                            layergroup,
+                            def,
+                            class,
+                            wmssource,
+                            baselayer,
+                            sort_id,
+                            tilecache,
+                            data,
+                            not_querable,
+                            single_tile,
+                            cartomobile,
+                            filter,
+                            bitmapsource
 
-                        geometry_columns_join._key_,
-                        geometry_columns_join.f_table_abstract,
-                        geometry_columns_join.f_table_title,
-                        geometry_columns_join.tweet,
-                        geometry_columns_join.editable,
-                        geometry_columns_join.created,
-                        geometry_columns_join.lastmodified,
-                        geometry_columns_join.authentication,
-                        geometry_columns_join.fieldconf,
-                        geometry_columns_join.meta_url,
-                        geometry_columns_join.layergroup,
-                        geometry_columns_join.def,
-                        geometry_columns_join.class,
-                        geometry_columns_join.wmssource,
-                        geometry_columns_join.baselayer,
-                        geometry_columns_join.sort_id,
-                        geometry_columns_join.tilecache,
-                        geometry_columns_join.data,
-                        geometry_columns_join.not_querable,
-                        geometry_columns_join.single_tile,
-                        geometry_columns_join.cartomobile,
-                        geometry_columns_join.filter,
-                        geometry_columns_join.bitmapsource
-                      FROM raster_columns
-                        LEFT JOIN
-                        settings.geometry_columns_join ON
-                                                         raster_columns.r_table_schema || '.' || raster_columns.r_table_name || '.' || raster_columns.r_raster_column::text =
-                                                         geometry_columns_join._key_::text;
+                          FROM (
+                              SELECT
+                                geometry_columns.f_table_schema,
+                                geometry_columns.f_table_name,
+                                geometry_columns.f_geometry_column,
+                                geometry_columns.coord_dimension,
+                                geometry_columns.srid,
+                                geometry_columns.type
+
+                              FROM geometry_columns
+
+                              UNION ALL
+                              SELECT
+                                raster_columns.r_table_schema as f_table_schema,
+                                raster_columns.r_table_name as f_table_name,
+                                raster_columns.r_raster_column as f_geometry_column,
+                                2 as coord_dimension,
+                                raster_columns.srid,
+                                'RASTER' as type
+
+                              FROM raster_columns
+                              ) AS foo
+
+                            LEFT JOIN
+                                settings.geometry_columns_join ON
+                                                             foo.f_table_schema || '.' || foo.f_table_name || '.' || foo.f_geometry_column::text =
+                                                             geometry_columns_join._key_::text)
                     ";
         return $sqls;
     }
 }
+
