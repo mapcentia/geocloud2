@@ -46,7 +46,7 @@ class Sql
                         settings.geometry_columns_join ON
                                                          geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text =
                                                          geometry_columns_join._key_::text
-                      UNION
+                      UNION ALL
                       SELECT
                         raster_columns.r_table_schema as f_table_schema,
                         raster_columns.r_table_name as f_table_name,
