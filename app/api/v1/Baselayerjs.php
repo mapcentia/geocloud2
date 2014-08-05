@@ -8,6 +8,8 @@ class Baselayerjs extends \app\inc\Controller
         header("content-type: application/javascript");
         echo "window.gc2Options = {\n";
         echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . "\n";
+       // echo "subUsers = " . json_encode($_SESSION['subusers']) . "\n";
+
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";
@@ -43,6 +45,7 @@ class Baselayerjs extends \app\inc\Controller
         }
         exit();
     }
+
     public function get_index()
     {
 

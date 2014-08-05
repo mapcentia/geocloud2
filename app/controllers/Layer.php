@@ -29,12 +29,13 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get()));
         $data["data"]->editable = ($data["data"]->editable) ? : "0";
-        return $this->table->updateRecord($data, "_key_");
+        return (!$this->auth()) ? : $this->table->updateRecord($data, "_key_");
     }
-    public function delete_records(){
+
+    public function delete_records()
+    {
         $input = json_decode(Input::get());
-        print_r($input);
-        return $this->table->delete($input->data);
+        return (!$this->auth()) ? : $this->table->delete($input->data);
     }
 
     public function get_columns()
@@ -61,8 +62,28 @@ class Layer extends \app\inc\Controller
     {
         return $this->table->getValueFromKey($_key_, $column);
     }
-    public function put_schema(){
+
+    public function put_schema()
+    {
         $input = json_decode(Input::get());
-        return $this->table->setSchema($input->data->tables,$input->data->schema);
+        return $this->table->setSchema($input->data->tables, $input->data->schema);
+    }
+
+    public function get_privileges()
+    {
+        foreach ($_SESSION['subusers'] as $subUser) {
+            $response['data'][] = array("subuser" => $subUser, "privileges"=>"write");
+        }
+        $response['message'] = "";
+        $response['success'] = true;
+        return $response;
+    }
+
+    public function put_privileges()
+    {
+        $response['message'] = "";
+        $response['success'] = true;
+        $response['code'] = 200;
+        return $response;
     }
 }

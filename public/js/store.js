@@ -19,40 +19,30 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({});
+var form, store, privilegeStore, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
-    var winAdd, winCartomobile, winMoreSettings, winGlobalSettings, fieldsForStore = {}, settings, groups, groupsStore;
+    var winAdd, winCartomobile, winMoreSettings, fieldsForStore = {}, settings, groups, groupsStore, subUsers;
 
     $.ajax({
         url: '/controllers/layer/columnswithkey',
         async: false,
         dataType: 'json',
-        type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState === 4) {
-                if (http.status === 200) {
-                    fieldsForStore = data.forStore;
-                }
-            }
+            fieldsForStore = data.forStore;
         }
     });
     $.ajax({
         url: '/controllers/setting',
         async: false,
         dataType: 'json',
-        type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState === 4) {
-                if (http.status === 200) {
-                    settings = data.data;
-                    $("#apikeyholder").html(settings.api_key);
-                    if (typeof settings.extents !== "undefined") {
-                        if (settings.extents[schema] !== undefined) {
-                            initExtent = settings.extents[schema];
-                        }
-                    }
+            settings = data.data;
+            $("#apikeyholder").html(settings.api_key);
+            if (typeof settings.extents !== "undefined") {
+                if (settings.extents[schema] !== undefined) {
+                    initExtent = settings.extents[schema];
                 }
             }
         }
@@ -94,22 +84,19 @@ $(window).ready(function () {
                         width: 300,
                         height: 300
                     });
+                } else {
+                    store.reload();
+                    Ext.MessageBox.show({
+                        title: 'Not allowed',
+                        msg: "You don't have permission to change properties of the layer",
+                        buttons: Ext.MessageBox.OK,
+                        width: 300,
+                        height: 300
+                    });
                 }
             }
         }
     });
-    /*Ext.define('FieldsForStore', {
-     extend: 'Ext.data.Model',
-     fields: fieldsForStore
-     });
-     store = Ext.create('Ext.data.Store', {
-     model: 'FieldsForStore',
-     proxy: proxy,
-     autoSave: true,
-     writer: writer,
-     reader: reader,
-     autoLoad: true
-     });*/
     store = new Ext.data.Store({
         writer: writer,
         reader: reader,
@@ -265,7 +252,6 @@ $(window).ready(function () {
                         click: function () {
                             var r = grid.getSelectionModel().getSelected();
                             var layer = r.data.f_table_schema + "." + r.data.f_table_name;
-                            //alert(layer);
                             Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for layer \'' + r.data.f_table_name + '\'. Are you sure?', function (btn) {
                                 if (btn === "yes") {
                                     $.ajax({
@@ -317,6 +303,11 @@ $(window).ready(function () {
             {
                 text: '<i class="icon-lock btn-gc"></i>' + __('Services'),
                 handler: onGlobalSettings
+
+            },
+            {
+                text: '<i class="icon-lock btn-gc"></i>' + __('Privileges'),
+                handler: onPrivileges
 
             },
             {
@@ -1071,7 +1062,7 @@ $(window).ready(function () {
     }
 
     function onGlobalSettings(btn, ev) {
-        winGlobalSettings = new Ext.Window({
+        new Ext.Window({
             title: "Services",
             modal: true,
             width: 700,
@@ -1141,11 +1132,175 @@ $(window).ready(function () {
                                             padding: '7px'
                                         },
                                         contentEl: "elasticsearch-dialog"
-                                    })]})]
+                                    })
+                                ]
+                            })
+                        ]
                     })]
-                })]});
-        winGlobalSettings.show(this);
+                })]}).show(this);
     }
+
+    function onPrivileges(btn, ev) {
+        var records = grid.getSelectionModel().getSelections(),
+            privilegesStore = new Ext.data.Store({
+                writer: new Ext.data.JsonWriter({
+                    writeAllFields: false,
+                    encode: false
+                }),
+                reader: new Ext.data.JsonReader(
+                    {
+                        successProperty: 'success',
+                        idProperty: 'subuser',
+                        root: 'data',
+                        messageProperty: 'message'
+                    },
+                    [
+                        {
+                            name: "subuser"
+                        },
+                        {
+                            name: "privileges"
+                        }
+                    ]
+                ),
+                proxy: new Ext.data.HttpProxy({
+                    restful: true,
+                    type: 'json',
+                    api: {
+                        read: '/controllers/layer/privileges/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name")
+                    },
+                    listeners: {
+                        exception: function (proxy, type, action, options, response, arg) {
+                            if (type === 'remote') {
+                                var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: message,
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 300,
+                                    height: 300
+                                });
+                            } else {
+                                Ext.MessageBox.show({
+                                    title: 'Not allowed',
+                                    msg: "hej",
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 300,
+                                    height: 300
+                                });
+                            }
+                        }
+                    }
+                }),
+                autoSave: true
+            });
+        privilegesStore.load();
+        new Ext.Window({
+            title: __("Privileges"),
+            modal: true,
+            width: 700,
+            height: 350,
+            initCenter: true,
+            closeAction: 'hide',
+            border: false,
+            layout: 'border',
+            items: [
+                new Ext.Panel({
+                    height: 215,
+                    border: false,
+                    region: "center",
+                    items: [
+                        new Ext.grid.EditorGridPanel({
+                            store: privilegesStore,
+                            viewConfig: {
+                                forceFit: true
+                            },
+                            height: 250,
+                            region: 'center',
+                            frame: false,
+                            border: true,
+                            sm: new Ext.grid.RowSelectionModel({
+                                singleSelect: true
+                            }),
+                            cm: new Ext.grid.ColumnModel({
+                                defaults: {
+                                    sortable: true
+                                },
+                                columns: [
+                                    {
+                                        header: 'Sub-user',
+                                        dataIndex: 'subuser',
+                                        editable: false,
+                                        width: 50
+                                    },
+                                    {
+                                        header: 'Privileges',
+                                        dataIndex: 'privileges',
+                                        sortable: false,
+                                        renderer: function (val, cell, record, rowIndex, colIndex, store) {
+                                            console.log(record)
+                                            var retval =
+                                                    '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;None&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;Only read&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;Read and write&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;All'
+                                                ;
+                                            return retval;
+                                        }
+                                    }
+                                ]
+                            })
+                        }),
+                        new Ext.Panel({
+                                height: 215,
+                                border: false,
+                                region: "south",
+                                bodyStyle: {
+                                    background: '#777',
+                                    color: '#fff',
+                                    padding: '7px'
+                                },
+                                html: __("Hej")
+                            }
+                        )
+                    ]
+
+                })
+            ]}).show();
+    }
+
+    updatePrivileges = function (subuser, privileges) {
+        console.log(subuser);
+        console.log(privileges);
+        var param = {
+            data: {
+                subuser: subuser,
+                privileges: privileges
+            }
+        };
+        param = Ext.util.JSON.encode(param);
+        Ext.Ajax.request({
+            url: '/controllers/layer/privileges',
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: param,
+            success: function () {
+                console.log("Test");
+            },
+            failure: function (response) {
+                Ext.MessageBox.show({
+                    title: 'Failure',
+                    msg: eval('(' + response.responseText + ')').message,
+                    buttons: Ext.MessageBox.OK,
+                    width: 400,
+                    height: 300,
+                    icon: Ext.MessageBox.ERROR
+                });
+            }
+        });
+    };
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +

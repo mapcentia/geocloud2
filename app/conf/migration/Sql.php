@@ -7,6 +7,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN cartomobile TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN bitmapsource VARCHAR(255)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN privileges TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD CONSTRAINT geometry_columns_join_key UNIQUE (_key_)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER data TYPE TEXT";
         $sqls[] = "CREATE EXTENSION \"uuid-ossp\"";
@@ -41,13 +42,14 @@ class Sql
                         geometry_columns_join.single_tile,
                         geometry_columns_join.cartomobile,
                         geometry_columns_join.filter,
-                        geometry_columns_join.bitmapsource
+                        geometry_columns_join.bitmapsource,
+                        geometry_columns_join.privileges
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
                                                          geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text =
                                                          geometry_columns_join._key_::text
-                      UNION
+                      UNION ALL
                       SELECT
                         raster_columns.r_table_schema as f_table_schema,
                         raster_columns.r_table_name as f_table_name,
@@ -78,7 +80,8 @@ class Sql
                         geometry_columns_join.single_tile,
                         geometry_columns_join.cartomobile,
                         geometry_columns_join.filter,
-                        geometry_columns_join.bitmapsource
+                        geometry_columns_join.bitmapsource,
+                        geometry_columns_join.privileges
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
