@@ -8,6 +8,7 @@ class Baselayerjs extends \app\inc\Controller
         header("content-type: application/javascript");
         echo "window.gc2Options = {\n";
         echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . "\n";
+        echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . "\n";
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";
