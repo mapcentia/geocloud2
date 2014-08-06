@@ -115,7 +115,8 @@ $depth++;
     <!--<Lock/>-->
 </Operations>
 <?php
-$sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}'";
+$sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
+
 $result = $postgisObject->execQuery($sql);
 if ($postgisObject->PDOerror) {
     makeExceptionReport($postgisObject->PDOerror);

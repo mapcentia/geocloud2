@@ -229,6 +229,7 @@ class Mapfile extends \app\inc\Controller
         # Start of layers
         #
         <?php
+
         $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') order by sort_id";
 
         $result = $postgisObject->execQuery($sql);

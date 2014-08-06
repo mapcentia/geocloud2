@@ -62,7 +62,9 @@ foreach ($tables as $table) {
         $atts["maxOccurs"] = "1";
         $selfclose = true;
         if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE f_table_schema='{$postgisschema}' AND f_table_name='{$table}'";
+            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}''',
+                    'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
+
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
             if ($def->geotype && $def->geotype!=="Default") {
