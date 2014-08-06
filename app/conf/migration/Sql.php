@@ -47,8 +47,8 @@ class Sql
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
-                                                         geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column::text =
-                                                         geometry_columns_join._key_::text
+                                                         geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column =
+                                                         geometry_columns_join._key_
                       UNION ALL
                       SELECT
                         raster_columns.r_table_schema as f_table_schema,
@@ -84,8 +84,8 @@ class Sql
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
-                                                         raster_columns.r_table_schema || '.' || raster_columns.r_table_name || '.' || raster_columns.r_raster_column::text =
-                                                         geometry_columns_join._key_::text;
+                                                         raster_columns.r_table_schema || '.' || raster_columns.r_table_name || '.' || raster_columns.r_raster_column =
+                                                         geometry_columns_join._key_;
                     ";
         return $sqls;
     }
