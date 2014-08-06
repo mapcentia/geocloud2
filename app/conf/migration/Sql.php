@@ -11,6 +11,8 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER data TYPE TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER sort_id set default 0";
         $sqls[] = "UPDATE settings.geometry_columns_join SET sort_id = 0 WHERE sort_id IS NULL";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_schema";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_name";
 
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
