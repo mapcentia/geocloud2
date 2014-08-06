@@ -88,7 +88,7 @@ class Sql
                                                          geometry_columns_join._key_;
                     ";
         $sqls[] = "
-                      CREATE OR REPLACE FUNCTION getColumns(g text, r text) RETURNS SETOF settings.geometry_columns_view AS $$
+                      CREATE OR REPLACE FUNCTION settings.getColumns(g text, r text) RETURNS SETOF settings.geometry_columns_view AS $$
                       BEGIN
                         RETURN QUERY EXECUTE '
                             SELECT
