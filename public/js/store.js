@@ -1603,4 +1603,3 @@ $(window).ready(function () {
         }
     };
 });
-

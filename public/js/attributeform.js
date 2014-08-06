@@ -151,4 +151,4 @@ function getFieldType(attrType) {
         "xs:double": "float",
         "gml:PointPropertyType": "int"
     })[attrType];
-};
+}
