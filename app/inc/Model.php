@@ -262,7 +262,6 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        //$query = "SELECT * FROM settings.getColumns('WHERE f_table_name=''{$_table}'' AND f_table_schema='{$_schema}'";
         $query = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$_table}'' AND geometry_columns.f_table_schema=''{$_schema}''',
                     'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
 
