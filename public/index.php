@@ -42,7 +42,9 @@ if (Input::getPath()->part(1) == "api") {
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
     $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
     include_once("store.php");
-    include_once("../app/conf/intercom.js.inc");
+    if (\app\conf\App::$param['intercom_io']) {
+        include_once("../app/conf/intercom.js.inc");
+    }
 } elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
     Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");

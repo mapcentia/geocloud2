@@ -14,11 +14,10 @@ if (App::$param['domain']) {
     $host = App::$param['host'];
 }
 
-if (App::$param['cdnSubDomain']){
+if (App::$param['cdnSubDomain']) {
     $bits = explode("://", $host);
-    $cdnHost = $bits[0]."://".App::$param['cdnSubDomain'].".".$bits[1];
-}
-else {
+    $cdnHost = $bits[0] . "://" . App::$param['cdnSubDomain'] . "." . $bits[1];
+} else {
     $cdnHost = $host;
 }
 
@@ -117,6 +116,10 @@ else {
         });
     });
 </script>
-<?php include_once("../../../app/conf/intercom.js.inc"); ?>
+<?php
+if (\app\conf\App::$param['intercom_io']) {
+    include_once("../../../app/conf/intercom.js.inc");
+}
+?>
 </body>
 </html>
