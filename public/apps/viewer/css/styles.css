@@ -252,6 +252,12 @@ input[type="radio"], input[type="checkbox"] {
     margin-left: 5px;
     font-size: 14px;
 }
+#legend > ul , #legend > ul > li > ul{
+    list-style: none;
+    list-style-position: outside;
+    padding-left:0;
+    margin-bottom: 10px;
+}
 
 
 .popover-content {
