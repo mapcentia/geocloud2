@@ -683,3 +683,4 @@ gxp.FilterBuilder.NOT_ALL_OF = 3;
 
 /** api: xtype = gx_filterbuilder */
 Ext.reg('gx_filterbuilder', gxp.FilterBuilder); 
+

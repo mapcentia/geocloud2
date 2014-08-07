@@ -7,9 +7,8 @@ class Baselayerjs extends \app\inc\Controller
     {
         header("content-type: application/javascript");
         echo "window.gc2Options = {\n";
-        echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . "\n";
-       // echo "subUsers = " . json_encode($_SESSION['subusers']) . "\n";
-
+        echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . ",\n";
+        echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . "\n";
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";
@@ -24,7 +23,7 @@ class Baselayerjs extends \app\inc\Controller
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
         }
 
-        $locales = array("en_US", "da_DK", "fr_FR", "es_ES");
+        $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         //echo $_SERVER['HTTP_ACCEPT_LANGUAGE'] . "\n";
         //echo $requestedLan."\n";

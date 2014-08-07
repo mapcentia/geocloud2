@@ -1,18 +1,16 @@
 <script id="IntercomSettingsScriptTag">
-window.intercomSettings = {
-    // TODO: The current logged in user's email address.
-    email: "<?php echo $_SESSION['email']; ?>",
-    // TODO: The current logged in user's sign-up date as a Unix timestamp.
-    created_at: <?php echo $_SESSION['created']; ?>,
+    window.intercomSettings = {
+        // TODO: The current logged in user's email address.
+        email: "<?php echo $_SESSION['email']; ?>",
+        // TODO: The current logged in user's sign-up date as a Unix timestamp.
+        created_at: <?php echo $_SESSION['created']; ?>,
         widget: {
             activator: "#IntercomDefaultWidget"
         },
-zone: "<?php echo $_SESSION['zone']; ?>",
-user_hash: "<?php echo hash_hmac("sha256", $_SESSION['email'], "o9n0p044wnqsjYZX5QRN_W4AezyeHPEVBagyZfXQ");?>",
-app_id: "154aef785c933674611dca1f823960ad5f523b92"
-};
-</script>
-    <script>
+        zone: "<?php echo $_SESSION['zone']; ?>",
+        user_hash: "<?php echo hash_hmac("sha256", $_SESSION['email'], "o9n0p044wnqsjYZX5QRN_W4AezyeHPEVBagyZfXQ");?>",
+        app_id: "154aef785c933674611dca1f823960ad5f523b92"
+    };
     (function () {
         var w = window;
         var ic = w.Intercom;
@@ -44,6 +42,5 @@ app_id: "154aef785c933674611dca1f823960ad5f523b92"
                 w.addEventListener('load', l, false);
             }
         }
-        ;
     })()
 </script>

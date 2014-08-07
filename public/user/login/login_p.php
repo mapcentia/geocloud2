@@ -158,6 +158,10 @@ if (!$_SESSION['subuser']) {
         });
     });
 </script>
-<?php include_once("../../../app/conf/intercom.js.inc"); ?>
+<?php
+if (\app\conf\App::$param['intercom_io']) {
+    include_once("../../../app/conf/intercom.js.inc");
+}
+?>
 </body>
 </html>

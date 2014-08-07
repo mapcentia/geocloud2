@@ -1111,4 +1111,3 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
-

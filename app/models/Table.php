@@ -376,7 +376,7 @@ class Table extends Model
                 $type = "text";
                 break;
             case "Geometry":
-                $type = "geometry";
+                $type = "geometry(Geometry,4326)";
                 break;
         }
         $sql .= "ALTER TABLE {$this->table} ADD COLUMN {$safeColumn} {$type};";
