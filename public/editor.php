@@ -158,6 +158,11 @@ include("html_header.php");
         text-decoration: none;
         color: white;
     }
+    .olControlAttribution {
+        bottom: 0 !important;
+        font-family: verdana, arial, sans-serif !important;
+        font-size: 7.5pt !important;
+    }
 </style>
 </head>
 <body>

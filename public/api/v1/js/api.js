@@ -143,6 +143,7 @@ var mygeocloud_ol = (function () {
                     //new OpenLayers.Control.PanZoomBar(),
                     //new OpenLayers.Control.LayerSwitcher(),
                     //new OpenLayers.Control.PanZoom(),
+                    new OpenLayers.Control.Attribution(),
                     new OpenLayers.Control.Zoom(),
                     new OpenLayers.Control.TouchNavigation({
                         dragPanOptions: {enableKinetic: true}
@@ -403,7 +404,10 @@ var mygeocloud_ol = (function () {
                 url = "http://eu1.mapcentia.com/wms/dk/tilecache";
             l = new OpenLayers.Layer.WMS(name, url, {
                 layers: layer
-            }, {wrapDateLine: true});
+            }, {
+                wrapDateLine: true,
+                attribution: "© Geodatastyrelsen"
+            });
             this.map.addLayer(l);
             l.baseLayer = true;
             l.id = name;

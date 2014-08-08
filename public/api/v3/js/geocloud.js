@@ -708,7 +708,9 @@ geocloud = (function () {
                     this.map.addLayer(this.mapQuestOSM);
                     break;
                 case "leaflet":
-                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg');
+                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg',{
+                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                    });
                     lControl.addBaseLayer(this.mapQuestOSM);
                     break;
             }
@@ -759,7 +761,9 @@ geocloud = (function () {
                     this.map.addLayer(this.osm);
                     break;
                 case "leaflet":
-                    this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+                    this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                    });
                     lControl.addBaseLayer(this.osm);
                     break;
             }
@@ -965,7 +969,8 @@ geocloud = (function () {
                         layers: layer,
                         format: 'image/png',
                         transparent: true,
-                        subdomains: ["cdn1", "cdn2", "cdn3"]
+                        subdomains: ["cdn1", "cdn2", "cdn3"],
+                        attribution: "© Geodatastyrelsen"
                     });
                     lControl.addBaseLayer(l);
                     break;
