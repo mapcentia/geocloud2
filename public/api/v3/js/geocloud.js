@@ -49,7 +49,7 @@ geocloud = (function () {
         DTKSKAERMKORT = "dtkSkaermkort",
         DTKSKAERMKORTDAEMPET = "dtkSkaermkortDaempet",
         DIGITALGLOBE = "DigitalGlobe:Imagery",
-        attribution = (window.mapAttribution === undefined) ? "Powered by <a href='http://geocloud.mapcentia.com'>MapCentia</a> " : window.mapAttribution;
+        attribution = (window.mapAttribution === undefined) ? "Powered by <a target='_blank' href='http://www.mapcentia.com/en/geocloud/geocloud.htm'>MapCentia GC2</a> " : window.mapAttribution;
 
     // Try to set host from script
     if (typeof window.geocloud_host === "undefined") {
