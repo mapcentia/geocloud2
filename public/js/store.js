@@ -1167,7 +1167,7 @@ $(window).ready(function () {
                     restful: true,
                     type: 'json',
                     api: {
-                        read: '/controllers/layer/privileges/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name")
+                        read: '/controllers/layer/privileges/' + records[0].get("_key_")
                     },
                     listeners: {
                         exception: function (proxy, type, action, options, response, arg) {
@@ -1238,12 +1238,12 @@ $(window).ready(function () {
                                         dataIndex: 'privileges',
                                         sortable: false,
                                         renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                            console.log(record)
+                                            var _key_ = records[0].get("_key_");
                                             var retval =
-                                                    '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;None&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;Only read&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;Read and write&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;All'
+                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;None&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;Only read&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;Read and write&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;All'
                                                 ;
                                             return retval;
                                         }
@@ -1269,11 +1269,10 @@ $(window).ready(function () {
             ]}).show();
     }
 
-    updatePrivileges = function (subuser, privileges) {
-        console.log(subuser);
-        console.log(privileges);
+    updatePrivileges = function (subuser, key,  privileges) {
         var param = {
             data: {
+                _key_: key,
                 subuser: subuser,
                 privileges: privileges
             }
@@ -1758,3 +1757,4 @@ $(window).ready(function () {
         }
     };
 });
+

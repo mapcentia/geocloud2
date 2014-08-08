@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers;
 
-use \app\inc\Response;
 use \app\inc\Input;
 use \app\conf\Connection;
 
@@ -71,19 +70,11 @@ class Layer extends \app\inc\Controller
 
     public function get_privileges()
     {
-        foreach ($_SESSION['subusers'] as $subUser) {
-            $response['data'][] = array("subuser" => $subUser, "privileges"=>"write");
-        }
-        $response['message'] = "";
-        $response['success'] = true;
-        return $response;
+        return $this->table->getPrivileges(Input::getPath()->part(4));
     }
 
     public function put_privileges()
     {
-        $response['message'] = "";
-        $response['success'] = true;
-        $response['code'] = 200;
-        return $response;
+        return $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
 }
