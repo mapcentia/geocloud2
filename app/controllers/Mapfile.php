@@ -236,6 +236,14 @@ class Mapfile extends \app\inc\Controller
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
+                $versioning = true;
+                $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" LIMIT 1";
+                $res = $postgisObject->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    $versioning = false;
+                }
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -331,6 +339,9 @@ class Mapfile extends \app\inc\Controller
                                 $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             } else {
                                 $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
+                            }
+                            if ($versioning) {
+                                $dataSql.= " WHERE gc2_version_end_date IS NULL";
                             }
                         } else {
                             $dataSql = $row['data'];

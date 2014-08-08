@@ -13,6 +13,7 @@ class Table extends Model
     var $geomField;
     var $geomType;
     var $exits;
+    var $versioning;
 
     function __construct($table, $temp = false)
     {
@@ -45,6 +46,17 @@ class Table extends Model
             $this->primeryKey = $this->getPrimeryKey($this->table);
             $this->setType();
             $this->exits = true;
+            // Start assuming versioning and then check
+            if ($this->table != "settings.geometry_columns_view") {
+                $this->versioning = true;
+                $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM {$this->table} LIMIT 1";
+                $res = $this->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    $this->versioning = false;
+                }
+            }
         }
     }
 
@@ -83,6 +95,16 @@ class Table extends Model
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
+        } elseif (preg_match("/text/", $field['type'])) {
+            $field['typeObj'] = array("type" => "text");
+            $field['type'] = "text";
+        } elseif (preg_match("/timestamptz/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timestamptz");
+            $field['type'] = "timestamptz";
+
+        } elseif (preg_match("/uuid/", $field['type'])) {
+            $field['typeObj'] = array("type" => "uuid");
+            $field['type'] = "uuid";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";
@@ -106,7 +128,7 @@ class Table extends Model
         if ($whereClause) {
             $sql .= " WHERE {$whereClause}";
         }
-        if (strpos(strtolower($whereClause),strtolower("order by")) !== false) {
+        if (strpos(strtolower($whereClause), strtolower("order by")) !== false) {
             $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         }
         $result = $this->execQuery($sql);
@@ -366,6 +388,71 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
         }
+        return $response;
+    }
+
+    public function addVersioning()
+    {
+
+        $this->begin();
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid serial NOT NULL";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_start_date timestamp with time zone NOT NULL DEFAULT now()";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_end_date timestamp with time zone DEFAULT NULL";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_user VARCHAR(255)";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "Table is now versioned";
         return $response;
     }
 

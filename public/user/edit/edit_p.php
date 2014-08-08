@@ -27,13 +27,13 @@ function PasswordCheck($sValue, &$oStatus)
 
     $sQuery = "SELECT * FROM {$sTable} WHERE screenname = :sUserID AND pw = :sPassword";
     $res = $postgisObject->prepare($sQuery);
-    $res->execute(array(":sUserID" => $_SESSION['screen_name'], ":sPassword" => $sOldPassword));
+    $res->execute(array(":sUserID" => ($_SESSION['subuser']) ? : $_SESSION['screen_name'], ":sPassword" => $sOldPassword));
     $row = $postgisObject->fetchRow($res);
 
     if ($row['screenname']) {
         $sQuery = "UPDATE {$sTable} SET pw = :sNewPassword WHERE screenname = :sUserID";
         $res = $postgisObject->prepare($sQuery);
-        if ($res->execute(array(":sUserID" => $_SESSION['screen_name'], ":sNewPassword" => $sNewPassword))) {
+        if ($res->execute(array(":sUserID" => ($_SESSION['subuser']) ? : $_SESSION['screen_name'], ":sNewPassword" => $sNewPassword))) {
             $oStatus->bValid = 1;
         }
     } else {

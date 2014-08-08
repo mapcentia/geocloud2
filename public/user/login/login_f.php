@@ -40,7 +40,8 @@ function UserIDCheck($sValue, &$oStatus)
         $_SESSION['zone'] = $row['zone'];
         $_SESSION['VDaemonData'] = null;
         $_SESSION['auth'] = true;
-        $_SESSION['screen_name'] = $sUserID;
+        $_SESSION['screen_name'] = ($row['parentdb']) ? : $sUserID;
+        $_SESSION['subuser'] = ($row['parentdb']) ? $row['screenname'] : false;
         $_SESSION['email'] = $row['email'];
         $_SESSION['created'] = strtotime($row['created']);
     } else {
@@ -55,8 +56,10 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
 <div class="container">
     <div class="dialog">
         <img src="<?php echo \app\conf\App::$param['loginLogo']; ?>" id="logo">
+
         <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
             <h3>Login</h3>
+
             <div class="control-group first">
 
                 <div class="controls">

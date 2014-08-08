@@ -2,7 +2,6 @@
 namespace app\inc;
 
 use \app\conf\App;
-use \app\inc\Response;
 
 class Session
 {
@@ -20,7 +19,8 @@ class Session
         if ($_SESSION['auth'] == true) {
             return true;
         } else {
-            Redirect::to($redirect);
+            \app\inc\Redirect::to($redirect);
+            exit();
         }
     }
 

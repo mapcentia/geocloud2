@@ -17,8 +17,8 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var App = new Ext.App({}), cloud, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData;
-function startWfsEdition(layerName, geomField, wfsFilter, single) {
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData, searchWin, placeMarkers, placePopup;
+function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
     layerBeingEditing = layerName;
@@ -28,7 +28,11 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         map.removeLayer(layer);
     } catch (e) {
     }
-    south.remove(grid);
+    try {
+        south.remove(grid);
+    } catch (e) {
+
+    }
     $.ajax({
         url: '/controllers/table/columns/' + layerName,
         async: false,
@@ -78,6 +82,41 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         handlerType = OpenLayers.Handler.Path;
     }
     south.expand(true);
+    var rules = {
+        rules: [
+            new OpenLayers.Rule({
+                filter: new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.NOT_EQUAL_TO,
+                    property: "gc2_version_end_date",
+                    value: 'null'
+                }),
+                symbolizer: {
+                    fillColor: "#000000",
+                    fillOpacity: 0.0,
+                    strokeColor: "#FF0000",
+                    strokeWidth: 2,
+                    strokeDashstyle: "dash",
+                    strokeOpacity: 0.7,
+                    graphicZIndex: 1
+                }
+            }),
+            new OpenLayers.Rule({
+                filter: new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                    property: "gc2_version_end_date",
+                    value: null
+                }),
+                symbolizer: {
+                    fillColor: "#000000",
+                    fillOpacity: 0.0,
+                    strokeColor: "#0000FF",
+                    strokeWidth: 3,
+                    strokeOpacity: 0.7,
+                    graphicZIndex: 3,
+                    strokeDashstyle: "solid"
+                }
+            })
+        ]};
     var styleMap = new OpenLayers.StyleMap({
         default: new OpenLayers.Style({
                 fillColor: "#000000",
@@ -87,7 +126,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
                 strokeWidth: 3,
                 strokeOpacity: 0.7,
                 graphicZIndex: 3
-            }
+
+            },
+            rules
         ),
         temporary: new OpenLayers.Style({
                 fillColor: "#FFFFFF",
@@ -102,18 +143,18 @@ function startWfsEdition(layerName, geomField, wfsFilter, single) {
         select: new OpenLayers.Style({
                 fillColor: "#000000",
                 fillOpacity: 0.2,
-                pointRadius: 6,
+                pointRadius: 8,
                 strokeColor: "#0000FF",
                 strokeWidth: 3,
                 strokeOpacity: 1,
                 graphicZIndex: 3
-            }
+            }, rules
         )
     });
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + screenName + "/" + schema + "/900913?",
+            url: "/wfs/" + screenName + "/" + schema + "/900913" + ((timeSlice) ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
             featureNS: "http://twitter/" + screenName,
@@ -252,7 +293,14 @@ $(document).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
     });
-    cloud = new mygeocloud_ol.map(null, screenName);
+    cloud = new mygeocloud_ol.map(null, screenName,{
+        controls: [
+            new OpenLayers.Control.Navigation({
+                //zoomBoxEnabled: true
+            }),
+            new OpenLayers.Control.Zoom()
+        ]
+    });
     map = cloud.map;
     var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
     var gc2 = new geocloud.map({});
@@ -393,7 +441,6 @@ $(document).ready(function () {
                                                     {
                                                         text: "<i class='icon-pencil btn-gc'></i> Edit feature #" + pkeyValue,
                                                         handler: function () {
-
                                                             if (geoType === "GEOMETRY" || geoType === "RASTER") {
                                                                 Ext.MessageBox.show({
                                                                     title: 'No geometry type on layer',
@@ -577,8 +624,10 @@ $(document).ready(function () {
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                     window.parent.onEditWMSClasses(e.id);
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
                                 } else {
                                     Ext.getCmp('editlayerbutton').setDisabled(true);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
                                 }
                             }
                         }
@@ -676,7 +725,7 @@ $(document).ready(function () {
     };
     wfsTools = [
         {
-            text: "<i class='icon-edit btn-gc'></i> Start edit",
+            text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
             id: "editlayerbutton",
             disabled: true,
             handler: function (thisBtn, event) {
@@ -699,7 +748,6 @@ $(document).ready(function () {
                         height: 300,
                         icon: Ext.MessageBox.ERROR
                     });
-
                 }
                 else {
                     var poll = function () {
@@ -759,7 +807,117 @@ $(document).ready(function () {
             id: "editstopbutton",
             handler: stopEdit
         },
+        '-',
+        {
+            text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
+            id: "quickdrawbutton",
+            disabled: true,
+            handler : function () {
+                var node = tree.getSelectionModel().getSelectedNode();
+                var id = node.id.split(".");
+                var geomField = node.attributes.geomField;
+                var type = node.attributes.geomType;
+                if (type === "GEOMETRY" || type === "RASTER") {
+                    Ext.MessageBox.show({
+                        title: 'No geometry type on layer',
+                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                    return false;
+                }
+                else {
+                    var filter = new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "\"dummy\"",
+                        value: "-1"
+                    });
+
+                    attributeForm.init(id[1], geomField);
+                    startWfsEdition(id[1], geomField, filter);
+                    wfsTools[2].control.activate();
+                    Ext.getCmp('editcreatebutton').toggle(true);
+                    Ext.iterate(qstore, function (v) {
+                        v.reset();
+                    });
+                    queryWin.hide();
+                }
+            }
+        },
         '->',
+        {
+            text: "<i class='icon-search btn-gc'></i> " + __("Search"),
+            handler: function (objRef) {
+                if (!searchWin) {
+                    searchWin = new Ext.Window({
+                        title: "Find",
+                        layout: 'fit',
+                        width: 300,
+                        height: 70,
+                        plain: true,
+                        closeAction: 'hide',
+                        html: '<div style="padding: 5px" id="searchContent"><input style="width: 270px" type="text" id="gAddress" name="gAddress" value="" /></div>',
+                        x: 250,
+                        y: 35
+                    });
+                }
+                if (typeof(objRef) === "object") {
+                    searchWin.show(objRef);
+                } else {
+                    searchWin.show();
+                }//end if object reference was passed
+                var input = document.getElementById('gAddress');
+                var options = {
+                    //bounds: defaultBounds
+                    //types: ['establishment']
+                };
+                var autocomplete = new google.maps.places.Autocomplete(input, options);
+                //console.log(autocomplete.getBounds());
+                google.maps.event.addListener(autocomplete, 'place_changed', function () {
+                    var place = autocomplete.getPlace();
+                    var transformPoint = function (lat, lon, s, d) {
+                        var p = [];
+                        if (typeof Proj4js === "object") {
+                            var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+                            var dest = new Proj4js.Proj(d);
+                            p = new Proj4js.Point(lat, lon);
+                            Proj4js.transform(source, dest, p);
+                        }
+                        else {
+                            p.x = null;
+                            p.y = null;
+                        }
+                        return p;
+                    };
+                    var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+                    var point = new OpenLayers.LonLat(p.x, p.y);
+                    map.setCenter(point, 17);
+                    try {
+                        placeMarkers.destroy();
+                    } catch (e) {
+                    }
+
+                    try {
+                        placePopup.destroy();
+                    } catch (e) {
+                    }
+
+                    placeMarkers = new OpenLayers.Layer.Markers("Markers");
+                    map.addLayer(placeMarkers);
+                    var size = new OpenLayers.Size(21, 25);
+                    var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+                    var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
+                    placeMarkers.addMarker(new OpenLayers.Marker(point, icon));
+                    placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
+                    map.addPopup(placePopup);
+                });
+
+            },
+            tooltip: "Search with Google Places"
+        },
+        '-',
         {
             text: "<i class='icon-refresh btn-gc'></i> Reload tree",
             handler: function () {
@@ -803,7 +961,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-th-list btn-gc'></i> Attributes",
+            text: "<i class='icon-th-list btn-gc'></i> " + __("Attributes"),
             id: "infobutton",
             disabled: true,
             handler: function () {

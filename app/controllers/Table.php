@@ -57,4 +57,8 @@ class Table extends \app\inc\Controller
     {
         return Response::json($this->table->getTableStructure());
     }
+    public function put_versions()
+    {
+        return Response::json($this->table->addVersioning(Input::getPath()->part(4)));
+    }
 }

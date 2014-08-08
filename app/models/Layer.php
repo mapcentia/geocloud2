@@ -48,6 +48,14 @@ class Layer extends \app\models\Table
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
             $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
+            $versioning = true;
+            $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" LIMIT 1";
+            $resVersioning = $this->prepare($sql);
+            try {
+                $resVersioning->execute();
+            } catch (\PDOException $e) {
+                $versioning = false;
+            }
             foreach ($row as $key => $value) {
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
@@ -58,6 +66,7 @@ class Layer extends \app\models\Table
                 $value = ($key == "layergroup" && (!$value)) ? "Default group" : $value;
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+                $arr = $this->array_push_assoc($arr, "versioning", $versioning);
             }
             $response['data'][] = $arr;
         }
@@ -230,6 +239,39 @@ class Layer extends \app\models\Table
         $this->commit();
         $response['success'] = true;
         $response['message'] = sizeof($tables) . " tables deleted";
+        return $response;
+    }
+
+    public function getPrivileges($_key_)
+    {
+        $privileges = (array)json_decode($this->getValueFromKey($_key_, "privileges"));
+
+        foreach($_SESSION['subusers'] as $subuser){
+            $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
+        }
+        $response['success'] = true;
+        $response['message'] = "Privileges fetched";
+        return $response;
+
+    }
+
+    public function updatePrivileges($data)
+    {
+        $data = (array)$data;
+        $table = new Table("settings.geometry_columns_join");
+        $privilege = (array)json_decode($this->getValueFromKey($data['_key_'], "privileges"));
+        $privilege[$data['subuser']] = $data['privileges'];
+        $privileges['privileges'] = json_encode($privilege);
+        $privileges['_key_'] = $data['_key_'];
+        $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
+        if ($res['success'] == true) {
+            $response['success'] = true;
+            $response['message'] = "Privileges updates";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $res['message'];
+            $response['code'] = 403;
+        }
         return $response;
     }
 

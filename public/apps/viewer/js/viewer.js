@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [];
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -54,9 +54,18 @@ Viewer = function () {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var table = $("<table/>", {border: '0'}), tr, td;
+                var list = $("<ul/>"), li, classUl, title;
+                //console.log(response)
+                //console.log(metaDataKeys)
+
                 $.each(response, function (i, v) {
-                    var u, showLayer = false;
+                    console.log(v.id);
+                    try{
+                    console.log(metaDataKeys[v.id.split(".")[1]].title);
+                        title = metaDataKeys[v.id.split(".")[1]].f_table_title;
+                    }
+                    catch (e){}
+                        var u, showLayer = false;
                     if (typeof v === "object") {
                         for (u = 0; u < v.classes.length; u = u + 1) {
                             if (v.classes[u].name !== "") {
@@ -64,22 +73,23 @@ Viewer = function () {
                             }
                         }
                         if (showLayer) {
-                            tr = $("<tr/>");
-                            tr.append("<td><div class='layer-title' style='width:15px;'></div></td>");
-                            td = $("<td/>");
+                            li = $("<li/>");
+
+                            classUl = $("<ul/>");
                             for (u = 0; u < v.classes.length; u = u + 1) {
                                 if (v.classes[u].name !== "") {
-                                    td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                                    classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /><span class='legend-text'>" + v.classes[u].name + "</span></li>");
                                 }
                             }
-                            tr.append(td);
+                            // title
+                            list.append($("<li>" + title + "</li>"));
+                            list.append(li.append(classUl));
+
                         }
-                        table.append(tr);
-                        // Spacer
-                        table.append($("<tr style='height: 5px'/>"));
+
                     }
                 });
-                $('#legend').html(table);
+                $('#legend').html(list);
             }
         });
     };
@@ -225,7 +235,7 @@ Viewer = function () {
     }
     // Draw end
     init = function () {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, jRes, node, modalFlag, extent = null, i;
+        var metaData, layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
             return false;
@@ -492,7 +502,7 @@ Viewer = function () {
                         var geoType = metaDataKeys[value.split(".")[1]].type;
                         var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
                         var not_querable = metaDataKeys[value.split(".")[1]].not_querable;
-
+                        var versioning = metaDataKeys[value.split(".")[1]].versioning;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                                 4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
@@ -554,11 +564,15 @@ Viewer = function () {
                         cloud.addGeoJsonStore(qstore[index]);
                         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\") LIMIT 5";
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
                         }
                         else {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
                         }
+                        if (versioning){
+                            sql = sql + " AND gc2_version_end_date IS NULL";
+                        }
+                        sql = sql + " LIMIT 5";
                         qstore[index].sql = sql;
                         qstore[index].load();
                     });

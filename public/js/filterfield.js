@@ -8,7 +8,7 @@
 
 Ext.namespace("gxp.form");
 gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
-    
+
     /**
      * Property: filter
      * {OpenLayers.Filter} Optional non-logical filter provided in the initial
@@ -16,30 +16,30 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
      *     of accessing this property directly.
      */
     filter: null,
-    
+
     /**
      * Property: attributes
      * {GeoExt.data.AttributeStore} A configured attributes store for use in
      *     the filter property combo.
      */
     attributes: null,
-    
+
     /**
      * Property: attributesComboConfig
      * {Object}
      */
     attributesComboConfig: null,
 
-    initComponent: function() {
-                
-        if(!this.filter) {
+    initComponent: function () {
+
+        if (!this.filter) {
             this.filter = this.createDefaultFilter();
         }
-        if(!this.attributes) {
+        if (!this.attributes) {
             this.attributes = new GeoExt.data.AttributeStore();
         }
-        
-		//console.log(attributeForm.attributeFormCopy);
+
+        //console.log(attributeForm.attributeFormCopy);
         var defAttributesComboConfig = {
             xtype: "combo",
             store: this.attributes,
@@ -48,10 +48,10 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
             allowBlank: false,
             displayField: "name",
             valueField: "name",
-			mode: 'local',
+            mode: 'local',
             value: this.filter.property,
             listeners: {
-                select: function(combo, record) {
+                select: function (combo, record) {
                     this.filter.property = record.get("name");
                     this.fireEvent("change", this.filter);
                 },
@@ -63,7 +63,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
         Ext.applyIf(this.attributesComboConfig, defAttributesComboConfig);
 
         this.items = this.createFilterItems();
-        
+
         this.addEvents(
             /**
              * Event: change
@@ -73,11 +73,11 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
              * filter - {OpenLayers.Filter} This filter.
              */
             "change"
-        ); 
+        );
 
         gxp.form.FilterField.superclass.initComponent.call(this);
     },
-    
+
     /**
      * Method: createDefaultFilter
      * May be overridden to change the default filter.
@@ -85,22 +85,22 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
      * Returns:
      * {OpenLayers.Filter} By default, returns a comarison filter.
      */
-    createDefaultFilter: function() {
+    createDefaultFilter: function () {
         return new OpenLayers.Filter.Comparison();
     },
-    
+
     /**
      * Method: createFilterItems
      * Creates a panel config containing filter parts.
      */
-    createFilterItems: function() {
-        
+    createFilterItems: function () {
+
         return [
             this.attributesComboConfig, {
                 xtype: "gx_comparisoncombo",
                 value: this.filter.type,
                 listeners: {
-                    select: function(combo, record) {
+                    select: function (combo, record) {
                         this.filter.type = record.get("value");
                         this.fireEvent("change", this.filter);
                     },
@@ -115,7 +115,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
                 anchor: "100%",
                 allowBlank: false,
                 listeners: {
-                    change: function(el, value) {
+                    change: function (el, value) {
                         this.filter.value = value;
                         this.fireEvent("change", this.filter);
                     },
