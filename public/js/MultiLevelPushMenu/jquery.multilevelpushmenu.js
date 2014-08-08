@@ -516,7 +516,6 @@
                             $('#' + instance.settings.menuID + ' div.levelHolderClass').map(function () {
                                 return $(this).height();
                             }).get()) : forceHeight;
-                    maxHeight = (maxHeight - 60);
                     instance.settings.container.css('min-height', '');
                     instance.settings.container.children('nav:first').css('min-height', '');
                     if (extHeight) {

@@ -33,7 +33,6 @@ body {
 }
 
 #menu {
-    margin-top: 60px;
     z-index: 2 !important;
 }
 
@@ -132,10 +131,6 @@ input[type="radio"], input[type="checkbox"] {
         width: 280px !important;
     }
 
-    #locate-btn {
-        margin-left: 5px;
-    }
-
     .infobox {
         top: 35px !important;
         right: 0 !important;
@@ -203,6 +198,7 @@ input[type="radio"], input[type="checkbox"] {
 
 .navbar-nav {
     margin: 0 !important;
+    float: right;
 }
 
 .navbar-form {
@@ -251,6 +247,12 @@ input[type="radio"], input[type="checkbox"] {
 .legend-text {
     margin-left: 5px;
     font-size: 14px;
+}
+#legend > ul , #legend > ul > li > ul{
+    list-style: none;
+    list-style-position: outside;
+    padding-left:0;
+    margin-bottom: 10px;
 }
 
 

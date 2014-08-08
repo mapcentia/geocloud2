@@ -15,19 +15,9 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
-                <li>
-                    <button id="locate-btn" type="button" class="btn btn-default navbar-btn">
-                        <i class="fa fa-location-arrow"></i>
-                    </button>
-                </li>
-                <li>
-                    <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
-                        <div class="form-group">
-                            <input type="text" id="search-input" name="search-input" class="form-control"
-                                   placeholder="{{{Search}}}">
-                        </div>
-                    </form>
-                </li>
+
+
+
                 <li>
                     <a href="javascript:void(0)" title="Layers" onclick="$('#menu').multilevelpushmenu('expand');">
                         {{{Layers}}}</a>
@@ -37,6 +27,11 @@
                             class="caret"></b></a>
                     <ul class="dropdown-menu" id="base-layer-list">
                     </ul>
+                </li>
+                <li id="share-modal-li" class="gc-btn">
+                    <a href="javascript:void(0)" id="share-modal" title="Share"
+                       onclick="MapCentia.share();">
+                        {{{Share}}} </a>
                 </li>
                 <li id="legend-popover-li" class="gc-btn">
                     <a href="javascript:void(0)" id="legend-popover" rel="popover" data-placement="bottom"
@@ -48,14 +43,23 @@
                        onclick="$('#modal-legend').modal();">
                         {{{Legend}}} </a>
                 </li>
-                <li id="share-modal-li" class="gc-btn">
-                    <a href="javascript:void(0)" id="share-modal" title="Share"
-                       onclick="MapCentia.share();">
-                        {{{Share}}} </a>
-                </li>
                 <li id="draw-button-li" class="gc-btn" style="display: none">
                     <button type="button" class="btn btn-default navbar-btn" data-toggle="button" id="draw-button">{{{Draw}}}</button>
                 </li>
+                <li>
+                    <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
+                        <div class="form-group">
+                            <input type="text" id="search-input" name="search-input" class="form-control"
+                                   placeholder="{{{Search}}}">
+                        </div>
+                    </form>
+                </li>
+                <li>
+                    <button id="locate-btn" type="button" class="btn btn-default navbar-btn">
+                        <i class="fa fa-location-arrow"></i>
+                    </button>
+                </li>
+
             </ul>
         </div>
     </nav>
