@@ -22,17 +22,20 @@ class Database extends \app\inc\Controller
 
     public function post_schemas()
     {
-        return $this->db->createSchema(Input::get('schema'));
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->db->createSchema(Input::get('schema'));
     }
 
     public function put_schema()
     {
-        return $this->db->renameSchema(Connection::$param['postgisschema'], json_decode(Input::get())->data->name);
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->db->renameSchema(Connection::$param['postgisschema'], json_decode(Input::get())->data->name);
     }
 
     public function delete_schema()
     {
-        return $this->db->deleteSchema(Connection::$param['postgisschema']);
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->db->deleteSchema(Connection::$param['postgisschema']);
     }
 
     public function get_exist()

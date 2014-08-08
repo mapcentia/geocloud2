@@ -46,6 +46,15 @@ wmsClasses.init = function (record) {
                         height: 300,
                         icon: Ext.MessageBox.ERROR
                     });
+                } else {
+                    Ext.MessageBox.show({
+                        title: 'Failure',
+                        msg: __("You don't have permission to change properties of this layer"),
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.ERROR
+                    });
                 }
             }
         }
@@ -155,22 +164,33 @@ wmsClasses.init = function (record) {
     });
 };
 wmsClasses.onAdd = function () {
-    var requestCg = {
+    Ext.Ajax.request({
         url: '/controllers/classification/index/' + wmsClasses.table,
         method: 'post',
-        callback: function (options, success, http) {
-            var response = eval('(' + http.responseText + ')');
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        success: function () {
             wmsClasses.store.load();
+        },
+        failure: function (response) {
+            Ext.MessageBox.show({
+                title: 'Failure',
+                msg: __("You don't have permission to change properties of this layer"),
+                buttons: Ext.MessageBox.OK,
+                width: 400,
+                height: 300,
+                icon: Ext.MessageBox.ERROR
+            });
         }
-    };
-    Ext.Ajax.request(requestCg);
+    });
 };
 wmsClasses.onDelete = function () {
     var record = wmsClasses.grid.getSelectionModel().getSelected();
     if (!record) {
         return false;
     }
-    Ext.MessageBox.confirm('Confirm', 'Are you sure you want to delete the class?', function (btn) {
+    Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete the class?'), function (btn) {
         if (btn === "yes") {
             wmsClasses.grid.store.remove(record);
             Ext.getCmp("a3").remove(wmsClass.grid);

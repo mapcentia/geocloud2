@@ -99,7 +99,17 @@ tableStructure.init = function (record, screenName) {
                             height: 300,
                             icon: Ext.MessageBox.ERROR
                         });
+                    } else {
+                        tableStructure.store.load();
+                        Ext.MessageBox.show({
+                            title: 'Not allowed',
+                            msg: __("You don't have permission to change the structure of this layer"),
+                            buttons: Ext.MessageBox.OK,
+                            width: 300,
+                            height: 300
+                        });
                     }
+
                 }
             }
         });
@@ -330,8 +340,20 @@ tableStructure.init = function (record, screenName) {
                         form.form.submit({
                             url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name"),
                             submitEmptyText: false,
-                            success: tableStructure.onSubmit,
-                            failure: tableStructure.onSubmit
+                            success: function () {
+                                tableStructure.store.load();
+                                form.reset();
+                            },
+                            failure: function () {
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: __("You don't have permission to change structure of this layer"),
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 400,
+                                    height: 300,
+                                    icon: Ext.MessageBox.ERROR
+                                });
+                            }
                         });
                     } else {
                         var s = '';
@@ -397,7 +419,7 @@ tableStructure.onVersion = function (record) {
                         failure: function (response) {
                             Ext.MessageBox.show({
                                 title: 'Failure',
-                                msg: eval('(' + response.responseText + ')').message,
+                                msg: __("You don't have permission to change structure of this layer"),
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,
@@ -419,20 +441,5 @@ tableStructure.onWrite = function (store, action, result, transaction, rs) {
         tableStructure.store.load();
     }
 };
-tableStructure.onSubmit = function (form, action) {
-    var result = action.result;
-    if (result.success) {
-        tableStructure.store.load();
-        form.reset();
-    } else {
-        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
-        Ext.MessageBox.show({
-            title: 'Failure',
-            msg: message,
-            buttons: Ext.MessageBox.OK,
-            width: 300,
-            height: 300
-        });
-    }
-};
+
 

@@ -185,7 +185,7 @@ wmsLayer.init = function (record) {
         },
         tbar: [
             {
-                text: '<i class="icon-ok btn-gc"></i> Update',
+                text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
                 //iconCls : 'silk-accept',
                 handler: function () {
                     var grid = Ext.getCmp("propGridLayer");
@@ -193,20 +193,32 @@ wmsLayer.init = function (record) {
                     var source = grid.getSource();
                     var jsonDataStr = null;
                     jsonDataStr = Ext.encode(source);
-                    var requestCg = {
+             
+
+                    Ext.Ajax.request({
                         url: '/controllers/tile/index/' + wmsLayer.classId,
                         method: 'put',
                         params: {
                             data: jsonDataStr
                         },
-                        timeout: 120000,
-                        callback: function (options, success, http) {
-                            var response = eval('(' + http.responseText + ')');
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function (response) {
                             writeFiles(record.f_table_schema + "." + record.f_table_name);
-                            wmsLayer.onSubmit(response);
+                            wmsLayer.onSubmit(eval('(' + response + ')'));
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: __("You don't have permission to change properties of this layer"),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
                         }
-                    };
-                    Ext.Ajax.request(requestCg);
+                    });
                 }
             }
         ]

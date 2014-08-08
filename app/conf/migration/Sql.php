@@ -13,6 +13,8 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER sort_id set default 0";
         $sqls[] = "UPDATE settings.geometry_columns_join SET sort_id = 0 WHERE sort_id IS NULL";
         $sqls[] = "CREATE EXTENSION \"uuid-ossp\"";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_schema";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_name";
 
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
@@ -93,7 +95,7 @@ class Sql
                                                          geometry_columns_join._key_;
                     ";
         $sqls[] = "
-                      CREATE OR REPLACE FUNCTION getColumns(g text, r text) RETURNS SETOF settings.geometry_columns_view AS $$
+                      CREATE OR REPLACE FUNCTION settings.getColumns(g text, r text) RETURNS SETOF settings.geometry_columns_view AS $$
                       BEGIN
                         RETURN QUERY EXECUTE '
                             SELECT
@@ -126,7 +128,9 @@ class Sql
                                 geometry_columns_join.single_tile,
                                 geometry_columns_join.cartomobile,
                                 geometry_columns_join.filter,
-                                geometry_columns_join.bitmapsource
+                                geometry_columns_join.bitmapsource,
+                                geometry_columns_join.privileges
+
                               FROM geometry_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON
@@ -165,7 +169,8 @@ class Sql
                                 geometry_columns_join.single_tile,
                                 geometry_columns_join.cartomobile,
                                 geometry_columns_join.filter,
-                                geometry_columns_join.bitmapsource
+                                geometry_columns_join.bitmapsource,
+                                geometry_columns_join.privileges
                               FROM raster_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON

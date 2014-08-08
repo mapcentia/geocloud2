@@ -15,12 +15,13 @@ class Tile extends \app\inc\Controller
 
     public function get_index()
     {
-        return Response::json($this->wmslayer->get());
+        return $this->wmslayer->get();
     }
 
     public function put_index()
     {
-        return Response::json($this->wmslayer->update(Input::get('data')));
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->wmslayer->update(Input::get('data'));
     }
 
     public function get_fields()

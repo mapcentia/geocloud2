@@ -7,12 +7,15 @@ class Controller
 
     public function auth()
     {
-        if (!$_SESSION['subuser']) {
+        if ($_SESSION['subuser']) {
             $response['success'] = false;
-            $response['message'] = "";
+            $response['message'] = "ssdsd";
             $response['code'] = 403;
-            return $response;
         }
+        else {
+            $response['success'] = true;
+        }
+        return $response;
     }
 
     public function authApiKey($user, $key)

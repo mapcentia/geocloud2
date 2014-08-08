@@ -17,8 +17,6 @@ SET default_with_oids = false;
 
 CREATE TABLE geometry_columns_join (
 	_key_ varchar(255) not null,
-    f_table_name character varying(256),
-    f_table_schema character varying(256),
     f_table_abstract character varying(256),
     f_table_title character varying(256),
     tweet text,

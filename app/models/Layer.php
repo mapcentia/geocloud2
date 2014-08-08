@@ -252,7 +252,6 @@ class Layer extends \app\models\Table
         $response['success'] = true;
         $response['message'] = "Privileges fetched";
         return $response;
-
     }
 
     public function updatePrivileges($data)

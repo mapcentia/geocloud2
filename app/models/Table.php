@@ -118,15 +118,21 @@ class Table extends Model
         return $array;
     }
 
-    function getRecords($createKeyFrom = NULL, $fields = "*", $whereClause = NULL) // All tables
+    // Move to layer model
+    function getRecords($createKeyFrom = NULL, $fields = "*", $whereClause = NULL) //
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
         $response['data'] = array();
-        $sql = "SELECT {$fields} FROM {$this->table}";
 
+        $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
-            $sql .= " WHERE {$whereClause}";
+            $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') order by sort_id";
+
+        }
+        else {
+            $sql = "SELECT * from settings.getColumns('1=1','1=1') order by sort_id";
+
         }
         if (strpos(strtolower($whereClause), strtolower("order by")) !== false) {
             $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";

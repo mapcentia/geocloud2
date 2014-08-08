@@ -765,7 +765,7 @@ $(document).ready(function () {
         '-',
         new GeoExt.Action({
             control: drawControl,
-            text: "<i class='icon-pencil btn-gc'></i>" + __("Draw"),
+            text: "<i class='icon-pencil btn-gc'></i> " + __("Draw"),
             id: "editcreatebutton",
             disabled: true,
             enableToggle: true
@@ -802,7 +802,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-stop btn-gc'></i> Stop editing",
+            text: "<i class='icon-stop btn-gc'></i> " + __("Stop editing"),
             disabled: true,
             id: "editstopbutton",
             handler: stopEdit

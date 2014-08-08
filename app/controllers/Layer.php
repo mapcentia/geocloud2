@@ -15,7 +15,7 @@ class Layer extends \app\inc\Controller
 
     public function get_records()
     {
-        return $this->table->getRecords(true, "*", $whereClause = "f_table_schema='" . Connection::$param["postgisschema"] . "' ORDER BY sort_id");
+        return $this->table->getRecords(true, "*", $whereClause =  Connection::$param["postgisschema"]);
     }
 
     public function get_groups()
@@ -28,13 +28,15 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get()));
         $data["data"]->editable = ($data["data"]->editable) ? : "0";
-        return (!$this->auth()) ? : $this->table->updateRecord($data, "_key_");
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
     }
 
     public function delete_records()
     {
         $input = json_decode(Input::get());
-        return (!$this->auth()) ? : $this->table->delete($input->data);
+        $response = $this->auth();
+        return (!$response['success']) ? $response: $this->table->delete($input->data);
     }
 
     public function get_columns()
@@ -54,7 +56,8 @@ class Layer extends \app\inc\Controller
 
     public function put_cartomobile()
     {
-        return $this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5));
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     public function getValueFromKey($_key_, $column)
@@ -65,16 +68,19 @@ class Layer extends \app\inc\Controller
     public function put_schema()
     {
         $input = json_decode(Input::get());
-        return $this->table->setSchema($input->data->tables, $input->data->schema);
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
     }
 
     public function get_privileges()
     {
-        return $this->table->getPrivileges(Input::getPath()->part(4));
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->table->getPrivileges(Input::getPath()->part(4));
     }
 
     public function put_privileges()
     {
-        return $this->table->updatePrivileges(json_decode(Input::get())->data);
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
 }

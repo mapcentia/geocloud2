@@ -23,7 +23,7 @@ var form, store, privilegeStore, writeFiles, clearTileCache, updateLegend, activ
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
-    var winAdd, winCartomobile, winMoreSettings, fieldsForStore = {}, settings, groups, groupsStore, subUsers;
+    var winAdd, winMoreSettings, fieldsForStore = {}, settings, groups, groupsStore, subUsers;
 
     $.ajax({
         url: '/controllers/layer/columnswithkey',
@@ -88,7 +88,7 @@ $(window).ready(function () {
                     store.reload();
                     Ext.MessageBox.show({
                         title: 'Not allowed',
-                        msg: "You don't have permission to change properties of the layer",
+                        msg: __("You don't have permission to change the properties of this layer"),
                         buttons: Ext.MessageBox.OK,
                         width: 300,
                         height: 300
@@ -289,29 +289,32 @@ $(window).ready(function () {
         }),
         tbar: [
             {
-                text: '<i class="icon-camera btn-gc"></i>' + __('CartoMobile'),
+                text: '<i class="icon-user btn-gc"></i> ' + __('Privileges'),
+                id: 'privileges-btn',
+                handler: onPrivileges,
+                disabled: true
+
+            },
+            {
+                text: '<i class="icon-camera btn-gc"></i> ' + __('CartoMobile'),
                 handler: onEditCartomobile,
                 id: 'cartomobile-btn',
                 disabled: true
             },
             {
-                text: '<i class="icon-cog btn-gc"></i>' + __('Advanced'),
+                text: '<i class="icon-cog btn-gc"></i> ' + __('Advanced'),
                 handler: onEditMoreSettings,
                 id: 'advanced-btn',
                 disabled: true
             },
             {
-                text: '<i class="icon-lock btn-gc"></i>' + __('Services'),
+                text: '<i class="icon-lock btn-gc"></i> ' + __('Services'),
                 handler: onGlobalSettings
 
             },
-            {
-                text: '<i class="icon-lock btn-gc"></i>' + __('Privileges'),
-                handler: onPrivileges
 
-            },
             {
-                text: '<i class="icon-remove btn-gc"></i>' + __('Clear all tile cache'),
+                text: '<i class="icon-remove btn-gc"></i> ' + __('Clear all tile cache'),
                 handler: function () {
                     Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
                         if (btn === "yes") {
@@ -340,14 +343,14 @@ $(window).ready(function () {
             },
             '->',
             {
-                text: '<i class="icon-plus btn-gc"></i>' + __('New layer'),
+                text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
                 handler: function () {
                     onAdd();
                 }
             },
             '-',
             {
-                text: '<i class="icon-arrow-right btn-gc"></i>' + __('Move layers'),
+                text: '<i class="icon-arrow-right btn-gc"></i> ' + __('Move layers'),
                 disabled: true,
                 id: 'movelayer-btn',
                 handler: function () {
@@ -356,7 +359,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-trash btn-gc"></i>' + __('Delete layers'),
+                text: '<i class="icon-trash btn-gc"></i> ' + __('Delete layers'),
                 disabled: true,
                 id: 'deletelayer-btn',
                 handler: function () {
@@ -365,17 +368,17 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-th btn-gc"></i> Schema',
+                text: '<i class="icon-th btn-gc"></i> ' + __('Schema'),
                 menu: new Ext.menu.Menu({
                     items: [
                         {
-                            text: 'Rename schema',
+                            text: __('Rename schema'),
                             handler: function () {
                                 onSchemaRename();
                             }
                         },
                         {
-                            text: 'Delete schema',
+                            text: __('Delete schema'),
                             handler: function () {
                                 onSchemaDelete();
                             }
@@ -423,8 +426,14 @@ $(window).ready(function () {
                                 App.setAlert(App.STATUS_OK, "New schema created");
                             },
                             failure: function (form, action) {
-                                var result = action.result;
-                                App.setAlert(App.STATUS_ERROR, result.message);
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: __("Sub-users can't create new schemas"),
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 400,
+                                    height: 300,
+                                    icon: Ext.MessageBox.ERROR
+                                });
                             }
                         });
                     }
@@ -468,7 +477,7 @@ $(window).ready(function () {
                     failure: function (response) {
                         Ext.MessageBox.show({
                             title: 'Failure',
-                            msg: eval('(' + response.responseText + ')').message,
+                            msg: __("You don't have the privileges to delete this layer"),
                             buttons: Ext.MessageBox.OK,
                             width: 400,
                             height: 300,
@@ -640,13 +649,14 @@ $(window).ready(function () {
                                                 params: param,
                                                 success: function () {
                                                     store.reload();
-                                                    winMoveTable.hide(this);
+                                                    winMoveTable.close(this);
                                                     App.setAlert(App.STATUS_OK, "Layers moved");
                                                 },
                                                 failure: function (response) {
+                                                    winMoveTable.close(this);
                                                     Ext.MessageBox.show({
                                                         title: 'Failure',
-                                                        msg: eval('(' + response.responseText + ')').message,
+                                                        msg: __("You don't have the privilges to move this layer"),
                                                         buttons: Ext.MessageBox.OK,
                                                         width: 400,
                                                         height: 300,
@@ -734,9 +744,10 @@ $(window).ready(function () {
                                                     window.location = "/store/" + screenName + "/" + data.data.name;
                                                 },
                                                 failure: function (response) {
+                                                    winSchemaRename.close();
                                                     Ext.MessageBox.show({
                                                         title: 'Failure',
-                                                        msg: eval('(' + response.responseText + ')').message,
+                                                        msg: __("Sub-users can't rename schemas"),
                                                         buttons: Ext.MessageBox.OK,
                                                         width: 400,
                                                         height: 300,
@@ -757,8 +768,7 @@ $(window).ready(function () {
                     ]
                 }
             ]
-        });
-        winSchemaRename.show(this);
+        }).show(this);
     };
 
     onSchemaDelete = function (btn, ev) {
@@ -776,7 +786,7 @@ $(window).ready(function () {
                     failure: function (response) {
                         Ext.MessageBox.show({
                             title: 'Failure',
-                            msg: eval('(' + response.responseText + ')').message,
+                            msg: __("Sub-users can't delete schemas"),
                             buttons: Ext.MessageBox.OK,
                             width: 400,
                             height: 300,
@@ -814,7 +824,7 @@ $(window).ready(function () {
         }
         cartomobile.grid = null;
         cartomobile.init(record, screenName);
-        winCartomobile = new Ext.Window({
+        cartomobile.winCartomobile = new Ext.Window({
             title: "CartoMobile settings for the layer '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
@@ -833,8 +843,7 @@ $(window).ready(function () {
                 layout: 'border',
                 items: [cartomobile.grid]
             })]
-        });
-        winCartomobile.show(this);
+        }).show(this);
     }
 
     function onSave() {
@@ -925,7 +934,7 @@ $(window).ready(function () {
         }
         var r = record;
         winMoreSettings = new Ext.Window({
-            title: "More settings on '" + record.get("f_table_name") + "'",
+            title: __("Advanced settings on '") + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 500,
@@ -1042,9 +1051,19 @@ $(window).ready(function () {
                                         success: function () {
                                             store.reload();
                                             groupsStore.load();
-                                            App.setAlert(App.STATUS_NOTICE, "Settings updated");
+                                            App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
+                                        },
+                                        failure: function () {
+                                            winMoreSettings.close();
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __("You don't have permission to change properties of this layer"),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
                                         }
-                                        //failure: test
                                     });
                                 } else {
                                     var s = '';
@@ -1141,61 +1160,66 @@ $(window).ready(function () {
     }
 
     function onPrivileges(btn, ev) {
-        var records = grid.getSelectionModel().getSelections(),
-            privilegesStore = new Ext.data.Store({
-                writer: new Ext.data.JsonWriter({
-                    writeAllFields: false,
-                    encode: false
-                }),
-                reader: new Ext.data.JsonReader(
+        var records = grid.getSelectionModel().getSelections();
+        if (records.length === 0) {
+            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            return false;
+        }
+        var privilegesStore = new Ext.data.Store({
+            writer: new Ext.data.JsonWriter({
+                writeAllFields: false,
+                encode: false
+            }),
+            reader: new Ext.data.JsonReader(
+                {
+                    successProperty: 'success',
+                    idProperty: 'subuser',
+                    root: 'data',
+                    messageProperty: 'message'
+                },
+                [
                     {
-                        successProperty: 'success',
-                        idProperty: 'subuser',
-                        root: 'data',
-                        messageProperty: 'message'
+                        name: "subuser"
                     },
-                    [
-                        {
-                            name: "subuser"
-                        },
-                        {
-                            name: "privileges"
-                        }
-                    ]
-                ),
-                proxy: new Ext.data.HttpProxy({
-                    restful: true,
-                    type: 'json',
-                    api: {
-                        read: '/controllers/layer/privileges/' + records[0].get("_key_")
-                    },
-                    listeners: {
-                        exception: function (proxy, type, action, options, response, arg) {
-                            if (type === 'remote') {
-                                var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
-                                Ext.MessageBox.show({
-                                    title: 'Failure',
-                                    msg: message,
-                                    buttons: Ext.MessageBox.OK,
-                                    width: 300,
-                                    height: 300
-                                });
-                            } else {
-                                Ext.MessageBox.show({
-                                    title: 'Not allowed',
-                                    msg: "hej",
-                                    buttons: Ext.MessageBox.OK,
-                                    width: 300,
-                                    height: 300
-                                });
-                            }
+                    {
+                        name: "privileges"
+                    }
+                ]
+            ),
+            proxy: new Ext.data.HttpProxy({
+                restful: true,
+                type: 'json',
+                api: {
+                    read: '/controllers/layer/privileges/' + records[0].get("_key_")
+                },
+                listeners: {
+                    exception: function (proxy, type, action, options, response, arg) {
+                        if (type === 'remote') {
+                            var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: message,
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
+                        } else {
+                            privilgesWin.close();
+                            Ext.MessageBox.show({
+                                title: __("Not allowed"),
+                                msg: __("You can't set privileges in this schema"),
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
                         }
                     }
-                }),
-                autoSave: true
-            });
+                }
+            }),
+            autoSave: true
+        });
         privilegesStore.load();
-        new Ext.Window({
+        var privilgesWin = new Ext.Window({
             title: __("Privileges"),
             modal: true,
             width: 700,
@@ -1269,7 +1293,7 @@ $(window).ready(function () {
             ]}).show();
     }
 
-    updatePrivileges = function (subuser, key,  privileges) {
+    updatePrivileges = function (subuser, key, privileges) {
         var param = {
             data: {
                 _key_: key,
@@ -1285,9 +1309,6 @@ $(window).ready(function () {
                 'Content-Type': 'application/json; charset=utf-8'
             },
             params: param,
-            success: function () {
-                console.log("Test");
-            },
             failure: function (response) {
                 Ext.MessageBox.show({
                     title: 'Failure',
@@ -1339,10 +1360,12 @@ $(window).ready(function () {
         if (records.length === 1) {
             Ext.getCmp('cartomobile-btn').setDisabled(false);
             Ext.getCmp('advanced-btn').setDisabled(false);
+            Ext.getCmp('privileges-btn').setDisabled(false);
         }
         else {
             Ext.getCmp('cartomobile-btn').setDisabled(true);
             Ext.getCmp('advanced-btn').setDisabled(true);
+            Ext.getCmp('privileges-btn').setDisabled(true);
         }
         if (records.length > 0) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);

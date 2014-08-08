@@ -80,7 +80,18 @@ cartomobile.init = function (record, screenName) {
                             height: 300,
                             icon: Ext.MessageBox.ERROR
                         });
+                    } else {
+                        cartomobile.winCartomobile.close();
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: __("You don't have permission to change properties of this layer"),
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
                     }
+
                 }
             }
         });
