@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers;
 
-use \app\inc\Response;
 use \app\inc\Input;
 
 class Table extends \app\inc\Controller
@@ -26,8 +25,8 @@ class Table extends \app\inc\Controller
 
     public function delete_records()
     {
-        $response = $this->auth();
-        return (!$response['success']) ? $response :$this->table->destroy();
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->destroy();
     }
 
     public function get_columns()
@@ -42,29 +41,31 @@ class Table extends \app\inc\Controller
 
     public function put_columns()
     {
-        $response = $this->auth();
+        $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     public function post_columns()
     {
-        $response = $this->auth();
-        return (!$response['success']) ? $response :$this->table->addColumn(Input::get()); // Is POSTED by a form
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->addColumn(Input::get()); // Is POSTED by a form
     }
 
     public function delete_columns()
     {
-        $response = $this->auth();
-        return (!$response['success']) ? $response :$this->table->deleteColumn(json_decode(Input::get())->data);
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->deleteColumn(json_decode(Input::get())->data);
     }
 
     public function get_structure()
     {
-        return Response::json($this->table->getTableStructure());
+        $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
+        return (!$response['success']) ? $response :  $this->table->getTableStructure();
     }
+
     public function put_versions()
     {
-        $response = $this->auth();
-        return (!$response['success']) ? $response :$this->table->addVersioning(Input::getPath()->part(4));
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->addVersioning(Input::getPath()->part(4));
     }
 }

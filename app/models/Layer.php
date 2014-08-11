@@ -68,7 +68,16 @@ class Layer extends \app\models\Table
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
             }
-            $response['data'][] = $arr;
+            if ($row["authentication"] == "Read/write"){
+                $privileges = (array)json_decode($row["privileges"]);
+                if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+                    $response['data'][] = $arr;
+                }
+            }
+            else {
+                $response['data'][] = $arr;
+            }
+
         }
         $response['data'] = ($response['data']) ? : array();
         if (!$this->PDOerror) {
@@ -246,7 +255,8 @@ class Layer extends \app\models\Table
     {
         $privileges = (array)json_decode($this->getValueFromKey($_key_, "privileges"));
 
-        foreach($_SESSION['subusers'] as $subuser){
+        foreach ($_SESSION['subusers'] as $subuser) {
+            $privileges[$subuser] = ($privileges[$subuser]) ? : "none";
             $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
         }
         $response['success'] = true;

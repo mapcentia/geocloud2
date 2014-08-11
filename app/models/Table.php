@@ -127,11 +127,9 @@ class Table extends Model
 
         $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
-            $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') order by sort_id";
-
-        }
-        else {
-            $sql = "SELECT * from settings.getColumns('1=1','1=1') order by sort_id";
+            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
+        } else {
+            $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
 
         }
         if (strpos(strtolower($whereClause), strtolower("order by")) !== false) {
@@ -139,23 +137,25 @@ class Table extends Model
         }
         $result = $this->execQuery($sql);
         while ($row = $this->fetchRow($result, "assoc")) {
+            $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
-            foreach ($row as $key => $value) {
-                if ($key == "type" && $value == "GEOMETRY") {
-                    $def = json_decode($row['def']);
-                    if (($def->geotype) && $def->geotype != "Default") {
-                        $value = "MULTI" . $def->geotype;
+            if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+                foreach ($row as $key => $value) {
+                    if ($key == "type" && $value == "GEOMETRY") {
+                        $def = json_decode($row['def']);
+                        if (($def->geotype) && $def->geotype != "Default") {
+                            $value = "MULTI" . $def->geotype;
+                        }
                     }
+                    $arr = $this->array_push_assoc($arr, $key, $value);
                 }
-                $arr = $this->array_push_assoc($arr, $key, $value);
+                if ($createKeyFrom) {
+                    $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
+                    $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
+                    $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+                }
+                $response['data'][] = $arr;
             }
-
-            if ($createKeyFrom) {
-                $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
-                $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-                $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
-            }
-            $response['data'][] = $arr;
         }
         return $response;
     }
@@ -401,7 +401,7 @@ class Table extends Model
     {
 
         $this->begin();
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid serial NOT NULL";
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -412,7 +412,7 @@ class Table extends Model
             $response['code'] = 400;
             return $response;
         }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_start_date timestamp with time zone NOT NULL DEFAULT now()";
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -423,7 +423,7 @@ class Table extends Model
             $response['code'] = 400;
             return $response;
         }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_end_date timestamp with time zone DEFAULT NULL";
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
         $res = $this->prepare($sql);
         try {
             $res->execute();

@@ -78,8 +78,21 @@ addScratch.init = function () {
                         addScratch.form.getForm().submit({
                             url: '/controllers/table/records',
                             waitMsg: 'Creating your new layer',
-                            success: addScratch.onSubmit,
-                            failure: addScratch.onSubmit
+                            success: function (form, action) {
+                                App.setAlert(App.STATUS_NOTICE, action.result.message);
+                                document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                store.load();
+                            },
+                            failure: function (form, action) {
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: __(Ext.decode(action.response.responseText).message),
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 400,
+                                    height: 300,
+                                    icon: Ext.MessageBox.ERROR
+                                });
+                            }
                         });
                     }
                 }
@@ -92,14 +105,4 @@ addScratch.init = function () {
             }
         ]
     });
-};
-addScratch.onSubmit = function (form, action) {
-    var result = action.result;
-    if (result.success) {
-        App.setAlert(App.STATUS_NOTICE, result.message);
-        document.getElementById("wfseditor").contentWindow.window.reLoadTree();
-        store.load();
-    } else {
-        Ext.MessageBox.alert('Failure', result.message);
-    }
 };

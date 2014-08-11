@@ -36,6 +36,7 @@ class Classification extends \app\inc\Model
         $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->layer}'";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
+            $arrNew = array();
             $sortedArr = array();
             $response['success'] = true;
             $row = $this->fetchRow($result, "assoc");
@@ -61,6 +62,7 @@ class Classification extends \app\inc\Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = 400;
         }
         return $response;
     }

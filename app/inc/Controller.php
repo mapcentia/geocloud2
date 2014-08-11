@@ -5,14 +5,28 @@ class Controller
 {
     public $response;
 
-    public function auth()
+    public function auth($key, $level = array("all" => true))
     {
+
         if ($_SESSION['subuser']) {
-            $response['success'] = false;
-            $response['message'] = "ssdsd";
-            $response['code'] = 403;
-        }
-        else {
+            $text = "Hey Hey My My";
+            if (sizeof($level) == 0) {
+                $response['success'] = false;
+                $response['message'] = $text;
+                $response['code'] = 403;
+            } else {
+                $layer = new \app\models\Layer();
+                $privileges = (array)json_decode($layer->getValueFromKey($key, "privileges"));
+                $subuserLevel = $privileges[$_SESSION['subuser']];
+                if (!isset($level[$subuserLevel])) {
+                    $response['success'] = false;
+                    $response['message'] = $text;
+                    $response['code'] = 403;
+                } else {
+                    $response['success'] = true;
+                }
+            }
+        } else {
             $response['success'] = true;
         }
         return $response;

@@ -15,17 +15,12 @@ class Tile extends Model {
 		if (!$this->PDOerror) {
 			$response['success'] = true;
 			$arr = (array)json_decode($row['def']); // Cast stdclass to array
-			/*$props = array("label_column"=>"","theme_column"=>"","meta_tiles"=>false);
-			foreach($props as $field=>$value){
-				if (!isset($arr[$field])){
-					$arr[$field] = $value;
-				}
-			}*/
 			$response['data'] = array($arr);
 		}
 		else {
 			$response['success'] = false;
-			$response['message'] = $this->PDOerror[0];
+			$response['message'] = "Hej hej";
+            $response['code'] = 500;
 		}
 		return $response;
 	}
@@ -40,6 +35,7 @@ class Tile extends Model {
 		else {
 			$response['success'] = false;
 			$response['message'] = $this->PDOerror[0];
+			$response['code'] = 500;
 		}
 		return $response;
 	}

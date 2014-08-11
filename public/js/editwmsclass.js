@@ -48,8 +48,8 @@ wmsClasses.init = function (record) {
                     });
                 } else {
                     Ext.MessageBox.show({
-                        title: 'Failure',
-                        msg: __("You don't have permission to change properties of this layer"),
+                        title: 'Failurgfge',
+                        msg: __(Ext.decode(response.responseText).message),
                         buttons: Ext.MessageBox.OK,
                         width: 400,
                         height: 300,
@@ -176,7 +176,7 @@ wmsClasses.onAdd = function () {
         failure: function (response) {
             Ext.MessageBox.show({
                 title: 'Failure',
-                msg: __("You don't have permission to change properties of this layer"),
+                msg: __(Ext.decode(response.responseText).message),
                 buttons: Ext.MessageBox.OK,
                 width: 400,
                 height: 300,
@@ -1102,3 +1102,4 @@ wmsClass.init = function (id) {
         }
     });
 };
+

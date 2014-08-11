@@ -88,6 +88,27 @@ wmsLayer.init = function (record) {
                         propGridLayer.setSource(store.getAt(0).data);
                     }
                 }
+            },
+            exception: function (proxy, type, action, options, response, arg) {
+                if (type === 'remote') {
+                    var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                    Ext.MessageBox.show({
+                        title: 'Failure',
+                        msg: message,
+                        buttons: Ext.MessageBox.OK,
+                        width: 300,
+                        height: 300
+                    });
+                } else {
+                    store.reload();
+                    Ext.MessageBox.show({
+                        title: 'Not allowed',
+                        msg: __(Ext.decode(response.responseText).message),
+                        buttons: Ext.MessageBox.OK,
+                        width: 300,
+                        height: 300
+                    });
+                }
             }
         }
     });
@@ -193,7 +214,7 @@ wmsLayer.init = function (record) {
                     var source = grid.getSource();
                     var jsonDataStr = null;
                     jsonDataStr = Ext.encode(source);
-             
+
 
                     Ext.Ajax.request({
                         url: '/controllers/tile/index/' + wmsLayer.classId,
@@ -206,12 +227,12 @@ wmsLayer.init = function (record) {
                         },
                         success: function (response) {
                             writeFiles(record.f_table_schema + "." + record.f_table_name);
-                            wmsLayer.onSubmit(eval('(' + response + ')'));
+                            App.setAlert(App.STATUS_NOTICE, __("The layer settings are updated"));
                         },
                         failure: function (response) {
                             Ext.MessageBox.show({
                                 title: 'Failure',
-                                msg: __("You don't have permission to change properties of this layer"),
+                                msg: __(Ext.decode(response.responseText).message),
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,
@@ -235,7 +256,8 @@ wmsLayer.init = function (record) {
                     '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
                     '</table>',
                 border: false,
-                bodyStyle: 'padding-left: 3px'            },
+                bodyStyle: 'padding-left: 3px'
+            },
             {
                 name: '_key_',
                 xtype: 'hidden',
@@ -253,13 +275,13 @@ wmsLayer.init = function (record) {
         ],
         buttons: [
             {
-                text: '<i class="icon-ok btn-gc"></i> Update SQL',
+                text: '<i class="icon-ok btn-gc"></i> ' + __('Update SQL'),
                 handler: function () {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
                         // Submit empty if default sql is not changed. Extjs3 is submitting EmptyText!
-                        if (values.data === wmsLayer.defaultSql){
+                        if (values.data === wmsLayer.defaultSql) {
                             values.data = "";
                         }
                         values.data = encodeURIComponent(values.data);
@@ -282,7 +304,7 @@ wmsLayer.init = function (record) {
                             failure: function (response) {
                                 Ext.MessageBox.show({
                                     title: 'Failure',
-                                    msg: eval('(' + response.responseText + ')').message,
+                                    msg: __(Ext.decode(response.responseText).message),
                                     buttons: Ext.MessageBox.OK,
                                     width: 400,
                                     height: 300,
@@ -300,22 +322,6 @@ wmsLayer.init = function (record) {
             }
         ]
     });
-};
-
-wmsLayer.onSubmit = function (response) {
-    if (response.success) {
-        App.setAlert(App.STATUS_NOTICE, "The layer settings are updated");
-        writeFiles();
-    } else {
-        message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + result.message + "</textarea>";
-        Ext.MessageBox.show({
-            title: 'Failure',
-            msg: message,
-            buttons: Ext.MessageBox.OK,
-            width: 300,
-            height: 300
-        });
-    }
 };
 
 

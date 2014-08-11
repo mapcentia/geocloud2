@@ -75,15 +75,10 @@ tableStructure.init = function (record, screenName) {
         {
             restful: true,
             api: {
-                read: '/controllers/table/structure/' + record.get("f_table_schema")
-                    + '.' + record.get("f_table_name"),
-                create: '/controllers/table/columns/' + record.get("f_table_schema")
-                    + '.' + record.get("f_table_name"),
-                update: '/controllers/table/columns/' + record.get("f_table_schema")
-                    + '.' + record.get("f_table_name") + '/'
-                    + record.get("_key_"),
-                destroy: '/controllers/table/columns/' + record.get("f_table_schema")
-                    + '.' + record.get("f_table_name")
+                read: '/controllers/table/structure/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
+                create: '/controllers/table/columns/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
+                update: '/controllers/table/columns/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
+                destroy: '/controllers/table/columns/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_")
             },
             listeners: {
                 write: tableStructure.onWrite,
@@ -103,7 +98,7 @@ tableStructure.init = function (record, screenName) {
                         tableStructure.store.load();
                         Ext.MessageBox.show({
                             title: 'Not allowed',
-                            msg: __("You don't have permission to change the structure of this layer"),
+                            msg: __(Ext.decode(response.responseText).message),
                             buttons: Ext.MessageBox.OK,
                             width: 300,
                             height: 300
@@ -338,16 +333,16 @@ tableStructure.init = function (record, screenName) {
                     var form = Ext.getCmp("addColumnForm");
                     if (form.form.isValid()) {
                         form.form.submit({
-                            url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name"),
+                            url: '/controllers/table/columns/' + schema + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
                             submitEmptyText: false,
-                            success: function () {
+                            success: function (response) {
                                 tableStructure.store.load();
                                 form.reset();
                             },
-                            failure: function () {
+                            failure: function (form, action) {
                                 Ext.MessageBox.show({
                                     title: 'Failure',
-                                    msg: __("You don't have permission to change structure of this layer"),
+                                    msg: __(Ext.decode(action.response.responseText).message),
                                     buttons: Ext.MessageBox.OK,
                                     width: 400,
                                     height: 300,
@@ -407,7 +402,7 @@ tableStructure.onVersion = function (record) {
             if (btn === "yes") {
                 Ext.Ajax.request(
                     {
-                        url: '/controllers/table/versions/' + record.data.f_table_schema + "." + record.data.f_table_name,
+                        url: '/controllers/table/versions/' + record.data.f_table_schema + "." + record.data.f_table_name + '/' + record.data._key_,
                         method: 'put',
                         headers: {
                             'Content-Type': 'application/json; charset=utf-8'
@@ -419,7 +414,7 @@ tableStructure.onVersion = function (record) {
                         failure: function (response) {
                             Ext.MessageBox.show({
                                 title: 'Failure',
-                                msg: __("You don't have permission to change structure of this layer"),
+                                msg: __(Ext.decode(response.responseText).message),
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,
@@ -441,5 +436,4 @@ tableStructure.onWrite = function (store, action, result, transaction, rs) {
         tableStructure.store.load();
     }
 };
-
 
