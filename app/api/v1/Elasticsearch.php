@@ -28,7 +28,12 @@ class Elasticsearch extends \app\inc\Controller
         }
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        return $api->sql(rawurldecode($_GET['q']), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
+        return $api->sql(rawurldecode(Input::get('q')), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
+    }
+
+    function post_bulk()
+    {
+        return $this->get_bulk();
     }
 
     function get_search()
