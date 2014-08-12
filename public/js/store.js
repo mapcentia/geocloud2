@@ -11,6 +11,7 @@
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
 window.__ = function (string) {
+    "use strict";
     if (typeof gc2i18n !== 'undefined') {
         if (gc2i18n.dict[string]) {
             return gc2i18n.dict[string];
@@ -19,7 +20,7 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var form, store, privilegeStore, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -29,7 +30,7 @@ $(window).ready(function () {
         url: '/controllers/layer/columnswithkey',
         async: false,
         dataType: 'json',
-        success: function (data, textStatus, http) {
+        success: function (data) {
             fieldsForStore = data.forStore;
         }
     });
@@ -37,7 +38,7 @@ $(window).ready(function () {
         url: '/controllers/setting',
         async: false,
         dataType: 'json',
-        success: function (data, textStatus, http) {
+        success: function (data) {
             settings = data.data;
             $("#apikeyholder").html(settings.api_key);
             if (typeof settings.extents !== "undefined") {
@@ -76,7 +77,7 @@ $(window).ready(function () {
             write: onWrite,
             exception: function (proxy, type, action, options, response, arg) {
                 if (type === 'remote') {
-                    var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                    var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
                     Ext.MessageBox.show({
                         title: 'Failure',
                         msg: message,
@@ -154,7 +155,7 @@ $(window).ready(function () {
             },
             columns: [
                 {
-                    header: "Name",
+                    header: __("Name"),
                     dataIndex: "f_table_name",
                     sortable: true,
                     editable: false,
@@ -166,7 +167,7 @@ $(window).ready(function () {
                     }
                 },
                 {
-                    header: "Type",
+                    header: __("Type"),
                     dataIndex: "type",
                     sortable: true,
                     editable: false,
@@ -174,14 +175,14 @@ $(window).ready(function () {
                     width: 150
                 },
                 {
-                    header: "Title",
+                    header: __("Title"),
                     dataIndex: "f_table_title",
                     sortable: true,
                     width: 150
                 },
                 {
                     id: "desc",
-                    header: "Description",
+                    header: __("Description"),
                     dataIndex: "f_table_abstract",
                     sortable: true,
                     editable: true,
@@ -189,7 +190,7 @@ $(window).ready(function () {
                     width: 250
                 },
                 {
-                    header: 'Group',
+                    header: __("Group"),
                     dataIndex: 'layergroup',
                     sortable: true,
                     editable: true,
@@ -206,7 +207,7 @@ $(window).ready(function () {
                     }
                 },
                 {
-                    header: 'Sort id',
+                    header: __("Sort id"),
                     dataIndex: 'sort_id',
                     sortable: true,
                     editable: true,
@@ -217,7 +218,7 @@ $(window).ready(function () {
                     })
                 },
                 {
-                    header: 'Authentication',
+                    header: __("Authentication"),
                     dataIndex: 'authentication',
                     width: 80,
                     tooltip: 'When accessing your layer from external clients, which level of authentication do you want?',
@@ -241,18 +242,18 @@ $(window).ready(function () {
                 },
                 {
                     xtype: 'checkcolumn',
-                    header: 'Editable',
+                    header: __("Editable"),
                     dataIndex: 'editable',
                     width: 50
                 },
                 {
-                    header: 'Tile cache',
+                    header: __("Tile cache"),
                     editable: false,
                     listeners: {
                         click: function () {
                             var r = grid.getSelectionModel().getSelected();
                             var layer = r.data.f_table_schema + "." + r.data.f_table_name;
-                            Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for layer \'' + r.data.f_table_name + '\'. Are you sure?', function (btn) {
+                            Ext.MessageBox.confirm(__('Confirm'), __("You are about to delete the tile cache for layer") + " '" + r.data.f_table_name + "'. " + __("Are you sure?"), function (btn) {
                                 if (btn === "yes") {
                                     $.ajax({
                                         url: '/controllers/tilecache/index/' + layer,
@@ -264,9 +265,9 @@ $(window).ready(function () {
                                                 if (http.status == 200) {
                                                     var response = eval('(' + http.responseText + ')');
                                                     if (response.success === true) {
-                                                        App.setAlert(App.STATUS_NOTICE, response.message);
+                                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
                                                     } else {
-                                                        App.setAlert(App.STATUS_NOTICE, response.message);
+                                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
                                                     }
                                                 }
                                             }
@@ -280,9 +281,8 @@ $(window).ready(function () {
                         }
                     },
                     renderer: function (value, id, r) {
-                        return ('<a href="#">Clear</a>');
+                        return ('<a href="#">' + __("Clear") + '</a>');
                     },
-
                     width: 70
                 }
             ]
@@ -314,24 +314,20 @@ $(window).ready(function () {
             },
 
             {
-                text: '<i class="icon-remove btn-gc"></i> ' + __('Clear all tile cache'),
+                text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
                 handler: function () {
-                    Ext.MessageBox.confirm('Confirm', 'You are about to delete the tile cache for the whole schema. Are you sure?', function (btn) {
+                    Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
                             $.ajax({
                                 url: '/controllers/tilecache/index/schema/' + schema,
                                 dataType: 'json',
                                 type: 'delete',
                                 success: function (data, textStatus, http) {
-                                    if (http.readyState == 4) {
-                                        if (http.status == 200) {
-                                            var response = eval('(' + http.responseText + ')');
-                                            if (response.success === true) {
-                                                App.setAlert(App.STATUS_OK, response.message);
-                                            } else {
-                                                App.setAlert(App.STATUS_NOTICE, response.message);
-                                            }
-                                        }
+                                    var response = eval('(' + http.responseText + ')');
+                                    if (response.success === true) {
+                                        App.setAlert(App.STATUS_OK, __(response.message));
+                                    } else {
+                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
                                     }
                                 }
                             });
@@ -417,7 +413,7 @@ $(window).ready(function () {
             },
             {
                 text: '<i class="icon-plus btn-gc"></i>',
-                tooltip: 'Add new schema',
+                tooltip: __('Add new schema'),
                 disabled: subUser ? true : false,
                 handler: function () {
                     var f = Ext.getCmp('schemaform');
@@ -427,7 +423,7 @@ $(window).ready(function () {
                             submitEmptyText: false,
                             success: function () {
                                 schemasStore.reload();
-                                App.setAlert(App.STATUS_OK, "New schema created");
+                                App.setAlert(App.STATUS_OK, __("New schema created"));
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({
@@ -454,10 +450,10 @@ $(window).ready(function () {
     function onDelete() {
         var records = grid.getSelectionModel().getSelections();
         if (records.length === 0) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
-        Ext.MessageBox.confirm('Confirm', 'Are you sure you want to delete ' + records.length + ' tables?', function (btn) {
+        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('table(s)') + '?', function (btn) {
             if (btn === "yes") {
                 var tables = [];
                 Ext.iterate(records, function (v) {
@@ -476,7 +472,7 @@ $(window).ready(function () {
                     params: param,
                     success: function () {
                         store.reload();
-                        App.setAlert(App.STATUS_OK, records.length + " layers deleted");
+                        App.setAlert(App.STATUS_OK, records.length + " " + __("layers deleted"));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
@@ -538,7 +534,7 @@ $(window).ready(function () {
                 }
             };
         winAdd = new Ext.Window({
-            title: 'Add new layer',
+            title: __('New layer'),
             layout: 'fit',
             modal: true,
             width: 500,
@@ -548,22 +544,22 @@ $(window).ready(function () {
             items: [p],
             tbar: [
                 {
-                    text: 'Add vector',
+                    text: __('Add vector'),
                     handler: addVector
                 },
                 '-',
                 {
-                    text: 'Add raster',
+                    text: __('Add raster'),
                     handler: addRaster
                 },
                 '-',
                 {
-                    text: 'Add imagery',
+                    text: __('Add imagery'),
                     handler: addImage
                 },
                 '-',
                 {
-                    text: 'Blank layer',
+                    text: __('Blank layer'),
                     handler: function () {
                         addScratch.init();
                         var c = p.getComponent(0);
@@ -582,11 +578,11 @@ $(window).ready(function () {
     onMove = function (btn, ev) {
         var records = grid.getSelectionModel().getSelections();
         if (records.length === 0) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
         var winMoveTable = new Ext.Window({
-            title: "Move " + records.length + " selected to another schema",
+            title: __("Move") + " " + records.length + " " + __("selected to another schema"),
             modal: true,
             layout: 'fit',
             width: 270,
@@ -687,7 +683,7 @@ $(window).ready(function () {
 
     onSchemaRename = function (btn, ev) {
         var winSchemaRename = new Ext.Window({
-            title: "Rename schema '" + schema + "'",
+            title: __("Rename schema") + " '" + schema + "'",
             modal: true,
             layout: 'fit',
             width: 270,
@@ -713,7 +709,7 @@ $(window).ready(function () {
                                         {
                                             xtype: "textfield",
                                             name: 'name',
-                                            emptyText: 'New name',
+                                            emptyText: __('New name'),
                                             allowBlank: false,
                                             width: 150
                                         }
@@ -727,7 +723,7 @@ $(window).ready(function () {
                             items: [
                                 {
                                     xtype: 'button',
-                                    text: 'Rename',
+                                    text: __('Rename'),
                                     handler: function () {
                                         var f = Ext.getCmp('schemaRenameForm');
                                         if (f.form.isValid()) {
@@ -750,7 +746,7 @@ $(window).ready(function () {
                                                 failure: function (response) {
                                                     winSchemaRename.close();
                                                     Ext.MessageBox.show({
-                                                        title: 'Failure',
+                                                        title: __('Failure'),
                                                         msg: __(Ext.decode(response.responseText).message),
                                                         buttons: Ext.MessageBox.OK,
                                                         width: 400,
@@ -776,7 +772,7 @@ $(window).ready(function () {
     };
 
     onSchemaDelete = function (btn, ev) {
-        Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that? All layers in this schema will be deleted!', function (btn) {
+        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to do that? All layers in the schema will be deleted!'), function (btn) {
             if (btn === "yes") {
                 Ext.Ajax.request({
                     url: '/controllers/database/schema',
@@ -789,7 +785,7 @@ $(window).ready(function () {
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
-                            title: 'Failure',
+                            title: __('Failure'),
                             msg: __(Ext.decode(response.responseText).message),
                             buttons: Ext.MessageBox.OK,
                             width: 400,
@@ -823,13 +819,13 @@ $(window).ready(function () {
     function onEditCartomobile(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
         cartomobile.grid = null;
         cartomobile.init(record, screenName);
         cartomobile.winCartomobile = new Ext.Window({
-            title: __("CartoMobile settings for the layer '") + record.get("f_table_name") + "'",
+            title: __("CartoMobile settings for the layer") + " '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 750,
@@ -863,12 +859,12 @@ $(window).ready(function () {
             }
         });
         if (!record) {
-            App.setAlert(App.STATUS_NOTICE, __("You\'ve to select a layer"));
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
         activeLayer = record.f_table_schema + "." + record.f_table_name;
         markup = [
-            '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>A SQL must return a primary key and a geometry. Naming and srid must match this: </td></tr></table>' +
+            '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>' + __('A SQL must return a primary key and a geometry. Naming and srid must match this') + '</td></tr></table>' +
                 '<table>' +
                 '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_schema}.{f_table_name}</td></tr>' +
                 '<tr class="x-grid3-row"><td><b>Primary key</b></td><td  width="150">{pkey}</td></tr>' +
@@ -933,12 +929,12 @@ $(window).ready(function () {
     function onEditMoreSettings(btn, ev) {
         var record = grid.getSelectionModel().getSelected();
         if (!record) {
-            App.setAlert(App.STATUS_NOTICE, __("You\'ve to select a layer"));
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
         var r = record;
         winMoreSettings = new Ext.Window({
-            title: __("Advanced settings on '") + record.get("f_table_name") + "'",
+            title: __("Advanced settings on") + " '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 500,
@@ -969,7 +965,7 @@ $(window).ready(function () {
                         {
                             width: 300,
                             xtype: 'textfield',
-                            fieldLabel: 'Meta data URL',
+                            fieldLabel: __('Meta data URL'),
                             name: 'meta_url',
                             value: r.data.meta_url
 
@@ -977,7 +973,7 @@ $(window).ready(function () {
                         {
                             width: 300,
                             xtype: 'textfield',
-                            fieldLabel: 'WMS source',
+                            fieldLabel: __('WMS source'),
                             name: 'wmssource',
                             value: r.data.wmssource
                         },
@@ -1022,14 +1018,14 @@ $(window).ready(function () {
                         {
                             width: 300,
                             xtype: 'textfield',
-                            fieldLabel: 'SQL where clause',
+                            fieldLabel: __('SQL where clause'),
                             name: 'filter',
                             value: r.data.filter
                         }
                     ],
                     buttons: [
                         {
-                            text: '<i class="icon-ok btn-gc"></i> Update',
+                            text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
                             handler: function () {
                                 var f = Ext.getCmp('detailform');
                                 if (f.form.isValid()) {
@@ -1103,16 +1099,16 @@ $(window).ready(function () {
                         new Ext.Panel({
                             region: "center",
                             items: [httpAuth.form, apiKey.form,
-                            new Ext.Panel({
-                                region: "south",
-                                border: false,
-                                bodyStyle: {
-                                    background: '#777',
-                                    color: '#fff',
-                                    padding: '7px'
-                                },
-                                html: __("HTTP Basic auth password and API key are set for the specific (sub) user.")
-                            })
+                                new Ext.Panel({
+                                    region: "south",
+                                    border: false,
+                                    bodyStyle: {
+                                        background: '#777',
+                                        color: '#fff',
+                                        padding: '7px'
+                                    },
+                                    html: __("HTTP Basic auth password and API key are set for the specific (sub) user.")
+                                })
                             ]
                         }), new Ext.Panel({
                             layout: "border",
@@ -1149,7 +1145,7 @@ $(window).ready(function () {
                                     items: [
                                         new Ext.Panel({
                                             //title: 'SQL',
-                                           // height: 50,
+                                            // height: 50,
                                             border: false,
                                             region: "north",
                                             bodyStyle: {
@@ -1179,7 +1175,7 @@ $(window).ready(function () {
     function onPrivileges(btn, ev) {
         var records = grid.getSelectionModel().getSelections();
         if (records.length === 0) {
-            App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
         var privilegesStore = new Ext.data.Store({
@@ -1212,9 +1208,9 @@ $(window).ready(function () {
                 listeners: {
                     exception: function (proxy, type, action, options, response, arg) {
                         if (type === 'remote') {
-                            var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
+                            var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
                             Ext.MessageBox.show({
-                                title: 'Failure',
+                                title: __('Failure'),
                                 msg: message,
                                 buttons: Ext.MessageBox.OK,
                                 width: 300,
@@ -1223,7 +1219,7 @@ $(window).ready(function () {
                         } else {
                             privilgesWin.close();
                             Ext.MessageBox.show({
-                                title: __("Not allowed"),
+                                title: __("Failure"),
                                 msg: __(Ext.decode(response.responseText).message),
                                 buttons: Ext.MessageBox.OK,
                                 width: 300,
@@ -1237,7 +1233,7 @@ $(window).ready(function () {
         });
         privilegesStore.load();
         var privilgesWin = new Ext.Window({
-            title: __("Grant privileges to sub-users on ") + "'" + records[0].get("f_table_name") + "'",
+            title: __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
             modal: true,
             width: 500,
             height: 320,
@@ -1269,22 +1265,22 @@ $(window).ready(function () {
                                 },
                                 columns: [
                                     {
-                                        header: 'Sub-user',
+                                        header: __('Sub-user'),
                                         dataIndex: 'subuser',
                                         editable: false,
                                         width: 50
                                     },
                                     {
-                                        header: 'Privileges',
+                                        header: __('Privileges'),
                                         dataIndex: 'privileges',
                                         sortable: false,
                                         renderer: function (val, cell, record, rowIndex, colIndex, store) {
                                             var _key_ = records[0].get("_key_");
                                             var retval =
-                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;None&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;Only read&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;Read and write&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;All'
+                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
+                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All')
                                                 ;
                                             return retval;
                                         }
@@ -1302,10 +1298,10 @@ $(window).ready(function () {
                                     padding: '7px'
                                 },
                                 html: "<ul>" +
-                                    "<li>" + __("<b>None</b>: The layer doesn't exist for the sub-user.") + "</li>" +
-                                    "<li>" + __("<b>Only read</b>: The sub-user can se and query the layer.") + "</li>" +
-                                    "<li>" + __("<b>Read and write</b>: The sub-user can edit the layer.") + "</li>" +
-                                    "<li>" + __("<b>All</b>: The sub-user change properties like style and alter table structure.") + "</li>" +
+                                    "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                    "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can se and query the layer.") + "</li>" +
+                                    "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                    "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
                                     "<ul>" +
                                     "<br><p>" +
                                     __("The privileges is granted for both Admin and external services like WMS and WFS.") +
@@ -1336,7 +1332,7 @@ $(window).ready(function () {
             params: param,
             failure: function (response) {
                 Ext.MessageBox.show({
-                    title: 'Failure',
+                    title: __('Failure'),
                     msg: __(Ext.decode(response.responseText).message),
                     buttons: Ext.MessageBox.OK,
                     width: 400,
@@ -1349,13 +1345,13 @@ $(window).ready(function () {
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +
-        '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>Created</b></td><td>{created}</td></tr>' +
-        '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td><td><b>Last modified</b></td><td>{lastmodified}</td>' +
+        '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>' + __('Created') + '</b></td><td>{created}</td></tr>' +
+        '<tr class="x-grid3-row"><td><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td><b>' + __('Last modified') + '</b></td><td>{lastmodified}</td>' +
         '</tr>' +
         '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
-        title: 'Database',
+        title: __('Database'),
         frame: false,
         layout: 'border',
         region: 'center',
@@ -1402,90 +1398,90 @@ $(window).ready(function () {
     });
 
 
-    Ext.namespace('viewerSettings');
-    if (schema === "" || schema === "public") {
-        viewerSettings.form = new Ext.FormPanel({
-            title: "Global settings",
-            frame: false,
-            border: false,
-            autoHeight: false,
-            labelWidth: 100,
-            bodyStyle: 'padding: 7px 7px 10px 7px;',
-            defaults: {
-                anchor: '95%',
-                allowBlank: false,
-                msgTarget: 'side'
-            },
-            items: [new Ext.Panel({
-                frame: false,
-                border: false,
-                bodyStyle: 'padding: 7px 7px 10px 7px;',
-                contentEl: "map-settings"
-            }), {
-                width: 10,
-                xtype: 'combo',
-                mode: 'local',
-                triggerAction: 'all',
-                forceSelection: true,
-                editable: false,
-                fieldLabel: 'Extent layer',
-                name: 'default_extent',
-                displayField: 'f_table_name',
-                valueField: 'f_table_name',
-                allowBlank: true,
-                store: store,
-                value: settings.default_extent
+    /*Ext.namespace('viewerSettings');
+     if (schema === "" || schema === "public") {
+     viewerSettings.form = new Ext.FormPanel({
+     title: __("Global settings"),
+     frame: false,
+     border: false,
+     autoHeight: false,
+     labelWidth: 100,
+     bodyStyle: 'padding: 7px 7px 10px 7px;',
+     defaults: {
+     anchor: '95%',
+     allowBlank: false,
+     msgTarget: 'side'
+     },
+     items: [new Ext.Panel({
+     frame: false,
+     border: false,
+     bodyStyle: 'padding: 7px 7px 10px 7px;',
+     contentEl: "map-settings"
+     }), {
+     width: 10,
+     xtype: 'combo',
+     mode: 'local',
+     triggerAction: 'all',
+     forceSelection: true,
+     editable: false,
+     fieldLabel: 'Extent layer',
+     name: 'default_extent',
+     displayField: 'f_table_name',
+     valueField: 'f_table_name',
+     allowBlank: true,
+     store: store,
+     value: settings.default_extent
 
-            }, {
-                xtype: 'numberfield',
-                name: 'minzoomlevel',
-                fieldLabel: 'Min zoom level',
-                allowBlank: true,
-                minValue: 1,
-                maxValue: 20,
-                value: settings.minzoomlevel
-            }, {
-                xtype: 'numberfield',
-                name: 'maxzoomlevel',
-                fieldLabel: 'Max zoom level',
-                allowBlank: true,
-                minValue: 1,
-                maxValue: 20,
-                value: settings.maxzoomlevel
-            }],
-            buttons: [
-                {
-                    text: 'Update',
-                    handler: function () {
-                        if (viewerSettings.form.getForm().isValid()) {
-                            viewerSettings.form.getForm().submit({
-                                url: '/controller/settings_viewer/' + screenName + '/update',
-                                waitMsg: 'Saving your settings',
-                                success: viewerSettings.onSubmit,
-                                failure: viewerSettings.onSubmit
-                            });
-                        }
-                    }
-                }
-            ]
-        });
-    } else {
-        viewerSettings.form = new Ext.Panel({
-            title: "Global settings",
-            frame: false,
-            border: false,
-            bodyStyle: 'padding: 7px 7px 10px 7px;',
-            html: "<p>You can only set global settings from the 'public schema.'</p>"
-        });
-    }
-    viewerSettings.onSubmit = function (form, action) {
-        var result = action.result;
-        if (result.success) {
-            Ext.MessageBox.alert('Success', result.message);
-        } else {
-            Ext.MessageBox.alert('Failure', result.message);
-        }
-    };
+     }, {
+     xtype: 'numberfield',
+     name: 'minzoomlevel',
+     fieldLabel: 'Min zoom level',
+     allowBlank: true,
+     minValue: 1,
+     maxValue: 20,
+     value: settings.minzoomlevel
+     }, {
+     xtype: 'numberfield',
+     name: 'maxzoomlevel',
+     fieldLabel: 'Max zoom level',
+     allowBlank: true,
+     minValue: 1,
+     maxValue: 20,
+     value: settings.maxzoomlevel
+     }],
+     buttons: [
+     {
+     text: 'Update',
+     handler: function () {
+     if (viewerSettings.form.getForm().isValid()) {
+     viewerSettings.form.getForm().submit({
+     url: '/controller/settings_viewer/' + screenName + '/update',
+     waitMsg: 'Saving your settings',
+     success: viewerSettings.onSubmit,
+     failure: viewerSettings.onSubmit
+     });
+     }
+     }
+     }
+     ]
+     });
+     } else {
+     viewerSettings.form = new Ext.Panel({
+     title: "Global settings",
+     frame: false,
+     border: false,
+     bodyStyle: 'padding: 7px 7px 10px 7px;',
+     html: "<p>You can only set global settings from the 'public schema.'</p>"
+     });
+     }
+     viewerSettings.onSubmit = function (form, action) {
+     var result = action.result;
+     if (result.success) {
+     Ext.MessageBox.alert('Success', result.message);
+     } else {
+     Ext.MessageBox.alert('Failure', result.message);
+     }
+     };*/
     var tabs = new Ext.TabPanel({
         activeTab: 0,
         region: 'center',
@@ -1557,7 +1553,7 @@ $(window).ready(function () {
                                     },
                                     {
                                         xtype: "panel",
-                                        title: 'Classes',
+                                        title: __('Classes'),
                                         defaults: {
                                             border: false
                                         },
@@ -1610,7 +1606,7 @@ $(window).ready(function () {
                                                 ],
                                                 tbar: [
                                                     {
-                                                        text: '<i class="icon-ok btn-gc"></i> Update',
+                                                        text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
                                                         handler: function () {
                                                             var grid = Ext.getCmp("propGrid");
                                                             var grid2 = Ext.getCmp("propGrid2");
@@ -1663,7 +1659,7 @@ $(window).ready(function () {
                                     },
                                     {
                                         xtype: "panel",
-                                        title: 'Settings',
+                                        title: __('Settings'),
                                         height: 625,
                                         defaults: {
                                             border: false
@@ -1697,7 +1693,7 @@ $(window).ready(function () {
             ct,
             {
                 xtype: "panel",
-                title: 'Log',
+                title: __('Log'),
                 layout: 'border',
                 listeners: {
                     activate: function () {
@@ -1768,7 +1764,7 @@ $(window).ready(function () {
             type: 'delete',
             success: function (response) {
                 if (response.success === true) {
-                    App.setAlert(App.STATUS_NOTICE, response.message);
+                    App.setAlert(App.STATUS_NOTICE, __(response.message));
                     var l;
                     l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
                     if (l === undefined) { // If called from iframe
@@ -1787,7 +1783,7 @@ $(window).ready(function () {
 
                 }
                 else {
-                    App.setAlert(App.STATUS_NOTICE, response.message);
+                    App.setAlert(App.STATUS_NOTICE, __(response.message));
                 }
             }
         });

@@ -51,7 +51,7 @@ classWizards.init = function (record) {
                                         failure: function (response) {
                                             Ext.MessageBox.show({
                                                 title: 'Failure',
-                                                msg: eval('(' + response.responseText + ')').message,
+                                                msg: __(Ext.decode(response.responseText).message),
                                                 buttons: Ext.MessageBox.OK,
                                                 width: 400,
                                                 height: 300,

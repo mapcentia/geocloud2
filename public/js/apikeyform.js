@@ -19,47 +19,52 @@ apiKey.form = new Ext.FormPanel({
     })],
     buttons: [
         {
-            text: 'New API key',
+            text: __('New API key'),
             handler: function () {
                 "use strict";
-                Ext.MessageBox.confirm('Confirm', 'Are you sure you want to do that?', function (btn) {
+                Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to do that?'), function (btn) {
                     if (btn === "yes") {
-                        $.ajax({
-                            url: '/controllers/setting/apikey',
-                            async: false,
-                            dataType: 'json',
-                            type: 'put',
-                            success: function (data, textStatus, http) {
-                                if (http.readyState === 4) {
-                                    if (http.status === 200) {
-                                        var response = eval('(' + http.responseText + ')');
-                                        if (response.success === true) {
-                                            $("#apikeyholder").html(response.key)
-                                        } else {
-                                            var message = "<p>Sorry! Some thing failed.</p>";
-                                            Ext.MessageBox.show({
-                                                title: 'Failure',
-                                                msg: message,
-                                                buttons: Ext.MessageBox.OK,
-                                                width: 300,
-                                                height: 300
-                                            });
+                        $.ajax(
+                            {
+                                url: '/controllers/setting/apikey',
+                                async: false,
+                                dataType: 'json',
+                                type: 'put',
+                                success: function (data, textStatus, http) {
+                                    if (http.readyState === 4) {
+                                        if (http.status === 200) {
+                                            var response = eval('(' + http.responseText + ')');
+                                            if (response.success === true) {
+                                                $("#apikeyholder").html(response.key)
+                                            } else {
+                                                var message = __("Sorry! Some thing failed.");
+                                                Ext.MessageBox.show({
+                                                    title: __('Failure'),
+                                                    msg: message,
+                                                    buttons: Ext.MessageBox.OK,
+                                                    width: 300,
+                                                    height: 300
+                                                });
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }).fail(function () {
-                                var message = "<p>Sorry! Connection problems</p>";
-                                Ext.MessageBox.show({
-                                    title: 'Failure',
-                                    msg: message,
-                                    buttons: Ext.MessageBox.OK,
-                                    width: 300,
-                                    height: 300
-                                });
-                            });
-                    }
-                    else {
+                        ).fail(
+                            function () {
+                                var message = __("Sorry! Connection problems");
+                                Ext.MessageBox.show(
+                                    {
+                                        title: __('Failure'),
+                                        msg: message,
+                                        buttons: Ext.MessageBox.OK,
+                                        width: 300,
+                                        height: 300
+                                    }
+                                );
+                            }
+                        );
+                    } else {
                         return false;
                     }
                 });

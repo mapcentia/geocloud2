@@ -70,10 +70,10 @@ cartomobile.init = function (record, screenName) {
                 write: cartomobile.onWrite,
                 exception: function (proxy, type, action, options, response, arg) {
                     if (type === 'remote') { // success is false
-                        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
+                        var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
                             + response.message + "</textarea>";
                         Ext.MessageBox.show({
-                            title: 'Failure',
+                            title: __('Failure'),
                             msg: message,
                             buttons: Ext.MessageBox.OK,
                             width: 400,
@@ -83,7 +83,7 @@ cartomobile.init = function (record, screenName) {
                     } else {
                         cartomobile.winCartomobile.close();
                         Ext.MessageBox.show({
-                            title: 'Failure',
+                            title: __('Failure'),
                             msg: __(Ext.decode(response.responseText).message),
                             buttons: Ext.MessageBox.OK,
                             width: 400,
@@ -131,7 +131,7 @@ cartomobile.init = function (record, screenName) {
             columns: [
                 {
                     id: "column",
-                    header: "Column",
+                    header: __("Column"),
                     dataIndex: "column",
                     sortable: true,
                     editor: new Ext.form.TextField({
@@ -141,7 +141,7 @@ cartomobile.init = function (record, screenName) {
                 },
                 {
                     id: "type",
-                    header: "Native field type",
+                    header: __("Native field type"),
                     dataIndex: "type",
                     sortable: true,
                     width: 35
@@ -149,13 +149,13 @@ cartomobile.init = function (record, screenName) {
                 {
                     id: "available",
                     xtype: 'checkcolumn',
-                    header: 'Available',
+                    header: __("Available"),
                     dataIndex: 'available',
                     width: 35
                 },
                 {
                     id: "cartomobiletype",
-                    header: 'Cartomobile field type',
+                    header: __("Cartomobile field type"),
                     dataIndex: 'cartomobiletype',
                     width: 45,
                     editor: {
@@ -186,7 +186,7 @@ cartomobile.init = function (record, screenName) {
                 },
                 {
                     id: "properties",
-                    header: "Properties",
+                    header: __("Properties"),
                     dataIndex: "properties",
                     sortable: true,
                     //width : 60,
@@ -204,20 +204,7 @@ cartomobile.onSave = function () {
     cartomobile.store.save();
 };
 cartomobile.onWrite = function (store, action, result, transaction, rs) {
-    // console.log('onwrite', store, action, result, transaction, rs);
     if (transaction.success) {
         cartomobile.store.load();
     }
 };
-function test() {
-    message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
-        + response.message + "</textarea>";
-    Ext.MessageBox.show({
-        title: 'Failure',
-        msg: message,
-        buttons: Ext.MessageBox.OK,
-        width: 400,
-        height: 300,
-        icon: Ext.MessageBox.ERROR
-    })
-}

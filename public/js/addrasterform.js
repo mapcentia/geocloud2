@@ -18,7 +18,7 @@ addRasterFile.init = function () {
         bodyStyle: 'padding: 0',
         border: false,
         autoHeight: true,
-        html: "<div id='shape_uploader'>You need Flash or a modern browser, which supports HTML5</div>",
+        html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
             var arr = [], ext = ["asc", "tif", "tiff", "gen", "php"], srs, flag = false;
             $("#shape_uploader").pluploadQueue({
@@ -39,18 +39,18 @@ addRasterFile.init = function () {
                                 type: 'GET',
                                 success: function (response, textStatus, http) {
                                     if (response.success) {
-                                        App.setAlert(App.STATUS_NOTICE, response.message);
+                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
                                         writeFiles();
                                         document.getElementById("wfseditor").contentWindow.window.reLoadTree();
                                         store.load();
                                     } else {
-                                        Ext.MessageBox.alert('Failure', response.message);
+                                        Ext.MessageBox.alert(__('Failure'), __(response.message));
                                     }
                                 }
                             });
                         });
                         if (!flag) {
-                            Ext.MessageBox.alert('Failure', "No files you uploaded seems to be recognized as a valid raster format.");
+                            Ext.MessageBox.alert(__('Failure'), __("No files you uploaded seems to be recognized as a valid image format."));
                         }
                     },
                     FilesAdded: function (up, files) {
@@ -78,7 +78,7 @@ addRasterFile.init = function () {
                     e.fadeOut(500).fadeIn(500);
                 }, 1000);
                 window.setTimeout(function () {
-                    e.html("Raster formats: At the moment you can upload .tif, .asc and .gen");
+                    e.html(__("Raster formats") + ": " + __("At the moment you can upload") + " .tif .asc .gen");
                 }, 1500);
             }, 200);
         },
@@ -99,9 +99,9 @@ addRasterFile.init = function () {
         var result = action.result;
         if (result.success) {
             store.load();
-            App.setAlert(App.STATUS_NOTICE, result.message);
+            App.setAlert(App.STATUS_NOTICE, __(result.message));
         } else {
-            Ext.MessageBox.alert('Failure', result.message);
+            Ext.MessageBox.alert(__('Failure'), __(result.message));
         }
     };
 };

@@ -37,7 +37,7 @@ attributeForm.init = function (layer, geomtype) {
                         },
                         tbar: ["->",
                             {
-                                text: "<i class='icon-filter btn-gc'></i> Load",
+                                text: "<i class='icon-filter btn-gc'></i> " + __("Load"),
                                 //iconCls: "icon-find",
                                 disabled: false,
                                 handler: function () {
@@ -64,14 +64,12 @@ attributeForm.init = function (layer, geomtype) {
                                 } else {
                                     startWfsEdition(layer, geomtype, filters, false, timeslice);
                                 }
-                            } else {
-                                // console.log("Not valid");
                             }
                         },
                         items: [filter.filterBuilder]
                     });
                     filter.win = new Ext.Window({
-                        title: "Load features",
+                        title: __("Load features"),
                         modal: false,
                         layout: 'fit',
                         initCenter: true,
@@ -111,9 +109,8 @@ attributeForm.init = function (layer, geomtype) {
         buttons: [
             {
                 //iconCls: 'silk-add',
-                text: "<i class='icon-ok btn-gc'></i> Update table",
+                text: "<i class='icon-ok btn-gc'></i> " + __("Update table"),
                 handler: function () {
-
                     if (attributeForm.form.form.isValid()) {
                         var record = grid.getSelectionModel().getSelected();
                         attributeForm.form.getForm().updateRecord(record);
@@ -122,13 +119,11 @@ attributeForm.init = function (layer, geomtype) {
                             feature.state = OpenLayers.State.UPDATE;
                         }
                         //attributeForm.win.close();
-                    }
-                    else {
+                    } else {
                         var s = '';
                         Ext.iterate(detailForm.form.form.getValues(), function (key, value) {
                             s += String.format("{0} = {1}<br />", key, value);
                         }, this);
-                        //Ext.example.msg('Form Values', s);
                     }
                 }
             }
@@ -136,10 +131,8 @@ attributeForm.init = function (layer, geomtype) {
     });
     attributeForm.attributeStore.load();
 };
-attributeForm.onSubmit = function () {
-};
 function getFieldType(attrType) {
-    //alert(attrType);
+    "use strict";
     return ({
         "xs:boolean": "boolean",
         "xs:int": "int",
@@ -153,3 +146,4 @@ function getFieldType(attrType) {
         "gml:PointPropertyType": "int"
     })[attrType];
 }
+

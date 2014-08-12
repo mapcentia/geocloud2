@@ -16,7 +16,7 @@ addScratch.init = function () {
         id: "addScratch",
         frame: false,
         border: false,
-        title: 'Create layer from scratch',
+        title: __('Create layer from scratch'),
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
         labelWidth: 10,
@@ -28,14 +28,14 @@ addScratch.init = function () {
         items: [
             {
                 xtype: 'textfield',
-                emptyText: 'layer name',
+                emptyText: __('Name'),
                 name: 'name'
             },
             {
 
                 xtype: 'textfield',
                 name: 'srid',
-                emptyText: 'EPSG number',
+                emptyText: __('EPSG number'),
                 //value: '4326'
             },
             {
@@ -50,7 +50,7 @@ addScratch.init = function () {
                 displayField: 'name',
                 valueField: 'value',
                 allowBlank: false,
-                emptyText: 'Type',
+                emptyText: __('Type'),
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],
                     data: [
@@ -72,7 +72,7 @@ addScratch.init = function () {
         ],
         buttons: [
             {
-                text: 'Save',
+                text: __('Save'),
                 handler: function () {
                     if (addScratch.form.getForm().isValid()) {
                         addScratch.form.getForm().submit({
@@ -98,7 +98,7 @@ addScratch.init = function () {
                 }
             },
             {
-                text: 'Reset',
+                text: __('Reset'),
                 handler: function () {
                     addScratch.form.getForm().reset();
                 }
