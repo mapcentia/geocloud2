@@ -30,6 +30,12 @@ gc2i18n = {
 
         "Save": "Save",
         "Reset": "Reset",
+        "Delete": "Delete",
+        "Stop editing": "Stop editing",
+        "Quick draw": "Quick draw",
+        "Reload tree": "Reload tree",
+        "Save extent": "Save extent",
+        "Attributes": "Attributes",
         "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.": "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.",
         "Privileges": "Privileges",
         "Confirm": "Confirm",
@@ -118,10 +124,37 @@ gc2i18n = {
         "Native field type": "Native field type",
         "Available": "Available",
         "Cartomobile field type": "Cartomobile field type",
-        "Properties": "Properties"
-
-
-
+        "Properties": "Properties",
+        "Single": "Single",
+        "Unique values": "Unique values",
+        "Field": "Field",
+        "Intervals": "Intervals",
+        "Numeric field": "Numeric field",
+        "# of colors": "# of colors",
+        "Start color": "Start color",
+        "End color": "End color",
+        "Create": "Create",
+        "Additional settings": "Additional settings",
+        "These setting are applied to all created classes. Set them before hitting a create button above.": "These setting are applied to all created classes. Set them before hitting a create button above.",
+        "Label text": "Label text",
+        "Label color": "Label color",
+        "Label size": "Label size",
+        "Symbol": "Symbol",
+        "Symbol angle": "Symbol angle",
+        "Symbol size": "Symbol size",
+        "Outline color": "Outline color",
+        "Outline width": "Outline width",
+        "Opacity": "Opacity",
+        "Alias": "Alias",
+        "Queryable": "Queryable",
+        "Link": "Link",
+        "Link prefix": "Link prefix",
+        "New column name": "New column name",
+        "New column type": "New column type",
+        "Add new column": "Add new column",
+        "Delete column": "Delete column",
+        "Add versioning": "Add versioning",
+        "This will add versioning to the table. Do you want to proceed?": "This will add versioning to the table. Do you want to proceed?"
 
 
     }

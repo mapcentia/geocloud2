@@ -4,8 +4,8 @@ Ext.ux.grid.CheckColumn = Ext.extend(
     Ext.grid.Column,
     {
         processEvent: function (name, e, grid, rowIndex, colIndex) {
-            'use strict'
-            if (name == 'click'/* 'mousedown' */) {
+            "use strict";
+            if (name === 'click'/* 'mousedown' */) {
                 var record = grid.store.getAt(rowIndex);
                 record.set(this.dataIndex,
                     !record.data[this.dataIndex]);
@@ -19,13 +19,14 @@ Ext.ux.grid.CheckColumn = Ext.extend(
             p.css += ' x-grid3-check-col-td';
             return String.format(
                 '<div class="x-grid3-check-col{0}"> </div>',
-                v ? '-on' : '');
+                v ? '-on' : ''
+            );
         },
         init: Ext.emptyFn
-    });
+    }
+);
 tableStructure.init = function (record, screenName) {
-    'use strict'
-
+    "use strict";
     tableStructure.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -60,7 +61,7 @@ tableStructure.init = function (record, screenName) {
         {
             name: 'linkprefix',
             allowBlank: true
-        } ,
+        },
         {
             name: 'properties',
             allowBlank: true
@@ -87,7 +88,7 @@ tableStructure.init = function (record, screenName) {
                         var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
                             + response.message + "</textarea>";
                         Ext.MessageBox.show({
-                            title: 'Failure',
+                            title: __("Failure"),
                             msg: message,
                             buttons: Ext.MessageBox.OK,
                             width: 400,
@@ -97,7 +98,7 @@ tableStructure.init = function (record, screenName) {
                     } else {
                         tableStructure.store.load();
                         Ext.MessageBox.show({
-                            title: 'Not allowed',
+                            title: __("Failure"),
                             msg: __(Ext.decode(response.responseText).message),
                             buttons: Ext.MessageBox.OK,
                             width: 300,
@@ -107,7 +108,8 @@ tableStructure.init = function (record, screenName) {
 
                 }
             }
-        });
+        }
+    );
 
     tableStructure.store = new Ext.data.Store({
         writer: tableStructure.writer,
@@ -141,7 +143,7 @@ tableStructure.init = function (record, screenName) {
             columns: [
                 {
                     id: "sort_id",
-                    header: "Sort id",
+                    header: __("Sort id"),
                     dataIndex: "sort_id",
                     sortable: true,
                     width: 30,
@@ -152,7 +154,7 @@ tableStructure.init = function (record, screenName) {
                 },
                 {
                     id: "column",
-                    header: "Column",
+                    header: __("Column"),
                     dataIndex: "column",
                     sortable: true,
                     editor: new Ext.form.TextField({
@@ -162,7 +164,7 @@ tableStructure.init = function (record, screenName) {
                 },
                 {
                     id: "type",
-                    header: "Type",
+                    header: __("Type"),
                     dataIndex: "type",
                     sortable: true,
                     width: 30,
@@ -179,7 +181,7 @@ tableStructure.init = function (record, screenName) {
                 },
                 {
                     id: "alias",
-                    header: "Alias",
+                    header: __("Alias"),
                     dataIndex: "alias",
                     sortable: true,
                     editor: new Ext.form.TextField({
@@ -189,22 +191,20 @@ tableStructure.init = function (record, screenName) {
                 {
                     id: "querable",
                     xtype: 'checkcolumn',
-                    // editor: new Ext.ux.grid.CheckColumn({}),
-                    header: 'Querable',
+                    header: __("Queryable"),
                     dataIndex: 'querable',
                     width: 35
                 },
                 {
                     id: "link",
                     xtype: 'checkcolumn',
-                    // editor: new Ext.ux.grid.CheckColumn({}),
-                    header: 'Link',
+                    header: __("Link"),
                     dataIndex: 'link',
                     width: 20
                 },
                 {
                     id: "linkprefix",
-                    header: "Link prefix",
+                    header: __("Link prefix"),
                     dataIndex: "linkprefix",
                     sortable: true,
                     width: 60,
@@ -214,7 +214,7 @@ tableStructure.init = function (record, screenName) {
                 },
                 {
                     id: "properties",
-                    header: "Properties",
+                    header: __("Properties"),
                     dataIndex: "properties",
                     sortable: true,
                     width: 80,
@@ -284,7 +284,7 @@ tableStructure.init = function (record, screenName) {
                         xtype: 'textfield',
                         flex: 1,
                         name: 'column',
-                        emptyText: 'New column name',
+                        emptyText: __("New column name"),
                         allowBlank: false
                     },
                     {
@@ -294,7 +294,7 @@ tableStructure.init = function (record, screenName) {
                         triggerAction: 'all',
                         forceSelection: true,
                         editable: false,
-                        emptyText: 'New column type',
+                        emptyText: __("New column type"),
                         name: 'type',
                         displayField: 'name',
                         valueField: 'value',
@@ -328,7 +328,7 @@ tableStructure.init = function (record, screenName) {
                 ]
             },
             {
-                text: '<i class="icon-plus btn-gc"></i> ' + __('Add new column'),
+                text: '<i class="icon-plus btn-gc"></i> ' + __("Add new column"),
                 handler: function () {
                     var form = Ext.getCmp("addColumnForm");
                     if (form.form.isValid()) {
@@ -341,7 +341,7 @@ tableStructure.init = function (record, screenName) {
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({
-                                    title: 'Failure',
+                                    title: __("Failure"),
                                     msg: __(Ext.decode(action.response.responseText).message),
                                     buttons: Ext.MessageBox.OK,
                                     width: 400,
@@ -359,13 +359,13 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-trash btn-gc"></i> ' + __('Delete column'),
+                text: '<i class="icon-trash btn-gc"></i> ' + __("Delete column"),
                 handler: tableStructure.onDelete
             },
             {
-                text: '<i class="icon-list-alt btn-gc"></i> ' + __('Add versioning'),
+                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Add versioning"),
                 handler: function () {
-                    tableStructure.onVersion(record)
+                    tableStructure.onVersion(record);
                 }
             }
         ]
@@ -373,6 +373,7 @@ tableStructure.init = function (record, screenName) {
 
 };
 tableStructure.onDelete = function () {
+    "use strict";
     var record = tableStructure.grid.getSelectionModel().getSelected();
     if (!record) {
         return false;
@@ -387,6 +388,7 @@ tableStructure.onDelete = function () {
         });
 };
 tableStructure.onAdd = function (btn, ev) {
+    "use strict";
     var field = tableStructure.grid.getStore().recordType,
         u = new field(
             {
@@ -397,6 +399,7 @@ tableStructure.onAdd = function (btn, ev) {
     tableStructure.grid.store.insert(0, u);
 };
 tableStructure.onVersion = function (record) {
+    "use strict";
     Ext.MessageBox.confirm(__('Confirm'), __('This will add versioning to the table. Do you want to proceed?'),
         function (btn) {
             if (btn === "yes") {
@@ -409,11 +412,10 @@ tableStructure.onVersion = function (record) {
                         },
                         success: function () {
                             tableStructure.grid.getStore().reload();
-                            //App.setAlert(App.STATUS_OK, records.length + " layers deleted");
                         },
                         failure: function (response) {
                             Ext.MessageBox.show({
-                                title: 'Failure',
+                                title: __("Failure"),
                                 msg: __(Ext.decode(response.responseText).message),
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
@@ -429,9 +431,11 @@ tableStructure.onVersion = function (record) {
         });
 };
 tableStructure.onSave = function () {
+    "use strict";
     tableStructure.store.save();
 };
 tableStructure.onWrite = function (store, action, result, transaction, rs) {
+    "use strict";
     if (transaction.success) {
         tableStructure.store.load();
     }

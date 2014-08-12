@@ -17,7 +17,7 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>Single</b></td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>' + __("Single") + '</b></td></tr>' +
                     '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/single_class.png"></td></tr>' +
                     '</table>'
             },
@@ -46,11 +46,11 @@ classWizards.init = function (record) {
                                             Ext.getCmp("a3").remove(wmsClass.grid);
                                             wmsClasses.store.load();
                                             writeFiles(record.f_table_schema + "." + record.f_table_name);
-                                            App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                                            App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                         },
                                         failure: function (response) {
                                             Ext.MessageBox.show({
-                                                title: 'Failure',
+                                                title: __('Failure'),
                                                 msg: __(Ext.decode(response.responseText).message),
                                                 buttons: Ext.MessageBox.OK,
                                                 width: 400,
@@ -68,7 +68,7 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>Unique values</b></td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>' + __("Unique values") + '</b></td></tr>' +
                     '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/unique_classes.png"></td></tr>' +
                     '</table>'
 
@@ -96,7 +96,7 @@ classWizards.init = function (record) {
                                         editable: false,
                                         triggerAction: "all",
                                         name: "value",
-                                        emptyText: "Field",
+                                        emptyText: __("Field"),
                                         allowBlank: false
                                     }
                                 ]
@@ -126,12 +126,12 @@ classWizards.init = function (record) {
                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                 wmsClasses.store.load();
                                                 writeFiles(record.f_table_schema + "." + record.f_table_name);
-                                                App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                             },
                                             failure: function (response) {
                                                 Ext.MessageBox.show({
                                                     title: 'Failure',
-                                                    msg: eval('(' + response.responseText + ')').message,
+                                                    msg: __(Ext.decode(response.responseText).message),
                                                     buttons: Ext.MessageBox.OK,
                                                     width: 400,
                                                     height: 300,
@@ -154,7 +154,7 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>Intervals</b></td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>' + __("Intervals") + '</b></td></tr>' +
                     '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/interval_classes.png"></td></tr>' +
                     '</table>'
 
@@ -190,7 +190,7 @@ classWizards.init = function (record) {
                                         editable: false,
                                         triggerAction: "all",
                                         name: "type",
-                                        emptyText: "Type",
+                                        emptyText: __("Type"),
                                         allowBlank: false,
                                         mode: 'local'
                                     },
@@ -200,7 +200,7 @@ classWizards.init = function (record) {
                                         editable: false,
                                         triggerAction: "all",
                                         name: "value",
-                                        emptyText: "Numeric field",
+                                        emptyText: __("Numeric field"),
                                         allowBlank: false
                                     },
                                     new Ext.ux.form.SpinnerField({
@@ -212,7 +212,7 @@ classWizards.init = function (record) {
                                         incrementValue: 1,
                                         accelerate: true,
                                         allowBlank: false,
-                                        emptyText: "# of colors"
+                                        emptyText: __("# of colors")
                                     })
                                 ]
                             },
@@ -230,12 +230,12 @@ classWizards.init = function (record) {
                                 items: [
                                     new Ext.form.ColorField({
                                         name: "start",
-                                        emptyText: "Start color",
+                                        emptyText: __("Start color"),
                                         allowBlank: false
                                     }),
                                     new Ext.form.ColorField({
                                         name: "end",
-                                        emptyText: "End color",
+                                        emptyText: __("End color"),
                                         allowBlank: false
                                     }),
                                     {
@@ -245,7 +245,7 @@ classWizards.init = function (record) {
                                         items: [
                                             {
                                                 xtype: 'button',
-                                                text: 'Create',
+                                                text: __("Create"),
                                                 width: 'auto',
                                                 handler: function () {
                                                     var f = Ext.getCmp('equalform');
@@ -267,7 +267,7 @@ classWizards.init = function (record) {
                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                 wmsClasses.store.load();
                                                                 writeFiles(record.f_table_schema + "." + record.f_table_name);
-                                                                App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                             },
                                                             failure: function (response) {
                                                                 Ext.MessageBox.show({
@@ -297,10 +297,9 @@ classWizards.init = function (record) {
                     {
                         html: '<table>' +
                             '<tr class="x-grid3-row"><td><hr style="width:100%"></td></tr>' +
-                            '<tr class="x-grid3-row"><td><b>Additional settings</b></td></tr>' +
-                            '<tr class="x-grid3-row"><td>These setting are applied to all created classes. Set them before hitting a create button above.</td></tr>' +
+                            '<tr class="x-grid3-row"><td><b>' + __("Additional settings") + ' </b></td></tr>' +
+                            '<tr class="x-grid3-row"><td>' + __("These setting are applied to all created classes. Set them before hitting a create button above.") + '</td></tr>' +
                             '<tr class="x-grid3-row"><td><img style="width: 283px; height: 0" src="/assets/images/single_class.png"></td></tr>' +
-
                             '</table>'
                     },
                     {
@@ -318,15 +317,15 @@ classWizards.init = function (record) {
                                 items: [
                                     {
                                         xtype: 'box',
-                                        html: "Label text"
+                                        html: __("Label text")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Label color"
+                                        html: __("Label color")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Label size"
+                                        html: __("Label size")
                                     }
                                 ]
                             },
@@ -374,15 +373,15 @@ classWizards.init = function (record) {
                                 items: [
                                     {
                                         xtype: 'box',
-                                        html: "Symbol"
+                                        html: __("Symbol")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Symbol angle"
+                                        html: __("Symbol angle")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Symbol size"
+                                        html: __("Symbol size")
                                     }
                                 ]
                             },
@@ -433,15 +432,15 @@ classWizards.init = function (record) {
                                 items: [
                                     {
                                         xtype: 'box',
-                                        html: "Outline color"
+                                        html: __("Outline color")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Outline width"
+                                        html: __("Outline width")
                                     },
                                     {
                                         xtype: 'box',
-                                        html: "Opacity"
+                                        html: __("Opacity")
                                     }
                                 ]
                             },

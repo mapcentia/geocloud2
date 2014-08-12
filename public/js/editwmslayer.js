@@ -9,10 +9,9 @@ wmsLayer.init = function (record) {
         async: false,
         dataType: 'json',
         type: 'GET',
-        success: function (data, textStatus, http) {
-            var response = data;
-            // JSON
-            var forStore = response.forStore;
+        success: function (data) {
+            var response = data,
+                forStore = response.forStore;
             wmsLayer.fieldsForStore.push("");
             for (var i in forStore) {
                 wmsLayer.fieldsForStore.push(forStore[i].name);

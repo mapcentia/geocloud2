@@ -771,7 +771,7 @@ $(document).ready(function () {
             enableToggle: true
         }),
         {
-            text: "<i class='icon-trash btn-gc'></i> Delete",
+            text: "<i class='icon-trash btn-gc'></i> " + __("Delete"),
             id: "editdeletebutton",
             disabled: true,
             handler: function () {
@@ -788,7 +788,7 @@ $(document).ready(function () {
             }
         },
         {
-            text: "<i class='icon-ok btn-gc'></i> Save",
+            text: "<i class='icon-ok btn-gc'></i> " + __("Save"),
             disabled: true,
             id: "editsavebutton",
             handler: function () {
@@ -919,7 +919,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-refresh btn-gc'></i> Reload tree",
+            text: "<i class='icon-refresh btn-gc'></i> " + __("Reload tree"),
             handler: function () {
                 stopEdit();
                 reLoadTree();
@@ -927,7 +927,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-globe btn-gc'></i> Save extent",
+            text: "<i class='icon-globe btn-gc'></i> " + __("Save extent"),
             id: "extentbutton",
             disabled: false,
             handler: function () {
