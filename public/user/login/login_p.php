@@ -61,7 +61,7 @@ if (!$_SESSION['subuser']) {
             <div><?php echo $_SESSION['screen_name'] ?>
                 <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
                 <?php if (!$_SESSION['subuser']) { ?>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New user</a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New sub-user</a>
                 <?php } ?>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
                     href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;

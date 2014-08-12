@@ -48,12 +48,12 @@ if (sizeof($dbSplit) == 2) { //Sub-user
         switch ($transaction) {
             case false:
                 if ($privileges[$subUser] == false || $privileges[$subUser] == "none") {
-                    makeExceptionReport(array("You don't have privileges to read this layer"));
+                    makeExceptionReport(array("You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges."));
                 }
                 break;
             case true:
                 if ($privileges[$subUser] == false || $privileges[$subUser] == "none" || $privileges[$subUser] == "read") {
-                    makeExceptionReport(array("You don't have privileges to edit this layer"));
+                    makeExceptionReport(array("You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges."));
                 }
                 break;
         }

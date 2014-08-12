@@ -62,7 +62,7 @@ class Sql extends \app\inc\Controller
             $this->response['success'] = false;
             $this->response['message'] = "CREATE is not allowed through the API";
         } elseif ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']) {
-            if ($this->apiKey == Input::get('key') || $this->apiKey == false) {
+            if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                 $api = new \app\models\Sql();
                 $this->response = $api->transaction($this->q);
             } else {

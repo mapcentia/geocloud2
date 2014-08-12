@@ -18,7 +18,16 @@ if (!\app\conf\App::$param['host']) {
 
 if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default
-    Route::add("api/v1/sql");
+    Route::add("api/v1/sql", function(){
+        $db = Input::getPath()->part(4);
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+            Session::start();
+            $_SESSION['subuser'] = $dbSplit[0];
+        }
+        Database::setDb($db);
+    });
     Route::add("api/v1/elasticsearch", function () {
         Database::setDb(Input::getPath()->part(5));
     });
@@ -76,11 +85,9 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/processraster");
 } elseif (Input::getPath()->part(1) == "wms") {
     Session::start();
-    Database::setDb(Input::getPath()->part(2));
     new \app\controllers\Wms();
 } elseif (Input::getPath()->part(1) == "wmsc") {
     Session::start();
-    Database::setDb(Input::getPath()->part(2));
     new \app\controllers\Wmsc();
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();

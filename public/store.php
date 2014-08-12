@@ -72,7 +72,7 @@ include("html_header.php");
 <div style="display:none">
     <div id="map-settings"></div>
     <div id="authentication">
-        HTTP authentication password for WMS and WFS
+        HTTP Basic auth password for WMS and WFS
     </div>
     <div id="apikey">
         API key. This is used for the SQL API. You can always change the key
@@ -89,7 +89,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
+                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
                            size="65"/>
                 </td>
             </tr>
@@ -105,7 +105,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
+                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
                            size="65"/>
                 </td>
             </tr>
@@ -121,7 +121,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
+                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
                            size="65"/>
                 </td>
             </tr>

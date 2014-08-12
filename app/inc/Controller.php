@@ -9,7 +9,7 @@ class Controller
     {
 
         if ($_SESSION['subuser']) {
-            $text = "You don't have privileges to this";
+            $text = "You don't have privileges to do this. Please contact the database owner, which can grant you privileges.";
             if (sizeof($level) == 0) {
                 $response['success'] = false;
                 $response['message'] = $text;

@@ -12,9 +12,9 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser']!=fal
 
             <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                 <div class="control-group">
-                    <h3>Create a new user for this database</h3>
+                    <h3>Create a new sub-user</h3>
                     <div class="alert alert-success" style="text-align: center">
-                        The new user can log into this database in the same way as the super user.
+                        The sub-user can log into this database in the same way as the parent user, which can grant privileges to sub-users on layer level.
                     </div>
                     <div class="controls first">
                         <div style="height: 2em; float: right">
@@ -63,9 +63,9 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser']!=fal
                     </div>
                     <div class="controls">
                         <label class="checkbox">
-                            <input name="schema" type="checkbox" id="schema" value="1">
+                            <input name="schema" type="checkbox" id="schema" value="1" disabled="true">
                             <label>
-                                Create schema for new user</a>
+                                Create schema for new user (coming)</a>
                             </label>
                         </label>
                     </div>

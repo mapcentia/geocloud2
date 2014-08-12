@@ -1089,7 +1089,7 @@ $(window).ready(function () {
             title: "Services",
             modal: true,
             width: 700,
-            height: 350,
+            height: 272,
             initCenter: true,
             closeAction: 'hide',
             border: false,
@@ -1099,67 +1099,80 @@ $(window).ready(function () {
                     border: false,
                     layout: 'border',
                     region: "center",
-                    items: [new Ext.Panel({
-                        region: "center",
-                        items: [httpAuth.form, apiKey.form]
-                    }), new Ext.Panel({
-                        layout: "border",
-                        region: "east",
-                        width: 400,
-                        items: [
+                    items: [
+                        new Ext.Panel({
+                            region: "center",
+                            items: [httpAuth.form, apiKey.form,
                             new Ext.Panel({
-                                //title: 'WFS',
-                                region: "north",
-                                border: false,
-                                height: 50,
-                                bodyStyle: {
-                                    background: '#ffffff',
-                                    padding: '7px'
-                                },
-                                contentEl: "wfs-dialog"
-                            }), new Ext.Panel({
-                                //title: 'WMS',
-                                border: false,
-                                height: 50,
-                                region: "center",
-                                bodyStyle: {
-                                    background: '#ffffff',
-                                    padding: '7px'
-                                },
-                                contentEl: "wms-dialog"
-
-                            }), new Ext.Panel({
-                                //title: 'SQL',
-                                height: 215,
-                                border: false,
                                 region: "south",
-                                items: [
-                                    new Ext.Panel({
-                                        //title: 'SQL',
-                                        height: 50,
-                                        border: false,
-                                        region: "north",
-                                        bodyStyle: {
-                                            background: '#ffffff',
-                                            padding: '7px'
-                                        },
-                                        contentEl: "sql-dialog"
-
-                                    }), new Ext.Panel({
-                                        //title: 'elasticsearch',
-                                        height: 60,
-                                        border: false,
-                                        region: "center",
-                                        bodyStyle: {
-                                            background: '#ffffff',
-                                            padding: '7px'
-                                        },
-                                        contentEl: "elasticsearch-dialog"
-                                    })
-                                ]
+                                border: false,
+                                bodyStyle: {
+                                    background: '#777',
+                                    color: '#fff',
+                                    padding: '7px'
+                                },
+                                html: __("HTTP Basic auth password and API key are set for the specific (sub) user.")
                             })
-                        ]
-                    })]
+                            ]
+                        }), new Ext.Panel({
+                            layout: "border",
+                            region: "east",
+                            width: 400,
+                            height: 72,
+                            items: [
+                                new Ext.Panel({
+                                    //title: 'WFS',
+                                    region: "north",
+                                    border: false,
+                                    //height: 50,
+                                    bodyStyle: {
+                                        background: '#ffffff',
+                                        padding: '7px'
+                                    },
+                                    contentEl: "wfs-dialog"
+                                }), new Ext.Panel({
+                                    //title: 'WMS',
+                                    border: false,
+                                    //height: 50,
+                                    region: "center",
+                                    bodyStyle: {
+                                        background: '#ffffff',
+                                        padding: '7px'
+                                    },
+                                    contentEl: "wms-dialog"
+
+                                }), new Ext.Panel({
+                                    //title: 'SQL',
+                                    height: 135,
+                                    border: false,
+                                    region: "south",
+                                    items: [
+                                        new Ext.Panel({
+                                            //title: 'SQL',
+                                           // height: 50,
+                                            border: false,
+                                            region: "north",
+                                            bodyStyle: {
+                                                background: '#ffffff',
+                                                padding: '7px'
+                                            },
+                                            contentEl: "sql-dialog"
+
+                                        }), new Ext.Panel({
+                                            //title: 'elasticsearch',
+                                            //height: 60,
+                                            border: false,
+                                            region: "center",
+                                            bodyStyle: {
+                                                background: '#ffffff',
+                                                padding: '7px'
+                                            },
+                                            contentEl: "elasticsearch-dialog"
+                                        })
+                                    ]
+                                })
+                            ]
+                        })]
                 })]}).show(this);
     }
 
@@ -1224,17 +1237,17 @@ $(window).ready(function () {
         });
         privilegesStore.load();
         var privilgesWin = new Ext.Window({
-            title: __("Privileges"),
+            title: __("Grant privileges to sub-users on ") + "'" + records[0].get("f_table_name") + "'",
             modal: true,
-            width: 700,
-            height: 350,
+            width: 500,
+            height: 320,
             initCenter: true,
             closeAction: 'hide',
             border: false,
             layout: 'border',
             items: [
                 new Ext.Panel({
-                    height: 215,
+                    height: 200,
                     border: false,
                     region: "center",
                     items: [
@@ -1243,7 +1256,7 @@ $(window).ready(function () {
                             viewConfig: {
                                 forceFit: true
                             },
-                            height: 250,
+                            height: 200,
                             region: 'center',
                             frame: false,
                             border: true,
@@ -1280,7 +1293,7 @@ $(window).ready(function () {
                             })
                         }),
                         new Ext.Panel({
-                                height: 215,
+                                height: 100,
                                 border: false,
                                 region: "south",
                                 bodyStyle: {
@@ -1288,7 +1301,15 @@ $(window).ready(function () {
                                     color: '#fff',
                                     padding: '7px'
                                 },
-                                html: __("Hej")
+                                html: "<ul>" +
+                                    "<li>" + __("<b>None</b>: The layer doesn't exist for the sub-user.") + "</li>" +
+                                    "<li>" + __("<b>Only read</b>: The sub-user can se and query the layer.") + "</li>" +
+                                    "<li>" + __("<b>Read and write</b>: The sub-user can edit the layer.") + "</li>" +
+                                    "<li>" + __("<b>All</b>: The sub-user change properties like style and alter table structure.") + "</li>" +
+                                    "<ul>" +
+                                    "<br><p>" +
+                                    __("The privileges is granted for both Admin and external services like WMS and WFS.") +
+                                    "</p>"
                             }
                         )
                     ]
