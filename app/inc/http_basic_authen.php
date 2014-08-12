@@ -1,7 +1,9 @@
 <?php
 use \app\inc\Input;
-
-if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2)) {
+$db = \app\inc\Input::getPath()->part(2);
+$dbSplit = explode("@", $db);
+include_once("http_basic_authen_subuser.php");
+if (!$_SESSION['auth'] || $_SESSION['screen_name'] != $db) {
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
     \app\inc\Log::write("Auth");
@@ -12,7 +14,6 @@ if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2))
 
         // most other servers
     } elseif (isset($_SERVER['HTTP_AUTHENTICATION'])) {
-
         if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic') === 0)
             list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
     }
@@ -27,7 +28,7 @@ if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2))
         die("Could not authenticate you 1");
 
     } elseif ($username != Input::getPath()->part(2)) {
-        header('WWW-Authenticate: Basic realm="' .Input::getPath()->part(2) . '"');
+        header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
         header('HTTP/1.0 401 Unauthorized');
         header("Cache-Control: no-cache, must-revalidate");
         // HTTP/1.1
@@ -44,8 +45,8 @@ if (!$_SESSION['auth'] || $_SESSION['screen_name'] != Input::getPath()->part(2))
         header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
         // Date in the past
         die("Could not authenticate you 3");
-    }
-    else {
-        $_SESSION['http_auth'] = \app\inc\Input::getPath()->part(2);
+    } else {
+        $_SESSION['http_auth'] = $db;
     }
 }
+

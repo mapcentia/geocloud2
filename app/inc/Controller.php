@@ -9,7 +9,7 @@ class Controller
     {
 
         if ($_SESSION['subuser']) {
-            $text = "Hey Hey My My";
+            $text = "You don't have privileges to this";
             if (sizeof($level) == 0) {
                 $response['success'] = false;
                 $response['message'] = $text;

@@ -15,13 +15,13 @@ class Setting extends Model
     {
         if (\app\conf\App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/secret.key");
-            $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::bytea, dearmor('{$secretKey}')) as viewer FROM settings.viewer";
+            $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::BYTEA, dearmor('{$secretKey}')) AS viewer FROM settings.viewer";
         } else {
             $sql = "SELECT viewer FROM settings.viewer";
         }
         $res = $this->execQuery($sql);
         // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
-        if ($this->PDOerror[0]){
+        if ($this->PDOerror[0]) {
             $this->PDOerror = null;
             $sql = "SELECT viewer FROM settings.viewer";
             $res = $this->execQuery($sql);
@@ -34,7 +34,11 @@ class Setting extends Model
     {
         $apiKey = md5(microtime() . rand());
         $arr = $this->getArray();
-        $arr['api_key'] = $apiKey;
+        if (!$_SESSION["subuser"]) {
+            $arr['api_key'] = $apiKey;
+        } else {
+            $arr['api_key_subuser']->$_SESSION["subuser"] = $apiKey;
+        }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
             $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
@@ -57,7 +61,12 @@ class Setting extends Model
     public function updatePw($pw)
     {
         $arr = $this->getArray();
-        $arr['pw'] = $this->encryptPw($pw);
+
+        if (!$_SESSION["subuser"]) {
+            $arr['pw'] = $this->encryptPw($pw);
+        } else {
+            $arr['pw_subuser']->$_SESSION["subuser"] =  $this->encryptPw($pw);
+        }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
             $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
@@ -75,7 +84,9 @@ class Setting extends Model
         }
         return $response;
     }
-    public function updateExtent($extent){
+
+    public function updateExtent($extent)
+    {
         $arr = $this->getArray();
 
         $obj = (array)$arr['extents'];
@@ -111,6 +122,10 @@ class Setting extends Model
     public function get($unsetPw = false)
     {
         $arr = $this->getArray();
+        if ($_SESSION["subuser"]) {
+            $arr['pw'] = $arr['pw_subuser']->$_SESSION["subuser"];
+            $arr['api_key'] = $arr['api_key_subuser']->$_SESSION["subuser"];
+        }
         if ($unsetPw) {
             unset($arr['pw']);
         }
@@ -130,7 +145,9 @@ class Setting extends Model
         $arr = $this->getArray();
 
         unset($arr['pw']);
+        unset($arr['pw_subuser']);
         unset($arr['api_key']);
+        unset($arr['api_key_subuser']);
 
         if (!$this->PDOerror) {
             $response['success'] = true;

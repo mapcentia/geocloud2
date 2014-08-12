@@ -1,7 +1,6 @@
 <?php
 namespace app\controllers;
 
-use app\inc\Response;
 use app\inc\Input;
 
 class Setting extends \app\inc\Controller
@@ -15,27 +14,27 @@ class Setting extends \app\inc\Controller
 
     public function get_index()
     {
-        return Response::json($this->settings->get());
+        return $this->settings->get();
     }
 
     public function put_index()
     {
-        return Response::json($this->settings->update(Input::get()));
+        return $this->settings->update(Input::get());
     }
 
     public function put_pw()
     {
-        return Response::json($this->settings->updatePw(Input::get('pw')));
+        return $this->settings->updatePw(Input::get('pw'));
     }
 
     public function put_apikey()
     {
-        return Response::json($this->settings->updateApiKey());
+        return $this->settings->updateApiKey();
     }
 
     public function put_extent()
     {
-        $response = $this->auth();
+        $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->settings->updateExtent(json_decode(Input::get())->data);
     }
 }

@@ -154,7 +154,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + screenName + "/" + schema + "/900913" + ((timeSlice) ? "/" + timeSlice : "") + "?",
+            url: "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
             featureNS: "http://twitter/" + screenName,

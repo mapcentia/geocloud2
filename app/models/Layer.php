@@ -77,7 +77,6 @@ class Layer extends \app\models\Table
             else {
                 $response['data'][] = $arr;
             }
-
         }
         $response['data'] = ($response['data']) ? : array();
         if (!$this->PDOerror) {

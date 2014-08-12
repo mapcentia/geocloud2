@@ -15,22 +15,18 @@ include 'convertgeom.php';
 include 'explodefilter.php';
 
 if (!$gmlNameSpace) {
-    $gmlNameSpace = \app\inc\Input::getPath()->part(2);
+    $gmlNameSpace = Connection::$param["postgisdb"];
 }
 
 if (!$gmlNameSpaceUri) {
-    $gmlNameSpaceUri = "http://twitter/" . \app\inc\Input::getPath()->part(2);
+    $gmlNameSpaceUri = "http://twitter/" . Connection::$param["postgisdb"];
 }
 
 $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
 
 $srs = \app\inc\Input::getPath()->part(4);
-if ($_SESSION['subuser']) {
-    $user = $_SESSION['subuser'];
-} else {
-    $user = \app\inc\Input::getPath()->part(2);
-}
+
 $timeSlice = \app\inc\Input::getPath()->part(5);
 if ($timeSlice != "all") {
     $unixTime = strtotime(urldecode($timeSlice));
@@ -87,6 +83,7 @@ if ($HTTP_RAW_POST_DATA) {
     $request = $unserializer->getRootName();
     switch ($request) {
         case "GetFeature":
+            $transaction = false;
             if (!is_array($arr['Query'][0])) {
                 $arr['Query'] = array(0 => $arr['Query']);
             }
@@ -127,6 +124,7 @@ if ($HTTP_RAW_POST_DATA) {
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
             break;
         case "Transaction":
+            $transaction = true;
             $HTTP_FORM_VARS["REQUEST"] = "Transaction";
             if (isset($arr["Insert"])) {
                 $transactionType = "Insert";
@@ -174,6 +172,8 @@ $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VAR
 if ($auth == "Read/write") {
     include('inc/http_basic_authen.php');
 }
+
+
 //}
 // End HTTP basic authentication
 print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -234,12 +234,23 @@ if (!(empty($bbox[0]))) {
         }
     }
 }
-//get the request
+//get the request'
+
+
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
     case "GETCAPABILITIES":
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
+        /*if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+
+        }
+        else {
+            $code = 400;
+            header("HTTP/1.0 {$code} " . \app\inc\Util::httpCodeText($code));
+            makeExceptionReport("dsdsd");
+        }*/
+
         if (!$gmlFeatureCollection) {
             $gmlFeatureCollection = "wfs:FeatureCollection";
         }
@@ -253,7 +264,6 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         if ($gmlSchemaLocation) {
             print "xsi:schemaLocation=\"{$gmlSchemaLocation}\"";
         } else {
-            //print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=".$HTTP_FORM_VARS["TYPENAME"]." http://www.opengis.net/wfs ".str_replace("server.php","",$thePath)."schemas/wfs/1.0.0/WFS-basic.xsd\"";
             print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] . " http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd\"";
         }
         if ($resultType != "hits") print ">\n";
@@ -340,6 +350,7 @@ function doQuery($queryType)
     global $postgisschema;
     global $tableObj;
     global $timeSlice;
+    global $dbSplit;
     //global $fieldConfArr;
     global $geometryColumnsObj;
 
@@ -350,6 +361,8 @@ function doQuery($queryType)
     switch ($queryType) {
         case "Select":
             foreach ($tables as $table) {
+                $HTTP_FORM_VARS["TYPENAME"] = $table;
+                include_once("inc/http_basic_authen_subuser.php");
                 $tableObj = new table($postgisschema . "." . $table);
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
                 //$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
@@ -757,10 +770,13 @@ function doParse($arr)
     global $postgisObject;
     global $user;
     global $postgisschema;
+    global $transaction;
+    global $db;
 
     $serializer_options = array(
         'indent' => '  ',
     );
+
     $Serializer = & new XML_Serializer($serializer_options);
     foreach ($arr as $key => $featureMember) {
         if ($key == "Insert") {
@@ -797,6 +813,7 @@ function doParse($arr)
                         // Start HTTP basic authentication
                         $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
                         if ($auth == "Write" OR $auth == "Read/write") {
+                            $HTTP_FORM_VARS["TYPENAME"] = $typeName;
                             include('inc/http_basic_authen.php');
                         }
                         // End HTTP basic authentication
@@ -836,6 +853,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
+                    $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                     include('inc/http_basic_authen.php');
                 }
                 // End HTTP basic authentication
@@ -855,6 +873,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
+                    $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                     include('inc/http_basic_authen.php');
                 }
                 // End HTTP basic authentication
@@ -1102,7 +1121,11 @@ function makeExceptionReport($value)
 	   xsi:schemaLocation="http://www.opengis.net/ogc http://wfs.plansystem.dk:80/geoserver/schemas//wfs/1.0.0/OGC-exception.xsd">
 	   <ServiceException>';
     if (is_array($value)) {
-        print_r($value);
+        if (sizeof($value) == 1) {
+            print $value[0];
+        } else {
+            print_r($value);
+        }
     } else {
         print $value;
     }

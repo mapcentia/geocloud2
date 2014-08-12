@@ -27,8 +27,10 @@ class Layer extends \app\inc\Controller
     {
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get()));
-        $data["data"]->editable = ($data["data"]->editable) ? : "0";
-        $response = $this->auth(null, array());
+        if (isset($data["data"]->editable)) {
+            $data["data"]->editable = ($data["data"]->editable) ? : "0";
+        }
+        $response = $this->auth($data["data"]->_key_);
         return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
     }
 

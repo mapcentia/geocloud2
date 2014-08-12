@@ -84,7 +84,16 @@ if (Input::getPath()->part(1) == "api") {
     new \app\controllers\Wmsc();
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
-    Database::setDb(Input::getPath()->part(2));
+    $db = \app\inc\Input::getPath()->part(2);
+    $dbSplit = explode("@", $db);
+    if (sizeof($dbSplit) == 2) {
+        $db = $dbSplit[1];
+        $user = $dbSplit[0];
+    }
+    else {
+        $user = $db;
+    }
+    Database::setDb($db);
     Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
     include_once("app/wfs/server.php");
 } elseif (!Input::getPath()->part(1)) {

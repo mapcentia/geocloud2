@@ -8,15 +8,18 @@ class Wms extends \app\inc\Controller
     function __construct()
     {
         if (\app\inc\Input::getPath()->part(3) == "tilecache") {
-            $schema = \app\inc\Input::getPath()->part(4);
+            $postgisschema = \app\inc\Input::getPath()->part(4);
 
         } else {
-            $schema = \app\inc\Input::getPath()->part(3);
+            $postgisschema = \app\inc\Input::getPath()->part(3);
         }
         $db = \app\inc\Input::getPath()->part(2);
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+        }
         $path = App::$param['path'] . "/app/wms/mapfiles/";
-        $name = $db . "_" . $schema . ".map";
-
+        $name = $db . "_" . $postgisschema . ".map";
 
         $oMap = new \mapObj($path . $name);
         $request = new \OWSRequestObj();
@@ -27,16 +30,21 @@ class Wms extends \app\inc\Controller
                 }
                 $request->setParameter($k, $v);
             }
-        }
-        else {
+        } else {
             $request->loadParams();
         }
-        if ($_SESSION['http_auth'] != \app\inc\Input::getPath()->part(2)) {
+        if ($_SESSION['http_auth'] != $db) {
             \app\models\Database::setDb($db);
             $postgisObject = new \app\inc\Model();
             $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+            $layerSplit = explode(".", $layer);
+            $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
             if ($auth == "Read/write") {
+
                 include('inc/http_basic_authen.php');
+            }
+            else {
+                include('inc/http_basic_authen_subuser.php');
             }
         }
         if ($_GET['sql_layer']) {
@@ -109,11 +117,11 @@ class Wms extends \app\inc\Controller
         $contenttype = ms_iostripstdoutbuffercontenttype();
         if ($contenttype == 'image/png') {
             header('Content-type: image/png');
-        }
-        else {
+        } else {
             header('Content-type: text/xml');
         }
         ms_iogetStdoutBufferBytes();
         ms_ioresethandlers();
+
     }
 }
