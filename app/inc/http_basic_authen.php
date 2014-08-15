@@ -2,8 +2,8 @@
 use \app\inc\Input;
 $db = \app\inc\Input::getPath()->part(2);
 $dbSplit = explode("@", $db);
-include_once("http_basic_authen_subuser.php");
-if (!$_SESSION['auth'] || $_SESSION['screen_name'] != $db) {
+include("http_basic_authen_subuser.php");
+if ((!$_SESSION['auth']) || $_SESSION['screen_name'] != $db) {
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
     \app\inc\Log::write("Auth");
