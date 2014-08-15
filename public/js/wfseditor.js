@@ -182,7 +182,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         //App.setAlert(App.STATUS_OK, "Start loading...");
     });
 
-
     drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
         featureAdded: onInsert,
         handlerOptions: {
@@ -298,7 +297,8 @@ $(document).ready(function () {
             new OpenLayers.Control.Navigation({
                 //zoomBoxEnabled: true
             }),
-            new OpenLayers.Control.Zoom()
+            new OpenLayers.Control.Zoom(),
+            new OpenLayers.Control.Attribution()
         ]
     });
     map = cloud.map;

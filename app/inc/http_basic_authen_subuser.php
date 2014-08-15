@@ -32,30 +32,32 @@ if (sizeof($dbSplit) == 2) { //Sub-user
     $db = $dbSplit[1];
     // We set the SESSION, if request is coming from outside a session
     $subUser = $_SESSION["subuser"] = $dbSplit[0];
-    $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
-    $res = $postgisObject->prepare($sql);
-    try {
-        $res->execute(array("schema" => $postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
+    if ($dbSplit[0] != $postgisschema) {
+        $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
+        $res = $postgisObject->prepare($sql);
+        try {
+            $res->execute(array("schema" => $postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
 
-    } catch (\PDOException $e) {
-        $response['success'] = false;
-        $response['message'] = $e->getMessage();
-        $response['code'] = 401;
-        makeExceptionReport($response);
-    }
-    while ($row = $postgisObject->fetchRow($res, "assoc")) {
-        $privileges = (array)json_decode($row["privileges"]);
-        switch ($transaction) {
-            case false:
-                if ($privileges[$subUser] == false || $privileges[$subUser] == "none") {
-                    makeExceptionReport(array("You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges."));
-                }
-                break;
-            case true:
-                if ($privileges[$subUser] == false || $privileges[$subUser] == "none" || $privileges[$subUser] == "read") {
-                    makeExceptionReport(array("You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges."));
-                }
-                break;
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            makeExceptionReport($response);
+        }
+        while ($row = $postgisObject->fetchRow($res, "assoc")) {
+            $privileges = (array)json_decode($row["privileges"]);
+            switch ($transaction) {
+                case false:
+                    if ($privileges[$subUser] == false || $privileges[$subUser] == "none") {
+                        makeExceptionReport(array("You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges."));
+                    }
+                    break;
+                case true:
+                    if ($privileges[$subUser] == false || $privileges[$subUser] == "none" || $privileges[$subUser] == "read") {
+                        makeExceptionReport(array("You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges."));
+                    }
+                    break;
+            }
         }
     }
 }

@@ -99,9 +99,7 @@ var mygeocloud_ol = (function () {
                 sql = sql.replace("{maxY}", map.getExtent().top);
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
-                //console.log(e.message);
             }
-            //console.log(sql);
             $.ajax({
                 dataType: 'jsonp',
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime + '&client_encoding=' + defaults.clientEncoding,
@@ -133,22 +131,21 @@ var mygeocloud_ol = (function () {
         };
     };
     map = function (el, db, config) {
-        var prop, // baseLayer wrapper
-            parentMap, defaults = {
-                numZoomLevels: 20,
-                projection: "EPSG:900913",
-                maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
-                controls: [
-                    //new OpenLayers.Control.Navigation(),
-                    //new OpenLayers.Control.PanZoomBar(),
-                    //new OpenLayers.Control.LayerSwitcher(),
-                    //new OpenLayers.Control.PanZoom(),
-                    new OpenLayers.Control.Attribution(),
-                    new OpenLayers.Control.Zoom(),
-                    new OpenLayers.Control.TouchNavigation({
-                        dragPanOptions: {enableKinetic: true}
-                    })]
-            };
+        var prop, parentMap, defaults = {
+            numZoomLevels: 20,
+            projection: "EPSG:900913",
+            maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
+            controls: [
+                //new OpenLayers.Control.Navigation(),
+                //new OpenLayers.Control.PanZoomBar(),
+                //new OpenLayers.Control.LayerSwitcher(),
+                //new OpenLayers.Control.PanZoom(),
+                new OpenLayers.Control.Attribution(),
+                new OpenLayers.Control.Zoom(),
+                new OpenLayers.Control.TouchNavigation({
+                    dragPanOptions: {enableKinetic: true}
+                })]
+        };
         if (config) {
             for (prop in config) {
                 defaults[prop] = config[prop];
@@ -175,7 +172,6 @@ var mygeocloud_ol = (function () {
         };
         this.getVisibleLayers = function () {
             var layerArr = [];
-            //console.log(this.map.layers);
             for (var i = 0; i < this.map.layers.length; i++) {
                 if (this.map.layers[i].isBaseLayer === false && this.map.layers[i].visibility === true && this.map.layers[i].CLASS_NAME === "OpenLayers.Layer.WMS") {
                     layerArr.push(this.map.layers[i].params.LAYERS);
@@ -500,7 +496,6 @@ var mygeocloud_ol = (function () {
                     defaults[prop] = config[prop];
                 }
             }
-            ;
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l = this.createTileLayer(layers[i], defaults)
