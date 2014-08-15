@@ -34,7 +34,7 @@ class Sql extends \app\inc\Controller
 
     public function post_index()
     {
-        return get_index();
+        return $this->get_index();
     }
 
     private function transaction($sql, $clientEncoding = null)
