@@ -115,12 +115,14 @@ var mygeocloud_ol = (function () {
                         alert(response.message);
                     }
                     if (response.success === true) {
-                        parentThis.geoJSON = response;
-                        parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
-                        parentThis.featureStore = new GeoExt.data.FeatureStore({
-                            fields: response.forStore,
-                            layer: parentThis.layer
-                        });
+                        if (response.features !== null) {
+                            parentThis.geoJSON = response;
+                            parentThis.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                            parentThis.featureStore = new GeoExt.data.FeatureStore({
+                                fields: response.forStore,
+                                layer: parentThis.layer
+                            });
+                        }
                     }
                 },
                 complete: function () {
