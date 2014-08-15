@@ -55,7 +55,8 @@ var mygeocloud_ol = (function () {
             },
             selectControl: {},
             clientEncoding: "UTF8",
-            jsonp: true
+            jsonp: true,
+            method: "GET"
         };
         if (config) {
             for (prop in config) {
@@ -108,6 +109,7 @@ var mygeocloud_ol = (function () {
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime + '&client_encoding=' + defaults.clientEncoding,
                 jsonp: (defaults.jsonp) ? 'jsonp_callback' : false,
                 url: host + '/api/v1/sql/' + db,
+                method: defaults.method,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);

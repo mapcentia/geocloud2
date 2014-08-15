@@ -29,7 +29,12 @@ class Sql extends \app\inc\Controller
         if (!$this->data) {
             $this->data = $this->response;
         }
-        return  unserialize($this->data);
+        return unserialize($this->data);
+    }
+
+    public function post_index()
+    {
+        return get_index();
     }
 
     private function transaction($sql, $clientEncoding = null)
