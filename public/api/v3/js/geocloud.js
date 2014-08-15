@@ -104,7 +104,8 @@ geocloud = (function () {
             type: "",
             size: 3,
             clientEncoding: "UTF8",
-            async: true
+            async: true,
+            jsonp: true
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -196,10 +197,10 @@ geocloud = (function () {
             } catch (e) {
             }
             $.ajax({
-                dataType: 'jsonp',
+                dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
-                jsonp: 'jsonp_callback',
+                jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
                 url: url + '/api/v1/sql/' + this.db,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
@@ -708,7 +709,7 @@ geocloud = (function () {
                     this.map.addLayer(this.mapQuestOSM);
                     break;
                 case "leaflet":
-                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg',{
+                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
                         attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
                     });
                     lControl.addBaseLayer(this.mapQuestOSM);
@@ -761,7 +762,7 @@ geocloud = (function () {
                     this.map.addLayer(this.osm);
                     break;
                 case "leaflet":
-                    this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+                    this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
                     });
                     lControl.addBaseLayer(this.osm);
