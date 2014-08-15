@@ -203,7 +203,7 @@ geocloud = (function () {
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
                 url: url + '/api/v1/sql/' + this.db,
-                method: this.defaults.method,
+                type: this.defaults.method,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
                         alert(response.message);
