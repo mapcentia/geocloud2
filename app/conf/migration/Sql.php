@@ -183,4 +183,8 @@ class Sql
         ";
         return $sqls;
     }
+    public static function mapcentia(){
+        $sqls[] = "ALTER TABLE users ADD COLUMN parentdb varchar(255)";
+        return $sqls;
+    }
 }
