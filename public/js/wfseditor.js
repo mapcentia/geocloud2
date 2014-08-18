@@ -298,7 +298,8 @@ $(document).ready(function () {
             new OpenLayers.Control.Navigation({
                 //zoomBoxEnabled: true
             }),
-            new OpenLayers.Control.Zoom()
+            new OpenLayers.Control.Zoom(),
+            new OpenLayers.Control.Attribution()
         ]
     });
     map = cloud.map;
