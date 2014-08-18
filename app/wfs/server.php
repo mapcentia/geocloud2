@@ -177,7 +177,7 @@ if ($auth == "Read/write") {
 //}
 // End HTTP basic authentication
 print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-ob_start();
+//ob_start();
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
         $__u = explode(".", $property); // Is it "/" for get method?
@@ -532,12 +532,10 @@ function doSelect($table, $sql, $sql2, $from)
     Log::write($sql . $from . "\n");
     $totalTime = microtime_float() - $startTime;
     Log::write("\nQuery time {$totalTime}\n");
-    //foreach($postgisObject -> execQuery($sql.$from." LIMIT 10000") as $myrow) { //Iteration directly over result. Only PDO
     if ($postgisObject->PDOerror) {
         makeExceptionReport($postgisObject->PDOerror);
     }
     if ($resultType == "hits") {
-
         $myrow = $postgisObject->fetchRow($result);
         print "\nnumberOfFeatures=\"{$myrow['count']}\"\n";
         // Close the GeometryCollection tag
@@ -612,13 +610,12 @@ function doSelect($table, $sql, $sql2, $from)
             writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True);
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
+            $postgisObject->free($result);
         }
     }
-
     $totalTime = microtime_float() - $startTime;
     $postgisObject->execQuery("ROLLBACK");
 }
-
 
 /**
  *
@@ -1136,7 +1133,5 @@ function makeExceptionReport($value)
     Log::write($data);
     die();
 }
-
-$data = ob_get_clean();
-//Log::write($data);
-echo $data;
+//echo ob_get_clean();
+print("<!-- Memory used: ".number_format(memory_get_usage())." bytes -->\n");
