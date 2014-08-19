@@ -159,6 +159,6 @@ gc2i18n = {
         "Show legend": "Vis signaturforklaring",
         "Open map in pop up window": "&Aring;ben kortet i et pop up vindue",
         "Change the baselayer": "Skift baggrundskortet",
-        "Locate me on the map": "Find mig på kortet"
+        "Locate me on the map": "Find mig p&aring; kortet"
     }
 };
