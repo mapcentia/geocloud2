@@ -11,12 +11,14 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li>
-                    <button id="locate-btn-{{id}}" type="button" class="btn btn-default navbar-btn locate-btn">
+                    <button id="locate-btn-{{id}}" type="button" class="btn btn-default navbar-btn locate-btn" data-toggle="tooltip"
+                            data-placement="bottom" title="{{{Locate me on the map}}}">
                         <i class="fa fa-location-arrow"></i>
                     </button>
                 </li>
 
-                <li id="legend-popover-li-{{id}}" class="gc-btn">
+                <li id="legend-popover-li-{{id}}" class="gc-btn" data-toggle="tooltip"
+                    data-placement="bottom" title="{{{Show legend}}}">
                     <a href="javascript:void(0)" id="legend-popover-{{id}}" rel="popover"
                        data-placement="bottom">
                         {{Legend}} </a>
@@ -26,12 +28,14 @@
                        onclick="gc2map.maps['{{id}}'].share();">
                         Del </a>
                 </li>-->
-                <li id="open-win-li-{{id}}" class="gc-btn">
+                <li id="open-win-li-{{id}}" class="gc-btn" data-toggle="tooltip"
+                    data-placement="bottom" title="{{{Open map in pop up window}}}">
                     <a href="javascript:void(0)" title=""
                        onclick="gc2map.maps['{{id}}'].openMapWin(decodeURIComponent(geocloud.urlHash),screen.width-20, screen.height-100);">
                         {{Pop up}} </a>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown" data-toggle="tooltip"
+                    data-placement="bottom" title="{{{Change the baselayer}}}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{Baselayers}} <b
                             class="caret"></b></a>
                     <ul class="dropdown-menu" id="base-layer-list-{{id}}">
