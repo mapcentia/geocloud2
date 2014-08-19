@@ -157,7 +157,7 @@ gc2i18n = {
         "This will add versioning to the table. Do you want to proceed?": "This will add versioning to the table. Do you want to proceed?",
 
         "Show legend": "Vis signaturforklaring",
-        "Open map in pop up window": "Åben kortet i et pop up vindue",
+        "Open map in pop up window": "&Aring;ben kortet i et pop up vindue",
         "Change the baselayer": "Skift baggrundskortet",
         "Locate me on the map": "Find mig på kortet"
     }
