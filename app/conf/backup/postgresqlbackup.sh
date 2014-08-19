@@ -47,5 +47,5 @@ function mkdbbackup {
 }
 
 echo "_ts_ host1 start" `date`
-mkdbbackup 127.0.0.1 5432 /var/www/geocloud2/backups
+mkdbbackup 127.0.0.1 5432 /var/www/geocloud2/public/backups
 echo "_ts_ host1 end" `date`
