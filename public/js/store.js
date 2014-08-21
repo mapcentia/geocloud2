@@ -1523,7 +1523,7 @@ $(window).ready(function () {
                                 items: [
                                     {
                                         xtype: "panel",
-                                        title: 'Theme wizard',
+                                        title: __('Class wizards'),
                                         defaults: {
                                             border: false
                                         },

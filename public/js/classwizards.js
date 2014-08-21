@@ -17,8 +17,7 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>' + __("Single") + '</b></td></tr>' +
-                    '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/single_class.png"></td></tr>' +
+                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"><b>' + __("Single") + '</b></td></tr>' +
                     '</table>'
             },
             {
@@ -68,10 +67,8 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>' + __("Unique values") + '</b></td></tr>' +
-                    '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/unique_classes.png"></td></tr>' +
+                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"><b>' + __("Unique values") + '</b></td></tr>' +
                     '</table>'
-
             },
             {
                 defaults: {
@@ -81,13 +78,13 @@ classWizards.init = function (record) {
                 items: [
                     {
                         xtype: "form",
-                        id: "uniqueform",
+                        id: "clusterform",
                         layout: "form",
                         items: [
                             {
                                 xtype: 'container',
                                 defaults: {
-                                    width: 100
+                                    width: 150
                                 },
                                 items: [
                                     {
@@ -154,8 +151,7 @@ classWizards.init = function (record) {
             {
                 html: '<table>' +
                     '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>' + __("Intervals") + '</b></td></tr>' +
-                    '<tr class="x-grid3-row"><td><img style="width: 283px" src="/assets/images/interval_classes.png"></td></tr>' +
+                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"><b>' + __("Intervals") + '</b></td></tr>' +
                     '</table>'
 
             },
@@ -289,6 +285,92 @@ classWizards.init = function (record) {
                                                 }
                                             }
                                         ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        html: '<table>' +
+                            '<tr class="x-grid3-row"><td><hr></td></tr>' +
+                            '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"><b>' + __("Clustering") + '</b></td></tr>' +
+                            '</table>'
+                    },
+                    {
+                        defaults: {
+                            border: false
+                        },
+                        layout: 'hbox',
+                        items: [
+                            {
+                                xtype: "form",
+                                id: "clusterform",
+                                layout: "form",
+                                items: [
+                                    {
+                                        xtype: 'container',
+                                        defaults: {
+                                            width: 150
+                                        },
+                                        items: [
+                                            new Ext.ux.form.SpinnerField({
+                                                name: "clusterdistance",
+                                                minValue: 1,
+                                                allowDecimals: false,
+                                                decimalPrecision: 0,
+                                                incrementValue: 1,
+                                                accelerate: true,
+                                                allowBlank: false,
+                                                emptyText: __("Cluster distance")
+                                            })
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                layout: 'form',
+                                bodyStyle: 'margin-right:5px; padding-left: 5px',
+                                items: [
+                                    {
+                                        xtype: 'button',
+                                        text: 'Create',
+                                        handler: function () {
+                                            var f = Ext.getCmp('clusterform'), values, params;
+                                            if (f.form.isValid()) {
+                                                values = f.form.getValues();
+                                                params = classWizards.getAddvalues();
+                                                Ext.Ajax.request({
+                                                    url: '/controllers/classification/cluster/' + record._key_ + '/' + values.clusterdistance,
+                                                    method: 'put',
+                                                    params: params,
+                                                    headers: {
+                                                        'Content-Type': 'application/json; charset=utf-8'
+                                                    },
+                                                    success: function (response) {
+                                                        Ext.getCmp("a3").remove(wmsClass.grid);
+                                                        wmsClasses.store.load();
+                                                        wmsLayer.store.load();
+                                                        writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                                        App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
+                                                    },
+                                                    failure: function (response) {
+                                                        Ext.MessageBox.show({
+                                                            title: 'Failure',
+                                                            msg: __(Ext.decode(response.responseText).message),
+                                                            buttons: Ext.MessageBox.OK,
+                                                            width: 400,
+                                                            height: 300,
+                                                            icon: Ext.MessageBox.ERROR
+                                                        });
+                                                    }
+                                                });
+                                            } else {
+                                                var s = '';
+                                                Ext.iterate(f.form.getValues(), function (key, value) {
+                                                    s += String.format("{0} = {1}<br />", key, value);
+                                                }, this);
+                                            }
+                                        }
                                     }
                                 ]
                             }

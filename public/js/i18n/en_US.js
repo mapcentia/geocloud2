@@ -162,6 +162,7 @@ gc2i18n = {
         "Close this window to disable measure tool": "Close this window to disable measure tool",
         "Measure": "Measure",
         "Distance": "Distance",
-        "Area": "Area"
+        "Area": "Area",
+        "Class wizards": "Class wizards"
     }
 };

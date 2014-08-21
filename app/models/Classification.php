@@ -105,8 +105,7 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    private
-    function store($data)
+    private function store($data)
     {
 
         // First we replace unicode escape sequence
@@ -124,8 +123,7 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public
-    function insert()
+    public function insert()
     {
         $classes = $this->getAll();
         $classes['data'][] = array("name" => "Unnamed class");
@@ -140,8 +138,7 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public
-    function update($id, $data)
+    public function update($id, $data)
     {
         $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
@@ -158,8 +155,7 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public
-    function destroy($id) // Geometry columns
+    public function destroy($id) // Geometry columns
     {
         $classes = $this->getAll();
         unset($classes['data'][$id]);
@@ -179,14 +175,12 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    private
-    function reset()
+    private function reset()
     {
         $this->store(json_encode(array()));
     }
 
-    public
-    function createSingle($data)
+    public function createSingle($data)
     {
         $this->reset();
         $layer = new \app\models\Layer();
@@ -203,8 +197,7 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
-    public
-    function createUnique($field, $data)
+    public function createUnique($field, $data)
     {
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
@@ -244,13 +237,12 @@ class Classification extends \app\inc\Model
                 return $response;
             }
         }
-        $response['success'] = false;
+        $response['success'] = true;
         $response['message'] = "Updated " . sizeof($rows) . " classes";
         return $response;
     }
 
-    public
-    function createEqualIntervals($field, $num, $startColor, $endColor, $data)
+    public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
     {
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
@@ -293,8 +285,7 @@ class Classification extends \app\inc\Model
 
     }
 
-    public
-    function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
+    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
     {
         $layer = new \app\models\Layer();
         $geometryType = $layer->getValueFromKey($this->layer, type);
@@ -364,6 +355,78 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
+    public function createCluster($distance, $data)
+    {
+        $layer = new \app\models\Layer();
+        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
+        if ($geometryType != "POINT" && $geometryType != "MULTIPOINT") {
+            $response['success'] = false;
+            $response['message'] = "Only point layers can be clustered";
+            $response['code'] = 400;
+            return $response;
+        }
+        $this->reset();
+
+        // Set layer def
+        $layer = new \app\models\Tile($this->layer);
+        $def = $layer->get();
+        if (!$def['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+        $def["data"][0]["cluster"] = $distance;
+        $def["data"][0]["meta_tiles"] = true;
+        $def["data"][0]["meta_size"] = 4;
+        $defJson = json_encode($def["data"][0]);
+        $res = $layer->update($defJson);
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+        //Set single class
+        $expression = "[Cluster:FeatureCount]=1";
+        $name = "Single";
+        $res = $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+
+        //Set cluster class
+        $expression = "[Cluster:FeatureCount]>1";
+        $name = "Cluster";
+        $data->labelText = "[Cluster:FeatureCount]";
+        $data->labelSize = "9";
+        $data->labelPosition = "cc";
+        $data->symbolSize = "50";
+        $data->overlaySize = "35";
+        $data->overlayColor = "#00FF00";
+        $data->overlaySymbol = "circle";
+        $data->symbol = "circle";
+        $data->opacity = "20";
+        $data->force = true;
+
+        $res = $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+
+
+        $response['success'] = true;
+        $response['message'] = "Updated 2 classes";
+        return $response;
+    }
+
+
     static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
     {
         $symbol = ($data->symbol) ? : "";
@@ -388,13 +451,16 @@ class Classification extends \app\inc\Model
             "angle" => ($data->angle) ? : "",
             "size" => $size,
             "width" => ($data->lineWidth) ? : "",
-            "overlaycolor" => "",
+            "overlaycolor" => ($data->overlayColor) ? : "",
             "overlayoutlinecolor" => "",
-            "overlaysymbol" => "",
-            "overlaysize" => "",
+            "overlaysymbol" => ($data->overlaySymbol) ? : "",
+            "overlaysize" => ($data->overlaySize) ? : "",
             "overlaywidth" => "",
             "label_text" => ($data->labelText) ? : "",
             "label2_text" => ($data->labelText) ? : "",
+            "label_position" => ($data->labelPosition) ? : "",
+            "style_opacity" => ($data->opacity) ? : "",
+            "label_force" => ($data->force) ? : "",
         );
     }
 }

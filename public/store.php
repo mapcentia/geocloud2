@@ -66,6 +66,26 @@ include("html_header.php");
         color: #ffffff;
         background-color: rgb(119, 119, 119);
     }
+
+    .map-thumbs {
+         background-size: 283px 35px;
+         width: 283px;
+         height:35px;
+        vertical-align: middle !important;
+
+    }
+    .map-thumbs b {
+        font-size: 16px;
+        line-height: 5px;
+        padding-left: 5px;
+        padding-top: 5px;
+        color: #000000;
+        text-shadow:
+            -1px -1px 0 #FFF,
+            1px -1px 0 #FFF,
+            -1px 1px 0 #FFF,
+            1px 1px 0 #FFF;
+    }
 </style>
 </head>
 <body>
