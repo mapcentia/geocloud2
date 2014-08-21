@@ -1660,7 +1660,7 @@ $(window).ready(function () {
                                     {
                                         xtype: "panel",
                                         title: __('Settings'),
-                                        height: 625,
+                                        height: 650,
                                         defaults: {
                                             border: false
                                         },

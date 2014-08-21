@@ -49,6 +49,9 @@ wmsLayer.init = function (record) {
                 name: 'label_min_scale'
             },
             {
+                name: 'cluster'
+            },
+            {
                 name: 'meta_tiles',
                 type: 'boolean'
             },
@@ -127,6 +130,7 @@ wmsLayer.init = function (record) {
             opacity: 'Opacity',
             label_max_scale: 'Label max scale',
             label_min_scale: 'Label min scale',
+            cluster: 'Clustering distance',
             meta_tiles: 'Use meta tiles',
             meta_size: 'Meta tile size',
             meta_buffer: 'Meta buffer size (px)',
@@ -197,6 +201,10 @@ wmsLayer.init = function (record) {
                 store: ['Default', 'POINT', 'LINE', 'POLYGON'],
                 editable: false,
                 triggerAction: 'all'
+            }), {}),
+            'cluster': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char nobody is using
             }), {})
         },
         viewConfig: {

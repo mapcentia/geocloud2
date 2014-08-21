@@ -343,7 +343,7 @@ class Mapfile extends \app\inc\Controller
                                 $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             }
                             if ($versioning) {
-                                $dataSql.= " WHERE gc2_version_end_date IS NULL";
+                                $dataSql .= " WHERE gc2_version_end_date IS NULL";
                             }
                         } else {
                             $dataSql = $row['data'];
@@ -384,6 +384,15 @@ class Mapfile extends \app\inc\Controller
 
                 #MINSCALEDENOM
                 <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
+
+                #MINSCALEDENOM
+                <?php if ($layerArr['data'][0]['cluster']) {
+                    echo "CLUSTER\n";
+                    echo "MAXDISTANCE {$layerArr['data'][0]['cluster']}\n";
+                    echo "REGION \"ellipse\"\n";
+                    echo "END\n";
+                }
+                ?>
 
                 #LABELMAXSCALE
                 METADATA
