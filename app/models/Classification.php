@@ -409,7 +409,8 @@ class Classification extends \app\inc\Model
         $data->overlayColor = "#00FF00";
         $data->overlaySymbol = "circle";
         $data->symbol = "circle";
-        $data->opacity = "20";
+        $data->opacity = "25";
+        $data->overlayOpacity = "70";
         $data->force = true;
 
         $res = $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
@@ -460,6 +461,7 @@ class Classification extends \app\inc\Model
             "label2_text" => ($data->labelText) ? : "",
             "label_position" => ($data->labelPosition) ? : "",
             "style_opacity" => ($data->opacity) ? : "",
+            "overlaystyle_opacity" => ($data->overlayOpacity) ? : "",
             "label_force" => ($data->force) ? : "",
         );
     }
