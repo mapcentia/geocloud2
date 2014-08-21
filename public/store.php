@@ -75,7 +75,7 @@ include("html_header.php");
 
     }
     .map-thumbs b {
-        font-size: 16px;
+        font-size: 14px;
         line-height: 5px;
         padding-left: 5px;
         padding-top: 5px;
