@@ -155,11 +155,13 @@ gc2i18n = {
         "Delete column": "Delete column",
         "Add versioning": "Add versioning",
         "This will add versioning to the table. Do you want to proceed?": "This will add versioning to the table. Do you want to proceed?",
-
         "Show legend": "Show legend",
         "Open map in pop up window": "Open map in pop up window",
         "Change the baselayer": "Change the baselayer",
-        "Locate me on the map": "Locate me on the map"
-
+        "Locate me on the map": "Locate me on the map",
+        "Close this window to disable measure tool": "Close this window to disable measure tool",
+        "Measure": "Measure",
+        "Distance": "Distance",
+        "Area": "Area"
     }
 };

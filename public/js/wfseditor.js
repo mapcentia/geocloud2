@@ -17,7 +17,7 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData, searchWin, placeMarkers, placePopup;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -192,6 +192,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             }
         }
     });
+
     if (editable) {
         // We set the control to the second button in wfsTools
         wfsTools[2].control = drawControl;
@@ -849,6 +850,30 @@ $(document).ready(function () {
         },
         '->',
         {
+            text: "<i class='icon-resize-vertical btn-gc'></i> " + __("Measure"),
+            menu: new Ext.menu.Menu({
+                items: [
+                    {
+                        text: __('Distance'),
+                        handler: function () {
+                            openMeasureWin();
+                            measureControls.polygon.deactivate();
+                            measureControls.line.activate();
+                        }
+                    },
+                    {
+                        text: __('Area'),
+                        handler: function () {
+                            openMeasureWin();
+                            measureControls.line.deactivate();
+                            measureControls.polygon.activate();
+                        }
+                    }
+
+                ]
+            })
+        },
+        {
             text: "<i class='icon-search btn-gc'></i> " + __("Search"),
             handler: function (objRef) {
                 if (!searchWin) {
@@ -973,6 +998,114 @@ $(document).ready(function () {
     reLoadTree = function () {
         loadTree();
     };
+    var sketchSymbolizers = {
+        "Point": {
+            pointRadius: 4,
+            graphicName: "square",
+            fillColor: "white",
+            fillOpacity: 1,
+            strokeWidth: 1,
+            strokeOpacity: 1,
+            strokeColor: "#333333"
+        },
+        "Line": {
+            strokeWidth: 3,
+            strokeOpacity: 1,
+            strokeColor: "#666666",
+            strokeDashstyle: "dash"
+        },
+        "Polygon": {
+            strokeWidth: 2,
+            strokeOpacity: 1,
+            strokeColor: "#666666",
+            fillColor: "white",
+            fillOpacity: 0.3
+        }
+    };
+    var measureStyle = new OpenLayers.Style();
+    measureStyle.addRules([
+        new OpenLayers.Rule({symbolizer: sketchSymbolizers})
+    ]);
+    var measureStyleMap = new OpenLayers.StyleMap({"default": measureStyle});
+    measureControls = {
+        line: new OpenLayers.Control.Measure(
+            OpenLayers.Handler.Path, {
+                persist: true,
+                geodesic: true,
+                immediate: true,
+                handlerOptions: {
+                    layerOptions: {
+                     styleMap: measureStyleMap
+                     }
+                }
+            }
+        ),
+        polygon: new OpenLayers.Control.Measure(
+            OpenLayers.Handler.Polygon, {
+                persist: true,
+                geodesic: true,
+                immediate: true,
+                handlerOptions: {
+                    layerOptions: {
+                     styleMap: measureStyleMap
+                     }
+                }
+            }
+        )
+    };
+    function handleMeasurements(event) {
+        var geometry = event.geometry;
+        var units = event.units;
+        var order = event.order;
+        var measure = event.measure;
+        var element = document.getElementById('output');
+        var out = "";
+        if(order === 1) {
+            out += __("Measure") + ": " + measure.toFixed(3) + " " + units;
+        } else {
+            out += __("Measure") + ": " + measure.toFixed(3) + " " + units + "<sup>2</" + "sup>";
+        }
+        element.innerHTML = out;
+    }
+    function openMeasureWin(objRef) {
+        if (!measureWin) {
+            measureWin = new Ext.Window({
+                title: __("Measure"),
+                layout: 'fit',
+                width: 300,
+                height: 90,
+                plain: true,
+                closeAction: 'hide',
+                html: '<div style="padding: 5px"><div id="output" style="height: 20px; margin-bottom: 10px"></div><div>' + __("Close this window to disable measure tool") + '</div></div>',
+                x: 250,
+                y: 35,
+                listeners: {
+                    hide: {
+                        fn: function (el, e) {
+                            measureControls.polygon.deactivate();
+                            measureControls.line.deactivate();
+                        }
+                    }
+                }
+            });
+        }
+        if (typeof(objRef) === "object") {
+            measureWin.show(objRef);
+        } else {
+            measureWin.show();
+        }//end if object reference was passed
+    }
+    measureControls.line.events.on({
+        "measure": handleMeasurements,
+        "measurepartial": handleMeasurements
+    });
+    map.addControl(measureControls.line);
+
+    measureControls.polygon.events.on({
+        "measure": handleMeasurements,
+        "measurepartial": handleMeasurements
+    });
+    map.addControl(measureControls.polygon);
     loadTree();
 });
 function stopEdit() {
