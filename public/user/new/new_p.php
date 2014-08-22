@@ -60,10 +60,10 @@ if (!$row['created']) {
 
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
     ?>
-    <div id="alert" class="alert alert-success"
-         style="width: 200px;margin-right: auto; margin-left: auto;margin-top: 100px">
+    <div id="alert" class="center alert alert-success"
+         style="width: 300px;margin-right: auto; margin-left: auto;margin-top: 100px">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
-        User <?php echo $sUserID?> is created
+        <h3>User <?php echo $sUserID?> is created</3>
     </div>
     <script>$('#alert').bind('closed', function () {
             window.location = '/user/login/p';

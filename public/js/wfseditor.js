@@ -118,7 +118,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             })
         ]};
     var styleMap = new OpenLayers.StyleMap({
-        default: new OpenLayers.Style({
+        "default": new OpenLayers.Style({
                 fillColor: "#000000",
                 fillOpacity: 0.0,
                 pointRadius: 5,
@@ -294,7 +294,7 @@ $(document).ready(function () {
     $("#upload").click(function () {
         window.parent.onAdd();
     });
-    cloud = new mygeocloud_ol.map(null, screenName,{
+    cloud = new mygeocloud_ol.map(null, screenName, {
         controls: [
             new OpenLayers.Control.Navigation({
                 //zoomBoxEnabled: true
@@ -615,13 +615,17 @@ $(document).ready(function () {
                     listeners: {
                         click: {
                             fn: function (e) {
+
                                 try {
                                     stopEdit();
-                                    filter.win.hide();
-                                    filter.win = false;
-
                                 }
                                 catch (e) {
+                                }
+                                if (typeof  filter.win !== "undefined") {
+                                    if (typeof  filter.win.hide !== "undefined") {
+                                        filter.win.hide();
+                                    }
+                                    filter.win = false;
                                 }
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                     window.parent.onEditWMSClasses(e.id);
@@ -814,7 +818,7 @@ $(document).ready(function () {
             text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
             id: "quickdrawbutton",
             disabled: true,
-            handler : function () {
+            handler: function () {
                 var node = tree.getSelectionModel().getSelectedNode();
                 var id = node.id.split(".");
                 var geomField = node.attributes.geomField;
@@ -975,7 +979,7 @@ $(document).ready(function () {
                     failure: function (response) {
                         Ext.MessageBox.show({
                             title: 'Failure',
-                            msg:  __(Ext.decode(response.responseText).message),
+                            msg: __(Ext.decode(response.responseText).message),
                             buttons: Ext.MessageBox.OK,
                             width: 400,
                             height: 300,
@@ -1035,8 +1039,8 @@ $(document).ready(function () {
                 immediate: true,
                 handlerOptions: {
                     layerOptions: {
-                     styleMap: measureStyleMap
-                     }
+                        styleMap: measureStyleMap
+                    }
                 }
             }
         ),
@@ -1047,8 +1051,8 @@ $(document).ready(function () {
                 immediate: true,
                 handlerOptions: {
                     layerOptions: {
-                     styleMap: measureStyleMap
-                     }
+                        styleMap: measureStyleMap
+                    }
                 }
             }
         )
@@ -1060,13 +1064,14 @@ $(document).ready(function () {
         var measure = event.measure;
         var element = document.getElementById('output');
         var out = "";
-        if(order === 1) {
+        if (order === 1) {
             out += __("Measure") + ": " + measure.toFixed(3) + " " + units;
         } else {
             out += __("Measure") + ": " + measure.toFixed(3) + " " + units + "<sup>2</" + "sup>";
         }
         element.innerHTML = out;
     }
+
     function openMeasureWin(objRef) {
         if (!measureWin) {
             measureWin = new Ext.Window({
@@ -1095,6 +1100,7 @@ $(document).ready(function () {
             measureWin.show();
         }//end if object reference was passed
     }
+
     measureControls.line.events.on({
         "measure": handleMeasurements,
         "measurepartial": handleMeasurements

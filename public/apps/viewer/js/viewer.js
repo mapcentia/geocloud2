@@ -178,6 +178,19 @@ Viewer = function () {
     // Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();
+        cloud.map.on('draw:created', function (e) {
+            var type = e.layerType;
+            drawLayer = e.layer;
+
+            if (type === 'marker') {
+                var text = prompt("Enter a text for the marker or cancel to add without text", "");
+                if (text !== null) {
+                    drawLayer.bindLabel(text, { noHide: true}).on("click", function () {
+                    }).showLabel();
+                }
+            }
+            drawnItems.addLayer(drawLayer);
+        });
         $("#draw-button").on("click", function () {
             if (!drawOn) {
                 drawnItems = new L.FeatureGroup();
@@ -211,19 +224,7 @@ Viewer = function () {
                 });
                 cloud.map.addLayer(drawnItems);
                 cloud.map.addControl(drawControl);
-                cloud.map.on('draw:created', function (e) {
-                    var type = e.layerType;
-                    drawLayer = e.layer;
 
-                    if (type === 'marker') {
-                        var text = prompt("Enter a text for the marker or cancel to add without text", "");
-                        if (text !== null) {
-                            drawLayer.bindLabel(text, { noHide: true}).on("click",function () {
-                            }).showLabel();
-                        }
-                    }
-                    drawnItems.addLayer(drawLayer);
-                });
                 drawOn = true;
             } else {
                 cloud.map.removeControl(drawControl);
