@@ -401,8 +401,10 @@ Viewer = function () {
                 // We activate the modals
                 $("#modal-legend .modal-body").append($("#legend"));
                 $(".modal-body").css({"height": (eHeight - sub) + "px"});
-                //$("#modal-info-body").css({"max-height": (eHeight - sub) + "px"});
-                //$("#modal-share-body").css({"max-height": (eHeight - sub) + "px"});
+                $('#legend-modal').on('click', function (e) {
+                    $('#modal-legend').modal();
+                    addLegend();
+                });
             },
             exit: function () {
                 $('#modal-legend').modal('hide');
@@ -422,7 +424,6 @@ Viewer = function () {
                 $('#legend-popover').on('click', function (e) {
                     addLegend();
                     $("#legend").css({"max-height": (eHeight - 100) + "px"});
-
                 });
                 $(".modal-body").css({"max-height": (eHeight - sub) + "px"});
                 //$("#modal-info-body").css({"max-height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
@@ -544,7 +545,6 @@ Viewer = function () {
                                         $.each(out, function (name, property) {
                                             $("#_" + index + " table").append('<tr><td>' + property[2] + '</td><td>' + property[3] + '</td></tr>');
                                         });
-                                        //$("#_" + index + " table").append('<tr><td>&nbsp;</td><td>&nbsp;</td></tr>');
                                         out = [];
                                         $('#info-tab a:first').tab('show');
                                     });
@@ -597,6 +597,7 @@ Viewer = function () {
         shareStumbleupon: shareStumbleupon
     };
 };
+
 
 
 
