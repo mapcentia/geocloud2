@@ -55,17 +55,13 @@ Viewer = function () {
             jsonp: 'jsonp_callback',
             success: function (response) {
                 var list = $("<ul/>"), li, classUl, title;
-                //console.log(response)
-                //console.log(metaDataKeys)
-
                 $.each(response, function (i, v) {
-                    console.log(v.id);
-                    try{
-                    console.log(metaDataKeys[v.id.split(".")[1]].title);
+                    try {
                         title = metaDataKeys[v.id.split(".")[1]].f_table_title;
                     }
-                    catch (e){}
-                        var u, showLayer = false;
+                    catch (e) {
+                    }
+                    var u, showLayer = false;
                     if (typeof v === "object") {
                         for (u = 0; u < v.classes.length; u = u + 1) {
                             if (v.classes[u].name !== "") {
@@ -185,7 +181,7 @@ Viewer = function () {
             if (type === 'marker') {
                 var text = prompt("Enter a text for the marker or cancel to add without text", "");
                 if (text !== null) {
-                    drawLayer.bindLabel(text, { noHide: true}).on("click", function () {
+                    drawLayer.bindLabel(text, { noHide: true}).on("click",function () {
                     }).showLabel();
                 }
             }
@@ -388,11 +384,11 @@ Viewer = function () {
             {
                 label: 'handheld',
                 enter: 0,
-                exit: 400
+                exit: 768
             },
             {
                 label: 'desktop',
-                enter: 401,
+                enter: 769,
                 exit: 10000
             }
         ]);
@@ -533,7 +529,12 @@ Viewer = function () {
                                             $.each(fieldConf, function (name, property) {
                                                 if (property.querable) {
                                                     fieldLabel = (property.alias !== null && property.alias !== "") ? property.alias : name;
-                                                    out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
+                                                    if (property.link) {
+                                                        out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + property.linkprefix + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
+                                                    }
+                                                    else {
+                                                        out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
+                                                    }
                                                 }
                                             });
                                         }
@@ -570,7 +571,7 @@ Viewer = function () {
                         else {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
                         }
-                        if (versioning){
+                        if (versioning) {
                             sql = sql + " AND gc2_version_end_date IS NULL";
                         }
                         sql = sql + " LIMIT 5";

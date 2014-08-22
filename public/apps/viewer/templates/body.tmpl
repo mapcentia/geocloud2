@@ -2,74 +2,72 @@
 <div id="pane">
     <div id="map"></div>
     <nav class="navbar navbar-default" role="navigation">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#"><img style="height: 25px"
-                                                  src="http://www.mapcentia.com/images/icons/frontpage/app.png"></a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#"><img style="height: 25px"
+                                                      src="http://www.mapcentia.com/images/icons/frontpage/app.png"></a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="javascript:void(0)" title="Layers" onclick="$('#menu').multilevelpushmenu('expand');">
+                            {{{Layers}}}</a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{{Baselayers}}} <b
+                                class="caret"></b></a>
+                        <ul class="dropdown-menu" id="base-layer-list">
+                        </ul>
+                    </li>
+                    <li id="share-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="share-modal" title="Share"
+                           onclick="MapCentia.share();">
+                            {{{Share}}} </a>
+                    </li>
+                    <li id="legend-popover-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="legend-popover" rel="popover" data-placement="bottom"
+                                >
+                            {{{Legend}}} </a>
+                    </li>
+                    <li id="legend-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="legend-modal" title="Legend"
+                           onclick="$('#modal-legend').modal();">
+                            {{{Legend}}} </a>
+                    </li>
+                    <li id="draw-button-li" class="gc-btn" style="display: none">
+                        <button type="button" class="btn btn-default navbar-btn" data-toggle="button" id="draw-button">
+                            {{{Draw}}}
+                        </button>
+                    </li>
+                    <li>
+                        <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
+                            <div class="form-group">
+                                <input type="text" id="search-input" name="search-input" class="form-control"
+                                       placeholder="{{{Search}}}">
+                            </div>
+                        </form>
+                    </li>
+                    <li>
+                        <button id="locate-btn" type="button" class="btn btn-default navbar-btn">
+                            <i class="fa fa-location-arrow"></i>
+                        </button>
+                    </li>
 
-                <li>
-                    <a href="javascript:void(0)" title="Layers" onclick="$('#menu').multilevelpushmenu('expand');">
-                        {{{Layers}}}</a>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{{Baselayers}}} <b
-                            class="caret"></b></a>
-                    <ul class="dropdown-menu" id="base-layer-list">
-                    </ul>
-                </li>
-                <li id="share-modal-li" class="gc-btn">
-                    <a href="javascript:void(0)" id="share-modal" title="Share"
-                       onclick="MapCentia.share();">
-                        {{{Share}}} </a>
-                </li>
-                <li id="legend-popover-li" class="gc-btn">
-                    <a href="javascript:void(0)" id="legend-popover" rel="popover" data-placement="bottom"
-                            >
-                        {{{Legend}}} </a>
-                </li>
-                <li id="legend-modal-li" class="gc-btn">
-                    <a href="javascript:void(0)" id="legend-modal" title="Legend"
-                       onclick="$('#modal-legend').modal();">
-                        {{{Legend}}} </a>
-                </li>
-                <li id="draw-button-li" class="gc-btn" style="display: none">
-                    <button type="button" class="btn btn-default navbar-btn" data-toggle="button" id="draw-button">{{{Draw}}}</button>
-                </li>
-                <li>
-                    <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
-                        <div class="form-group">
-                            <input type="text" id="search-input" name="search-input" class="form-control"
-                                   placeholder="{{{Search}}}">
-                        </div>
-                    </form>
-                </li>
-                <li>
-                    <button id="locate-btn" type="button" class="btn btn-default navbar-btn">
-                        <i class="fa fa-location-arrow"></i>
-                    </button>
-                </li>
-
-            </ul>
+                </ul>
+            </div>
         </div>
     </nav>
-
-
     <!-- layers -->
     <div id="layers" class="panel-group"></div>
     <!-- legend -->
     <div id="legend"></div>
-    <!-- Alert -->
-    <div id="alert" class="alert alert-info">
-    </div>
 </div>
 <div id="menu"></div>
 <!-- legend modal -->

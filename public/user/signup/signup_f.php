@@ -6,8 +6,7 @@ include('../html_header.php');
     <div class="container">
         <div id="main">
             <div class="signup-hero">
-                <h2>GC2 is a geospatial platform built on powerful open source software</h2>
-                <p>PostGIS, MapServer, TileCache, Elasticsearch, WMS, WFS-T, SQL API, JavaScript API, OpenLayers, Leaflet and more in one integrated platform.</p>
+                <?php echo \app\conf\App::$param['heroText']; ?>
             </div>
             <div class="dialog dialog-narrow">
                 <div class="center">

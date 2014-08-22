@@ -93,7 +93,7 @@ input[type="radio"], input[type="checkbox"] {
 
 }
 
-@media (max-width: 400px) {
+@media (max-width: 768px) {
 
     #legend-popover-li {
         display: none !important;
@@ -121,7 +121,7 @@ input[type="radio"], input[type="checkbox"] {
     }
 }
 
-@media (min-width: 401px) {
+@media (min-width: 769px) {
 
     #legend-modal-li {
         display: none !important;
@@ -322,3 +322,5 @@ div.olControlZoom {
 .leaflet-draw-actions > li > a {
     color: #ffffff;
 }
+
+
