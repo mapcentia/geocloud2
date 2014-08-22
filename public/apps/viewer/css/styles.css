@@ -61,7 +61,6 @@ img {
 
 .modal-body {
     overflow: auto;
-    padding: 10px;
 }
 
 input[type="radio"], input[type="checkbox"] {
@@ -322,5 +321,7 @@ div.olControlZoom {
 .leaflet-draw-actions > li > a {
     color: #ffffff;
 }
+
+
 
 
