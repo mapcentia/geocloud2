@@ -384,11 +384,11 @@ Viewer = function () {
             {
                 label: 'handheld',
                 enter: 0,
-                exit: 768
+                exit: 767
             },
             {
                 label: 'desktop',
-                enter: 769,
+                enter: 768,
                 exit: 10000
             }
         ]);

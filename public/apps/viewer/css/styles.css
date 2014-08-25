@@ -92,7 +92,7 @@ input[type="radio"], input[type="checkbox"] {
 
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
     #legend-popover-li {
         display: none !important;
@@ -120,7 +120,7 @@ input[type="radio"], input[type="checkbox"] {
     }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
 
     #legend-modal-li {
         display: none !important;
