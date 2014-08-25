@@ -10,210 +10,332 @@
 
 <!--[if lt IE 9]>
 <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-<link href="/styles/banner-ie.css" rel="stylesheet">
+<link href="/css/banner-ie.css" rel="stylesheet">
 <![endif]-->
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/js/jquery-placeholder/jquery.placeholder.js"></script>
 <script src="/js/bootstrap/js/bootstrap.js"></script>
 <script src="/js/jqote2/jquery.jqote2.js"></script>
 
-<link href="/js/bootstrap/css/bootstrap.css" rel="stylesheet">
-<link href="/js/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+<link href="/js/bootstrap3/css/bootstrap.css" rel="stylesheet">
 <link href="/css/banner.css" rel="stylesheet">
+<link rel="StyleSheet" href="http://cdn.eu1.mapcentia.com/css/proximanova.css" type="text/css"/>
+<script>
+    $(function () {
+        $('input, textarea').placeholder();
+
+    });
+</script>
 <style type="text/css">
-    body {
-        background: url(/theme/images/bg_iso.png) repeat top left;
-    }
+body {
+    font-family: proximanova, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
-    .popover-title {
-        display: none !important;
-    }
+.container {
+    position: relative;
+}
 
-    .popover {
-        width: 200px;
-    }
+.popover-title {
+    display: none !important;
+}
 
-    h1, h2, h3, h4, h5, h6 {
-        margin: 10px 0;
-        font-family: inherit;
-        font-weight: bold;
-        line-height: 1;
-        color: inherit;
-        text-rendering: optimizelegibility;
-    }
+.popover {
+    width: 200px;
+}
 
-    .navbar .brand-dev:hover {
-        text-decoration: none;
-    }
+h1, h2, h3, h4, h5, h6 {
+    margin: 10px 0;
+    font-family: inherit;
+    font-weight: bold;
+    line-height: 1;
+    color: inherit;
+    text-rendering: optimizelegibility;
+}
 
-    .navbar .brand-dev {
-        float: left;
-        display: block;
-        padding: 8px 20px 12px;
-        margin-left: -20px;
-        font-size: 20px;
-        font-weight: 200;
-        line-height: 1;
-        color: #ffffff;
-    }
+.navbar .brand-dev:hover {
+    text-decoration: none;
+}
 
-    .dialog, .dashboard {
-        border: 1px solid black;
-        padding: 40px;
-        margin: auto;
-        margin-top: 50px;
-        background-color: white;
-        border-radius: 10px;
-        border: 3px solid rgba(0, 0, 0, 0.2);
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-        background-clip: padding-box;
-    }
+.navbar .brand-dev {
+    float: left;
+    display: block;
+    padding: 8px 20px 12px;
+    margin-left: -20px;
+    font-size: 20px;
+    font-weight: 200;
+    line-height: 1;
+    color: #ffffff;
+}
 
-    .dashboard-create {
-        padding: 40px;
-        margin: auto;
-        margin-top: 50px;
-    }
+.dialog, .dashboard {
+    border: 1px solid black;
+    padding: 40px;
+    margin-left: auto;
+    background-color: #f7f7f7;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-clip: padding-box;
+    position: relative;
+}
+.dialog-center {
+    border: 1px solid black;
+    padding: 40px;
+    margin: auto;
+    background-color: #f7f7f7;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-clip: padding-box;
+    position: relative;
+}
 
-    .dialog {
-        position: relative;
-        width: 440px;
-    }
+.signup-hero {
+    position: absolute !important;
+    width: 450px;
+    margin: 0;
+    padding: 60px 0;
+    font-family: proximanova, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
-    #logo {
-        width: 120px;
-        position: absolute;
-        right: 20px;
-        bottom: 20px;
-    }
+#main {
+    margin: 0;
+    padding: 0;
+    width: 840px;
+    margin: auto;
+    margin-top: 75px;
+}
 
-    .dashboard {
-        min-height: 200px;
-    }
+.container {
+    position: relative;
+}
 
-    .first {
-        margin-top: 20px
-    }
+.dashboard-create {
+    padding: 40px;
+    margin: auto;
+    margin-top: 50px;
+}
 
-    .box {
-        -webkit-border-radius: 4px;
-        -moz-border-radius: 4px;
-        border-radius: 4px;
-        adding: 10px;
-        display: block;
-        background: white;
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, white), color-stop(100%, #DDD));
-        background: -webkit-linear-gradient(top, white 0, #DDD 100%);
-        background: -moz-linear-gradient(top, white 0, #DDD 100%);
-        background: -ms-linear-gradient(top, white 0, #DDD 100%);
-        background: -o-linear-gradient(top, white 0, #DDD 100%);
-        background: linear-gradient(top, white 0, #DDD 100%);
-        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#dddddd', GradientType=0);
-        border-left: solid 1px #BBB;
-        border-right: solid 1px #CCC;
-        border-bottom: solid 1px #AAA;
-        border-top: solid 1px #DDD;
-        -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-        -moz-box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-        box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-        height: 230px;
-        position: relative;
-    }
+.dialog, .dialog-wide {
 
-    .inner {
-        padding: 10px;
-    }
+}
 
-    .box h2 {
-        display: block;
-        padding: 10px 12px;
-        margin-bottom: 12px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #777;
-        border-bottom: 1px solid #E2E2E2;
-        -webkit-box-shadow: 0 1px 0 #fff;
-        -moz-box-shadow: 0 1px 0 #fff;
-        box-shadow: 0 1px 0 #fff;
-        -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        line-height: 20px;
-    }
+.dialog-narrow {
+    width: 350px;
+}
 
-    h2 span i {
-        font-size: 13px;
-        font-weight: bold;
-        font-style: normal
-    }
+.dialog-wide {
+    width: 450px;
+}
 
-    .icon-ok {
-        margin-right: 5px;
-    }
+#logo {
+    width: 95px;
 
-    .box .inner {
-        color: #777;
-        font-weight: bold;
-        -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
-        line-height: 20px;
-    }
+}
 
-    .box .minus {
-        color: #aaa;
-    }
+.dashboard {
+    min-height: 200px;
+}
 
-    .box .no-icon {
-        visibility: hidden;
-    }
+.first {
+    margin-top: 10px
+}
 
-    .round_border {
-        -webkit-border-radius: 4px;
-        -moz-border-radius: 4px;
-        border-radius: 4px;
-    }
+.last {
+    margin-bottom: 30px;
+}
 
-    .btn-upgrade {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        float: right;
-    }
+.box {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    adding: 10px;
+    display: block;
+    background: white;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, white), color-stop(100%, #DDD));
+    background: -webkit-linear-gradient(top, white 0, #DDD 100%);
+    background: -moz-linear-gradient(top, white 0, #DDD 100%);
+    background: -ms-linear-gradient(top, white 0, #DDD 100%);
+    background: -o-linear-gradient(top, white 0, #DDD 100%);
+    background: linear-gradient(top, white 0, #DDD 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#dddddd', GradientType=0);
+    border-left: solid 1px #BBB;
+    border-right: solid 1px #CCC;
+    border-bottom: solid 1px #AAA;
+    border-top: solid 1px #DDD;
+    -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
+    -moz-box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
+    height: 230px;
+    position: relative;
+}
 
-    .all-plans i {
-        margin-left: 20px;
-    }
+.inner {
+    padding: 10px;
+}
 
-    .all-plans {
-        margin-top: 15px;
-    }
+.box h2 {
+    display: block;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #777;
+    border-bottom: 1px solid #E2E2E2;
+    -webkit-box-shadow: 0 1px 0 #fff;
+    -moz-box-shadow: 0 1px 0 #fff;
+    box-shadow: 0 1px 0 #fff;
+    -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    line-height: 20px;
+}
 
-    .form {
-        margin-bottom: 0px;
-    }
+h2 span i {
+    font-size: 13px;
+    font-weight: bold;
+    font-style: normal
+}
 
-    #btn-admin {
-        margin-top: 50px;
-    }
+.icon-ok {
+    margin-right: 5px;
+}
 
-    .map-entry {
-        font-size: 14pt;
-        font-weight: bold;
-    }
+.box .inner {
+    color: #777;
+    font-weight: bold;
+    -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    line-height: 20px;
+}
 
-    .map-entry a {
-        float: right;
-    }
+.box .minus {
+    color: #aaa;
+}
 
-    .subuser-entry td {
-        border:none;
-        padding: 3px;
-    }
+.box .no-icon {
+    visibility: hidden;
+}
+
+.round_border {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.btn-upgrade {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    float: right;
+}
+
+.all-plans i {
+    margin-left: 20px;
+}
+
+.all-plans {
+    margin-top: 15px;
+}
+
+.form {
+    margin-bottom: 0px;
+}
+
+#btn-admin {
+    margin-top: 50px;
+}
+
+.map-entry {
+    font-size: 12pt;
+    font-weight: normal;
+}
+
+.map-entry a {
+    float: left;
+}
+
+.subuser-entry td {
+    border: none;
+    padding: 3px;
+}
+
+.mm-or {
+    top: 69px;
+    color: #666666;
+    font-size: bold;
+    background-color: #f7f7f7;
+    position: absolute;
+    text-align: center;
+    top: -10px;
+    width: 40px;
+    left: 115px;
+}
+
+.lgbx-signup {
+    border-top: 1px solid #dfdfdf;
+    margin-top: 20px;
+    padding-top: 20px;
+    position: relative;
+}
+
+.center {
+    text-align: center;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.label {
+    width: 100%;
+}
+
+#db_exists_not {
+    margin-top: 100px;
+}
+
+#corner a {
+    position: absolute;
+    background-image: url("<?php echo \app\conf\App::$param['loginLogo']; ?>");
+    width: 120px;
+    height: 65px;
+    background-size: 120px 65px;
+    background-repeat: no-repeat;
+    top: 5px;
+    left: 5px;
+    display: block;
+    z-index: 2;
+}
+
+.fixed-width {
+    width: 40px;
+}
+.padded {
+    padding: 40px;
+}
 </style>
 </head>
 <body>
 <?php include_once("../../../app/conf/analyticstracking.php") ?>
-<span id="corner-banner">
-            <em>beta</em>
-        </span>
+<div id="corner">
+    <a href="<?php echo (\app\conf\App::$param['homepage']) ? : "http://www.mapcentia.com/en/geocloud/geocloud.htm"; ?>"></a>
+</div>
+<div style="position: absolute; right: 5px; top: 3px; z-index: 2">
+    <div>
+        <?php if (!$_SESSION['auth'] || !$_SESSION['screen_name']) { ?>
+            <a href="/user/login">Sign In</a>
+        <?php
+        } else {
+            ?>
+            <a href="/user/login/p"><?php echo $_SESSION['screen_name'] ?></a>
+            <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
+            <?php if (!$_SESSION['subuser']) { ?>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New Sub-User</a>
+            <?php } ?>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change
+                Password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
+                href="/user/logout">Log Out</a>&nbsp;&nbsp;&nbsp;
+        <?php } ?>
+    </div>
+</div>

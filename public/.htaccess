@@ -17,6 +17,8 @@ RewriteRule user/edit/$ user/edit/edit_f.php [L]
 RewriteRule user/edit/p$ user/edit/edit_p.php [L]
 RewriteRule user/new/$ user/new/new_f.php [L]
 RewriteRule user/new/p$ user/new/new_p.php [L]
+RewriteRule user/delete/$ user/delete/delete_f.php [L]
+RewriteRule user/delete/p$ user/delete/delete_p.php [L]
 
 # Always rewrite GetLegendGraphic, GetFeatureInfo, DescribeFeatureType, format_options and all POST to WMS
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetLegendGraphic($|&) [NC,OR]

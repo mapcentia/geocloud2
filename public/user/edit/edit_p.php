@@ -43,10 +43,10 @@ function PasswordCheck($sValue, &$oStatus)
 
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
     ?>
-    <div id="alert" class="alert alert-success"
-         style="width: 200px;margin-right: auto; margin-left: auto;margin-top: 100px">
+    <div id="alert" class="center alert alert-success"
+         style="width: 400px;margin-right: auto; margin-left: auto;margin-top: 100px">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
-        Your password is changed
+        <h3>Your password is changed</h3>
     </div>
     <script>$('#alert').bind('closed', function () {
             window.location = '/user/login/p';

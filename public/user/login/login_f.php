@@ -54,46 +54,47 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
 }
 ?>
 <div class="container">
-    <div class="dialog">
-        <img src="<?php echo \app\conf\App::$param['loginLogo']; ?>" id="logo">
-
-        <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon" class="">
-            <h3>Login</h3>
-
-            <div class="control-group first">
-
-                <div class="controls">
-                    <vllabel
-                        errtext="<span class='label label-important'>User name or Password incorrect</span>"
-                        validators="UserID,UserIDExist,Password"
-                        errclass="error">
-                        User name
-                    </vllabel>
-                    <input name="UserID" type="text" class="control" size="20">
+    <div id="main">
+        <div class="signup-hero">
+            <?php echo \app\conf\App::$param['heroText']; ?>
+        </div>
+        <div class="dialog dialog-narrow">
+            <form action="/user/login/" method="post" id="SelfSubmit" runat="vdaemon">
+                <div class="center">
+                    <img src="<?php echo \app\conf\App::$param['loginLogo']; ?>" id="logo">
                 </div>
-                <vlvalidator name="UserID" type="required" control="UserID">
-                    <vlvalidator name="UserIDExist" type="custom" control="UserID" function="UserIDCheck">
-            </div>
+                <div class="form-group first">
+                    <div class="controls">
+                        <vllabel
+                            errtext="<span class='label label-warning'>User name or Password incorrect</span>"
+                            validators="UserID,UserIDExist,Password"
+                            errclass="error">
+                            &nbsp;
+                        </vllabel>
+                        <input name="UserID" type="text" class="form-control" size="20" placeholder="User name">
+                    </div>
+                    <vlvalidator name="UserID" type="required" control="UserID"/>
+                    <vlvalidator name="UserIDExist" type="custom" control="UserID" function="UserIDCheck"/>
 
-            <div class="control-group">
-                <label class="control-label" for="inputEmail">Password</label>
 
-                <div class="controls">
-                    <input name="Password" type="password" class="control" size="20">
+                    <div class="controls">
+                        <label> &nbsp;</label>
+                        <input name="Password" type="password" class="form-control last" size="20"
+                               placeholder="Password">
+                    </div>
+                    <vlvalidator type="required" name="Password" control="Password"/>
+                    <input name="submit" type="submit" class="btn btn-danger full-width"
+                           value="Sign In">
+
+                    <div class="lgbx-signup">
+                        <span class="mm-or">OR</span>
+                        <a href="/user/signup" class="btn btn-primary full-width">Create New
+                            Account</a>
+                    </div>
                 </div>
-                <vlvalidator type="required" name="Password" control="Password">
-            </div>
-            <div class="control-group">
-                <input name="submit" type="submit" class="btn btn-info" value="Log in">
-            </div>
-
-            <p>
-                Not using GeoCloud2? <b><a href="/user/signup/">Sign up</a></b>
-            </p>
-
-        </form>
+            </form>
+        </div>
     </div>
-
 </div>
 </body>
 </html>

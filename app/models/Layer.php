@@ -258,6 +258,9 @@ class Layer extends \app\models\Table
             $privileges[$subuser] = ($privileges[$subuser]) ? : "none";
             $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
         }
+        if (!isset($response['data'])){
+            $response['data'] = array();
+        }
         $response['success'] = true;
         $response['message'] = "Privileges fetched";
         return $response;

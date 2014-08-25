@@ -44,10 +44,18 @@ class App
             //array("id" => "bingAerial", "name" => "Bing Aerial"),
             //array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
         ),
+
+        // Bing key
         "bingApiKey" => 'your_bing_map_key',
 
-        // Logo on log-in page
+        //Force a locale
+        //"locale" => "en_US",
+
+        // Logo
         "loginLogo" => "/assets/images/MapCentia_500.png",
+
+        // Homepage link for corner logo
+        "homepage" => "http://www.mapcentia.com/en/geocloud/geocloud.htm",
 
         // If true, low layer sort id puts the layer on top
         "reverseLayerOrder" => true,
@@ -57,6 +65,9 @@ class App
 
         // Use Intercom.io for messaging MapCentia
         "intercom_io" => true,
+
+        // Hero text on log in / sign up page
+        "heroText" => "<h2>GC2 is a geospatial platform built on powerful open source software</h2><p>PostGIS, MapServer, TileCache, Elasticsearch, WMS, WFS-T, SQL API, JavaScript API, OpenLayers, Leaflet and more in one integrated platform.</p>",
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

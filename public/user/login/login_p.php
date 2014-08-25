@@ -27,71 +27,82 @@ if (App::$param['cdnSubDomain']) {
 // If main user fetch all sub users
 if (!$_SESSION['subuser']) {
     $_SESSION['subusers'] = array();
+    $_SESSION['subuserEmails'] = array();
     $sQuery = "SELECT * FROM {$sTable} WHERE parentdb = :sUserID";
     $res = $postgisObject->prepare($sQuery);
     $res->execute(array(":sUserID" => $_SESSION['screen_name']));
     while ($rowSubUSers = $postgisObject->fetchRow($res)) {
         $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+        $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
     };
 }
 ?>
 <div class="container">
-    <div id="db_exists" style="display: none">
-        <div class="row dashboard">
-            <div class="span3">
-                <?php
-                echo "<a target='_blank' href='" . $host . "/store/{$_SESSION['screen_name']}' id='btn-admin' class='btn btn-large btn-info' data-placement='top'
-                                     title='Start the administration of your GeoCloud'>Start admin</a>";
-                ?>
-            </div>
-            <div class="span3">
-                <div id="schema-list">
-                    <h2>Maps <span><i><i id="schema-tool-tip" data-placement="right" class="icon-info-sign"
-                                         title="Logical groups of layers"></i></i></span></h2>
-                    <table class="table" id="schema-table"></table>
-                </div>
-            </div>
-            <div class="span5" id="subusers-el" style="display: none">
-                <div><strong>Users in this database</strong></div>
-                <table class="table" id="subusers-table"></table>
-            </div>
-        </div>
-
-        <div style="position: absolute; right: 5px; top: 3px">
-            <div><?php echo $_SESSION['screen_name'] ?>
-                <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
-                <?php if (!$_SESSION['subuser']) { ?>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New sub-user</a>
-                <?php } ?>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
-                    href="/user/logout">Log out</a>&nbsp;&nbsp;&nbsp;
-            </div>
-        </div>
-    </div>
-    <div id="db_exists_not" style="display: none">
-        <div class="row dashboard-create">
+    <div id="main">
+        <div id="db_exists" style="display: none">
             <div class="row">
-                <div class="span3">
-                    <?php
-                    echo "<a href='" . $host . "/user/createstore' id='btn-create' class='btn btn-large btn-info' title='' data-placement='right' data-content='Click here to create your geocloud. It may take some secs, so stay on this page.'>Create new database</a>";
-                    ?>
+                <div id="sb" class="col-md-12 dashboard" style="display: none">
+                    <div id="schema-list">
+                        <table class="table table-condensed" id="schema-table">
+                            <thead><tr><th class="col-md-2">Schema</th><th class="col-md-3">Viewer</th><!--<th>Viewer</th>--><th>Admin</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 padded" id="subusers-el" style="display: none">
+                    <table class="table table-condensed" id="subusers-table">
+                        <thead><tr><th class="col-md-2">Sub-user</th><th class="col-md-3">Email</th><th>Delete</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
+        <div id="db_exists_not" style="display: none">
+            <?php
+            echo "<a href='" . $host . "/user/createstore' id='btn-create' class='btn btn-lg btn-danger' title='' data-placement='right' data-content='Click here to create your PostGIS database.'>Create New Database</a>";
+            ?>
+        </div>
+    </div>
 </div>
+<div id="confirm-user-delete" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Confirm deletion of sub-user</h4>
+            </div>
+            <div class="modal-body">
+                <p>If you later create a sub-user with the same name, it will get the privileges of the deleted one.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-user">Delete</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 <script type="text/html" id="template-schema-list">
-    <tr class="map-entry">
+    <tr class="map-edntry">
         <td><%= this . schema %></td>
-        <td><a target="_blank"
-               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>">View
+        <td><a class="btn btn-xs btn-default fixed-width" target="_blank"
+               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span class="glyphicon glyphicon-globe"></span>
+        </a></td>
+        <!--<td><a target="_blank"
+               href="<?php echo $cdnHost . "/apps/heron/" ?><%= db %>/<%= this . schema %>">View
+        </a></td>-->
+        <td><a class="btn btn-xs btn-primary fixed-width" target="_blank"
+               href="/store/<%= db %>/<%= this . schema %>"><span class="glyphicon glyphicon-cog"></span>
         </a></td>
     </tr>
 </script>
 <script type="text/html" id="template-subuser-list">
     <tr class="subuser-entry">
-        <td><%= this %></td>
+        <td><span class="glyphicon glyphicon-user"></span> <%= this %></td>
+        <td><%= subUserEmails[this] %></td>
+        <td><form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/><button class="btn btn-xs btn-danger fixed-width delete" type="submit"><span class="glyphicon glyphicon-trash"></span></button></form></td>
     </tr>
 </script>
 <script>
@@ -102,18 +113,14 @@ if (!$_SESSION['subuser']) {
     <?php
        if (!$_SESSION['subuser']){
        echo "var subUsers = ".json_encode($_SESSION['subusers']).";\n";
+       echo "var subUserEmails = ".json_encode($_SESSION['subuserEmails']).";\n";
        }
        else {
        echo "var subUsers = null;\n";
+       echo "var subUserEmails = null;\n";
        }
    ?>
     $(window).ready(function () {
-        if (subUsers) {
-            $('#subusers-table').append($('#template-subuser-list').jqote(subUsers));
-            if (subUsers.length > 0) {
-                $("#subusers-el").delay(200).fadeIn(400);
-            }
-        }
         $.ajax({
             url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',
             dataType: 'jsonp',
@@ -130,7 +137,22 @@ if (!$_SESSION['subuser']) {
                         jsonp: 'jsonp_callback',
                         success: function (response) {
                             //console.log(response);
-                            $('#schema-table').append($('#template-schema-list').jqote(response.data));
+                            $('#schema-table tbody').append($('#template-schema-list').jqote(response.data));
+                            $('#sb').fadeIn(400);
+                            if (subUsers) {
+                                $('#subusers-table tbody').append($('#template-subuser-list').jqote(subUsers));
+                                if (subUsers.length > 0) {
+                                    $("#subusers-el").delay(200).fadeIn(400);
+                                    $('.delete').on('click', function(e){
+                                        var $form=$(this).closest('form');
+                                        e.preventDefault();
+                                        $('#confirm-user-delete').modal({ backdrop: 'static', keyboard: false })
+                                            .one('click', '#delete-user', function () {
+                                                $form.trigger('submit');
+                                            });
+                                    });
+                                }
+                            }
                         }
                     });
                     $.ajax({
