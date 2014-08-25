@@ -106,7 +106,7 @@ Viewer = function () {
             layersStr = arr.join(",");
         }
         javascript = "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
-            "<div/>\n" +
+            "<div></div>\n" +
             "<script>\n" +
             "(function () {\n" +
             "gc2map.init({\n" +
@@ -115,7 +115,7 @@ Viewer = function () {
             "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
             "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
             "          width: '100%',\n" +
-            "          height: '400px'\n" +
+            "          height: '400px',\n" +
             "          schema: '" + schema + "'\n" +
             "     });\n" +
             "}())\n" +

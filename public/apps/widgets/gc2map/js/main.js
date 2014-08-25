@@ -154,7 +154,9 @@ MapCentia = function (globalId) {
     init = function (conf) {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
         defaults = {
-            baseLayers: null
+            baseLayers: null,
+            callBack: function () {
+            }
         };
         if (conf) {
             for (prop in conf) {
@@ -445,10 +447,12 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
+        defaults.callBack();
     };
-    return{
+    return {
         init: init,
         cloud: cloud,
+        map: cloud.map,
         switchLayer: switchLayer,
         setBaseLayer: setBaseLayer,
         openMapWin: openMapWin,

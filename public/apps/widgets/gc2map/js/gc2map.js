@@ -181,20 +181,22 @@ if (typeof gc2map === "undefined") {
                     staticMap: false,
                     infoText: null,
                     infoTextWidth: "200px",
-                    locale: null
+                    locale: null,
+                    key: null
                 },
                 prop,
                 divs = document.getElementsByTagName('div'),
                 div = divs[divs.length - 1],
-                gc2RandId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
+                gc2RandId;
             if (conf) {
                 for (prop in conf) {
                     defaults[prop] = conf[prop];
                 }
             }
+            gc2RandId = (defaults.key !== null) ? defaults.key : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
             div.setAttribute("id", gc2RandId);
             div.setAttribute("class", "gc2map");
             div.style.width = defaults.width;
@@ -243,6 +245,9 @@ if (typeof gc2map === "undefined") {
                     setTimeout(pollForScripts, 10);
                 }
             }());
+            return {
+                maps: maps
+            };
         };
         return {
             maps: maps,
