@@ -44,6 +44,7 @@ classWizards.init = function (record) {
                                         success: function (response) {
                                             Ext.getCmp("a3").remove(wmsClass.grid);
                                             wmsClasses.store.load();
+                                            wmsLayer.store.load();
                                             writeFiles(record.f_table_schema + "." + record.f_table_name);
                                             App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                         },
@@ -122,6 +123,7 @@ classWizards.init = function (record) {
                                             success: function (response) {
                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                 wmsClasses.store.load();
+                                                wmsLayer.store.load();
                                                 writeFiles(record.f_table_schema + "." + record.f_table_name);
                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                             },
@@ -261,6 +263,7 @@ classWizards.init = function (record) {
                                                             success: function (response) {
                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                 wmsClasses.store.load();
+                                                                wmsLayer.store.load();
                                                                 writeFiles(record.f_table_schema + "." + record.f_table_name);
                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                             },

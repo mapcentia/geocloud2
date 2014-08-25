@@ -390,6 +390,7 @@ class Mapfile extends \app\inc\Controller
                     echo "CLUSTER\n";
                     echo "MAXDISTANCE {$layerArr['data'][0]['cluster']}\n";
                     echo "REGION \"ellipse\"\n";
+                    //echo "PROCESSING \"CLUSTER_GET_ALL_SHAPES=false\"\n";
                     echo "END\n";
                 }
                 ?>

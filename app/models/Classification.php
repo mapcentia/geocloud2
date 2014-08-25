@@ -10,6 +10,7 @@ class Classification extends \app\inc\Model
     private $table;
     private $def;
     private $geometryType;
+    private $tile;
 
     function __construct($table)
     {
@@ -17,6 +18,7 @@ class Classification extends \app\inc\Model
         $this->layer = $table;
         $bits = explode(".", $this->layer);
         $this->table = new \app\models\Table($bits[0] . "." . $bits[1]);
+        $this->tile = new \app\models\Tile($table);
         // Check if geom type is overridden
         $def = new \app\models\Tile($table);
         $this->def = $def->get();
@@ -180,8 +182,38 @@ class Classification extends \app\inc\Model
         $this->store(json_encode(array()));
     }
 
+    private function setLayerDef()
+    {
+        $def = $this->tile->get();
+        if (!$def['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+        $def["data"][0]["cluster"] = null;
+        $defJson = json_encode($def["data"][0]);
+        $res = $this->tile->update($defJson);
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
+        $response['success'] = true;
+        return $response;
+
+    }
+
     public function createSingle($data)
     {
+        $res = $this->setLayerDef();
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
         $this->reset();
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
@@ -199,6 +231,13 @@ class Classification extends \app\inc\Model
 
     public function createUnique($field, $data)
     {
+        $res = $this->setLayerDef();
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
         $fieldObj = $this->table->metaData[$field];
@@ -244,6 +283,13 @@ class Classification extends \app\inc\Model
 
     public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
     {
+        $res = $this->setLayerDef();
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
         $query = "SELECT max({$field}) as max, min({$field}) FROM " . $this->table->table;
@@ -287,6 +333,13 @@ class Classification extends \app\inc\Model
 
     public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
     {
+        $res = $this->setLayerDef();
+        if (!$res['success']) {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+            return $response;
+        }
         $layer = new \app\models\Layer();
         $geometryType = $layer->getValueFromKey($this->layer, type);
         $query = "SELECT count(*) as count FROM " . $this->table->table;
@@ -368,8 +421,7 @@ class Classification extends \app\inc\Model
         $this->reset();
 
         // Set layer def
-        $layer = new \app\models\Tile($this->layer);
-        $def = $layer->get();
+        $def = $this->tile->get();
         if (!$def['success']) {
             $response['success'] = false;
             $response['message'] = "Error";
@@ -380,7 +432,7 @@ class Classification extends \app\inc\Model
         $def["data"][0]["meta_tiles"] = true;
         $def["data"][0]["meta_size"] = 4;
         $defJson = json_encode($def["data"][0]);
-        $res = $layer->update($defJson);
+        $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
             $response['message'] = "Error";
