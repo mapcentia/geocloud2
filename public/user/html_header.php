@@ -78,6 +78,16 @@ h1, h2, h3, h4, h5, h6 {
     background-clip: padding-box;
     position: relative;
 }
+.dialog-center {
+    border: 1px solid black;
+    padding: 40px;
+    margin: auto;
+    background-color: #f7f7f7;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-clip: padding-box;
+    position: relative;
+}
 
 .signup-hero {
     position: absolute !important;
@@ -280,7 +290,8 @@ h2 span i {
 .label {
     width: 100%;
 }
-#db_exists_not{
+
+#db_exists_not {
     margin-top: 100px;
 }
 
@@ -297,6 +308,12 @@ h2 span i {
     z-index: 2;
 }
 
+.fixed-width {
+    width: 40px;
+}
+.padded {
+    padding: 40px;
+}
 </style>
 </head>
 <body>
@@ -306,18 +323,19 @@ h2 span i {
 </div>
 <div style="position: absolute; right: 5px; top: 3px; z-index: 2">
     <div>
-        <?php if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {?>
+        <?php if (!$_SESSION['auth'] || !$_SESSION['screen_name']) { ?>
             <a href="/user/login">Sign In</a>
-        <?php }
-        else {
-        ?>
-        <a href="/user/login/p"><?php echo $_SESSION['screen_name'] ?></a>
-        <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
-        <?php if (!$_SESSION['subuser']) { ?>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New Sub-User</a>
-        <?php } ?>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change Password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
-            href="/user/logout">Log Out</a>&nbsp;&nbsp;&nbsp;
+        <?php
+        } else {
+            ?>
+            <a href="/user/login/p"><?php echo $_SESSION['screen_name'] ?></a>
+            <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
+            <?php if (!$_SESSION['subuser']) { ?>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New Sub-User</a>
+            <?php } ?>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change
+                Password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
+                href="/user/logout">Log Out</a>&nbsp;&nbsp;&nbsp;
         <?php } ?>
     </div>
 </div>

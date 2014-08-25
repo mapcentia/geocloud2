@@ -8,7 +8,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
 ?>
     <div class="container">
         <div id="main">
-            <div class="dialog">
+            <div class="dialog-center">
                 <form id="Register" action="p" method="POST" runat="vdaemon" disablebuttons="all">
                     <div class="form-group">
                         <div class="center">

@@ -9,7 +9,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 ?>
 <div class="container">
     <div id="main">
-        <div class="dialog">
+        <div class="dialog-center dialog-narrow">
             <form action="/user/edit/p" method="post" id="SelfSubmit" runat="vdaemon" class="">
                 <div class="form-group">
                     <div class="center">
@@ -34,7 +34,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
                             &nbsp;
                         </vllabel>
                         <input name="Password" type="password" class="form-control" id="Password"
-                               placeholder="Password"/>
+                               placeholder="New password"/>
                         <vlvalidator type="required" name="Password" control="Password"/>
                     </div>
 
