@@ -94,7 +94,7 @@ if (!$_SESSION['subuser']) {
                href="<?php echo $cdnHost . "/apps/heron/" ?><%= db %>/<%= this . schema %>">View
         </a></td>-->
         <td><a class="btn btn-xs btn-primary fixed-width" target="_blank"
-               href="/store/<%= db %>/<%= this . schema %>"><span class="glyphicon glyphicon-cog"></span>
+               href="<?php echo $cdnHost . "/store/" ?><%= this . schema %>"><span class="glyphicon glyphicon-cog"></span>
         </a></td>
     </tr>
 </script>
