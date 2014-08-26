@@ -298,9 +298,9 @@ h2 span i {
 #corner a {
     position: absolute;
     background-image: url("<?php echo \app\conf\App::$param['loginLogo']; ?>");
-    width: 120px;
-    height: 65px;
-    background-size: 120px 65px;
+    width: 150px;
+    height: 80px;
+    background-size: 120px;
     background-repeat: no-repeat;
     top: 5px;
     left: 5px;
