@@ -386,6 +386,7 @@ $(document).ready(function () {
                     var geoField = metaDataKeys[value.split(".")[1]].f_geometry_column;
                     var geoType = metaDataKeys[value.split(".")[1]].type;
                     var layerTitel = metaDataKeys[value.split(".")[1]].f_table_name;
+                    var versioning = metaDataKeys[value.split(".")[1]].versioning;
                     if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                         var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
@@ -499,11 +500,20 @@ $(document).ready(function () {
                     gc2.addGeoJsonStore(qstore[index]);
                     var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                     if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                        sql = "SELECT *,round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) as afstand FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance + " ORDER BY afstand LIMIT 1";
+                        sql = "SELECT * FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
+                        if (versioning) {
+                            sql = sql + " AND gc2_version_end_date IS NULL";
+                        }
+                        sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                     }
                     else {
-                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\") LIMIT 1";
+                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
+                        if (versioning) {
+                            sql = sql + " AND gc2_version_end_date IS NULL";
+                        }
+
                     }
+                    sql = sql + " LIMIT 1";
                     qstore[index].sql = sql;
                     qstore[index].load();
                 });

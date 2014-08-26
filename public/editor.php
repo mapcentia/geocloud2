@@ -170,20 +170,10 @@ include("html_header.php");
 </style>
 </head>
 <body>
-<div id="instructions">
-    <p style="padding: 10px">
-        Make a layer name in the layer tree active and click 'Start edit'. Only Features in the view port will be
-        loaded. So on big layers zoom in before you start to edit.
-    </p>
-
-    <p style="padding: 10px">
-        To load tiles check the box beside the layer name.
-    </p>
-</div>
+<div id="instructions"></div>
 <div id="upload">
     <a href="#">
         <img src="/assets/images/upload_black.png">
-
         <div>.shp .geojson .gml .kml .tab .mif</div>
     </a>
 </div>

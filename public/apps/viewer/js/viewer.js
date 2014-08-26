@@ -566,15 +566,18 @@ Viewer = function () {
                         cloud.addGeoJsonStore(qstore[index]);
                         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),\"" + f_geometry_column + "\")";
+                            sql = "SELECT * FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
+                            if (versioning) {
+                                sql = sql + " AND gc2_version_end_date IS NULL";
+                            }
+                            sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
+                        } else {
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                            if (versioning) {
+                                sql = sql + " AND gc2_version_end_date IS NULL";
+                            }
                         }
-                        else {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
-                        }
-                        if (versioning) {
-                            sql = sql + " AND gc2_version_end_date IS NULL";
-                        }
-                        sql = sql + " LIMIT 5";
+                        sql = sql + "LIMIT 5";
                         qstore[index].sql = sql;
                         qstore[index].load();
                     });
