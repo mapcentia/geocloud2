@@ -183,8 +183,8 @@ geocloud = (function () {
         this.id = this.defaults.id;
         this.sql = this.defaults.sql;
         this.db = this.defaults.db;
+        this.host = this.defaults.host.replace("cdn.", "");
         this.load = function (doNotShowAlertOnError) {
-            var url = this.defaults.host.replace("cdn.", "");
             try {
                 map = me.map;
                 sql = this.sql;
@@ -202,7 +202,7 @@ geocloud = (function () {
                 async: this.defaults.async,
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
-                url: url + '/api/v1/sql/' + this.db,
+                url: this.host + '/api/v1/sql/' + this.db,
                 type: this.defaults.method,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
