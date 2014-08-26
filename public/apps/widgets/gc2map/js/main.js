@@ -154,9 +154,7 @@ MapCentia = function (globalId) {
     init = function (conf) {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
         defaults = {
-            baseLayers: null,
-            callBack: function () {
-            }
+
         };
         if (conf) {
             for (prop in conf) {
@@ -377,6 +375,7 @@ MapCentia = function (globalId) {
                         var isEmpty = true,
                             srid = metaDataKeys[value.split(".")[1]].srid,
                             geoType = metaDataKeys[value.split(".")[1]].type,
+                            f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column,
                             layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name,
                             not_querable = metaDataKeys[value.split(".")[1]].not_querable,
                             res;
@@ -385,7 +384,7 @@ MapCentia = function (globalId) {
                                 4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                                 76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
                                 1.19432856696, 0.597164283478, 0.298582141739];
-                            distance = 5 * res[cloud.getZoom()];
+                            distance = defaults.clickDistance * res[cloud.getZoom()];
                         }
                         qstore[index] = new geocloud.sqlStore({
                             host: defaults.host,
@@ -437,9 +436,9 @@ MapCentia = function (globalId) {
                         });
                         cloud.addGeoJsonStore(qstore[index]);
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_buffer(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913), " + distance + " )," + srid + "),the_geom) LIMIT 5";
+                            sql = "SELECT *,round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) as afstand FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance + " ORDER BY afstand LIMIT 5";
                         } else {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),the_geom)";
+                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
                         }
                         qstore[index].sql = sql;
                         qstore[index].load();

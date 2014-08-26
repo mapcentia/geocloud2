@@ -182,7 +182,11 @@ if (typeof gc2map === "undefined") {
                     infoText: null,
                     infoTextWidth: "200px",
                     locale: null,
-                    key: null
+                    key: null,
+                    clickDistance: 5,
+                    baseLayers: null,
+                    callBack: function () {
+                    }
                 },
                 prop,
                 divs = document.getElementsByTagName('div'),
@@ -255,6 +259,7 @@ if (typeof gc2map === "undefined") {
         };
     }());
 }
+
 
 
 
