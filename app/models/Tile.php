@@ -15,6 +15,11 @@ class Tile extends Model {
 		if (!$this->PDOerror) {
 			$response['success'] = true;
 			$arr = (array)json_decode($row['def']); // Cast stdclass to array
+            foreach ($arr as $key => $value) {
+                if ($value === null) { // Never send null to client
+                    $arr[$key] = "";
+                }
+            }
 			$response['data'] = array($arr);
 		}
 		else {
