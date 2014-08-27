@@ -115,7 +115,19 @@ tableStructure.init = function (record, screenName) {
         writer: tableStructure.writer,
         reader: tableStructure.reader,
         proxy: tableStructure.proxy,
-        autoSave: true
+        autoSave: true,
+        listeners: {
+            'load': function (store, records, options) {
+                if (($.inArray('gc2_version_gid', store.data.keys)) !== -1) {
+                    Ext.getCmp('add-versioning-btn').setDisabled(true);
+                    Ext.getCmp('remove-versioning-btn').setDisabled(false);
+                }
+                else {
+                    Ext.getCmp('add-versioning-btn').setDisabled(false);
+                    Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                }
+            }
+        }
     });
 
     tableStructure.store.setDefaultSort('sort_id', 'asc');
@@ -363,9 +375,19 @@ tableStructure.init = function (record, screenName) {
                 handler: tableStructure.onDelete
             },
             {
-                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Add versioning"),
+                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Start track changes"),
+                id: "add-versioning-btn",
+                disabled: true,
                 handler: function () {
                     tableStructure.onVersion(record);
+                }
+            },
+            {
+                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Stop track changes"),
+                id: "remove-versioning-btn",
+                disabled: true,
+                handler: function () {
+                    tableStructure.onRemoveVersion(record);
                 }
             }
         ]
@@ -400,13 +422,45 @@ tableStructure.onAdd = function (btn, ev) {
 };
 tableStructure.onVersion = function (record) {
     "use strict";
-    Ext.MessageBox.confirm(__('Confirm'), __('This will add versioning to the table. Do you want to proceed?'),
+    Ext.MessageBox.confirm(__('Confirm'), __('This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?'),
         function (btn) {
             if (btn === "yes") {
                 Ext.Ajax.request(
                     {
                         url: '/controllers/table/versions/' + record.data.f_table_schema + "." + record.data.f_table_name + '/' + record.data._key_,
                         method: 'put',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function () {
+                            tableStructure.grid.getStore().reload();
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: __("Failure"),
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
+                        }
+                    }
+                );
+            } else {
+                return false;
+            }
+        });
+};
+tableStructure.onRemoveVersion = function (record) {
+    "use strict";
+    Ext.MessageBox.confirm(__('Confirm'), __("This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?"),
+        function (btn) {
+            if (btn === "yes") {
+                Ext.Ajax.request(
+                    {
+                        url: '/controllers/table/versions/' + record.data.f_table_schema + "." + record.data.f_table_name + '/' + record.data._key_,
+                        method: 'delete',
                         headers: {
                             'Content-Type': 'application/json; charset=utf-8'
                         },

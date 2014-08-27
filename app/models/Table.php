@@ -14,6 +14,7 @@ class Table extends Model
     var $geomType;
     var $exits;
     var $versioning;
+    var $sysCols;
 
     function __construct($table, $temp = false)
     {
@@ -58,6 +59,7 @@ class Table extends Model
                 }
             }
         }
+        $this->sysCols = array("gc2_version_gid","gc2_version_start_date","gc2_version_end_date","gc2_version_uuid","gc2_version_user");
     }
 
     private function setType()
@@ -293,6 +295,7 @@ class Table extends Model
                 $response['data'][] = $arr;
             }
         }
+        $response['versioned'] = $this->versioning;
         return $response;
     }
 
@@ -310,6 +313,12 @@ class Table extends Model
                 }
                 if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
                     $safeColumn = "_" . $safeColumn;
+                }
+                if (in_array($value->id,$this->sysCols)){
+                    $response['success'] = false;
+                    $response['message'] = "You can't rename a system column";
+                    $response['code'] = 400;
+                    return $response;
                 }
                 $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
@@ -337,8 +346,15 @@ class Table extends Model
     {
         $data = $this->makeArray($data);
         $sql = "";
+
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
+            if (in_array($value,$this->sysCols)){
+                $response['success'] = false;
+                $response['message'] = "You can't drop a system column";
+                $response['code'] = 400;
+                return $response;
+            }
             $sql .= "ALTER TABLE {$this->table} DROP COLUMN {$value};";
             unset($fieldconfArr[$value]);
         }
@@ -366,6 +382,12 @@ class Table extends Model
         }
         if ($safeColumn == "state") {
             $safeColumn = "_state";
+        }
+        if (in_array($safeColumn,$this->sysCols)){
+            $response['success'] = false;
+            $response['message'] = "The name is reserved. Choose another.";
+            $response['code'] = 400;
+            return $response;
         }
         // We set the data type
         switch ($data['type']) {
@@ -399,7 +421,6 @@ class Table extends Model
 
     public function addVersioning()
     {
-
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
         $res = $this->prepare($sql);
@@ -459,6 +480,69 @@ class Table extends Model
         $this->commit();
         $response['success'] = true;
         $response['message'] = "Table is now versioned";
+        return $response;
+    }
+    public function removeVersioning()
+    {
+        $this->begin();
+        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_gid";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_start_date";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_end_date";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_uuid";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_user";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "Versioning is removed";
         return $response;
     }
 

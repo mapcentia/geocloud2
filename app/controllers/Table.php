@@ -68,4 +68,9 @@ class Table extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->addVersioning(Input::getPath()->part(4));
     }
+    public function delete_versions()
+    {
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->removeVersioning(Input::getPath()->part(4));
+    }
 }

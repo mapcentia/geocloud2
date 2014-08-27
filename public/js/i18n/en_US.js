@@ -153,8 +153,10 @@ gc2i18n = {
         "New column type": "New column type",
         "Add new column": "Add new column",
         "Delete column": "Delete column",
-        "Add versioning": "Add versioning",
-        "This will add versioning to the table. Do you want to proceed?": "This will add versioning to the table. Do you want to proceed?",
+        "Start track changes": "Start track changes",
+        "Stop track changes": "Stop track changes",
+        "This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?": "This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?",
+        "This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?": "This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?",
         "Show legend": "Show legend",
         "Open map in pop up window": "Open map in pop up window",
         "Change the baselayer": "Change the baselayer",
@@ -163,6 +165,7 @@ gc2i18n = {
         "Measure": "Measure",
         "Distance": "Distance",
         "Area": "Area",
-        "Class wizards": "Class wizards"
+        "Class wizards": "Class wizards",
+        "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line.": "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line."
     }
 };

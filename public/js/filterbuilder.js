@@ -166,7 +166,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                 checkboxToggle: true,
                 collapsed: !this.timeSliceQuery,
                 anchor: "95%",
-                html : __("Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>Old features will be shown with a red dashed line."),
+                html : __("Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line."),
                 items: [
                     {
                         xtype: "container",
