@@ -48,7 +48,7 @@ wmsClasses.init = function (record) {
                     });
                 } else {
                     Ext.MessageBox.show({
-                        title: 'Failurgfge',
+                        title: 'Failure',
                         msg: __(Ext.decode(response.responseText).message),
                         buttons: Ext.MessageBox.OK,
                         width: 400,

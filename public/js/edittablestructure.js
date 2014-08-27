@@ -117,14 +117,20 @@ tableStructure.init = function (record, screenName) {
         proxy: tableStructure.proxy,
         autoSave: true,
         listeners: {
-            'load': function (store, records, options) {
+            load: function (store, records, options) {
                 if (($.inArray('gc2_version_gid', store.data.keys)) !== -1) {
                     Ext.getCmp('add-versioning-btn').setDisabled(true);
                     Ext.getCmp('remove-versioning-btn').setDisabled(false);
-                }
-                else {
+                } else {
                     Ext.getCmp('add-versioning-btn').setDisabled(false);
                     Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                }
+            },
+            beforewrite: function (store, d) {
+                for (var key in store.data.keys) {
+                    if (store.data.keys.hasOwnProperty(key)) {
+                        store.data.keys[key] = encodeURIComponent(store.data.keys[key]);
+                    }
                 }
             }
         }

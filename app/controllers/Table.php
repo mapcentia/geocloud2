@@ -42,7 +42,7 @@ class Table extends \app\inc\Controller
     public function put_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
-        return (!$response['success']) ? $response : $this->table->updateColumn(json_decode(Input::get())->data, Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->updateColumn(json_decode(Input::get(null, true))->data, Input::getPath()->part(5));
     }
 
     public function post_columns()

@@ -26,7 +26,7 @@ class Layer extends \app\inc\Controller
     public function put_records()
     {
         $this->table = new \app\models\table("settings.geometry_columns_join");
-        $data = (array)json_decode(urldecode(Input::get()));
+        $data = (array)json_decode(urldecode(Input::get(null, true)));
         if (isset($data["data"]->editable)) {
             $data["data"]->editable = ($data["data"]->editable) ? : "0";
         }

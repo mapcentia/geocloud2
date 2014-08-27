@@ -15,7 +15,7 @@ class Input
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function get($key = null)
+    public static function get($key = null, $raw = false)
     {
         $query = "";
         switch (static::getMethod()) {
@@ -26,10 +26,10 @@ class Input
                 $query = $_POST;
                 break;
             case "put":
-                $query = static::parseQueryString(file_get_contents('php://input'));
+                $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
             case "delete":
-                $query = static::parseQueryString(file_get_contents('php://input'));
+                $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
         }
         if (!reset($query) && $key == null)
@@ -43,8 +43,11 @@ class Input
         }
     }
 
-    static function parseQueryString($str)
+    static function parseQueryString($str, $raw)
     {
+        if ($raw) {
+            return array($str => false);
+        }
         $op = array();
         $pairs = explode("&", $str);
         foreach ($pairs as $pair) {
@@ -68,6 +71,7 @@ class GetPart
     {
         return $this->parts[$e];
     }
+
     function parts()
     {
         return $this->parts;
