@@ -5,7 +5,7 @@ include '../header.php';
 $postgisObject = new Model();
 \app\models\Database::setDb("postgres");
 // Check if user is logged in - and redirect if this is not the case
-if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
+if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != false) {
     header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
     exit();
 }

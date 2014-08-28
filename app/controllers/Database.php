@@ -22,19 +22,19 @@ class Database extends \app\inc\Controller
 
     public function post_schemas()
     {
-        $response = $this->auth();
+        $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->db->createSchema(Input::get('schema'));
     }
 
     public function put_schema()
     {
-        $response = $this->auth();
+        $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->db->renameSchema(Connection::$param['postgisschema'], json_decode(Input::get())->data->name);
     }
 
     public function delete_schema()
     {
-        $response = $this->auth();
+        $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->db->deleteSchema(Connection::$param['postgisschema']);
     }
 

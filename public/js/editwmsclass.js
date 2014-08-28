@@ -210,7 +210,7 @@ wmsClasses.onSave = function () {
 wmsClasses.onWrite = function (store, action, result, transaction, rs) {
     if (transaction.success) {
         wmsClasses.store.load();
-        writeFiles(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
+        writeFiles(wmsClasses.table);
     }
 };
 

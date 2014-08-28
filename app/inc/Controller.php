@@ -4,8 +4,7 @@ namespace app\inc;
 class Controller
 {
     public $response;
-
-    public function auth($key = null, $level = array("all" => true))
+    public function auth($key=null, $level = array("all" => true), $neverAllowSubUser = false)
     {
         if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
             $response['success'] = true;

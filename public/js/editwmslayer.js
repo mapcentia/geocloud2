@@ -233,7 +233,7 @@ wmsLayer.init = function (record) {
                             'Content-Type': 'application/json; charset=utf-8'
                         },
                         success: function (response) {
-                            writeFiles(record.f_table_schema + "." + record.f_table_name);
+                            writeFiles(record._key_);
                             App.setAlert(App.STATUS_NOTICE, __("The layer settings are updated"));
                         },
                         failure: function (response) {
@@ -305,7 +305,7 @@ wmsLayer.init = function (record) {
                             params: param,
                             success: function () {
                                 store.reload();
-                                writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                writeFiles(record._key_);
                                 App.setAlert(App.STATUS_NOTICE, "Sql updated");
                             },
                             failure: function (response) {

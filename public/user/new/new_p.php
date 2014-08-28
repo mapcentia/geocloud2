@@ -8,7 +8,7 @@ $postgisObject = new Model();
 include('../vdaemon/vdaemon.php');
 include('../html_header.php');
 //  Check if user is logged in - and redirect if this is the case
-if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
+if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != false) {
     die("<script>window.location='{$userHostName}/user/login'</script>");
 }
 function UserIDCheck($sValue, &$oStatus)

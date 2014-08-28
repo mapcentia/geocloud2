@@ -68,13 +68,12 @@ class Layer extends \app\models\Table
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
             }
-            if ($row["authentication"] == "Read/write"){
+            if ($row["authentication"] == "Read/write") {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
                 }
-            }
-            else {
+            } else {
                 $response['data'][] = $arr;
             }
         }
@@ -256,9 +255,12 @@ class Layer extends \app\models\Table
 
         foreach ($_SESSION['subusers'] as $subuser) {
             $privileges[$subuser] = ($privileges[$subuser]) ? : "none";
-            $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
+            if ($subuser != \app\conf\Connection::$param['postgisschema']) {
+                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
+            }
         }
-        if (!isset($response['data'])){
+
+        if (!isset($response['data'])) {
             $response['data'] = array();
         }
         $response['success'] = true;

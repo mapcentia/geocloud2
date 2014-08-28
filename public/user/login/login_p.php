@@ -25,7 +25,7 @@ if (App::$param['cdnSubDomain']) {
     $cdnHost = $host;
 }
 // If main user fetch all sub users
-if (!$_SESSION['subuser']) {
+//if (!$_SESSION['subuser']) {
     $_SESSION['subusers'] = array();
     $_SESSION['subuserEmails'] = array();
     $sQuery = "SELECT * FROM {$sTable} WHERE parentdb = :sUserID";
@@ -35,7 +35,7 @@ if (!$_SESSION['subuser']) {
         $_SESSION['subusers'][] = $rowSubUSers["screenname"];
         $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
     };
-}
+//}
 ?>
 <div class="container">
     <div id="main">
@@ -44,7 +44,14 @@ if (!$_SESSION['subuser']) {
                 <div id="sb" class="col-md-12 dashboard" style="display: none">
                     <div id="schema-list">
                         <table class="table table-condensed" id="schema-table">
-                            <thead><tr><th class="col-md-2">Schema</th><th class="col-md-3">Viewer</th><!--<th>Viewer</th>--><th>Admin</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th class="col-md-2">Schema</th>
+                                <th class="col-md-3">Viewer</th>
+                                <!--<th>Viewer</th>-->
+                                <th>Admin</th>
+                            </tr>
+                            </thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -53,7 +60,13 @@ if (!$_SESSION['subuser']) {
             <div class="row">
                 <div class="col-md-12 padded" id="subusers-el" style="display: none">
                     <table class="table table-condensed" id="subusers-table">
-                        <thead><tr><th class="col-md-2">Sub-user</th><th class="col-md-3">Email</th><th>Delete</th></tr></thead>
+                        <thead>
+                        <tr>
+                            <th class="col-md-2">Sub-user</th>
+                            <th class="col-md-3">Email</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -80,21 +93,25 @@ if (!$_SESSION['subuser']) {
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="delete-user">Delete</button>
             </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
 <script type="text/html" id="template-schema-list">
     <tr class="map-edntry">
         <td><%= this . schema %></td>
         <td><a class="btn btn-xs btn-default fixed-width" target="_blank"
-               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span class="glyphicon glyphicon-globe"></span>
+               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span
+            class="glyphicon glyphicon-globe"></span>
         </a></td>
         <!--<td><a target="_blank"
                href="<?php echo $cdnHost . "/apps/heron/" ?><%= db %>/<%= this . schema %>">View
         </a></td>-->
         <td><a class="btn btn-xs btn-primary fixed-width" target="_blank"
-               href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span class="glyphicon glyphicon-cog"></span>
+               href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
+            class="glyphicon glyphicon-cog"></span>
         </a></td>
     </tr>
 </script>
@@ -102,7 +119,12 @@ if (!$_SESSION['subuser']) {
     <tr class="subuser-entry">
         <td><span class="glyphicon glyphicon-user"></span> <%= this %></td>
         <td><%= subUserEmails[this] %></td>
-        <td><form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/><button class="btn btn-xs btn-danger fixed-width delete" type="submit"><span class="glyphicon glyphicon-trash"></span></button></form></td>
+        <td>
+            <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
+                <button class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
+                    class="glyphicon glyphicon-trash"></span></button>
+            </form>
+        </td>
     </tr>
 </script>
 <script>
@@ -143,8 +165,8 @@ if (!$_SESSION['subuser']) {
                                 $('#subusers-table tbody').append($('#template-subuser-list').jqote(subUsers));
                                 if (subUsers.length > 0) {
                                     $("#subusers-el").delay(200).fadeIn(400);
-                                    $('.delete').on('click', function(e){
-                                        var $form=$(this).closest('form');
+                                    $('.delete').on('click', function (e) {
+                                        var $form = $(this).closest('form');
                                         e.preventDefault();
                                         $('#confirm-user-delete').modal({ backdrop: 'static', keyboard: false })
                                             .one('click', '#delete-user', function () {

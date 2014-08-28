@@ -252,25 +252,28 @@ $(window).ready(function () {
                     listeners: {
                         click: function () {
                             var r = grid.getSelectionModel().getSelected();
-                            var layer = r.data.f_table_schema + "." + r.data.f_table_name;
+                            var layer = r.data._key_;
                             Ext.MessageBox.confirm(__('Confirm'), __("You are about to delete the tile cache for layer") + " '" + r.data.f_table_name + "'. " + __("Are you sure?"), function (btn) {
                                 if (btn === "yes") {
-                                    $.ajax({
+                                    Ext.Ajax.request({
                                         url: '/controllers/tilecache/index/' + layer,
-                                        async: true,
-                                        dataType: 'json',
-                                        type: 'delete',
-                                        success: function (data, textStatus, http) {
-                                            if (http.readyState == 4) {
-                                                if (http.status == 200) {
-                                                    var response = eval('(' + http.responseText + ')');
-                                                    if (response.success === true) {
-                                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
-                                                    } else {
-                                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
-                                                    }
-                                                }
-                                            }
+                                        method: 'delete',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function () {
+                                            store.reload();
+                                            App.setAlert(App.STATUS_OK, __("Tile cache deleted"));
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
                                         }
                                     });
                                 } else {
@@ -318,17 +321,26 @@ $(window).ready(function () {
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
-                            $.ajax({
+
+                            Ext.Ajax.request({
                                 url: '/controllers/tilecache/index/schema/' + schema,
-                                dataType: 'json',
-                                type: 'delete',
-                                success: function (data, textStatus, http) {
-                                    var response = eval('(' + http.responseText + ')');
-                                    if (response.success === true) {
-                                        App.setAlert(App.STATUS_OK, __(response.message));
-                                    } else {
-                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
-                                    }
+                                method: 'delete',
+                                headers: {
+                                    'Content-Type': 'application/json; charset=utf-8'
+                                },
+                                success: function () {
+                                    store.reload();
+                                    App.setAlert(App.STATUS_OK, __("Tile cache deleted"));
+                                },
+                                failure: function (response) {
+                                    Ext.MessageBox.show({
+                                        title: 'Failure',
+                                        msg: __(Ext.decode(response.responseText).message),
+                                        buttons: Ext.MessageBox.OK,
+                                        width: 400,
+                                        height: 300,
+                                        icon: Ext.MessageBox.ERROR
+                                    });
                                 }
                             });
                         } else {
@@ -340,7 +352,7 @@ $(window).ready(function () {
             '->',
             {
                 text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
-                //disabled: subUser ? true : false,
+                disabled: subUser !== schema ? true : false,
                 handler: function () {
                     onAdd();
                 }
@@ -1236,7 +1248,7 @@ $(window).ready(function () {
             title: __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
             modal: true,
             width: 500,
-            height: 320,
+            height: 330,
             initCenter: true,
             closeAction: 'hide',
             border: false,
@@ -1289,7 +1301,7 @@ $(window).ready(function () {
                             })
                         }),
                         new Ext.Panel({
-                                height: 100,
+                                height: 110,
                                 border: false,
                                 region: "south",
                                 bodyStyle: {
@@ -1381,7 +1393,7 @@ $(window).ready(function () {
         if (records.length === 1) {
             Ext.getCmp('cartomobile-btn').setDisabled(false);
             Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false) {
+            if (subUser === false || (subUser === schema)) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
             }
         }
@@ -1391,8 +1403,10 @@ $(window).ready(function () {
             Ext.getCmp('privileges-btn').setDisabled(true);
         }
         if (records.length > 0 && subUser === false) {
-            Ext.getCmp('deletelayer-btn').setDisabled(false);
             Ext.getCmp('movelayer-btn').setDisabled(false);
+        }
+        if (records.length > 0 && subUser === false || (subUser === schema)) {
+            Ext.getCmp('deletelayer-btn').setDisabled(false);
         }
         onEdit();
     });
@@ -1635,7 +1649,7 @@ $(window).ready(function () {
                                                                 },
                                                                 success: function (response) {
                                                                     App.setAlert(App.STATUS_OK, __("Style is updated"));
-                                                                    writeFiles(wmsClasses.table.split(".")[0] + "." + wmsClasses.table.split(".")[1]);
+                                                                    writeFiles(wmsClasses.table);
                                                                     wmsClasses.store.load();
                                                                 },
                                                                 failure: function (response) {
@@ -1757,6 +1771,7 @@ $(window).ready(function () {
          });*/
     };
     clearTileCache = function (layer, map) {
+        var key = layer.split(".")[0] + "." + layer.split(".")[1];
         $.ajax({
             url: '/controllers/tilecache/index/' + layer,
             async: true,
@@ -1766,9 +1781,9 @@ $(window).ready(function () {
                 if (response.success === true) {
                     App.setAlert(App.STATUS_NOTICE, __(response.message));
                     var l;
-                    l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(layer)[0];
+                    l = document.getElementById("wfseditor").contentWindow.window.map.getLayersByName(key)[0];
                     if (l === undefined) { // If called from iframe
-                        l = map.getLayersByName(layer)[0];
+                        l = map.getLayersByName(key)[0];
                     }
                     l.clearGrid();
                     var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {

@@ -17,11 +17,12 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
     layerBeingEditing = layerName;
+    layerBeingEditingGeomField = geomField;
     try {
         drawControl.deactivate();
         layer.removeAllFeatures();
@@ -181,7 +182,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     layer.events.register("loadstart", layer, function () {
         //App.setAlert(App.STATUS_OK, "Start loading...");
     });
-
 
     drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
         featureAdded: onInsert,
@@ -1257,7 +1257,7 @@ saveStrategy = new OpenLayers.Strategy.Save({
                 message = "<p>Deleted: " + deleted + "</p>";
                 window.parent.App.setAlert(App.STATUS_OK, message);
             }
-            window.parent.writeFiles(schema + "." + layerBeingEditing, map);
+            window.parent.writeFiles(schema + "." + layerBeingEditing + "." + layerBeingEditingGeomField, map);
         }
     }
 });

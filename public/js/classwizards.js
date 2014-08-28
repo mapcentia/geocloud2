@@ -45,7 +45,7 @@ classWizards.init = function (record) {
                                             Ext.getCmp("a3").remove(wmsClass.grid);
                                             wmsClasses.store.load();
                                             wmsLayer.store.load();
-                                            writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                            writeFiles(record._key_);
                                             App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                         },
                                         failure: function (response) {
@@ -124,7 +124,7 @@ classWizards.init = function (record) {
                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                 wmsClasses.store.load();
                                                 wmsLayer.store.load();
-                                                writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                                writeFiles(record._key_);
                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                             },
                                             failure: function (response) {
@@ -264,7 +264,7 @@ classWizards.init = function (record) {
                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                 wmsClasses.store.load();
                                                                 wmsLayer.store.load();
-                                                                writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                                                writeFiles(record._key_);
                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                             },
                                                             failure: function (response) {
@@ -354,7 +354,7 @@ classWizards.init = function (record) {
                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                 wmsClasses.store.load();
                                                 wmsLayer.store.load();
-                                                writeFiles(record.f_table_schema + "." + record.f_table_name);
+                                                writeFiles(record._key_);
                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                             },
                                             failure: function (response) {

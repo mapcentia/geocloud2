@@ -71,7 +71,7 @@ class Layer extends \app\inc\Controller
     public function put_schema()
     {
         $input = json_decode(Input::get());
-        $response = $this->auth(null, array());
+        $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
     }
 
