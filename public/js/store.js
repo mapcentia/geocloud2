@@ -318,10 +318,10 @@ $(window).ready(function () {
 
             {
                 text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
+                disabled: subUser !== schema ? true : false,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
-
                             Ext.Ajax.request({
                                 url: '/controllers/tilecache/index/schema/' + schema,
                                 method: 'delete',
