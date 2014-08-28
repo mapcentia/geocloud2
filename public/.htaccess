@@ -30,8 +30,8 @@ RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
 # Rewrite URL so tile requests is going direct to TileCache mod_apache script
 RewriteRule wms/(.*)/tilecache$ /cgi/tilecache.py?cfg=$1 [QSA,L]
+RewriteRule wms/(.*)/tilecache/(.*)/(.*)/(.*)/(.*)/(.*)$ /cgi/tilecache.py/$2/$3/$4/$5/$6?cfg=$1 [QSA,L]
 RewriteRule wms/(.*)/tilecache/(.*)$ /cgi/tilecache.py?cfg=$1 [QSA,L]
-RewriteRule wms/(.*)/tilecache/(.*)/(.*)/(.*)/(.*)/(.*) /cgi/tilecache.py/$2/$3/$4/$5/$6?cfg=$1 [QSA,L]
 
 # Rewrite URL so tinyows request is going direct to tinyows cgi
 #RewriteRule tinyows/(.*)/(.*) /cgi/tinyows.cgi [QSA,L]

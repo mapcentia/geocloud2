@@ -132,6 +132,22 @@ include("html_header.php");
             </tbody>
         </table>
     </div>
+    <div id="tms-dialog">
+        <table border="0">
+            <tbody>
+            <tr>
+                <td>Use this string in GIS that supports TMS (Google style):</td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" readonly="readonly"
+                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
+                           size="65"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
     <div id="sql-dialog">
         <table border="0">
             <tbody>
@@ -162,7 +178,7 @@ include("html_header.php");
                 </td>
             </tr>
             <tr>
-                <td>map: PUT, bulk: GET, search: GET, delete: DELETE</td>
+                <td>map: PUT, bulk: POST, search: GET, delete: DELETE</td>
             </tr>
             </tbody>
         </table>
