@@ -1,6 +1,7 @@
 <?php
 use \app\inc\Model;
 use \app\models\Setting;
+use \app\conf\App;
 
 include('../header.php');
 $postgisObject = new Model();
@@ -15,7 +16,6 @@ function UserIDCheck($sValue, &$oStatus)
     global $sTable;
     global $postgisObject;
     $sUserID = Model::toAscii($sValue, NULL, "_");
-    $sEmail = VDFormat($_POST['Email'], true);
 
     $oStatus->bValid = false;
 
@@ -24,19 +24,19 @@ function UserIDCheck($sValue, &$oStatus)
     $res->execute(array(":sUserID" => $sUserID));
     $rowScreenname = $postgisObject->fetchRow($res);
 
-    /*$sQuery = "SELECT COUNT(*) AS count FROM $sTable WHERE email = :sEmail";
-    $res = $postgisObject->prepare($sQuery);
-    $res->execute(array(":sEmail" => $sEmail));
-    $rowEmail = $postgisObject->fetchRow($res);*/
-
-    if ($rowScreenname['count'] > 0 && $rowEmail['count'] == 0) {
+    if ($rowScreenname['count'] > 0) {
         $oStatus->sErrMsg = "<span class='label label-warning'>User name already taken</span>";
-    } /*elseif ($rowEmail['count'] > 0 && $rowScreenname['count'] == 0) {
-        $oStatus->sErrMsg = "<span class='label label-warning'>Email already is use</span>";
-    }*/ elseif ($rowScreenname['count'] > 0 && $rowEmail['count'] > 0) {
-        $oStatus->sErrMsg = "<span class='label label-warning'>User name taken and email in use</span>";
     } else {
         $oStatus->bValid = 1;
+        $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
+        if (App::$param['domain']) {
+            $host = "http://" . $prefix . App::$param['domain'];
+        } else {
+            if (!\app\conf\App::$param['host']) {
+                include_once("../../../app/conf/hosts.php");
+            }
+            $host = App::$param['host'];
+        }
     }
 }
 
@@ -51,7 +51,7 @@ $sPassword = Setting::encryptPw($sPassword);
 $sQuery = "INSERT INTO {$sTable} (screenname,pw,email,zone,parentdb) VALUES( :sUserID, :sPassword, :sEmail, :sZone, :sParentDb) RETURNING created";
 
 $res = $postgisObject->prepare($sQuery);
-$res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword, ":sEmail" => $sEmail, ":sZone" => $_SESSION['zone'], ":sParentDb"=>$_SESSION['screen_name']));
+$res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword, ":sEmail" => $sEmail, ":sZone" => $_SESSION['zone'], ":sParentDb" => $_SESSION['screen_name']));
 $row = $res->fetch();
 
 if (!$row['created']) {
@@ -60,13 +60,59 @@ if (!$row['created']) {
 
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
     ?>
+    <script>
+        var hostName = "<?php echo $host ?>";
+        $(window).ready(function () {
+            $.ajax({
+                url: hostName + '/controllers/database/createschema?schema=<?php echo $sUserID ?>',
+                dataType: 'jsonp',
+                jsonp: 'jsonp_callback',
+                success: function (response) {
+                    if (response.success === true) {
+                        $("#alert-schema").show();
+                    }
+                    else {
+                        $('#schema-failure').modal({ backdrop: 'static', keyboard: false })
+                    }
+                }
+            });
+        });
+    </script>
+    <div id="schema-failure" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Schema was not created</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Schema '<?php echo $sUserID ?>' was not created. It may already exist. If not, you can always
+                        create it manually from Admin</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div><!-- /.modal -->
     <div id="alert" class="center alert alert-success"
          style="width: 300px;margin-right: auto; margin-left: auto;margin-top: 100px">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <h3>User <?php echo $sUserID?> is created</3>
+        <h3>User <?php echo $sUserID ?> is created</h3>
     </div>
-    <script>$('#alert').bind('closed', function () {
+    <div id="alert-schema" class="center alert alert-success"
+         style="width: 300px;margin-right: auto; margin-left: auto;margin-top: 10px;display: none">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <h3>Schema <?php echo $sUserID ?> is created</h3>
+    </div>
+    <script>
+        $('#alert').bind('closed', function () {
             window.location = '/user/login/p';
-        })</script>
+        });
+        $('#alert-schema').bind('closed', function () {
+            window.location = '/user/login/p';
+        });
+    </script>
 <?php
 }

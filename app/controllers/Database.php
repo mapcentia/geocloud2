@@ -44,4 +44,8 @@ class Database extends \app\inc\Controller
         $this->db = new \app\models\Database();
         return $this->db->doesDbExist(Input::getPath()->part(4));
     }
+    public function get_createschema(){
+        $response = $this->auth();
+        return (!$response['success']) ? $response : $this->db->createSchema(Input::get('schema'));
+    }
 }

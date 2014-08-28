@@ -5,10 +5,10 @@ class Controller
 {
     public $response;
 
-    public function auth($key, $level = array("all" => true))
+    public function auth($key=null, $level = array("all" => true))
     {
 
-        if ($_SESSION['subuser']) {
+        if ($_SESSION['subuser'] && ($_SESSION['subuser'] != $_SESSION['schema'])) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
             if (sizeof($level) == 0) {
                 $response['success'] = false;

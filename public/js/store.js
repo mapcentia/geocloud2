@@ -340,7 +340,7 @@ $(window).ready(function () {
             '->',
             {
                 text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
-                disabled: subUser ? true : false,
+                //disabled: subUser ? true : false,
                 handler: function () {
                     onAdd();
                 }
