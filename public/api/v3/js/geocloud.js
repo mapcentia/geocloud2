@@ -423,7 +423,9 @@ geocloud = (function () {
         var prop, lControl, queryLayers = [],
             defaults = {
                 numZoomLevels: 20,
-                projection: "EPSG:900913"
+                projection: "EPSG:900913",
+                fadeAnimation: true,
+                zoomAnimation: false
             };
         if (config) {
             for (prop in config) {
