@@ -130,7 +130,6 @@ $(window).ready(function () {
         url: '/controllers/database/schemas'
     });
     schemasStore.load();
-
     //var editor = new Ext.ux.grid.RowEditor();
     var grid = new Ext.grid.EditorGridPanel({
         //plugins: [editor],
@@ -318,7 +317,7 @@ $(window).ready(function () {
 
             {
                 text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
-                disabled: subUser !== schema ? true : false,
+                disabled: (subUser === schema || subUser === false) ? false : true,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
@@ -352,7 +351,7 @@ $(window).ready(function () {
             '->',
             {
                 text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
-                disabled: subUser !== schema ? true : false,
+                disabled: (subUser === schema || subUser === false) ? false : true,
                 handler: function () {
                     onAdd();
                 }
@@ -1393,7 +1392,7 @@ $(window).ready(function () {
         if (records.length === 1) {
             Ext.getCmp('cartomobile-btn').setDisabled(false);
             Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false || (subUser === schema)) {
+            if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
             }
         }
@@ -1405,7 +1404,7 @@ $(window).ready(function () {
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
         }
-        if (records.length > 0 && subUser === false || (subUser === schema)) {
+        if (records.length > 0 && (subUser === false || subUser === schema)) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);
         }
         onEdit();

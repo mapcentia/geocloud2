@@ -16,7 +16,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
                                 <h3>Create a new sub-user</h3>
                                 The sub-user can log into this database in the same way as the parent user, which can
                                 grant
-                                privileges to sub-users on layer level.
+                                privileges to sub-users on layer level. The sub-user name must be globally unique.
                             </div>
                         </div>
                         <div class="controls">
@@ -66,11 +66,19 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
                             <vlvalidator name="PassCmp" type="compare" control="Password" comparecontrol="Password2"
                                          operator="e" validtype="string">
                         </div>
+                        <div class="center">
+                            <div class="alert alert-info first" style="margin-bottom: 0">
+                                You can choose to create a schema for the new sub-user. The sub-user will be able to
+                                create new layers with all privileges inside the schema. The sub-user will also be able
+                                to grant privileges on layers inside the schema to other sub-users. You can also create
+                                the schema later - just use the name of the sub-user.
+                            </div>
+                        </div>
                         <div class="controls">
                             <label class="checkbox">
-                                <input name="schema" type="checkbox" id="schema" value="1" disabled="true">
+                                <input name="schema" type="checkbox" id="schema" value="1">
                                 <label>
-                                    Create schema for new user (coming)
+                                    Create schema for new user
                                 </label>
                             </label>
                         </div>

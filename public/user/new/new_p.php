@@ -15,6 +15,7 @@ function UserIDCheck($sValue, &$oStatus)
 {
     global $sTable;
     global $postgisObject;
+    global $host;
     $sUserID = Model::toAscii($sValue, NULL, "_");
 
     $oStatus->bValid = false;
@@ -59,25 +60,27 @@ if (!$row['created']) {
 }
 
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
-    ?>
-    <script>
-        var hostName = "<?php echo $host ?>";
-        $(window).ready(function () {
-            $.ajax({
-                url: hostName + '/controllers/database/createschema?schema=<?php echo $sUserID ?>',
-                dataType: 'jsonp',
-                jsonp: 'jsonp_callback',
-                success: function (response) {
-                    if (response.success === true) {
-                        $("#alert-schema").show();
+    if ($_POST['schema']) {
+        ?>
+        <script>
+            var hostName = "<?php echo $host ?>";
+            $(window).ready(function () {
+                $.ajax({
+                    url: hostName + '/controllers/database/createschema?schema=<?php echo $sUserID ?>',
+                    dataType: 'jsonp',
+                    jsonp: 'jsonp_callback',
+                    success: function (response) {
+                        if (response.success === true) {
+                            $("#alert-schema").show();
+                        }
+                        else {
+                            $('#schema-failure').modal({ backdrop: 'static', keyboard: false })
+                        }
                     }
-                    else {
-                        $('#schema-failure').modal({ backdrop: 'static', keyboard: false })
-                    }
-                }
+                });
             });
-        });
-    </script>
+        </script>
+    <?php } ?>
     <div id="schema-failure" class="modal fade">
         <div class="modal-dialog">
             <div class="modal-content">
