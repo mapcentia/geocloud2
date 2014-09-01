@@ -340,4 +340,46 @@ class Model
         return $array;
     }
 
+    public function isTableOrView($table)
+    {
+        $bits = explode(".", $table);
+        $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '{$bits[0]}' AND tablename='{$bits[1]}'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        if ($row["count"] > 0) {
+            $response['data'] = "table";
+            $response['success'] = true;
+            return $response;
+        }
+        $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '{$bits[0]}' AND viewname='{$bits[1]}'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        if ($row["count"] > 0) {
+            $response['data'] = "view";
+            $response['success'] = true;
+            return $response;
+        }
+        $response['data'] = null;
+        $response['success'] = true;
+        return $response;
+    }
+
 }

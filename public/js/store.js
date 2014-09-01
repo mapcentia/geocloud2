@@ -20,11 +20,11 @@ window.__ = function (string) {
     return string;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
-    var winAdd, winMoreSettings, fieldsForStore = {}, settings, groups, groupsStore, subUsers;
+    var winAdd, winMoreSettings, fieldsForStore = {}, groups, groupsStore, subUsers;
 
     $.ajax({
         url: '/controllers/layer/columnswithkey',
@@ -567,6 +567,17 @@ $(window).ready(function () {
                 {
                     text: __('Add imagery'),
                     handler: addImage
+                },
+                '-',
+                {
+                    text: __('Create database view'),
+                    handler: function () {
+                        addView.init();
+                        var c = p.getComponent(0);
+                        c.remove(0);
+                        c.add(addView.form);
+                        c.doLayout();
+                    }
                 },
                 '-',
                 {

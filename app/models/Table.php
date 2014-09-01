@@ -182,13 +182,24 @@ class Table extends Model
     function destroy()
     {
         $sql = "DROP TABLE {$this->table} CASCADE;";
-        $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $sql = "DROP VIEW {$this->table} CASCADE;";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
         }
+        $response['success'] = true;
         return $response;
     }
 
