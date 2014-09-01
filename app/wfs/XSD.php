@@ -34,7 +34,7 @@ foreach ($tables as $table) {
         }
     }
     $fields = implode(",", $fieldsArr[$table]);
-    $sql = "SELECT '{$fields}' FROM " . $postgisschema . "." . $table;
+    $sql = "SELECT '{$fields}' FROM " . $postgisschema . "." . $table . " LIMIT 1";
     $result = $postgisObject->execQuery($sql);
     if ($postgisObject->PDOerror) {
         makeExceptionReport($postgisObject->PDOerror);
