@@ -284,10 +284,15 @@ class Table extends Model
 
     function getTableStructure() // Only geometry tables
     {
-        $response['success'] = true;
-        $response['message'] = "Structure loaded";
+
         $arr = array();
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        if (!$this->metaData){
+            $response['success'] = false;
+            $response['code'] = 500;
+            $response['message'] = "Could not load table structure";
+            return $response;
+        }
         foreach ($this->metaData as $key => $value) {
             if ($key != $this->primeryKey['attname']) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
@@ -306,6 +311,8 @@ class Table extends Model
                 $response['data'][] = $arr;
             }
         }
+        $response['success'] = true;
+        $response['message'] = "Structure loaded";
         $response['versioned'] = $this->versioning;
         return $response;
     }

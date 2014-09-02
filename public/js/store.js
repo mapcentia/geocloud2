@@ -570,12 +570,23 @@ $(window).ready(function () {
                 },
                 '-',
                 {
-                    text: __('Create database view'),
+                    text: __('Database view'),
                     handler: function () {
                         addView.init();
                         var c = p.getComponent(0);
                         c.remove(0);
                         c.add(addView.form);
+                        c.doLayout();
+                    }
+                },
+                '-',
+                {
+                    text: __('OSM view'),
+                    handler: function () {
+                        addOsm.init();
+                        var c = p.getComponent(0);
+                        c.remove(0);
+                        c.add(addOsm.form);
                         c.doLayout();
                     }
                 },
@@ -1828,5 +1839,4 @@ $(window).ready(function () {
         }
     };
 });
-
 

@@ -25,6 +25,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/addbitmapform.js"></script>
 <script type="text/javascript" src="/js/addrasterform.js"></script>
 <script type="text/javascript" src="/js/addviewform.js"></script>
+<script type="text/javascript" src="/js/addosmform.js"></script>
 <script type="text/javascript" src="/js/addfromscratch.js"></script>
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>

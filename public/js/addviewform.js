@@ -19,10 +19,10 @@ addView.init = function () {
         title: __('Create layer from database view'),
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
-        labelWidth: 10,
+        labelWidth: 1,
         html: "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.",
         defaults: {
-            anchor: '95%',
+            anchor: '99%',
             allowBlank: false,
             msgTarget: 'side'
         },
@@ -33,9 +33,8 @@ addView.init = function () {
                 name: 'name'
             },
             {
-
                 xtype: 'textarea',
-                name: 'select',
+                name: 'Tags',
                 emptyText: __('SELECT ...')
             }
         ],
@@ -57,6 +56,7 @@ addView.init = function () {
                             params: param,
                             success: function () {
                                 store.reload();
+                                document.getElementById("wfseditor").contentWindow.window.reLoadTree();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },
                             failure: function (response) {
