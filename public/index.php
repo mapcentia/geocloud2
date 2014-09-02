@@ -61,7 +61,7 @@ if (Input::getPath()->part(1) == "api") {
 } elseif (Input::getPath()->part(1) == "controllers") {
 
     Session::start();
-    Session::authenticate("/user/login/");
+    Session::authenticate(null);
 
     Database::setDb($_SESSION['screen_name']);
     Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
