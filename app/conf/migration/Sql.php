@@ -16,6 +16,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_schema";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_name";
         $sqls[] = "CREATE EXTENSION \"hstore\"";
+        $sqls[] = "CREATE EXTENSION \"dblink\"";
 
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT

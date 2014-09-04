@@ -11,6 +11,10 @@ addOsm.init = function () {
             buttons: Ext.Msg.OK
         });
     };
+    addOsm.schemas = [];
+    Ext.each(window.gc2Options.osmConfig.schemas, function (item) {
+        addOsm.schemas.push({name: item, value: item});
+    });
     addOsm.form = new Ext.FormPanel({
         region: 'center',
         id: "addOsm",
@@ -76,19 +80,14 @@ addOsm.init = function () {
                 editable: false,
                 //fieldLabel: 'type',
                 name: 'region',
-                value: 'DK',
+                //value: 'DK',
                 displayField: 'name',
                 valueField: 'value',
                 allowBlank: false,
                 emptyText: __('Region'),
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'DK',
-                            value: 'DK'
-                        }
-                    ]
+                    data: addOsm.schemas
                 })
             },
             {
@@ -144,6 +143,7 @@ addOsm.init = function () {
                         var param = {
                             data: values
                         };
+                        console.log(values);
                         param.data.extent = document.getElementById("wfseditor").contentWindow.window.map.getExtent();
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({

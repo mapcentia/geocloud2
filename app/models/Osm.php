@@ -276,10 +276,9 @@ class Osm extends \app\inc\Model
             $safeName = "_" . $safeName;
         }
         $wheres = "way && ST_MakeEnvelope({$box->left},{$box->bottom},{$box->right},{$box->top},900913)";
-
         $output = sprintf($sql,
             \app\conf\Connection::$param['postgisschema'] . "." . $safeName,
-            \app\conf\App::$param["osmConfig"],
+            \app\conf\App::$param["osmConfig"]["server"],
             $wheres . (($tagsStr) ? " AND {$tagsStr}" : "")
         );
         $res = $this->prepare($output);

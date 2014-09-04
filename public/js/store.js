@@ -582,6 +582,7 @@ $(window).ready(function () {
                 '-',
                 {
                     text: __('OSM view'),
+                    disabled: (window.gc2Options.osmConfig === null) ? true : false,
                     handler: function () {
                         addOsm.init();
                         var c = p.getComponent(0);
