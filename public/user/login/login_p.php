@@ -9,7 +9,8 @@ include '../html_header.php';
 if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
     die("<script>window.location='/user/login'</script>");
 }
-
+// Set schema for the mapfiles write request
+$_SESSION['postgisschema'] = "public";
 
 $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
 if (App::$param['domain']) {
