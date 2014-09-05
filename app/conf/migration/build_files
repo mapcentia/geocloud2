@@ -1,0 +1,28 @@
+#!/usr/bin/php
+<?php
+use \app\conf\App;
+use \app\conf\Connection;
+use \app\inc\Model;
+
+header("Content-type: text/plain");
+include_once("../App.php");
+new \app\conf\App();
+$database = new \app\models\Database();
+$arr = $database->listAllDbs();
+$cfgfile = new \app\controllers\Cfgfile();
+$mapfile = new \app\controllers\Mapfile();
+foreach ($arr['data'] as $db) {
+    Connection::$param['postgisdb'] = $db;
+
+    if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
+        $res = $cfgfile->get_index();
+        echo $res["ch"]."\n";
+        $database2 = new \app\models\Database();
+        $schemas = $database2->listAllSchemas();
+        foreach($schemas["data"] as $schema){
+            Connection::$param['postgisschema'] = $schema["schema"];
+            $res = $mapfile->get_index();
+            echo $res["ch"]."\n";
+        }
+    }
+}

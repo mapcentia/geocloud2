@@ -236,12 +236,12 @@ MapCentia.setup = function () {
                             nodeType: "gx_layer",
                             layer: "osm",
                             text: 'Osm'
-                        }/*,
+                        },
                         {
                             nodeType: "gx_layer",
                             layer: "DigitalGlobe:Imagery",
                             text: 'DigitalGlobe:Imagery'
-                        }*/,
+                        },
                         {
                             nodeType: "gx_layer",
                             layer: "None",

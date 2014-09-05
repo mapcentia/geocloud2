@@ -234,7 +234,8 @@ class Mapfile extends \app\inc\Controller
 
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
-            makeExceptionReport($postgisObject->PDOerror);
+            ob_get_clean();
+            return false;
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
@@ -689,6 +690,6 @@ class Mapfile extends \app\inc\Controller
         $fh = fopen($path . $name, 'w');
         fwrite($fh, $data);
         fclose($fh);
-        return array("success" => true, "message" => "Mapfile written");
+        return array("success" => true, "message" => "Mapfile written", "ch" => $path . $name);
     }
 }

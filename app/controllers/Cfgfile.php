@@ -1,5 +1,6 @@
 <?php
 namespace app\controllers;
+error_reporting(0);
 
 use \app\conf\App;
 use \app\conf\Connection;
@@ -23,7 +24,8 @@ class Cfgfile extends \app\inc\Controller
         $sql = "SELECT * FROM settings.geometry_columns_view ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
-            makeExceptionReport($postgisObject->PDOerror);
+            ob_get_clean();
+            return false;
         }
         $layerArr = array();
         while ($row = $postgisObject->fetchRow($result)) {
@@ -36,11 +38,10 @@ class Cfgfile extends \app\inc\Controller
                 $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
                 //if (app::$param["tileRenderBackend"] == "wms"){
-                if ($row['type'] == "RASTER"){
+                if ($row['type'] == "RASTER") {
                     echo "type=WMS\n";
-                    echo "url=".App::$param['host']."/wms/".Connection::$param['postgisdb']."/{$row['f_table_schema']}/?";
-                }
-                else{
+                    echo "url=" . App::$param['host'] . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
+                } else {
                     echo "type=MapServerLayer\n";
                     echo "mapfile=" . App::$param['path'] . "/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row['f_table_schema'] . ".map\n";
                 }
@@ -73,12 +74,12 @@ class Cfgfile extends \app\inc\Controller
             }
         }
         $data = ob_get_clean();
-        $path = App::$param['path'] . "/app/wms/cfgfiles/";
+        $path = App::$param['path'] . "app/wms/cfgfiles/";
         $name = Connection::$param['postgisdb'] . ".tilecache.cfg";
         @unlink($path . $name);
         $fh = fopen($path . $name, 'w');
         fwrite($fh, $data);
         fclose($fh);
-        return array("success" => true, "message" => "Cfgfile written");
+        return array("success" => true, "message" => "Cfgfile written", "ch" => $path . $name);
     }
 }
