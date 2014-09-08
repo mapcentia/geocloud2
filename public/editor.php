@@ -1,25 +1,7 @@
 <?php
 include("html_header.php");
 ?>
-<!-- Ext 4.0 -->
-<!--<link rel="stylesheet" type="text/css" href="/js/ext4/resources/css/ext-all.css" />-->
-<!-- Stick to ext-all-debug.js (not bootstrap.js) while migrating. Legacy code will not work with bootstrap! -->
-<!--<script type="text/javascript" src="/js/ext4/ext-all-debug.js"></script>-->
 
-<!-- Ext 3.x compatibility -->
-<!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
-<!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
-
-<script type="text/javascript" src="/api/v1/baselayerjs"></script>
-<script type="text/javascript" src="/api/v1/js/api.js"></script>
-<script type="text/javascript" src="/js/wfseditor.js"></script>
-<script type="text/javascript" src="/js/attributeform.js"></script>
-<script type="text/javascript" src="/js/filterfield.js?format=txt"></script>
-<script type="text/javascript" src="/js/filterbuilder.js?format=txt"></script>
-<script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
-<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
-<script src="//maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
-<script src="/api/v3/js/geocloud.js" type="text/javascript"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
@@ -176,6 +158,16 @@ include("html_header.php");
         <div>.shp .geojson .gml .kml .tab .mif</div>
     </a>
 </div>
+<script type="text/javascript" src="/api/v1/baselayerjs"></script>
+<script type="text/javascript" src="/api/v1/js/api.js"></script>
+<script type="text/javascript" src="/js/wfseditor.js"></script>
+<script type="text/javascript" src="/js/attributeform.js"></script>
+<script type="text/javascript" src="/js/filterfield.js?format=txt"></script>
+<script type="text/javascript" src="/js/filterbuilder.js?format=txt"></script>
+<script type="text/javascript" src="/js/comparisoncomboBox.js?format=txt"></script>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
+<script type="text/javascript" src="//maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js" type="text/javascript"></script>
 <?php
 include("html_footer.php");
 ?>
