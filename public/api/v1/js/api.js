@@ -25,7 +25,7 @@ if (typeof mygeocloud_host === "undefined") {
     }
 }
 if (typeof jQuery === "undefined") {
-    document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 }
 if (typeof OpenLayers === "undefined") {
     document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");

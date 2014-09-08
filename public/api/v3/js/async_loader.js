@@ -16,19 +16,19 @@ if (typeof gc2apiLoader === "undefined") {
         if (typeof $ === "undefined") {
             js = document.createElement("script");
             js.type = "text/javascript";
-            js.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+            js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
             document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
                 if (window.geocloud_maplib === "ol2") {
-                    $.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/OpenLayers.js");
+                    $.getScript("/js/openlayers/OpenLayers.js");
                 }
                 else if (window.geocloud_maplib === "leaflet") {
-                    $.getScript("http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js");
+                    $.getScript("/js/leaflet/leaflet.js");
                 }
-                $.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-combined.js");
+                $.getScript("/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/api/v1/baselayerjs");
                 (function pollForDependencies() {
                     if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
@@ -37,8 +37,8 @@ if (typeof gc2apiLoader === "undefined") {
                         ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js");
-                        $.getScript("http://leaflet.github.io/Leaflet.draw/leaflet.draw.js");
-                        $.getScript("http://leaflet.github.io/Leaflet.label/leaflet.label.js");
+                        $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
+                        $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof L.drawVersion !== "undefined"  && typeof L.labelVersion !== "undefined") {
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
