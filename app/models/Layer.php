@@ -231,7 +231,15 @@ class Layer extends \app\models\Table
         $this->begin();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
-            $query = "DROP TABLE \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
+            $check = $this->isTableOrView($table);
+            if (!$check["success"]){
+                $response['success'] = false;
+                $response['message'] = $check["message"];
+                $response['code'] = 500;
+                return $response;
+            }
+            $type = $check["data"];
+            $query = "DROP {$type} \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
             $res = $this->prepare($query);
             try {
                 $res->execute();

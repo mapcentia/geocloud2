@@ -11,6 +11,7 @@ class Session
             session_name("PHPSESSID");
             session_set_cookie_params(0, '/', "." . App::$param['domain']);
         }
+        ini_set("session.cookie_lifetime","86400");
         session_start();
     }
 
@@ -18,8 +19,12 @@ class Session
     {
         if ($_SESSION['auth'] == true) {
             return true;
-        } else {
+        } elseif ($redirect) {
             \app\inc\Redirect::to($redirect);
+            exit();
+        }
+        else {
+            \app\inc\Redirect::to("/nosession.php");
             exit();
         }
     }

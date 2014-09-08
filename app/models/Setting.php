@@ -125,6 +125,8 @@ class Setting extends Model
         if ($_SESSION["subuser"]) {
             $arr['pw'] = $arr['pw_subuser']->$_SESSION["subuser"];
             $arr['api_key'] = $arr['api_key_subuser']->$_SESSION["subuser"];
+            unset($arr['api_key_subuser']);
+            unset($arr['pw_subuser']);
         }
         if ($unsetPw) {
             unset($arr['pw']);

@@ -19,9 +19,9 @@ addScratch.init = function () {
         title: __('Create layer from scratch'),
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
-        labelWidth: 10,
+        labelWidth: 1,
         defaults: {
-            anchor: '95%',
+            anchor: '99%',
             allowBlank: false,
             msgTarget: 'side'
         },

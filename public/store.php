@@ -12,10 +12,9 @@ include("html_header.php");
 <!-- Ext 3.x compatibility -->
 <!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
 <!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
-
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script type="text/javascript" src="/js/msg.js"></script>
-<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>
 <script type="text/javascript" src="/js/edittablestructure.js"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js"></script>
@@ -25,6 +24,8 @@ include("html_header.php");
 <script type="text/javascript" src="/js/addshapeform.js"></script>
 <script type="text/javascript" src="/js/addbitmapform.js"></script>
 <script type="text/javascript" src="/js/addrasterform.js"></script>
+<script type="text/javascript" src="/js/addviewform.js"></script>
+<script type="text/javascript" src="/js/addosmform.js"></script>
 <script type="text/javascript" src="/js/addfromscratch.js"></script>
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>

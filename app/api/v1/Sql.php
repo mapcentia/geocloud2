@@ -53,19 +53,35 @@ class Sql extends \app\inc\Controller
         }
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
+            $this->response['code'] = 403;
             $this->response['message'] = "You can't use ';'. Use the bulk transaction API instead";
         } elseif (strpos($sql, '--') !== false) {
             $this->response['success'] = false;
+            $this->response['code'] = 403;
             $this->response['message'] = "SQL comments '--' are not allowed";
         } elseif ($parsedSQL['drop']) {
             $this->response['success'] = false;
+            $this->response['code'] = 403;
             $this->response['message'] = "DROP is not allowed through the API";
         } elseif ($parsedSQL['alter']) {
             $this->response['success'] = false;
+            $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
         } elseif ($parsedSQL['create']) {
-            $this->response['success'] = false;
-            $this->response['message'] = "CREATE is not allowed through the API";
+            if (strpos(strtolower($parsedSQL['create']), 'create view') !== false) {
+                if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
+                    $api = new \app\models\Sql();
+                    $this->response = $api->transaction($this->q);
+                } else {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Not the right key!";
+                    $this->response['code'] = 403;
+                }
+            } else {
+                $this->response['success'] = false;
+                $this->response['message'] = "Only CREATE VIEW is allowed through the API";
+                $this->response['code'] = 403;
+            }
         } elseif ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']) {
             if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                 $api = new \app\models\Sql();
