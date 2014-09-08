@@ -127,17 +127,17 @@ if (typeof gc2map === "undefined") {
         if (typeof $ === "undefined") {
             js = document.createElement("script");
             js.type = "text/javascript";
-            js.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+            js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
             document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
                 //$.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/OpenLayers.js");
-                $.getScript("http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js");
-                $.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-combined.js");
-                $.getScript("http://cdn.eu1.mapcentia.com/js/bootstrap3/js/bootstrap.min.js");
-                $.getScript("http://cdn.eu1.mapcentia.com/js/hogan/hogan-2.0.0.js");
+                $.getScript("/js/leaflet/leaflet.js");
+                $.getScript("/js/openlayers/proj4js-combined.js");
+                $.getScript("/js/bootstrap3/js/bootstrap.min.js");
+                $.getScript("/js/hogan/hogan-2.0.0.js");
                 $.getScript(host + "/apps/widgets/gc2map/js/bootstrap-alert.js");
                 $.getScript(host + "/api/v1/baselayerjs");
                 (function pollForDependencies() {
@@ -166,8 +166,8 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap-alert.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/non-responsive.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
             } else {
                 setTimeout(pollForjQuery, 10);
             }
@@ -259,6 +259,7 @@ if (typeof gc2map === "undefined") {
         };
     }());
 }
+
 
 
 

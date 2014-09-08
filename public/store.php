@@ -109,7 +109,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
                            size="65"/>
                 </td>
             </tr>
@@ -125,7 +125,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
                            size="65"/>
                 </td>
             </tr>
@@ -141,7 +141,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
                            size="65"/>
                 </td>
             </tr>
@@ -157,7 +157,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
                            size="65"/>
                 </td>
             </tr>
@@ -173,7 +173,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
                            size="65"/>
                 </td>
             </tr>
