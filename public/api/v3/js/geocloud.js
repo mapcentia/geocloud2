@@ -68,9 +68,10 @@ geocloud = (function () {
     if (typeof L === "object") {
         MAPLIB = "leaflet";
     }
+    //Only if loaded in script tag
     if (document.readyState === "loading") {
         if (typeof jQuery === "undefined") {
-            document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+            document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
         }
     }
     // Helper for extending classes
@@ -857,7 +858,7 @@ geocloud = (function () {
             // Load Google Maps API and make sure its not loaded more than once
             if (typeof window.GoogleMapsDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
                 window.GoogleMapsDirty = true;
-                jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
+                jQuery.getScript("//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
                 // Google Maps API is loaded
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
@@ -1541,7 +1542,7 @@ geocloud = (function () {
     var SUBDOMAINS = " a. b. c. d.".split(" "),
         MAKE_PROVIDER = function (layer, type, minZoom, maxZoom) {
             return {
-                "url": ["http://{S}tile.stamen.com/", layer, "/{Z}/{X}/{Y}.", type].join(""),
+                "url": ["https://stamen-tiles.a.ssl.fastly.net/", layer, "/{Z}/{X}/{Y}.", type].join(""),
                 "type": type,
                 "subdomains": SUBDOMAINS.slice(),
                 "minZoom": minZoom,
@@ -1557,24 +1558,7 @@ geocloud = (function () {
         PROVIDERS = {
             "toner": MAKE_PROVIDER("toner", "png", 0, 20),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
-            "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18),
-            "trees-cabs-crime": {
-                "url": "//{S}.tiles.mapbox.com/v3/stamen.trees-cabs-crime/{Z}/{X}/{Y}.png",
-                "type": "png",
-                "subdomains": "a b c d".split(" "),
-                "minZoom": 11,
-                "maxZoom": 18,
-                "extent": [
-                    {"lat": 37.853, "lon": -122.577},
-                    {"lat": 37.684, "lon": -122.313}
-                ],
-                "attribution": [
-                    'Design by Shawn Allen at <a href="http://stamen.com">Stamen</a>.',
-                    'Data courtesy of <a href="http://fuf.net">FuF</a>,',
-                    '<a href="http://www.yellowcabsf.com">Yellow Cab</a>',
-                    '&amp; <a href="http://sf-police.org">SFPD</a>.'
-                ].join(" ")
-            }
+            "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
     /*
      * Get the named provider, or throw an exception if it doesn't exist.
@@ -1721,6 +1705,7 @@ if (geocloud.MAPLIB === "leaflet") {
             var subdomains = this.options.subdomains,
                 s = this.options.subdomains[Math.abs((p.x + p.y) % subdomains.length)];
             return this._url.replace('{subdomain}', s)
+                .replace('http:', 'https:')
                 .replace('{quadkey}', this.tile2quad(p.x, p.y, z))
                 .replace('{culture}', this.options.culture);
         },
@@ -2058,5 +2043,6 @@ var gc2SetLGoogle = function () {
         }
     }
 }
+
 
 
