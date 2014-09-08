@@ -20,7 +20,7 @@
 
 <link href="/js/bootstrap3/css/bootstrap.css" rel="stylesheet">
 <link href="/css/banner.css" rel="stylesheet">
-<link rel="StyleSheet" href="http://cdn.eu1.mapcentia.com/css/proximanova.css" type="text/css"/>
+<link rel="StyleSheet" href="/css/proximanova.css" type="text/css"/>
 <script>
     $(function () {
         $('input, textarea').placeholder();

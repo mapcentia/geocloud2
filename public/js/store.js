@@ -1812,8 +1812,10 @@ $(window).ready(function () {
                         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                         return v.toString(16);
                     });
+                    //console.log(l.url);
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + "token=" + n;
+                    //console.log(l.url);
                     setTimeout(function () {
                         l.redraw();
                     }, 500);

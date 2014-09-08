@@ -12,7 +12,7 @@ class Tinyowsfile extends \app\inc\Controller
         $postgisObject = new Model();
         ob_start();?>
 
-    <tinyows online_resource="http://<?php echo $_SERVER['HTTP_HOST']; ?>/cgi/tinyows.cgi"
+    <tinyows online_resource="<?php echo App::$param['protocol'] ? : "http"?>://<?php echo $_SERVER['HTTP_HOST']; ?>/cgi/tinyows.cgi"
              schema_dir="/usr/tinyows/schema/">
 
         <pg user="<?php echo Connection::$param['postgisuser']; ?>"

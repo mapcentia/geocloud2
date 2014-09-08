@@ -46,7 +46,7 @@ class Staticmap extends \app\inc\Controller
             $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
             $cmd = "wkhtmltoimage " .
                 "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
-                "\"" . \app\conf\App::$param['host'] . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}&sql={$sql}\" " .
+                "\"" . "http://127.0.0.1" . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}&sql={$sql}\" " .
                 $file;
             //die($cmd);
             exec($cmd);
@@ -95,8 +95,8 @@ class Staticmap extends \app\inc\Controller
         $sql = Input::get("sql");
 
         echo "
-        <script src='http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.js'></script>
-        <script src='http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-combined.js'></script>
+        <script src='/js/leaflet/leaflet.js'></script>
+        <script src='/js/openlayers/proj4js-combined.js'></script>
         <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>

@@ -1,55 +1,15 @@
 <?php
 include("html_header.php");
 ?>
-<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" src="/js/ext/ext-all.js"></script>
-
-<!-- Ext 4.0 -->
-<!--<link rel="stylesheet" type="text/css" href="/js/ext4/resources/css/ext-all.css" />-->
-<!-- Stick to ext-all-debug.js (not bootstrap.js) while migrating. Legacy code will not work with bootstrap! -->
-<!--<script type="text/javascript" src="/js/ext4/ext-all-debug.js"></script>-->
-
-<!-- Ext 3.x compatibility -->
-<!--<script type="text/javascript" src="/js/compatibility/ext3-core-compat.js"></script>-->
-<!--<script type="text/javascript" src="/js/compatibility/ext3-compat.js"></script>-->
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script type="text/javascript" src="/api/v1/baselayerjs"></script>
-<script type="text/javascript" src="/js/msg.js"></script>
-<script type="text/javascript" src="/js/store.js"></script>
-<script type="text/javascript" src="/js/edittablestructure.js"></script>
-<script type="text/javascript" src="/js/cartomobilesetup.js"></script>
-<script type="text/javascript" src="/js/editwmsclass.js"></script>
-<script type="text/javascript" src="/js/editwmslayer.js"></script>
-<script type="text/javascript" src="/js/classwizards.js"></script>
-<script type="text/javascript" src="/js/addshapeform.js"></script>
-<script type="text/javascript" src="/js/addbitmapform.js"></script>
-<script type="text/javascript" src="/js/addrasterform.js"></script>
-<script type="text/javascript" src="/js/addviewform.js"></script>
-<script type="text/javascript" src="/js/addosmform.js"></script>
-<script type="text/javascript" src="/js/addfromscratch.js"></script>
-<script type="text/javascript" src="/js/colorfield.js"></script>
-<script type="text/javascript" src="/js/httpauthform.js"></script>
-<script type="text/javascript" src="/js/apikeyform.js"></script>
-<!--<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>-->
-
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 <link rel="stylesheet" type="text/css" href="/css/legend.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/RowEditor.css"/>
-<link href="/js/bootstrap/css/bootstrap.icons.min.css" rel="stylesheet">
-
-<!-- overrides to base library -->
-<script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
+<link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css" />
-<!-- extensions -->
-<script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
-
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css"/>
-<script type="text/javascript" src="/js/plupload/js/moxie.min.js"></script>
-<script type="text/javascript" src="/js/plupload/js/plupload.min.js"></script>
-<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js"></script>
+
 <style>
     .btn-gc {
         margin-top: -1px !important;
@@ -110,7 +70,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
                            size="65"/>
                 </td>
             </tr>
@@ -126,7 +86,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
                            size="65"/>
                 </td>
             </tr>
@@ -142,7 +102,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
                            size="65"/>
                 </td>
             </tr>
@@ -158,7 +118,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
                            size="65"/>
                 </td>
             </tr>
@@ -174,7 +134,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="http://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
                            size="65"/>
                 </td>
             </tr>
@@ -185,6 +145,33 @@ include("html_header.php");
         </table>
     </div>
 </div>
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="/js/ext/ext-all.js"></script>
+<script type="text/javascript" src="/api/v1/baselayerjs"></script>
+<script type="text/javascript" src="/js/msg.js"></script>
+<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="/js/store.js"></script>
+<script type="text/javascript" src="/js/edittablestructure.js"></script>
+<script type="text/javascript" src="/js/cartomobilesetup.js"></script>
+<script type="text/javascript" src="/js/editwmsclass.js"></script>
+<script type="text/javascript" src="/js/editwmslayer.js"></script>
+<script type="text/javascript" src="/js/classwizards.js"></script>
+<script type="text/javascript" src="/js/addshapeform.js"></script>
+<script type="text/javascript" src="/js/addbitmapform.js"></script>
+<script type="text/javascript" src="/js/addrasterform.js"></script>
+<script type="text/javascript" src="/js/addfromscratch.js"></script>
+<script type="text/javascript" src="/js/addviewform.js"></script>
+<script type="text/javascript" src="/js/addosmform.js"></script>
+<script type="text/javascript" src="/js/colorfield.js"></script>
+<script type="text/javascript" src="/js/httpauthform.js"></script>
+<script type="text/javascript" src="/js/apikeyform.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
+<!--<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>-->
+<script type="text/javascript" src="/js/plupload/js/moxie.min.js"></script>
+<script type="text/javascript" src="/js/plupload/js/plupload.min.js"></script>
+<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
 <?php
 include("html_footer.php");
 ?>

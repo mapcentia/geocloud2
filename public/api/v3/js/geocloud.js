@@ -49,7 +49,7 @@ geocloud = (function () {
         DTKSKAERMKORT = "dtkSkaermkort",
         DTKSKAERMKORTDAEMPET = "dtkSkaermkortDaempet",
         DIGITALGLOBE = "DigitalGlobe:Imagery",
-        attribution = (window.mapAttribution === undefined) ? "Powered by <a target='_blank' href='http://www.mapcentia.com/en/geocloud/geocloud.htm'>MapCentia GC2</a> " : window.mapAttribution;
+        attribution = (window.mapAttribution === undefined) ? "Powered by <a target='_blank' href='//www.mapcentia.com/en/geocloud/geocloud.htm'>MapCentia GC2</a> " : window.mapAttribution;
 
     // Try to set host from script
     if (typeof window.geocloud_host === "undefined") {
@@ -68,9 +68,10 @@ geocloud = (function () {
     if (typeof L === "object") {
         MAPLIB = "leaflet";
     }
+    //Only if loaded in script tag
     if (document.readyState === "loading") {
         if (typeof jQuery === "undefined") {
-            document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+            document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
         }
     }
     // Helper for extending classes
@@ -435,10 +436,10 @@ geocloud = (function () {
         // Load js and css
         if (MAPLIB === "leaflet") {
             // The css
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://cdn.eu1.mapcentia.com/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/leaflet.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'http://eu1.mapcentia.com/api/v3/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/api/v3/css/styles.css' }).appendTo('head');
 
         this.bingApiKey = null;
         this.digitalGlobeKey = null;
@@ -766,7 +767,7 @@ geocloud = (function () {
                     this.map.addLayer(this.osm);
                     break;
                 case "leaflet":
-                    this.osm = new L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    this.osm = new L.tileLayer("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
                     });
                     lControl.addBaseLayer(this.osm);
@@ -812,10 +813,10 @@ geocloud = (function () {
             switch (MAPLIB) {
                 case "ol2":
                     this.mapBoxNaturalEarth = new OpenLayers.Layer.XYZ("mapBoxNaturalEarth", [
-                        "http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                        "http://b.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                        "http://c.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
-                        "http://d.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png"
+                        "//a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "//b.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "//c.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png",
+                        "//d.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/${z}/${x}/${y}.png"
                     ]);
                     this.mapBoxNaturalEarth.wrapDateLine = false;
                     this.map.addLayer(this.mapBoxNaturalEarth);
@@ -829,7 +830,7 @@ geocloud = (function () {
                     this.map.addLayer(this.mapBoxNaturalEarth);
                     break;
                 case "leaflet":
-                    this.mapBoxNaturalEarth = new L.tileLayer("http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
+                    this.mapBoxNaturalEarth = new L.tileLayer("//a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
                     lControl.addBaseLayer(this.mapBoxNaturalEarth);
                     break;
             }
@@ -857,7 +858,7 @@ geocloud = (function () {
             // Load Google Maps API and make sure its not loaded more than once
             if (typeof window.GoogleMapsDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
                 window.GoogleMapsDirty = true;
-                jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
+                jQuery.getScript("//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
                 // Google Maps API is loaded
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
@@ -1541,7 +1542,7 @@ geocloud = (function () {
     var SUBDOMAINS = " a. b. c. d.".split(" "),
         MAKE_PROVIDER = function (layer, type, minZoom, maxZoom) {
             return {
-                "url": ["http://{S}tile.stamen.com/", layer, "/{Z}/{X}/{Y}.", type].join(""),
+                "url": ["https://stamen-tiles.a.ssl.fastly.net/", layer, "/{Z}/{X}/{Y}.", type].join(""),
                 "type": type,
                 "subdomains": SUBDOMAINS.slice(),
                 "minZoom": minZoom,
@@ -1557,24 +1558,7 @@ geocloud = (function () {
         PROVIDERS = {
             "toner": MAKE_PROVIDER("toner", "png", 0, 20),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
-            "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18),
-            "trees-cabs-crime": {
-                "url": "http://{S}.tiles.mapbox.com/v3/stamen.trees-cabs-crime/{Z}/{X}/{Y}.png",
-                "type": "png",
-                "subdomains": "a b c d".split(" "),
-                "minZoom": 11,
-                "maxZoom": 18,
-                "extent": [
-                    {"lat": 37.853, "lon": -122.577},
-                    {"lat": 37.684, "lon": -122.313}
-                ],
-                "attribution": [
-                    'Design by Shawn Allen at <a href="http://stamen.com">Stamen</a>.',
-                    'Data courtesy of <a href="http://fuf.net">FuF</a>,',
-                    '<a href="http://www.yellowcabsf.com">Yellow Cab</a>',
-                    '&amp; <a href="http://sf-police.org">SFPD</a>.'
-                ].join(" ")
-            }
+            "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
     /*
      * Get the named provider, or throw an exception if it doesn't exist.
@@ -1721,6 +1705,7 @@ if (geocloud.MAPLIB === "leaflet") {
             var subdomains = this.options.subdomains,
                 s = this.options.subdomains[Math.abs((p.x + p.y) % subdomains.length)];
             return this._url.replace('{subdomain}', s)
+                .replace('http:', 'https:')
                 .replace('{quadkey}', this.tile2quad(p.x, p.y, z))
                 .replace('{culture}', this.options.culture);
         },
@@ -1739,7 +1724,7 @@ if (geocloud.MAPLIB === "leaflet") {
                 }
                 _this.initMetadata();
             };
-            var url = "http://dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
+            var url = "//dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
             var script = document.createElement("script");
             script.type = "text/javascript";
             script.src = url;
@@ -2058,5 +2043,6 @@ var gc2SetLGoogle = function () {
         }
     }
 }
+
 
 

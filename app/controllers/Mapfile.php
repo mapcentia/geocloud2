@@ -4,7 +4,6 @@ namespace app\controllers;
 use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Util;
-use \app\inc\Response;
 
 class Mapfile extends \app\inc\Controller
 {
@@ -50,8 +49,8 @@ class Mapfile extends \app\inc\Controller
         "wms_name"    "<?php echo $user; ?>"
         "wfs_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
-        "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
-        "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wms_onlineresource"    "<?php echo App::$param['protocol'] ? : "http"?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wfs_onlineresource"    "<?php echo App::$param['protocol'] ? : "http"?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
         END

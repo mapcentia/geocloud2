@@ -25,9 +25,10 @@ if (typeof mygeocloud_host === "undefined") {
     }
 }
 if (typeof jQuery === "undefined") {
-    document.write("<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
+    document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
 }
 if (typeof OpenLayers === "undefined") {
+    // This is a hacked version of OpenLayers 2.12. Do NOT use 2.13 in GC2 Admin
     document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 }
 document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
