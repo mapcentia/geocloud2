@@ -14,7 +14,7 @@ $_SESSION['postgisschema'] = "public";
 
 $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
 if (App::$param['domain']) {
-    $host = "http://" . $prefix . App::$param['domain'];
+    $host = "//" . $prefix . App::$param['domain'];
 } else {
     $host = App::$param['host'];
 }
