@@ -31,7 +31,7 @@ function UserIDCheck($sValue, &$oStatus)
         $oStatus->bValid = 1;
         $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
         if (App::$param['domain']) {
-            $host = "http://" . $prefix . App::$param['domain'];
+            $host = "//" . $prefix . App::$param['domain'];
         } else {
             if (!\app\conf\App::$param['host']) {
                 include_once("../../../app/conf/hosts.php");
