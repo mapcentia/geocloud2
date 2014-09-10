@@ -131,15 +131,16 @@ class Staticmap extends \app\inc\Controller
                 store.load();
                 map.zoomToExtentOfgeoJsonStore(store);";
         }
+        if ($layers) {
         echo "
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}
                 });
 
-            }())
-        </script>
-        ";
+            }())";
+        }
+        echo "</script>";
         exit();
     }
 }
