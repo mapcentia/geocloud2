@@ -9,7 +9,7 @@ class Elasticsearch extends \app\inc\Controller
 
     function __construct()
     {
-        $this->host = \app\conf\App::$param['esHost']?:"http://127.0.0.1";
+        $this->host = \app\conf\App::$param['esHost'];
     }
 
     function get_bulk()
@@ -39,7 +39,7 @@ class Elasticsearch extends \app\inc\Controller
     function get_search()
     {
         $get = Input::get();
-        $q = urldecode($get['q']);
+        $q = $get['q'];
         $size = ($get['size']) ? : 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();

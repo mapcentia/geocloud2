@@ -37,9 +37,9 @@ class Input
 
         else {
             if ($key != null)
-                return $query[$key];
+                return urldecode($query[$key]);
             else
-                return $query;
+                return urldecode($query);
         }
     }
 
