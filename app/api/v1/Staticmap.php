@@ -140,10 +140,9 @@ class Staticmap extends \app\inc\Controller
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}
-                });
-
-            }())";
+                });";
         }
+        echo "}())";
         echo "</script>";
         exit();
     }
