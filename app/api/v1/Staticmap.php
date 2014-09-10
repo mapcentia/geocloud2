@@ -34,7 +34,7 @@ class Staticmap extends \app\inc\Controller
         $bbox = Input::get("bbox");
         $sql = Input::get("sql");
 
-        $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox. "_" . $sql;
+        $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox . "_" . $sql;
         $lifetime = (Input::get('lifetime')) ? : 0;
         $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
         $Cache_Lite = new \Cache_Lite($options);
@@ -87,7 +87,11 @@ class Staticmap extends \app\inc\Controller
     {
         $db = Input::getPath()->part(5);
         $baseLayer = Input::get("baselayer");
-        $layers = json_encode(explode(",", Input::get("layers")));
+        if (Input::get("layers")) {
+            $layers = json_encode(explode(",", Input::get("layers")));
+        } else {
+            $layers = null;
+        }
         $center = str_replace('"', '', json_encode(explode(",", Input::get("center"))));
         $zoom = Input::get("zoom");
         $size = explode("x", Input::get("size"));
@@ -124,7 +128,7 @@ class Staticmap extends \app\inc\Controller
             echo "
                 var store = new geocloud.sqlStore({
                     db: '{$db}',
-                    sql: '".rawurlencode($sql)."',
+                    sql: '" . rawurlencode($sql) . "',
                     async: false
                 });
                 map.addGeoJsonStore(store);
@@ -132,7 +136,7 @@ class Staticmap extends \app\inc\Controller
                 map.zoomToExtentOfgeoJsonStore(store);";
         }
         if ($layers) {
-        echo "
+            echo "
                 map.addTileLayers({
                     db: '{$db}',
                     layers: {$layers}
