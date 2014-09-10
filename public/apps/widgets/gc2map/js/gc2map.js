@@ -134,10 +134,10 @@ if (typeof gc2map === "undefined") {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
                 //$.getScript("http://cdn.eu1.mapcentia.com/js/openlayers/OpenLayers.js");
-                $.getScript("/js/leaflet/leaflet.js");
-                $.getScript("/js/openlayers/proj4js-combined.js");
-                $.getScript("/js/bootstrap3/js/bootstrap.min.js");
-                $.getScript("/js/hogan/hogan-2.0.0.js");
+                $.getScript(host + "/js/leaflet/leaflet.js");
+                $.getScript(host + "/js/openlayers/proj4js-combined.js");
+                $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
+                $.getScript(host + "/js/hogan/hogan-2.0.0.js");
                 $.getScript(host + "/apps/widgets/gc2map/js/bootstrap-alert.js");
                 $.getScript(host + "/api/v1/baselayerjs");
                 (function pollForDependencies() {
