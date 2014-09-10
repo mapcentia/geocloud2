@@ -143,7 +143,6 @@ addOsm.init = function () {
                         var param = {
                             data: values
                         };
-                        console.log(values);
                         param.data.extent = document.getElementById("wfseditor").contentWindow.window.map.getExtent();
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({

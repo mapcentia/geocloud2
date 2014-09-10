@@ -34,7 +34,7 @@ addView.init = function () {
             },
             {
                 xtype: 'textarea',
-                name: 'Tags',
+                name: 'select',
                 emptyText: __('SELECT ...')
             }
         ],
@@ -46,7 +46,7 @@ addView.init = function () {
                     if (f.form.isValid()) {
                         var values = f.form.getValues(),
                             safeName = values.name.replace(/[^\w\s]/gi, '').replace(' ', '');
-                        if ($.isNumeric(safeName.charAt(0))) {
+                        if (Ext.isNumber(safeName.charAt(0))) {
                             safeName = "_" + safeName;
                         }
                         var param = "q=CREATE VIEW " + safeName + " AS " + values.select + "&key=" + settings.api_key;
