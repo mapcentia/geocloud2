@@ -436,10 +436,10 @@ geocloud = (function () {
         // Load js and css
         if (MAPLIB === "leaflet") {
             // The css
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/leaflet.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '/api/v3/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/api/v3/css/styles.css' }).appendTo('head');
 
         this.bingApiKey = null;
         this.digitalGlobeKey = null;
