@@ -39,7 +39,7 @@ class Elasticsearch extends \app\inc\Controller
     function get_search()
     {
         $get = Input::get();
-        $q = $get['q'];
+        $q = urldecode($get['q']);
         $size = ($get['size']) ? : 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
