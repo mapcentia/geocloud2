@@ -17,7 +17,7 @@ class Sql extends \app\inc\Controller
         if (Input::get('base64') === "true") {
             $this->q = base64_decode(Input::get('q'));
         } else {
-            $this->q = urldecode(Input::get('q'));
+            $this->q = rawurldecode(Input::get('q'));
         }
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
