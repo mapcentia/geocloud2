@@ -228,7 +228,7 @@ var mygeocloud_ol = (function () {
                 popup.panMapIfOutOfView = true;
                 $.ajax({
                     dataType: 'jsonp',
-                    data: 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + parentMap.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
+                    data: 'proj=25832&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + parentMap.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
                     jsonp: 'jsonp_callback',
                     url: "//plandk2.mapcentia.com" + '/apps/viewer/servers/query/' + db,
                     success: function (response) {
