@@ -244,11 +244,11 @@ var mygeocloud_ol = (function () {
                             parentMap.map.addPopup(popup);
                             $("#queryResult").html(response.html);
                             //popup.relativePosition="tr";
-                            vectors.removeAllFeatures();
-                            parentMap.map.raiseLayer(vectors, 10);
-                            for (var i = 0; i < response.renderGeometryArray.length; ++i) {
-                                vectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
-                            }
+                            //vectors.removeAllFeatures();
+                            //parentMap.map.raiseLayer(vectors, 10);
+                            //for (var i = 0; i < response.renderGeometryArray.length; ++i) {
+                            //    vectors.addFeatures(deserialize(response.renderGeometryArray[i][0]));
+                            //}
                         } else {
                             $("#alert").fadeIn(400).delay(1000).fadeOut(400);
                             vectors.removeAllFeatures();
