@@ -47,6 +47,13 @@ include("html_header.php");
             -1px 1px 0 #FFF,
             1px 1px 0 #FFF;
     }
+    .tt{
+        color: #808080;
+        font-size: 9px;
+        cursor: help;
+        line-height: 13px;
+        vertical-align: top;
+    }
 </style>
 </head>
 <body>

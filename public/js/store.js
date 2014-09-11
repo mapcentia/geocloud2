@@ -7,17 +7,24 @@
 /*global schema:false */
 /*global window:false */
 /*global document:false */
+/*global gc2i18n:false */
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-window.__ = function (string) {
-    "use strict";
+window.__ = function (string, toolTip) {
+    'use strict';
+    var str;
     if (typeof gc2i18n !== 'undefined') {
         if (gc2i18n.dict[string]) {
-            return gc2i18n.dict[string];
+            str = gc2i18n.dict[string];
+        } else {
+            str = string;
+        }
+        if (toolTip) {
+            str = " <span class='tt' ext:qtip='" + string + "' ext>[?]</span>";
         }
     }
-    return string;
+    return str;
 };
 document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;

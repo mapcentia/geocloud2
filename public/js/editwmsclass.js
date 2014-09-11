@@ -94,7 +94,7 @@ wmsClasses.init = function (record) {
                     id: "sortid",
                     header: "Sort id",
                     dataIndex: "sortid",
-                    width: 40
+                    width: 50
                 },
                 {
                     id: "name",

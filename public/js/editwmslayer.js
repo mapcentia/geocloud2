@@ -11,13 +11,18 @@ wmsLayer.init = function (record) {
         type: 'GET',
         success: function (data) {
             var response = data,
-                forStore = response.forStore;
+                forStore = response.forStore,
+                i;
             wmsLayer.fieldsForStore.push("");
-            for (var i in forStore) {
-                wmsLayer.fieldsForStore.push(forStore[i].name);
-                wmsLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
-                if (forStore[i].type === "number" || forStore[i].type === "int") {
-                    wmsLayer.numFieldsForStore.push(forStore[i].name);
+            wmsLayer.numFieldsForStore.push("");
+            wmsLayer.fieldsForStoreBrackets.push("");
+            for (i in forStore) {
+                if (forStore.hasOwnProperty(i)) {
+                    wmsLayer.fieldsForStore.push(forStore[i].name);
+                    wmsLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
+                    if (forStore[i].type === "number" || forStore[i].type === "int") {
+                        wmsLayer.numFieldsForStore.push(forStore[i].name);
+                    }
                 }
             }
         }
@@ -131,29 +136,15 @@ wmsLayer.init = function (record) {
             label_max_scale: 'Label max scale',
             label_min_scale: 'Label min scale',
             cluster: 'Clustering distance',
-            meta_tiles: 'Use meta tiles',
+            meta_tiles: 'Use meta tiles' + __('Meta tiles fights cut of symboles and labels in tiles. Is slower on creation.', true),
             meta_size: 'Meta tile size',
             meta_buffer: 'Meta buffer size (px)',
-            ttl: 'Time to live (TTL)',
+            ttl: 'Time to live (TTL)' + __('Time to live in the CDN cache.', true),
             maxscaledenom: 'Max scale',
             minscaledenom: 'Min scale',
             geotype: 'Geom type'
         },
 
-        customRenderers: {
-            theme_column: function (v, p) {
-                p.attr = "ext:qtip='your tooltip here' ext";
-                return v;
-            },
-            meta_tiles: function (v, p) {
-                p.attr = "ext:qtip='Meta tiles fights cut of symboles and labels in tiles. Is slower on creation.' ext";
-                return v;
-            },
-            ttl: function (v, p) {
-                p.attr = "ext:qtip='Time to live in the CDN cache.' ext";
-                return v;
-            }
-        },
         customEditors: {
             'label_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.fieldsForStore,

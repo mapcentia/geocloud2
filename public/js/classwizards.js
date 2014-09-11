@@ -402,15 +402,15 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'box',
-                                html: __("Label text")
+                                html: __("Label text") + __("Combo field. Select a attribute for label. You write around like &apos;My label [attribute]&apos; or concatenate two or more attributes like &apos;[attribute1] [attribute2]&apos;.",true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Label color")
+                                html: __("Label color") + __("Select a label color.", true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Label size")
+                                html: __("Label size") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
                             }
                         ]
                     },
@@ -458,15 +458,15 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'box',
-                                html: __("Symbol")
+                                html: __("Symbol") + __("Select a symbol for layer drawing. Leave empty for solid line and area style.", true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Symbol angle")
+                                html: __("Symbol angle") + __("Combo field. Either select an integer attribute or write an integer for symbol angling.", true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Symbol size")
+                                html: __("Symbol size") + __("Combo field. Either select an integer attribute or write an integer for symbol size.", true)
                             }
                         ]
                     },
@@ -517,15 +517,15 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'box',
-                                html: __("Outline color")
+                                html: __("Outline color") + __('Pick color for outlining features.', true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Outline width")
+                                html: __("Outline width") + __('Pick thickness for outline.', true)
                             },
                             {
                                 xtype: 'box',
-                                html: __("Opacity")
+                                html: __("Opacity")+ __('Set opacity level between 1 and 100, where 100 is solid.', true)
                             }
                         ]
                     },
