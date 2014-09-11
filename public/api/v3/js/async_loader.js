@@ -41,6 +41,7 @@ if (typeof gc2apiLoader === "undefined") {
                         $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof L.drawVersion !== "undefined"  && typeof L.labelVersion !== "undefined") {
+                                L.Icon.Default.imagePath = "/js/leaflet/images";
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {
