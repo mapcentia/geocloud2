@@ -230,7 +230,7 @@ var mygeocloud_ol = (function () {
                     dataType: 'jsonp',
                     data: 'proj=900913&lon=' + coords.lon + '&lat=' + coords.lat + '&layers=' + parentMap.getVisibleLayers() + '&extent=' + boundsStr + '&width=' + mapSize.w + '&height=' + mapSize.h,
                     jsonp: 'jsonp_callback',
-                    url: mygeocloud_host + '/apps/viewer/servers/query/' + db,
+                    url: "//plandk2.mapcentia.com" + '/apps/viewer/servers/query/' + db,
                     success: function (response) {
                         //waitPopup.destroy();
 
