@@ -23,7 +23,7 @@ addShape.init = function () {
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/vector',
-                max_file_size: '1000mb',
+                max_file_size: '2000mb',
                 chunk_size: '1mb',
                 unique_names: true,
                 urlstream_upload: true,
