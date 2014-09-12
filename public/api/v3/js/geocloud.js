@@ -39,6 +39,7 @@ geocloud = (function () {
         MAPQUESTOSM = "mapQuestOSM",
         MAPBOXNATURALEARTH = "mapBoxNaturalEarth",
         STAMENTONER = "stamenToner",
+        STAMENTONERLITE = "stamenTonerLite",
         GOOGLESTREETS = "googleStreets",
         GOOGLEHYBRID = "googleHybrid",
         GOOGLESATELLITE = "googleSatellite",
@@ -777,19 +778,28 @@ geocloud = (function () {
             this.osm.id = "osm";
             return (this.osm);
         };
-        //ol2 and leaflet
-        this.addStamenToner = function () {
+        //ol2, ol3 and leaflet
+        this.addStamen = function (type) {
+            var name;
+            switch (type) {
+                case "toner":
+                    name = "stamenToner";
+                    break;
+                case "toner-lite":
+                    name = "stamenTonerLite";
+                    break;
+            }
             switch (MAPLIB) {
                 case "ol2":
-                    this.stamenToner = new OpenLayers.Layer.Stamen("toner");
-                    this.stamenToner.name = "stamenToner";
+                    this.stamenToner = new OpenLayers.Layer.Stamen(type);
+                    this.stamenToner.name = name;
                     this.map.addLayer(this.stamenToner);
                     this.stamenToner.setVisibility(false);
                     break;
                 case "ol3":
                     this.stamenToner = new ol.layer.TileLayer({
                         source: new ol.source.Stamen({
-                            layer: 'toner'
+                            layer: type
                         }),
                         visible: false
                     });
@@ -797,7 +807,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     try {
-                        this.stamenToner = new L.StamenTileLayer("toner");
+                        this.stamenToner = new L.StamenTileLayer(type);
                         lControl.addBaseLayer(this.stamenToner);
                     }
                     catch (e) {
@@ -805,7 +815,7 @@ geocloud = (function () {
                     break;
             }
             this.stamenToner.baseLayer = true;
-            this.stamenToner.id = "stamenToner";
+            this.stamenToner.id = name;
             return (this.stamenToner);
         };
         //ol2 and leaflet
@@ -1066,7 +1076,10 @@ geocloud = (function () {
                     o = this.addMapBoxNaturalEarth();
                     break;
                 case "stamenToner":
-                    o = this.addStamenToner();
+                    o = this.addStamen("toner");
+                    break;
+                case "stamenTonerLite":
+                    o = this.addStamen("toner-lite");
                     break;
                 case "googleStreets":
                     o = this.addGoogle("ROADMAP");
@@ -1518,6 +1531,7 @@ geocloud = (function () {
         MAPQUESTOSM: MAPQUESTOSM,
         MAPBOXNATURALEARTH: MAPBOXNATURALEARTH,
         STAMENTONER: STAMENTONER,
+        STAMENTONERLITE: STAMENTONERLITE,
         GOOGLESTREETS: GOOGLESTREETS,
         GOOGLEHYBRID: GOOGLEHYBRID,
         GOOGLESATELLITE: GOOGLESATELLITE,
