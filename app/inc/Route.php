@@ -5,7 +5,7 @@ use \app\inc\Util;
 
 class Route
 {
-    static function add($uri, $func = "")
+    static function add($uri, $func = "", $silent = false)
     {
         $time_start = Util::microtime_float();
         $requestUri = strtok($_SERVER["REQUEST_URI"], '?');
@@ -43,8 +43,10 @@ class Route
             if (isset($response["json"])) {
                 echo Response::passthru($response["json"]);
             } else {
-                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
-                echo Response::toJson($response);
+                if (!$silent) {
+                    $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+                    echo Response::toJson($response);
+                }
             }
             exit();
         }

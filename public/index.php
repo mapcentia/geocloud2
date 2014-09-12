@@ -37,7 +37,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/schema");
     Route::add("api/v1/setting");
     Route::add("api/v1/twitter");
-    Route::add("api/v1/cartomobile");
+    Route::add("api/v1/cartomobile", null, true); // Returns xml
     Route::add("api/v1/user");
     Route::add("api/v1/legend", function () {
         Database::setDb(Input::getPath()->part(5));
