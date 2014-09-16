@@ -38,7 +38,7 @@ addView.init = function () {
                 emptyText: __('SELECT ...')
             }
         ],
-        
+
         buttons: [
             {
                 text: __('Create'),
@@ -50,7 +50,7 @@ addView.init = function () {
                         if (Ext.isNumber(safeName.charAt(0))) {
                             safeName = "_" + safeName;
                         }
-                        var param = "q=CREATE VIEW " + safeName + " AS " + values.select + "&key=" + settings.api_key;
+                        var param = "q=CREATE VIEW " + schema + "." + safeName + " AS " + values.select + "&key=" + settings.api_key;
                         Ext.Ajax.request({
                             url: '/api/v1/sql/' + screenName,
                             method: 'post',
