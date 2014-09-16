@@ -38,6 +38,7 @@ addView.init = function () {
                 emptyText: __('SELECT ...')
             }
         ],
+        
         buttons: [
             {
                 text: __('Create'),
