@@ -127,7 +127,7 @@ if (typeof gc2map === "undefined") {
         if (typeof $ === "undefined") {
             js = document.createElement("script");
             js.type = "text/javascript";
-            js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+            js.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
             document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
@@ -166,8 +166,8 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/bootstrap-alert.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/non-responsive.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: scriptHost + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'https://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
             } else {
                 setTimeout(pollForjQuery, 10);
             }
