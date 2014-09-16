@@ -514,6 +514,7 @@ $(window).ready(function () {
         var p = new Ext.Panel({
                 id: "uploadpanel",
                 frame: false,
+                border: false,
                 layout: 'border',
                 items: [new Ext.Panel({
                     region: "center"
@@ -556,7 +557,7 @@ $(window).ready(function () {
             layout: 'fit',
             modal: true,
             width: 500,
-            height: 385,
+            height: 390,
             closeAction: 'close',
             plain: true,
             items: [p],

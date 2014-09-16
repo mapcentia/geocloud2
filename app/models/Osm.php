@@ -4,7 +4,7 @@ namespace app\models;
 
 class Osm extends \app\inc\Model
 {
-    public function createView($conf)
+    public function create($conf, $createTable = false)
     {
         switch ($conf->data->table) {
             case "POINT";
@@ -51,7 +51,7 @@ class Osm extends \app\inc\Model
             }
             $tagsStr = implode(" {$lo} ", $tags);
         }
-        $sql = "CREATE VIEW %s AS SELECT
+        $sql = "CREATE " . ($createTable ? "TABLE" : "VIEW") . " %s AS SELECT
             p.osm_id             ,
             p.access             ,
             p.\"addr:housename\"     ,
@@ -275,21 +275,50 @@ class Osm extends \app\inc\Model
         if (is_numeric(mb_substr($safeName, 0, 1, 'utf-8'))) {
             $safeName = "_" . $safeName;
         }
+        $fullName = \app\conf\Connection::$param['postgisschema'] . "." . $safeName;
         $wheres = "way && ST_MakeEnvelope({$box->left},{$box->bottom},{$box->right},{$box->top},900913)";
         $output = sprintf($sql,
-            \app\conf\Connection::$param['postgisschema'] . "." . $safeName,
+            $fullName,
             \app\conf\App::$param["osmConfig"]["server"],
             $wheres . (($tagsStr) ? " AND {$tagsStr}" : "")
         );
+        $this->connect();
+        $this->begin();
         $res = $this->prepare($output);
         try {
             $res->execute();
         } catch (\PDOException $e) {
+            $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
+        if ($createTable){
+            $sql = "ALTER TABLE {$fullName} ADD PRIMARY KEY (gid)";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+            $sql = "CREATE INDEX {$safeName}_idx ON {$fullName} USING gist(way)";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+        }
+        $this->commit();
         $response['success'] = true;
         $response['message'] = "View created";
         return $response;

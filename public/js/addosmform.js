@@ -24,7 +24,7 @@ addOsm.init = function () {
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
         labelWidth: 1,
-        html: "Create a view on top of the OSM database. The extent of the map will be used as filter. You can also filter by OSM tags. ",
+        html: __("Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags."),
         defaults: {
             anchor: '99%',
             msgTarget: 'side'
@@ -92,6 +92,7 @@ addOsm.init = function () {
             },
             {
                 xtype: 'textarea',
+                height: 50,
                 name: 'tags',
                 emptyText: __('tag=value\ntag=value\ntag=value')
             },
@@ -128,6 +129,28 @@ addOsm.init = function () {
                         }
                     ]
                 })
+            },
+            {
+                xtype: 'container',
+                html: __('Create table instead of a view?')
+            },
+            {
+                xtype: 'combo',
+                store: new Ext.data.ArrayStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        ['true', true],
+                        ['false', false]
+                    ]
+                }),
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                typeAhead: false,
+                editable: false,
+                triggerAction: 'all',
+                name: 'createtable',
+                value: false
             }
         ],
         buttons: [
@@ -146,7 +169,7 @@ addOsm.init = function () {
                         param.data.extent = document.getElementById("wfseditor").contentWindow.window.map.getExtent();
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({
-                            url: '/controllers/osm/view',
+                            url: values.createtable === 'true' ? '/controllers/osm/table' : '/controllers/osm/view',
                             method: 'put',
                             params: param,
                             headers: {

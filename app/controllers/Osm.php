@@ -15,6 +15,11 @@ class Osm extends \app\inc\Controller
     public function put_view()
     {
         $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->osm->createView(json_decode(Input::get(null, true)));
+        return (!$response['success']) ? $response : $this->osm->create(json_decode(Input::get(null, true)));
+    }
+    public function put_table()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->osm->create(json_decode(Input::get(null, true)),true);
     }
 }
