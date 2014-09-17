@@ -2,6 +2,9 @@
 header('Content-type: application/javascript');
 include_once("../../../../app/conf/App.php");
 new \app\conf\App();
+if (!\app\conf\App::$param['protocol']){
+    \app\conf\App::$param['protocol'] = \app\inc\Util::protocol();
+}
 if (!\app\conf\App::$param['host']) {
     include_once("../../../../app/conf/hosts.php");
 }
