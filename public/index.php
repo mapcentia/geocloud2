@@ -12,6 +12,7 @@ use \app\models\Database;
 include_once("../app/conf/App.php");
 new \app\conf\App();
 
+// Set the protocol if not set in App.php
 if (!\app\conf\App::$param['protocol']){
     \app\conf\App::$param['protocol'] = \app\inc\Util::protocol();
 }
@@ -21,6 +22,7 @@ if (!\app\conf\App::$param['host']) {
     include_once("../app/conf/hosts.php");
 }
 
+// Start routing
 if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default
     Route::add("api/v1/sql", function(){

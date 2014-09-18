@@ -2,12 +2,17 @@
 header('Content-type: application/javascript');
 include_once("../../../../app/conf/App.php");
 new \app\conf\App();
+
+// Set the protocol if not set in App.php
 if (!\app\conf\App::$param['protocol']){
     \app\conf\App::$param['protocol'] = \app\inc\Util::protocol();
 }
+
+// Set the host names if they are not set in App.php
 if (!\app\conf\App::$param['host']) {
     include_once("../../../../app/conf/hosts.php");
 }
+
 echo "window.geocloud_host = \"" . \app\conf\App::$param['host'] . "\";\n";
 echo "window.geocloud_maplib = \"" . ((isset($_GET["maplib"])) ? $_GET["maplib"] : "leaflet") . "\";\n";
 if (isset($_GET["callback"])) {
