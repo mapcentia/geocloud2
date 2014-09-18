@@ -22,7 +22,7 @@ if (typeof gc2apiLoader === "undefined") {
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
-                if (window.geocloud_maplib === "ol2" && OpenLayers === "undefined") {
+                if (window.geocloud_maplib === "ol2" && typeof OpenLayers === "undefined") {
                     $.getScript("/js/openlayers/OpenLayers.js");
                 }
                 else if (window.geocloud_maplib === "leaflet" && typeof L === "undefined") {
@@ -43,8 +43,10 @@ if (typeof gc2apiLoader === "undefined") {
                         }
 
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "leaflet" && typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "leaflet" && typeof L.labelVersion !== "undefined")) {
-                                L.Icon.Default.imagePath = "/js/leaflet/images";
+                            if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "ol2" || typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "ol2" || typeof L.labelVersion !== "undefined")) {
+                                if (window.geocloud_maplib === "leaflet") {
+                                    L.Icon.Default.imagePath = "/js/leaflet/images";
+                                }
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {
@@ -65,6 +67,13 @@ if (typeof gc2apiLoader === "undefined") {
                 setTimeout(pollForjQuery, 10);
             }
         }());
+        // Load some css
+        if (window.geocloud_maplib === "leaflet") {
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//leaflet.github.io/Leaflet.draw/leaflet.draw.css' }).appendTo('head');
+            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//leaflet.github.io/Leaflet.label/leaflet.label.css' }).appendTo('head');
+        }
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
     }());
 }
 

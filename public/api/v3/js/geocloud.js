@@ -52,7 +52,7 @@ geocloud = (function () {
         DIGITALGLOBE = "DigitalGlobe:Imagery",
         attribution = (window.mapAttribution === undefined) ? "Powered by <a target='_blank' href='//www.mapcentia.com/en/geocloud/geocloud.htm'>MapCentia GC2</a> " : window.mapAttribution;
 
-    // Try to set host from script
+    // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
         window.geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
     }
@@ -434,11 +434,10 @@ geocloud = (function () {
                 defaults[prop] = config[prop];
             }
         }
-        // Load js and css
+        //Load css
         if (MAPLIB === "leaflet") {
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/leaflet.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
         }
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/api/v3/css/styles.css' }).appendTo('head');
 
