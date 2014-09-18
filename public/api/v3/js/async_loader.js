@@ -22,10 +22,10 @@ if (typeof gc2apiLoader === "undefined") {
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
-                if (window.geocloud_maplib === "ol2") {
+                if (window.geocloud_maplib === "ol2" && OpenLayers === "undefined") {
                     $.getScript("/js/openlayers/OpenLayers.js");
                 }
-                else if (window.geocloud_maplib === "leaflet") {
+                else if (window.geocloud_maplib === "leaflet" && typeof L === "undefined") {
                     $.getScript("/js/leaflet/leaflet.js");
                 }
                 $.getScript("/js/openlayers/proj4js-combined.js");
@@ -37,10 +37,13 @@ if (typeof gc2apiLoader === "undefined") {
                         ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js");
-                        $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
-                        $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
+                        if (window.geocloud_maplib === "leaflet") {
+                            $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
+                            $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
+                        }
+
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && typeof L.drawVersion !== "undefined"  && typeof L.labelVersion !== "undefined") {
+                            if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "leaflet" && typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "leaflet" && typeof L.labelVersion !== "undefined")) {
                                 L.Icon.Default.imagePath = "/js/leaflet/images";
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {

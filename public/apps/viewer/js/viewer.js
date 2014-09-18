@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [];
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -161,7 +161,25 @@ Viewer = function () {
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace(),
             center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
-        cloud.zoomToPoint(center.x, center.y, 10);
+        cloud.zoomToPoint(center.x, center.y, 18);
+        if (awesomeMarker !== undefined) cloud.map.removeLayer(awesomeMarker);
+        awesomeMarker = L.marker([place.geometry.location.lat(), place.geometry.location.lng()], {icon: L.AwesomeMarkers.icon({
+            icon: 'home',
+            markerColor: 'blue',
+            prefix: 'fa'
+        })}).addTo(cloud.map);
+        setTimeout(function () {
+            /*var p = new R.Pulse(
+             [place.geometry.location.lat(), place.geometry.location.lng()],
+             30,
+             {'stroke': 'none', 'fill': 'none'},
+             {'stroke': '#30a3ec', 'stroke-width': 3}
+             );
+             cloud.map.addLayer(p);
+             setTimeout(function () {
+             cloud.map.removeLayer(p);
+             }, 1000);*/
+        }, 300);
     });
     cloud = new geocloud.map({
         el: "map",
@@ -495,6 +513,9 @@ Viewer = function () {
                     $("#info-tab").empty();
                     $("#info-pane").empty();
                     $.each(layers, function (index, value) {
+                        if (layers[0] === "") {
+                            return false;
+                        }
                         var isEmpty = true;
                         var srid = metaDataKeys[value.split(".")[1]].srid;
                         var geoType = metaDataKeys[value.split(".")[1]].type;
