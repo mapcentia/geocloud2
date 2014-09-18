@@ -411,8 +411,8 @@ geocloud = (function () {
                     layers: layer,
                     format: 'image/png',
                     transparent: true,
-                    subdomains: ["cdn1", "cdn2", "cdn3"]
-
+                    subdomains: ["cdn1", "cdn2", "cdn3"],
+                    maxZoom: 19
                 });
                 l.id = layer;
                 break;
@@ -986,7 +986,10 @@ geocloud = (function () {
                         format: 'image/png',
                         transparent: true,
                         subdomains: ["cdn1", "cdn2", "cdn3"],
-                        attribution: "© Geodatastyrelsen"
+                        attribution: "&copy; Geodatastyrelsen",
+                        maxZoom: 19,
+                        maxNativeZoom: 19
+
                     });
                     lControl.addBaseLayer(l);
                     break;
@@ -1570,7 +1573,7 @@ geocloud = (function () {
             };
         },
         PROVIDERS = {
-            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
+            "toner": MAKE_PROVIDER("toner", "png", 0, 19),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
             "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
@@ -1863,7 +1866,7 @@ var gc2SetLGoogle = function () {
             includes: L.Mixin.Events,
             options: {
                 minZoom: 0,
-                maxZoom: 18,
+                maxZoom: 19,
                 tileSize: 256,
                 subdomains: 'abc',
                 errorTileUrl: '',
