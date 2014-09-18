@@ -460,7 +460,7 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
-        defaults.callBack();
+        defaults.callBack(cloud);
     };
     return {
         init: init,
@@ -478,3 +478,4 @@ MapCentia = function (globalId) {
         shareStumbleupon: shareStumbleupon
     };
 };
+
