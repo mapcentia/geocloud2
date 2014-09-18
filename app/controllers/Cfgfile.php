@@ -49,6 +49,7 @@ class Cfgfile extends \app\inc\Controller
                 echo "extension=png\n";
                 echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";
                 echo "maxResolution=156543.0339\n";
+                echo "levels=21\n";
                 echo "metaBuffer={$meta_buffer}\n";
                 echo "metaTile={$meta_tiles}\n";
                 echo "metaSize={$meta_size},{$meta_size}\n";

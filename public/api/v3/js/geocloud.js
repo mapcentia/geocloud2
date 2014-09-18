@@ -412,7 +412,7 @@ geocloud = (function () {
                     format: 'image/png',
                     transparent: true,
                     subdomains: ["cdn1", "cdn2", "cdn3"],
-                    maxZoom: 19
+                    maxZoom: 20
                 });
                 l.id = layer;
                 break;
@@ -716,7 +716,9 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
-                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        maxZoom: 20,
+                        maxNativeZoom: 18
                     });
                     lControl.addBaseLayer(this.mapQuestOSM);
                     break;
@@ -742,7 +744,10 @@ geocloud = (function () {
                     this.map.addLayer(this.mapQuestAerial);
                     break;
                 case "leaflet":
-                    this.mapQuestAerial = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg");
+                    this.mapQuestAerial = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg",{
+                        maxZoom: 20,
+                        maxNativeZoom: 18
+                    });
                     lControl.addBaseLayer(this.mapQuestAerial);
                     break;
 
@@ -769,7 +774,9 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.osm = new L.tileLayer("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+                        attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        maxZoom: 20,
+                        maxNativeZoom: 18
                     });
                     lControl.addBaseLayer(this.osm);
                     break;
@@ -932,7 +939,11 @@ geocloud = (function () {
                     l.id = name;
                     return (l);
                 case "leaflet":
-                    l = new L.BingLayer(this.bingApiKey, {"type": type});
+                    l = new L.BingLayer(this.bingApiKey, {
+                        type: type,
+                        maxZoom: 20,
+                        maxNativeZoom: 18
+                    });
                     l.baseLayer = true;
                     lControl.addBaseLayer(l);
                     l.id = name;
@@ -958,7 +969,9 @@ geocloud = (function () {
                     l.setVisibility(false);
                     break;
                 case "leaflet":
-                    l = new L.TileLayer("https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:{z}&TileRow={y}&TileCol={x}");
+                    l = new L.TileLayer("https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:{z}&TileRow={y}&TileCol={x}",{
+                        maxZoom: 20
+                    });
                     lControl.addBaseLayer(l);
                     break;
             }
@@ -987,9 +1000,7 @@ geocloud = (function () {
                         transparent: true,
                         subdomains: ["cdn1", "cdn2", "cdn3"],
                         attribution: "&copy; Geodatastyrelsen",
-                        maxZoom: 19,
-                        maxNativeZoom: 19
-
+                        maxZoom: 20
                     });
                     lControl.addBaseLayer(l);
                     break;
@@ -1573,7 +1584,7 @@ geocloud = (function () {
             };
         },
         PROVIDERS = {
-            "toner": MAKE_PROVIDER("toner", "png", 0, 19),
+            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
             "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
@@ -1866,7 +1877,7 @@ var gc2SetLGoogle = function () {
             includes: L.Mixin.Events,
             options: {
                 minZoom: 0,
-                maxZoom: 19,
+                maxZoom: 20,
                 tileSize: 256,
                 subdomains: 'abc',
                 errorTileUrl: '',
