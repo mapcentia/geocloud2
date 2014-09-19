@@ -9,7 +9,8 @@ class Baselayerjs extends \app\inc\Controller
         echo "window.gc2Options = {\n";
         echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . ",\n";
         echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
-        echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']);
+        echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
+        echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";

@@ -50,6 +50,8 @@ geocloud = (function () {
         DTKSKAERMKORT = "dtkSkaermkort",
         DTKSKAERMKORTDAEMPET = "dtkSkaermkortDaempet",
         DIGITALGLOBE = "DigitalGlobe:Imagery",
+        HERENORMALDAYGREY = "hereNormalDayGrey",
+        HERENORMALNIGHTGREY = "hereNormalNightGrey",
         attribution = (window.mapAttribution === undefined) ? "Powered by <a target='_blank' href='//www.mapcentia.com/en/geocloud/geocloud.htm'>MapCentia GC2</a> " : window.mapAttribution;
 
     // Try to set host from script if not set already
@@ -980,6 +982,43 @@ geocloud = (function () {
 
         };
         //ol2 and leaflet
+        this.addHere = function (type) {
+            var l, name;
+            switch (type) {
+                case "hereNormalNightGrey":
+                    name = "normal.night.grey";
+                    break;
+                case "hereNormalDayGrey":
+                    name = "normal.day.grey";
+                    break;
+            }
+            switch (MAPLIB) {
+                case "ol2":
+                    l = new OpenLayers.Layer.XYZ(
+                        type,
+                        "http://1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
+                        {
+                            attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='http://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
+                        }
+                    );
+                    this.map.addLayer(l);
+                    l.setVisibility(false);
+                    break;
+                case "leaflet":
+                    l = new L.TileLayer("http://{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
+                        maxZoom: 20,
+                        subdomains: ["1", "2", "3", "4"],
+                        attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='http://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
+
+                    });
+                    lControl.addBaseLayer(l);
+                    break;
+            }
+            l.baseLayer = true;
+            l.id = type;
+            return (l);
+        };
+        //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
                 url = "//eu1.mapcentia.com/wms/dk/tilecache";
@@ -1126,6 +1165,12 @@ geocloud = (function () {
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");
+                    break;
+                case "hereNormalDayGrey":
+                    o = this.addHere("hereNormalDayGrey");
+                    break;
+                case "hereNormalNightGrey":
+                    o = this.addHere("hereNormalNightGrey");
                     break;
                 default : // Try to add as tile layer
                     this.addTileLayers({
@@ -1554,7 +1599,9 @@ geocloud = (function () {
         BINGAERIALWITHLABELS: BINGAERIALWITHLABELS,
         DTKSKAERMKORT: DTKSKAERMKORT,
         DTKSKAERMKORTDAEMPET: DTKSKAERMKORTDAEMPET,
-        DIGITALGLOBE: DIGITALGLOBE
+        DIGITALGLOBE: DIGITALGLOBE,
+        HERENORMALDAYGREY: HERENORMALDAYGREY,
+        HERENORMALNIGHTGREY: HERENORMALNIGHTGREY
     };
 }());
 
@@ -2067,6 +2114,10 @@ var gc2SetLGoogle = function () {
         }
     }
 }
+
+
+
+
 
 
 

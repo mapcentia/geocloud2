@@ -415,6 +415,32 @@ var mygeocloud_ol = (function () {
             l.id = name;
             return (l);
         };
+        this.addHere = function (type) {
+            var l, name, schema;
+            switch (type) {
+                case "hereNormalNightGrey":
+                    name = "Here Night";
+                    schema = "normal.night.grey";
+                    break;
+                case "hereNormalDayGrey":
+                    name = "Here Day";
+                    schema = "normal.day.grey";
+                    break;
+            }
+            l = new OpenLayers.Layer.XYZ(
+                type,
+                "http://1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + schema + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
+                {
+                    attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='http://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
+                }
+            );
+            this.map.addLayer(l);
+            l.setVisibility(false);
+            l.baseLayer = true;
+            l.name = name;
+            l.id = type;
+            return (l);
+        };
         this.addDigitalGlobe = function (type) {
             var l, name, key = this.digitalGlobeKey;
             switch (type) {
@@ -430,7 +456,6 @@ var mygeocloud_ol = (function () {
             l.baseLayer = true;
             l.id = type;
             return (l);
-
         };
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
@@ -482,6 +507,12 @@ var mygeocloud_ol = (function () {
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");
+                    break;
+                case "hereNormalDayGrey":
+                    o = this.addHere("hereNormalDayGrey");
+                    break;
+                case "hereNormalNightGrey":
+                    o = this.addHere("hereNormalNightGrey");
                     break;
             }
             return o;
