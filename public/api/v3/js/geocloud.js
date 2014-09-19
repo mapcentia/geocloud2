@@ -429,7 +429,7 @@ geocloud = (function () {
                 numZoomLevels: 20,
                 projection: "EPSG:900913",
                 fadeAnimation: true,
-                zoomAnimation: false
+                zoomAnimation: true
             };
         if (config) {
             for (prop in config) {
