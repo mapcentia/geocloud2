@@ -552,7 +552,7 @@ Viewer = function () {
                                                 if (property.querable) {
                                                     fieldLabel = (property.alias !== null && property.alias !== "") ? property.alias : name;
                                                     if (property.link) {
-                                                        out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + (property.linkprefix !== null ? property.linkprefix + escape(feature.properties[name]) : feature.properties[name]) + "'>" + feature.properties[name] + "</a>"]);
+                                                        out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + (property.linkprefix !== null ? property.linkprefix : "") + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
                                                     }
                                                     else {
                                                         out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
