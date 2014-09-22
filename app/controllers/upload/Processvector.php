@@ -17,6 +17,41 @@ class Processvector extends \app\inc\Controller
             $safeName = "_" . $safeName;
         }
 
+        //Check if file is .zip
+        $zipCheck1 = explode(".", $_REQUEST['file']);
+        $zipCheck2 = array_reverse($zipCheck1);
+
+        if (strtolower($zipCheck2[0]) == "zip") {
+            $ext = array("shp", "tab", "geojson", "gml", "kml", "mif");
+            $folderArr = array();
+            $safeNameArr = array();
+            $zip = new \ZipArchive;
+            $res = $zip->open($dir . "/" . $_REQUEST['file']);
+            for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
+                $folderArr[] = $zipCheck1[$i];
+            }
+            $folder = implode(".", $folderArr);
+
+            $zip->extractTo($dir . "/" . $folder);
+            $zip->close();
+            if ($handle = opendir($dir . "/" . $folder)) {
+                while (false !== ($entry = readdir($handle))) {
+                    if ($entry !== "." && $entry !== "..") {
+                        $zipCheck1 = explode(".", $entry);
+                        $zipCheck2 = array_reverse($zipCheck1);
+                        if (in_array(strtolower($zipCheck2[0]), $ext)) {
+                            $_REQUEST['file'] = $folder . "/" . $entry;
+                            for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
+                                $safeNameArr[] = $zipCheck1[$i];
+                            }
+                            $safeName = \app\inc\Model::toAscii(implode(".",$safeNameArr), array(), "_");
+                            break;
+                        }
+                        $_REQUEST['file'] =$folder;
+                    }
+                }
+            }
+        }
         $srid = ($_REQUEST['srid']) ? : "4326";
         $encoding = ($_REQUEST['encoding']) ? : "LATIN1";
 
