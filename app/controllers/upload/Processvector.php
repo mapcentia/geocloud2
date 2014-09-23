@@ -21,19 +21,35 @@ class Processvector extends \app\inc\Controller
         $zipCheck1 = explode(".", $_REQUEST['file']);
         $zipCheck2 = array_reverse($zipCheck1);
 
-        if (strtolower($zipCheck2[0]) == "zip") {
-            $ext = array("shp", "tab", "geojson", "gml", "kml", "mif");
+        if (strtolower($zipCheck2[0]) == "zip" || strtolower($zipCheck2[0]) == "rar") {
+            $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb");
             $folderArr = array();
             $safeNameArr = array();
-            $zip = new \ZipArchive;
-            $res = $zip->open($dir . "/" . $_REQUEST['file']);
             for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                 $folderArr[] = $zipCheck1[$i];
             }
             $folder = implode(".", $folderArr);
 
-            $zip->extractTo($dir . "/" . $folder);
-            $zip->close();
+            if (strtolower($zipCheck2[0]) == "zip") {
+                // ZIP start
+                $zip = new \ZipArchive;
+                $res = $zip->open($dir . "/" . $_REQUEST['file']);
+                $zip->extractTo($dir . "/" . $folder);
+                $zip->close();
+                // ZIP end
+            }
+
+            if (strtolower($zipCheck2[0]) == "rar") {
+                // RAR start
+                $rar_file = rar_open($dir . "/" . $_REQUEST['file']);
+                $list = rar_list($rar_file);
+                foreach ($list as $file) {
+                    $entry = rar_entry_get($rar_file, $file);
+                    $entry->extract($dir . "/" . $folder); // extract to the current dir
+                }
+                rar_close($rar_file);
+                // RAR end
+            }
             if ($handle = opendir($dir . "/" . $folder)) {
                 while (false !== ($entry = readdir($handle))) {
                     if ($entry !== "." && $entry !== "..") {
@@ -44,10 +60,10 @@ class Processvector extends \app\inc\Controller
                             for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                                 $safeNameArr[] = $zipCheck1[$i];
                             }
-                            $safeName = \app\inc\Model::toAscii(implode(".",$safeNameArr), array(), "_");
+                            $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
                             break;
                         }
-                        $_REQUEST['file'] =$folder;
+                        $_REQUEST['file'] = $folder;
                     }
                 }
             }
