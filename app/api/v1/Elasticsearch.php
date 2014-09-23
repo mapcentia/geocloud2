@@ -57,7 +57,7 @@ class Elasticsearch extends \app\inc\Controller
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
-        $response['searchUrl'] = $searchUrl;
+        error_log($searchUrl);
         return $response;
     }
 
