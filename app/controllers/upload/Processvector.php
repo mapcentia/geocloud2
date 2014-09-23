@@ -34,6 +34,12 @@ class Processvector extends \app\inc\Controller
                 // ZIP start
                 $zip = new \ZipArchive;
                 $res = $zip->open($dir . "/" . $_REQUEST['file']);
+                if ($res === false) {
+                    die("hej");
+                    $response['success'] = false;
+                    $response['message'] = "Could not unzip file";
+                    return Response::json($response);
+                }
                 $zip->extractTo($dir . "/" . $folder);
                 $zip->close();
                 // ZIP end
@@ -42,6 +48,11 @@ class Processvector extends \app\inc\Controller
             if (strtolower($zipCheck2[0]) == "rar") {
                 // RAR start
                 $rar_file = rar_open($dir . "/" . $_REQUEST['file']);
+                if (!$rar_file) {
+                    $response['success'] = false;
+                    $response['message'] = "Could not unrar file";
+                }
+
                 $list = rar_list($rar_file);
                 foreach ($list as $file) {
                     $entry = rar_entry_get($rar_file, $file);
