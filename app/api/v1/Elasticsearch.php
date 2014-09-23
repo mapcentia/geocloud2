@@ -49,13 +49,15 @@ class Elasticsearch extends \app\inc\Controller
             $arr[] = Input::getPath()->part(5) . "_" . $v;
         }
         $index = implode(",", $arr);
-        $ch = curl_init($this->host . ":9200/{$index}/" . Input::getPath()->part(7) . "/_search?pretty={$pretty}&size={$size}");
+        $searchUrl = $this->host . ":9200/{$index}/" . Input::getPath()->part(7) . "/_search?pretty={$pretty}&size={$size}";
+        $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
+        $response['searchUrl'] = $searchUrl;
         return $response;
     }
 
