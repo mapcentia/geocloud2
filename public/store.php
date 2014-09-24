@@ -54,6 +54,10 @@ include("html_header.php");
         line-height: 13px;
         vertical-align: top;
     }
+    li.plupload_droptext {
+        line-height: 18px !important;
+        margin-top: 20px;
+    }
 </style>
 </head>
 <body>
