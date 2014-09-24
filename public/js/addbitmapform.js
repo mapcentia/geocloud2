@@ -77,7 +77,7 @@ addBitmap.init = function () {
                     e.fadeOut(500).fadeIn(500);
                 }, 1000);
                 window.setTimeout(function () {
-                    e.html(__("Image formats") + ": " + __("At the moment you can upload") + " .tif");
+                    e.html(__("Image formats") + ": " + __("At the moment you can upload") + " .tif and .ecw");
                 }, 1500);
             }, 200);
         },

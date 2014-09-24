@@ -81,7 +81,7 @@ addShape.init = function () {
                     e.fadeOut(500).fadeIn(500);
                 }, 500);
                 window.setTimeout(function () {
-                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .gdb*" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a compressed file has more than one dataset, only the first will be imported.<br><br> * The gdb folder must be compressed with either zip or rar."));
+                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .gdb*" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The gdb folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above"));
                 }, 1000);
             }, 200);
         },
