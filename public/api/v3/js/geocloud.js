@@ -665,6 +665,7 @@ geocloud = (function () {
                     //theme: null,
                     controls: [
                         new OpenLayers.Control.Zoom(),
+                        new OpenLayers.Control.Attribution(),
                         new OpenLayers.Control.TouchNavigation({
                             dragPanOptions: {
                                 enableKinetic: true
