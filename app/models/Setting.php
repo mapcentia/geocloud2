@@ -122,11 +122,17 @@ class Setting extends Model
     public function get($unsetPw = false)
     {
         $arr = $this->getArray();
+
         if ($_SESSION["subuser"]) {
             $arr['pw'] = $arr['pw_subuser']->$_SESSION["subuser"];
             $arr['api_key'] = $arr['api_key_subuser']->$_SESSION["subuser"];
             unset($arr['api_key_subuser']);
             unset($arr['pw_subuser']);
+        }
+        // If user has no key, we generate one.
+        if (!$arr['api_key']) {
+            $res = $this->updateApiKey();
+            $arr['api_key'] = $res['key'];
         }
         if ($unsetPw) {
             unset($arr['pw']);
