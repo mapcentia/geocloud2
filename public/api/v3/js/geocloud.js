@@ -718,7 +718,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
-                        attribution: "© <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
@@ -1027,7 +1027,10 @@ geocloud = (function () {
                 case "ol2":
                     l = new OpenLayers.Layer.WMS(name, url, {
                         layers: layer
-                    }, {wrapDateLine: true});
+                    }, {
+                        wrapDateLine: true,
+                        attribution: "&copy; Geodatastyrelsen"
+                    });
                     this.map.addLayer(l);
                     l.setVisibility(false);
                     break;
