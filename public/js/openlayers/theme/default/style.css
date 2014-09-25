@@ -31,7 +31,7 @@ div.olLayerDiv {
 .olControlAttribution {
     font-size: smaller;
     right: 3px;
-    bottom: 4.5em;
+    bottom: 0;
     position: absolute;
     display: block;
 }

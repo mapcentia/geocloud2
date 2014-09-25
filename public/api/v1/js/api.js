@@ -408,7 +408,7 @@ var mygeocloud_ol = (function () {
                 layers: layer
             }, {
                 wrapDateLine: true,
-                attribution: "© Geodatastyrelsen"
+                attribution: "&copy; Geodatastyrelsen"
             });
             this.map.addLayer(l);
             l.baseLayer = true;
