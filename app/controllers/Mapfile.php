@@ -161,6 +161,22 @@ class Mapfile extends \app\inc\Controller
         POINTS 1 1 END
         #STYLE 4 2 END
         END
+        SYMBOL
+        NAME "arrow"
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.4
+        3 0.4
+        3 0
+        5 0.8
+        3 1.6
+        3 1.2
+        0 1.2
+        0 0.4
+        END # POINTS
+        ANCHORPOINT 0 0.5
+        END # SYMBOL
 
         # ============================================================================
         # Vector Line Types

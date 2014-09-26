@@ -632,7 +632,7 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -721,7 +721,7 @@ wmsClass.init = function (id) {
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -789,7 +789,7 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -878,7 +878,7 @@ wmsClass.init = function (id) {
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
