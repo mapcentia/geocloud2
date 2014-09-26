@@ -479,7 +479,7 @@ classWizards.init = function (record) {
                         },
                         items: [
                             new Ext.form.ComboBox({
-                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot'],
+                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot','arrow'],
                                 editable: false,
                                 triggerAction: 'all',
                                 name: "symbol"
