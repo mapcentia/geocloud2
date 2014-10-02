@@ -23,12 +23,12 @@ if (typeof gc2apiLoader === "undefined") {
             if (typeof $ !== "undefined") {
                 // Load loadDependencies
                 if (window.geocloud_maplib === "ol2" && typeof OpenLayers === "undefined") {
-                    $.getScript("/js/openlayers/OpenLayers.js");
+                    $.getScript(host + "/js/openlayers/OpenLayers.js");
                 }
                 else if (window.geocloud_maplib === "leaflet" && typeof L === "undefined") {
-                    $.getScript("/js/leaflet/leaflet.js");
+                    $.getScript(host + "/js/leaflet/leaflet.js");
                 }
-                $.getScript("/js/openlayers/proj4js-combined.js");
+                $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/api/v1/baselayerjs");
                 (function pollForDependencies() {
                     if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
