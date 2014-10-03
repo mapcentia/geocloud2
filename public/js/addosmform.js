@@ -88,7 +88,8 @@ addOsm.init = function () {
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],
                     data: addOsm.schemas
-                })
+                }),
+                value: window.gc2Options.osmConfig.schemas[0]
             },
             {
                 xtype: 'textarea',
