@@ -167,6 +167,31 @@ addOsm.init = function () {
                             data: values
                         };
                         param.data.extent = document.getElementById("wfseditor").contentWindow.window.map.getExtent();
+                        var width = (param.data.extent.left - param.data.extent.right);
+                        var height = (param.data.extent.top - param.data.extent.bottom);
+                        var max = 50000;
+                        if (((width < 0 ? width * -1 : width) > max || (height < 0 ? height * -1 : width) > max) && values.createtable === 'false') {
+                            Ext.MessageBox.show({
+                                title: 'Info',
+                                msg: __('The width or height of map extent exceed the limit. Create a table instead for better performance.'),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.INFO
+                            });
+                            return false;
+                        }
+                        if ((width < 0 ? width * -1 : width) > 200000) {
+                            Ext.MessageBox.show({
+                                title: 'Info',
+                                msg: __('The width or height of map extent exceed 200km, which are the limit for the map extent.'),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.INFO
+                            });
+                            return false;
+                        }
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({
                             url: values.createtable === 'true' ? '/controllers/osm/table' : '/controllers/osm/view',
