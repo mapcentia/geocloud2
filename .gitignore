@@ -4,6 +4,7 @@ app/conf/hosts.php
 app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles
+node_modules
 
 !app/tmp/.gitignore
 !app/wms/cfgfiles/.gitignore

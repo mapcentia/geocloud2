@@ -4,61 +4,12 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
-<link rel="stylesheet" type="text/css" href="/css/legend.css"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/RowEditor.css"/>
-<link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css" />
+<link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css"/>
-
-<style>
-    .btn-gc {
-        margin-top: -1px !important;
-    }
-
-    .x-box-item {
-        font-family: arial, tahoma, helvetica, sans-serif;
-        font-size: 11px;
-        font-style: normal;
-        font-variant: normal;
-        font-weight: normal;
-        vertical-align: middle;
-    }
-    .plupload_header{
-        color: #ffffff;
-        background-color: rgb(119, 119, 119);
-    }
-
-    .map-thumbs {
-         background-size: 283px 35px;
-         width: 283px;
-         height:35px;
-        vertical-align: middle !important;
-
-    }
-    .map-thumbs b {
-        font-size: 14px;
-        line-height: 5px;
-        padding-left: 5px;
-        padding-top: 5px;
-        color: #000000;
-        text-shadow:
-            -1px -1px 0 #FFF,
-            1px -1px 0 #FFF,
-            -1px 1px 0 #FFF,
-            1px 1px 0 #FFF;
-    }
-    .tt{
-        color: #808080;
-        font-size: 9px;
-        cursor: help;
-        line-height: 13px;
-        vertical-align: top;
-    }
-    li.plupload_droptext {
-        line-height: 18px !important;
-        margin-top: 20px;
-    }
-</style>
+<!-- build:css /css/build/all.min.css -->
+<link rel="stylesheet" type="text/css" href="/css/styles.css"/>
+<!-- /build -->
 </head>
 <body>
 <div style="display:none">
@@ -156,11 +107,16 @@ include("html_header.php");
         </table>
     </div>
 </div>
+<script type="text/javascript" src="/api/v1/baselayerjs"></script>
+
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
-<script type="text/javascript" src="/api/v1/baselayerjs"></script>
-<script type="text/javascript" src="/js/msg.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
+
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="/js/msg.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>
 <script type="text/javascript" src="/js/edittablestructure.js"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js"></script>
@@ -176,13 +132,9 @@ include("html_header.php");
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
-<!--<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>-->
+
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
-<?php
-include("html_footer.php");
-?>
+</body>
+</html>
