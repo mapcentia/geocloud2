@@ -637,7 +637,7 @@ $(document).ready(function () {
                                 try {
                                     stopEdit();
                                 }
-                                catch (e) {
+                                catch (error) {
                                 }
                                 if (typeof  filter.win !== "undefined") {
                                     if (typeof  filter.win.hide !== "undefined") {

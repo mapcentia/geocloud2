@@ -4,7 +4,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(
     Ext.grid.Column,
     {
         processEvent: function (name, e, grid, rowIndex, colIndex) {
-            'use strict'
+            'use strict';
             if (name == 'click'/* 'mousedown' */) {
                 var record = grid.store.getAt(rowIndex);
                 record.set(this.dataIndex,
@@ -24,8 +24,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(
         init: Ext.emptyFn
     });
 cartomobile.init = function (record, screenName) {
-    'use strict'
-
+    'use strict';
     cartomobile.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -71,7 +70,6 @@ cartomobile.init = function (record, screenName) {
                 exception: function (proxy, type, action, options, response, arg) {
                     if (type === 'remote') { // success is false
                         var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
-                            + response.message + "</textarea>";
                         Ext.MessageBox.show({
                             title: __('Failure'),
                             msg: message,

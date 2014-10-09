@@ -36,12 +36,11 @@ if (typeof gc2apiLoader === "undefined") {
                         typeof window.setBaseLayers !== "undefined"
                         ) {
                         // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.js");
-                        if (window.geocloud_maplib === "leaflet") {
+                        $.getScript(host + "/api/v3/js/geocloud.min.js");
+                        if (window.geocloud_maplib === "leaflet" && typeof L.drawVersion === "undefined" && typeof L.labelVersion === "undefined") {
                             $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
                             $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
                         }
-
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "ol2" || typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "ol2" || typeof L.labelVersion !== "undefined")) {
                                 if (window.geocloud_maplib === "leaflet") {
@@ -76,6 +75,8 @@ if (typeof gc2apiLoader === "undefined") {
         $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
     }());
 }
+
+
 
 
 

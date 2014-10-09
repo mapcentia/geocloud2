@@ -57,7 +57,7 @@ Ext.extend(Ext.form.ColorField, Ext.form.TriggerField,  {
 
         var parseOK = this.parseColor(value);
 
-        if(!value || (parseOK == false)){
+        if(!value || (parseOK === false)){
             this.markInvalid(String.format(this.invalidText, value, '#AABBCC'));
             return false;
         }
@@ -122,7 +122,7 @@ Ext.extend(Ext.form.ColorField, Ext.form.TriggerField,  {
 
     // private
     formatColor : function(value){
-	if (value && (this.parseColor(value) == false)) {
+	if (value && (this.parseColor(value) === false)) {
 		value = '#' + value;
 	}
 
@@ -152,7 +152,7 @@ Ext.extend(Ext.form.ColorField, Ext.form.TriggerField,  {
         if(this.disabled){
             return;
         }
-        if(this.menu == null){
+        if(this.menu === null){
             this.menu = new Ext.menu.ColorMenu();
         }
 

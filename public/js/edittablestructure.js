@@ -85,8 +85,7 @@ tableStructure.init = function (record, screenName) {
                 write: tableStructure.onWrite,
                 exception: function (proxy, type, action, options, response, arg) {
                     if (type === 'remote') { // success is false
-                        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>"
-                            + response.message + "</textarea>";
+                        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
                         Ext.MessageBox.show({
                             title: __("Failure"),
                             msg: message,

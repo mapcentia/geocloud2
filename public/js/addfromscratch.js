@@ -35,7 +35,7 @@ addScratch.init = function () {
 
                 xtype: 'textfield',
                 name: 'srid',
-                emptyText: __('EPSG number'),
+                emptyText: __('EPSG number')
                 //value: '4326'
             },
             {
