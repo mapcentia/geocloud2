@@ -382,4 +382,23 @@ class Model
         return $response;
     }
 
+    public function postgisVersion()
+    {
+        $sql = "SELECT PostGIS_Lib_Version()";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        $response['success'] = true;
+        $response['version'] = $row["postgis_lib_version"];
+        return $response;
+    }
+
 }

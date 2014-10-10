@@ -5,11 +5,13 @@ namespace app\models;
 class Sql extends \app\inc\Model
 {
     var $srs;
+
     function __construct($srs = "900913")
     {
         parent::__construct();
         $this->srs = $srs;
     }
+
     function sql($q, $clientEncoding = null)
     {
         $name = "_" . rand(1, 999999999) . microtime();
@@ -19,25 +21,33 @@ class Sql extends \app\inc\Model
         $result = $this->execQuery($sqlView);
         $arrayWithFields = $this->getMetaData($view);
         // First check. Is the SQL valid
-        if ($this -> PDOerror) {
+        if ($this->PDOerror) {
             $response['success'] = false;
-            $response['message'] = $this -> PDOerror;
+            $response['message'] = $this->PDOerror;
             $response['code'] = 400;
             $sql = "DROP VIEW {$view}";
-            $result = $this -> execQuery($sql);
+            $result = $this->execQuery($sql);
             $this->free($result);
             return $response;
         }
+        $postgisVersion = $this->postgisVersion();
+        $bits = explode(".", $postgisVersion["version"]);
+        if ((int)$bits[1] > 0) {
+            $ST_Force2D = "ST_Force2D";
+        } else {
+            $ST_Force2D = "ST_Force_2D";
+        }
+
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
-                $fieldsArr[] = "ST_asGeoJson(ST_Transform(\"" . $key . "\"," . $this->srs . ")) as \"" . $key."\"";
+                $fieldsArr[] = "ST_asGeoJson(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
             } else {
                 $fieldsArr[] = "\"{$key}\"";
             }
         }
         $sql = implode(",", $fieldsArr);
         $sql = "SELECT {$sql} FROM {$view}";
-        if ($clientEncoding){
+        if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
         $result = $this->execQuery($sql);
@@ -86,6 +96,7 @@ class Sql extends \app\inc\Model
         $response['features'] = $features;
         return $response;
     }
+
     public function transaction($q)
     {
         $result = $this->execQuery($q, "PDO", "transaction");
@@ -100,6 +111,7 @@ class Sql extends \app\inc\Model
         $this->free($result);
         return $response;
     }
+
     private function array_push_assoc($array, $key, $value)
     {
         $array[$key] = $value;
