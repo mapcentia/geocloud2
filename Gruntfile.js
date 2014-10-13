@@ -50,6 +50,19 @@ module.exports = function (grunt) {
                 }
             }
         },
+        hogan: {
+            publish: {
+                options: {
+                    defaultName: function(filename) {
+                        return filename.split('/').pop();
+                    }
+                },
+                files: {
+                    "public/apps/viewer/js/templates.js": ["public/apps/viewer/templates/body.tmpl"],
+                    "public/apps/widgets/gc2map/js/templates.js": ["public/apps/widgets/gc2map/templates/body.tmpl"]
+                }
+            }
+        },
         processhtml: {
             dist: {
                 files: {
@@ -65,7 +78,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-processhtml');
-    grunt.registerTask('default', ['cssmin', 'jshint', 'uglify']);
+    grunt.loadNpmTasks('grunt-templates-hogan');
+    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify']);
     grunt.registerTask('production', ['processhtml']);
 };
 

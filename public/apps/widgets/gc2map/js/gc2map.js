@@ -52,7 +52,7 @@ if (typeof gc2map === "undefined") {
                         $.getScript(host + "/apps/widgets/gc2map/js/main.js");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js");
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof templates !== "undefined") {
+                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof this.Templates !== "undefined") {
                                 scriptsLoaded = true;
                             } else {
                                 setTimeout(pollForDependants, 10);
@@ -130,7 +130,7 @@ if (typeof gc2map === "undefined") {
                                     $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                                 }
                             } else {
-                                $("#" + gc2RandId).html(templates.body.render(context));
+                                $("#" + gc2RandId).html(this.Templates["body.tmpl"].render(context));
                                 if (defaults.infoText) {
                                     $("#info-text-" + gc2RandId).show();
                                 }

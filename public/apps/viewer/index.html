@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="/apps/viewer/css/styles.css" type="text/css">
     <!-- /build -->
     <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Open+Sans+Condensed:300' type='text/css'>
-
 </head>
 <body>
 <div class="center">
@@ -45,13 +44,12 @@
 <script src="/api/v3/js/geocloud.php?callback=go&maplib=leaflet" type="text/javascript"></script>
 <script>
     window.go = function () {
-        $("body").html(templates.body.render(gc2i18n.dict));
+        $("body").html(this.Templates["body.tmpl"].render(gc2i18n.dict));
         window.MapCentia = new Viewer();
         MapCentia.init();
         $("[data-toggle=tooltip]").tooltip();
         $(".center").hide();
         $("#pane").hide().fadeIn(1500);
-
     }
 </script>
 </html>
