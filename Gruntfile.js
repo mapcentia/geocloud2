@@ -25,7 +25,8 @@ module.exports = function (grunt) {
                 eqeqeq: false,
                 loopfunc: true,
                 es3: true,
-                devel: false
+                devel: false,
+                eqnull: true
             },
             all: ['public/js/*.js']
         },

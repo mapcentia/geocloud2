@@ -10,9 +10,6 @@ class App
         // The hostname of the user module. Normally this is the same as the host above
         "userHostName" => "",
 
-        // Use HTTP over SSL or not. Either 'http' or 'https'. Defaults to http.
-        "protocol" => "http",
-
         //Server path where GeoCLoud is installed.
         "path" => "/var/www/geocloud2/",
 
