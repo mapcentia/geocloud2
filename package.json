@@ -8,10 +8,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mapcentia/geocloud2.git"
+    "url": "http://github.com/mapcentia/geocloud2.git"
   },
   "author": "Martin Høgh",
-  "license": "ISC",
+  "license": "GMLv3",
   "bugs": {
     "url": "https://github.com/mapcentia/geocloud2/issues"
   },

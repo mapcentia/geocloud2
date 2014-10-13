@@ -31,9 +31,9 @@ module.exports = function (grunt) {
             all: ['public/js/*.js']
         },
         uglify: {
-            my_target: {
+            publish: {
                 files: {
-                    // geoclaoud.js
+                    // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
                     // The Viewer
                     'public/apps/viewer/js/build/all.min.js': [
