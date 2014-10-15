@@ -48,8 +48,14 @@ class App
         // Bing key
         "bingApiKey" => 'your_bing_map_key',
 
-        //Force a locale
+        //Force a locale. If not set it'll set set from the browsers language settings.
         //"locale" => "en_US",
+
+        // Default EPSG when uploading data files. If not set it defaults to 4326.
+        "epsg" => "4326",
+
+        // Default encoding when uploading data files. If not set it defaults to UTF8
+        "encoding" => "UTF8",
 
         // Logo
         "loginLogo" => "/assets/images/MapCentia_500.png",

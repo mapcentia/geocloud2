@@ -93,7 +93,7 @@ addShape.init = function () {
                 width: 60,
                 xtype: 'textfield',
                 id: 'srs',
-                value: '4326'
+                value: window.gc2Options.epsg
 
             },
             {
@@ -146,7 +146,7 @@ addShape.init = function () {
                 id: 'encoding',
                 displayField: 'name',
                 valueField: 'value',
-                value: 'LATIN1',
+                value: window.gc2Options.encoding,
                 allowBlank: false,
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],

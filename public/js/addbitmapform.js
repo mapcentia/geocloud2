@@ -89,7 +89,7 @@ addBitmap.init = function () {
                 width: 60,
                 xtype: 'textfield',
                 id: 'srs',
-                value: '4326'
+                value: window.gc2Options.epsg
             }
         ]
     });

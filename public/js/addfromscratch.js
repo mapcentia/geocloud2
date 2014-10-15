@@ -35,8 +35,8 @@ addScratch.init = function () {
 
                 xtype: 'textfield',
                 name: 'srid',
-                emptyText: __('EPSG number')
-                //value: '4326'
+                emptyText: __('EPSG number'),
+                value: window.gc2Options.epsg
             },
             {
                 width: 100,
