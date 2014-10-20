@@ -1,4 +1,5 @@
 module.exports = function (grunt) {
+    "use strict";
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         cssmin: {
@@ -53,7 +54,7 @@ module.exports = function (grunt) {
         hogan: {
             publish: {
                 options: {
-                    defaultName: function(filename) {
+                    defaultName: function (filename) {
                         return filename.split('/').pop();
                     }
                 },

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #curl $1 -o $2.pbf
-osm2pgsql -d osm -U postgres --hstore-all $2.pbf
+osm2pgsql -d osm -U postgres --hstore-all --slim $2.pbf
 
 psql osm -U postgres -c "DROP TABLE $2.planet_osm_roads"
 psql osm -U postgres -c "DROP TABLE $2.planet_osm_point"

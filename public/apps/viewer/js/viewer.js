@@ -106,21 +106,28 @@ Viewer = function () {
             layersStr = arr.join(",");
         }
         javascript = "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
-            "<div></div>\n" +
-            "<script>\n" +
-            "(function () {\n" +
-            "gc2map.init({\n" +
-            "          db: '" + db + "',\n" +
-            "          layers: [" + layersStr + "],\n" +
-            "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
-            "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
-            "          width: '100%',\n" +
-            "          height: '400px',\n" +
-            "          schema: '" + schema + "'\n" +
-            "     });\n" +
-            "}())\n" +
-            "</script>";
+        "<div></div>\n" +
+        "<script>\n" +
+        "(function () {\n" +
+        "gc2map.init({\n" +
+        "          db: '" + db + "',\n" +
+        "          layers: [" + layersStr + "],\n" +
+        "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
+        "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
+        "          width: '100%',\n" +
+        "          height: '400px',\n" +
+        "          schema: '" + schema + "'\n" +
+        "     });\n" +
+        "}())\n" +
+        "</script>";
         $("#share-javascript").val(javascript);
+        $("#share-javascript-object").val(function () {
+            var l = [];
+            $.each(layers.split(","), function (index, value) {
+                l.push("\"name\":\"" + value + "\"");
+            });
+            return "[{" + l.join(",") + "}]";
+        });
     };
     shareTwitter = function () {
         var url = hostname + linkToSimpleMap();
@@ -163,11 +170,13 @@ Viewer = function () {
             center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
         cloud.zoomToPoint(center.x, center.y, 18);
         if (awesomeMarker !== undefined) cloud.map.removeLayer(awesomeMarker);
-        awesomeMarker = L.marker([place.geometry.location.lat(), place.geometry.location.lng()], {icon: L.AwesomeMarkers.icon({
-            icon: 'home',
-            markerColor: 'blue',
-            prefix: 'fa'
-        })}).addTo(cloud.map);
+        awesomeMarker = L.marker([place.geometry.location.lat(), place.geometry.location.lng()], {
+            icon: L.AwesomeMarkers.icon({
+                icon: 'home',
+                markerColor: 'blue',
+                prefix: 'fa'
+            })
+        }).addTo(cloud.map);
         setTimeout(function () {
             /*var p = new R.Pulse(
              [place.geometry.location.lat(), place.geometry.location.lng()],
@@ -199,7 +208,7 @@ Viewer = function () {
             if (type === 'marker') {
                 var text = prompt("Enter a text for the marker or cancel to add without text", "");
                 if (text !== null) {
-                    drawLayer.bindLabel(text, { noHide: true}).on("click",function () {
+                    drawLayer.bindLabel(text, {noHide: true}).on("click", function () {
                     }).showLabel();
                 }
             }
@@ -606,7 +615,7 @@ Viewer = function () {
             }
         });
     };
-    return{
+    return {
         init: init,
         cloud: cloud,
         switchLayer: switchLayer,
