@@ -128,6 +128,8 @@ Viewer = function () {
             });
             return "[{" + l.join(",") + "}]";
         });
+        console.log(cloud.getExtent());
+        $("#share-extent").val(cloud.getExtent().left + "," + cloud.getExtent().bottom + "," + cloud.getExtent().right + "," + cloud.getExtent().top);
     };
     shareTwitter = function () {
         var url = hostname + linkToSimpleMap();
