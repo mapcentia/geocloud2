@@ -123,12 +123,13 @@ Viewer = function () {
         $("#share-javascript").val(javascript);
         $("#share-javascript-object").val(function () {
             var l = [];
-            $.each(layers.split(","), function (index, value) {
-                l.push("\"name\":\"" + value + "\"");
-            });
-            return "[{" + l.join(",") + "}]";
+            if (layers) {
+                $.each(layers.split(","), function (index, value) {
+                    l.push("\"name\":\"" + value + "\"");
+                });
+                return "[{" + l.join(",") + "}]";
+            }
         });
-        console.log(cloud.getExtent());
         $("#share-extent").val(cloud.getExtent().left + "," + cloud.getExtent().bottom + "," + cloud.getExtent().right + "," + cloud.getExtent().top);
     };
     shareTwitter = function () {
