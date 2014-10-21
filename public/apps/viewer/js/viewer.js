@@ -125,9 +125,9 @@ Viewer = function () {
             var l = [];
             if (layers) {
                 $.each(layers.split(","), function (index, value) {
-                    l.push("\"name\":\"" + value + "\"");
+                    l.push("{\"name\":\"" + value + "\"}");
                 });
-                return "[{" + l.join(",") + "}]";
+                return "[" + l.join(",") + "]";
             }
         });
         $("#share-extent").val(cloud.getExtent().left + "," + cloud.getExtent().bottom + "," + cloud.getExtent().right + "," + cloud.getExtent().top);
