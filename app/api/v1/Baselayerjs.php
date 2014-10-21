@@ -10,6 +10,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . ",\n";
         echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
         echo "epsg: '" . ((\app\conf\App::$param['epsg']) ? : "4326") . "',\n";
+        echo "staticMapHost: '" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
