@@ -441,7 +441,7 @@ geocloud = (function () {
             // The css
             $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/leaflet.css' }).appendTo('head');
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/api/v3/css/styles.css' }).appendTo('head');
+        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/api/v3/css/styles.css?b1639e04e4f6da62#grunt-cache-bust' }).appendTo('head');
 
         this.bingApiKey = null;
         this.digitalGlobeKey = null;

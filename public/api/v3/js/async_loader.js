@@ -36,7 +36,7 @@ if (typeof gc2apiLoader === "undefined") {
                         typeof window.setBaseLayers !== "undefined"
                         ) {
                         // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.min.js");
+                        $.getScript(host + "/api/v3/js/geocloud.min.js?adcf76f3df0740c9#grunt-cache-bust");
                         if (window.geocloud_maplib === "leaflet" && typeof L.drawVersion === "undefined" && typeof L.labelVersion === "undefined") {
                             $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
                             $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");

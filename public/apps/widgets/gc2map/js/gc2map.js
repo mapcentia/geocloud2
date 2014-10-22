@@ -48,9 +48,9 @@ if (typeof gc2map === "undefined") {
                         typeof window.setBaseLayers !== "undefined"
                         ) {
                         // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.js");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js");
-                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js");
+                        $.getScript(host + "/api/v3/js/geocloud.js?a439ffa6e8bc2dd0#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?894e375a5f05e2ea#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof this.Templates !== "undefined") {
                                 scriptsLoaded = true;
@@ -62,10 +62,10 @@ if (typeof gc2map === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap-alert.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/non-responsive.css' }).appendTo('head');
-                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/styles.css' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap.css?cea63a515abbff15#grunt-cache-bust' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/bootstrap-alert.css?a849390f2a859c66#grunt-cache-bust' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/non-responsive.css?3a2e6af4eca91b40#grunt-cache-bust' }).appendTo('head');
+                $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/apps/widgets/gc2map/css/styles.css?e08d74d5e4d44028#grunt-cache-bust' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'https://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
                 $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: 'https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' }).appendTo('head');
             } else {

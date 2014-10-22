@@ -1,3 +1,9 @@
+<ifmodule mod_expires.c>
+<FilesMatch ".(ico|jpg|jpeg|png|gif|js|css|swf)$">
+        ExpiresActive on
+        ExpiresDefault "access plus 100 day"
+   </FilesMatch>
+</ifmodule>
 <IfModule mod_rewrite.c>
 RewriteEngine On
 #RewriteRule index\.php - [L]

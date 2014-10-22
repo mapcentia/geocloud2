@@ -10,6 +10,10 @@ module.exports = function (grunt) {
                         'public/js/bootstrap3/css/bootstrap.min.css',
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.css',
                         'public/apps/viewer/css/styles.css'
+                    ],
+                    // The Viewer
+                    'public/css/build/styles.min.css': [
+                        'public/css/styles.css'
                     ]
                 }
             }
@@ -67,7 +71,6 @@ module.exports = function (grunt) {
                         'public/js/colorfield.js',
                         'public/js/httpauthform.js',
                         'public/js/apikeyform.js',
-
                         'public/js/plupload/js/moxie.min.js',
                         'public/js/plupload/js/plupload.min.js',
                         'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js'
@@ -97,12 +100,36 @@ module.exports = function (grunt) {
                 }
             }
         },
+        cacheBust: {
+            options: {
+                encoding: 'utf8',
+                algorithm: 'md5',
+                length: 16,
+                rename: false,
+                enableUrlFragmentHint: true,
+                baseDir: "public/",
+                ignorePatterns: ['php']
+            },
+            assets: {
+                files: [{
+                    src: [
+                        'public/store.php',
+                        'public/editor.php',
+                        'public/api/v3/js/async_loader.js',
+                        'public/api/v3/js/geocloud.js',
+                        'public/apps/viewer/index.html',
+                        'public/apps/widgets/gc2map/index.html',
+                        'public/apps/widgets/gc2map/js/gc2map.js'
+                    ]
+                }]
+            }
+        },
         processhtml: {
             dist: {
                 files: {
-                    'public/store.php': ['public/store.php'],
+                    //'public/store.php': ['public/store.php'],
                     //'public/editor.php': ['public/editor.php']
-                    //'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
+                    'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
         }
@@ -113,8 +140,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-processhtml');
     grunt.loadNpmTasks('grunt-templates-hogan');
-    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify']);
-    grunt.registerTask('production', ['processhtml']);
+    grunt.loadNpmTasks('grunt-cache-bust');
+
+    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'cacheBust']);
+    grunt.registerTask('production', ['processhtml', 'cacheBust']);
 };
 
 
