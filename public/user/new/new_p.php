@@ -36,7 +36,7 @@ function UserIDCheck($sValue, &$oStatus)
             if (!\app\conf\App::$param['host']) {
                 include_once("../../../app/conf/hosts.php");
             }
-            $host = App::$param['host'];
+            $host = "";
         }
     }
 }
