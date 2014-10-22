@@ -723,8 +723,12 @@ $(document).ready(function () {
                                     new Ext.Panel({
                                         border: false,
                                         id: "treepanel",
-                                        collapsible: false,
-                                        width: 200
+                                        style: {
+                                            height: (Ext.getBody().getViewSize().height-180) + "px",
+                                            overflow: "auto"
+                                        },
+                                        collapsible: false
+
                                     })
                                 ]
                             })

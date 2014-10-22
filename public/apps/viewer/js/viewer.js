@@ -105,21 +105,22 @@ Viewer = function () {
             }
             layersStr = arr.join(",");
         }
-        javascript = "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
-        "<div></div>\n" +
-        "<script>\n" +
-        "(function () {\n" +
-        "gc2map.init({\n" +
-        "          db: '" + db + "',\n" +
-        "          layers: [" + layersStr + "],\n" +
-        "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
-        "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
-        "          width: '100%',\n" +
-        "          height: '400px',\n" +
-        "          schema: '" + schema + "'\n" +
-        "     });\n" +
-        "}())\n" +
-        "</script>";
+        javascript =
+            "<script src='" + hostname + "/apps/widgets/gc2map/js/gc2map.js'></script>\n" +
+            "<div></div>\n" +
+            "<script>\n" +
+            "(function () {\n" +
+            "gc2map.init({\n" +
+            "          db: '" + db + "',\n" +
+            "          layers: [" + layersStr + "],\n" +
+            "          zoom: [" + cloud.getCenter().lon.toString() + "," + cloud.getCenter().lat.toString() + "," + Math.round(cloud.getZoom()).toString() + "],\n" +
+            "          setBaseLayer: '" + cloud.getBaseLayerName() + "',    \n" +
+            "          width: '100%',\n" +
+            "          height: '400px',\n" +
+            "          schema: '" + schema + "'\n" +
+            "     });\n" +
+            "}())\n" +
+            "</script>";
         $("#share-javascript").val(javascript);
         $("#share-javascript-object").val(function () {
             var l = [];
@@ -270,6 +271,11 @@ Viewer = function () {
         $(".share-text").focus(function () {
             $(this).select();
         });
+
+        if (window.gc2Options.extraShareFields){
+            $("#group-javascript-object").show();
+            $("#group-extent").show();
+        }
 
         if (typeof window.setBaseLayers !== 'object') {
             window.setBaseLayers = [
