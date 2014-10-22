@@ -47,6 +47,15 @@ module.exports = function (grunt) {
                         'public/apps/viewer/js/templates.js',
                         'public/apps/viewer/js/viewer.js',
                         'public/js/leaflet/leaflet.js'
+                    ],
+                    //Editor
+                    'public/js/build/editor/all.min.js': [
+                        'public/js/wfseditor.js',
+                        'public/js/attributeform.js',
+                        'public/js/filterfield.js',
+                        'public/js/filterbuilder.js',
+                        'public/js/comparisoncomboBox.js',
+                        'public/js/openlayers/proj4js-combined.js'
                     ]
                 }
             }
@@ -68,8 +77,8 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     //'public/store.php': ['public/store.php'],
-                    //'public/editor.php': ['public/editor.php'],
-                    'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
+                    'public/editor.php': ['public/editor.php']
+                    //'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
         }

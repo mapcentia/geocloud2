@@ -6,7 +6,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <link rel="stylesheet" type="text/css" href="/api/v3/css/styles.css"/>
-<!-- build:css /css/build/all.min.css -->
+<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
 <!-- /build -->
 </head>
@@ -22,13 +22,14 @@ include("html_header.php");
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script type="text/javascript" src="/api/v1/js/api.js"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js" type="text/javascript"></script>
-
+<!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/wfseditor.js"></script>
 <script type="text/javascript" src="/js/attributeform.js"></script>
 <script type="text/javascript" src="/js/filterfield.js"></script>
 <script type="text/javascript" src="/js/filterbuilder.js"></script>
 <script type="text/javascript" src="/js/comparisoncomboBox.js"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
+<!-- /build -->
 </body>
 </html>
 
