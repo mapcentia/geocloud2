@@ -7,7 +7,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css" />
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css"/>
-<!-- build:css /css/build/all.min.css -->
+<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
 <!-- /build -->
 </head>
@@ -108,13 +108,12 @@ include("html_header.php");
     </div>
 </div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
-
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js"></script>
-
+<!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="/js/msg.js"></script>
 <script type="text/javascript" src="/js/store.js"></script>
@@ -132,9 +131,9 @@ include("html_header.php");
 <script type="text/javascript" src="/js/colorfield.js"></script>
 <script type="text/javascript" src="/js/httpauthform.js"></script>
 <script type="text/javascript" src="/js/apikeyform.js"></script>
-
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js"></script>
+<!-- /build -->
 </body>
 </html>

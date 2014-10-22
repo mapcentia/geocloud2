@@ -48,7 +48,31 @@ module.exports = function (grunt) {
                         'public/apps/viewer/js/viewer.js',
                         'public/js/leaflet/leaflet.js'
                     ],
-                    //Editor
+                    //store
+                    'public/js/build/store/all.min.js': [
+                        'public/js/jquery/1.6.4/jquery.min.js',
+                        'public/js/msg.js',
+                        'public/js/store.js',
+                        'public/js/edittablestructure.js',
+                        'public/js/cartomobilesetup.js',
+                        'public/js/editwmsclass.js',
+                        'public/js/editwmslayer.js',
+                        'public/js/classwizards.js',
+                        'public/js/addshapeform.js',
+                        'public/js/addbitmapform.js',
+                        'public/js/addrasterform.js',
+                        'public/js/addfromscratch.js',
+                        'public/js/addviewform.js',
+                        'public/js/addosmform.js',
+                        'public/js/colorfield.js',
+                        'public/js/httpauthform.js',
+                        'public/js/apikeyform.js',
+
+                        'public/js/plupload/js/moxie.min.js',
+                        'public/js/plupload/js/plupload.min.js',
+                        'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js'
+                    ],
+                    //store
                     'public/js/build/editor/all.min.js': [
                         'public/js/wfseditor.js',
                         'public/js/attributeform.js',
@@ -76,8 +100,8 @@ module.exports = function (grunt) {
         processhtml: {
             dist: {
                 files: {
-                    //'public/store.php': ['public/store.php'],
-                    'public/editor.php': ['public/editor.php']
+                    'public/store.php': ['public/store.php'],
+                    //'public/editor.php': ['public/editor.php']
                     //'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
