@@ -25,7 +25,7 @@ httpAuth.form = new Ext.FormPanel({
     ],
     buttons: [
         {
-            text: 'Update',
+            text: __('Update'),
             handler: function () {
                 "use strict";
                 if (httpAuth.form.getForm().isValid()) {

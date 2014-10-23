@@ -113,7 +113,7 @@ gc2i18n = {
         "Line": "Line",
         "Polygon": "Polygon",
         "Encoding": "Encoding",
-        "Are you sure you want to do that?": "Are you sure you want to do that?",
+        "Are you sure you want to do that?": "Er du sikker?",
         "Sorry! Some thing failed.": "Sorry! Some thing failed.",
         "Sorry! Connection problems": "Sorry! Connection problems",
         "New API key": "New API key",

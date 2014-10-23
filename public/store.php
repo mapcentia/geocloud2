@@ -129,7 +129,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/addviewform.js?6977a4ed52a23fae"></script>
 <script type="text/javascript" src="/js/addosmform.js?f003acc713efeafa"></script>
 <script type="text/javascript" src="/js/colorfield.js?4c80541098c1f93d"></script>
-<script type="text/javascript" src="/js/httpauthform.js?14bca002392f60e7"></script>
+<script type="text/javascript" src="/js/httpauthform.js?f68874434ef507cc"></script>
 <script type="text/javascript" src="/js/apikeyform.js?255f5386bda54d03"></script>
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
@@ -137,3 +137,4 @@ include("html_header.php");
 <!-- /build -->
 </body>
 </html>
+

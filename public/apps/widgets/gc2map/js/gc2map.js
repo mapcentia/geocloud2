@@ -85,8 +85,7 @@ if (typeof gc2map === "undefined") {
                     key: null,
                     clickDistance: 5,
                     baseLayers: null,
-                    callBack: function () {
-                    }
+                    callBack: function () {}
                 },
                 prop,
                 divs = document.getElementsByTagName('div'),
@@ -102,7 +101,6 @@ if (typeof gc2map === "undefined") {
                 return v.toString(16);
             });
             div.setAttribute("id", gc2RandId);
-            //div.setAttribute("class", "gc2map");
             div.classList.add("gc2map");
             div.style.width = defaults.width;
             div.style.height = defaults.height;
