@@ -115,10 +115,10 @@ module.exports = function (grunt) {
                     src: [
                         'public/store.php',
                         'public/editor.php',
-                        'public/api/v3/js/async_loader.js',
-                        'public/api/v3/js/geocloud.js',
                         'public/apps/viewer/index.html',
                         'public/apps/widgets/gc2map/index.html',
+                        'public/api/v3/js/async_loader.js',
+                        'public/api/v3/js/geocloud.js',
                         'public/apps/widgets/gc2map/js/gc2map.js'
                     ]
                 }]
@@ -127,8 +127,8 @@ module.exports = function (grunt) {
         processhtml: {
             dist: {
                 files: {
-                    //'public/store.php': ['public/store.php'],
-                    //'public/editor.php': ['public/editor.php']
+                    'public/store.php': ['public/store.php'],
+                    'public/editor.php': ['public/editor.php'],
                     'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
