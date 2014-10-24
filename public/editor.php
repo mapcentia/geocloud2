@@ -18,8 +18,26 @@ include("html_header.php");
         <div>.shp .geojson .gml .kml .tab .mif</div>
     </a>
 </div>
-<script type="text/javascript" src="//maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
+<script>
+    window.__ = function (string, toolTip) {
+        'use strict';
+        var str;
+        if (typeof gc2i18n !== 'undefined') {
+            if (gc2i18n.dict[string]) {
+                str = gc2i18n.dict[string];
+            } else {
+                str = string;
+            }
+            if (toolTip) {
+                str = " <span class='tt' ext:qtip='" + string + "' ext>[?]</span>";
+            }
+        }
+        return str;
+    };
+    document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
+</script>
+<script type="text/javascript" src="//maps.google.com/maps/api/js?v=3&sensor=false&libraries=places"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?be90740c4a1f891e"></script>
 <!-- build:js /api/v3/js/geocloud.min.js -->
 <script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>

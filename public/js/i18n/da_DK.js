@@ -116,7 +116,7 @@ gc2i18n = {
         "Are you sure you want to do that?": "Er du sikker?",
         "Sorry! Some thing failed.": "Sorry! Some thing failed.",
         "Sorry! Connection problems": "Sorry! Connection problems",
-        "New API key": "New API key",
+        "New API key": "Ny API nøgle",
         "Load": "Load",
         "Load features": "Load features",
         "Update table": "Update table",

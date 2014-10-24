@@ -9,22 +9,6 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-window.__ = function (string, toolTip) {
-    'use strict';
-    var str;
-    if (typeof gc2i18n !== 'undefined') {
-        if (gc2i18n.dict[string]) {
-            str = gc2i18n.dict[string];
-        } else {
-            str = string;
-        }
-        if (toolTip) {
-            str = " <span ext:qtip='" + string + "' ext>[?]</span>";
-        }
-    }
-    return str;
-};
-document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';

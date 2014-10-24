@@ -130,7 +130,7 @@ wmsLayer.init = function (record) {
             borderBottom: '1px solid #d0d0d0'
         },
         propertyNames: {
-            label_column: 'Label item',
+            label_column: __('Label item'),
             theme_column: 'Class item',
             opacity: 'Opacity',
             label_max_scale: 'Label max scale',

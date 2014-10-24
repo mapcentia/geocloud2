@@ -108,6 +108,23 @@ include("html_header.php");
     </div>
 </div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
+<script>window.__ = function (string, toolTip) {
+        'use strict';
+        var str;
+        if (typeof gc2i18n !== 'undefined') {
+            if (gc2i18n.dict[string]) {
+                str = gc2i18n.dict[string];
+            } else {
+                str = string;
+            }
+            if (toolTip) {
+                str = " <span class='tt' ext:qtip='" + string + "' ext>[?]</span>";
+            }
+        }
+        return str;
+    };
+    document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
+</script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7453012a468a8a38"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?e49f4b82150f1b22"></script>
