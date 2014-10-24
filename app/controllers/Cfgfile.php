@@ -39,8 +39,9 @@ class Cfgfile extends \app\inc\Controller
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
                 //if (app::$param["tileRenderBackend"] == "wms"){
                 if ($row['type'] == "RASTER") {
+                    $parts = explode(":",App::$param['host']);
                     echo "type=WMS\n";
-                    echo "url=" . App::$param['host'] . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
+                    echo "url=" . $parts[0].":".$parts[1] . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
                 } else {
                     echo "type=MapServerLayer\n";
                     echo "mapfile=" . App::$param['path'] . "/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row['f_table_schema'] . ".map\n";

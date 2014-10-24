@@ -121,7 +121,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?4f93fc8ac1ee2be8"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?ac6b46d6d15b9718"></script>
-<script type="text/javascript" src="/js/classwizards.js?412d361adbae9e02"></script>
+<script type="text/javascript" src="/js/classwizards.js?468fa5842a0dd9e9"></script>
 <script type="text/javascript" src="/js/addshapeform.js?9c4ac94310c47df3"></script>
 <script type="text/javascript" src="/js/addbitmapform.js?7f352c9bbaf8b3ce"></script>
 <script type="text/javascript" src="/js/addrasterform.js?da336a6959702c26"></script>

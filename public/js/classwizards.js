@@ -95,7 +95,8 @@ classWizards.init = function (record) {
                                         triggerAction: "all",
                                         name: "value",
                                         emptyText: __("Field"),
-                                        allowBlank: false
+                                        allowBlank: false,
+                                        disabled: (record.type === "RASTER") ? true : false
                                     }
                                 ]
                             }
@@ -108,6 +109,7 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'button',
                                 text: 'Create',
+                                disabled: (record.type === "RASTER") ? true: false,
                                 handler: function () {
                                     var f = Ext.getCmp('uniqueform');
                                     if (f.form.isValid()) {
@@ -198,7 +200,8 @@ classWizards.init = function (record) {
                                         triggerAction: "all",
                                         name: "value",
                                         emptyText: __("Numeric field"),
-                                        allowBlank: false
+                                        allowBlank: false,
+                                        value: (record.type === "RASTER") ? "pixel": null
                                     },
                                     new Ext.ux.form.SpinnerField({
                                         name: "num",
@@ -325,7 +328,8 @@ classWizards.init = function (record) {
                                         incrementValue: 1,
                                         accelerate: true,
                                         allowBlank: false,
-                                        emptyText: __("Cluster distance")
+                                        emptyText: __("Cluster distance"),
+                                        disabled: (record.type === "RASTER") ? true: false
                                     })
                                 ]
                             }
@@ -338,6 +342,7 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'button',
                                 text: 'Create',
+                                disabled: (record.type === "RASTER") ? true: false,
                                 handler: function () {
                                     var f = Ext.getCmp('clusterform'), values, params;
                                     if (f.form.isValid()) {

@@ -216,7 +216,7 @@ class Classification extends \app\inc\Model
         }
         $this->reset();
         $layer = new \app\models\Layer();
-        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
+        $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         $res = $this->update("0", self::createClass($geometryType, "Single value", null, 10, null, $data));
         if ($res['success']) {
             $response['success'] = true;
@@ -239,7 +239,7 @@ class Classification extends \app\inc\Model
             return $response;
         }
         $layer = new \app\models\Layer();
-        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
+        $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         $fieldObj = $this->table->metaData[$field];
         $query = "SELECT distinct({$field}) as value FROM " . $this->table->table . " ORDER BY {$field}";
         $res = $this->prepare($query);
@@ -291,8 +291,23 @@ class Classification extends \app\inc\Model
             return $response;
         }
         $layer = new \app\models\Layer();
-        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
-        $query = "SELECT max({$field}) as max, min({$field}) FROM " . $this->table->table;
+        $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
+        if ($geometryType == "RASTER") {
+            $parts = explode(".", $this->layer);
+            $setSchema = "set search_path to {$parts[0]}";
+            $res = $this->prepare($setSchema);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+            $query = "SELECT band, (stats).min, (stats).max FROM (SELECT band, public.ST_SummaryStats('{$parts[1]}','rast', band) As stats FROM generate_series(1,1) As band) As foo;";
+        } else {
+            $query = "SELECT max({$field}) as max, min({$field}) FROM {$this->table->table}";
+        }
         $res = $this->prepare($query);
         try {
             $res->execute();
@@ -342,7 +357,7 @@ class Classification extends \app\inc\Model
         }
         $layer = new \app\models\Layer();
         $geometryType = $layer->getValueFromKey($this->layer, type);
-        $query = "SELECT count(*) as count FROM " . $this->table->table;
+        $query = "SELECT count(*) AS count FROM " . $this->table->table;
         $res = $this->prepare($query);
         try {
             $res->execute();
@@ -411,7 +426,7 @@ class Classification extends \app\inc\Model
     public function createCluster($distance, $data)
     {
         $layer = new \app\models\Layer();
-        $geometryType = ($this->geometryType) ? : $layer->getValueFromKey($this->layer, "type");
+        $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         if ($geometryType != "POINT" && $geometryType != "MULTIPOINT") {
             $response['success'] = false;
             $response['message'] = "Only point layers can be clustered";
@@ -482,39 +497,39 @@ class Classification extends \app\inc\Model
 
     static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
     {
-        $symbol = ($data->symbol) ? : "";
-        $size = ($data->symbolSize) ? : "";
-        $outlineColor = ($data->outlineColor) ? : "#FFFFFF";
-        $color = ($color) ? : Util::randHexColor();
+        $symbol = ($data->symbol) ?: "";
+        $size = ($data->symbolSize) ?: "";
+        $outlineColor = ($data->outlineColor) ?: "#FFFFFF";
+        $color = ($color) ?: Util::randHexColor();
         if ($type == "POINT" || $type == "MULTIPOINT") {
-            $symbol = ($data->symbol) ? : "circle";
-            $size = ($data->symbolSize) ? : 10;
+            $symbol = ($data->symbol) ?: "circle";
+            $size = ($data->symbolSize) ?: 10;
         }
         return (object)array(
             "sortid" => $sortid,
             "name" => $name,
             "expression" => $expression,
             "label" => ($data->labelText) ? true : false,
-            "label_size" => ($data->labelSize) ? : "",
-            "label_color" => ($data->labelColor) ? : "",
+            "label_size" => ($data->labelSize) ?: "",
+            "label_color" => ($data->labelColor) ?: "",
             "color" => $color,
-            "outlinecolor" => ($outlineColor) ? : "",
-            "style_opacity" => ($data->opacity) ? : "",
+            "outlinecolor" => ($outlineColor) ?: "",
+            "style_opacity" => ($data->opacity) ?: "",
             "symbol" => $symbol,
-            "angle" => ($data->angle) ? : "",
+            "angle" => ($data->angle) ?: "",
             "size" => $size,
-            "width" => ($data->lineWidth) ? : "",
-            "overlaycolor" => ($data->overlayColor) ? : "",
+            "width" => ($data->lineWidth) ?: "",
+            "overlaycolor" => ($data->overlayColor) ?: "",
             "overlayoutlinecolor" => "",
-            "overlaysymbol" => ($data->overlaySymbol) ? : "",
-            "overlaysize" => ($data->overlaySize) ? : "",
+            "overlaysymbol" => ($data->overlaySymbol) ?: "",
+            "overlaysize" => ($data->overlaySize) ?: "",
             "overlaywidth" => "",
-            "label_text" => ($data->labelText) ? : "",
-            "label2_text" => ($data->labelText) ? : "",
-            "label_position" => ($data->labelPosition) ? : "",
-            "style_opacity" => ($data->opacity) ? : "",
-            "overlaystyle_opacity" => ($data->overlayOpacity) ? : "",
-            "label_force" => ($data->force) ? : "",
+            "label_text" => ($data->labelText) ?: "",
+            "label2_text" => ($data->labelText) ?: "",
+            "label_position" => ($data->labelPosition) ?: "",
+            "style_opacity" => ($data->opacity) ?: "",
+            "overlaystyle_opacity" => ($data->overlayOpacity) ?: "",
+            "label_force" => ($data->force) ?: "",
         );
     }
 }
