@@ -180,7 +180,7 @@ classWizards.init = function (record) {
                                         store: new Ext.data.ArrayStore({
                                             fields: ['type', 'display'],
                                             data: (record.type === "RASTER") ? [
-                                                ['equal', 'Equal'],
+                                                ['equal', 'Equal']
                                             ]:[
                                                 ['equal', 'Equal'],
                                                 ['quantile', 'Quantile']
