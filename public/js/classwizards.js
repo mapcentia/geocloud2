@@ -16,9 +16,9 @@ classWizards.init = function (record) {
         items: [
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"><b>' + __("Single") + '</b></td></tr>' +
-                    '</table>'
+                '<tr class="x-grid3-row"><td><hr></td></tr>' +
+                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"><b>' + __("Single") + '</b></td></tr>' +
+                '</table>'
             },
             {
                 defaults: {
@@ -67,9 +67,9 @@ classWizards.init = function (record) {
             },
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"><b>' + __("Unique values") + '</b></td></tr>' +
-                    '</table>'
+                '<tr class="x-grid3-row"><td><hr></td></tr>' +
+                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"><b>' + __("Unique values") + '</b></td></tr>' +
+                '</table>'
             },
             {
                 defaults: {
@@ -109,7 +109,7 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'button',
                                 text: 'Create',
-                                disabled: (record.type === "RASTER") ? true: false,
+                                disabled: (record.type === "RASTER") ? true : false,
                                 handler: function () {
                                     var f = Ext.getCmp('uniqueform');
                                     if (f.form.isValid()) {
@@ -154,9 +154,9 @@ classWizards.init = function (record) {
             },
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"><b>' + __("Intervals") + '</b></td></tr>' +
-                    '</table>'
+                '<tr class="x-grid3-row"><td><hr></td></tr>' +
+                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"><b>' + __("Intervals") + '</b></td></tr>' +
+                '</table>'
             },
             {
                 defaults: {
@@ -179,10 +179,13 @@ classWizards.init = function (record) {
                                         xtype: "combo",
                                         store: new Ext.data.ArrayStore({
                                             fields: ['type', 'display'],
-                                            data: [
+                                            data: (record.type === "RASTER") ? [
+                                                ['equal', 'Equal'],
+                                            ]:[
                                                 ['equal', 'Equal'],
                                                 ['quantile', 'Quantile']
                                             ]
+
                                         }),
                                         displayField: 'display',
                                         valueField: 'type',
@@ -191,7 +194,8 @@ classWizards.init = function (record) {
                                         name: "type",
                                         emptyText: __("Type"),
                                         allowBlank: false,
-                                        mode: 'local'
+                                        mode: 'local',
+                                        value: (record.type === "RASTER") ? 'Equal': null
                                     },
                                     {
                                         xtype: "combo",
@@ -201,7 +205,7 @@ classWizards.init = function (record) {
                                         name: "value",
                                         emptyText: __("Numeric field"),
                                         allowBlank: false,
-                                        value: (record.type === "RASTER") ? "pixel": null
+                                        value: (record.type === "RASTER") ? "pixel" : null
                                     },
                                     new Ext.ux.form.SpinnerField({
                                         name: "num",
@@ -254,10 +258,10 @@ classWizards.init = function (record) {
                                                             params = classWizards.getAddvalues();
                                                         Ext.Ajax.request({
                                                             url: '/controllers/classification/' + values.type.toLowerCase() + '/' + record._key_ + '/' +
-                                                                values.value + '/' +
-                                                                values.num + '/' +
-                                                                values.start.replace("#", "") + '/' +
-                                                                values.end.replace("#", "") + '/',
+                                                            values.value + '/' +
+                                                            values.num + '/' +
+                                                            values.start.replace("#", "") + '/' +
+                                                            values.end.replace("#", "") + '/',
                                                             method: 'put',
                                                             params: params,
                                                             headers: {
@@ -299,9 +303,9 @@ classWizards.init = function (record) {
             },
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><hr></td></tr>' +
-                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"><b>' + __("Clustering") + '</b></td></tr>' +
-                    '</table>'
+                '<tr class="x-grid3-row"><td><hr></td></tr>' +
+                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"><b>' + __("Clustering") + '</b></td></tr>' +
+                '</table>'
             },
             {
                 defaults: {
@@ -329,7 +333,7 @@ classWizards.init = function (record) {
                                         accelerate: true,
                                         allowBlank: false,
                                         emptyText: __("Cluster distance"),
-                                        disabled: (record.type === "RASTER") ? true: false
+                                        disabled: (record.type === "RASTER") ? true : false
                                     })
                                 ]
                             }
@@ -342,7 +346,7 @@ classWizards.init = function (record) {
                             {
                                 xtype: 'button',
                                 text: 'Create',
-                                disabled: (record.type === "RASTER") ? true: false,
+                                disabled: (record.type === "RASTER") ? true : false,
                                 handler: function () {
                                     var f = Ext.getCmp('clusterform'), values, params;
                                     if (f.form.isValid()) {
@@ -387,10 +391,10 @@ classWizards.init = function (record) {
             },
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><hr style="width:100%"></td></tr>' +
-                    '<tr class="x-grid3-row"><td><b>' + __("Additional settings") + ' </b></td></tr>' +
-                    '<tr class="x-grid3-row"><td>' + __("These setting are applied to all created classes. Set them before hitting a create button above.") + '</td></tr>' +
-                    '</table>'
+                '<tr class="x-grid3-row"><td><hr style="width:100%"></td></tr>' +
+                '<tr class="x-grid3-row"><td><b>' + __("Additional settings") + ' </b></td></tr>' +
+                '<tr class="x-grid3-row"><td>' + __("These setting are applied to all created classes. Set them before hitting a create button above.") + '</td></tr>' +
+                '</table>'
             },
             {
                 xtype: "form",
@@ -407,7 +411,7 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'box',
-                                html: __("Label text") + __("Combo field. Select a attribute for label. You write around like &apos;My label [attribute]&apos; or concatenate two or more attributes like &apos;[attribute1] [attribute2]&apos;.",true)
+                                html: __("Label text") + __("Combo field. Select a attribute for label. You write around like &apos;My label [attribute]&apos; or concatenate two or more attributes like &apos;[attribute1] [attribute2]&apos;.", true)
                             },
                             {
                                 xtype: 'box',
@@ -484,7 +488,7 @@ classWizards.init = function (record) {
                         },
                         items: [
                             new Ext.form.ComboBox({
-                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot','arrow'],
+                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                                 editable: false,
                                 triggerAction: 'all',
                                 name: "symbol"
@@ -530,7 +534,7 @@ classWizards.init = function (record) {
                             },
                             {
                                 xtype: 'box',
-                                html: __("Opacity")+ __('Set opacity level between 1 and 100, where 100 is solid.', true)
+                                html: __("Opacity") + __('Set opacity level between 1 and 100, where 100 is solid.', true)
                             }
                         ]
                     },

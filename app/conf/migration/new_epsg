@@ -7,15 +7,19 @@ use \app\inc\Model;
 header("Content-type: text/plain");
 include_once("../App.php");
 new \app\conf\App();
-\app\conf\Connection::$param["postgisschema"] = "public";
-\app\models\Database::setDb("mydb");
+\app\conf\Connection::$param["postgisschema"] = "gis34";
+\app\models\Database::setDb("ballerup");
 $conn = new \app\inc\Model();
 $sql = "SELECT * from public.geometry_columns";
 $result = $conn->execQuery($sql);
 echo $conn->PDOerror[0];
 while($row = $conn->fetchRow($result)){
-    if (\app\conf\Connection::$param["postgisschema"] == $row['f_table_schema']) {
+    if (\app\conf\Connection::$param["postgisschema"] == $row['f_table_schema'] && $row['srid'] != 0) {
         $q = "ALTER TABLE \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" ALTER COLUMN \"{$row['f_geometry_column']}\" TYPE geometry({$row['type']},{$row['srid']});\n";
+        echo $q;
+        $q = "ALTER TABLE \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" drop constraint \"enforce_dims_SP_GEOMETRY\";\n";
+        echo $q;
+        $q = "ALTER TABLE \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" drop constraint \"enforce_srid_SP_GEOMETRY\";\n";
         echo $q;
     }
 }
