@@ -538,7 +538,7 @@ $(document).ready(function () {
             }
         ];
         $.ajax({
-            url: '/controllers/layer/records',
+            url: '/api/v1/meta/' + screenName + '/' + schema,
             dataType: 'json',
             type: 'GET',
             success: function (response) {

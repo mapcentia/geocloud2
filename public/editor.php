@@ -43,7 +43,7 @@ include("html_header.php");
 <script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>
 <!-- /build -->
 <!-- build:js /js/build/editor/all.min.js -->
-<script type="text/javascript" src="/js/wfseditor.js?e7439340a3da3e65"></script>
+<script type="text/javascript" src="/js/wfseditor.js?3cfc745d190f76ac"></script>
 <script type="text/javascript" src="/js/attributeform.js?257465ed180e5e84"></script>
 <script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
 <script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>
