@@ -394,7 +394,7 @@ Viewer = function () {
                         }
                     }
                 }
-                if (window.gc2Options.reverseLayerOrder) {
+                if (!window.gc2Options.reverseLayerOrder) {
                     arrMenu[0].items.reverse();
                 }
                 $('#menu').multilevelpushmenu({
