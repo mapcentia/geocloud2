@@ -20,7 +20,13 @@ class Layer extends \app\inc\Controller
 
     public function get_groups()
     {
-        return $this->response = $this->table->getGroupBy("layergroup");
+        $groups = $this->table->getGroupBy("layergroup");
+        if (array_search(array("group" => "gc2_hide_in_viewer"), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => "gc2_hide_in_viewer"), $groups["data"])]);
+        $groups["data"] = array_values($groups["data"]);
+        if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
+        $groups["data"] = array_values($groups["data"]);
+        array_unshift($groups["data"],array("group"=>""), array("group" => "gc2_hide_in_viewer"));
+        return $groups;
     }
 
     public function put_records()
@@ -28,7 +34,7 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         if (isset($data["data"]->editable)) {
-            $data["data"]->editable = ($data["data"]->editable) ? : "0";
+            $data["data"]->editable = ($data["data"]->editable) ?: "0";
         }
         $response = $this->auth($data["data"]->_key_);
         return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
