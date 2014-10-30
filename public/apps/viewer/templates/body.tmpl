@@ -72,6 +72,27 @@
     <div id="layers" class="panel-group"></div>
     <!-- legend -->
     <div id="legend"></div>
+    <!-- info modal -->
+    <div id="modal-info" class="modal fade infobox">
+        <div class="modal-dialog modal-infobox">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">{{{Info}}}</h4>
+                </div>
+                <div class="modal-body" id="modal-info-body">
+                    <ul class="nav nav-tabs" id="info-tab"></ul>
+                    <div class="tab-content" id="info-pane"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{{{Close}}}</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
 </div>
 <div id="menu"></div>
 <!-- legend modal -->
@@ -83,27 +104,6 @@
                 <h4 class="modal-title">{{{Legend}}}</h4>
             </div>
             <div class="modal-body"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">{{{Close}}}</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
-<!-- info modal -->
-<div id="modal-info" class="modal fade infobox">
-    <div class="modal-dialog modal-infobox">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">{{{Info}}}</h4>
-            </div>
-            <div class="modal-body" id="modal-info-body">
-                <ul class="nav nav-tabs" id="info-tab"></ul>
-                <div class="tab-content" id="info-pane"></div>
-            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">{{{Close}}}</button>
             </div>
