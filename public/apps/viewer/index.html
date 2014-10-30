@@ -32,6 +32,16 @@
     </div>
 </div>
 </body>
+<script>
+    window.go = function () {
+        $("body").html(this.Templates["body.tmpl"].render(gc2i18n.dict));
+        window.MapCentia = new Viewer();
+        MapCentia.init();
+        $("[data-toggle=tooltip]").tooltip();
+        $(".center").hide();
+        $("#pane").hide().fadeIn(1500);
+    }
+</script>
 <script src="//maps.google.com/maps/api/js?v=3&sensor=false&libraries=places" type="text/javascript"></script>
 <!-- build:js /apps/viewer/js/build/all.min.js -->
 <script src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3" type="text/javascript"></script>
@@ -44,16 +54,6 @@
 <script src="/apps/viewer/js/viewer.js?ab1231bdee1d3c0f" type="text/javascript"></script>
 <!-- /build -->
 <script src="/api/v3/js/geocloud.php?callback=go&maplib=leaflet" type="text/javascript"></script>
-<script>
-    window.go = function () {
-        $("body").html(this.Templates["body.tmpl"].render(gc2i18n.dict));
-        window.MapCentia = new Viewer();
-        MapCentia.init();
-        $("[data-toggle=tooltip]").tooltip();
-        $(".center").hide();
-        $("#pane").hide().fadeIn(1500);
-    }
-</script>
 </html>
 
 
