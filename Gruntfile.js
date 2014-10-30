@@ -50,7 +50,9 @@ module.exports = function (grunt) {
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.js',
                         'public/apps/viewer/js/templates.js',
                         'public/apps/viewer/js/viewer.js',
-                        'public/js/leaflet/leaflet.js'
+                        'public/js/leaflet/leaflet.js',
+                        'public//js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
+                        'public//js/leaflet/plugins/Leaflet.label/leaflet.label.js'
                     ],
                     //store
                     'public/js/build/store/all.min.js': [

@@ -34,12 +34,12 @@ if (typeof gc2apiLoader === "undefined") {
                     if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
                         typeof Proj4js !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
-                        ) {
+                    ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.min.js?adcf76f3df0740c9#grunt-cache-bust");
                         if (window.geocloud_maplib === "leaflet" && typeof L.drawVersion === "undefined" && typeof L.labelVersion === "undefined") {
-                            $.getScript("//leaflet.github.io/Leaflet.draw/leaflet.draw.js");
-                            $.getScript("//leaflet.github.io/Leaflet.label/leaflet.label.js");
+                            $.getScript(host + "/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js");
+                            $.getScript(host + "/js/leaflet/plugins/Leaflet.label/leaflet.label.js");
                         }
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "ol2" || typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "ol2" || typeof L.labelVersion !== "undefined")) {
@@ -68,11 +68,27 @@ if (typeof gc2apiLoader === "undefined") {
         }());
         // Load some css
         if (window.geocloud_maplib === "leaflet") {
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//leaflet.github.io/Leaflet.draw/leaflet.draw.css' }).appendTo('head');
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//leaflet.github.io/Leaflet.label/leaflet.label.css' }).appendTo('head');
+            $('<link/>').attr({
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: host + '/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css'
+            }).appendTo('head');
+            $('<link/>').attr({
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: host + '/js/leaflet/plugins/Leaflet.draw/leaflet.draw.css'
+            }).appendTo('head');
+            $('<link/>').attr({
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: host + '/js/leaflet/plugins/Leaflet.label/leaflet.label.css'
+            }).appendTo('head');
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css' }).appendTo('head');
+        $('<link/>').attr({
+            rel: 'stylesheet',
+            type: 'text/css',
+            href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css'
+        }).appendTo('head');
     }());
 }
 
