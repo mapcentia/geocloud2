@@ -134,7 +134,7 @@ input[type="radio"], input[type="checkbox"] {
         top: 35px !important;
         right: 0 !important;
         width: 300px !important;
-        position: absolute !important;
+        position: fixed !important;
         left: auto !important;
     }
 
