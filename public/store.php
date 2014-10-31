@@ -131,7 +131,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?4ac75c8fbbf56910"></script>
 <!-- build:js /js/build/store/all.min.js -->
-<script type="text/javascript" src="/js/jquery/1.6.4/jquery.min.js?219073097031d9c1"></script>
+<script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?219073097031d9c1"></script>
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
 <script type="text/javascript" src="/js/store.js?5b74d3458194911d"></script>
 <script type="text/javascript" src="/js/edittablestructure.js?3e5e88d555665ea7"></script>

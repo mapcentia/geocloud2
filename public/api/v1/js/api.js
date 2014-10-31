@@ -31,10 +31,12 @@ if (typeof OpenLayers === "undefined") {
     // This is a hacked version of OpenLayers 2.12. Do NOT use 2.13 in GC2 Admin
     document.write("<script src='" + mygeocloud_host + "/js/openlayers/OpenLayers.js'><\/script>");
 }
-document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/msg.js'><\/script>");
-document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
+if (typeof Ext === "undefined") {
+    document.write("<script src='" + mygeocloud_host + "/js/ext/adapter/ext/ext-base.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/ext/ext-all.js'><\/script>");
+    document.write("<script src='" + mygeocloud_host + "/js/GeoExt/script/GeoExt.js'><\/script>");
+}
+
 var mygeocloud_ol = (function () {
     "use strict";
     var map, host = mygeocloud_host, parentThis = this;

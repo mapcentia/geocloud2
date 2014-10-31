@@ -36,8 +36,10 @@ module.exports = function (grunt) {
             all: ['public/js/*.js']
         },
         uglify: {
+            //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             publish: {
                 files: {
+                    'public/js/ext/examples/ux/Spinner.min.js': ['public/js/ext/examples/ux/Spinner.js'],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
                     // The Viewer
@@ -56,7 +58,7 @@ module.exports = function (grunt) {
                     ],
                     //store
                     'public/js/build/store/all.min.js': [
-                        'public/js/jquery/1.6.4/jquery.min.js',
+                        'public/js/jquery/1.10.0/jquery.min.js',
                         'public/js/msg.js',
                         'public/js/store.js',
                         'public/js/edittablestructure.js',
@@ -77,8 +79,14 @@ module.exports = function (grunt) {
                         'public/js/plupload/js/plupload.min.js',
                         'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js'
                     ],
-                    //store
+                    //Editor
                     'public/js/build/editor/all.min.js': [
+                        'public/js/jquery/1.10.0/jquery.min.js',
+                        'public/js/msg.js',
+                        'public/js/openlayers/OpenLayers.js',
+                        'public/js/GeoExt/script/GeoExt.js',
+                        'public/api/v1/js/api.js',
+                        'public/api/v3/js/geocloud.js',
                         'public/js/wfseditor.js',
                         'public/js/attributeform.js',
                         'public/js/filterfield.js',
@@ -130,7 +138,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'public/store.php': ['public/store.php'],
-                    'public/editor.php': ['public/editor.php'],
+                    'public/editor.php': ['public/editor.php']
                     'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
@@ -147,5 +155,7 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'cacheBust']);
     grunt.registerTask('production', ['processhtml', 'cacheBust']);
 };
+
+
 
 
