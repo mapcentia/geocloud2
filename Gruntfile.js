@@ -83,7 +83,6 @@ module.exports = function (grunt) {
                     'public/js/build/editor/all.min.js': [
                         'public/js/jquery/1.10.0/jquery.min.js',
                         'public/js/msg.js',
-                        'public/js/openlayers/OpenLayers.js',
                         'public/js/GeoExt/script/GeoExt.js',
                         'public/api/v1/js/api.js',
                         'public/api/v3/js/geocloud.js',
@@ -138,7 +137,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'public/store.php': ['public/store.php'],
-                    'public/editor.php': ['public/editor.php']
+                    'public/editor.php': ['public/editor.php'],
                     'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }

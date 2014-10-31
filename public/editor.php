@@ -39,9 +39,9 @@ include("html_header.php");
 <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7453012a468a8a38"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
+<script type="text/javascript" src="/js/openlayers/OpenLayers.js?8b397f6ff00cc458"></script>
 <!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/openlayers/OpenLayers.js?8b397f6ff00cc458"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?0494cd822345d162"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?eadeef95ab9b1b53"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>
