@@ -1,3 +1,4 @@
+AddDefaultCharset UTF-8
 <ifmodule mod_expires.c>
 <FilesMatch ".(ico|jpg|jpeg|png|gif|js|css|swf)$">
         ExpiresActive on
