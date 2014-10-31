@@ -17,7 +17,6 @@ function mkdbbackup {
 	BACKUPDIR=$3
 	BLACKLIST=$4[@]
 	CREDS="--user=postgres"
-	SSHHOST="ubuntu@${HOST}"
 	BACKUPBASE="${BACKUPDIR}/${HOST}"
 	BACKUPLATEST="${BACKUPBASE}/latest"
 	if [ ! -d $BACKUPDIR ]; then

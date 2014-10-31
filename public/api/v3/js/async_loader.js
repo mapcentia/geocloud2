@@ -51,19 +51,19 @@ if (typeof gc2apiLoader === "undefined") {
                                     if (typeof gc2i18n !== "undefined") {
                                         window[window.geocloud_callback]();
                                     } else {
-                                        setTimeout(pollForDict, 10);
+                                        setTimeout(pollForDict, 3);
                                     }
                                 }());
                             } else {
-                                setTimeout(pollForDependants, 10);
+                                setTimeout(pollForDependants, 3);
                             }
                         }());
                     } else {
-                        setTimeout(pollForDependencies, 10);
+                        setTimeout(pollForDependencies, 3);
                     }
                 }());
             } else {
-                setTimeout(pollForjQuery, 10);
+                setTimeout(pollForjQuery, 3);
             }
         }());
         // Load some css
