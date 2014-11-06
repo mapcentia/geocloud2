@@ -1,7 +1,7 @@
 app/conf/App.php
 app/conf/Connection.php
-app/conf/secret.php
-app/conf/public.php
+app/conf/secret.key
+app/conf/public.key
 app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles
