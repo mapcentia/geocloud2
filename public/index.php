@@ -6,26 +6,22 @@ error_reporting(3);
 use \app\inc\Input;
 use \app\inc\Session;
 use \app\inc\Route;
+use \app\inc\Util;
 use \app\conf\Connection;
+use \app\conf\App;
 use \app\models\Database;
 
 include_once("../app/conf/App.php");
 new \app\conf\App();
 
-// Set the protocol if not set in App.php
-if (!\app\conf\App::$param['protocol']){
-    \app\conf\App::$param['protocol'] = \app\inc\Util::protocol();
-}
-
-// Set the host names if they are not set in App.php
-if (!\app\conf\App::$param['host']) {
-    include_once("../app/conf/hosts.php");
-}
+App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
+App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host'];
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default
-    Route::add("api/v1/sql", function(){
+    Route::add("api/v1/sql", function () {
         $db = Input::getPath()->part(4);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
@@ -55,18 +51,17 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/getheader");
 } elseif (Input::getPath()->part(1) == "store") {
     Session::start();
-    Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
-    $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ? : "public";
+    Session::authenticate(App::$param['userHostName'] . "/user/login/");
+    $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ?: "public";
     include_once("store.php");
     if (\app\conf\App::$param['intercom_io']) {
         include_once("../app/conf/intercom.js.inc");
     }
 } elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
-    Session::authenticate(\app\conf\App::$param['userHostName'] . "/user/login/");
+    Session::authenticate(App::$param['userHostName'] . "/user/login/");
     include_once("editor.php");
 } elseif (Input::getPath()->part(1) == "controllers") {
-
     Session::start();
     Session::authenticate(null);
 
@@ -99,21 +94,20 @@ if (Input::getPath()->part(1) == "api") {
     new \app\controllers\Wmsc();
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
-    $db = \app\inc\Input::getPath()->part(2);
+    $db = Input::getPath()->part(2);
     $dbSplit = explode("@", $db);
     if (sizeof($dbSplit) == 2) {
         $db = $dbSplit[1];
         $user = $dbSplit[0];
-    }
-    else {
+    } else {
         $user = $db;
     }
     Database::setDb($db);
-    Connection::$param["postgisschema"] = \app\inc\Input::getPath()->part(3);
+    Connection::$param["postgisschema"] = Input::getPath()->part(3);
     include_once("app/wfs/server.php");
 } elseif (!Input::getPath()->part(1)) {
-    if (\app\conf\App::$param["redirectTo"]) {
-        \app\inc\Redirect::to(\app\conf\App::$param["redirectTo"]);
+    if (App::$param["redirectTo"]) {
+        \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
         \app\inc\Redirect::to("/user/login");
     }

@@ -1,7 +1,6 @@
 <?php
 namespace app\api\v1;
 
-use \app\inc\Response;
 use \app\inc\Input;
 use \app\inc\Session;
 

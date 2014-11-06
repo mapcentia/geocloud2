@@ -17,12 +17,14 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
     db = uri[3];
     schema = uri[4];
+    urlVars = geocloud.urlVars;
+    console.log(urlVars);
     arrMenu = [
         {
             title: __('Layers'),
@@ -272,7 +274,7 @@ Viewer = function () {
             $(this).select();
         });
 
-        if (window.gc2Options.extraShareFields){
+        if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
             $("#group-extent").show();
         }
@@ -308,7 +310,7 @@ Viewer = function () {
             $('#modal-info').modal({"backdrop": false});
         };
         $.ajax({
-            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + schema,
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0]) + ',' + schema,
             dataType: 'jsonp',
             scriptCharset: "utf-8",
             async: false,
@@ -359,10 +361,10 @@ Viewer = function () {
                             ]
                         };
                         for (u = 0; u < response.data.length; ++u) {
-                            if (response.data[u].layergroup === arr[i] && response.data[u].layergroup !=="_gc2_hide_in_viewer") {
+                            if (response.data[u].layergroup === arr[i] && response.data[u].layergroup !== "_gc2_hide_in_viewer") {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <i data-toggle='tooltip' title='first tooltip' class='fa fa-lock'></i>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
-                                var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" onchange="MapCentia.switchLayer(MapCentia.schema+\'.\'+this.id,this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
+                                var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" data-gc2-id="' + response.data[u].f_table_schema + "." + response.data[u].f_table_name + '"onchange="MapCentia.switchLayer($(this).data(\'gc2-id\'),this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
                                 if (response.data[u].baselayer) {
                                     $("#base-layer-list").append(
                                         "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
@@ -485,6 +487,7 @@ Viewer = function () {
                         for (i = 0; i < arr.length; i++) {
                             switchLayer(arr[i], true);
                             $("#" + arr[i].replace(schema + ".", "")).attr('checked', true);
+                            $('*[data-gc2-id="' + arr[i] + '"]').attr('checked', true);
                         }
                     }
                     p = geocloud.transformPoint(hashArr[2], hashArr[3], "EPSG:4326", "EPSG:900913");

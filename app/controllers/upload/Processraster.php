@@ -53,6 +53,15 @@ class Processraster extends \app\inc\Controller
             $response['cmd'] = $cmd;
             $response['message'] = "Raster layer <b>{$safeName}</b> is created";
 
+            $key = Connection::$param["postgisschema"] . "." . $safeName . ".rast";
+            $class = new \app\models\Classification($key);
+            $arr = $class->getAll();
+
+            if (empty($arr['data'])) {
+                $class->insert();
+                $class->update("0", \app\models\Classification::createClass("POLYGON"));
+            }
+
         } else {
             $response['success'] = false;
             $response['message'] = "Some thing went wrong. Check the log.";

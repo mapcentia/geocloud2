@@ -111,7 +111,6 @@ class Processvector extends \app\inc\Controller
             "-nln {$safeName} " .
             "-nlt {$type}";
 
-        //echo $cmd;
         exec($cmd . ' 2>&1', $out, $err);
 
         $model = new \app\inc\Model();

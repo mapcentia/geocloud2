@@ -27,7 +27,9 @@ class Layer extends \app\models\Table
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";
         if ($schema) {
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND _key_ LIKE :schema ORDER BY sort_id";
+            $ids = explode(",",$schema);
+            $qMarks = str_repeat('?,', count($ids) - 1) . '?';
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort_id";
         } else {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
         }
@@ -35,7 +37,7 @@ class Layer extends \app\models\Table
         $res = $this->prepare($sql);
         try {
             if ($schema) {
-                $res->execute(array("schema" => $schema . "%"));
+                $res->execute($ids);
             } else {
                 $res->execute();
             }
@@ -149,7 +151,7 @@ class Layer extends \app\models\Table
 
         $table->updateRecord(json_decode(json_encode($conf)), "_key_");
         //$this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror) || (!$sql)) {
+        if ((!$this->PDOerror)) {
             $response['success'] = true;
             $response['message'] = "Column renamed";
         } else {

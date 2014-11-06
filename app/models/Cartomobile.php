@@ -165,7 +165,6 @@ class Cartomobile extends Model
                                 $xml .= "/>\n";
                                 break;
                         }
-
                         $xml .= "\t\t</FormField>\n";
                     }
                 }
