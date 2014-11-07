@@ -790,6 +790,12 @@ $(window).ready(function () {
                                                 params: param,
                                                 success: function () {
                                                     store.reload();
+                                                    Ext.iterate(records, function (v) {
+                                                        document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
+                                                            [v.data.f_table_schema + "." + v.get("f_table_name")]
+                                                        ]);
+                                                    });
+                                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
                                                     resetButtons();
                                                     winMoveTable.close(this);
                                                     App.setAlert(App.STATUS_OK, "Layers moved");
