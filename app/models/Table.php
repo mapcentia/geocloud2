@@ -638,54 +638,5 @@ class Table extends Model
         return $nowArray;
     }
 
-    public function rename($data)
-    {
-        $newName = Model::toAscii($data->name, array(), "_");
-        if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
-            $newName = "_" . $newName;
-        }
-        $this->begin();
-        $whereClauseG = "f_table_schema=''{$this->schema}'' AND f_table_name=''{$this->tableWithOutSchema}''";
-        $whereClauseR = "r_table_schema=''{$this->schema}'' AND r_table_name=''{$this->tableWithOutSchema}''";
-        $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
-        $res = $this->prepare($query);
-        try {
-            $res->execute();
-            while ($row = $this->fetchRow($res)) {
-                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.{$newName}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
-                $resUpdate = $this->prepare($query);
-                try {
-                    $resUpdate->execute();
-                } catch (\PDOException $e) {
-                    $this->rollback();
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 400;
-                    return $response;
-                }
-            }
-            $sql = "ALTER TABLE {$this->table} RENAME TO {$newName}";
-            $res = $this->prepare($sql);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
-        } catch (\PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
-        $this->commit();
-        $response['success'] = true;
-        $response['message'] = "Layer renamed";
-        return $response;
-    }
 }
 

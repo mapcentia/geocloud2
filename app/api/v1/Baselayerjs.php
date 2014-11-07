@@ -14,6 +14,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "staticMapHost: '" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
+        echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {

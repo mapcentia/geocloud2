@@ -73,9 +73,5 @@ class Table extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->removeVersioning(Input::getPath()->part(4));
     }
-    public function put_name()
-    {
-        $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->rename(json_decode(Input::get())->data);
-    }
+
 }

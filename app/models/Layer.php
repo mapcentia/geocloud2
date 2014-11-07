@@ -174,6 +174,57 @@ class Layer extends \app\models\Table
         $array[$key] = $value;
         return $array;
     }
+    public function rename($tableName, $data)
+    {
+        $split = explode(".",$tableName);
+        $newName = \app\inc\Model::toAscii($data->name, array(), "_");
+        if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
+            $newName = "_" . $newName;
+        }
+        $this->begin();
+        $whereClauseG = "f_table_schema=''{$split[0]}'' AND f_table_name=''{$split[1]}''";
+        $whereClauseR = "r_table_schema=''{$split[0]}'' AND r_table_name=''{$split[1]}''";
+        $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
+        $res = $this->prepare($query);
+        try {
+            $res->execute();
+            while ($row = $this->fetchRow($res)) {
+                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.{$newName}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
+                $resUpdate = $this->prepare($query);
+                try {
+                    $resUpdate->execute();
+                } catch (\PDOException $e) {
+                    $this->rollback();
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 400;
+                    return $response;
+                }
+            }
+            $sql = "ALTER TABLE {$tableName} RENAME TO {$newName}";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $this->rollback();
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "Layer renamed";
+        return $response;
+    }
+
 
     public function setSchema($tables, $schema)
     {
@@ -181,7 +232,9 @@ class Layer extends \app\models\Table
         foreach ($tables as $table) {
             $bits = explode(".", $table);
 
-            $query = "SELECT * FROM geometry_columns WHERE f_table_schema='{$bits[0]}' AND f_table_name='{$bits[1]}'";
+            $whereClauseG = "f_table_schema=''{$bits[0]}'' AND f_table_name=''{$bits[1]}''";
+            $whereClauseR = "r_table_schema=''{$bits[0]}'' AND r_table_name=''{$bits[1]}''";
+            $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
             $res = $this->prepare($query);
             try {
                 $res->execute();
@@ -205,7 +258,6 @@ class Layer extends \app\models\Table
                     $response['code'] = 400;
                     return $response;
                 }
-
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}' WHERE _key_ ='{$bits[0]}.{$bits[1]}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
                 try {

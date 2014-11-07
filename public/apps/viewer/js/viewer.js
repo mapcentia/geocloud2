@@ -312,7 +312,7 @@ Viewer = function () {
             $('#modal-info').modal({"backdrop": false});
         };
         $.ajax({
-            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0]) + ',' + schema,
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0] + ',') + schema,
             dataType: 'jsonp',
             scriptCharset: "utf-8",
             async: false,

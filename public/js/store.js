@@ -461,7 +461,6 @@ $(window).ready(function () {
 
     function onRename() {
         var record = grid.getSelectionModel().getSelected();
-        console.log(record);
         if (!record) {
             App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
@@ -519,7 +518,7 @@ $(window).ready(function () {
                                             param.id = record.id;
                                             param = Ext.util.JSON.encode(param);
                                             Ext.Ajax.request({
-                                                url: '/controllers/table/name/' + record.data.f_table_schema + "." + record.data.f_table_name,
+                                                url: '/controllers/layer/name/' + record.data.f_table_schema + "." + record.data.f_table_name,
                                                 method: 'put',
                                                 headers: {
                                                     'Content-Type': 'application/json; charset=utf-8'
@@ -1849,10 +1848,8 @@ $(window).ready(function () {
                         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                         return v.toString(16);
                     });
-                    //console.log(l.url);
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + "token=" + n;
-                    //console.log(l.url);
                     setTimeout(function () {
                         l.redraw();
                     }, 500);
@@ -1879,4 +1876,6 @@ $(window).ready(function () {
         }
     };
 });
+
+
 

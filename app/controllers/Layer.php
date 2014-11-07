@@ -25,7 +25,7 @@ class Layer extends \app\inc\Controller
         $groups["data"] = array_values($groups["data"]);
         if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
         $groups["data"] = array_values($groups["data"]);
-        array_unshift($groups["data"],array("group"=>""), array("group" => "_gc2_hide_in_viewer"));
+        array_unshift($groups["data"], array("group" => ""), array("group" => "_gc2_hide_in_viewer"));
         return $groups;
     }
 
@@ -72,6 +72,12 @@ class Layer extends \app\inc\Controller
     public function getValueFromKey($_key_, $column)
     {
         return $this->table->getValueFromKey($_key_, $column);
+    }
+
+    public function put_name()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->rename(Input::getPath()->part(4),json_decode(Input::get())->data);
     }
 
     public function put_schema()
