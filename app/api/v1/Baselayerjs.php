@@ -11,6 +11,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
         echo "epsg: '" . ((\app\conf\App::$param['epsg']) ? : "4326") . "',\n";
         echo "extraShareFields: " . ((\app\conf\App::$param['extraShareFields']) ? "true": "false") . ",\n";
+        echo "hideUngroupedLayers: " . ((\app\conf\App::$param['hideUngroupedLayers']) ? "true": "false") . ",\n";
         echo "staticMapHost: '" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";

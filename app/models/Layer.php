@@ -45,7 +45,7 @@ class Layer extends \app\models\Table
                 $res->execute($ids);
             } elseif ($layer) {
                 $split = explode(".", $layer);
-                $res->execute(array("sSchema"=>$split[0],"sName"=>$split[1]));
+                $res->execute(array("sSchema" => $split[0], "sName" => $split[1]));
             } else {
                 $res->execute();
             }
@@ -73,7 +73,7 @@ class Layer extends \app\models\Table
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                $value = ($key == "layergroup" && (!$value)) ? "Default group" : $value;
+                $value = ($key == "layergroup" && (!$value)) ? ((\app\conf\App::$param['hideUngroupedLayers']) ? "_gc2_hide_in_viewer" : "Default group") : $value;
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
@@ -174,9 +174,10 @@ class Layer extends \app\models\Table
         $array[$key] = $value;
         return $array;
     }
+
     public function rename($tableName, $data)
     {
-        $split = explode(".",$tableName);
+        $split = explode(".", $tableName);
         $newName = \app\inc\Model::toAscii($data->name, array(), "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;

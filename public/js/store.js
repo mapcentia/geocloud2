@@ -358,7 +358,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-trash btn-gc"></i> ' + __('Rename layer'),
+                text: '<i class="icon-retweet btn-gc"></i> ' + __('Rename layer'),
                 disabled: true,
                 id: 'renamelayer-btn',
                 handler: function () {

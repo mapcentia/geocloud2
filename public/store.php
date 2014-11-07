@@ -133,7 +133,7 @@ include("html_header.php");
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/store.js?5b74d3458194911d"></script>
+<script type="text/javascript" src="/js/store.js?33de3be576bc2db0"></script>
 <script type="text/javascript" src="/js/edittablestructure.js?3e5e88d555665ea7"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?4f93fc8ac1ee2be8"></script>

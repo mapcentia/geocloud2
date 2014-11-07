@@ -43,7 +43,7 @@ include("html_header.php");
 <!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?0494cd822345d162"></script>
-<script type="text/javascript" src="/api/v1/js/api.js?eadeef95ab9b1b53"></script>
+<script type="text/javascript" src="/api/v1/js/api.js?9890f37fd070dd05"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>
 <script type="text/javascript" src="/js/wfseditor.js?3cfc745d190f76ac"></script>
 <script type="text/javascript" src="/js/attributeform.js?257465ed180e5e84"></script>
