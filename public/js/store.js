@@ -11,7 +11,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -358,6 +358,15 @@ $(window).ready(function () {
             },
             '-',
             {
+                text: '<i class="icon-trash btn-gc"></i> ' + __('Rename layer'),
+                disabled: true,
+                id: 'renamelayer-btn',
+                handler: function () {
+                    onRename();
+                }
+            },
+            '-',
+            {
                 text: '<i class="icon-trash btn-gc"></i> ' + __('Delete layers'),
                 disabled: true,
                 id: 'deletelayer-btn',
@@ -449,6 +458,112 @@ $(window).ready(function () {
     Ext.getCmp("schemabox").on('select', function (e) {
         window.location = "/store/" + screenName + "/" + e.value;
     });
+
+    function onRename() {
+        var record = grid.getSelectionModel().getSelected();
+        console.log(record);
+        if (!record) {
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+            return false;
+        }
+        var winTableRename = new Ext.Window({
+            title: __("Rename table") + " '" + record.data.f_table_name + "'",
+            modal: true,
+            layout: 'fit',
+            width: 270,
+            height: 80,
+            closeAction: 'close',
+            plain: true,
+            items: [
+                {
+                    defaults: {
+                        border: false
+                    },
+                    layout: 'hbox',
+                    items: [
+                        {
+                            xtype: "form",
+                            id: "tableRenameForm",
+                            layout: "form",
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'container',
+                                    items: [
+                                        {
+                                            xtype: "textfield",
+                                            name: 'name',
+                                            emptyText: __('New name'),
+                                            allowBlank: false,
+                                            width: 150
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            layout: 'form',
+                            bodyStyle: 'padding: 10px',
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: __('Rename'),
+                                    handler: function () {
+                                        var f = Ext.getCmp('tableRenameForm');
+                                        if (f.form.isValid()) {
+                                            var values = f.form.getValues();
+                                            var param = {
+                                                data: values
+                                            };
+                                            var name = record.data.f_table_schema + "." + record.data.f_table_name;
+                                            param.id = record.id;
+                                            param = Ext.util.JSON.encode(param);
+                                            Ext.Ajax.request({
+                                                url: '/controllers/table/name/' + record.data.f_table_schema + "." + record.data.f_table_name,
+                                                method: 'put',
+                                                headers: {
+                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                },
+                                                params: param,
+                                                success: function () {
+                                                    winTableRename.close();
+                                                    resetButtons();
+                                                    Ext.getCmp('renamelayer-btn').setDisabled(true);
+                                                    document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
+                                                        [name]
+                                                    ]);
+                                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                                    store.reload();
+                                                    App.setAlert(App.STATUS_OK, __("layer rename"));
+                                                },
+                                                failure: function (response) {
+                                                    winTableRename.close();
+                                                    Ext.MessageBox.show({
+                                                        title: __('Failure'),
+                                                        msg: __(Ext.decode(response.responseText).message),
+                                                        buttons: Ext.MessageBox.OK,
+                                                        width: 400,
+                                                        height: 300,
+                                                        icon: Ext.MessageBox.ERROR
+                                                    });
+                                                }
+                                            });
+                                        } else {
+                                            var s = '';
+                                            Ext.iterate(f.form.getValues(), function (key, value) {
+                                                s += String.format("{0} = {1}<br />", key, value);
+                                            }, this);
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }).show(this);
+    }
+
     function onDelete() {
         var records = grid.getSelectionModel().getSelections();
         if (records.length === 0) {
@@ -474,6 +589,7 @@ $(window).ready(function () {
                     params: param,
                     success: function () {
                         store.reload();
+                        resetButtons();
                         App.setAlert(App.STATUS_OK, records.length + " " + __("layers deleted"));
                     },
                     failure: function (response) {
@@ -675,6 +791,7 @@ $(window).ready(function () {
                                                 params: param,
                                                 success: function () {
                                                     store.reload();
+                                                    resetButtons();
                                                     winMoveTable.close(this);
                                                     App.setAlert(App.STATUS_OK, "Layers moved");
                                                 },
@@ -703,8 +820,7 @@ $(window).ready(function () {
                     ]
                 }
             ]
-        });
-        winMoveTable.show(this);
+        }).show(this);
     };
 
     onSchemaRename = function (btn, ev) {
@@ -891,13 +1007,13 @@ $(window).ready(function () {
         activeLayer = record.f_table_schema + "." + record.f_table_name;
         markup = [
             '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>' + __('A SQL must return a primary key and a geometry. Naming and srid must match this') + '</td></tr></table>' +
-                '<table>' +
-                '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_schema}.{f_table_name}</td></tr>' +
-                '<tr class="x-grid3-row"><td><b>Primary key</b></td><td  width="150">{pkey}</td></tr>' +
-                '<tr class="x-grid3-row"><td><b>Srid</b></td><td>{srid}</td></tr>' +
-                '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td></tr>' +
-                '<tr class="x-grid3-row"><td><b>Geom type</b></td><td>{type}</td></tr>' +
-                '</table>'
+            '<table>' +
+            '<tr class="x-grid3-row"><td width="80"><b>Name</b></td><td  width="150">{f_table_schema}.{f_table_name}</td></tr>' +
+            '<tr class="x-grid3-row"><td><b>Primary key</b></td><td  width="150">{pkey}</td></tr>' +
+            '<tr class="x-grid3-row"><td><b>Srid</b></td><td>{srid}</td></tr>' +
+            '<tr class="x-grid3-row"><td><b>Geom field</b></td><td>{f_geometry_column}</td></tr>' +
+            '<tr class="x-grid3-row"><td><b>Geom type</b></td><td>{type}</td></tr>' +
+            '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
         Ext.getCmp("layerStyleTabs").activate(1);
@@ -1195,7 +1311,8 @@ $(window).ready(function () {
                                 })
                             ]
                         })]
-                })]}).show(this);
+                })]
+        }).show(this);
     }
 
     function onPrivileges(btn, ev) {
@@ -1304,9 +1421,9 @@ $(window).ready(function () {
                                             var _key_ = records[0].get("_key_");
                                             var retval =
                                                     '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
-                                                        '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All')
+                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
+                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
+                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All')
                                                 ;
                                             return retval;
                                         }
@@ -1324,20 +1441,21 @@ $(window).ready(function () {
                                     padding: '7px'
                                 },
                                 html: "<ul>" +
-                                    "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                    "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can se and query the layer.") + "</li>" +
-                                    "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                    "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
-                                    "<ul>" +
-                                    "<br><p>" +
-                                    __("The privileges is granted for both Admin and external services like WMS and WFS.") +
-                                    "</p>"
+                                "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can se and query the layer.") + "</li>" +
+                                "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
+                                "<ul>" +
+                                "<br><p>" +
+                                __("The privileges is granted for both Admin and external services like WMS and WFS.") +
+                                "</p>"
                             }
                         )
                     ]
 
                 })
-            ]}).show();
+            ]
+        }).show();
     }
 
     updatePrivileges = function (subuser, key, privileges) {
@@ -1371,10 +1489,10 @@ $(window).ready(function () {
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +
-        '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>' + __('Created') + '</b></td><td>{created}</td></tr>' +
-        '<tr class="x-grid3-row"><td><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td><b>' + __('Last modified') + '</b></td><td>{lastmodified}</td>' +
-        '</tr>' +
-        '</table>'];
+    '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>' + __('Created') + '</b></td><td>{created}</td></tr>' +
+    '<tr class="x-grid3-row"><td><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td><b>' + __('Last modified') + '</b></td><td>{lastmodified}</td>' +
+    '</tr>' +
+    '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
         title: __('Database'),
@@ -1409,12 +1527,14 @@ $(window).ready(function () {
             Ext.getCmp('advanced-btn').setDisabled(false);
             if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
+                Ext.getCmp('renamelayer-btn').setDisabled(false);
             }
         }
         else {
             Ext.getCmp('cartomobile-btn').setDisabled(true);
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
+            Ext.getCmp('renamelayer-btn').setDisabled(true);
         }
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
@@ -1425,91 +1545,15 @@ $(window).ready(function () {
         onEdit();
     });
 
+    resetButtons = function () {
+        Ext.getCmp('cartomobile-btn').setDisabled(true);
+        Ext.getCmp('advanced-btn').setDisabled(true);
+        Ext.getCmp('privileges-btn').setDisabled(true);
+        Ext.getCmp('renamelayer-btn').setDisabled(true);
+        Ext.getCmp('deletelayer-btn').setDisabled(true);
+        Ext.getCmp('movelayer-btn').setDisabled(true);
+    }
 
-    /*Ext.namespace('viewerSettings');
-     if (schema === "" || schema === "public") {
-     viewerSettings.form = new Ext.FormPanel({
-     title: __("Global settings"),
-     frame: false,
-     border: false,
-     autoHeight: false,
-     labelWidth: 100,
-     bodyStyle: 'padding: 7px 7px 10px 7px;',
-     defaults: {
-     anchor: '95%',
-     allowBlank: false,
-     msgTarget: 'side'
-     },
-     items: [new Ext.Panel({
-     frame: false,
-     border: false,
-     bodyStyle: 'padding: 7px 7px 10px 7px;',
-     contentEl: "map-settings"
-     }), {
-     width: 10,
-     xtype: 'combo',
-     mode: 'local',
-     triggerAction: 'all',
-     forceSelection: true,
-     editable: false,
-     fieldLabel: 'Extent layer',
-     name: 'default_extent',
-     displayField: 'f_table_name',
-     valueField: 'f_table_name',
-     allowBlank: true,
-     store: store,
-     value: settings.default_extent
-
-     }, {
-     xtype: 'numberfield',
-     name: 'minzoomlevel',
-     fieldLabel: 'Min zoom level',
-     allowBlank: true,
-     minValue: 1,
-     maxValue: 20,
-     value: settings.minzoomlevel
-     }, {
-     xtype: 'numberfield',
-     name: 'maxzoomlevel',
-     fieldLabel: 'Max zoom level',
-     allowBlank: true,
-     minValue: 1,
-     maxValue: 20,
-     value: settings.maxzoomlevel
-     }],
-     buttons: [
-     {
-     text: 'Update',
-     handler: function () {
-     if (viewerSettings.form.getForm().isValid()) {
-     viewerSettings.form.getForm().submit({
-     url: '/controller/settings_viewer/' + screenName + '/update',
-     waitMsg: 'Saving your settings',
-     success: viewerSettings.onSubmit,
-     failure: viewerSettings.onSubmit
-     });
-     }
-     }
-     }
-     ]
-     });
-     } else {
-     viewerSettings.form = new Ext.Panel({
-     title: "Global settings",
-     frame: false,
-     border: false,
-     bodyStyle: 'padding: 7px 7px 10px 7px;',
-     html: "<p>You can only set global settings from the 'public schema.'</p>"
-     });
-     }
-     viewerSettings.onSubmit = function (form, action) {
-     var result = action.result;
-     if (result.success) {
-     Ext.MessageBox.alert('Success', result.message);
-     } else {
-     Ext.MessageBox.alert('Failure', result.message);
-     }
-     };*/
     var tabs = new Ext.TabPanel({
         activeTab: 0,
         region: 'center',
@@ -1717,7 +1761,8 @@ $(window).ready(function () {
                             }
                         ]
                     }
-                ]},
+                ]
+            },
             ct,
             {
                 xtype: "panel",
