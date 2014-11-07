@@ -21,23 +21,31 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $auth)
+    function getAll($schema = false, $layer = false, $auth)
     {
         $where = ($auth) ?
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";
         if ($schema) {
-            $ids = explode(",",$schema);
+            $ids = explode(",", $schema);
             $qMarks = str_repeat('?,', count($ids) - 1) . '?';
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort_id";
+        } elseif ($layer) {
+
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort_id";
+
         } else {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
         }
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+        //die($sql);
         $res = $this->prepare($sql);
         try {
             if ($schema) {
                 $res->execute($ids);
+            } elseif ($layer) {
+                $split = explode(".", $layer);
+                $res->execute(array("sSchema"=>$split[0],"sName"=>$split[1]));
             } else {
                 $res->execute();
             }
@@ -79,7 +87,7 @@ class Layer extends \app\models\Table
                 $response['data'][] = $arr;
             }
         }
-        $response['data'] = ($response['data']) ? : array();
+        $response['data'] = ($response['data']) ?: array();
         if (!$this->PDOerror) {
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
@@ -234,7 +242,7 @@ class Layer extends \app\models\Table
         foreach ($tables as $table) {
             $bits = explode(".", $table);
             $check = $this->isTableOrView($table);
-            if (!$check["success"]){
+            if (!$check["success"]) {
                 $response['success'] = false;
                 $response['message'] = $check["message"];
                 $response['code'] = 500;
@@ -264,7 +272,7 @@ class Layer extends \app\models\Table
         $privileges = (array)json_decode($this->getValueFromKey($_key_, "privileges"));
 
         foreach ($_SESSION['subusers'] as $subuser) {
-            $privileges[$subuser] = ($privileges[$subuser]) ? : "none";
+            $privileges[$subuser] = ($privileges[$subuser]) ?: "none";
             if ($subuser != \app\conf\Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
             }

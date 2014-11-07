@@ -15,6 +15,14 @@ class Meta extends \app\inc\Controller
 
     public function get_index()
     {
-        return $this->layers->getAll(Input::getPath()->part(5), Session::isAuth());
+        $q = Input::getPath()->part(5);
+        $split = explode(".",$q);
+        if (sizeof($split) == 1) {
+            return $this->layers->getAll($q, null, Session::isAuth());
+        }
+        else {
+            return $this->layers->getAll(null, $q, Session::isAuth());
+        }
+
     }
 }

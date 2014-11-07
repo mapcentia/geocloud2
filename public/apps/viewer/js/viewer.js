@@ -24,7 +24,6 @@ Viewer = function () {
     db = uri[3];
     schema = uri[4];
     urlVars = geocloud.urlVars;
-    console.log(urlVars);
     arrMenu = [
         {
             title: __('Layers'),
@@ -38,6 +37,10 @@ Viewer = function () {
             cloud.showLayer(name);
         } else {
             cloud.hideLayer(name);
+        }
+        try {
+            history.pushState(null, null, permaLink());
+        } catch (e) {
         }
         addLegend();
     };
@@ -160,8 +163,7 @@ Viewer = function () {
         window.open("http://www.stumbleupon.com/submit?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
     permaLink = function () {
-        var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-        return "/apps/viewer/" + db + "/" + schema + "/" + anchor();
+        return "/apps/viewer/" + db + "/" + schema + "/" + (typeof urlVars.i === "undefined" ? "" : "?i=" + urlVars.i.split("#")[0]) + anchor();
     };
     linkToSimpleMap = function () {
         return "/apps/widgets/gc2map/" + db + "/" + schema + "/" + anchor();
