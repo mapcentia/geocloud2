@@ -182,7 +182,9 @@ class Database extends \app\inc\Model
         $newName = Model::toAscii($name, array(), "_");
         $this->connect();
         $this->begin();
-        $query = "SELECT * FROM geometry_columns WHERE f_table_schema='{$schema}'";
+        $whereClauseG = "f_table_schema=''{$schema}''";
+        $whereClauseR = "r_table_schema=''{$schema}''";
+        $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
         $res = $this->prepare($query);
         try {
             $res->execute();
