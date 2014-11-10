@@ -49,8 +49,8 @@ class Mapfile extends \app\inc\Controller
         "wms_name"    "<?php echo $user; ?>"
         "wfs_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
-        "wms_onlineresource"    "<?php echo App::$param['protocol'] ? : "http"?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
-        "wfs_onlineresource"    "<?php echo App::$param['protocol'] ? : "http"?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wms_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
         END
@@ -245,7 +245,7 @@ class Mapfile extends \app\inc\Controller
         #
         <?php
 
-        $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') order by sort_id";
+        $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
 
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
@@ -371,7 +371,7 @@ class Mapfile extends \app\inc\Controller
                     <?php
                     } else {
                         echo "DATA \"PG:host=" . Connection::$param['postgishost'];
-                        if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport'];
+                        if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport']);
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
@@ -570,7 +570,7 @@ class Mapfile extends \app\inc\Controller
                             ANTIALIAS true
                             FORCE <?php echo ($class['label_force']) ? "true" : "false";
                             echo "\n"; ?>
-                            POSITION <?php echo ($class['label_position']) ? : "auto";
+                            POSITION <?php echo ($class['label_position']) ?: "auto";
                             echo "\n"; ?>
                             PARTIALS false
                             MINSIZE 6
@@ -591,7 +591,7 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
-                            OFFSET <?php echo ($class['label_offsetx']) ? : "0"; ?> <?php echo ($class['label_offsety']) ? : "0"; ?>
+                            OFFSET <?php echo ($class['label_offsetx']) ?: "0"; ?> <?php echo ($class['label_offsety']) ?: "0"; ?>
                             STYLE
                             <?php if ($class['label_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
@@ -634,7 +634,7 @@ class Mapfile extends \app\inc\Controller
                             ANTIALIAS true
                             FORCE <?php echo ($class['label2_force']) ? "true" : "false";
                             echo "\n"; ?>
-                            POSITION <?php echo ($class['label2_position']) ? : "auto";
+                            POSITION <?php echo ($class['label2_position']) ?: "auto";
                             echo "\n"; ?>
                             PARTIALS false
                             MINSIZE 6
@@ -655,7 +655,7 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
-                            OFFSET <?php echo ($class['label2_offsetx']) ? : "0"; ?> <?php echo ($class['label2_offsety']) ? : "0"; ?>
+                            OFFSET <?php echo ($class['label2_offsetx']) ?: "0"; ?> <?php echo ($class['label2_offsety']) ?: "0"; ?>
                             STYLE
                             <?php if ($class['label2_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
