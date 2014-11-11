@@ -39,14 +39,25 @@ class Legend extends \app\inc\Controller
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
                     for ($i = 0; $i < $layer->numclasses; $i++) {
                         $class = $layer->getClass($i);
-                        $icon = $class->createLegendIcon(17, 17);
-                        ob_start();
-                        $icon->saveImage("", $map);
-                        $data = base64_encode(ob_get_clean());
+                        if ($layer->getMetaData("wms_get_legend_url")) {
+                            $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
+                            imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                            imagealphablending($icon, false);
+                            imagesavealpha($icon, true);
+                            ob_start();
+                            imagepng($icon);
+                            imagedestroy($icon);
+                            $data = base64_encode(ob_get_clean());
+                        } else {
+                            $icon = $class->createLegendIcon(17, 17);
+                            ob_start();
+                            $icon->saveImage("", $map);
+                            $data = base64_encode(ob_get_clean());
+                        }
                         $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-
                         $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
                         $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
+
                     }
                 }
             }

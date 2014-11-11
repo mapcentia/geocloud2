@@ -50,23 +50,23 @@ MapCentia = function (globalId) {
             layersStr = arr.join(",");
         }
         javascript = "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
-            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
-            "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
-            "<div id='map' style='width: 100%; height: 500px'></div>\n" +
-            "<script>\n" +
-            "(function () {\n" +
-            "      var map = new geocloud.map({\n" +
-            "      el: 'map'\n" +
-            "   });\n" +
-            "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-            "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-            "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
-            "   map.addTileLayers({\n" +
-            "      db: '" + db + "',\n" +
-            "      layers: [" + layersStr + "],\n" +
-            "   });\n" +
-            "}())\n" +
-            "</script>";
+        "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
+        "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
+        "<div id='map' style='width: 100%; height: 500px'></div>\n" +
+        "<script>\n" +
+        "(function () {\n" +
+        "      var map = new geocloud.map({\n" +
+        "      el: 'map'\n" +
+        "   });\n" +
+        "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+        "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+        "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
+        "   map.addTileLayers({\n" +
+        "      db: '" + db + "',\n" +
+        "      layers: [" + layersStr + "],\n" +
+        "   });\n" +
+        "}())\n" +
+        "</script>";
         $("#share-javascript-" + id).val(javascript);
     };
     shareTwitter = function () {
@@ -126,10 +126,9 @@ MapCentia = function (globalId) {
             $(MapappWin.document).ready(function () {
                 MapappWin.document.write(
                     '<style>body{padding:0;margin:0}</style>' +
-                        '<script>window.gc2host = "' + hostname + '"</script>' +
-                        '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
-                        '<div style="width: 100%;height: 100%; position: absolute;"></div>'
-
+                    '<script>window.gc2host = "' + hostname + '"</script>' +
+                    '<script src="' + hostname + '/apps/widgets/gc2map/js/gc2map.js"></script>' +
+                    '<div style="width: 100%;height: 100%; position: absolute;"></div>'
                 );
                 // Must bee split in two parts. Yes, its f****** IE9
                 defaults.width = "100%";
@@ -153,9 +152,7 @@ MapCentia = function (globalId) {
     }));
     init = function (conf) {
         var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
-        defaults = {
-
-        };
+        defaults = {};
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -323,8 +320,13 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var table = $("<table/>", {border: '0'}), tr, td;
+                    var list = $("<ul/>", {border: '0'}), classUl, li, title;
                     $.each(response, function (i, v) {
+                        try {
+                            title = metaDataKeys[v.id.split(".")[1]].f_table_title;
+                        }
+                        catch (e) {
+                        }
                         var u, showLayer = false;
                         if (typeof v === "object") {
                             for (u = 0; u < v.classes.length; u = u + 1) {
@@ -333,22 +335,20 @@ MapCentia = function (globalId) {
                                 }
                             }
                             if (showLayer) {
-                                tr = $("<tr/>");
-                                tr.append("<td><div class='layer-title' style='width:15px;'><span><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span></div></td>");
-                                td = $("<td/>");
+                                li = $("<li/>");
+                                classUl = $("<ul/>");
                                 for (u = 0; u < v.classes.length; u = u + 1) {
                                     if (v.classes[u].name !== "") {
-                                        td.append("<div style='margin-top: 0; clear: both'><div class='class-title' style='float: left;margin-top: 2px'><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /></div><div style='width: 115px; float: right;' class='legend-text'>" + v.classes[u].name + "</div></div>");
+                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /><span class='legend-text'>" + v.classes[u].name + "</span></li>");
                                     }
                                 }
-                                tr.append(td);
+                                // title
+                                list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
+                                list.append(li.append(classUl));
                             }
-                            table.append(tr);
-                            // Spacer
-                            table.append($("<tr style='height: 5px'/>"));
                         }
                     });
-                    $('#legend-' + id).html(table);
+                    $('#legend-' + id).html(list);
                 }
             });
         };

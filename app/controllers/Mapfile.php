@@ -426,6 +426,11 @@ class Mapfile extends \app\inc\Controller
                 "wms_include_items" "all"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_the_geom_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
+                <?php if ($row['wmssource']) {
+                    $wmsCon = str_replace("LAYERS","LAYER",$row['wmssource']);
+                    $wmsCon = str_replace("layers","layer",$row['wmssource']);
+                    echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic&FORMAT=image/png\"\n";
+                } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
                 PROJECTION

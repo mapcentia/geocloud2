@@ -18,7 +18,7 @@ class Sql
         $sqls[] = "CREATE EXTENSION \"hstore\"";
         $sqls[] = "CREATE EXTENSION \"dblink\"";
         $sqls[] = "CREATE EXTENSION \"pgcrypto\"";
-
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD PRIMARY KEY (_key_)";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
