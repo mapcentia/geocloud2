@@ -12,10 +12,10 @@ class Response
     {
         $callback = Input::get('jsonp_callback');
         if ($callback) {
-            header('Content-type: application/javascript');
+            header('Content-type: application/javascript; charset=utf-8');
             return $callback . '(' . json_encode($response) . ');';
         } else {
-            header('Content-type: application/json');
+            header('Content-type: application/json; charset=utf-8');
             return json_encode($response);
         }
     }
@@ -24,10 +24,10 @@ class Response
     {
         $callback = Input::get('jsonp_callback');
         if ($callback) {
-            header('Content-type: application/javascript');
+            header('Content-type: application/javascript; charset=utf-8');
             return $callback . '(' . ($response) . ');';
         } else {
-            header('Content-type: application/json');
+            header('Content-type: application/json; charset=utf-8');
             return ($response);
         }
     }

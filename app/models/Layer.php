@@ -232,7 +232,6 @@ class Layer extends \app\models\Table
         $this->begin();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
-
             $whereClauseG = "f_table_schema=''{$bits[0]}'' AND f_table_name=''{$bits[1]}''";
             $whereClauseR = "r_table_schema=''{$bits[0]}'' AND r_table_name=''{$bits[1]}''";
             $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
