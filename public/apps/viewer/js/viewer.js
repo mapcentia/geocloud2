@@ -59,7 +59,7 @@ Viewer = function () {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var list = $("<ul/>"), li, classUl, title;
+                var list = $("<ul/>"), li, classUl, title, className;
                 $.each(response, function (i, v) {
                     try {
                         title = metaDataKeys[v.id.split(".")[1]].f_table_title;
@@ -75,11 +75,11 @@ Viewer = function () {
                         }
                         if (showLayer) {
                             li = $("<li/>");
-
                             classUl = $("<ul/>");
                             for (u = 0; u < v.classes.length; u = u + 1) {
-                                if (v.classes[u].name !== "") {
-                                    classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /><span class='legend-text'>" + v.classes[u].name + "</span></li>");
+                                if (v.classes[u].name !== "" || v.classes[u].name === "_gc2_wms_legend") {
+                                    className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
+                                    classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
                                 }
                             }
                             // title

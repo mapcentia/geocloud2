@@ -30,6 +30,7 @@ class Legend extends \app\inc\Controller
                 }
                 $newLayerNames = array_merge($newLayerNames, $arr);
             }
+            $i = 0;
             foreach ($newLayerNames as $layerName) {
                 $splitName = explode(".", $layerName);
                 $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
@@ -37,27 +38,30 @@ class Legend extends \app\inc\Controller
                 $layer = $map->getLayerByName($layerName);
                 if ($layer) {
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
-                    for ($i = 0; $i < $layer->numclasses; $i++) {
-                        $class = $layer->getClass($i);
-                        if ($layer->getMetaData("wms_get_legend_url")) {
-                            $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
-                            imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
-                            imagealphablending($icon, false);
-                            imagesavealpha($icon, true);
-                            ob_start();
-                            imagepng($icon);
-                            imagedestroy($icon);
-                            $data = base64_encode(ob_get_clean());
-                        } else {
+                    if ($layer->getMetaData("wms_get_legend_url")) {
+                        $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
+                        imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                        imagealphablending($icon, false);
+                        imagesavealpha($icon, true);
+                        ob_start();
+                        imagepng($icon);
+                        imagedestroy($icon);
+                        $data = base64_encode(ob_get_clean());
+                        $this->legendArr[$layerName]['classes'][0]['img'] = $data;
+                        $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                        $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+                    } else {
+                        for ($i = 0; $i < $layer->numclasses; $i++) {
+                            $class = $layer->getClass($i);
                             $icon = $class->createLegendIcon(17, 17);
                             ob_start();
                             $icon->saveImage("", $map);
                             $data = base64_encode(ob_get_clean());
-                        }
-                        $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-                        $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
-                        $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
+                            $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+                            $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                            $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
 
+                        }
                     }
                 }
             }

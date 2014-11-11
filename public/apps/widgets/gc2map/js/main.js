@@ -320,7 +320,7 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var list = $("<ul/>", {border: '0'}), classUl, li, title;
+                    var list = $("<ul/>", {border: '0'}), classUl, li, title, className;
                     $.each(response, function (i, v) {
                         try {
                             title = metaDataKeys[v.id.split(".")[1]].f_table_title;
@@ -339,7 +339,8 @@ MapCentia = function (globalId) {
                                 classUl = $("<ul/>");
                                 for (u = 0; u < v.classes.length; u = u + 1) {
                                     if (v.classes[u].name !== "") {
-                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' /><span class='legend-text'>" + v.classes[u].name + "</span></li>");
+                                        className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
+                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
                                     }
                                 }
                                 // title
