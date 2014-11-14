@@ -49,7 +49,7 @@ if (typeof gc2map === "undefined") {
                     ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.js?a439ffa6e8bc2dd0#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?ea4e1fd6a6fef346#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?a431ad6b702c34a3#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof this.Templates !== "undefined") {

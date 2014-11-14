@@ -169,6 +169,6 @@ gc2i18n = {
         "Rename layer": "Rename layer",
         "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line.": "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line.",
         "The width or height of map extent exceed the limit. Create a table instead for better performance.": "The width or height of map extent exceed the limit. Create a table instead for better performance.",
-        "The width or height of map extent exceed 200km, which are the limit for the map extent.": "The width or height of map extent exceed 200km, which are the limit for the map extent.",
+        "The width or height of map extent exceed 200km, which are the limit for the map extent.": "The width or height of map extent exceed 200km, which are the limit for the map extent."
     }
 };
