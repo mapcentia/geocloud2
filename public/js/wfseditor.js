@@ -9,7 +9,7 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, currentId;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -109,7 +109,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                     strokeDashstyle: "solid"
                 }
             })
-        ]};
+        ]
+    };
     var styleMap = new OpenLayers.StyleMap({
         "default": new OpenLayers.Style({
                 fillColor: "#000000",
@@ -573,12 +574,13 @@ $(document).ready(function () {
                         });
                     }
                     for (var i = 0; i < arr.length; ++i) {
-                        var l = [];
+                        var l = [], id;
                         for (var u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
+                                id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
                                 l.push({
-                                    text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                    id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
+                                    text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                    id: id,
                                     leaf: true,
                                     checked: false,
                                     geomField: response.data[u].f_geometry_column,
@@ -617,7 +619,21 @@ $(document).ready(function () {
                     listeners: {
                         click: {
                             fn: function (e) {
+                                //console.log(window.parent.Ext.getCmp("layerStylePanel"))
+                                var id = e.id.split('.').join('-'), load = function() {
+                                    window.parent.onEditWMSClasses(e.id);
+                                };
+                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
 
+                                    Ext.getCmp('editlayerbutton').setDisabled(false);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
+                                } else {
+                                    Ext.getCmp('editlayerbutton').setDisabled(true);
+                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
+                                }
+                                if (currentId !== e.id && window.parent.Ext.getCmp("layerStylePanel").collapsed !== true) {
+                                    load();
+                                }
                                 try {
                                     stopEdit();
                                 }
@@ -629,14 +645,18 @@ $(document).ready(function () {
                                     }
                                     filter.win = false;
                                 }
-                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                    window.parent.onEditWMSClasses(e.id);
-                                    Ext.getCmp('editlayerbutton').setDisabled(false);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
-                                } else {
-                                    Ext.getCmp('editlayerbutton').setDisabled(true);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
-                                }
+                                $(".leaf-tools").empty();
+                                $("#" + id).html("<i class='icon-edit btn-gc' id='style-" + id + "'></i> <i class='icon-edit btn-gc' id='settings-" + id + "'></i>");
+                                $("#style-" + id).on("click", function () {
+                                    load();
+                                    window.parent.Ext.getCmp("layerStylePanel").collapse(true);
+                                    window.parent.styleWizardWin(e.id);
+                                });
+                                $("#settings-" + id).on("click", function () {
+                                    window.parent.Ext.getCmp("layerStylePanel").expand(true);
+                                    load();
+                                });
+                                currentId = e.id;
                             }
                         }
                     },
@@ -708,7 +728,7 @@ $(document).ready(function () {
                                         border: false,
                                         id: "treepanel",
                                         style: {
-                                            height: (Ext.getBody().getViewSize().height-180) + "px",
+                                            height: (Ext.getBody().getViewSize().height - 180) + "px",
                                             overflow: "auto"
                                         },
                                         collapsible: false
@@ -733,8 +753,10 @@ $(document).ready(function () {
                 west.doLayout();
                 window.parent.writeFiles();
             }
-        });
-    };
+        })
+        ;
+    }
+    ;
     wfsTools = [
         {
             text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
@@ -888,7 +910,7 @@ $(document).ready(function () {
             handler: function (objRef) {
                 if (!searchWin) {
                     searchWin = new Ext.Window({
-                        title: "Find",
+                        title: __("Find"),
                         layout: 'fit',
                         width: 300,
                         height: 70,
@@ -970,12 +992,14 @@ $(document).ready(function () {
                 Ext.Ajax.request({
                     url: '/controllers/setting/extent/',
                     method: 'put',
-                    params: Ext.util.JSON.encode({data: {
-                        schema: schema,
-                        extent: cloud.getExtent(),
-                        zoom: cloud.getZoom(),
-                        center: [cloud.getCenter().x, cloud.getCenter().y]
-                    }}),
+                    params: Ext.util.JSON.encode({
+                        data: {
+                            schema: schema,
+                            extent: cloud.getExtent(),
+                            zoom: cloud.getZoom(),
+                            center: [cloud.getCenter().x, cloud.getCenter().y]
+                        }
+                    }),
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
@@ -1119,7 +1143,8 @@ $(document).ready(function () {
     });
     map.addControl(measureControls.polygon);
     loadTree();
-});
+})
+;
 function stopEdit() {
     "use strict";
     layerBeingEditing = null;

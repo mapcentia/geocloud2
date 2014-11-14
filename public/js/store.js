@@ -11,7 +11,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, styleWizardWin;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -1021,12 +1021,11 @@ $(window).ready(function () {
             '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(1);
+        Ext.getCmp("layerStyleTabs").activate(0);
 
-        Ext.getCmp("layerStyleTabs").activate(3);
+        Ext.getCmp("layerStyleTabs").activate(2);
         var template = new Ext.Template(markup);
         template.overwrite(Ext.getCmp('a5').body, record);
-        Ext.getCmp("layerStylePanel").expand(true);
         var a1 = Ext.getCmp("a1");
         var a4 = Ext.getCmp("a4");
         a1.remove(wmsLayer.grid);
@@ -1039,7 +1038,7 @@ $(window).ready(function () {
         a1.doLayout();
         a4.doLayout();
 
-        Ext.getCmp("layerStyleTabs").activate(2);
+        Ext.getCmp("layerStyleTabs").activate(1);
         var a2 = Ext.getCmp("a2");
         a2.remove(wmsClasses.grid);
         wmsClasses.grid = null;
@@ -1062,12 +1061,7 @@ $(window).ready(function () {
         a10.doLayout();
         a11.doLayout();
 
-        Ext.getCmp("layerStyleTabs").activate(0);
-        var a7 = Ext.getCmp("a7");
-        a7.remove(classWizards.quantile);
-        classWizards.init(record);
-        a7.add(classWizards.quantile);
-        a7.doLayout();
+
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
         updateLegend();
@@ -1491,6 +1485,54 @@ $(window).ready(function () {
             }
         });
     };
+    styleWizardWin = function(e) {
+        var record = null;
+        grid.getStore().each(function (rec) {  // for each row
+            var row = rec.data; // get record
+            if (row._key_ === e) {
+                record = row;
+            }
+        });
+        if (!record) {
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+            return false;
+        }
+        new Ext.Window({
+            title: __("Find"),
+            layout: 'fit',
+            width: 600,
+            height: 400,
+            plain: true,
+            modal: true,
+            resizable: false,
+            draggable: false,
+            closeAction: 'hide',
+            x: 250,
+            y: 35,
+            items: [
+                {
+                    xtype: "panel",
+                    title: __('Class wizards'),
+                    defaults: {
+                        border: false
+                    },
+                    items: [
+                        {
+                            xtype: "panel",
+                            id: "a7",
+                            layout: "fit"
+                        }
+                    ]
+                }
+            ]
+        }).show();
+        var a7 = Ext.getCmp("a7");
+        a7.remove(classWizards.quantile);
+        classWizards.init(record);
+        a7.add(classWizards.quantile);
+        a7.doLayout();
+
+    };
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +
@@ -1598,20 +1640,6 @@ $(window).ready(function () {
                                 activeTab: 0,
                                 plain: true,
                                 items: [
-                                    {
-                                        xtype: "panel",
-                                        title: __('Class wizards'),
-                                        defaults: {
-                                            border: false
-                                        },
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                id: "a7",
-                                                layout: "fit"
-                                            }
-                                        ]
-                                    },
                                     {
                                         xtype: "panel",
                                         title: 'Legend',
