@@ -400,5 +400,21 @@ class Model
         $response['version'] = $row["postgis_lib_version"];
         return $response;
     }
+    public function doesColumnExist(){
+        ;
+
+        $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='your_schema' AND table_name='your_table' and column_name='your_column'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+    }
 
 }
