@@ -1498,21 +1498,21 @@ $(window).ready(function () {
             return false;
         }
         new Ext.Window({
-            title: __("Find"),
+            title: __("Class wizard"),
             layout: 'fit',
-            width: 600,
-            height: 400,
+            width: 340,
+            height: 500,
             plain: true,
             modal: true,
             resizable: false,
             draggable: false,
+            border: false,
             closeAction: 'hide',
             x: 250,
             y: 35,
             items: [
                 {
                     xtype: "panel",
-                    title: __('Class wizards'),
                     defaults: {
                         border: false
                     },
@@ -1599,7 +1599,7 @@ $(window).ready(function () {
         Ext.getCmp('renamelayer-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
         Ext.getCmp('movelayer-btn').setDisabled(true);
-    }
+    };
 
     var tabs = new Ext.TabPanel({
         activeTab: 0,
@@ -1669,7 +1669,6 @@ $(window).ready(function () {
                                                 layout: "fit",
                                                 height: 150
                                             },
-
                                             new Ext.TabPanel({
                                                 activeTab: 0,
                                                 region: 'center',
@@ -1681,34 +1680,6 @@ $(window).ready(function () {
                                                     layout: "fit",
                                                     border: false
                                                 },
-                                                items: [
-                                                    {
-                                                        xtype: "panel",
-                                                        id: "a3",
-                                                        title: "Base"
-                                                    },
-                                                    {
-                                                        xtype: "panel",
-                                                        id: "a8",
-                                                        title: "Symbol1"
-                                                    },
-                                                    {
-                                                        xtype: "panel",
-                                                        id: "a9",
-                                                        title: "Symbol2"
-                                                    },
-                                                    {
-                                                        xtype: "panel",
-                                                        id: "a10",
-                                                        title: "Label1"
-                                                    },
-                                                    {
-                                                        xtype: "panel",
-                                                        id: "a11",
-                                                        title: "Label2"
-                                                    }
-
-                                                ],
                                                 tbar: [
                                                     {
                                                         text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
@@ -1756,6 +1727,34 @@ $(window).ready(function () {
                                                             });
                                                         }
                                                     }
+                                                ],
+                                                items: [
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a3",
+                                                        title: "Base"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a8",
+                                                        title: "Symbol1"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a9",
+                                                        title: "Symbol2"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a10",
+                                                        title: "Label1"
+                                                    },
+                                                    {
+                                                        xtype: "panel",
+                                                        id: "a11",
+                                                        title: "Label2"
+                                                    }
+
                                                 ]
                                             })
 

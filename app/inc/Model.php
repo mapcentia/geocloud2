@@ -401,7 +401,6 @@ class Model
         return $response;
     }
     public function doesColumnExist(){
-        ;
 
         $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='your_schema' AND table_name='your_table' and column_name='your_column'";
         $res = $this->prepare($sql);

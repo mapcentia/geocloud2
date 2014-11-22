@@ -529,6 +529,8 @@ class Classification extends \app\inc\Model
             "label_text" => ($data->labelText) ?: "",
             "label2_text" => ($data->labelText) ?: "",
             "label_position" => ($data->labelPosition) ?: "",
+            "label_angle" => ($data->labelAngle) ?: "",
+            "label_backgroundcolor" => ($data->labelBackgroundcolor) ?: "",
             "style_opacity" => ($data->opacity) ?: "",
             "overlaystyle_opacity" => ($data->overlayOpacity) ?: "",
             "label_force" => ($data->force) ?: "",

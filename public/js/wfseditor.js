@@ -602,7 +602,7 @@ $(document).ready(function () {
                     id: "tree",
                     border: false,
                     region: "center",
-                    width: 200,
+                    width: 270,
                     split: true,
                     autoScroll: true,
                     root: {
@@ -620,9 +620,21 @@ $(document).ready(function () {
                         click: {
                             fn: function (e) {
                                 //console.log(window.parent.Ext.getCmp("layerStylePanel"))
-                                var id = e.id.split('.').join('-'), load = function() {
-                                    window.parent.onEditWMSClasses(e.id);
+
+                                var id = e.id.split('.').join('-'), load = function () {
+                                    if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                        window.parent.onEditWMSClasses(e.id);
+                                    }
                                 };
+                                if (currentId !== e.id) {
+                                    if (window.parent.Ext.getCmp("layerStylePanel").collapsed) {
+                                        window.parent.Ext.getCmp("layerStylePanel").expand(false);
+                                        load();
+                                        window.parent.Ext.getCmp("layerStylePanel").collapse(false);
+                                    } else {
+                                        load();
+                                    }
+                                }
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
 
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
@@ -631,30 +643,24 @@ $(document).ready(function () {
                                     Ext.getCmp('editlayerbutton').setDisabled(true);
                                     Ext.getCmp('quickdrawbutton').setDisabled(true);
                                 }
-                                if (currentId !== e.id && window.parent.Ext.getCmp("layerStylePanel").collapsed !== true) {
-                                    load();
-                                }
+
+
                                 try {
                                     stopEdit();
                                 }
                                 catch (error) {
                                 }
-                                if (typeof  filter.win !== "undefined") {
+                                if (typeof filter.win !== "undefined") {
                                     if (typeof  filter.win.hide !== "undefined") {
                                         filter.win.hide();
                                     }
                                     filter.win = false;
                                 }
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-edit btn-gc' id='style-" + id + "'></i> <i class='icon-edit btn-gc' id='settings-" + id + "'></i>");
+                                $("#" + id).html("<i class='icon-edit btn-gc' id='style-" + id + "'></i>");
+
                                 $("#style-" + id).on("click", function () {
-                                    load();
-                                    window.parent.Ext.getCmp("layerStylePanel").collapse(true);
                                     window.parent.styleWizardWin(e.id);
-                                });
-                                $("#settings-" + id).on("click", function () {
-                                    window.parent.Ext.getCmp("layerStylePanel").expand(true);
-                                    load();
                                 });
                                 currentId = e.id;
                             }
@@ -713,10 +719,10 @@ $(document).ready(function () {
                                 ]
                             },
                             new Ext.Panel({
-                                border: false,
+                                border: true,
                                 region: "west",
-                                collapsible: false,
-                                width: 200,
+                                collapsible: true,
+                                width: 270,
                                 items: [
                                     {
                                         xtype: "panel",
@@ -755,8 +761,7 @@ $(document).ready(function () {
             }
         })
         ;
-    }
-    ;
+    };
     wfsTools = [
         {
             text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),

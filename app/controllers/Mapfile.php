@@ -427,8 +427,8 @@ class Mapfile extends \app\inc\Controller
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_the_geom_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($row['wmssource']) {
-                    $wmsCon = str_replace("LAYERS","LAYER",$row['wmssource']);
-                    $wmsCon = str_replace("layers","layer",$row['wmssource']);
+                    $wmsCon = str_replace("LAYERS", "LAYER", $row['wmssource']);
+                    $wmsCon = str_replace("layers", "layer", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic&FORMAT=image/png\"\n";
                 } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
@@ -604,11 +604,10 @@ class Mapfile extends \app\inc\Controller
                                     "GEOMTRANSFORM 'labelpoly'\n" .
                                     "COLOR {$labelBackgroundColor}\n";
 
-                                if ($class['label_backgroundpadding']) {
-                                    echo
-                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                        "WIDTH {$class['label_backgroundpadding']}\n";
-                                }
+                                echo
+                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                    "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
+
                             }
                             ?>
                             END # STYLE
