@@ -417,14 +417,14 @@ $(window).ready(function () {
                         xtype: 'textfield',
                         flex: 1,
                         name: 'schema',
-                        emptyText: 'New schema',
+                        emptyText: __('New schema'),
                         allowBlank: false
                     }
                 ]
             },
             {
                 text: '<i class="icon-plus btn-gc"></i>',
-                tooltip: __('Add new schema'),
+                tooltip: __('New schema'),
                 disabled: subUser ? true : false,
                 handler: function () {
                     var f = Ext.getCmp('schemaform');

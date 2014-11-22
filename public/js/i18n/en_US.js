@@ -43,7 +43,7 @@ gc2i18n = {
         "Schema": "Schema",
         "Rename schema": "Rename schema",
         "Delete schema": "Delete schema",
-        "Add new schema": "Add new schema",
+        "new schema": "Add new schema",
         "New schema created": "New schema created",
         "You've to select a layer": "You've to select a layer",
         "Are you sure you want to delete": "Are you sure you want to delete",
@@ -169,6 +169,8 @@ gc2i18n = {
         "Rename layer": "Rename layer",
         "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line.": "Either select 'latest, 'all' or write a date/time in the form yyyy-mm-dd hh:mm:ss<br><br>If you are tracking changes on your table, you can either load the latest (current) versions or you can 'slice' at a given point in time. You can also load all versions.<br><br>Earlier features will be shown with a red dashed line.",
         "The width or height of map extent exceed the limit. Create a table instead for better performance.": "The width or height of map extent exceed the limit. Create a table instead for better performance.",
-        "The width or height of map extent exceed 200km, which are the limit for the map extent.": "The width or height of map extent exceed 200km, which are the limit for the map extent."
+        "The width or height of map extent exceed 200km, which are the limit for the map extent.": "The width or height of map extent exceed 200km, which are the limit for the map extent.",
+        //
+        "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.": "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map."
     }
 };

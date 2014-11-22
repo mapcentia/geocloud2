@@ -109,7 +109,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                     strokeDashstyle: "solid"
                 }
             })
-        ]};
+        ]
+    };
     var styleMap = new OpenLayers.StyleMap({
         "default": new OpenLayers.Style({
                 fillColor: "#000000",
@@ -701,14 +702,14 @@ $(document).ready(function () {
                                     {
                                         xtype: "panel",
                                         border: false,
-                                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
+                                        html: "<div class=\"layer-desc\">" + __("Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.") + "</div>",
                                         height: 70
                                     },
                                     new Ext.Panel({
                                         border: false,
                                         id: "treepanel",
                                         style: {
-                                            height: (Ext.getBody().getViewSize().height-180) + "px",
+                                            height: (Ext.getBody().getViewSize().height - 180) + "px",
                                             overflow: "auto"
                                         },
                                         collapsible: false
@@ -970,12 +971,14 @@ $(document).ready(function () {
                 Ext.Ajax.request({
                     url: '/controllers/setting/extent/',
                     method: 'put',
-                    params: Ext.util.JSON.encode({data: {
-                        schema: schema,
-                        extent: cloud.getExtent(),
-                        zoom: cloud.getZoom(),
-                        center: [cloud.getCenter().x, cloud.getCenter().y]
-                    }}),
+                    params: Ext.util.JSON.encode({
+                        data: {
+                            schema: schema,
+                            extent: cloud.getExtent(),
+                            zoom: cloud.getZoom(),
+                            center: [cloud.getCenter().x, cloud.getCenter().y]
+                        }
+                    }),
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
