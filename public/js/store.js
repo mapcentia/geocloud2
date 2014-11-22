@@ -1447,12 +1447,12 @@ $(window).ready(function () {
                                 },
                                 html: "<ul>" +
                                 "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can se and query the layer.") + "</li>" +
+                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
                                 "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
                                 "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
                                 "<ul>" +
                                 "<br><p>" +
-                                __("The privileges is granted for both Admin and external services like WMS and WFS.") +
+                                __("The privileges are granted for both Admin and external services like WMS and WFS.") +
                                 "</p>"
                             }
                         )
