@@ -8,7 +8,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
-<link rel="stylesheet" type="text/css" href="/css/styles.css?cb4483ba51351535"/>
+<link rel="stylesheet" type="text/css" href="/css/styles.css?e240952495887feb"/>
 <!-- /build -->
 </head>
 <body>
@@ -133,12 +133,12 @@ include("html_header.php");
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/store.js?eb28f99580eb243a"></script>
+<script type="text/javascript" src="/js/store.js?7e1b649fc71afd66"></script>
 <script type="text/javascript" src="/js/edittablestructure.js?3e5e88d555665ea7"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?4f93fc8ac1ee2be8"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?2015a7622e89fc9a"></script>
-<script type="text/javascript" src="/js/classwizards.js?65e7244c7231033c"></script>
+<script type="text/javascript" src="/js/classwizards.js?c8cffaeca43cdb1e"></script>
 <script type="text/javascript" src="/js/addshapeform.js?9c4ac94310c47df3"></script>
 <script type="text/javascript" src="/js/addbitmapform.js?7f352c9bbaf8b3ce"></script>
 <script type="text/javascript" src="/js/addrasterform.js?da336a6959702c26"></script>

@@ -6,17 +6,11 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <!-- build:css /css/build/styles.min.css -->
-<link rel="stylesheet" type="text/css" href="/css/styles.css?cb4483ba51351535"/>
+<link rel="stylesheet" type="text/css" href="/css/styles.css?e240952495887feb"/>
 <!-- /build -->
 </head>
 <body>
 <div id="instructions"></div>
-<div id="upload">
-    <a href="#">
-        <img src="/assets/images/upload_black.png?00f5d5e5a884600f">
-        <div>.shp .geojson .gml .kml .tab .mif</div>
-    </a>
-</div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>
     window.__ = function (string, toolTip) {
@@ -45,7 +39,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?0494cd822345d162"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?9890f37fd070dd05"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>
-<script type="text/javascript" src="/js/wfseditor.js?3cfc745d190f76ac"></script>
+<script type="text/javascript" src="/js/wfseditor.js?2ef1b6b35bc223cd"></script>
 <script type="text/javascript" src="/js/attributeform.js?257465ed180e5e84"></script>
 <script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
 <script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>

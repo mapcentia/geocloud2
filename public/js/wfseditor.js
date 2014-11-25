@@ -284,9 +284,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
 $(document).ready(function () {
     'use strict';
     var bl = null;
-    $("#upload").click(function () {
-        window.parent.onAdd();
-    });
     cloud = new mygeocloud_ol.map(null, screenName, {
         controls: [
             new OpenLayers.Control.Navigation({
@@ -619,7 +616,6 @@ $(document).ready(function () {
                     listeners: {
                         click: {
                             fn: function (e) {
-                                //console.log(window.parent.Ext.getCmp("layerStylePanel"))
 
                                 var id = e.id.split('.').join('-'), load = function () {
                                     if (e.leaf === true && e.parentNode.id !== "baselayers") {
@@ -639,9 +635,11 @@ $(document).ready(function () {
 
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
                                     Ext.getCmp('quickdrawbutton').setDisabled(false);
+                                    Ext.getCmp('stylebutton').setDisabled(false);
                                 } else {
                                     Ext.getCmp('editlayerbutton').setDisabled(true);
                                     Ext.getCmp('quickdrawbutton').setDisabled(true);
+                                    Ext.getCmp('stylebutton').setDisabled(true);
                                 }
 
 
@@ -657,7 +655,7 @@ $(document).ready(function () {
                                     filter.win = false;
                                 }
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-edit btn-gc' id='style-" + id + "'></i>");
+                                $("#" + id).html("<i class='icon-edit btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
 
                                 $("#style-" + id).on("click", function () {
                                     window.parent.styleWizardWin(e.id);
@@ -723,18 +721,39 @@ $(document).ready(function () {
                                 region: "west",
                                 collapsible: true,
                                 width: 270,
+                                tbar: [{
+                                    text: '<i class="icon-eye-open btn-gc"></i> ' + __('Edit style'),
+                                    id: 'stylebutton',
+                                    disabled: true,
+                                    handler: function () {
+                                        var node = tree.getSelectionModel().getSelectedNode();
+                                        window.parent.styleWizardWin(node.id);
+                                    }
+                                }, '-', {
+                                    text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
+                                    disabled: (subUser === schema || subUser === false) ? false : true,
+                                    handler: function () {
+                                        window.parent.onAdd();
+                                    }
+                                }, '-', {
+                                    text: "<i class='icon-refresh btn-gc'></i> " + __("Reload tree"),
+                                    handler: function () {
+                                        stopEdit();
+                                        reLoadTree();
+                                    }
+                                }],
                                 items: [
                                     {
                                         xtype: "panel",
                                         border: false,
                                         html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
-                                        height: 70
+                                        height: 60
                                     },
                                     new Ext.Panel({
                                         border: false,
                                         id: "treepanel",
                                         style: {
-                                            height: (Ext.getBody().getViewSize().height - 180) + "px",
+                                            height: (Ext.getBody().getViewSize().height - 120) + "px",
                                             overflow: "auto"
                                         },
                                         collapsible: false
@@ -979,14 +998,6 @@ $(document).ready(function () {
 
             },
             tooltip: "Search with Google Places"
-        },
-        '-',
-        {
-            text: "<i class='icon-refresh btn-gc'></i> " + __("Reload tree"),
-            handler: function () {
-                stopEdit();
-                reLoadTree();
-            }
         },
         '-',
         {
