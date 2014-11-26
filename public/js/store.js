@@ -655,7 +655,7 @@ $(window).ready(function () {
             title: __('New layer'),
             layout: 'fit',
             modal: true,
-            width: 500,
+            width: 550,
             height: 390,
             closeAction: 'close',
             plain: true,

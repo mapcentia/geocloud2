@@ -79,8 +79,8 @@ class Processvector extends \app\inc\Controller
                 }
             }
         }
-        $srid = ($_REQUEST['srid']) ? : "4326";
-        $encoding = ($_REQUEST['encoding']) ? : "LATIN1";
+        $srid = ($_REQUEST['srid']) ?: "4326";
+        $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
 
         switch ($_REQUEST['type']) {
             case "Point":
@@ -100,6 +100,7 @@ class Processvector extends \app\inc\Controller
                 break;
         }
         $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+            (($_REQUEST["ignoreerrors"] == "true") ? "-skipfailures " : "") .
             "-overwrite " .
             "-dim 2 " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
