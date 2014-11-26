@@ -34,7 +34,16 @@ if (typeof gc2map === "undefined") {
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 $.getScript(host + "/api/v1/baselayerjs");
+                // @if DEBUG
+                $.getScript(host + "/js/leaflet/leaflet.js");
+                $.getScript(host + "/js/openlayers/proj4js-combined.js");
+                $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
+                $.getScript(host + "/js/hogan/hogan-2.0.0.js");
+                $.getScript(host + "/apps/widgets/gc2map/js/bootstrap-alert.js");
+                // @endif
+                // @if !DEBUG
                 $.getScript(host + "/apps/widgets/gc2map/js/build/all.min.js#grunt-cache-bust");
+                // @endif
                 (function pollForDependencies() {
                     if (typeof L !== "undefined" &&
                         typeof Proj4js !== "undefined" &&
@@ -42,6 +51,11 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
+                        // @if DEBUG
+                        $.getScript(host + "/api/v3/js/geocloud.js?a439ffa6e8bc2dd0#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?a431ad6b702c34a3#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
+                        // @endif
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {
                                 scriptsLoaded = true;
@@ -53,11 +67,35 @@ if (typeof gc2map === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
+                // @if DEBUG
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/apps/widgets/gc2map/css/bootstrap.css?cea63a515abbff15#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/apps/widgets/gc2map/css/bootstrap-alert.css?a849390f2a859c66#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/apps/widgets/gc2map/css/non-responsive.css?3a2e6af4eca91b40#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/apps/widgets/gc2map/css/styles.css?fe15deedc44b317d#grunt-cache-bust'
+                }).appendTo('head');
+                // @endif
+                // @if !DEBUG
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
                     href: host + '/apps/widgets/gc2map/js/build/styles.min.css?fe15deedc44b317d#grunt-cache-bust'
                 }).appendTo('head');
+                // @endif
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
