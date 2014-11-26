@@ -190,7 +190,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-preprocess');
 
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['processhtml', , 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('production', ['processhtml','preprocess:production', 'cacheBust']);
 };
 
 
