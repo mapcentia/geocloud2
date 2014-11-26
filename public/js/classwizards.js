@@ -31,7 +31,7 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Create',
+                                text: __('Create'),
                                 handler: function () {
                                     var params = classWizards.getAddvalues();
                                     Ext.Ajax.request({
@@ -108,7 +108,7 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Create',
+                                text: __('Create'),
                                 disabled: (record.type === "RASTER") ? true : false,
                                 handler: function () {
                                     var f = Ext.getCmp('uniqueform');
@@ -345,7 +345,7 @@ classWizards.init = function (record) {
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Create',
+                                text: __('Create'),
                                 disabled: (record.type === "RASTER") ? true : false,
                                 handler: function () {
                                     var f = Ext.getCmp('clusterform'), values, params;

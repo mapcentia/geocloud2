@@ -135,7 +135,7 @@ gc2i18n = {
         "End color": "Slut farve",
         "Create": "Skab",
         "Additional settings": "Øvrige indstillinger",
-        "These setting are applied to all created classes. Set them before hitting a create button above.": "These setting are applied to all created classes. Set them before hitting a create button above.",
+        "These setting are applied to all created classes. Set them before hitting a create button above.": "Disse indstillinger bliver tilføjet hver skabt klasse. Sæt dem før du klikker på en 'Skab' knap ovenfor.",
         "Label text": "Label tekst",
         "Label color": "Label farve",
         "Label size": "Label størrelse",
@@ -171,6 +171,12 @@ gc2i18n = {
         "The width or height of map extent exceed the limit. Create a table instead for better performance.": "Udsnittets bredde eller højde overskrider grænsen. Opret en tabel for bedre ydelse.",
         "The width or height of map extent exceed 200km, which are the limit for the map extent.": "Udsnittets bredde eller højde overstiger 200 km, som er grænsen for tilladte Udsnit.",
         //
-        "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.": "Klik på et lags titel for at ændre indstillinger og redigere data. Tjek boksen af for at se laget."
+        "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.": "Klik på et lags titel for at ændre indstillinger og redigere data. Tjek boksen af for at se laget.",
+        // New per 26. nov. 2014
+        "You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above": "Du kan også uploade datasæt komprimeret med zip eller rar. Hvis et arkiv har mere end et datasæt, bliver kun det første importeret<br><br>*FileGDB folderen skal være komprimeret med enten zip eller rar. Understøtter datasæt skabt af ArcGIS 9 og derover",
+        "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.": "Du kan skabe et view ovenpå en SELECT forespørgelse, der giver forespørgelsen et navn som du kan referere som en normal tabel.<br/><br/>Views kan bruges i næsten alle sammenhænge som en rigtig tabel.<br/><br/>Vær sikker på at inkludere et geometrifelt i viewet.",
+        "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Skab et view ovenpå OSM databasen. Hvis du vælger at skabe en tabel i stedet for et view, vil data bliver kopieret fra OSM databasen. Brug denne mulighed ved større datasæt. Kortets udsnit vil blive brugt som filter. Du kan også bruge OSM tags som filter.",
+        "Match all, any or none of the above": "Match alle, nogle eller ingen af ovenstående",
+        "Create table instead of a view?": "Skab tabel i stedet for et view?"
     }
 };

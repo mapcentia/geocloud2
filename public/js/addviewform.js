@@ -20,7 +20,7 @@ addView.init = function () {
         autoHeight: true,
         bodyStyle: 'padding: 10px 10px 0 10px;',
         labelWidth: 1,
-        html: "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.",
+        html: __("You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field."),
         defaults: {
             anchor: '99%',
             allowBlank: false,

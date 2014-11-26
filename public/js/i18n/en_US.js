@@ -171,6 +171,12 @@ gc2i18n = {
         "The width or height of map extent exceed the limit. Create a table instead for better performance.": "The width or height of map extent exceed the limit. Create a table instead for better performance.",
         "The width or height of map extent exceed 200km, which are the limit for the map extent.": "The width or height of map extent exceed 200km, which are the limit for the map extent.",
         //
-        "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.": "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map."
+        "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.": "Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.",
+        // New per 26. nov. 2014
+        "You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above": "You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above",
+        "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.": "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.",
+        "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.",
+        "Match all, any or none of the above": "Match all, any or none of the above",
+        "Create table instead of a view?": "Create table instead of a view?"
     }
 };

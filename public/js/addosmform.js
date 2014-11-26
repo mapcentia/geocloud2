@@ -184,7 +184,7 @@ addOsm.init = function () {
                         }
                         if ((width < 0 ? width * -1 : width) > 200000) {
                             Ext.MessageBox.show({
-                                title: 'Info',
+                                title: __('Info'),
                                 msg: __('The width or height of map extent exceed 200km, which are the limit for the map extent.'),
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
