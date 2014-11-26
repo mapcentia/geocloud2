@@ -910,7 +910,7 @@ geocloud = (function () {
                     }
                     return (l);
                 } else {
-                    setTimeout(poll, 10);
+                    setTimeout(poll, 100);
                 }
             }());
         };
@@ -1115,7 +1115,7 @@ geocloud = (function () {
                             break;
                     }
                 } else {
-                    setTimeout(poll, 100);
+                    setTimeout(poll, 200);
                 }
             }());
         };
