@@ -154,7 +154,7 @@ class Table extends Model
                     }
                     if ($key == "layergroup"){
                         if (!$value && \app\conf\App::$param['hideUngroupedLayers'] == true) {
-                            $value = "_gc2_hide_in_viewer";
+                            //$value = "_gc2_hide_in_viewer";
                         }
                     }
                     $arr = $this->array_push_assoc($arr, $key, $value);

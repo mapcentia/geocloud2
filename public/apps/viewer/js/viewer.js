@@ -363,7 +363,7 @@ Viewer = function () {
                             ]
                         };
                         for (u = 0; u < response.data.length; ++u) {
-                            if (response.data[u].layergroup === arr[i] && response.data[u].layergroup !== "_gc2_hide_in_viewer") {
+                            if (response.data[u].layergroup === arr[i] && (response.data[u].layergroup !== "<font color='red'>[Ungrouped]</font>" || window.gc2Options.hideUngroupedLayers !== true)) {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <i data-toggle='tooltip' title='first tooltip' class='fa fa-lock'></i>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" data-gc2-id="' + response.data[u].f_table_schema + "." + response.data[u].f_table_name + '"onchange="MapCentia.switchLayer($(this).data(\'gc2-id\'),this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';

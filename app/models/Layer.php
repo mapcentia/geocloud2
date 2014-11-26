@@ -73,7 +73,9 @@ class Layer extends \app\models\Table
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                $value = ($key == "layergroup" && (!$value)) ? ((\app\conf\App::$param['hideUngroupedLayers']) ? "_gc2_hide_in_viewer" : "Default group") : $value;
+                if ($key == "layergroup" && (!$value)){
+                    $value = "<font color='red'>[Ungrouped]</font>";
+                }
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
@@ -359,3 +361,4 @@ class Layer extends \app\models\Table
     }
 
 }
+
