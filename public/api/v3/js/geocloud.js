@@ -882,6 +882,7 @@ geocloud = (function () {
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
             }
+
             (function poll() {
                 if (typeof google !== "undefined" && typeof google.maps !== "undefined") {
                     switch (MAPLIB) {
@@ -1114,7 +1115,7 @@ geocloud = (function () {
                             break;
                     }
                 } else {
-                    setTimeout(poll, 10);
+                    setTimeout(poll, 100);
                 }
             }());
         };
