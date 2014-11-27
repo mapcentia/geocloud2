@@ -107,7 +107,7 @@ class Processvector extends \app\inc\Controller
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln {$safeName} " .
             "-nlt {$type}";
