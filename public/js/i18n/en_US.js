@@ -177,6 +177,7 @@ gc2i18n = {
         "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.": "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.",
         "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.",
         "Match all, any or none of the above": "Match all, any or none of the above",
-        "Create table instead of a view?": "Create table instead of a view?"
+        "Create table instead of a view?": "Create table instead of a view?",
+        "Ignore errors": "Ignore errors"
     }
 };

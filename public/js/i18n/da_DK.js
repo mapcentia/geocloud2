@@ -177,6 +177,7 @@ gc2i18n = {
         "You can create a view over a SELECT query, which gives a name to the query that you can refer to like an ordinary table.<br/><br/>Views can be used in almost any place a real table can be used.<br/><br/>Be sure that the view includes a geometry field.": "Du kan skabe et view ovenpå en SELECT forespørgelse, der giver forespørgelsen et navn som du kan referere som en normal tabel.<br/><br/>Views kan bruges i næsten alle sammenhænge som en rigtig tabel.<br/><br/>Vær sikker på at inkludere et geometrifelt i viewet.",
         "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Skab et view ovenpå OSM databasen. Hvis du vælger at skabe en tabel i stedet for et view, vil data bliver kopieret fra OSM databasen. Brug denne mulighed ved større datasæt. Kortets udsnit vil blive brugt som filter. Du kan også bruge OSM tags som filter.",
         "Match all, any or none of the above": "Match alle, nogle eller ingen af ovenstående",
-        "Create table instead of a view?": "Skab tabel i stedet for et view?"
+        "Create table instead of a view?": "Skab tabel i stedet for et view?",
+        "Ignore errors": "Tillad fejl"
     }
 };
