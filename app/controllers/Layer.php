@@ -21,6 +21,9 @@ class Layer extends \app\inc\Controller
     public function get_groups()
     {
         $groups = $this->table->getGroupBy("layergroup");
+        if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
+        $groups["data"] = array_values($groups["data"]);
+        array_unshift($groups["data"], array("group" => ""));
         return $groups;
     }
 

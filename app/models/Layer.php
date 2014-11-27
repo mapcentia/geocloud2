@@ -26,16 +26,15 @@ class Layer extends \app\models\Table
         $where = ($auth) ?
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";
+        $case = "CASE WHEN (layergroup = '' OR layergroup IS NULL) THEN 9999999 else sort_id END";
         if ($schema) {
             $ids = explode(",", $schema);
             $qMarks = str_repeat('?,', count($ids) - 1) . '?';
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort_id";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort";
         } elseif ($layer) {
-
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort_id";
-
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort";
         } else {
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort";
         }
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         //die($sql);
