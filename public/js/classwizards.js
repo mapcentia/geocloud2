@@ -2,7 +2,6 @@ Ext.namespace('classWizards');
 classWizards.init = function (record) {
     var customIsSet = false;
     classWizards.setting = Ext.util.JSON.decode(record.classwizard);
-    console.log(classWizards.setting);
     if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
         customIsSet = true;
     }
