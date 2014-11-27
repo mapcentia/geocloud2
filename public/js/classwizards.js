@@ -1,9 +1,20 @@
 Ext.namespace('classWizards');
 classWizards.init = function (record) {
+    var customIsSet = false;
+    classWizards.setting = Ext.util.JSON.decode(record.classwizard);
+    console.log(classWizards.setting);
+    if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
+        customIsSet = true;
+    }
     classWizards.getAddvalues = function (pre) {
-        return Ext.util.JSON.encode({data: Ext.getCmp(pre + '_addform').form.getValues()});
+        var values = Ext.getCmp(pre + '_addform').form.getValues();
+        var f = Ext.getCmp(pre + "Form").form.getValues();
+        f.pre = pre;
+        values.custom = f;
+        return Ext.util.JSON.encode({data: values});
     };
     classWizards.getAddForm = function (pre) {
+        var c = ((typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") && pre === classWizards.setting.custom.pre) ? true : false;
         return new Ext.Panel({
             region: "east",
             border: false,
@@ -16,7 +27,7 @@ classWizards.init = function (record) {
                     items: [
                         {
                             xtype: 'fieldset',
-                            title: __('Symbol'),
+                            title: __('Symbol (Optional)'),
                             items: [
                                 {
                                     xtype: 'container',
@@ -36,7 +47,7 @@ classWizards.init = function (record) {
                                         },
                                         {
                                             xtype: 'box',
-                                            html:  __("Size") + __("Combo field. Either select an integer attribute or write an integer for symbol size.", true)
+                                            html: __("Size") + __("Combo field. Either select an integer attribute or write an integer for symbol size.", true)
                                         }
                                     ]
                                 },
@@ -52,7 +63,8 @@ classWizards.init = function (record) {
                                             store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                                             editable: false,
                                             triggerAction: 'all',
-                                            name: "symbol"
+                                            name: "symbol",
+                                            value: (customIsSet && c) ? classWizards.setting.symbol : ""
                                         }),
                                         {
                                             xtype: "combo",
@@ -61,6 +73,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "angle",
                                             allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.angle : ""
 
                                         },
                                         {
@@ -70,7 +83,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "symbolSize",
                                             allowBlank: true,
-                                            toolTip: "xsd",
+                                            value: (customIsSet && c) ? classWizards.setting.symbolSize : ""
                                         }
                                     ]
                                 },
@@ -111,6 +124,7 @@ classWizards.init = function (record) {
                                         new Ext.form.ColorField({
                                             name: "outlineColor",
                                             allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
 
                                         }),
                                         new Ext.ux.form.SpinnerField({
@@ -121,7 +135,8 @@ classWizards.init = function (record) {
                                             decimalPrecision: 0,
                                             incrementValue: 1,
                                             accelerate: true,
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.lineWidth : ""
 
                                         }),
                                         new Ext.ux.form.SpinnerField({
@@ -132,7 +147,8 @@ classWizards.init = function (record) {
                                             decimalPrecision: 0,
                                             incrementValue: 1,
                                             accelerate: true,
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.opacity : ""
 
                                         })
                                     ]
@@ -141,7 +157,7 @@ classWizards.init = function (record) {
                         },
                         {
                             xtype: 'fieldset',
-                            title: __('Label'),
+                            title: __('Label (Optional)'),
                             items: [
                                 {
                                     xtype: 'container',
@@ -156,7 +172,7 @@ classWizards.init = function (record) {
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Color")  + __("Select a label color.", true)
+                                            html: __("Color") + __("Select a label color.", true)
                                         },
                                         {
                                             xtype: 'box',
@@ -177,11 +193,13 @@ classWizards.init = function (record) {
                                             editable: true,
                                             triggerAction: "all",
                                             name: "labelText",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelText : ""
                                         },
                                         new Ext.form.ColorField({
                                             name: "labelColor",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelColor : ""
                                         }),
                                         {
                                             xtype: "combo",
@@ -189,7 +207,8 @@ classWizards.init = function (record) {
                                             editable: true,
                                             triggerAction: "all",
                                             name: "labelSize",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelSize : ""
                                         }
                                     ]
                                 },
@@ -231,7 +250,8 @@ classWizards.init = function (record) {
                                             editable: true,
                                             triggerAction: "all",
                                             name: "labelPosition",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelPosition : ""
                                         },
                                         {
                                             xtype: "combo",
@@ -239,11 +259,13 @@ classWizards.init = function (record) {
                                             editable: true,
                                             triggerAction: "all",
                                             name: "labelAngle",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelAngle : ""
                                         },
                                         new Ext.form.ColorField({
                                             name: "labelBackgroundcolor",
-                                            allowBlank: true
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelBackgroundcolor : ""
                                         })
                                     ]
                                 }
@@ -264,508 +286,605 @@ classWizards.init = function (record) {
         //autoHeight: true,
         height: 772,
         region: 'center',
-        layout: "fit",
+        layout: "border",
         split: true,
         items: [
             new Ext.Panel({
                 region: 'center',
                 border: false,
-                defaults: {
-                    border: false
-                },
+                layout: "border",
                 items: [
-                    new Ext.TabPanel({
-                        activeTab: 0,
-                        defaults: {
-                            border: false
-                        },
+                    new Ext.Panel({
+                        region: "center",
                         items: [
-                            {
-                                title: __("Single"),
+                            new Ext.TabPanel({
+                                activeTab: (function () {
+                                    var i, pre;
+                                    if (customIsSet) {
+                                        pre = classWizards.setting.custom.pre;
+                                        if (pre === "single") {
+                                            i = 0;
+                                        }
+                                        if (pre === "unique") {
+                                            i = 1;
+                                        }
+                                        if (pre === "interval") {
+                                            i = 2;
+                                        }
+                                        if (pre === "cluster") {
+                                            i = 3;
+                                        }
+                                        return i;
+                                    } else {
+                                        return 0;
+                                    }
+                                })(),
+                                border: false,
                                 defaults: {
                                     border: false
                                 },
+                                plain: true,
                                 items: [
                                     {
-                                        html: '<table>' +
-                                        '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
-                                        '</table>'
-                                    },
-                                    {
-                                        padding: "5px",
-                                        border: false,
+                                        title: __("Single"),
+                                        defaults: {
+                                            border: false
+                                        },
                                         items: [
-                                            classWizards.getAddForm("single"),
                                             {
-                                                xtype: 'box',
-                                                height: 15
+                                                html: '<table>' +
+                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
+                                                '</table>'
                                             },
                                             {
+                                                padding: "5px",
                                                 border: false,
                                                 items: [
                                                     {
-                                                        xtype: 'button',
-                                                        text: 'Create single class',
-                                                        handler: function () {
-                                                            var params = classWizards.getAddvalues("single");
-                                                            Ext.Ajax.request({
-                                                                url: '/controllers/classification/single/' + record._key_,
-                                                                method: 'put',
-                                                                params: params,
-                                                                headers: {
-                                                                    'Content-Type': 'application/json; charset=utf-8'
-                                                                },
-                                                                success: function (response) {
-                                                                    Ext.getCmp("a3").remove(wmsClass.grid);
-                                                                    wmsClasses.store.load();
-                                                                    wmsLayer.store.load();
-                                                                    writeFiles(record._key_);
-                                                                    App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
-                                                                },
-                                                                failure: function (response) {
-                                                                    Ext.MessageBox.show({
-                                                                        title: __('Failure'),
-                                                                        msg: __(Ext.decode(response.responseText).message),
-                                                                        buttons: Ext.MessageBox.OK,
-                                                                        width: 400,
-                                                                        height: 300,
-                                                                        icon: Ext.MessageBox.ERROR
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                title: __("Unique"),
-                                defaults: {
-                                    border: false
-                                },
-                                items: [
-                                    {
-                                        html: '<table>' +
-                                        '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
-                                        '</table>'
-                                    },
-                                    {
-
-                                        padding: "5px",
-                                        items: [
-                                            {
-                                                xtype: 'fieldset',
-                                                title: __('Values'),
-                                                defaults: {
-                                                    border: false
-                                                },
-                                                items: [
-                                                    {
-                                                        xtype: 'container',
-                                                        layout: 'hbox',
-                                                        width: 285,
+                                                        xtype: 'fieldset',
+                                                        title: __('(Required)'),
                                                         defaults: {
-                                                            width: 95
+                                                            border: false
                                                         },
                                                         items: [
+
                                                             {
-                                                                xtype: 'box',
-                                                                html:  __("Field") + __("Select attribute field.", true)
+                                                                xtype: "form",
+                                                                id: "singleForm",
+                                                                layout: "form",
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        layout: 'hbox',
+                                                                        width: 285,
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                html: __("Color") + __("Select color", true)
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        layout: 'hbox',
+                                                                        width: 285,
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            new Ext.form.ColorField({
+                                                                                name: "color",
+                                                                                allowBlank: false,
+                                                                                value: (customIsSet) ? classWizards.setting.custom.color : null
+                                                                            })
+                                                                        ]
+                                                                    }
+                                                                ]
                                                             }
                                                         ]
                                                     },
+                                                    classWizards.getAddForm("single"),
                                                     {
-                                                        xtype: "form",
-                                                        id: "uniqueform",
-                                                        layout: "form",
-                                                        items: [
-                                                            {
-                                                                xtype: 'container',
-                                                                defaults: {
-                                                                    width: 95
-                                                                },
-                                                                items: [
-                                                                    {
-                                                                        xtype: "combo",
-                                                                        store: wmsLayer.fieldsForStore,
-                                                                        editable: false,
-                                                                        triggerAction: "all",
-                                                                        name: "value",
-                                                                        allowBlank: false,
-                                                                        disabled: (record.type === "RASTER") ? true : false,
-                                                                        emptyText: __("Field")
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            },
-                                            classWizards.getAddForm("unique"),
-                                            {
-                                                layout: 'form',
-                                                border: false,
-                                                items: [
-                                                    {
-                                                        xtype: 'button',
-                                                        text: 'Create unique values',
-                                                        disabled: (record.type === "RASTER") ? true : false,
-                                                        handler: function () {
-                                                            var f = Ext.getCmp('uniqueform');
-                                                            if (f.form.isValid()) {
-                                                                var values = f.form.getValues(),
-                                                                    params = classWizards.getAddvalues("unique");
-                                                                Ext.Ajax.request({
-                                                                    url: '/controllers/classification/unique/' + record._key_ + '/' + values.value,
-                                                                    method: 'put',
-                                                                    params: params,
-                                                                    headers: {
-                                                                        'Content-Type': 'application/json; charset=utf-8'
-                                                                    },
-                                                                    success: function (response) {
-                                                                        Ext.getCmp("a3").remove(wmsClass.grid);
-                                                                        wmsClasses.store.load();
-                                                                        wmsLayer.store.load();
-                                                                        writeFiles(record._key_);
-                                                                        App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
-                                                                    },
-                                                                    failure: function (response) {
-                                                                        Ext.MessageBox.show({
-                                                                            title: 'Failure',
-                                                                            msg: __(Ext.decode(response.responseText).message),
-                                                                            buttons: Ext.MessageBox.OK,
-                                                                            width: 400,
-                                                                            height: 300,
-                                                                            icon: Ext.MessageBox.ERROR
-                                                                        });
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                var s = '';
-                                                                Ext.iterate(f.form.getValues(), function (key, value) {
-                                                                    s += String.format("{0} = {1}<br />", key, value);
-                                                                }, this);
-                                                            }
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-
-                                ]
-                            },
-                            {
-                                title: __("Intervals"),
-                                defaults: {
-                                    border: false
-                                },
-                                items: [{
-                                    html: '<table>' +
-                                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
-                                    '</table>'
-                                },
-                                    {
-
-                                        padding: '5px',
-                                        items: [
-                                            {
-                                                xtype: 'fieldset',
-                                                title: __('Values'),
-                                                defaults: {
-                                                    border: false
-                                                },
-                                                items: [
-                                                    {
-                                                        xtype: 'container',
-                                                        layout: 'hbox',
-                                                        width: 285,
-                                                        defaults: {
-                                                            width: 95
-                                                        },
-                                                        items: [
-                                                            {
-                                                                xtype: 'box',
-                                                                html:  __("Type") + __("How should the intervals be calculated", true)
-                                                            },
-                                                            {
-                                                                xtype: 'box',
-                                                                html: __("Numeric field") + __("Select attribute field. Only numeric is shown.", true)
-                                                            },
-                                                            {
-                                                                xtype: 'box',
-                                                                html: __("# of colors") + __("How many intervals should be calculated.", true)
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        xtype: "form",
-                                                        id: "equalform",
-                                                        layout: "form",
-                                                        items: [
-                                                            {
-                                                                xtype: 'container',
-                                                                layout: 'hbox',
-                                                                defaults: {
-                                                                    width: 95
-                                                                },
-                                                                items: [
-                                                                    {
-                                                                        xtype: "combo",
-                                                                        store: new Ext.data.ArrayStore({
-                                                                            fields: ['type', 'display'],
-                                                                            data: (record.type === "RASTER") ? [
-                                                                                ['equal', 'Equal']
-                                                                            ] : [
-                                                                                ['equal', 'Equal'],
-                                                                                ['quantile', 'Quantile']
-                                                                            ]
-
-                                                                        }),
-                                                                        displayField: 'display',
-                                                                        valueField: 'type',
-                                                                        editable: false,
-                                                                        triggerAction: "all",
-                                                                        name: "type",
-                                                                        allowBlank: false,
-                                                                        mode: 'local',
-                                                                        value: (record.type === "RASTER") ? 'Equal' : null
-                                                                    },
-                                                                    {
-                                                                        xtype: "combo",
-                                                                        store: wmsLayer.numFieldsForStore,
-                                                                        editable: false,
-                                                                        triggerAction: "all",
-                                                                        name: "value",
-                                                                        allowBlank: false,
-                                                                        value: (record.type === "RASTER") ? "pixel" : null
-                                                                    },
-                                                                    new Ext.ux.form.SpinnerField({
-                                                                        name: "num",
-                                                                        minValue: 1,
-                                                                        maxValue: 20,
-                                                                        allowDecimals: false,
-                                                                        decimalPrecision: 0,
-                                                                        incrementValue: 1,
-                                                                        accelerate: true,
-                                                                        allowBlank: false
-                                                                    })
-                                                                ]
-                                                            },
-                                                            {
-                                                                xtype: 'box',
-                                                                height: 7
-                                                            },
-                                                            {
-                                                                xtype: 'container',
-                                                                layout: 'hbox',
-                                                                width: 285,
-                                                                defaults: {
-                                                                    width: 95
-                                                                },
-                                                                items: [
-                                                                    {
-                                                                        xtype: 'box',
-                                                                        html: __("Start color") + __("Select start color in the color ramp.", true)
-                                                                    },
-                                                                    {
-                                                                        xtype: 'box',
-                                                                        html: __("End color") + __("Select end color in the color ramp.", true)
-                                                                    }
-                                                                ]
-                                                            },
-                                                            {
-                                                                xtype: 'container',
-                                                                layout: 'hbox',
-                                                                width: 285,
-                                                                defaults: {
-                                                                    width: 95
-                                                                },
-                                                                items: [
-                                                                    new Ext.form.ColorField({
-                                                                        name: "start",
-                                                                        allowBlank: false
-                                                                    }),
-                                                                    new Ext.form.ColorField({
-                                                                        name: "end",
-                                                                        allowBlank: false
-                                                                    })
-
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            },
-
-                                            classWizards.getAddForm("interval"),
-                                            {
-                                                layout: 'form',
-                                                border: false,
-                                                items: [
-                                                    {
-                                                        xtype: 'button',
                                                         border: false,
-                                                        text: __("Create intervals"),
-                                                        width: 'auto',
-                                                        handler: function () {
-                                                            var f = Ext.getCmp('equalform');
-                                                            if (f.form.isValid()) {
-                                                                var values = f.form.getValues(),
-                                                                    params = classWizards.getAddvalues("interval");
-                                                                Ext.Ajax.request({
-                                                                    url: '/controllers/classification/' + values.type.toLowerCase() + '/' + record._key_ + '/' +
-                                                                    values.value + '/' +
-                                                                    values.num + '/' +
-                                                                    values.start.replace("#", "") + '/' +
-                                                                    values.end.replace("#", "") + '/',
-                                                                    method: 'put',
-                                                                    params: params,
-                                                                    headers: {
-                                                                        'Content-Type': 'application/json; charset=utf-8'
-                                                                    },
-                                                                    success: function (response) {
-                                                                        Ext.getCmp("a3").remove(wmsClass.grid);
-                                                                        wmsClasses.store.load();
-                                                                        wmsLayer.store.load();
-                                                                        writeFiles(record._key_);
-                                                                        App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
-                                                                    },
-                                                                    failure: function (response) {
-                                                                        Ext.MessageBox.show({
-                                                                            title: 'Failure',
-                                                                            msg: eval('(' + response.responseText + ')').message,
-                                                                            buttons: Ext.MessageBox.OK,
-                                                                            width: 400,
-                                                                            height: 300,
-                                                                            icon: Ext.MessageBox.ERROR
-                                                                        });
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                var s = '';
-                                                                Ext.iterate(f.form.getValues(), function (key, value) {
-                                                                    s += String.format("{0} = {1}<br />", key, value);
-                                                                }, this);
-                                                            }
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }]
-                            },
-                            {
-                                title: __("Clusters"),
-                                defaults: {
-                                    border: false
-                                },
-                                items: [{
-                                    html: '<table>' +
-                                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
-                                    '</table>'
-                                },
-                                    {
-                                        padding: "5px",
-                                        items: [
-                                            {
-                                                xtype: 'fieldset',
-                                                title: __('Values'),
-                                                defaults: {
-                                                    border: false
-                                                },
-                                                items: [
-                                                    {
-
-                                                        xtype: "form",
-                                                        id: "clusterform",
-                                                        layout: "form",
                                                         items: [
                                                             {
-                                                                xtype: 'container',
-                                                                defaults: {
-                                                                    width: 150
-                                                                },
-                                                                items: [
-                                                                    new Ext.ux.form.SpinnerField({
-                                                                        name: "clusterdistance",
-                                                                        minValue: 1,
-                                                                        allowDecimals: false,
-                                                                        decimalPrecision: 0,
-                                                                        incrementValue: 1,
-                                                                        accelerate: true,
-                                                                        allowBlank: false,
-                                                                        emptyText: __("Cluster distance"),
-                                                                        disabled: (record.type === "RASTER") ? true : false
-                                                                    })
-                                                                ]
+                                                                xtype: 'button',
+                                                                text: 'Create single class',
+                                                                handler: function () {
+                                                                    var f = Ext.getCmp('singleForm');
+                                                                    if (f.form.isValid()) {
+                                                                        var values = f.form.getValues(),
+                                                                            params = classWizards.getAddvalues("single");
+                                                                        Ext.Ajax.request({
+                                                                            url: '/controllers/classification/single/' + record._key_ + '/' + values.color.replace("#", ""),
+                                                                            method: 'put',
+                                                                            params: params,
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                                            },
+                                                                            success: function (response) {
+                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                wmsClasses.store.load();
+                                                                                wmsLayer.store.load();
+                                                                                writeFiles(record._key_);
+                                                                                store.load();
+                                                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
+                                                                            },
+                                                                            failure: function (response) {
+                                                                                Ext.MessageBox.show({
+                                                                                    title: __('Failure'),
+                                                                                    msg: __(Ext.decode(response.responseText).message),
+                                                                                    buttons: Ext.MessageBox.OK,
+                                                                                    width: 400,
+                                                                                    height: 300,
+                                                                                    icon: Ext.MessageBox.ERROR
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                    } else {
+                                                                        var s = '';
+                                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                                        }, this);
+                                                                    }
+                                                                }
                                                             }
                                                         ]
                                                     }
                                                 ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        title: __("Unique"),
+                                        defaults: {
+                                            border: false
+                                        },
+                                        items: [
+                                            {
+                                                html: '<table>' +
+                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
+                                                '</table>'
                                             },
                                             {
-                                                layout: 'form',
-                                                border: false,
+
+                                                padding: "5px",
                                                 items: [
                                                     {
-                                                        xtype: 'button',
-                                                        text: 'Create clusters',
-                                                        disabled: (record.type === "RASTER") ? true : false,
-                                                        handler: function () {
-                                                            var f = Ext.getCmp('clusterform'), values, params;
-                                                            if (f.form.isValid()) {
-                                                                values = f.form.getValues();
-                                                                //params = classWizards.getAddvalues();
-                                                                Ext.Ajax.request({
-                                                                    url: '/controllers/classification/cluster/' + record._key_ + '/' + values.clusterdistance,
-                                                                    method: 'put',
-                                                                    //params: params,
-                                                                    headers: {
-                                                                        'Content-Type': 'application/json; charset=utf-8'
-                                                                    },
-                                                                    success: function (response) {
-                                                                        Ext.getCmp("a3").remove(wmsClass.grid);
-                                                                        wmsClasses.store.load();
-                                                                        wmsLayer.store.load();
-                                                                        writeFiles(record._key_);
-                                                                        App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
-                                                                    },
-                                                                    failure: function (response) {
-                                                                        Ext.MessageBox.show({
-                                                                            title: 'Failure',
-                                                                            msg: __(Ext.decode(response.responseText).message),
-                                                                            buttons: Ext.MessageBox.OK,
-                                                                            width: 400,
-                                                                            height: 300,
-                                                                            icon: Ext.MessageBox.ERROR
-                                                                        });
+                                                        xtype: 'fieldset',
+                                                        title: __('(Required)'),
+                                                        defaults: {
+                                                            border: false
+                                                        },
+                                                        items: [
+                                                            {
+                                                                xtype: 'container',
+                                                                layout: 'hbox',
+                                                                width: 285,
+                                                                defaults: {
+                                                                    width: 95
+                                                                },
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'box',
+                                                                        html: __("Field") + __("Select attribute field.", true)
                                                                     }
-                                                                });
-                                                            } else {
-                                                                var s = '';
-                                                                Ext.iterate(f.form.getValues(), function (key, value) {
-                                                                    s += String.format("{0} = {1}<br />", key, value);
-                                                                }, this);
+                                                                ]
+                                                            },
+                                                            {
+                                                                xtype: "form",
+                                                                id: "uniqueForm",
+                                                                layout: "form",
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            {
+                                                                                xtype: "combo",
+                                                                                store: wmsLayer.fieldsForStore,
+                                                                                editable: false,
+                                                                                triggerAction: "all",
+                                                                                name: "value",
+                                                                                allowBlank: false,
+                                                                                disabled: (record.type === "RASTER") ? true : false,
+                                                                                emptyText: __("Field"),
+                                                                                value: (customIsSet && classWizards.setting.custom.pre === "unique") ? classWizards.setting.custom.value : null
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
                                                             }
-                                                        }
+                                                        ]
+                                                    },
+                                                    classWizards.getAddForm("unique"),
+                                                    {
+                                                        layout: 'form',
+                                                        border: false,
+                                                        items: [
+                                                            {
+                                                                xtype: 'button',
+                                                                text: 'Create unique values',
+                                                                disabled: (record.type === "RASTER") ? true : false,
+                                                                handler: function () {
+                                                                    var f = Ext.getCmp('uniqueForm');
+                                                                    if (f.form.isValid()) {
+                                                                        var values = f.form.getValues(),
+                                                                            params = classWizards.getAddvalues("unique");
+                                                                        Ext.Ajax.request({
+                                                                            url: '/controllers/classification/unique/' + record._key_ + '/' + values.value,
+                                                                            method: 'put',
+                                                                            params: params,
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                                            },
+                                                                            success: function (response) {
+                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                wmsClasses.store.load();
+                                                                                wmsLayer.store.load();
+                                                                                writeFiles(record._key_);
+                                                                                store.load();
+                                                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
+                                                                            },
+                                                                            failure: function (response) {
+                                                                                Ext.MessageBox.show({
+                                                                                    title: 'Failure',
+                                                                                    msg: __(Ext.decode(response.responseText).message),
+                                                                                    buttons: Ext.MessageBox.OK,
+                                                                                    width: 400,
+                                                                                    height: 300,
+                                                                                    icon: Ext.MessageBox.ERROR
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                    } else {
+                                                                        var s = '';
+                                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                                        }, this);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
                                                     }
                                                 ]
                                             }
+
                                         ]
-                                    }]
-                            }
-                        ]
+                                    },
+                                    {
+                                        title: __("Intervals"),
+                                        defaults: {
+                                            border: false
+                                        },
+                                        items: [{
+                                            html: '<table>' +
+                                            '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
+                                            '</table>'
+                                        },
+                                            {
+
+                                                padding: '5px',
+                                                items: [
+                                                    {
+                                                        xtype: 'fieldset',
+                                                        title: __('(Required)'),
+                                                        defaults: {
+                                                            border: false
+                                                        },
+                                                        items: [
+                                                            {
+                                                                xtype: 'container',
+                                                                layout: 'hbox',
+                                                                width: 285,
+                                                                defaults: {
+                                                                    width: 95
+                                                                },
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'box',
+                                                                        html: __("Type") + __("How should the intervals be calculated", true)
+                                                                    },
+                                                                    {
+                                                                        xtype: 'box',
+                                                                        html: __("Numeric field") + __("Select attribute field. Only numeric is shown.", true)
+                                                                    },
+                                                                    {
+                                                                        xtype: 'box',
+                                                                        html: __("# of colors") + __("How many intervals should be calculated.", true)
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                xtype: "form",
+                                                                id: "intervalForm",
+                                                                layout: "form",
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        layout: 'hbox',
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            {
+                                                                                xtype: "combo",
+                                                                                store: new Ext.data.ArrayStore({
+                                                                                    fields: ['type', 'display'],
+                                                                                    data: (record.type === "RASTER") ? [
+                                                                                        ['equal', 'Equal']
+                                                                                    ] : [
+                                                                                        ['equal', 'Equal'],
+                                                                                        ['quantile', 'Quantile']
+                                                                                    ]
+
+                                                                                }),
+                                                                                displayField: 'display',
+                                                                                valueField: 'type',
+                                                                                editable: false,
+                                                                                triggerAction: "all",
+                                                                                name: "type",
+                                                                                allowBlank: false,
+                                                                                mode: 'local',
+                                                                                value: (customIsSet) ? classWizards.setting.custom.type : (record.type === "RASTER") ? 'Equal' : null
+
+                                                                            },
+                                                                            {
+                                                                                xtype: "combo",
+                                                                                store: wmsLayer.numFieldsForStore,
+                                                                                editable: false,
+                                                                                triggerAction: "all",
+                                                                                name: "value",
+                                                                                allowBlank: false,
+                                                                                value: (customIsSet && classWizards.setting.custom.pre === "interval") ? classWizards.setting.custom.value : (record.type === "RASTER") ? "pixel" : null
+                                                                            },
+                                                                            new Ext.ux.form.SpinnerField({
+                                                                                name: "num",
+                                                                                minValue: 1,
+                                                                                maxValue: 20,
+                                                                                allowDecimals: false,
+                                                                                decimalPrecision: 0,
+                                                                                incrementValue: 1,
+                                                                                accelerate: true,
+                                                                                allowBlank: false,
+                                                                                value: (customIsSet) ? classWizards.setting.custom.num : null
+                                                                            })
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        xtype: 'box',
+                                                                        height: 7
+                                                                    },
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        layout: 'hbox',
+                                                                        width: 285,
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                html: __("Start color") + __("Select start color in the color ramp.", true)
+                                                                            },
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                html: __("End color") + __("Select end color in the color ramp.", true)
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        layout: 'hbox',
+                                                                        width: 285,
+                                                                        defaults: {
+                                                                            width: 95
+                                                                        },
+                                                                        items: [
+                                                                            new Ext.form.ColorField({
+                                                                                name: "start",
+                                                                                allowBlank: false,
+                                                                                value: (customIsSet) ? classWizards.setting.custom.start : null
+                                                                            }),
+                                                                            new Ext.form.ColorField({
+                                                                                name: "end",
+                                                                                allowBlank: false,
+                                                                                value: (customIsSet) ? classWizards.setting.custom.end : null
+                                                                            })
+
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+
+                                                    classWizards.getAddForm("interval"),
+                                                    {
+                                                        layout: 'form',
+                                                        border: false,
+                                                        items: [
+                                                            {
+                                                                xtype: 'button',
+                                                                border: false,
+                                                                text: __("Create intervals"),
+                                                                width: 'auto',
+                                                                handler: function () {
+                                                                    var f = Ext.getCmp('intervalForm');
+                                                                    if (f.form.isValid()) {
+                                                                        var values = f.form.getValues(),
+                                                                            params = classWizards.getAddvalues("interval");
+                                                                        Ext.Ajax.request({
+                                                                            url: '/controllers/classification/' + values.type.toLowerCase() + '/' + record._key_ + '/' +
+                                                                            values.value + '/' +
+                                                                            values.num + '/' +
+                                                                            values.start.replace("#", "") + '/' +
+                                                                            values.end.replace("#", "") + '/',
+                                                                            method: 'put',
+                                                                            params: params,
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                                            },
+                                                                            success: function (response) {
+                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                wmsClasses.store.load();
+                                                                                wmsLayer.store.load();
+                                                                                writeFiles(record._key_);
+                                                                                store.load();
+                                                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
+                                                                            },
+                                                                            failure: function (response) {
+                                                                                Ext.MessageBox.show({
+                                                                                    title: 'Failure',
+                                                                                    msg: eval('(' + response.responseText + ')').message,
+                                                                                    buttons: Ext.MessageBox.OK,
+                                                                                    width: 400,
+                                                                                    height: 300,
+                                                                                    icon: Ext.MessageBox.ERROR
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                    } else {
+                                                                        var s = '';
+                                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                                        }, this);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }]
+                                    },
+                                    {
+                                        title: __("Clusters"),
+                                        defaults: {
+                                            border: false
+                                        },
+                                        items: [{
+                                            html: '<table>' +
+                                            '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
+                                            '</table>'
+                                        },
+                                            {
+                                                padding: "5px",
+                                                items: [
+                                                    {
+                                                        xtype: 'fieldset',
+                                                        title: __('(Required)'),
+                                                        defaults: {
+                                                            border: false
+                                                        },
+                                                        items: [
+                                                            {
+
+                                                                xtype: "form",
+                                                                id: "clusterForm",
+                                                                layout: "form",
+                                                                items: [
+                                                                    {
+                                                                        xtype: 'container',
+                                                                        defaults: {
+                                                                            width: 150
+                                                                        },
+                                                                        items: [
+                                                                            new Ext.ux.form.SpinnerField({
+                                                                                name: "clusterdistance",
+                                                                                minValue: 1,
+                                                                                allowDecimals: false,
+                                                                                decimalPrecision: 0,
+                                                                                incrementValue: 1,
+                                                                                accelerate: true,
+                                                                                allowBlank: false,
+                                                                                emptyText: __("Cluster distance"),
+                                                                                disabled: (record.type === "RASTER") ? true : false,
+                                                                                value: (customIsSet) ? classWizards.setting.custom.clusterdistance : null
+                                                                            })
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        layout: 'form',
+                                                        border: false,
+                                                        items: [
+                                                            {
+                                                                xtype: 'button',
+                                                                text: 'Create clusters',
+                                                                disabled: (record.type === "RASTER") ? true : false,
+                                                                handler: function () {
+                                                                    var f = Ext.getCmp('clusterForm'), values, params;
+                                                                    if (f.form.isValid()) {
+                                                                        values = f.form.getValues();
+                                                                        Ext.Ajax.request({
+                                                                            url: '/controllers/classification/cluster/' + record._key_ + '/' + values.clusterdistance,
+                                                                            method: 'put',
+                                                                            params: Ext.util.JSON.encode({
+                                                                                data: {
+                                                                                    custom: {
+                                                                                        pre: "cluster",
+                                                                                        clusterdistance: values.clusterdistance
+                                                                                    }
+                                                                                }
+                                                                            }),
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                                            },
+                                                                            success: function (response) {
+                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                wmsClasses.store.load();
+                                                                                wmsLayer.store.load();
+                                                                                writeFiles(record._key_);
+                                                                                store.load();
+                                                                                App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
+                                                                            },
+                                                                            failure: function (response) {
+                                                                                Ext.MessageBox.show({
+                                                                                    title: 'Failure',
+                                                                                    msg: __(Ext.decode(response.responseText).message),
+                                                                                    buttons: Ext.MessageBox.OK,
+                                                                                    width: 400,
+                                                                                    height: 300,
+                                                                                    icon: Ext.MessageBox.ERROR
+                                                                                });
+                                                                            }
+                                                                        });
+                                                                    } else {
+                                                                        var s = '';
+                                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                                        }, this);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }]
+                                    }
+                                ]
+                            })]
+                    }),
+                    new Ext.Panel({
+                        region: 'east',
+                        border: true,
+                        width: 150,
+                        id: 'wizardLegend',
+                        html: ""
                     })
-
-
                 ]
             })
         ]
 
     });
 };
+
 

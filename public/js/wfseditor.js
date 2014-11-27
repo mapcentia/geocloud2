@@ -188,7 +188,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
 
     if (editable) {
         // We set the control to the second button in wfsTools
-        wfsTools[2].control = drawControl;
+        wfsTools[0].control = drawControl;
         map.addControl(drawControl);
         modifyControl = new OpenLayers.Control.ModifyFeature(layer, {
             vertexRenderIntent: 'temporary',
@@ -599,7 +599,6 @@ $(document).ready(function () {
                     id: "tree",
                     border: false,
                     region: "center",
-                    width: 270,
                     split: true,
                     autoScroll: true,
                     root: {
@@ -655,10 +654,10 @@ $(document).ready(function () {
                                     filter.win = false;
                                 }
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-edit btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
+                                $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
 
                                 $("#style-" + id).on("click", function () {
-                                    window.parent.styleWizardWin(e.id);
+                                    window.parent.Ext.getCmp("layerStylePanel").expand(true);
                                 });
                                 currentId = e.id;
                             }
@@ -720,14 +719,15 @@ $(document).ready(function () {
                                 border: true,
                                 region: "west",
                                 collapsible: true,
-                                width: 270,
+                                width: 300,
                                 tbar: [{
-                                    text: '<i class="icon-eye-open btn-gc"></i> ' + __('Edit style'),
+                                    text: '<i class="icon-eye-open btn-gc"></i> ' + __('Style'),
                                     id: 'stylebutton',
                                     disabled: true,
                                     handler: function () {
                                         var node = tree.getSelectionModel().getSelectedNode();
                                         window.parent.styleWizardWin(node.id);
+                                        window.parent.updateLegend('wizardLegend');
                                     }
                                 }, '-', {
                                     text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
@@ -735,13 +735,51 @@ $(document).ready(function () {
                                     handler: function () {
                                         window.parent.onAdd();
                                     }
-                                }, '-', {
-                                    text: "<i class='icon-refresh btn-gc'></i> " + __("Reload tree"),
-                                    handler: function () {
-                                        stopEdit();
-                                        reLoadTree();
-                                    }
-                                }],
+                                },'-',
+                                    {
+                                        text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
+                                        id: "editlayerbutton",
+                                        disabled: true,
+                                        handler: function (thisBtn, event) {
+                                            try {
+                                                stopEdit();
+                                            }
+                                            catch (e) {
+                                            }
+                                            var node = tree.getSelectionModel().getSelectedNode();
+                                            var id = node.id.split(".");
+                                            var geomField = node.attributes.geomField;
+                                            var type = node.attributes.geomType;
+                                            attributeForm.init(id[1], geomField);
+                                            if (type === "GEOMETRY" || type === "RASTER") {
+                                                Ext.MessageBox.show({
+                                                    title: 'No geometry type on layer',
+                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                    buttons: Ext.MessageBox.OK,
+                                                    width: 400,
+                                                    height: 300,
+                                                    icon: Ext.MessageBox.ERROR
+                                                });
+                                            }
+                                            else {
+                                                var poll = function () {
+                                                    if (typeof filter.win === "object") {
+                                                        filter.win.show();
+                                                    }
+                                                    else {
+                                                        setTimeout(poll, 10);
+                                                    }
+                                                };
+                                                poll();
+                                            }
+                                        }
+                                    }, '-', {
+                                        text: "<i class='icon-refresh btn-gc'></i> " + __("Reload"),
+                                        handler: function () {
+                                            stopEdit();
+                                            reLoadTree();
+                                        }
+                                    }],
                                 items: [
                                     {
                                         xtype: "panel",
@@ -782,45 +820,6 @@ $(document).ready(function () {
         ;
     };
     wfsTools = [
-        {
-            text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
-            id: "editlayerbutton",
-            disabled: true,
-            handler: function (thisBtn, event) {
-                try {
-                    stopEdit();
-                }
-                catch (e) {
-                }
-                var node = tree.getSelectionModel().getSelectedNode();
-                var id = node.id.split(".");
-                var geomField = node.attributes.geomField;
-                var type = node.attributes.geomType;
-                attributeForm.init(id[1], geomField);
-                if (type === "GEOMETRY" || type === "RASTER") {
-                    Ext.MessageBox.show({
-                        title: 'No geometry type on layer',
-                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                        buttons: Ext.MessageBox.OK,
-                        width: 400,
-                        height: 300,
-                        icon: Ext.MessageBox.ERROR
-                    });
-                }
-                else {
-                    var poll = function () {
-                        if (typeof filter.win === "object") {
-                            filter.win.show();
-                        }
-                        else {
-                            setTimeout(poll, 10);
-                        }
-                    };
-                    poll();
-                }
-            }
-        },
-        '-',
         new GeoExt.Action({
             control: drawControl,
             text: "<i class='icon-pencil btn-gc'></i> " + __("Draw"),
@@ -895,7 +894,7 @@ $(document).ready(function () {
 
                     attributeForm.init(id[1], geomField);
                     startWfsEdition(id[1], geomField, filter);
-                    wfsTools[2].control.activate();
+                    wfsTools[0].control.activate();
                     Ext.getCmp('editcreatebutton').toggle(true);
                     Ext.iterate(qstore, function (v) {
                         v.reset();

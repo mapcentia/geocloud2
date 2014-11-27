@@ -1021,9 +1021,9 @@ $(window).ready(function () {
             '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(0);
-
         Ext.getCmp("layerStyleTabs").activate(2);
+
+        Ext.getCmp("layerStyleTabs").activate(1);
         var template = new Ext.Template(markup);
         template.overwrite(Ext.getCmp('a5').body, record);
         var a1 = Ext.getCmp("a1");
@@ -1038,7 +1038,7 @@ $(window).ready(function () {
         a1.doLayout();
         a4.doLayout();
 
-        Ext.getCmp("layerStyleTabs").activate(1);
+        Ext.getCmp("layerStyleTabs").activate(0);
         var a2 = Ext.getCmp("a2");
         a2.remove(wmsClasses.grid);
         wmsClasses.grid = null;
@@ -1060,8 +1060,6 @@ $(window).ready(function () {
         a9.doLayout();
         a10.doLayout();
         a11.doLayout();
-
-
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
         updateLegend();
@@ -1500,7 +1498,7 @@ $(window).ready(function () {
         new Ext.Window({
             title: __("Class wizard"),
             layout: 'fit',
-            width: 340,
+            width: 500,
             height: 500,
             plain: true,
             modal: true,
@@ -1509,7 +1507,7 @@ $(window).ready(function () {
             border: false,
             closeAction: 'hide',
             x: 250,
-            y: 35,
+            y: 100,
             items: [
                 {
                     xtype: "panel",
@@ -1642,22 +1640,6 @@ $(window).ready(function () {
                                 items: [
                                     {
                                         xtype: "panel",
-                                        title: 'Legend',
-                                        autoHeight: true,
-                                        defaults: {
-                                            border: false,
-                                            bodyStyle: "padding : 7px"
-                                        },
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                id: "a6",
-                                                html: ""
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        xtype: "panel",
                                         title: __('Classes'),
                                         defaults: {
                                             border: false
@@ -1788,6 +1770,22 @@ $(window).ready(function () {
                                                 }
                                             }
                                         ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Legend',
+                                        autoHeight: true,
+                                        defaults: {
+                                            border: false,
+                                            bodyStyle: "padding : 7px"
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a6",
+                                                html: ""
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -1895,15 +1893,21 @@ $(window).ready(function () {
         });
     };
     updateLegend = function () {
-        var a6 = Ext.getCmp("a6");
+        var a = Ext.getCmp("a6");
+        var b = Ext.getCmp("wizardLegend");
         if (activeLayer !== undefined) {
             $.ajax({
                 url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    a6.update(response.html);
-                    a6.doLayout();
+                    a.update(response.html);
+                    a.doLayout();
+                    try {
+                        b.update(response.html);
+                        b.doLayout();
+                    }
+                    catch (e){}
                 }
             });
         }
