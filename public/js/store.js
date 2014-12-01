@@ -1498,7 +1498,7 @@ $(window).ready(function () {
         new Ext.Window({
             title: __("Class wizard"),
             layout: 'fit',
-            width: 500,
+            width: 600,
             height: 500,
             plain: true,
             modal: true,

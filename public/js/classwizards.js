@@ -6,7 +6,8 @@ classWizards.init = function (record) {
         customIsSet = true;
     }
     classWizards.getAddvalues = function (pre) {
-        var values = Ext.getCmp(pre + '_addform').form.getValues();
+        var values = Ext.getCmp(pre + '_addform').form.getFieldValues();
+        console.log(values);
         var f = Ext.getCmp(pre + "Form").form.getValues();
         f.pre = pre;
         values.custom = f;
@@ -31,7 +32,6 @@ classWizards.init = function (record) {
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
-                                    width: 285,
                                     defaults: {
                                         width: 95
                                     },
@@ -47,13 +47,16 @@ classWizards.init = function (record) {
                                         {
                                             xtype: 'box',
                                             html: __("Size") + __("Combo field. Either select an integer attribute or write an integer for symbol size.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Outline color") + __('Pick color for outlining features.', true)
                                         }
                                     ]
                                 },
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
-                                    width: 285,
                                     defaults: {
                                         width: 95
                                     },
@@ -73,7 +76,6 @@ classWizards.init = function (record) {
                                             name: "angle",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.angle : ""
-
                                         },
                                         {
                                             xtype: "combo",
@@ -83,7 +85,12 @@ classWizards.init = function (record) {
                                             name: "symbolSize",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.symbolSize : ""
-                                        }
+                                        },
+                                        new Ext.form.ColorField({
+                                            name: "outlineColor",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
+                                        })
                                     ]
                                 },
                                 {
@@ -98,10 +105,6 @@ classWizards.init = function (record) {
                                         width: 95
                                     },
                                     items: [
-                                        {
-                                            xtype: 'box',
-                                            html: __("Outline color") + __('Pick color for outlining features.', true)
-                                        },
                                         {
                                             xtype: 'box',
                                             html: __("Line width") + __('Pick thickness for outline.', true)
@@ -120,12 +123,7 @@ classWizards.init = function (record) {
                                         width: 95
                                     },
                                     items: [
-                                        new Ext.form.ColorField({
-                                            name: "outlineColor",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
 
-                                        }),
                                         new Ext.ux.form.SpinnerField({
                                             name: "lineWidth",
                                             minValue: 1,
@@ -176,6 +174,10 @@ classWizards.init = function (record) {
                                         {
                                             xtype: 'box',
                                             html: __("Size") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Position") + __("Select a label position.", true)
                                         }
                                     ]
                                 },
@@ -208,6 +210,15 @@ classWizards.init = function (record) {
                                             name: "labelSize",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.labelSize : ""
+                                        },
+                                        {
+                                            xtype: "combo",
+                                            editable: false,
+                                            store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
+                                            triggerAction: "all",
+                                            name: "labelPosition",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelPosition : ""
                                         }
                                     ]
                                 },
@@ -224,15 +235,19 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
-                                            html: __("Position") + __("Select a label position.", true)
-                                        },
-                                        {
-                                            xtype: 'box',
                                             html: __("Angle") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
                                         },
                                         {
                                             xtype: 'box',
                                             html: __("Background") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Font") + __("Choose font for labels.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Font weight") + __("Font weight.", true)
                                         }
                                     ]
                                 },
@@ -243,15 +258,7 @@ classWizards.init = function (record) {
                                         width: 95
                                     },
                                     items: [
-                                        {
-                                            xtype: "combo",
-                                            store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
-                                            editable: true,
-                                            triggerAction: "all",
-                                            name: "labelPosition",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.labelPosition : ""
-                                        },
+
                                         {
                                             xtype: "combo",
                                             store: wmsLayer.numFieldsForStore,
@@ -265,7 +272,60 @@ classWizards.init = function (record) {
                                             name: "labelBackgroundcolor",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.labelBackgroundcolor : ""
-                                        })
+                                        }),
+                                        {
+                                            xtype: "combo",
+                                            editable: false,
+                                            displayField: 'name',
+                                            valueField: 'value',
+                                            mode: 'local',
+                                            triggerAction: "all",
+                                            name: "labelFont",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelFont : "",
+                                            store: new Ext.data.JsonStore({
+                                                fields: ['name', 'value'],
+                                                data: [
+                                                    {
+                                                        name: 'Arial',
+                                                        value: 'arial'
+                                                    }, {
+                                                        name: 'Courier new',
+                                                        value: 'courier'
+                                                    }
+                                                ]
+                                            })
+                                        },
+                                        {
+                                            xtype: "combo",
+                                            editable: false,
+                                            displayField: 'name',
+                                            valueField: 'value',
+                                            mode: 'local',
+                                            triggerAction: "all",
+                                            name: "labelFontWeight",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelFontWeight : "",
+                                            store: new Ext.data.JsonStore({
+                                                fields: ['name', 'value'],
+                                                data: [
+                                                    {
+                                                        name: 'Normal',
+                                                        value: 'normal'
+                                                    }, {
+                                                        name: 'Bold',
+                                                        value: 'bold'
+                                                    }, {
+                                                        name: 'Italic',
+                                                        value: 'italic'
+                                                    },
+                                                    {
+                                                        name: 'Bold italic',
+                                                        value: 'bolditalic'
+                                                    }
+                                                ]
+                                            })
+                                        }
                                     ]
                                 }
                             ]
@@ -274,8 +334,6 @@ classWizards.init = function (record) {
                     ]
                 }
             ]
-
-
         });
     };
     classWizards.quantile = new Ext.Panel({

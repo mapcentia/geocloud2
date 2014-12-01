@@ -7,6 +7,12 @@ use \app\inc\Util;
 
 class Mapfile extends \app\inc\Controller
 {
+    private $fonts;
+
+    function __construct()
+    {
+    }
+
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
@@ -555,7 +561,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT "arialbd"
+                            FONT <?php echo ($class['label_font'] ?: "arialbd") . ($class['label_fontweight'] ?: "normal") ?>
                             SIZE <?php
                             if ($class['label_size']) {
                                 if (is_numeric($class['label_size']))
@@ -618,7 +624,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT "arialbd"
+                            FONT <?php echo ($class['label2_font'] ? $class['label2_font'] : "arialbd") . $class['label2_fontweight'] ?: "normal" ?>
                             SIZE <?php
                             if ($class['label2_size']) {
                                 if (is_numeric($class['label2_size']))

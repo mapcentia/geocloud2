@@ -17,7 +17,7 @@ class Processraster extends \app\inc\Controller
             $safeName = "_" . $safeName;
         }
 
-        $srid = ($_REQUEST['srid']) ? : "4326";
+        $srid = ($_REQUEST['srid']) ?: "4326";
 
         $cmd = "raster2pgsql " .
             "-s " .
@@ -32,13 +32,15 @@ class Processraster extends \app\inc\Controller
             " -U " .
             Connection::$param["postgisuser"] .
             " -h " .
-            Connection::$param["postgishost"];
+            Connection::$param["postgishost"] .
+            " -p " .
+            Connection::$param["postgisport"];
 
         exec($cmd . ' 2>&1', $out);
         $err = false;
 
         // This is a HACK. raster2pgsql doesn't return the error to stdout or stderr.
-        if (!isset($out[0])){
+        if (!isset($out[0])) {
             $out[0] = "ERROR: Unable to read raster file";
         }
 

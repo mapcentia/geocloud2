@@ -331,6 +331,12 @@ wmsClass.init = function (id) {
             {
                 name: "label_offsety"
             },
+            {
+                name: "label_font"
+            },
+            {
+                name: "label_fontweight"
+            },
 
             // label22 start
             {
@@ -382,6 +388,12 @@ wmsClass.init = function (id) {
             },
             {
                 name: "label2_offsety"
+            },
+            {
+                name: "label2_font"
+            },
+            {
+                name: "label2_fontweight"
             },
 
             // Leader start
@@ -506,6 +518,8 @@ wmsClass.init = function (id) {
                             'label_maxscaledenom',
                             'label_position',
                             'label_size',
+                            'label_font',
+                            'label_fontweight',
                             'label_color',
                             'label_outlinecolor',
                             'label_buffer',
@@ -532,6 +546,8 @@ wmsClass.init = function (id) {
                             'label2_maxscaledenom',
                             'label2_position',
                             'label2_size',
+                            'label2_font',
+                            'label2_fontweight',
                             'label2_color',
                             'label2_outlinecolor',
                             'label2_buffer',
@@ -939,7 +955,10 @@ wmsClass.init = function (id) {
             label_backgroundcolor: 'Label: background color',
             label_backgroundpadding: 'Label: background padding',
             label_offsetx: 'Label: offset X',
-            label_offsety: 'Label: offset Y'
+            label_offsety: 'Label: offset Y',
+            label_font: 'Label: font',
+            label_fontweight: 'Label: font weight'
+
         },
         customEditors: {
             'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -982,6 +1001,51 @@ wmsClass.init = function (id) {
                 store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
                 editable: false,
                 triggerAction: 'all'
+            }), {}),
+            'label_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                triggerAction: "all",
+                editable: false,
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Arial',
+                            value: 'arial'
+                        }, {
+                            name: 'Courier new',
+                            value: 'courier'
+                        }
+                    ]
+                })
+            }), {}),
+            'label_fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                triggerAction: "all",
+                editable: false,
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Normal',
+                            value: 'normal'
+                        }, {
+                            name: 'Bold',
+                            value: 'bold'
+                        }, {
+                            name: 'Italic',
+                            value: 'italic'
+                        },
+                        {
+                            name: 'Bold italic',
+                            value: 'bolditalic'
+                        }
+                    ]
+                })
             }), {}),
             'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
@@ -1031,7 +1095,10 @@ wmsClass.init = function (id) {
             label2_backgroundcolor: 'Label: background color',
             label2_backgroundpadding: 'Label: background padding',
             label2_offsetx: 'Label: offset X',
-            label2_offsety: 'Label: offset Y'
+            label2_offsety: 'Label: offset Y',
+            label2_font: 'Label: font',
+            label2_fontweight: 'Label: font weight'
+
         },
         customEditors: {
             'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1074,6 +1141,51 @@ wmsClass.init = function (id) {
                 store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
                 editable: false,
                 triggerAction: 'all'
+            }), {}),
+            'label2_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                triggerAction: "all",
+                editable: false,
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Arial',
+                            value: 'arial'
+                        }, {
+                            name: 'Courier new',
+                            value: 'courier'
+                        }
+                    ]
+                })
+            }), {}),
+            'label2_fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                triggerAction: "all",
+                editable: false,
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Normal',
+                            value: 'normal'
+                        }, {
+                            name: 'Bold',
+                            value: 'bold'
+                        }, {
+                            name: 'Italic',
+                            value: 'italic'
+                        },
+                        {
+                            name: 'Bold italic',
+                            value: 'bolditalic'
+                        }
+                    ]
+                })
             }), {}),
             'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
