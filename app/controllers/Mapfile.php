@@ -370,7 +370,7 @@ class Mapfile extends \app\inc\Controller
                         CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'" ?>"
                     <?php
                     } else {
-                        echo "DATA \"PG:host=" . Connection::$param['postgishost'];
+                        echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
                         if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport']);
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
@@ -427,8 +427,8 @@ class Mapfile extends \app\inc\Controller
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_the_geom_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($row['wmssource']) {
-                    $wmsCon = str_replace("LAYERS","LAYER",$row['wmssource']);
-                    $wmsCon = str_replace("layers","layer",$row['wmssource']);
+                    $wmsCon = str_replace("LAYERS", "LAYER", $row['wmssource']);
+                    $wmsCon = str_replace("layers", "layer", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic&FORMAT=image/png\"\n";
                 } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>

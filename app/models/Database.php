@@ -49,7 +49,7 @@ class Database extends \app\inc\Model
 
         $sql = "GRANT {$screenName} to {$this->postgisuser}";
         $this->execQuery($sql);
-        
+
         $this->changeOwner($screenName, $screenName);
 
         if (!$this->PDOerror) {
