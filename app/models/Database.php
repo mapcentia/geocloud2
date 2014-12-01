@@ -38,14 +38,18 @@ class Database extends \app\inc\Model
 
         $sql = "CREATE DATABASE {$screenName}
 			    WITH ENCODING='{$encoding}'
-       			OWNER=postgres
+       			OWNER={$this->postgisuser}
        			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
         $this->execQuery($sql);
+
         $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
         $this->execQuery($sql);
 
+        $sql = "GRANT {$screenName} to {$this->postgisuser}";
+        $this->execQuery($sql);
+        
         $this->changeOwner($screenName, $screenName);
 
         if (!$this->PDOerror) {
@@ -108,7 +112,7 @@ class Database extends \app\inc\Model
         return $response;
     }
 
-    private function changeOwner($db, $newOwner)
+    public function changeOwner($db, $newOwner)
     {
         $this->db = null;
         $this->postgisdb = $db;
@@ -116,27 +120,32 @@ class Database extends \app\inc\Model
         $this->connect();
         $this->begin();
 
+        //Database
+        $sql = "ALTER DATABASE {$db} OWNER TO {$newOwner}";
+        $res = $this->execQuery($sql);
+
         // Schema
         $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows1 = $this->fetchAll($res);
 
         // tables
-        $sql = "SELECT schemaname||'.'||tablename AS table FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
+        $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS table FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows2 = $this->fetchAll($res);
 
 
-        $sql = "SELECT table_schema||'.'||table_name AS table FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
+        $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS table FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows3 = $this->fetchAll($res);
 
 
-        $sql = "SELECT sequence_schema||'.'||sequence_name AS table FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
+        $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS table FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
         $res = $this->execQuery($sql);
         $rows4 = $this->fetchAll($res);
 
 
+        $this->execQuery($sql);
         foreach ($rows1 as $row) {
             $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);

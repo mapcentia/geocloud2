@@ -32,7 +32,7 @@ function mkdbbackup {
         do
         DUMPPATH="${BACKUPLATEST}/${DATABASE}.bak"
             echo "Backing up: ${HOST}.${DATABASE} to ${DUMPPATH}"
-            pg_dump ${CREDS} --format=c  ${DATABASE} > ${DUMPPATH}
+            pg_dump --host ${HOST} ${CREDS} --format=c  ${DATABASE} > ${DUMPPATH}
         done
 
         for BDIR in $BACKUPALTS
