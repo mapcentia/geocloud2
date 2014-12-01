@@ -16,11 +16,13 @@ module.exports = function (grunt) {
                         'public/css/styles.css'
                     ],
                     // The widget
-                    'sp': [
+                    'public/apps/widgets/gc2map/css/build/styles.min.css': [
                         'public/apps/widgets/gc2map/css/bootstrap.css',
                         'public/apps/widgets/gc2map/css/bootstrap-alert.css,',
                         'public/apps/widgets/gc2map/css/non-responsive.css',
-                        'public/apps/widgets/gc2map/css/styles.css'
+                        'public/apps/widgets/gc2map/css/styles.css',
+                        'public/js/leaflet/plugins/markercluster/MarkerCluster.css',
+                        'public/js/leaflet/plugins/markercluster/MarkerCluster.Default.css'
                     ]
                 }
             }
@@ -46,6 +48,11 @@ module.exports = function (grunt) {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             publish: {
                 files: {
+                    'public/js/leaflet/leaflet-all.js': [
+                        'public/js/leaflet/leaflet.js',
+                        'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
+                        'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js'
+                    ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
                     // The Viewer

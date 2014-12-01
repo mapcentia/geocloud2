@@ -35,7 +35,7 @@ if (typeof gc2map === "undefined") {
             if (typeof $ !== "undefined") {
                 $.getScript(host + "/api/v1/baselayerjs");
                 // @if DEBUG
-                $.getScript(host + "/js/leaflet/leaflet.js");
+                $.getScript(host + "/js/leaflet/leaflet-all.js");
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
                 $.getScript(host + "/js/hogan/hogan-2.0.0.js");
@@ -88,12 +88,22 @@ if (typeof gc2map === "undefined") {
                     type: 'text/css',
                     href: host + '/apps/widgets/gc2map/css/styles.css?fe15deedc44b317d#grunt-cache-bust'
                 }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.css?fe15deedc44b317d#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.Default.css?fe15deedc44b317d#grunt-cache-bust'
+                }).appendTo('head');
                 // @endif
                 // @if !DEBUG
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/js/build/styles.min.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + 'apps/widgets/gc2map/css/build/styles.min.css?fe15deedc44b317d#grunt-cache-bust'
                 }).appendTo('head');
                 // @endif
                 $('<link/>').attr({

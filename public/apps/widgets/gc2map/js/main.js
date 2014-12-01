@@ -151,8 +151,10 @@ MapCentia = function (globalId) {
         position: 'bottomright'
     }));
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
-        defaults = {};
+        var count = 0, metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
+        defaults = {
+            layers: []
+        };
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -258,6 +260,10 @@ MapCentia = function (globalId) {
         }
 
         arr = defaults.layers;
+        //If no layers, when initiate call back
+        if (arr.length === 0) {
+            cloud.map.on('load', defaults.callBack(cloud));
+        }
         for (i = 0; i < arr.length; i = i + 1) {
             // If layer is schema, set as base layer
             if (arr[i].split(".").length < 2) {
@@ -273,6 +279,7 @@ MapCentia = function (globalId) {
                 $("#base-layer-list-" + id).append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
                 );
+            	count = count + 1;
             } else {
                 $.ajax(
                     {
@@ -303,6 +310,11 @@ MapCentia = function (globalId) {
                                     $("#base-layer-list-" + id).append(
                                         "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                                     );
+                                }
+                                // We first call back when all layers are initiated
+                                count = count + 1;
+                                if (count === arr.length) {
+                        			cloud.map.on('load', defaults.callBack(cloud));
                                 }
                             }
                         }
@@ -463,7 +475,7 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
-        defaults.callBack(cloud);
+        
     };
     return {
         init: init,
