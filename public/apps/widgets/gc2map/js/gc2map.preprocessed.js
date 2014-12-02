@@ -103,7 +103,7 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + 'apps/widgets/gc2map/css/build/styles.min.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + '/apps/widgets/gc2map/css/build/all.min.css?fe15deedc44b317d#grunt-cache-bust'
                 }).appendTo('head');
                 // @endif
                 $('<link/>').attr({

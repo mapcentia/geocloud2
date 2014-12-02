@@ -16,9 +16,9 @@ module.exports = function (grunt) {
                         'public/css/styles.css'
                     ],
                     // The widget
-                    'public/apps/widgets/gc2map/css/build/styles.min.css': [
+                    'public/apps/widgets/gc2map/css/build/all.min.css': [
                         'public/apps/widgets/gc2map/css/bootstrap.css',
-                        'public/apps/widgets/gc2map/css/bootstrap-alert.css,',
+                        'public/apps/widgets/gc2map/css/bootstrap-alert.css',
                         'public/apps/widgets/gc2map/css/non-responsive.css',
                         'public/apps/widgets/gc2map/css/styles.css',
                         'public/js/leaflet/plugins/markercluster/MarkerCluster.css',
