@@ -35,7 +35,7 @@ if (typeof gc2map === "undefined") {
             if (typeof $ !== "undefined") {
                 $.getScript(host + "/api/v1/baselayerjs");
                 // @if DEBUG
-                $.getScript(host + "/js/leaflet/leaflet-all.js");
+                $.getScript(host + "/js/leaflet/leaflet-all.js#grunt-cache-bust");
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
                 $.getScript(host + "/js/hogan/hogan-2.0.0.js");

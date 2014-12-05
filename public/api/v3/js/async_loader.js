@@ -26,7 +26,7 @@ if (typeof gc2apiLoader === "undefined") {
                     $.getScript(host + "/js/openlayers/OpenLayers.js");
                 }
                 else if (window.geocloud_maplib === "leaflet" && typeof L === "undefined") {
-                    $.getScript(host + "/js/leaflet/leaflet.js");
+                    $.getScript(host + "/js/leaflet/leaflet-all.js");
                 }
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/api/v1/baselayerjs");
@@ -37,12 +37,8 @@ if (typeof gc2apiLoader === "undefined") {
                     ) {
                         // Load Dependants
                         $.getScript(host + "/api/v3/js/geocloud.min.js?816bf7fd4f9dcd05#grunt-cache-bust");
-                        if (window.geocloud_maplib === "leaflet" && typeof L.drawVersion === "undefined" && typeof L.labelVersion === "undefined") {
-                            $.getScript(host + "/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js");
-                            $.getScript(host + "/js/leaflet/plugins/Leaflet.label/leaflet.label.js");
-                        }
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && (window.geocloud_maplib === "ol2" || typeof L.drawVersion !== "undefined") && (window.geocloud_maplib === "ol2" || typeof L.labelVersion !== "undefined")) {
+                            if (typeof geocloud !== "undefined") {
                                 if (window.geocloud_maplib === "leaflet") {
                                     L.Icon.Default.imagePath = "/js/leaflet/images";
                                 }

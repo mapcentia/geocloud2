@@ -34,7 +34,7 @@ if (typeof gc2map === "undefined") {
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 $.getScript(host + "/api/v1/baselayerjs");
-                $.getScript(host + "/js/leaflet/leaflet-all.js");
+                $.getScript(host + "/js/leaflet/leaflet-all.js?950f422fbabe9382#grunt-cache-bust");
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
                 $.getScript(host + "/js/hogan/hogan-2.0.0.js");
@@ -46,8 +46,8 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        $.getScript(host + "/api/v3/js/geocloud.js?a439ffa6e8bc2dd0#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?a431ad6b702c34a3#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?b7b47372b32dde62#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?fcd29b3cdfa6f10c#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {
@@ -83,12 +83,12 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.css?2145c86eef214f53#grunt-cache-bust'
                 }).appendTo('head');
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.Default.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.Default.css?0ba3d71ad0980967#grunt-cache-bust'
                 }).appendTo('head');
                 $('<link/>').attr({
                     rel: 'stylesheet',

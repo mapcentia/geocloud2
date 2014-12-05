@@ -51,7 +51,9 @@ module.exports = function (grunt) {
                     'public/js/leaflet/leaflet-all.js': [
                         'public/js/leaflet/leaflet.js',
                         'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
-                        'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js'
+                        'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js',
+                        'public//js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
+                        'public//js/leaflet/plugins/Leaflet.label/leaflet.label.js'
                     ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
@@ -65,9 +67,7 @@ module.exports = function (grunt) {
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.js',
                         'public/apps/viewer/js/templates.js',
                         'public/apps/viewer/js/viewer.js',
-                        'public/js/leaflet/leaflet.js',
-                        'public//js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
-                        'public//js/leaflet/plugins/Leaflet.label/leaflet.label.js'
+                        'public/js/leaflet/leaflet-all.js'
                     ],
                     //store
                     'public/js/build/store/all.min.js': [
@@ -108,7 +108,7 @@ module.exports = function (grunt) {
                     ],
                     // The widget
                     'public/apps/widgets/gc2map/js/build/all.min.js': [
-                        'public/js/leaflet/leaflet.js',
+                        'public/js/leaflet/leaflet-all.js',
                         'public/js/openlayers/proj4js-combined.js',
                         'public/js/bootstrap3/js/bootstrap.min.js',
                         'public/js/hogan/hogan-2.0.0.js',
