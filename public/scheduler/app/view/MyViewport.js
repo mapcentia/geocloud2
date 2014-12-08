@@ -28,10 +28,17 @@ Ext.define('MyApp.view.MyViewport', {
                 {
                     xtype: 'panel',
                     region: 'center',
+                    border: false,
+                    constrain: true,
+                    layout: {
+                        type: 'border'
+                    },
                     title: 'Jobs',
                     items: [
                         {
                             xtype: 'gridpanel',
+                            region: 'center',
+                            forceFit: true,
                             store: 'MyJsonStore',
                             dockedItems: [
                                 {
@@ -111,10 +118,10 @@ Ext.define('MyApp.view.MyViewport', {
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    width: 180,
                                     dataIndex: 'url',
                                     menuDisabled: true,
-                                    text: 'Url',
-                                    flex: 1
+                                    text: 'Url'
                                 },
                                 {
                                     xtype: 'gridcolumn',
@@ -147,12 +154,6 @@ Ext.define('MyApp.view.MyViewport', {
                             ]
                         }
                     ]
-                },
-                {
-                    xtype: 'panel',
-                    region: 'east',
-                    width: 150,
-                    title: 'Log'
                 }
             ]
         });

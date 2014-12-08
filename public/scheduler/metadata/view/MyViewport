@@ -21,6 +21,9 @@
             "codeClass": null,
             "userConfig": {
                 "layout|region": "center",
+                "border": false,
+                "constrain": true,
+                "layout": "border",
                 "title": "Jobs"
             },
             "designerId": "0086b47c-7a97-452a-857b-aaf415036d0c",
@@ -33,8 +36,11 @@
                     },
                     "codeClass": null,
                     "userConfig": {
+                        "layout|region": "center",
                         "designer|createAlias": null,
+                        "bodyPadding": null,
                         "title": null,
+                        "forceFit": true,
                         "store": "MyJsonStore"
                     },
                     "designerId": "d1eab2af-8977-422a-836b-fb3d941888d7",
@@ -235,10 +241,11 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 180,
                                 "dataIndex": "url",
                                 "menuDisabled": true,
                                 "text": "Url",
-                                "flex": 1
+                                "flex": null
                             },
                             "designerId": "ea209994-e81b-45f5-a34d-66e85b871853"
                         },
@@ -313,20 +320,6 @@
                     ]
                 }
             ]
-        },
-        {
-            "type": "Ext.panel.Panel",
-            "reference": {
-                "name": "items",
-                "type": "array"
-            },
-            "codeClass": null,
-            "userConfig": {
-                "layout|region": "east",
-                "width": 150,
-                "title": "Log"
-            },
-            "designerId": "bc156bd4-9f27-4f10-9d8f-c2ee5e6d0161"
         }
     ]
 }
