@@ -265,7 +265,7 @@ Ext.define('MyApp.view.MyWindow', {
                         },
                         {
                             xtype: 'textfield',
-                            fieldLabel: 'Name',
+                            fieldLabel: 'Table',
                             name: 'name',
                             allowBlank: false
                         },
@@ -296,6 +296,7 @@ Ext.define('MyApp.view.MyWindow', {
                             fieldLabel: 'Type',
                             name: 'type',
                             allowBlank: false,
+                            editable: false,
                             store: [
                                 'POINT',
                                 'LINESTRING',

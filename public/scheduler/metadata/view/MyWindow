@@ -419,7 +419,7 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "fieldLabel": "Name",
+                        "fieldLabel": "Table",
                         "name": "name",
                         "allowBlank": false
                     },
@@ -482,6 +482,7 @@
                         "fieldLabel": "Type",
                         "name": "type",
                         "allowBlank": false,
+                        "editable": false,
                         "store": [
                             "",
                             "    [\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]",
