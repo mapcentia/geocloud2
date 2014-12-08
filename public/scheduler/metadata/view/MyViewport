@@ -291,8 +291,8 @@
                             "codeClass": null,
                             "userConfig": {
                                 "dataIndex": "lastcheck",
-                                "text": "Last check",
-                                "flex": 0.4
+                                "text": "Success on latest",
+                                "flex": 0.5
                             },
                             "designerId": "dcb2cf13-be70-47cd-9cea-acf679e748ff"
                         },
@@ -306,7 +306,7 @@
                             "userConfig": {
                                 "dataIndex": "lasttimestamp",
                                 "text": "Last success ",
-                                "flex": 1
+                                "flex": 0.7
                             },
                             "designerId": "275e7805-6377-4b74-b229-520f313afa0f"
                         }

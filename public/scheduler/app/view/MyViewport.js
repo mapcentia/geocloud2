@@ -135,14 +135,14 @@ Ext.define('MyApp.view.MyViewport', {
                                 {
                                     xtype: 'booleancolumn',
                                     dataIndex: 'lastcheck',
-                                    text: 'Last check',
-                                    flex: 0.4
+                                    text: 'Success on latest',
+                                    flex: 0.5
                                 },
                                 {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'lasttimestamp',
                                     text: 'Last success ',
-                                    flex: 1
+                                    flex: 0.7
                                 }
                             ]
                         }
