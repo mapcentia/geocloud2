@@ -222,7 +222,7 @@
                             "userConfig": {
                                 "dataIndex": "name",
                                 "menuDisabled": true,
-                                "text": "Name",
+                                "text": "Table",
                                 "flex": 0.3
                             },
                             "designerId": "7f7949ea-d38b-446b-b561-109defd03aa5"

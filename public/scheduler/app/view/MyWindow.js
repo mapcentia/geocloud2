@@ -267,7 +267,6 @@ Ext.define('MyApp.view.MyWindow', {
                             xtype: 'textfield',
                             fieldLabel: 'Name',
                             name: 'name',
-                            value: 'hej',
                             allowBlank: false
                         },
                         {

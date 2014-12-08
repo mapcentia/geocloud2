@@ -106,7 +106,7 @@ Ext.define('MyApp.view.MyViewport', {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'name',
                                     menuDisabled: true,
-                                    text: 'Name',
+                                    text: 'Table',
                                     flex: 0.3
                                 },
                                 {

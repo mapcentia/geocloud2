@@ -421,9 +421,6 @@
                     "userConfig": {
                         "fieldLabel": "Name",
                         "name": "name",
-                        "value": [
-                            "hej"
-                        ],
                         "allowBlank": false
                     },
                     "designerId": "30a4eb10-fef8-4d55-b377-a0cb8b9031cd"
