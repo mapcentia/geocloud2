@@ -1,0 +1,148 @@
+{
+    "type": "Ext.app.Controller",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "stores": [
+            "MyJsonStore"
+        ],
+        "designer|userClassName": "MyController"
+    },
+    "designerId": "219c8580-746b-465e-a8f3-5174ccb0e893",
+    "cn": [
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onButtonClick",
+                "implHandler": [
+                    "var wind = new MyApp.view.MyWindow();",
+                    "wind.modal = true;",
+                    "wind.show();",
+                    "Ext.ComponentQuery.query('#update')[0].setVisible(false);"
+                ],
+                "name": "click",
+                "scope": "me",
+                "designer|targetType": "Ext.button.Button",
+                "designer|controlQuery": "button#new"
+            },
+            "designerId": "f7a28765-67a7-4cfd-91f6-7e8ac82a15dc"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onButtonClick1",
+                "implHandler": [
+                    "Ext.Msg.confirm(\"Confirmation\", \"Do you want to Save changes?\", function(btnText){",
+                    "            if(btnText === \"no\"){",
+                    "                return false;",
+                    "            }",
+                    "            else if(btnText === \"yes\"){",
+                    "                var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
+                    "\t\t\t\tExt.getStore(\"MyJsonStore\").remove(record);",
+                    "            }",
+                    "        }, this);",
+                    ""
+                ],
+                "name": "click",
+                "scope": "me",
+                "designer|targetType": "Ext.button.Button",
+                "designer|controlQuery": "button#delete"
+            },
+            "designerId": "cad0eeae-7887-4945-a2de-8eba85f1c003"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onButtonClick2",
+                "implHandler": [
+                    "if (Ext.ComponentQuery.query('#form')[0].isValid() === false){",
+                    "\treturn false",
+                    "}",
+                    "var values = Ext.ComponentQuery.query('#form')[0].getValues();",
+                    "Ext.getStore(\"MyJsonStore\").add(values);",
+                    "Ext.ComponentQuery.query('#window')[0].close();",
+                    "Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().clearSelections()",
+                    ""
+                ],
+                "name": "click",
+                "scope": "me",
+                "designer|targetType": "Ext.button.Button",
+                "designer|controlQuery": "button#save"
+            },
+            "designerId": "089c83fb-8d60-40a0-854c-760deea3dd88"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onButtonClick3",
+                "implHandler": [
+                    "var wind = new MyApp.view.MyWindow();",
+                    "wind.modal = true;",
+                    "wind.show();",
+                    "Ext.ComponentQuery.query('#save')[0].setVisible(false);",
+                    "var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
+                    "if (!record){",
+                    "\twind.close();",
+                    "    return false;",
+                    "}",
+                    "wind.down('form').loadRecord(record);"
+                ],
+                "name": "click",
+                "scope": "me",
+                "designer|targetType": "Ext.button.Button",
+                "designer|controlQuery": "button#edit"
+            },
+            "designerId": "7c79a43d-c2a0-4ad7-95d5-a78e8037f4a7"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onButtonClick4",
+                "implHandler": [
+                    "if (Ext.ComponentQuery.query('#form')[0].isValid() === false){",
+                    "\treturn false",
+                    "}",
+                    "var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
+                    "var values = Ext.ComponentQuery.query('#form')[0].getValues();",
+                    "record.set(values);",
+                    "Ext.ComponentQuery.query('#window')[0].close();",
+                    "Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().clearSelections()",
+                    ""
+                ],
+                "name": "click",
+                "scope": "me",
+                "designer|targetType": "Ext.button.Button",
+                "designer|controlQuery": "button#update"
+            },
+            "designerId": "b45326a8-e968-41b9-a6d0-23812119694f"
+        }
+    ]
+}
