@@ -31,7 +31,7 @@ class Job extends \app\inc\Model
         $sql = "INSERT INTO jobs (name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding) VALUES(:name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding)";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":name" => $data->name, ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding));
+            $res->execute(array(":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -55,7 +55,7 @@ class Job extends \app\inc\Model
         $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding WHERE id=:id";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":name" => $data->name, ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding, ":id" => $data->id));
+            $res->execute(array(":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding, ":id" => $data->id));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
