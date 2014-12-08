@@ -62,7 +62,9 @@ Ext.define('MyApp.store.MyJsonStore', {
 
     onRestException: function(proxy, response, operation, eOpts) {
         alert(Ext.decode(response.responseText).message);
-        this.load();
+        if (response.status !==401){
+            this.load();
+        }
     },
 
     onJsonstoreLoad: function(store, records, successful, eOpts) {

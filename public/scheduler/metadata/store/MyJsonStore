@@ -59,7 +59,9 @@
                         "fn": "onRestException",
                         "implHandler": [
                             "alert(Ext.decode(response.responseText).message);",
-                            "this.load();"
+                            "if (response.status !==401){",
+                            "\tthis.load();",
+                            "}"
                         ],
                         "name": "exception",
                         "scope": "me"
