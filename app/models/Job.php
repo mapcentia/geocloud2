@@ -103,13 +103,13 @@ class Job extends \app\inc\Model
         $jobs = $this->getAll();
         exec("crontab -r");
         foreach ($jobs["data"] as $job) {
-            $cmd = "crontab -l | { cat; echo '{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php ". __DIR__ . "/../scripts/get.php {$_SESSION['screen_name']} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} >> ".__DIR__."/../../public/logs/{$job["id"]}_scheduler.log\n'; } | crontab - 2>&1";
+            $cmd = "crontab -l | { cat; echo '{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php ". __DIR__ . "/../scripts/get.php {$_SESSION['screen_name']} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} > ".__DIR__."/../../public/logs/{$job["id"]}_scheduler.log\n'; } | crontab - 2>&1";
             $out = exec($cmd);
             if ($out){
                 return $out . " ({$job["id"]})";
             }
         }
-        $cmd = "crontab -l | { cat; echo '*/1 * * * * echo \"Hello world\" >> ".__DIR__."/../../public/logs/test.log\n'; } | crontab - 2>&1";
+        $cmd = "crontab -l | { cat; echo '*/1 * * * * echo \"Hello world\" > ".__DIR__."/../../public/logs/test.log\n'; } | crontab - 2>&1";
         $out = exec($cmd);
         return true;
 
