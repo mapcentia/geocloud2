@@ -70,8 +70,9 @@ exec($cmd . ' 2>&1', $out, $err);
 
 if ($out[0] == "") {
     print_r($out);
+    print_r($cmd);
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
-    $values = array(":lastcheck" => 1, ":id" => $jobId);
+    $values = array(":lastcheck" => 0, ":id" => $jobId);
 
 } else {
     print $url . " imported to " . $schema . "." . $safeName;
