@@ -52,8 +52,8 @@ module.exports = function (grunt) {
                         'public/js/leaflet/leaflet.js',
                         'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
                         'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js',
-                        'public//js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
-                        'public//js/leaflet/plugins/Leaflet.label/leaflet.label.js'
+                        'public/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
+                        'public/js/leaflet/plugins/Leaflet.label/leaflet.label.js'
                     ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],

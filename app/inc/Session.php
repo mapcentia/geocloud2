@@ -48,7 +48,7 @@ class Session
         $_SESSION["log"] .= "<br/<br/>";
         $_SESSION["log"] .= "<i>Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
         for ($i = 0; $i <= sizeof($lines); $i++) {
-            $_SESSION["log"] .= $lines[$i] . "</br>";
+            $_SESSION["log"] .= htmlentities($lines[$i]) . "</br>";
             if ($i >= $num) {
                 $_SESSION["log"] .= "<i>" . (sizeof($lines) - $num - 1) . " more lines</i><br/>";
                 return;

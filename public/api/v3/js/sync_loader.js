@@ -19,3 +19,11 @@ document.write("<script src='http://cdn.eu1.mapcentia.com/js/openlayers/proj4js-
 document.write("<script src='" + host + "/api/v1/baselayerjs' type='text/javascript'><\/script>");
 document.write("<script src='" + host + "/api/v3/js/geocloud.js'><\/script>");
 document.write("<script src='" + host + "/js/i18n/" + "en_US" + ".js'><\/script>");
+
+// Load some css
+if (window.geocloud_maplib === "leaflet") {
+    document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/awesome-markers/leaflet.awesome-markers.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/Leaflet.draw/leaflet.draw.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/Leaflet.label/leaflet.label.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css'>");
+}
