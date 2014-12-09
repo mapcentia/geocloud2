@@ -485,7 +485,7 @@
                         "editable": false,
                         "store": [
                             "",
-                            "    [\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]",
+                            "    [\"AUTO\",\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]",
                             ""
                         ]
                     },

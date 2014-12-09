@@ -298,6 +298,7 @@ Ext.define('MyApp.view.MyWindow', {
                             allowBlank: false,
                             editable: false,
                             store: [
+                                'AUTO',
                                 'POINT',
                                 'LINESTRING',
                                 'POLYGON',
