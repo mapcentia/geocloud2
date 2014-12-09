@@ -69,15 +69,15 @@ $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
 exec($cmd . ' 2>&1', $out, $err);
 
 if ($out[0] == "") {
+    print $url . " imported to " . $schema . "." . $safeName;
+    $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
+    $values = array(":lastcheck" => 1, ":id" => $jobId);
+
+} else {
     print_r($out);
     print_r($cmd);
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
-
-} else {
-    print $url . " imported to " . $schema . "." . $safeName;
-    $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
-    $values = array(":lastcheck" => 1, ":id" => $jobId);
 }
 \app\models\Database::setDb("gc2scheduler");
 $model = new \app\inc\Model();
