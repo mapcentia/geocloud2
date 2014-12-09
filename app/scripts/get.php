@@ -51,14 +51,22 @@ $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
     "";
 
 exec($cmd . ' 2>&1', $out, $err);
+$pass = true;
+foreach($out as $line){
+    if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+        $pass = false;
+        break;
+    }
+}
 
-if (strpos($out[0], "FAILURE") === false && strpos($out[0], "ERROR") === false) {
+if ($pass) {
+    print $cmd."\n";
     print $url . " imported to " . $schema . "." . $safeName;
     $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
 
 } else {
-    print_r($cmd);
+    print $cmd."\n";
     print_r($out);
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
