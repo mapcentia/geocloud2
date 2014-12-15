@@ -40,7 +40,7 @@ if (typeof gc2apiLoader === "undefined") {
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined") {
                                 if (window.geocloud_maplib === "leaflet") {
-                                    L.Icon.Default.imagePath = "/js/leaflet/images";
+                                    L.Icon.Default.imagePath = host + "/js/leaflet/images";
                                 }
                                 $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
                                 (function pollForDict() {

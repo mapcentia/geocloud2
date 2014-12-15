@@ -774,7 +774,7 @@ function doParse($arr)
         'indent' => '  ',
     );
 
-    $Serializer = & new XML_Serializer($serializer_options);
+    $Serializer = &new XML_Serializer($serializer_options);
     foreach ($arr as $key => $featureMember) {
         if ($key == "Insert") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
@@ -884,7 +884,7 @@ function doParse($arr)
     // First we loop through inserts
     if (sizeof($forSql['tables']) > 0) for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
-
+            \app\controllers\Tilecache::bust($postgisschema . "." . $forSql['tables'][$i]);
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql['tables'][$i]);
             $sql = "INSERT INTO {$postgisschema}.{$forSql['tables'][$i]} (";
 
@@ -923,6 +923,7 @@ function doParse($arr)
     // Second we loop through updates
     if (sizeof($forSql2['tables']) > 0) for ($i = 0; $i < sizeof($forSql2['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "editable")) {
+            \app\controllers\Tilecache::bust($postgisschema . "." . $forSql2['tables'][$i]);
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
             $tableObj = new table($postgisschema . "." . $forSql2['tables'][$i]);
             if ($tableObj->versioning) {
@@ -993,6 +994,7 @@ function doParse($arr)
     // Third we loop through deletes
     if (sizeof($forSql3['tables']) > 0) for ($i = 0; $i < sizeof($forSql3['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql3['tables'][$i], "editable")) {
+            \app\controllers\Tilecache::bust($postgisschema . "." . $forSql3['tables'][$i]);
             $tableObj = new table($postgisschema . "." . $forSql3['tables'][$i]);
             if ($tableObj->versioning) {
                 // Check if its history
@@ -1133,5 +1135,6 @@ function makeExceptionReport($value)
     Log::write($data);
     die();
 }
+
 //echo ob_get_clean();
-print("<!-- Memory used: ".number_format(memory_get_usage())." bytes -->\n");
+print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");

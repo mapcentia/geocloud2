@@ -1256,7 +1256,19 @@ saveStrategy = new OpenLayers.Strategy.Save({
                 message = "<p>Deleted: " + deleted + "</p>";
                 window.parent.App.setAlert(App.STATUS_OK, message);
             }
-            window.parent.writeFiles(schema + "." + layerBeingEditing + "." + layerBeingEditingGeomField, map);
+            window.parent.writeFiles(false, map);
+            var l;
+            l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
+            l.clearGrid();
+            var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            l.url = l.url.replace(l.url.split("?")[1], "");
+            l.url = l.url + "token=" + n;
+            setTimeout(function () {
+                l.redraw();
+            }, 500);
         }
     }
 });

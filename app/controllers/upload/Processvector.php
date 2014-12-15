@@ -152,6 +152,8 @@ class Processvector extends \app\inc\Controller
             $response['success'] = true;
             $response['message'] = "Layer <b>{$safeName}</b> is created";
             $response['type'] = $geoType;
+            // Bust cache, in case of layer already exist
+            \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $safeName);
         } else {
 
             $response['success'] = false;

@@ -42,4 +42,21 @@ class Tilecache extends \app\inc\Controller
         }
         return Response::json($respons);
     }
+    static function bust ($layer){
+        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/" .$layer;
+        $dir = str_replace("..", "", $dir);
+        if ($dir) {
+            exec("rm -R {$dir}");
+            if (strpos($dir, ".*") !== false) {
+                $dir = str_replace(".*", "", $dir);
+                exec("rm -R {$dir}");
+            }
+            $respons['success'] = true;
+            $respons['message'] = "Tile cache deleted";
+        } else {
+            $respons['success'] = false;
+            $respons['message'] = "No tile cache to delete.";
+        }
+        return $respons;
+    }
 }
