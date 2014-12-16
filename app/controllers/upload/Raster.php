@@ -15,7 +15,7 @@ class Raster extends \app\inc\Controller
     {
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"];
-        $targetDir = $mainDir ."/__rasters";
+        $targetDir = $mainDir ."/__bitmaps";
 
         $cleanupTargetDir = true;
         $maxFileAge = 5 * 3600;

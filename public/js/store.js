@@ -1168,6 +1168,13 @@ $(window).ready(function () {
                             fieldLabel: __('SQL where clause'),
                             name: 'filter',
                             value: r.data.filter
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textfield',
+                            fieldLabel: __('File source'),
+                            name: 'bitmapsource',
+                            value: r.data.bitmapsource
                         }
                     ],
                     buttons: [
