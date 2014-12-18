@@ -261,6 +261,7 @@ class Table extends Model
 
     function getColumnsForExtGridAndStore($createKeyFrom = NULL) // All tables
     {
+        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         if ($this->geomType == "POLYGON" || $this->geomType == "MULTIPOLYGON") {
             $type = "Polygon";
         } elseif ($this->geomType == "POINT" || $this->geomType == "MULTIPOINT") {
@@ -276,7 +277,7 @@ class Table extends Model
         foreach ($this->metaData as $key => $value) {
             if ($value['type'] != "geometry" && $key != $this->primeryKey['attname']) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj']);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties"=> $fieldconfArr[$key]->properties?:null);
             }
         }
         if ($createKeyFrom) {

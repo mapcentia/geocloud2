@@ -34,7 +34,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         success: function (data, textStatus, http) {
             if (http.readyState === 4) {
                 if (http.status === 200) {
-                    var response = data;
+                    var response = data, validProperties = true;
                     // JSON
                     fieldsForStore = response.forStore;
                     columnsForGrid = response.forGrid;
@@ -44,7 +44,20 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                     for (var i in columnsForGrid) {
                         columnsForGrid[i].editable = editable;
                         if (columnsForGrid[i].typeObj !== undefined) {
-                            if (columnsForGrid[i].typeObj.type === "int") {
+                            if (columnsForGrid[i].properties) {
+                                try {
+                                    var json = Ext.decode(columnsForGrid[i].properties);
+                                    columnsForGrid[i].editor = new Ext.form.ComboBox({
+                                        store: Ext.decode(columnsForGrid[i].properties),
+                                        editable: true,
+                                        triggerAction: 'all'
+                                    });
+                                    validProperties = false;
+                                }
+                                catch (e) {
+                                    alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                                }
+                            } else if (columnsForGrid[i].typeObj.type === "int" || validProperties === false) {
                                 columnsForGrid[i].editor = new Ext.form.NumberField({
                                     decimalPrecision: 0,
                                     decimalSeparator: '¤'// Some strange char nobody is using
@@ -59,6 +72,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                             } else if (columnsForGrid[i].typeObj.type === "text") {
                                 columnsForGrid[i].editor = new Ext.form.TextArea();
                             }
+
                         }
                     }
                 }

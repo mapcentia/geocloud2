@@ -134,15 +134,16 @@ attributeForm.init = function (layer, geomtype) {
 function getFieldType(attrType) {
     "use strict";
     return ({
-        "xs:boolean": "boolean",
-        "xs:int": "int",
-        "xs:integer": "int",
-        "xs:short": "int",
-        "xs:long": "int",
-        "xs:date": "date",
-        "xs:string": "string",
-        "xs:float": "float",
-        "xs:double": "float",
+        "xsd:boolean": "boolean",
+        "xsd:int": "int",
+        "xsd:integer": "int",
+        "xsd:short": "int",
+        "xsd:long": "int",
+        "xsd:date": "date",
+        "xsd:string": "string",
+        "xsd:float": "float",
+        "xsd:double": "float",
+        "xsd:decimal": "float",
         "gml:PointPropertyType": "int"
     })[attrType];
 }
