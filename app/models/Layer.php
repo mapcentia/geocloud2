@@ -21,7 +21,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $layer = false, $auth)
+    function getAll($schema = false, $layer = false, $auth, $includeExtent = false)
     {
         $where = ($auth) ?
             "(authentication<>'foo')" :
@@ -65,6 +65,19 @@ class Layer extends \app\models\Table
             } catch (\PDOException $e) {
                 $versioning = false;
             }
+
+            if ($row['type'] != "RASTER" && $includeExtent == true) {
+
+                $srsTmp = "900913";
+                $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
+                $resExtent = $this->prepare($sql);
+                try {
+                    $resExtent->execute();
+                } catch (\PDOException $e) {
+                    print_r($e);
+                }
+                $extent = $this->fetchRow($resExtent, "assoc");
+            }
             foreach ($row as $key => $value) {
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
@@ -72,12 +85,15 @@ class Layer extends \app\models\Table
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                if ($key == "layergroup" && (!$value)){
+                if ($key == "layergroup" && (!$value)) {
                     $value = "<font color='red'>[Ungrouped]</font>";
                 }
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+                if ($includeExtent == true) {
+                    $arr = $this->array_push_assoc($arr, "extent", $extent);
+                }
             }
             if ($row["authentication"] == "Read/write") {
                 $privileges = (array)json_decode($row["privileges"]);

@@ -102,7 +102,7 @@ MapCentia.setup = function () {
                 resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                     4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                     76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                    1.19432856696, 0.597164283478, 0.298582141739],
+                    1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
                 isBaseLayer: true,
                 visibility: false,
                 displayInLayerSwitcher: true,
@@ -117,7 +117,7 @@ MapCentia.setup = function () {
         )
     ];
     $.ajax({
-        url: "/api/v1/meta/" + db + "/" + schema,
+        url: "/api/v1/meta/" + db + "/" + schema + "?iex=t",
         contentType: "application/json; charset=utf-8",
         scriptCharset: "utf-8",
         async: false,
@@ -151,6 +151,9 @@ MapCentia.setup = function () {
                             visibility: false,
                             transitionEffect: 'resize',
                             featureInfoFormat: 'application/vnd.ogc.gml',
+                            displayOutsideMaxExtent: true,
+                            maxExtent: (v.type !== "RASTER") ? new OpenLayers.Bounds(v.extent.xmin, v.extent.ymin, v.extent.xmax, v.extent.ymax) : null,
+                            tileOrigin: new OpenLayers.LonLat(-20037508.34, -20037508.34),
                             metadata: {
                                 wfs: {
                                     protocol: new OpenLayers.Protocol.WFS({
@@ -318,7 +321,8 @@ MapCentia.init = function () {
                     header: false,
                     autoConfig: true,
                     autoConfigMaxSniff: 100,
-                    exportFormats: Heron.options.exportFormats,
+                    //exportFormats: Heron.options.exportFormats,
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -347,7 +351,8 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: Heron.options.exportFormats,
+                    //exportFormats: Heron.options.exportFormats,
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -373,7 +378,8 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    //exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -387,40 +393,6 @@ MapCentia.init = function () {
     };
     Heron.options.map.toolbar = [
         {
-            type: "any",
-            options: {
-                text: 'MyMenu',
-                iconCls: 'bmenu',
-                handler: function () {
-                    console.log(Heron.App.map);
-                    var clickController = OpenLayers.Class(OpenLayers.Control, {
-                        defaultHandlerOptions: {
-                            'single': true,
-                            'double': false,
-                            'pixelTolerance': 0,
-                            'stopSingle': false,
-                            'stopDouble': false
-                        },
-                        initialize: function (options) {
-                            this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-                            OpenLayers.Control.prototype.initialize.apply(this, arguments);
-                            this.handler = new OpenLayers.Handler.Click(this, {
-                                'click': this.trigger
-                            }, this.handlerOptions);
-                        },
-                        trigger: function (e) {
-                            alert();
-
-                        }
-                    });
-                    var click = new clickController();
-                    Heron.App.map.addControl(click);
-                    click.activate();
-
-                }
-            }
-        },
-        {
             type: "featureinfo",
             options: {
                 popupWindow: {
@@ -432,7 +404,8 @@ MapCentia.init = function () {
                         // Should column-names be capitalized? Default true.
                         columnCapitalize: true,
                         hideColumns: ['objectid', 'gid'],
-                        exportFormats: Heron.options.exportFormats,
+                        //exportFormats: Heron.options.exportFormats,
+                        exportFormats: [],
                         maxFeatures: 10,
                         discardStylesForDups: true
                     }

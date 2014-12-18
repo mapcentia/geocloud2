@@ -49,7 +49,7 @@ RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
 
 # Rewrite URL to HTML Heron map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule apps/heron/(.*)/(.*) apps/heron/index.html [L]
+RewriteRule apps/mapclient/(.*)/(.*) apps/mapclient/index.html [L]
 
 # Rewrite URL to HTML widget map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
