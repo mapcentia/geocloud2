@@ -380,6 +380,9 @@ class Mapfile extends \app\inc\Controller
                     TYPE <?php echo $type . "\n"; ?>
 
                 <?php } ?>
+                #OFFSITE
+                <?php if ($layerArr['data'][0]['offsite']) echo "OFFSITE " . $layerArr['data'][0]['offsite'] . "\n"; ?>
+
                 #CLASSITEM
                 <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
 
@@ -438,7 +441,7 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) && (!$row['bitmapsource'])) {
+                if (is_array($classArr['data'])) {
                     foreach ($classArr['data'] as $class) {
                         ?>
                         CLASS

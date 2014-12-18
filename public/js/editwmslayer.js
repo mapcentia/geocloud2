@@ -77,6 +77,9 @@ wmsLayer.init = function (record) {
             },
             {
                 name: 'geotype'
+            },
+            {
+                name: 'offsite'
             }
 
         ],
@@ -142,7 +145,8 @@ wmsLayer.init = function (record) {
             ttl: 'Time to live (TTL)' + __('Time to live in the CDN cache.', true),
             maxscaledenom: 'Max scale',
             minscaledenom: 'Min scale',
-            geotype: 'Geom type'
+            geotype: 'Geom type',
+            offsite: 'Offsite'
         },
 
         customEditors: {

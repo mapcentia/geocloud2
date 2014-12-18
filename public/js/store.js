@@ -1744,7 +1744,7 @@ $(window).ready(function () {
                                     {
                                         xtype: "panel",
                                         title: __('Settings'),
-                                        height: 650,
+                                        height: 700,
                                         defaults: {
                                             border: false
                                         },
