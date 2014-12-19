@@ -314,12 +314,12 @@ $(document).ready(function () {
         restrictedExtent: subUser ? window.parent.settings.extentrestricts[schema] : null
     });
     map = cloud.map;
-    var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
+    var metaData, metaDataKeys = [], metaDataKeysTitle = [],metaDataRealKeys=[], extent = null;
     var gc2 = new geocloud.map({});
     gc2.map = map;
     getMetaData = function () {
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema,
+            url: '/api/v1/meta/' + screenName + '/' + schema + '?iex=true',
             async: true,
             dataType: 'json',
             type: 'GET',
@@ -327,6 +327,7 @@ $(document).ready(function () {
                 metaData = response;
                 for (var i = 0; i < metaData.data.length; i++) {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                    metaDataRealKeys[metaData.data[i]._key_] = metaData.data[i];
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
                     }
@@ -591,12 +592,13 @@ $(document).ready(function () {
                         });
                     }
                     for (var i = 0; i < arr.length; ++i) {
-                        var l = [];
+                        var l = [], id;
                         for (var u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
+                                id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
                                 l.push({
-                                    text: (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title,
-                                    id: response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column,
+                                    text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                    id: id,
                                     leaf: true,
                                     checked: false,
                                     geomField: response.data[u].f_geometry_column,
@@ -635,7 +637,7 @@ $(document).ready(function () {
                     listeners: {
                         click: {
                             fn: function (e) {
-
+                                var ext;
                                 try {
                                     stopEdit();
                                 }
@@ -661,10 +663,15 @@ $(document).ready(function () {
                                     }
                                 };
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
+                                $("#" + id).html("<i class='icon-fullscreen btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
 
                                 $("#style-" + id).on("click", function () {
-                                    console.log(metaDataKeys[id])
+                                    if (metaDataRealKeys[e.id].type === "RASTER"){
+                                        window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
+                                        return false;
+                                    }
+                                    ext = metaDataRealKeys[e.id].extent;
+                                    cloud.map.zoomToExtent([ext.xmin,ext.ymin,ext.xmax,ext.ymax]);
                                 });
 
                             }
