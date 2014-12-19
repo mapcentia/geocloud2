@@ -660,7 +660,7 @@ $(document).ready(function () {
                                         window.parent.onEditWMSClasses(e.id);
                                     }
                                 };
-
+                                $(".leaf-tools").empty();
                                 $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
 
                                 $("#style-" + id).on("click", function () {
