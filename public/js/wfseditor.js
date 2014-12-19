@@ -317,9 +317,9 @@ $(document).ready(function () {
     var metaData, metaDataKeys = [], metaDataKeysTitle = [], metaDataRealKeys = [], extent = null;
     var gc2 = new geocloud.map({});
     gc2.map = map;
-    getMetaData = function (getLayerExtents) {
+    getMetaData = function () {
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema + (getLayerExtents ? '?iex=true' : ''),
+            url: '/api/v1/meta/' + screenName + '/' + schema,
             async: true,
             dataType: 'json',
             type: 'GET',
@@ -327,9 +327,6 @@ $(document).ready(function () {
                 metaData = response;
                 for (var i = 0; i < metaData.data.length; i++) {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                    if (getExtents) { // Only update this once to get extents
-                        metaDataRealKeys[metaData.data[i]._key_] = metaData.data[i];
-                    }
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
                     }
@@ -559,7 +556,7 @@ $(document).ready(function () {
             }
         ];
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema,
+            url: '/api/v1/meta/' + screenName + '/' + schema + '?iex=true',
             dataType: 'json',
             type: 'GET',
             success: function (response) {
@@ -567,6 +564,7 @@ $(document).ready(function () {
                 if (response.data !== undefined) {
                     for (var i = 0; i < response.data.length; ++i) {
                         groups[i] = response.data[i].layergroup;
+                        metaDataRealKeys[response.data[i]._key_] = response.data[i];
                     }
                     var arr = array_unique(groups);
                     for (var u = 0; u < response.data.length; ++u) {
@@ -771,8 +769,7 @@ $(document).ready(function () {
                 west.remove(tree);
                 west.add(tree);
                 west.doLayout();
-                // Initially writefiles wil get metadata with extents
-                window.parent.writeFiles(null, null, true);
+                window.parent.writeFiles();
                 // Last we add the restricted area layer.
                 extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
                     styleMap: new OpenLayers.StyleMap({
