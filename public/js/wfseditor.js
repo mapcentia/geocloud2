@@ -9,7 +9,7 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -159,6 +159,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             }, rules
         )
     });
+
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
@@ -1021,15 +1022,21 @@ $(document).ready(function () {
             disabled: subUser ? true : false,
             pressed: (window.parent.extentRestricted ? true : false),
             handler: function () {
-                window.parent.extentRestricted = !this.pressed;
+                window.parent.extentRestricted = this.pressed;
+                if (window.parent.extentRestricted) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
+                }
+                else {
+                    extentRestrictLayer.destroyFeatures();
+                }
                 Ext.Ajax.request({
                     url: '/controllers/setting/extentrestrict/',
                     method: 'put',
                     params: Ext.util.JSON.encode({
                         data: {
                             schema: schema,
-                            extent: window.parent.extentRestricted ? null : cloud.getExtent(),
-                            zoom: window.parent.extentRestricted ? null : cloud.getZoom()
+                            extent: window.parent.extentRestricted ? cloud.getExtent() : null,
+                            zoom: window.parent.extentRestricted ? cloud.getZoom() : null
                         }
                     }),
                     headers: {
@@ -1175,6 +1182,26 @@ $(document).ready(function () {
     });
     map.addControl(measureControls.polygon);
     loadTree();
+
+    extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
+        styleMap: new OpenLayers.StyleMap({
+            "default": new OpenLayers.Style({
+                fillColor: "#000000",
+                fillOpacity: 0.0,
+                pointRadius: 5,
+                strokeColor: "#ff0000",
+                strokeWidth: 2,
+                strokeOpacity: 0.7,
+                graphicZIndex: 3
+            })
+        })
+    });
+    if (window.parent.extentRestricted) {
+        extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
+    }
+    map.addLayers([extentRestrictLayer]);
+
+
 });
 function stopEdit() {
     "use strict";
@@ -1325,3 +1352,5 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
+
+
