@@ -655,6 +655,18 @@ $(document).ready(function () {
                                     Ext.getCmp('editlayerbutton').setDisabled(true);
                                     Ext.getCmp('quickdrawbutton').setDisabled(true);
                                 }
+                                var id = e.id.split('.').join('-'), load = function () {
+                                    if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                        window.parent.onEditWMSClasses(e.id);
+                                    }
+                                };
+
+                                $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
+
+                                $("#style-" + id).on("click", function () {
+                                    console.log(metaDataKeys[id])
+                                });
+
                             }
                         }
                     },
