@@ -10,7 +10,7 @@
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, getExtents = true;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -314,12 +314,12 @@ $(document).ready(function () {
         restrictedExtent: subUser ? window.parent.settings.extentrestricts[schema] : null
     });
     map = cloud.map;
-    var metaData, metaDataKeys = [], metaDataKeysTitle = [],metaDataRealKeys=[], extent = null;
+    var metaData, metaDataKeys = [], metaDataKeysTitle = [], metaDataRealKeys = [], extent = null;
     var gc2 = new geocloud.map({});
     gc2.map = map;
-    getMetaData = function () {
+    getMetaData = function (getLayerExtents) {
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema + '?iex=true',
+            url: '/api/v1/meta/' + screenName + '/' + schema + (getLayerExtents ? '?iex=true' : ''),
             async: true,
             dataType: 'json',
             type: 'GET',
@@ -327,17 +327,19 @@ $(document).ready(function () {
                 metaData = response;
                 for (var i = 0; i < metaData.data.length; i++) {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                    metaDataRealKeys[metaData.data[i]._key_] = metaData.data[i];
+                    if (getExtents) { // Only update this once to get extents
+                        metaDataRealKeys[metaData.data[i]._key_] = metaData.data[i];
+                    }
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
+                getExtents = false;
             }
         }); // Ajax call end
     };
     var clicktimer;
-    window.getMetaData();
     gc2.on("dblclick", function (e) {
         clicktimer = undefined;
     });
@@ -666,12 +668,12 @@ $(document).ready(function () {
                                 $("#" + id).html("<i class='icon-fullscreen btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
 
                                 $("#style-" + id).on("click", function () {
-                                    if (metaDataRealKeys[e.id].type === "RASTER"){
+                                    if (metaDataRealKeys[e.id].type === "RASTER") {
                                         window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
                                         return false;
                                     }
                                     ext = metaDataRealKeys[e.id].extent;
-                                    cloud.map.zoomToExtent([ext.xmin,ext.ymin,ext.xmax,ext.ymax]);
+                                    cloud.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
                                 });
 
                             }
@@ -769,7 +771,8 @@ $(document).ready(function () {
                 west.remove(tree);
                 west.add(tree);
                 west.doLayout();
-                window.parent.writeFiles();
+                // Initially writefiles wil get metadata with extents
+                window.parent.writeFiles(null, null, true);
                 // Last we add the restricted area layer.
                 extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
                     styleMap: new OpenLayers.StyleMap({
@@ -1221,7 +1224,6 @@ $(document).ready(function () {
     });
     map.addControl(measureControls.polygon);
     loadTree();
-
 
 
 });

@@ -1824,12 +1824,12 @@ $(window).ready(function () {
         items: [tabs]
     });
 
-    writeFiles = function (clearCachedLayer, map) {
+    writeFiles = function (clearCachedLayer, map, getExtents) {
         $.ajax({
             url: '/controllers/mapfile',
             success: function (response) {
                 updateLegend();
-                document.getElementById("wfseditor").contentWindow.window.getMetaData();
+                document.getElementById("wfseditor").contentWindow.window.getMetaData(getExtents);
                 if (clearCachedLayer) {
                     clearTileCache(clearCachedLayer, map);
                 }
