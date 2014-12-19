@@ -770,6 +770,24 @@ $(document).ready(function () {
                 west.add(tree);
                 west.doLayout();
                 window.parent.writeFiles();
+                // Last we add the restricted area layer.
+                extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
+                    styleMap: new OpenLayers.StyleMap({
+                        "default": new OpenLayers.Style({
+                            fillColor: "#000000",
+                            fillOpacity: 0.0,
+                            pointRadius: 5,
+                            strokeColor: "#ff0000",
+                            strokeWidth: 2,
+                            strokeOpacity: 0.7,
+                            graphicZIndex: 1
+                        })
+                    })
+                });
+                if (window.parent.extentRestricted) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
+                }
+                map.addLayers([extentRestrictLayer]);
             }
         });
     };
@@ -1204,23 +1222,6 @@ $(document).ready(function () {
     map.addControl(measureControls.polygon);
     loadTree();
 
-    extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
-        styleMap: new OpenLayers.StyleMap({
-            "default": new OpenLayers.Style({
-                fillColor: "#000000",
-                fillOpacity: 0.0,
-                pointRadius: 5,
-                strokeColor: "#ff0000",
-                strokeWidth: 2,
-                strokeOpacity: 0.7,
-                graphicZIndex: 3
-            })
-        })
-    });
-    if (window.parent.extentRestricted) {
-        extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
-    }
-    map.addLayers([extentRestrictLayer]);
 
 
 });
