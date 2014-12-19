@@ -143,6 +143,7 @@ var mygeocloud_ol = (function () {
             numZoomLevels: 20,
             projection: "EPSG:900913",
             maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
+            restrictedExtent: null,
             controls: [
                 //new OpenLayers.Control.Navigation(),
                 //new OpenLayers.Control.PanZoomBar(),
@@ -265,7 +266,8 @@ var mygeocloud_ol = (function () {
             projection: defaults.projection,
             maxResolution: defaults.maxResolution,
             minResolution: defaults.minResolution,
-            maxExtent: defaults.maxExtent
+            maxExtent: defaults.maxExtent,
+            restrictedExtent: defaults.restrictedExtent
         });
         var _map = this.map;
         this.click = new this.clickController();

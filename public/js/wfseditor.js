@@ -308,7 +308,8 @@ $(document).ready(function () {
             }),
             new OpenLayers.Control.Zoom(),
             new OpenLayers.Control.Attribution()
-        ]
+        ],
+        restrictedExtent: subUser ? window.parent.settings.extentrestricts[schema] : null
     });
     map = cloud.map;
     var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
@@ -733,6 +734,7 @@ $(document).ready(function () {
                             })
                         ]
                     });
+
                     if (window.parent.initExtent !== null) {
                         cloud.map.zoomToExtent(window.parent.initExtent, false);
                     } else {
@@ -997,7 +999,44 @@ $(document).ready(function () {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
+                    },
+                    failure: function (response) {
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: __(Ext.decode(response.responseText).message),
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                });
+            }
+        }, '-',
+        {
+            text: "<i class='icon-globe btn-gc'></i> " + __("Lock extent"),
+            id: "extentlockbutton",
+            enableToggle: true,
+            disabled: subUser ? true : false,
+            pressed: (window.parent.extentRestricted ? true : false),
+            handler: function () {
+                window.parent.extentRestricted = !this.pressed;
+                Ext.Ajax.request({
+                    url: '/controllers/setting/extentrestrict/',
+                    method: 'put',
+                    params: Ext.util.JSON.encode({
+                        data: {
+                            schema: schema,
+                            extent: window.parent.extentRestricted ? null : cloud.getExtent(),
+                            zoom: window.parent.extentRestricted ? null : cloud.getZoom()
+                        }
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    success: function (response) {
+                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
