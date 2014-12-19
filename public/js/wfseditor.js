@@ -9,6 +9,7 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
+Ext.QuickTips.init();
 var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
@@ -1016,9 +1017,10 @@ $(document).ready(function () {
             }
         }, '-',
         {
-            text: "<i class='icon-globe btn-gc'></i> " + __("Lock extent"),
+            text: "<i class='icon-lock btn-gc'></i> " + __("Lock extent"),
             id: "extentlockbutton",
             enableToggle: true,
+            tooltip: __('Lock the map extent for sub-users'),
             disabled: subUser ? true : false,
             pressed: (window.parent.extentRestricted ? true : false),
             handler: function () {
