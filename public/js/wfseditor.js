@@ -10,7 +10,7 @@
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, getExtents = true;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -332,7 +332,6 @@ $(document).ready(function () {
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
-                getExtents = false;
             }
         }); // Ajax call end
     };
@@ -564,7 +563,7 @@ $(document).ready(function () {
                 if (response.data !== undefined) {
                     for (var i = 0; i < response.data.length; ++i) {
                         groups[i] = response.data[i].layergroup;
-                        metaDataRealKeys[response.data[i]._key_] = response.data[i];
+                        metaDataRealKeys[response.data[i]._key_] = response.data[i];// Holds the layer extents
                     }
                     var arr = array_unique(groups);
                     for (var u = 0; u < response.data.length; ++u) {
