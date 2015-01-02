@@ -87,6 +87,10 @@ class Staticmap extends \app\inc\Controller
     {
         $db = Input::getPath()->part(5);
         $baseLayer = Input::get("baselayer");
+        $bits = explode(".", $baseLayer);
+        if (sizeof($bits) == 1) {
+            $baseLayer = "geocloud.{$baseLayer}";
+        }
         if (Input::get("layers")) {
             $layers = json_encode(explode(",", Input::get("layers")));
         } else {
@@ -113,8 +117,8 @@ class Staticmap extends \app\inc\Controller
                     el: 'map'
                 });
                 map.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "'
-                map.addBaseLayer(geocloud.{$baseLayer});
-                map.setBaseLayer(geocloud.{$baseLayer});";
+                map.addBaseLayer({$baseLayer});
+                map.setBaseLayer({$baseLayer});";
         if (!$sql) {
             if ($bbox) {
                 $bboxArr = explode(",", Input::get("bbox"));
