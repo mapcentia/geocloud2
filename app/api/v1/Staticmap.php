@@ -90,6 +90,8 @@ class Staticmap extends \app\inc\Controller
         $bits = explode(".", $baseLayer);
         if (sizeof($bits) == 1) {
             $baseLayer = "geocloud.{$baseLayer}";
+        } else {
+            $baseLayer = "'{$baseLayer}'";
         }
         if (Input::get("layers")) {
             $layers = json_encode(explode(",", Input::get("layers")));
