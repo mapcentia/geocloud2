@@ -37,18 +37,18 @@ MapCentia.setup = function () {
                 Heron.options.zoom = null;
             }
 
-            if (typeof response.data.center !== "undefined" &&  typeof response.data.center[schema] !== "undefined") {
+            if (typeof response.data.center !== "undefined" && typeof response.data.center[schema] !== "undefined") {
                 Heron.options.center = response.data.center[schema];
             } else {
                 Heron.options.center = null;
             }
 
-            if (typeof response.data.extentrestricts !== "undefined" &&  typeof response.data.extentrestricts[schema] !== "undefined") {
+            if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[schema] !== "undefined") {
                 Heron.options.extentrestrict = response.data.extentrestricts[schema];
             } else {
                 Heron.options.extentrestrict = null;
             }
-            if (typeof response.data.zoomrestricts !== "undefined" &&  typeof response.data.zoomrestricts[schema] !== "undefined") {
+            if (typeof response.data.zoomrestricts !== "undefined" && typeof response.data.zoomrestricts[schema] !== "undefined") {
                 Heron.options.zoomrestrict = response.data.zoomrestricts[schema];
             } else {
                 Heron.options.zoomrestrict = null;
@@ -587,7 +587,7 @@ MapCentia.init = function () {
         },
         {
             type: "printdialog", options: {
-            url: 'http://kademo.nl/print/pdf28992', windowWidth: 360
+            url: 'http://54.77.123.219/geoserver/pdf', windowWidth: 360
             // , showTitle: true
             // , mapTitle: 'My Header - Print Dialog'
             // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
