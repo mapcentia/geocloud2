@@ -2,7 +2,6 @@
 namespace app\controllers;
 
 use \app\inc\Input;
-use \app\conf\Connection;
 
 class Job extends \app\inc\Controller
 {
@@ -10,6 +9,15 @@ class Job extends \app\inc\Controller
 
     function __construct()
     {
+        // Prevent unauthorized use of gc2scheduler
+        if (!\app\conf\App::$param["gc2scheduler"][$_SESSION["screen_name"]]){
+            $code = "401";
+            header("HTTP/1.0 {$code} " . \app\inc\Util::httpCodeText($code));
+            die(\app\inc\Response::toJson(array(
+                "success" => false,
+                "message" => "Not allowed"
+            )));
+        }
         $this->job = new \app\models\Job();
     }
 

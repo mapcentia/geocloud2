@@ -28,7 +28,7 @@ Ext.define('MyApp.controller.MyController', {
     },
 
     onButtonClick1: function(button, e, eOpts) {
-        Ext.Msg.confirm("Confirmation", "Do you want to Save changes?", function(btnText){
+        Ext.Msg.confirm("Confirmation", "Do you really want to delete the job?", function(btnText){
             if(btnText === "no"){
                 return false;
             }

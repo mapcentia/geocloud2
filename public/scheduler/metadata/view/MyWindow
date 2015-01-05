@@ -480,8 +480,7 @@
                     "userConfig": {
                         "layout|flex": 1,
                         "fieldLabel": "Extra fields",
-                        "name": "extra",
-                        "allowBlank": false
+                        "name": "extra"
                     },
                     "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
                 },

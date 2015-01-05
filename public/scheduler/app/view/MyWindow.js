@@ -294,8 +294,7 @@ Ext.define('MyApp.view.MyWindow', {
                             xtype: 'textfield',
                             flex: 1,
                             fieldLabel: 'Extra fields',
-                            name: 'extra',
-                            allowBlank: false
+                            name: 'extra'
                         },
                         {
                             xtype: 'combobox',
