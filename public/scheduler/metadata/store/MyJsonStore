@@ -1,0 +1,108 @@
+{
+    "type": "jsonstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "autoLoad": true,
+        "autoSync": true,
+        "model": "MyModel",
+        "storeId": "MyJsonStore",
+        "designer|userClassName": "MyJsonStore",
+        "designer|userAlias": null,
+        "data": null
+    },
+    "designerId": "ed20249e-3db4-4119-9fc7-d71f142e9358",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Rest",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "api": [
+                    "{",
+                    "                    create: '/controllers/job',",
+                    "                    update: '/controllers/job',",
+                    "                    destroy: '/controllers/job'",
+                    "                }"
+                ],
+                "url": "/controllers/job",
+                "format": null
+            },
+            "designerId": "f59a86ee-3f17-40eb-bf00-6d74ffa36f53",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "data"
+                    },
+                    "designerId": "873ace1f-86b3-45b3-902f-51fe7c70c111"
+                },
+                {
+                    "type": "basiceventbinding",
+                    "reference": {
+                        "name": "listeners",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fn": "onRestException",
+                        "implHandler": [
+                            "alert(Ext.decode(response.responseText).message);",
+                            "if (response.status !==401){",
+                            "    this.load();",
+                            "}"
+                        ],
+                        "name": "exception",
+                        "scope": "me"
+                    },
+                    "designerId": "689c557d-88f5-4da2-81f1-43777ab65240"
+                }
+            ]
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onJsonstoreLoad",
+                "implHandler": [
+                    ""
+                ],
+                "name": "load",
+                "scope": "me"
+            },
+            "designerId": "79040c04-4a42-4f49-9046-d78653dc494d"
+        },
+        {
+            "type": "basiceventbinding",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "fn": "onJsonstoreWrite",
+                "implHandler": [
+                    "this.load();"
+                ],
+                "name": "write",
+                "scope": "me"
+            },
+            "designerId": "71a4cf1b-e429-491c-b1d6-b27ed731ac76"
+        }
+    ]
+}

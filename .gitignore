@@ -7,8 +7,10 @@ app/wms/cfgfiles
 app/wms/mapfiles
 node_modules
 public/backups
+public/logs
 
 !app/tmp/.gitignore
+!public/logs/.gitignore
 !app/wms/cfgfiles/.gitignore
 !app/wms/mapfiles/.gitignore
 

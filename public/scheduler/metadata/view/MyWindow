@@ -1,0 +1,566 @@
+{
+    "type": "Ext.window.Window",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "height": 306,
+        "itemId": "window",
+        "width": 600,
+        "designer|userClassName": "MyWindow",
+        "title": "My Window"
+    },
+    "designerId": "35afd42e-aeac-4380-b0f0-9bcebe016ddb",
+    "cn": [
+        {
+            "type": "Ext.form.Panel",
+            "reference": {
+                "name": "items",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "container|align": "stretch",
+                "height": null,
+                "itemId": "form",
+                "layout": "vbox",
+                "bodyPadding": 10,
+                "manageHeight": false,
+                "title": null
+            },
+            "designerId": "56642eae-b121-45a3-8045-e1ff95aa4afb",
+            "cn": [
+                {
+                    "type": "Ext.form.FieldContainer",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "container|align": "stretch",
+                        "height": null,
+                        "width": 400,
+                        "layout": "hbox",
+                        "fieldLabel": null,
+                        "hideEmptyLabel": false
+                    },
+                    "designerId": "aac7f6e1-69ab-48ba-896b-c3c278c5eac5",
+                    "cn": [
+                        {
+                            "type": "Ext.container.Container",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "html": [
+                                    "Min"
+                                ]
+                            },
+                            "designerId": "4f2acec9-1e6b-416a-a76e-1d630424f201"
+                        },
+                        {
+                            "type": "Ext.container.Container",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "html": [
+                                    "Hour",
+                                    ""
+                                ]
+                            },
+                            "designerId": "e751c79a-e554-4714-9829-4e4fd9ffd9f6"
+                        },
+                        {
+                            "type": "Ext.container.Container",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "html": [
+                                    "Day of month"
+                                ]
+                            },
+                            "designerId": "5b77cb62-a1c9-4978-b746-17041874c6a8"
+                        },
+                        {
+                            "type": "Ext.container.Container",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "html": [
+                                    "Month"
+                                ]
+                            },
+                            "designerId": "f7fc4e69-88bb-45c3-ba80-e160c6abb8c0"
+                        },
+                        {
+                            "type": "Ext.container.Container",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "html": [
+                                    "Day of week",
+                                    ""
+                                ]
+                            },
+                            "designerId": "69d98a9c-4b74-4937-8532-8bffd3e8d1cc"
+                        }
+                    ]
+                },
+                {
+                    "type": "Ext.form.FieldContainer",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "container|align": "stretch",
+                        "height": null,
+                        "width": 400,
+                        "defaults": [
+                            "{",
+                            "    flex: 1",
+                            "   ",
+                            "}"
+                        ],
+                        "layout": "hbox",
+                        "fieldLabel": "Cron"
+                    },
+                    "designerId": "0e0cbbdf-4440-4260-a691-c782584d2c56",
+                    "cn": [
+                        {
+                            "type": "Ext.form.field.ComboBox",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "width": null,
+                                "fieldLabel": null,
+                                "name": "min",
+                                "value": [
+                                    "*"
+                                ],
+                                "store": [
+                                    "['*',",
+                                    " 0,",
+                                    "1,",
+                                    "2,",
+                                    "3,",
+                                    "4,",
+                                    "5,",
+                                    "6,",
+                                    "7,",
+                                    "8,",
+                                    "9,",
+                                    "10,",
+                                    "11,",
+                                    "12,",
+                                    "13,",
+                                    "14,",
+                                    "15,",
+                                    "16,",
+                                    "17,",
+                                    "18,",
+                                    "19,",
+                                    "20,",
+                                    "21,",
+                                    "22,",
+                                    "23,",
+                                    "24,",
+                                    "25,",
+                                    "26,",
+                                    "27,",
+                                    "28,",
+                                    "29,",
+                                    "30,",
+                                    "31,",
+                                    "32,",
+                                    "33,",
+                                    "34,",
+                                    "35,",
+                                    "36,",
+                                    "37,",
+                                    "38,",
+                                    "39,",
+                                    "40,",
+                                    "41,",
+                                    "42,",
+                                    "43,",
+                                    "44,",
+                                    "45,",
+                                    "46,",
+                                    "47,",
+                                    "48,",
+                                    "49,",
+                                    "50,",
+                                    "51,",
+                                    "52,",
+                                    "53,",
+                                    "54,",
+                                    "55,",
+                                    "56,",
+                                    "57,",
+                                    "58,",
+                                    "59",
+                                    "]"
+                                ]
+                            },
+                            "configAlternates": {
+                                "store": "array"
+                            },
+                            "designerId": "1c8c13fb-7dc6-46d3-bbf5-ea37081158ea"
+                        },
+                        {
+                            "type": "Ext.form.field.ComboBox",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "width": null,
+                                "fieldLabel": null,
+                                "labelWidth": null,
+                                "name": "hour",
+                                "value": [
+                                    "*"
+                                ],
+                                "store": [
+                                    "['*',",
+                                    " 0,",
+                                    "1,",
+                                    "2,",
+                                    "3,",
+                                    "4,",
+                                    "5,",
+                                    "6,",
+                                    "7,",
+                                    "8,",
+                                    "9,",
+                                    "10,",
+                                    "11,",
+                                    "12,",
+                                    "13,",
+                                    "14,",
+                                    "15,",
+                                    "16,",
+                                    "17,",
+                                    "18,",
+                                    "19,",
+                                    "20,",
+                                    "21,",
+                                    "22,",
+                                    "23]"
+                                ]
+                            },
+                            "configAlternates": {
+                                "store": "array"
+                            },
+                            "designerId": "a16c079c-9863-4911-ad40-936c1ea5ddc0"
+                        },
+                        {
+                            "type": "Ext.form.field.ComboBox",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "width": null,
+                                "fieldLabel": null,
+                                "labelWidth": null,
+                                "name": "dayofmonth",
+                                "value": [
+                                    "*"
+                                ],
+                                "store": [
+                                    "['*',",
+                                    "1,",
+                                    "2,",
+                                    "3,",
+                                    "4,",
+                                    "5,",
+                                    "6,",
+                                    "7,",
+                                    "8,",
+                                    "9,",
+                                    "10,",
+                                    "11,",
+                                    "12,",
+                                    "13,",
+                                    "14,",
+                                    "15,",
+                                    "16,",
+                                    "17,",
+                                    "18,",
+                                    "19,",
+                                    "20,",
+                                    "21,",
+                                    "22,",
+                                    "23,",
+                                    "24,",
+                                    "25,",
+                                    "26,",
+                                    "27,",
+                                    "28,",
+                                    "29,",
+                                    "30,",
+                                    "31",
+                                    "    ]"
+                                ]
+                            },
+                            "configAlternates": {
+                                "store": "array"
+                            },
+                            "designerId": "523bf007-4026-42a6-aedd-f7af3cfc004b"
+                        },
+                        {
+                            "type": "Ext.form.field.ComboBox",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "width": null,
+                                "fieldLabel": null,
+                                "labelWidth": null,
+                                "name": "month",
+                                "value": [
+                                    "*"
+                                ],
+                                "store": [
+                                    "['*',",
+                                    "1,",
+                                    "2,",
+                                    "3,",
+                                    "4,",
+                                    "5,",
+                                    "6,",
+                                    "7,",
+                                    "8,",
+                                    "9,",
+                                    "10,",
+                                    "11,",
+                                    "12]"
+                                ]
+                            },
+                            "configAlternates": {
+                                "store": "array"
+                            },
+                            "designerId": "f45c90d3-7ef6-441a-944c-76e3f4a62b55"
+                        },
+                        {
+                            "type": "Ext.form.field.ComboBox",
+                            "reference": {
+                                "name": "items",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "layout|flex": 1,
+                                "width": null,
+                                "fieldLabel": null,
+                                "labelWidth": null,
+                                "name": "dayofweek",
+                                "value": [
+                                    "*"
+                                ],
+                                "store": [
+                                    "['*',",
+                                    "   0,",
+                                    "1,",
+                                    "2,",
+                                    "3,",
+                                    "4,",
+                                    "5,",
+                                    "6",
+                                    " ]"
+                                ]
+                            },
+                            "configAlternates": {
+                                "store": "array"
+                            },
+                            "designerId": "d5a6ae89-f50a-4a2b-a465-a4be46bbc614"
+                        }
+                    ]
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "fieldLabel": "Table",
+                        "name": "name",
+                        "allowBlank": false
+                    },
+                    "designerId": "30a4eb10-fef8-4d55-b377-a0cb8b9031cd"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Schema",
+                        "name": "schema",
+                        "allowBlank": false
+                    },
+                    "designerId": "4d66296b-2e6f-4e88-b3e2-1b2899f7cb5b"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "width": 150,
+                        "fieldLabel": "Url",
+                        "name": "url",
+                        "allowBlank": false
+                    },
+                    "designerId": "66c2aa66-1130-4a62-b016-c6f90e59d364"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Epsg",
+                        "name": "epsg",
+                        "allowBlank": false
+                    },
+                    "designerId": "33473fbf-eb1a-4807-9b16-0b4976642028"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Extra fields",
+                        "name": "extra",
+                        "allowBlank": false
+                    },
+                    "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
+                },
+                {
+                    "type": "Ext.form.field.ComboBox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Type",
+                        "name": "type",
+                        "allowBlank": false,
+                        "editable": false,
+                        "store": [
+                            "",
+                            "    [\"AUTO\",\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]",
+                            ""
+                        ]
+                    },
+                    "configAlternates": {
+                        "store": "array"
+                    },
+                    "designerId": "079e7bf7-f84f-456f-a020-fe9ad56301f0"
+                },
+                {
+                    "type": "Ext.form.field.ComboBox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Encoding",
+                        "name": "encoding",
+                        "allowBlank": false,
+                        "store": [
+                            "",
+                            "    [\"UTF8\",\"LATIN1\"]",
+                            ""
+                        ]
+                    },
+                    "configAlternates": {
+                        "store": "array"
+                    },
+                    "designerId": "39545348-a9e8-4e9f-9166-dceeefb7e393"
+                },
+                {
+                    "type": "Ext.button.Button",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "itemId": "save",
+                        "text": "Save"
+                    },
+                    "designerId": "acbc3125-6101-49bb-94fa-f89ec61ed886"
+                },
+                {
+                    "type": "Ext.button.Button",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "itemId": "update",
+                        "text": "Update"
+                    },
+                    "designerId": "372fb25b-b751-4713-bc12-f51f4127f6b4"
+                }
+            ]
+        }
+    ]
+}
