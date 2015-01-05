@@ -6,7 +6,7 @@
     },
     "codeClass": null,
     "userConfig": {
-        "height": 281,
+        "height": 306,
         "itemId": "window",
         "width": 600,
         "designer|userClassName": "MyWindow",
@@ -469,6 +469,21 @@
                         "allowBlank": false
                     },
                     "designerId": "33473fbf-eb1a-4807-9b16-0b4976642028"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Extra fields",
+                        "name": "extra",
+                        "allowBlank": false
+                    },
+                    "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
                 },
                 {
                     "type": "Ext.form.field.ComboBox",

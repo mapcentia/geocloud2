@@ -48,6 +48,9 @@ Ext.define('MyApp.model.MyModel', {
             name: 'epsg'
         },
         {
+            name: 'extra'
+        },
+        {
             name: 'type'
         },
         {

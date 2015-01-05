@@ -15,12 +15,12 @@ class Job extends \app\inc\Controller
 
     public function get_index()
     {
-        return $this->job->getAll();
+        return $this->job->getAll($_SESSION['screen_name']);
     }
 
     public function post_index()
     {
-        return $this->job->newJob(json_decode(Input::get(null, true)));
+        return $this->job->newJob(json_decode(Input::get(null, true)), $_SESSION['screen_name']);
     }
 
     public function put_index()

@@ -139,6 +139,18 @@
             },
             "codeClass": null,
             "userConfig": {
+                "name": "extra"
+            },
+            "designerId": "0e53606e-937e-44a7-ae68-6a012ecee9cd"
+        },
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
                 "name": "type"
             },
             "designerId": "d7973373-8cfb-49f9-b6ff-bb15ef21f9e9"

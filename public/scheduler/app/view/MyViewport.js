@@ -130,6 +130,11 @@ Ext.define('MyApp.view.MyViewport', {
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    dataIndex: 'extra',
+                                    text: 'Extra'
+                                },
+                                {
+                                    xtype: 'gridcolumn',
                                     dataIndex: 'type',
                                     text: 'Type'
                                 },

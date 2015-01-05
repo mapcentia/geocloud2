@@ -270,6 +270,19 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "dataIndex": "extra",
+                                "text": "Extra"
+                            },
+                            "designerId": "f53d607b-6b1b-4153-b0b9-0ffda61169a9"
+                        },
+                        {
+                            "type": "Ext.grid.column.Column",
+                            "reference": {
+                                "name": "columns",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
                                 "dataIndex": "type",
                                 "text": "Type"
                             },

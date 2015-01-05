@@ -60,7 +60,7 @@
                         "implHandler": [
                             "alert(Ext.decode(response.responseText).message);",
                             "if (response.status !==401){",
-                            "\tthis.load();",
+                            "    this.load();",
                             "}"
                         ],
                         "name": "exception",

@@ -16,7 +16,7 @@
 Ext.define('MyApp.view.MyWindow', {
     extend: 'Ext.window.Window',
 
-    height: 281,
+    height: 306,
     itemId: 'window',
     width: 600,
     title: 'My Window',
@@ -288,6 +288,13 @@ Ext.define('MyApp.view.MyWindow', {
                             flex: 1,
                             fieldLabel: 'Epsg',
                             name: 'epsg',
+                            allowBlank: false
+                        },
+                        {
+                            xtype: 'textfield',
+                            flex: 1,
+                            fieldLabel: 'Extra fields',
+                            name: 'extra',
                             allowBlank: false
                         },
                         {
