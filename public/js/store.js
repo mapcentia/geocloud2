@@ -1834,7 +1834,11 @@ $(window).ready(function () {
     });
 
     // Hide tab if scheduler is not available for the db
-    if(window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false){
+    if (window.gc2Options.gc2scheduler !== null) {
+        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
+            tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+        }
+    } else {
         tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
     }
 
