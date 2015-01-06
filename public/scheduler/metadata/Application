@@ -7,10 +7,12 @@
     "codeClass": null,
     "userConfig": {
         "models": [
-            "MyModel"
+            "MyModel",
+            "SchemaModel"
         ],
         "stores": [
-            "MyJsonStore"
+            "MyJsonStore",
+            "SchemaStore"
         ],
         "views": [
             "MyViewport",

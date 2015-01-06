@@ -426,7 +426,7 @@
                     "designerId": "30a4eb10-fef8-4d55-b377-a0cb8b9031cd"
                 },
                 {
-                    "type": "Ext.form.field.Text",
+                    "type": "Ext.form.field.ComboBox",
                     "reference": {
                         "name": "items",
                         "type": "array"
@@ -436,9 +436,12 @@
                         "layout|flex": 1,
                         "fieldLabel": "Schema",
                         "name": "schema",
-                        "allowBlank": false
+                        "allowBlank": false,
+                        "editable": false,
+                        "displayField": "schema",
+                        "store": "SchemaStore"
                     },
-                    "designerId": "4d66296b-2e6f-4e88-b3e2-1b2899f7cb5b"
+                    "designerId": "b2ae4f82-2f38-4873-8753-1ea6e908b64c"
                 },
                 {
                     "type": "Ext.form.field.Text",
@@ -471,20 +474,6 @@
                     "designerId": "33473fbf-eb1a-4807-9b16-0b4976642028"
                 },
                 {
-                    "type": "Ext.form.field.Text",
-                    "reference": {
-                        "name": "items",
-                        "type": "array"
-                    },
-                    "codeClass": null,
-                    "userConfig": {
-                        "layout|flex": 1,
-                        "fieldLabel": "Extra fields",
-                        "name": "extra"
-                    },
-                    "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
-                },
-                {
                     "type": "Ext.form.field.ComboBox",
                     "reference": {
                         "name": "items",
@@ -498,9 +487,7 @@
                         "allowBlank": false,
                         "editable": false,
                         "store": [
-                            "",
-                            "    [\"AUTO\",\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]",
-                            ""
+                            "    [\"AUTO\",\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]"
                         ]
                     },
                     "configAlternates": {
@@ -530,6 +517,20 @@
                         "store": "array"
                     },
                     "designerId": "39545348-a9e8-4e9f-9166-dceeefb7e393"
+                },
+                {
+                    "type": "Ext.form.field.Text",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "layout|flex": 1,
+                        "fieldLabel": "Extra fields",
+                        "name": "extra"
+                    },
+                    "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
                 },
                 {
                     "type": "Ext.button.Button",

@@ -79,27 +79,29 @@ $res = $model->prepare($sql);
 try {
     $res->execute($values);
 } catch (\PDOException $e) {
-    //print_r($e);
-}
-
-\app\models\Database::setDb($db);
-$model = new \app\inc\Model();
-$fieldObj = json_decode($extra);
-
-$fieldName = $fieldObj->name;
-$fieldType = $fieldObj->type ?: "varchar";
-$fieldValue = $fieldObj->value;
-$sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-$res = $model->prepare($sql);
-try {
-    $res->execute();
-} catch (\PDOException $e) {
-    //print_r($e);
-}
-$sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
-$res = $model->prepare($sql);
-try {
-    $res->execute(array(":value" => $fieldValue));
-} catch (\PDOException $e) {
     print_r($e);
+}
+
+if ($extra) {
+    \app\models\Database::setDb($db);
+    $model = new \app\inc\Model();
+    $fieldObj = json_decode($extra);
+
+    $fieldName = $fieldObj->name;
+    $fieldType = $fieldObj->type ?: "varchar";
+    $fieldValue = $fieldObj->value;
+    $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
+    $res = $model->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e);
+    }
+    $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
+    $res = $model->prepare($sql);
+    try {
+        $res->execute(array(":value" => $fieldValue));
+    } catch (\PDOException $e) {
+        print_r($e);
+    }
 }

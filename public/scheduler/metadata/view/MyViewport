@@ -270,19 +270,6 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "dataIndex": "extra",
-                                "text": "Extra"
-                            },
-                            "designerId": "f53d607b-6b1b-4153-b0b9-0ffda61169a9"
-                        },
-                        {
-                            "type": "Ext.grid.column.Column",
-                            "reference": {
-                                "name": "columns",
-                                "type": "array"
-                            },
-                            "codeClass": null,
-                            "userConfig": {
                                 "dataIndex": "type",
                                 "text": "Type"
                             },
@@ -329,6 +316,19 @@
                                 "flex": 0.7
                             },
                             "designerId": "275e7805-6377-4b74-b229-520f313afa0f"
+                        },
+                        {
+                            "type": "Ext.grid.column.Column",
+                            "reference": {
+                                "name": "columns",
+                                "type": "array"
+                            },
+                            "codeClass": null,
+                            "userConfig": {
+                                "dataIndex": "extra",
+                                "text": "Extra"
+                            },
+                            "designerId": "f53d607b-6b1b-4153-b0b9-0ffda61169a9"
                         }
                     ]
                 }

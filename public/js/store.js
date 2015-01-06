@@ -1564,7 +1564,7 @@ $(window).ready(function () {
         Ext.getCmp('renamelayer-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
         Ext.getCmp('movelayer-btn').setDisabled(true);
-    }
+    };
 
     var tabs = new Ext.TabPanel({
         activeTab: 0,
@@ -1778,6 +1778,20 @@ $(window).ready(function () {
             ct,
             {
                 xtype: "panel",
+                title: __('Scheduler'),
+                layout: 'border',
+                id: "schedulerPanel",
+                items: [
+                    {
+                        frame: false,
+                        border: false,
+                        region: "center",
+                        html: '<iframe frameborder="0" id="scheduler" style="width:100%;height:100%" src="/scheduler"></iframe>'
+                    }
+                ]
+            },
+            {
+                xtype: "panel",
                 title: __('Log'),
                 layout: 'border',
                 listeners: {
@@ -1814,10 +1828,15 @@ $(window).ready(function () {
             }
         ]
     });
-    new Ext.Viewport({
+    var viewPort = new Ext.Viewport({
         layout: 'border',
         items: [tabs]
     });
+
+    // Hide tab if scheduler is not available for the db
+    if(window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false){
+        tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+    }
 
     writeFiles = function (clearCachedLayer, map) {
         $.ajax({

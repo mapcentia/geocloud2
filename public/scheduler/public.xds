@@ -53,6 +53,22 @@
                 "app/model/MyModel.js"
             ],
             "className": "MyModel"
+        },
+        "d6b9e932-91e0-4469-848a-df7f12caf2f3": {
+            "paths": [
+                "metadata/store/SchemaStore",
+                "app/store/override/SchemaStore.js",
+                "app/store/SchemaStore.js"
+            ],
+            "className": "SchemaStore"
+        },
+        "8cde3751-ecd4-498e-a37f-d281f47e1431": {
+            "paths": [
+                "metadata/model/SchemaModel",
+                "app/model/override/SchemaModel.js",
+                "app/model/SchemaModel.js"
+            ],
+            "className": "SchemaModel"
         }
     },
     "viewOrderMap": {
@@ -61,13 +77,15 @@
             "35afd42e-aeac-4380-b0f0-9bcebe016ddb"
         ],
         "store": [
-            "ed20249e-3db4-4119-9fc7-d71f142e9358"
+            "ed20249e-3db4-4119-9fc7-d71f142e9358",
+            "d6b9e932-91e0-4469-848a-df7f12caf2f3"
         ],
         "controller": [
             "219c8580-746b-465e-a8f3-5174ccb0e893"
         ],
         "model": [
-            "bd2ee9d8-45d5-4989-a423-b21638c35da7"
+            "bd2ee9d8-45d5-4989-a423-b21638c35da7",
+            "8cde3751-ecd4-498e-a37f-d281f47e1431"
         ],
         "resource": [
             "64fd95c1-abd1-460e-8e87-acfb51fde2de"

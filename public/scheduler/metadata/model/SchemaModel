@@ -1,0 +1,26 @@
+{
+    "type": "Ext.data.Model",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "designer|userClassName": "SchemaModel"
+    },
+    "designerId": "8cde3751-ecd4-498e-a37f-d281f47e1431",
+    "cn": [
+        {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "schema"
+            },
+            "designerId": "43f28caa-4260-44fd-b33b-d7eceebadff8"
+        }
+    ]
+}

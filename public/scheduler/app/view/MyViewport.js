@@ -130,11 +130,6 @@ Ext.define('MyApp.view.MyViewport', {
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    dataIndex: 'extra',
-                                    text: 'Extra'
-                                },
-                                {
-                                    xtype: 'gridcolumn',
                                     dataIndex: 'type',
                                     text: 'Type'
                                 },
@@ -155,6 +150,11 @@ Ext.define('MyApp.view.MyViewport', {
                                     dataIndex: 'lasttimestamp',
                                     text: 'Last success ',
                                     flex: 0.7
+                                },
+                                {
+                                    xtype: 'gridcolumn',
+                                    dataIndex: 'extra',
+                                    text: 'Extra'
                                 }
                             ]
                         }

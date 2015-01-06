@@ -270,11 +270,14 @@ Ext.define('MyApp.view.MyWindow', {
                             allowBlank: false
                         },
                         {
-                            xtype: 'textfield',
+                            xtype: 'combobox',
                             flex: 1,
                             fieldLabel: 'Schema',
                             name: 'schema',
-                            allowBlank: false
+                            allowBlank: false,
+                            editable: false,
+                            displayField: 'schema',
+                            store: 'SchemaStore'
                         },
                         {
                             xtype: 'textfield',
@@ -289,12 +292,6 @@ Ext.define('MyApp.view.MyWindow', {
                             fieldLabel: 'Epsg',
                             name: 'epsg',
                             allowBlank: false
-                        },
-                        {
-                            xtype: 'textfield',
-                            flex: 1,
-                            fieldLabel: 'Extra fields',
-                            name: 'extra'
                         },
                         {
                             xtype: 'combobox',
@@ -323,6 +320,12 @@ Ext.define('MyApp.view.MyWindow', {
                                 'UTF8',
                                 'LATIN1'
                             ]
+                        },
+                        {
+                            xtype: 'textfield',
+                            flex: 1,
+                            fieldLabel: 'Extra fields',
+                            name: 'extra'
                         },
                         {
                             xtype: 'button',
