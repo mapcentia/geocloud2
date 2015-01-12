@@ -96,9 +96,24 @@ Viewer = function () {
     };
 
     addSqlFilterForm = function () {
-        var table, formSchema;
-        table = "public.lp";
-        $("#sql-filter-title").html("<h3>" + table + "</h3>");
+        var table,title, formSchema = [], operator;
+        table = "proj_belysning.lygter_nomatch";
+        title = "Lygter - no match";
+        operator = "AND";
+        formSchema[table] = {
+            companycod: {
+                type: 'number',
+                title: 'companycod',
+                required: false
+            },
+            tag: {
+                type: 'string',
+                title: 'tag',
+                required: false
+            }
+        };
+
+        $("#sql-filter-title").html("<h3>" + title + "</h3>");
         sqlFilterStore = new geocloud.sqlStore({
             db: db,
             clickable: false,
@@ -117,29 +132,15 @@ Viewer = function () {
             }
         });
         cloud.addGeoJsonStore(sqlFilterStore);
-
-        formSchema = {
-            anvgen: {
-                type: 'number',
-                title: 'anvgen',
-                required: false
-            },
-            tag: {
-                type: 'string',
-                title: 'tag',
-                required: false
-            }
-        };
         $('#sql-filter-form').jsonForm({
-            schema: formSchema,
+            schema: formSchema[table],
             onSubmit: function (errors, values) {
                 var arr = [], where, sql;
                 if (errors) {
                     $('#sql-filter-res').html('<p>I beg your pardon?</p>');
                 } else {
                     sqlFilterStore.reset();
-
-                    $.each(formSchema, function (name, property) {
+                    $.each(formSchema[table], function (name, property) {
                         if (values[name] !== undefined) {
                             if (property.type === "number") {
                                 arr.push(name + "=" + values[name]);
@@ -148,7 +149,7 @@ Viewer = function () {
                             }
                         }
                     });
-                    where = arr.join(" OR ");
+                    where = arr.join(" " + operator+ " ");
                     sql = "SELECT * FROM " + table + " WHERE " + where;
                     sqlFilterStore.sql = sql;
                     sqlFilterStore.load();
