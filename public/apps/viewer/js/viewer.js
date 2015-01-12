@@ -97,7 +97,7 @@ Viewer = function () {
 
     addSqlFilterForm = function () {
         //console.log(metaData.data);
-        var i, table, formSchema = {}, operator;
+        var i;
         $("#sql-filter-table").append('<option value="">Choose layer</option>');
 
         for (i = 0; i < metaData.data.length; i = i + 1) {
@@ -106,7 +106,12 @@ Viewer = function () {
             }
         }
         $("#sql-filter-table").on("change", function () {
-            var fieldConf, value = $("#sql-filter-table").val();
+            var fieldConf, formSchema = {}, table, operator, value = $("#sql-filter-table").val();
+            try {
+                cloud.removeGeoJsonStore(sqlFilterStore);
+                sqlFilterStore.reset();
+            } catch (e) {
+            }
             fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
             table = schema + "." + value;
             operator = "AND";
@@ -146,7 +151,7 @@ Viewer = function () {
                     if (errors) {
                         $('#sql-filter-res').html('<p>Error in query. Plaese check types.</p>');
                     } else {
-                        sqlFilterStore.reset();
+
                         $.each(formSchema, function (name, property) {
                             if (values[name] !== undefined) {
                                 if (property.type === "number") {
