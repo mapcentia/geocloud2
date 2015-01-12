@@ -46,7 +46,7 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        $.getScript(host + "/api/v3/js/geocloud.js?b7b47372b32dde62#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?6e89d5a8d1655fdb#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/main.js?fcd29b3cdfa6f10c#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
                         (function pollForDependants() {
@@ -162,9 +162,9 @@ if (typeof gc2map === "undefined") {
                                     var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
                                     var p2 = geocloud.transformPoint(defaults.extent[2], defaults.extent[3], "EPSG:4326", "EPSG:900913");
                                     defaults.extent = [p1.x, p1.y, p2.x, p2.y];
-                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + ((defaults.setBaseLayer.split(".").length === 1) ? defaults.setBaseLayer.toUpperCase() : defaults.setBaseLayer) + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&bbox=" + defaults.extent.join(",") + "&lifetime=10'>");
+                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&bbox=" + defaults.extent.join(",") + "&lifetime=10'>");
                                 } else if (typeof defaults.zoom === "object") {
-                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + ((defaults.setBaseLayer.split(".").length === 1) ? defaults.setBaseLayer.toUpperCase() : defaults.setBaseLayer) + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
+                                    $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                                 }
                             } else {
                                 $("#" + gc2RandId).html(this.Templates["body.tmpl"].render(context));

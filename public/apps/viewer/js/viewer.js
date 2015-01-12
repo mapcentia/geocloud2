@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -91,6 +91,68 @@ Viewer = function () {
                     }
                 });
                 $('#legend').html(list);
+            }
+        });
+    };
+
+    addSqlFilterForm = function () {
+        var table, formSchema;
+        table = "public.lp";
+        $("#sql-filter-title").html("<h3>" + table + "</h3>");
+        sqlFilterStore = new geocloud.sqlStore({
+            db: db,
+            clickable: false,
+            styleMap: {
+                "color": "#ff0000",
+                "weight": 5,
+                "opacity": 0.65,
+                "fillOpacity": 0
+            },
+            onLoad: function () {
+                if (sqlFilterStore.geoJSON) {
+                    cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
+                } else {
+                    alert("Query did not return any features");
+                }
+            }
+        });
+        cloud.addGeoJsonStore(sqlFilterStore);
+
+        formSchema = {
+            anvgen: {
+                type: 'number',
+                title: 'anvgen',
+                required: false
+            },
+            tag: {
+                type: 'string',
+                title: 'tag',
+                required: false
+            }
+        };
+        $('#sql-filter-form').jsonForm({
+            schema: formSchema,
+            onSubmit: function (errors, values) {
+                var arr = [], where, sql;
+                if (errors) {
+                    $('#sql-filter-res').html('<p>I beg your pardon?</p>');
+                } else {
+                    sqlFilterStore.reset();
+
+                    $.each(formSchema, function (name, property) {
+                        if (values[name] !== undefined) {
+                            if (property.type === "number") {
+                                arr.push(name + "=" + values[name]);
+                            } else {
+                                arr.push(name + "='" + values[name] + "'");
+                            }
+                        }
+                    });
+                    where = arr.join(" OR ");
+                    sql = "SELECT * FROM " + table + " WHERE " + where;
+                    sqlFilterStore.sql = sql;
+                    sqlFilterStore.load();
+                }
             }
         });
     };
@@ -275,6 +337,8 @@ Viewer = function () {
         $(".share-text").focus(function () {
             $(this).select();
         });
+
+        addSqlFilterForm();
 
         if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
@@ -554,6 +618,12 @@ Viewer = function () {
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
                             id: index,
+                            styleMap: {
+                                "color": "#0000ff",
+                                "weight": 5,
+                                "opacity": 0.65,
+                                "fillOpacity": 0
+                            },
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
