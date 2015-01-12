@@ -151,7 +151,7 @@ Viewer = function () {
                     if (errors) {
                         $('#sql-filter-res').html('<p>Error in query. Plaese check types.</p>');
                     } else {
-
+                        sqlFilterStore.reset();
                         $.each(formSchema, function (name, property) {
                             if (values[name] !== undefined) {
                                 if (property.type === "number") {
