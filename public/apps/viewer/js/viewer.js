@@ -98,6 +98,8 @@ Viewer = function () {
     addSqlFilterForm = function () {
         //console.log(metaData.data);
         var i, table, formSchema = {}, operator;
+        $("#sql-filter-table").append('<option value="">Choose layer</option>');
+
         for (i = 0; i < metaData.data.length; i = i + 1) {
             if (metaData.data[i].fieldconf) {
                 $("#sql-filter-table").append('<option value="' + metaData.data[i].f_table_name + '">' + metaData.data[i].f_table_name + '</option>');
