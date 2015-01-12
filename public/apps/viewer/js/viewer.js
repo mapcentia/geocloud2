@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -96,65 +96,71 @@ Viewer = function () {
     };
 
     addSqlFilterForm = function () {
-        var table,title, formSchema = [], operator;
-        table = "proj_belysning.lygter_nomatch";
-        title = "Lygter - no match";
-        operator = "AND";
-        formSchema[table] = {
-            companycod: {
-                type: 'number',
-                title: 'companycod',
-                required: false
-            },
-            tag: {
-                type: 'string',
-                title: 'tag',
-                required: false
+        //console.log(metaData.data);
+        var i, table, formSchema = {}, operator;
+        for (i = 0; i < metaData.data.length; i = i + 1) {
+            if (metaData.data[i].fieldconf) {
+                $("#sql-filter-table").append('<option value="' + metaData.data[i].f_table_name + '">' + metaData.data[i].f_table_name + '</option>');
             }
-        };
+        }
+        $("#sql-filter-table").on("change", function () {
+            var fieldConf, value = $("#sql-filter-table").val();
+            fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
+            table = schema + "." + value;
+            operator = "AND";
+            $.each(fieldConf, function (i, v) {
+                if (v.type !== "geometry" && v.querable === true) {
+                    formSchema[i] = {
+                        type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
+                        title: i,
+                        required: false
+                    };
+                }
+            });
 
-        $("#sql-filter-title").html("<h3>" + title + "</h3>");
-        sqlFilterStore = new geocloud.sqlStore({
-            db: db,
-            clickable: false,
-            styleMap: {
-                "color": "#ff0000",
-                "weight": 5,
-                "opacity": 0.65,
-                "fillOpacity": 0
-            },
-            onLoad: function () {
-                if (sqlFilterStore.geoJSON) {
-                    cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
-                } else {
-                    alert("Query did not return any features");
+            sqlFilterStore = new geocloud.sqlStore({
+                db: db,
+                clickable: false,
+                styleMap: {
+                    "color": "#ff0000",
+                    "weight": 5,
+                    "opacity": 0.65,
+                    "fillOpacity": 0
+                },
+                onLoad: function () {
+                    if (sqlFilterStore.geoJSON) {
+                        cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
+                    } else {
+                        alert("Query did not return any features");
+                    }
                 }
-            }
-        });
-        cloud.addGeoJsonStore(sqlFilterStore);
-        $('#sql-filter-form').jsonForm({
-            schema: formSchema[table],
-            onSubmit: function (errors, values) {
-                var arr = [], where, sql;
-                if (errors) {
-                    $('#sql-filter-res').html('<p>I beg your pardon?</p>');
-                } else {
-                    sqlFilterStore.reset();
-                    $.each(formSchema[table], function (name, property) {
-                        if (values[name] !== undefined) {
-                            if (property.type === "number") {
-                                arr.push(name + "=" + values[name]);
-                            } else {
-                                arr.push(name + "='" + values[name] + "'");
+            });
+            cloud.addGeoJsonStore(sqlFilterStore);
+            $('#sql-filter-form').empty();
+            $('#sql-filter-form').jsonForm({
+                schema: formSchema,
+                onSubmit: function (errors, values) {
+                    var arr = [], where, sql;
+                    if (errors) {
+                        $('#sql-filter-res').html('<p>Error in query. Plaese check types.</p>');
+                    } else {
+                        sqlFilterStore.reset();
+                        $.each(formSchema, function (name, property) {
+                            if (values[name] !== undefined) {
+                                if (property.type === "number") {
+                                    arr.push(name + "=" + values[name]);
+                                } else {
+                                    arr.push(name + "='" + values[name] + "'");
+                                }
                             }
-                        }
-                    });
-                    where = arr.join(" " + operator+ " ");
-                    sql = "SELECT * FROM " + table + " WHERE " + where;
-                    sqlFilterStore.sql = sql;
-                    sqlFilterStore.load();
+                        });
+                        where = arr.join(" " + operator + " ");
+                        sql = "SELECT * FROM " + table + " WHERE " + where;
+                        sqlFilterStore.sql = sql;
+                        sqlFilterStore.load();
+                    }
                 }
-            }
+            });
         });
     };
     share = function () {
@@ -330,7 +336,7 @@ Viewer = function () {
     }
     // Draw end
     init = function () {
-        var metaData, layers = {}, jRes, node, modalFlag, extent = null, i;
+        var layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
             return false;
@@ -339,7 +345,6 @@ Viewer = function () {
             $(this).select();
         });
 
-        addSqlFilterForm();
 
         if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
@@ -468,6 +473,7 @@ Viewer = function () {
                 $('#menu').multilevelpushmenu({
                     menu: arrMenu
                 });
+                addSqlFilterForm();
             }
         }); // Ajax call end
         $.ajax({

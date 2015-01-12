@@ -43,12 +43,13 @@ body {
 #sql-filter{
     display: inline;
     background-color: #ffffff;
-    width: 200px;
+    width: 300px;
     height: 300px;
     position: absolute;
     bottom: 40px;
     right: 45px;
     padding: 10px;
+    overflow: auto;
 }
 
 .popover {
