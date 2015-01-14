@@ -170,9 +170,12 @@ Viewer = function () {
                     },
                     onSubmit: function (errors, values) {
                         var arr = [], where, sql;
+                        $('#sql-filter-res').empty();
                         $("#filter-submit").prop('disabled', true);
                         $("#filter-submit .spinner").show();
                         if (errors) {
+                            $("#filter-submit").prop('disabled', false);
+                            $("#filter-submit .spinner").hide();
                             $('#sql-filter-res').html('<p>' + __("Error in query. Please check types.") + '</p>');
                         } else {
                             sqlFilterStore.reset();
