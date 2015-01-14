@@ -240,6 +240,9 @@ input[type="radio"], input[type="checkbox"] {
     font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
     font-size: 14px !important;
 }
+.legend-container > ul > li {
+    font-size: 14px !important;
+}
 .legend-text {
     margin-left: 5px;
     font-size: 14px;
