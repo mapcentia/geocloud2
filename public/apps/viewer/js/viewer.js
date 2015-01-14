@@ -121,7 +121,7 @@ Viewer = function () {
                             type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
                             title: v.alias || i
                         };
-                        if (v.properties && v.properties !== "") {
+                        if (v.properties && v.properties !== "" && $.parseJSON(v.properties)) {
                             arr = $.parseJSON(v.properties);
                             arr.unshift("");
                             formSchema[i].enum = arr;
