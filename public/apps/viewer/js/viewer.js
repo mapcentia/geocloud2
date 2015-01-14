@@ -96,9 +96,8 @@ Viewer = function () {
     };
 
     addSqlFilterForm = function () {
-        //console.log(metaData.data);
         var i;
-        $("#sql-filter-table").append('<option value="">Choose layer</option>');
+        $("#sql-filter-table").append('<option value="">' + __("Choose layer") + '</option>');
 
         for (i = 0; i < metaData.data.length; i = i + 1) {
             if (metaData.data[i].fieldconf) {
@@ -107,7 +106,7 @@ Viewer = function () {
         }
         $("#sql-filter-table").on("change",
             function () {
-                var fieldConf, formSchema = {}, table, operator, value = $("#sql-filter-table").val();
+                var fieldConf, formSchema = {}, table, operator, value = $("#sql-filter-table").val(), arr;
                 try {
                     cloud.removeGeoJsonStore(sqlFilterStore);
                     sqlFilterStore.reset();
@@ -118,13 +117,15 @@ Viewer = function () {
                 operator = "AND";
                 $.each(fieldConf, function (i, v) {
                     if (v.type !== "geometry" && v.querable === true) {
-                        console.log($.parseJSON(v.properties))
                         formSchema[i] = {
                             type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
-                            title: i,
-                            enum: (v.properties) ? $.parseJSON(v.properties) : null,
-                            required: false
+                            title: v.alias || i
                         };
+                        if (v.properties && v.properties !== "") {
+                            arr = $.parseJSON(v.properties);
+                            arr.unshift("");
+                            formSchema[i].enum = arr;
+                        }
                     }
                 });
 
@@ -138,6 +139,8 @@ Viewer = function () {
                         "fillOpacity": 0
                     },
                     onLoad: function () {
+                        $("#filter-submit").prop('disabled', false);
+                        $("#filter-submit .spinner").hide();
                         if (sqlFilterStore.geoJSON) {
                             cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
                         } else {
@@ -149,20 +152,28 @@ Viewer = function () {
                 $('#sql-filter-form').empty();
                 $('#sql-filter-form').jsonForm({
                     schema: formSchema,
-                    /*form: [
+                    form: [
                         {
-                            "key": "anvgen",
-                            "titleMap": {
-                                "11": 11,
-                                "21": 21,
-                                "31": 31
-                            }
+                            "type": "help",
+                            "helpvalue": __("Set filter values")
+                        },
+                        "*",
+                        {
+                            "type": "button",
+                            "title": __("Load features"),
+                            "id": "filter-submit",
+                            "htmlClass": "btn-primary"
                         }
-                    ],*/
+                    ],
+                    "params": {
+                        "fieldHtmlClass": "filter-field"
+                    },
                     onSubmit: function (errors, values) {
                         var arr = [], where, sql;
+                        $("#filter-submit").prop('disabled', true);
+                        $("#filter-submit .spinner").show();
                         if (errors) {
-                            $('#sql-filter-res').html('<p>Error in query. Plaese check types.</p>');
+                            $('#sql-filter-res').html('<p>' + __("Error in query. Please check types.") + '</p>');
                         } else {
                             sqlFilterStore.reset();
                             $.each(formSchema, function (name, property) {
@@ -175,12 +186,16 @@ Viewer = function () {
                                 }
                             });
                             where = arr.join(" " + operator + " ");
-                            sql = "SELECT * FROM " + table + " WHERE " + where;
+                            sql = "SELECT * FROM " + table;
+                            if (where && where !== "") {
+                                sql = sql + " WHERE " + where;
+                            }
                             sqlFilterStore.sql = sql;
                             sqlFilterStore.load();
                         }
                     }
                 });
+                $("#filter-submit").append("<img src='http://www.gifstache.com/images/ajax_loader.gif' class='spinner'/>");
             }
         )
     };
@@ -536,9 +551,14 @@ Viewer = function () {
                     $('#modal-legend').modal();
                     addLegend();
                 });
+                $("#modal-filter .modal-body").append($("#filter"));
+                $('#filter-modal').on('click', function (e) {
+                    $('#modal-filter').modal();
+                });
             },
             exit: function () {
                 $('#modal-legend').modal('hide');
+                $('#modal-filter').modal('hide');
             }
         });
         jRes.addFunc({
@@ -556,9 +576,12 @@ Viewer = function () {
                     addLegend();
                     $("#legend").css({"max-height": (eHeight - 100) + "px"});
                 });
+                $("#filter-popover").popover({
+                    offset: 10,
+                    html: true,
+                    content: $("#filter")
+                }).popover('show').popover('hide');
                 $(".modal-body").css({"max-height": (eHeight - sub) + "px"});
-                //$("#modal-info-body").css({"max-height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
-                //$("#modal-share-body").css({"max-height": (eHeight - sub) + "px"});
             },
 
             exit: function () {

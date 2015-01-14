@@ -41,15 +41,7 @@ body {
 }
 
 #sql-filter{
-    display: inline;
-    background-color: #ffffff;
-    width: 300px;
-    height: 300px;
-    position: absolute;
-    bottom: 40px;
-    right: 45px;
-    padding: 10px;
-    overflow: auto;
+
 }
 
 .popover {
@@ -110,6 +102,10 @@ input[type="radio"], input[type="checkbox"] {
         display: none !important;
     }
 
+    #filter-popover-li {
+        display: none !important;
+    }
+
     .navbar-fixed-top {
         margin-bottom: 0;
     }
@@ -135,6 +131,10 @@ input[type="radio"], input[type="checkbox"] {
 @media (min-width: 768px) {
 
     #legend-modal-li {
+        display: none !important;
+    }
+
+    #filter-modal-li {
         display: none !important;
     }
 
@@ -450,7 +450,26 @@ div.olControlZoom {
         transform: translateX(-40px);
     }
 }
-
-
-
-
+.spinner {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    left: 84px;
+    display: none;
+    top: 3px;
+}
+#filter-submit{
+    width: 100%;
+    position: relative;
+    margin-top: 10px;
+}
+.filter-field {
+    width: 100%;
+}
+#sql-filter-form  label {
+    margin-bottom: 0 !important;
+    margin-top: 5px !important;
+}
+.help-block {
+    margin-bottom: 0 !important;
+}

@@ -1,11 +1,6 @@
 <!-- map -->
 <div id="pane">
     <div id="map"></div>
-    <div id="sql-filter">
-        <select id="sql-filter-table"></select>
-        <form id="sql-filter-form"></form>
-        <div id="sql-filter-res"></div>
-    </div>
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -55,6 +50,15 @@
                             {{{Draw}}}
                         </button>
                     </li>
+                    <li id="filter-popover-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="filter-popover" rel="popover" data-placement="bottom"
+                                >
+                            Filter </a>
+                    </li>
+                    <li id="filter-modal-li" class="gc-btn">
+                        <a href="javascript:void(0)" id="filter-modal" title="Filter">
+                            Filter </a>
+                    </li>
                     <li>
                         <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
                             <div class="form-group">
@@ -77,6 +81,14 @@
     <div id="layers" class="panel-group"></div>
     <!-- legend -->
     <div id="legend"></div>
+    <!-- filter -->
+    <div id="filter">
+        <div id="sql-filter">
+            <select id="sql-filter-table"></select>
+            <form id="sql-filter-form"></form>
+            <div id="sql-filter-res"></div>
+        </div>
+    </div>
 </div>
 <div id="menu"></div>
 <!-- legend modal -->
@@ -86,6 +98,24 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">{{{Legend}}}</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">{{{Close}}}</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+<!-- filter modal -->
+<div id="modal-filter" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Filter</h4>
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
