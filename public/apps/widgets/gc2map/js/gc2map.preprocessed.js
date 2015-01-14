@@ -133,6 +133,7 @@ if (typeof gc2map === "undefined") {
                     key: null,
                     clickDistance: 5,
                     baseLayers: null,
+                    template: "body.tmpl",
                     callBack: function () {
                     }
                 },
@@ -173,6 +174,7 @@ if (typeof gc2map === "undefined") {
                             context.id = gc2RandId;
                             context.infoText = defaults.infoText;
                             context.infoTextWidth = defaults.infoTextWidth;
+                            context.height = defaults.height;
                             if (defaults.staticMap) {
                                 if (typeof defaults.extent === "object") {
                                     var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
@@ -183,7 +185,7 @@ if (typeof gc2map === "undefined") {
                                     $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                                 }
                             } else {
-                                $("#" + gc2RandId).html(this.Templates["body.tmpl"].render(context));
+                                $("#" + gc2RandId).html(this.Templates[defaults.template].render(context));
                                 if (defaults.infoText) {
                                     $("#info-text-" + gc2RandId).show();
                                 }

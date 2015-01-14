@@ -133,15 +133,15 @@ include("html_header.php");
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/store.js?ca716a91796023a0"></script>
+<script type="text/javascript" src="/js/store.js?7bc0047ad957fe53"></script>
 <script type="text/javascript" src="/js/edittablestructure.js?3e5e88d555665ea7"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?4f93fc8ac1ee2be8"></script>
-<script type="text/javascript" src="/js/editwmslayer.js?2015a7622e89fc9a"></script>
+<script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
 <script type="text/javascript" src="/js/classwizards.js?1d00b17572d800a0"></script>
 <script type="text/javascript" src="/js/addshapeform.js?43ca95e2d0f3aa01"></script>
 <script type="text/javascript" src="/js/addbitmapform.js?7f352c9bbaf8b3ce"></script>
-<script type="text/javascript" src="/js/addrasterform.js?da336a6959702c26"></script>
+<script type="text/javascript" src="/js/addrasterform.js?8f2b98038194028c"></script>
 <script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
 <script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>
 <script type="text/javascript" src="/js/addosmform.js?6fa514ebc5d91d01"></script>

@@ -251,4 +251,7 @@ input[type="radio"], input[type="checkbox"] {
     padding-left: 0;
     margin-bottom: 10px;
 }
+.body2 {
+    position: absolute;
+}
 
