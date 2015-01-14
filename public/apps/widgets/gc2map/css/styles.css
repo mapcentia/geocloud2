@@ -253,5 +253,6 @@ input[type="radio"], input[type="checkbox"] {
 }
 .body2 {
     position: absolute;
+    font-family: 'Open Sans Condensed', sans-serif, sans-serif;
 }
 
