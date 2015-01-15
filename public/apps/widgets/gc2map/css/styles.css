@@ -258,8 +258,9 @@ input[type="radio"], input[type="checkbox"] {
 .body2 {
     position: absolute;
     font-family: 'Open Sans Condensed', sans-serif, sans-serif;
-    max-height: 200px !important;
+    max-height: 150px !important;
     overflow-y: scroll;
+    background-color: #ffffff;
     width: 100%;
 }
 
