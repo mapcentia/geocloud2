@@ -73,5 +73,9 @@ class Table extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->removeVersioning(Input::getPath()->part(4));
     }
+    public function get_distinct()
+    {
+        return $this->table->getGroupByAsArray(Input::getPath()->part(5));
+    }
 
 }
