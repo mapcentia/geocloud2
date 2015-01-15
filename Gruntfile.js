@@ -129,7 +129,10 @@ module.exports = function (grunt) {
                 },
                 files: {
                     "public/apps/viewer/js/templates.js": ["public/apps/viewer/templates/body.tmpl"],
-                    "public/apps/widgets/gc2map/js/templates.js": ["public/apps/widgets/gc2map/templates/body.tmpl"]
+                    "public/apps/widgets/gc2map/js/templates.js": [
+                        "public/apps/widgets/gc2map/templates/body.tmpl",
+                        "public/apps/widgets/gc2map/templates/body2.tmpl"
+                    ]
                 }
             }
         },
@@ -197,7 +200,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-preprocess');
 
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['processhtml','preprocess:production', 'cacheBust']);
+    grunt.registerTask('production', ['processhtml', 'preprocess:production', 'cacheBust']);
 };
 
 

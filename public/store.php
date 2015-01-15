@@ -140,7 +140,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
 <script type="text/javascript" src="/js/classwizards.js?1d00b17572d800a0"></script>
 <script type="text/javascript" src="/js/addshapeform.js?43ca95e2d0f3aa01"></script>
-<script type="text/javascript" src="/js/addbitmapform.js?7f352c9bbaf8b3ce"></script>
+<script type="text/javascript" src="/js/addbitmapform.js?3470f8bb8b7fc38f"></script>
 <script type="text/javascript" src="/js/addrasterform.js?8f2b98038194028c"></script>
 <script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
 <script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>

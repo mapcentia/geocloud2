@@ -47,8 +47,8 @@ if (typeof gc2map === "undefined") {
                         typeof window.setBaseLayers !== "undefined"
                     ) {
                         $.getScript(host + "/api/v3/js/geocloud.js?6e89d5a8d1655fdb#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?fcd29b3cdfa6f10c#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?e26cfe4c614e1c99#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?9751459f2c18d094#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {
                                 scriptsLoaded = true;
@@ -78,7 +78,7 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/css/styles.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + '/apps/widgets/gc2map/css/styles.css?05ff4927965bb5d5#grunt-cache-bust'
                 }).appendTo('head');
                 $('<link/>').attr({
                     rel: 'stylesheet',
@@ -117,6 +117,7 @@ if (typeof gc2map === "undefined") {
                     key: null,
                     clickDistance: 5,
                     baseLayers: null,
+                    template: "body.tmpl",
                     callBack: function () {
                     }
                 },
@@ -157,6 +158,7 @@ if (typeof gc2map === "undefined") {
                             context.id = gc2RandId;
                             context.infoText = defaults.infoText;
                             context.infoTextWidth = defaults.infoTextWidth;
+                            context.height = defaults.height;
                             if (defaults.staticMap) {
                                 if (typeof defaults.extent === "object") {
                                     var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
@@ -167,7 +169,7 @@ if (typeof gc2map === "undefined") {
                                     $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                                 }
                             } else {
-                                $("#" + gc2RandId).html(this.Templates["body.tmpl"].render(context));
+                                $("#" + gc2RandId).html(this.Templates[defaults.template].render(context));
                                 if (defaults.infoText) {
                                     $("#info-text-" + gc2RandId).show();
                                 }

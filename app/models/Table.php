@@ -152,7 +152,7 @@ class Table extends Model
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-                    if ($key == "layergroup"){
+                    if ($key == "layergroup") {
                         if (!$value && \app\conf\App::$param['hideUngroupedLayers'] == true) {
                             //$value = "_gc2_hide_in_viewer";
                         }
@@ -184,6 +184,26 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
         }
+        return $response;
+    }
+
+    function getGroupByAsArray($field) // All tables
+    {
+        $sql = "SELECT DISTINCT({$field}) as distinct FROM {$this->table} ORDER BY {$field}";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+            while ($row = $this->fetchRow($res, "assoc")) {
+                $arr[] = $row["distinct"];
+            }
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
