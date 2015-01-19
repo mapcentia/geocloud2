@@ -72,8 +72,19 @@ class Layer extends \app\models\Table
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                if ($key == "layergroup" && (!$value)){
+                if ($key == "layergroup" && (!$value)) {
                     $value = "<font color='red'>[Ungrouped]</font>";
+                }
+                if ($key == "fieldconf" && ($value)) {
+                    $obj = json_decode($value, true);
+                    foreach ($obj as $k => $val) {
+                        if ($obj[$k]["properties"] == "*") {
+                            $table = new \app\models\Table($row['f_table_schema'].".".$row['f_table_name']);
+                            $distinctValues = $table->getGroupByAsArray($k);
+                            $obj[$k]["properties"] = json_encode($distinctValues["data"]);
+                        }
+                    }
+                    $value = json_encode($obj);
                 }
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);

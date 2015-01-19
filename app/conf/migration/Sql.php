@@ -19,6 +19,8 @@ class Sql
         $sqls[] = "CREATE EXTENSION \"dblink\"";
         $sqls[] = "CREATE EXTENSION \"pgcrypto\"";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD PRIMARY KEY (_key_)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN enablesqlfilter bool";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER enablesqlfilter set default false";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -51,7 +53,8 @@ class Sql
                         geometry_columns_join.cartomobile,
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
-                        geometry_columns_join.privileges
+                        geometry_columns_join.privileges,
+                        geometry_columns_join.enablesqlfilter
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -90,7 +93,8 @@ class Sql
                         geometry_columns_join.cartomobile,
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
-                        geometry_columns_join.privileges
+                        geometry_columns_join.privileges,
+                        geometry_columns_join.enablesqlfilter
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -132,7 +136,8 @@ class Sql
                                 geometry_columns_join.cartomobile,
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
-                                geometry_columns_join.privileges
+                                geometry_columns_join.privileges,
+                                geometry_columns_join.enablesqlfilter
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -173,7 +178,8 @@ class Sql
                                 geometry_columns_join.cartomobile,
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
-                                geometry_columns_join.privileges
+                                geometry_columns_join.privileges,
+                                geometry_columns_join.enablesqlfilter
                               FROM raster_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON

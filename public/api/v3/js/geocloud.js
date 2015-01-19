@@ -110,7 +110,8 @@ geocloud = (function () {
             clientEncoding: "UTF8",
             async: true,
             jsonp: true,
-            method: "GET"
+            method: "GET",
+            clickable: true
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -144,13 +145,14 @@ geocloud = (function () {
                     this.layer = L.geoJson(null, {
                         style: this.defaults.styleMap,
                         pointToLayer: this.defaults.pointToLayer,
-                        onEachFeature: this.defaults.onEachFeature
+                        onEachFeature: this.defaults.onEachFeature,
+                        clickable: this.defaults.clickable
                     });
                     this.layer.id = this.defaults.name;
                     break;
             }
         };
-        this.geoJSON = {};
+        this.geoJSON = null;
         this.featureStore = null;
         this.reset = function () {
             switch (MAPLIB) {
@@ -231,6 +233,8 @@ geocloud = (function () {
                                     me.layer.addData(response);
                                     break;
                             }
+                        } else {
+                            me.geoJSON = null;
                         }
                     }
                 },
