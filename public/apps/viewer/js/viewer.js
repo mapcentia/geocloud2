@@ -96,13 +96,18 @@ Viewer = function () {
     };
 
     addSqlFilterForm = function () {
-        var i;
+        var i, sqlFilterEnabled = false;
         $("#sql-filter-table").append('<option value="">' + __("Choose layer") + '</option>');
 
         for (i = 0; i < metaData.data.length; i = i + 1) {
-            if (metaData.data[i].fieldconf) {
+            if (metaData.data[i].enablesqlfilter) {
                 $("#sql-filter-table").append('<option value="' + metaData.data[i].f_table_name + '">' + metaData.data[i].f_table_name + '</option>');
+                sqlFilterEnabled = true;
             }
+        }
+        if (sqlFilterEnabled){
+            $("#filter-popover-li").show();
+            $("#filter-modal-li").show();
         }
         $("#sql-filter-table").on("change",
             function () {

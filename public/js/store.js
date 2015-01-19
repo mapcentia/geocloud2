@@ -1175,6 +1175,25 @@ $(window).ready(function () {
                             fieldLabel: __('File source'),
                             name: 'bitmapsource',
                             value: r.data.bitmapsource
+                        },
+                        {
+                            xtype: 'combo',
+                            store: new Ext.data.ArrayStore({
+                                fields: ['name', 'value'],
+                                data: [
+                                    ['true', true],
+                                    ['false', false]
+                                ]
+                            }),
+                            displayField: 'name',
+                            valueField: 'value',
+                            mode: 'local',
+                            typeAhead: false,
+                            editable: false,
+                            triggerAction: 'all',
+                            name: 'enablesqlfilter',
+                            fieldLabel: 'Enable sql filtering in Viewer',
+                            value: r.data.enablesqlfilter
                         }
                     ],
                     buttons: [
