@@ -4,7 +4,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css?49593e1feb591d0b"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css?35ea7a99ab8c2113" />
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css?35ea7a99ab8c2113"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
@@ -32,7 +32,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/4326"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo (\app\conf\App::$param["epsg"]) ?: "4326" ?>"
                            size="65"/>
                 </td>
             </tr>
@@ -48,7 +48,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
                            size="65"/>
                 </td>
             </tr>
@@ -64,7 +64,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
                            size="65"/>
                 </td>
             </tr>
@@ -80,7 +80,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser']?$_SESSION['subuser']."@":"") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
                            size="65"/>
                 </td>
             </tr>
@@ -96,7 +96,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ? : "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
                            size="65"/>
                 </td>
             </tr>
@@ -150,7 +150,8 @@ include("html_header.php");
 <script type="text/javascript" src="/js/apikeyform.js?255f5386bda54d03"></script>
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
-<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
+<script type="text/javascript"
+        src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 <!-- /build -->
 </body>
 </html>
