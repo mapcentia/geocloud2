@@ -128,7 +128,7 @@
                 "fn": "onButtonClick4",
                 "implHandler": [
                     "if (Ext.ComponentQuery.query('#form')[0].isValid() === false){",
-                    "\treturn false",
+                    "    return false",
                     "}",
                     "var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
                     "var values = Ext.ComponentQuery.query('#form')[0].getValues();",

@@ -36,14 +36,23 @@
                     },
                     "codeClass": null,
                     "userConfig": {
+                        "layout|flex": null,
                         "layout|region": "center",
                         "designer|createAlias": null,
                         "bodyPadding": null,
                         "title": null,
+                        "normalViewConfig": null,
                         "forceFit": true,
                         "store": "MyJsonStore"
                     },
                     "designerId": "d1eab2af-8977-422a-836b-fb3d941888d7",
+                    "customConfigs": [
+                        {
+                            "group": "(Custom Properties)",
+                            "name": "Scrollbar",
+                            "type": "string"
+                        }
+                    ],
                     "cn": [
                         {
                             "type": "Ext.grid.View",
@@ -52,6 +61,11 @@
                                 "type": "object"
                             },
                             "codeClass": null,
+                            "userConfig": {
+                                "height": null,
+                                "width": null,
+                                "autoScroll": false
+                            },
                             "designerId": "f0bd2376-530e-46f3-affa-a816b2d2f0fb"
                         },
                         {
@@ -120,10 +134,11 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 35,
                                 "dataIndex": "id",
                                 "menuDisabled": true,
                                 "text": "Id",
-                                "flex": 0.1,
+                                "flex": null,
                                 "format": "0"
                             },
                             "designerId": "6011fa25-c67d-45ab-ad65-7e1d0bac0e01"
@@ -136,7 +151,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": 40,
+                                "width": 50,
                                 "dataIndex": "min",
                                 "text": "Min",
                                 "flex": null
@@ -151,7 +166,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": 40,
+                                "width": 50,
                                 "dataIndex": "hour",
                                 "text": "Hour",
                                 "flex": null
@@ -181,7 +196,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": 45,
+                                "width": 60,
                                 "dataIndex": "month",
                                 "text": "Month",
                                 "flex": null
@@ -196,7 +211,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": 80,
+                                "width": 75,
                                 "dataIndex": "dayofweek",
                                 "text": "Day of week",
                                 "flex": null
@@ -211,10 +226,11 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 60,
                                 "dataIndex": "schema",
                                 "menuDisabled": true,
                                 "text": "Schema",
-                                "flex": 0.3
+                                "flex": null
                             },
                             "designerId": "a7b12153-5720-47da-86df-d6f1ae13b724"
                         },
@@ -229,7 +245,7 @@
                                 "dataIndex": "name",
                                 "menuDisabled": true,
                                 "text": "Table",
-                                "flex": 0.3
+                                "flex": null
                             },
                             "designerId": "7f7949ea-d38b-446b-b561-109defd03aa5"
                         },
@@ -241,7 +257,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": 180,
+                                "width": null,
                                 "dataIndex": "url",
                                 "menuDisabled": true,
                                 "text": "Url",
@@ -257,6 +273,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 40,
                                 "dataIndex": "epsg",
                                 "text": "Epsg"
                             },
@@ -270,6 +287,7 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 90,
                                 "dataIndex": "type",
                                 "text": "Type"
                             },
@@ -283,9 +301,10 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 50,
                                 "dataIndex": "encoding",
                                 "text": "Encoding",
-                                "flex": 0.4
+                                "flex": null
                             },
                             "designerId": "467cda0d-3082-478e-85de-1774c379122e"
                         },
@@ -297,9 +316,10 @@
                             },
                             "codeClass": null,
                             "userConfig": {
+                                "width": 80,
                                 "dataIndex": "lastcheck",
                                 "text": "Success on latest",
-                                "flex": 0.5
+                                "flex": null
                             },
                             "designerId": "dcb2cf13-be70-47cd-9cea-acf679e748ff"
                         },
@@ -313,7 +333,7 @@
                             "userConfig": {
                                 "dataIndex": "lasttimestamp",
                                 "text": "Last success ",
-                                "flex": 0.7
+                                "flex": null
                             },
                             "designerId": "275e7805-6377-4b74-b229-520f313afa0f"
                         },

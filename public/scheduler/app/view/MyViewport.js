@@ -40,6 +40,9 @@ Ext.define('MyApp.view.MyViewport', {
                             region: 'center',
                             forceFit: true,
                             store: 'MyJsonStore',
+                            viewConfig: {
+                                autoScroll: false
+                            },
                             dockedItems: [
                                 {
                                     xtype: 'toolbar',
@@ -66,21 +69,21 @@ Ext.define('MyApp.view.MyViewport', {
                             columns: [
                                 {
                                     xtype: 'numbercolumn',
+                                    width: 35,
                                     dataIndex: 'id',
                                     menuDisabled: true,
                                     text: 'Id',
-                                    flex: 0.1,
                                     format: '0'
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    width: 40,
+                                    width: 50,
                                     dataIndex: 'min',
                                     text: 'Min'
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    width: 40,
+                                    width: 50,
                                     dataIndex: 'hour',
                                     text: 'Hour'
                                 },
@@ -92,64 +95,63 @@ Ext.define('MyApp.view.MyViewport', {
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    width: 45,
+                                    width: 60,
                                     dataIndex: 'month',
                                     text: 'Month'
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    width: 80,
+                                    width: 75,
                                     dataIndex: 'dayofweek',
                                     text: 'Day of week'
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    width: 60,
                                     dataIndex: 'schema',
                                     menuDisabled: true,
-                                    text: 'Schema',
-                                    flex: 0.3
+                                    text: 'Schema'
                                 },
                                 {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'name',
                                     menuDisabled: true,
-                                    text: 'Table',
-                                    flex: 0.3
+                                    text: 'Table'
                                 },
                                 {
                                     xtype: 'gridcolumn',
-                                    width: 180,
                                     dataIndex: 'url',
                                     menuDisabled: true,
                                     text: 'Url'
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    width: 40,
                                     dataIndex: 'epsg',
                                     text: 'Epsg'
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    width: 90,
                                     dataIndex: 'type',
                                     text: 'Type'
                                 },
                                 {
                                     xtype: 'gridcolumn',
+                                    width: 50,
                                     dataIndex: 'encoding',
-                                    text: 'Encoding',
-                                    flex: 0.4
+                                    text: 'Encoding'
                                 },
                                 {
                                     xtype: 'booleancolumn',
+                                    width: 80,
                                     dataIndex: 'lastcheck',
-                                    text: 'Success on latest',
-                                    flex: 0.5
+                                    text: 'Success on latest'
                                 },
                                 {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'lasttimestamp',
-                                    text: 'Last success ',
-                                    flex: 0.7
+                                    text: 'Last success '
                                 },
                                 {
                                     xtype: 'gridcolumn',
