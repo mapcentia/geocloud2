@@ -1805,7 +1805,7 @@ $(window).ready(function () {
                         frame: false,
                         border: false,
                         region: "center",
-                        html: '<iframe frameborder="0" id="scheduler" style="width:100%;height:100%" src="/scheduler"></iframe>'
+                        html: '<iframe frameborder="0" id="scheduler" style="width:100%;height:100%" src="/scheduler/index2.html"></iframe>'
                     }
                 ]
             },
