@@ -207,3 +207,6 @@ q:after, q:before {
 .legend-container{
     margin-left: 10px;
 }
+.isview {
+    background-color: #d0e7ff;
+}

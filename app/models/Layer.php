@@ -37,7 +37,6 @@ class Layer extends \app\models\Table
             $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort";
         }
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        //die($sql);
         $res = $this->prepare($sql);
         try {
             if ($schema) {
@@ -79,7 +78,7 @@ class Layer extends \app\models\Table
                     $obj = json_decode($value, true);
                     foreach ($obj as $k => $val) {
                         if ($obj[$k]["properties"] == "*") {
-                            $table = new \app\models\Table($row['f_table_schema'].".".$row['f_table_name']);
+                            $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
                             $distinctValues = $table->getGroupByAsArray($k);
                             $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
                         }

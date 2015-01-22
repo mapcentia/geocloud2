@@ -126,7 +126,11 @@ $(window).ready(function () {
         //plugins: [editor],
         store: store,
         viewConfig: {
-            forceFit: true
+            forceFit: true,
+            stripeRows: true,
+            getRowClass: function(record) {
+                return record.json.isview ? 'isview' : null;
+            }
         },
         height: 300,
         split: true,
@@ -1194,6 +1198,15 @@ $(window).ready(function () {
                             name: 'enablesqlfilter',
                             fieldLabel: 'Enable sql filtering in Viewer',
                             value: r.data.enablesqlfilter
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textarea',
+                            height: 100,
+                            fieldLabel: __('View definition'),
+                            name: 'viewdefinition',
+                            value: r.json.viewdefinition,
+                            disabled: true
                         }
                     ],
                     buttons: [
