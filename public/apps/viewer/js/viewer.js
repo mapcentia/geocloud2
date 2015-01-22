@@ -96,7 +96,7 @@ Viewer = function () {
     };
 
     addSqlFilterForm = function () {
-        var i, sqlFilterEnabled = false;
+        var i, sqlFilterEnabled = false, layerPopup;
         $("#sql-filter-table").append('<option value="">' + __("Choose layer") + '</option>');
 
         for (i = 0; i < metaData.data.length; i = i + 1) {
@@ -130,8 +130,7 @@ Viewer = function () {
                                 arr = $.parseJSON(v.properties);
                                 arr.unshift("");
                                 formSchema[i].enum = arr;
-                            }
-                            catch (e) {
+                            } catch (e) {
                             }
                         }
                     }
@@ -144,7 +143,7 @@ Viewer = function () {
                 formSchema._gc2_filter_spatial = {};
                 sqlFilterStore = new geocloud.sqlStore({
                     db: db,
-                    clickable: false,
+                    clickable: true,
                     jsonp: false,
                     error: function (e) {
                         alert(e.responseJSON.message);
@@ -154,6 +153,16 @@ Viewer = function () {
                         "weight": 5,
                         "opacity": 0.65,
                         "fillOpacity": 0
+                    },
+                    // Bind a popup to each point
+                    onEachFeature: function (feature, layer) {
+                        var html = "";
+                        $.each(formSchema, function (i, v) {
+                            if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                                html = html + v.title + " : " + feature.properties[i] + "<br>";
+                            }
+                        });
+                        layer.bindPopup(html);
                     },
                     onLoad: function () {
                         $("#filter-submit").prop('disabled', false);
@@ -166,6 +175,21 @@ Viewer = function () {
                         }
                     }
                 });
+                /*sqlFilterStore.layer.on({
+                 mouseover: function (e) {
+                 layerPopup = L.popup()
+                 .setLatLng(e.latlng)
+                 .setContent('Popup for feature #' */
+                /*+ e.layer.feature.properties.id*/
+                /*)
+                 .openOn(cloud.map);
+                 },
+                 mouseout: function (e) {
+                 cloud.map.closePopup(layerPopup);
+                 layerPopup = null;
+
+                 }
+                 });*/
                 cloud.addGeoJsonStore(sqlFilterStore);
                 $('#sql-filter-form').empty();
                 form.push({
