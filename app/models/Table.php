@@ -345,8 +345,26 @@ class Table extends Model
         return $response;
     }
 
+    private function purgeFieldConf($_key_)
+    {
+        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        foreach ($fieldconfArr as $key => $value) {
+            if (!$this->metaData[$key]) {
+                unset($fieldconfArr[$key]);
+            }
+        }
+
+        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['_key_'] = $_key_;
+
+        $geometryColumnsObj = new table("settings.geometry_columns_join");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+    }
+
     function updateColumn($data, $key) // Only geometry tables
     {
+        $res = $this->purgeFieldConf($key);
+
         $data = $this->makeArray($data);
         $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));

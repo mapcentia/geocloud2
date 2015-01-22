@@ -28,16 +28,19 @@ class Job extends \app\inc\Controller
 
     public function post_index()
     {
-        return $this->job->newJob(json_decode(Input::get(null, true)), $_SESSION['screen_name']);
+        $response = $this->auth(null, array(), true); // Never sub-user
+        return (!$response['success']) ? $response : $this->job->newJob(json_decode(Input::get(null, true)), $_SESSION['screen_name']);
     }
 
     public function put_index()
     {
-        return $this->job->updateJob(json_decode(Input::get(null, true)));
+        $response = $this->auth(null, array(), true); // Never sub-user
+        return (!$response['success']) ? $response : $this->job->updateJob(json_decode(Input::get(null, true)));
     }
 
     public function delete_index()
     {
-        return $this->job->deleteJob(json_decode(Input::get(null, true)));
+        $response = $this->auth(null, array(), true); // Never sub-user
+        return (!$response['success']) ? $response : $this->job->deleteJob(json_decode(Input::get(null, true)));
     }
 }

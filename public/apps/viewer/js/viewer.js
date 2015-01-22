@@ -105,13 +105,13 @@ Viewer = function () {
                 sqlFilterEnabled = true;
             }
         }
-        if (sqlFilterEnabled){
+        if (sqlFilterEnabled) {
             $("#filter-popover-li").show();
             $("#filter-modal-li").show();
         }
         $("#sql-filter-table").on("change",
             function () {
-                var fieldConf, formSchema = {}, table, operator, value = $("#sql-filter-table").val(), arr;
+                var fieldConf, formSchema = {}, form = [], table, value = $("#sql-filter-table").val(), arr;
                 try {
                     cloud.removeGeoJsonStore(sqlFilterStore);
                     sqlFilterStore.reset();
@@ -119,7 +119,6 @@ Viewer = function () {
                 }
                 fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
                 table = schema + "." + value;
-                operator = "AND";
                 $.each(fieldConf, function (i, v) {
                     if (v.type !== "geometry" && v.querable === true) {
                         formSchema[i] = {
@@ -132,14 +131,24 @@ Viewer = function () {
                                 arr.unshift("");
                                 formSchema[i].enum = arr;
                             }
-                            catch (e){}
+                            catch (e) {
+                            }
                         }
                     }
                 });
-
+                formSchema._gc2_filter_operator = {
+                    "type": "string",
+                    "enum": ["and", "or"],
+                    "default": "and"
+                };
+                formSchema._gc2_filter_spatial = {};
                 sqlFilterStore = new geocloud.sqlStore({
                     db: db,
                     clickable: false,
+                    jsonp: false,
+                    error: function (e) {
+                        alert(e.responseJSON.message);
+                    },
                     styleMap: {
                         "color": "#ff0000",
                         "weight": 5,
@@ -151,33 +160,60 @@ Viewer = function () {
                         $("#filter-submit .spinner").hide();
                         if (sqlFilterStore.geoJSON) {
                             cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
+                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/mydb?q=" + encodeURIComponent(this.sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
                         } else {
-                            alert("Query did not return any features");
+                            alert(__("Query did not return any features"));
                         }
                     }
                 });
                 cloud.addGeoJsonStore(sqlFilterStore);
                 $('#sql-filter-form').empty();
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Set filter values")
+                });
+                $.each(formSchema, function (i, v) {
+                    if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                        form.push({
+                            "key": i
+                        });
+                    }
+                });
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Match all or any values")
+                });
+                form.push({
+                    "key": "_gc2_filter_operator",
+                    "type": "radios",
+                    "titleMap": {
+                        "and": __("All"),
+                        "or": __("Any")
+                    }
+                });
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Only match within view extent")
+                });
+                form.push({
+                    "key": "_gc2_filter_spatial",
+                    "type": "checkbox"
+                });
+                form.push({
+                    "type": "button",
+                    "title": __("Load features"),
+                    "id": "filter-submit",
+                    "htmlClass": "btn-primary"
+                });
+
                 $('#sql-filter-form').jsonForm({
                     schema: formSchema,
-                    form: [
-                        {
-                            "type": "help",
-                            "helpvalue": __("Set filter values")
-                        },
-                        "*",
-                        {
-                            "type": "button",
-                            "title": __("Load features"),
-                            "id": "filter-submit",
-                            "htmlClass": "btn-primary"
-                        }
-                    ],
+                    form: form,
                     "params": {
                         "fieldHtmlClass": "filter-field"
                     },
                     onSubmit: function (errors, values) {
-                        var arr = [], where, sql;
+                        var fields = [], where, sql, extent, spatialFilter;
                         $('#sql-filter-res').empty();
                         $("#filter-submit").prop('disabled', true);
                         $("#filter-submit .spinner").show();
@@ -188,27 +224,41 @@ Viewer = function () {
                         } else {
                             sqlFilterStore.reset();
                             $.each(formSchema, function (name, property) {
-                                if (values[name] !== undefined) {
+                                if (values[name] !== undefined && name !== "_gc2_filter_operator" && name !== "_gc2_filter_spatial") {
                                     if (property.type === "number") {
-                                        arr.push(name + "=" + values[name]);
+                                        fields.push(name + "=" + values[name]);
                                     } else {
-                                        arr.push(name + "='" + values[name] + "'");
+                                        fields.push(name + "='" + values[name] + "'");
                                     }
                                 }
                             });
-                            where = arr.join(" " + operator + " ");
+
+                            if (fields.length > 0) {
+                                where = fields.join(" " + values._gc2_filter_operator + " ");
+                            } else {
+                                where = "";
+                            }
+                            if (values._gc2_filter_spatial) {
+                                extent = cloud.getExtent();
+                                spatialFilter = metaDataKeys[value].f_geometry_column + " && ST_transform(ST_MakeEnvelope(" + extent.left + ", " + extent.bottom + ", " + extent.right + ", " + extent.top + ", 4326), " + metaDataKeys[value].srid + ")";
+                                if (where === "") {
+                                    where = spatialFilter;
+
+                                } else {
+                                    where = "(" + where + ")" + " AND " + spatialFilter;
+                                }
+                            }
                             sql = "SELECT * FROM " + table;
                             if (where && where !== "") {
                                 sql = sql + " WHERE " + where;
                             }
                             sqlFilterStore.sql = sql;
-                            sqlFilterStore.load();
+                            sqlFilterStore.load(true);
                         }
                     }
                 });
                 $("#filter-submit").append("<img src='http://www.gifstache.com/images/ajax_loader.gif' class='spinner'/>");
-            }
-        )
+            });
     };
     share = function () {
         var url = hostname + linkToSimpleMap(), layers, arr = [], layersStr = "", i, p, javascript;

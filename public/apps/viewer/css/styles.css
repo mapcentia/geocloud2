@@ -473,3 +473,9 @@ div.olControlZoom {
 .help-block {
     margin-bottom: 0 !important;
 }
+label {
+    display: inline-block !important;
+}
+#sql-filter-table {
+    width: 100%;
+}
