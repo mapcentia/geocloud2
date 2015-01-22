@@ -154,7 +154,6 @@ Viewer = function () {
                         "opacity": 0.65,
                         "fillOpacity": 0
                     },
-                    // Bind a popup to each point
                     onEachFeature: function (feature, layer) {
                         var html = "";
                         $.each(formSchema, function (i, v) {
@@ -169,7 +168,7 @@ Viewer = function () {
                         $("#filter-submit .spinner").hide();
                         if (sqlFilterStore.geoJSON) {
                             cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
-                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/mydb?q=" + encodeURIComponent(this.sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
+                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/" + db + "?q=" + encodeURIComponent(this.sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
                         } else {
                             alert(__("Query did not return any features"));
                         }
