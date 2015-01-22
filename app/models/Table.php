@@ -347,18 +347,20 @@ class Table extends Model
 
     private function purgeFieldConf($_key_)
     {
+        // Set metaData again in case of a column was dropped
+        $this->metaData = $this->getMetaData($this->table);
+        $this->setType();
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($fieldconfArr as $key => $value) {
             if (!$this->metaData[$key]) {
                 unset($fieldconfArr[$key]);
             }
         }
-
         $conf['fieldconf'] = json_encode($fieldconfArr);
         $conf['_key_'] = $_key_;
-
         $geometryColumnsObj = new table("settings.geometry_columns_join");
         $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        return $res;
     }
 
     function updateColumn($data, $key) // Only geometry tables
@@ -406,11 +408,10 @@ class Table extends Model
         return $response;
     }
 
-    function deleteColumn($data, $whereClause = NULL) // Only geometry tables
+    function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
         $data = $this->makeArray($data);
         $sql = "";
-
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             if (in_array($value, $this->sysCols)) {
@@ -434,6 +435,8 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
         }
+        $res = $this->purgeFieldConf($_key_);
+        print_r($res);
         return $response;
     }
 

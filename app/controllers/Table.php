@@ -54,7 +54,7 @@ class Table extends \app\inc\Controller
     public function delete_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
-        return (!$response['success']) ? $response : $this->table->deleteColumn(json_decode(Input::get())->data);
+        return (!$response['success']) ? $response : $this->table->deleteColumn(json_decode(Input::get())->data, null, Input::getPath()->part(5));
     }
 
     public function get_structure()
