@@ -81,7 +81,7 @@ class Layer extends \app\models\Table
                         if ($obj[$k]["properties"] == "*") {
                             $table = new \app\models\Table($row['f_table_schema'].".".$row['f_table_name']);
                             $distinctValues = $table->getGroupByAsArray($k);
-                            $obj[$k]["properties"] = json_encode($distinctValues["data"]);
+                            $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
                         }
                     }
                     $value = json_encode($obj);
