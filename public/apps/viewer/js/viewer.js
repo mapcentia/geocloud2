@@ -666,6 +666,9 @@ Viewer = function () {
                     html: true,
                     content: $("#filter")
                 }).popover('show').popover('hide');
+                $('#filter-popover').on('click', function (e) {
+                    $("#filter").css({"max-height": (eHeight - 100) + "px"});
+                });
                 $(".modal-body").css({"max-height": (eHeight - sub) + "px"});
             },
 
