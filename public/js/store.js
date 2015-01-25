@@ -456,7 +456,11 @@ $(window).ready(function () {
             }
         ],
         listeners: {
-            // Listensers here
+            'mouseover' : {
+                fn: function(){
+                },
+                scope: this
+            }
         }
     });
     Ext.getCmp("schemabox").on('select', function (e) {

@@ -111,7 +111,7 @@ Viewer = function () {
         }
         $("#sql-filter-table").on("change",
             function () {
-                var fieldConf, formSchema = {}, form = [], table, value = $("#sql-filter-table").val(), arr;
+                var fieldConf, formSchema = {}, form = [], table, value = $("#sql-filter-table").val(), arr, v;
                 try {
                     cloud.removeGeoJsonStore(sqlFilterStore);
                     sqlFilterStore.reset();
@@ -122,6 +122,7 @@ Viewer = function () {
                 $.each(fieldConf, function (i, v) {
                     if (v.type !== "geometry" && v.querable === true) {
                         formSchema[i] = {
+                            sort_id: v.sort_id,
                             type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
                             title: v.alias || i
                         };
@@ -135,6 +136,21 @@ Viewer = function () {
                         }
                     }
                 });
+
+                v = _.pairs(formSchema)
+                v.sort(function (a, b) {
+                    var keyA = a[1].sort_id,
+                        keyB = b[1].sort_id;
+                    if (keyA < keyB) {
+                        return -1;
+                    }
+                    if (keyA > keyB) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                formSchema = _.object(v);
+
                 formSchema._gc2_filter_operator = {
                     "type": "string",
                     "enum": ["and", "or"],
@@ -168,8 +184,7 @@ Viewer = function () {
                         $("#filter-submit .spinner").hide();
                         if (sqlFilterStore.geoJSON) {
                             cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
-                            console.log(this.sql)
-                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/" + db + "?q=" + encodeURIComponent(this.sql).replace(/'/g,"%27") + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
+                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/" + db + "?q=" + encodeURIComponent(this.sql).replace(/'/g, "%27") + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
                         } else {
                             alert(__("Query did not return any features"));
                         }
