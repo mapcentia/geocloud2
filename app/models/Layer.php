@@ -74,7 +74,7 @@ class Layer extends \app\models\Table
                 try {
                     $resExtent->execute();
                 } catch (\PDOException $e) {
-                    print_r($e);
+                    //print_r($e);
                 }
                 $extent = $this->fetchRow($resExtent, "assoc");
             }
