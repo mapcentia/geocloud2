@@ -180,7 +180,7 @@ class Table extends Model
                     $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 }
-                if (isset($views[$row['f_table_name']])){
+                if (isset($views[$row['f_table_name']])) {
                     $arr = $this->array_push_assoc($arr, "isview", true);
                     $arr = $this->array_push_assoc($arr, "viewdefinition", $viewDefinitions[$row['f_table_name']]);
 
@@ -707,6 +707,12 @@ class Table extends Model
             $nowArray = $notArray; // Input was array. Return it unaltered
         }
         return $nowArray;
+    }
+
+    public function getMapForEs()
+    {
+        $schema = $this->metaData;
+        return $schema;
     }
 
 }

@@ -105,4 +105,42 @@ class Elasticsearch extends \app\inc\Controller
         $response['json'] = $buffer;
         return $response;
     }
+
+    public function get_map()
+    {
+        $get = Input::get();
+        $split = explode(".", $get["table"]);
+
+        $table = new \app\models\Table($get["table"]);
+        $schema = $table->getMapForEs();
+        $map = array("mappings" =>
+            array($split[1] =>
+                array("properties" =>
+                    array(/*"properties" =>
+                        array("type" => "object")
+                    ,*/
+                        "geometry" =>
+                            array()
+                    )
+                )
+            )
+        );
+        foreach ($schema as $key => $value) {
+            if ($value["type"] == "geometry") {
+                $map["mappings"][$split[1]]["properties"]["geometry"] =
+                    array("type"=>"object", "properties" =>
+                        array("coordinates" =>
+                            array("type" => "geo_point")
+                        )
+                    );
+            } else {
+
+            }
+        }
+
+        $response = array("map" => $map);
+        return $response;
+
+
+    }
 }

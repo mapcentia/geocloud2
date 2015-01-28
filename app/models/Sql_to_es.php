@@ -33,7 +33,6 @@ class Sql_to_es extends Model
             }
             $sql = implode(",", $fieldsArr);
             $sql = "SELECT {$sql} FROM {$view}";
-            //echo $sql;
             $result = $this->execQuery($sql);
             $i = 0;
             $json = "";
@@ -76,7 +75,9 @@ class Sql_to_es extends Model
             }
             // Index the last bulk
             curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-            curl_exec($ch);
+            //echo $json;
+            $buffer = curl_exec($ch);
+            echo $buffer;
             curl_close($ch);
             $response['success'] = true;
             $response['message'] = "Indexed {$i} documents";
