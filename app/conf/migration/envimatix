@@ -34,7 +34,7 @@ if ($handle = opendir($dir)) {
                 $cmd2 = "gdalbuildvrt -overwrite temp.vrt  {$dir}{$entry}";
                 echo $cmd . "\n";
 
-                exec($cmd . ' 2>&1', $out);
+                //exec($cmd . ' 2>&1', $out);
                 exec($cmd2 . ' 2>&1', $out);
                 $xml = simplexml_load_string("<root>".file_get_contents("temp.vrt")."</root>");
 

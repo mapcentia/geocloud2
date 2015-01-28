@@ -39,6 +39,12 @@ class Elasticsearch extends \app\inc\Controller
     function get_search()
     {
         $get = Input::get();
+        if (!$this->authApiKey(Input::getPath()->part(5), $get['key']) && \app\conf\App::$param["useKeyForSearch"] == true) {
+            $response['success'] = false;
+            $response['message'] = "Not the right key.";
+            $response['code'] = 403;
+            return $response;
+        }
         $q = urldecode($get['q']);
         $size = ($get['size']) ?: 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";

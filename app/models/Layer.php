@@ -88,6 +88,9 @@ class Layer extends \app\models\Table
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+                //$table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
+                //$schema = $table->getColumnsForExtGridAndStore();
+                //$arr = $this->array_push_assoc($arr, "fields", $schema["forGrid"]);
             }
             if ($row["authentication"] == "Read/write") {
                 $privileges = (array)json_decode($row["privileges"]);

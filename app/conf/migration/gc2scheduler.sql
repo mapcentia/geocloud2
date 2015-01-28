@@ -103,16 +103,6 @@ ALTER TABLE ONLY jobs ALTER COLUMN id SET DEFAULT nextval('jobs_id_seq'::regclas
 
 
 --
--- Data for Name: jobs; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY jobs (id, name, url, cron, schema, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, lastcheck, lasttimestamp, db, extra) FROM stdin;
-11	ewrer	sdsd	\N	pusd	sd	POINT	*	*	*	*	*	UTF8	f	\N	dsdsd	
-12	kulturarv	http://www.kulturarv.dk/ffpublic/wfs?version=1.0.0&SERVICE=WFS&REQUEST=GETFEATURE&TYPENAME=fourf:fundogfortidsminder_areal_ka&BBOX=704275.26,6177444.42,716199.48,6185056.18	\N	public	25832	MULTIPOLYGON	*/1	*	*	*	*	UTF8	t	2015-01-08 21:15:14+00	mydb	{"name":"hej","value":"test"}
-\.
-
-
---
 -- Name: jobs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 

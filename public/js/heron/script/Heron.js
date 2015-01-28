@@ -2143,6 +2143,8 @@ Heron.widgets.LayerNodeMenuItem.ZoomExtent = Ext.extend(Heron.widgets.LayerNodeM
     Heron.widgets.LayerNodeMenuItem.ZoomExtent.superclass.initComponent.call(this);
 }, handler: function (menuItem, event) {
     var node = menuItem.ownerCt.contextNode;
+    //console.log(layer.name);
+
     if (!node || !node.layer) {
         return;
     }
