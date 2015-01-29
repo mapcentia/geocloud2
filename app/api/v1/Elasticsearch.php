@@ -198,7 +198,7 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Bulk insert
-        $sql = "SELECT * FROM {$fullTable} LIMIT 100";
+        $sql = "SELECT * FROM {$fullTable}";
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $res = $api->sql($sql, $index, $type, $priKey, $db);

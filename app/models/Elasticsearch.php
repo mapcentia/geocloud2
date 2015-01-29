@@ -101,7 +101,7 @@ class Elasticsearch extends Model
             if ($value["type"] == "geometry") {
                 $map["mappings"][$split[1]]["properties"]["geometry"] =
                     array("type" => "geo_shape");
-            } elseif ($value["type"] == "string") {
+            } elseif ($value["type"] == "string" || $value["type"] == "text") {
                 $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "string",
