@@ -13,7 +13,21 @@ class Elasticsearch extends Model
     {
         $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
     }
-    public function map($index, $map){
+
+    public function map($index, $type, $map)
+    {
+        $ch = curl_init($this->host . ":9200/{$index}/_mapping/{$type}");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        $buffer = curl_exec($ch);
+        curl_close($ch);
+        $response['json'] = $buffer;
+        return $response;
+    }
+
+    public function createIndex($index, $map)
+    {
         $ch = curl_init($this->host . ":9200/{$index}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
@@ -23,7 +37,26 @@ class Elasticsearch extends Model
         $response['json'] = $buffer;
         return $response;
     }
-    public function createMapFromTable($table){
+
+    public function delete($index, $type = null, $id = null)
+    {
+        if ($id) {
+            $ch = curl_init($this->host . ":9200/{$index}/{$type}/{$id}");
+        } elseif ($type) {
+            $ch = curl_init($this->host . ":9200/{$index}/{$type}");
+        } else {
+            $ch = curl_init($this->host . ":9200/{$index}");
+        }
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        $buffer = curl_exec($ch);
+        curl_close($ch);
+        $response['json'] = $buffer;
+        return $response;
+    }
+
+    public function createMapFromTable($table)
+    {
         $split = explode(".", $table);
         $table = new \app\models\Table($table);
         $schema = $table->getMapForEs();
@@ -31,10 +64,12 @@ class Elasticsearch extends Model
                                     "analysis" : {
                                       "analyzer" : {
                                         "str_search_analyzer" : {
+                                          "type" : "custom",
                                           "tokenizer" : "whitespace",
                                           "filter" : ["lowercase"]
                                         },
                                         "str_index_analyzer" : {
+                                          "type" : "custom",
                                           "tokenizer" : "whitespace",
                                           "filter" : ["lowercase", "substring"]
                                         }
@@ -56,26 +91,12 @@ class Elasticsearch extends Model
                         array(
                             "type" => "object",
                             "properties" => array()
-                        )
-                    ,
-                        "geometry" =>
-                            array()
+                        ),
+                        "geometry" => array()
                     )
                 )
             )
         );
-        /*foreach ($schema as $key => $value) {
-            if ($value["type"] == "geometry") {
-                $map["mappings"][$split[1]]["properties"]["geometry"] =
-                    array("type" => "object", "properties" =>
-                        array("coordinates" =>
-                            array("type" => "geo_point")
-                        )
-                    );
-            } else {
-
-            }
-        }*/
         foreach ($schema as $key => $value) {
             if ($value["type"] == "geometry") {
                 $map["mappings"][$split[1]]["properties"]["geometry"] =
@@ -114,10 +135,9 @@ class Elasticsearch extends Model
                         "type" => "boolean"
                     );
             }
-
         }
         $map["settings"] = $settings;
         $response = array("map" => $map);
-        return $response["map"];
+        return $response["map"]["mappings"];
     }
 }
