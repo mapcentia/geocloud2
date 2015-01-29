@@ -67,6 +67,11 @@ class Elasticsearch extends \app\inc\Controller
         return $response;
     }
 
+    function post_search()
+    {
+        return $this->get_search();
+    }
+
     function put_map()
     {
         $put = Input::get();
@@ -77,14 +82,8 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
         $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
-        $ch = curl_init($this->host . ":9200/{$index}");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $put['map']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        $buffer = curl_exec($ch);
-        curl_close($ch);
-        $response['json'] = $buffer;
-        return $response;
+        $es = new \app\models\Elasticsearch();
+        return $es->map($index, $put["map"]);
     }
 
     function delete_delete()
@@ -108,39 +107,26 @@ class Elasticsearch extends \app\inc\Controller
 
     public function get_map()
     {
-        $get = Input::get();
-        $split = explode(".", $get["table"]);
-
-        $table = new \app\models\Table($get["table"]);
-        $schema = $table->getMapForEs();
-        $map = array("mappings" =>
-            array($split[1] =>
-                array("properties" =>
-                    array(/*"properties" =>
-                        array("type" => "object")
-                    ,*/
-                        "geometry" =>
-                            array()
-                    )
-                )
-            )
-        );
-        foreach ($schema as $key => $value) {
-            if ($value["type"] == "geometry") {
-                $map["mappings"][$split[1]]["properties"]["geometry"] =
-                    array("type"=>"object", "properties" =>
-                        array("coordinates" =>
-                            array("type" => "geo_point")
-                        )
-                    );
-            } else {
-
-            }
+        $table = Input::getPath()->part(6);
+        $es = new \app\models\Elasticsearch();
+        return $es->createMapFromTable($table);
+    }
+    public function get_river(){
+        $table = Input::getPath()->part(6);
+        $split = explode(".",$table);
+        $schema = $split[0];
+        $index = Input::getPath()->part(5) . "_" . $schema;
+        $es = new \app\models\Elasticsearch();
+        $map = $es->createMapFromTable($table);
+        $res = $es->map($index, json_encode($map));
+        $obj = json_decode($res["json"], true);
+        if (isset($obj["error"]) && $obj["error"] != false) {
+            $response['success'] = false;
+            $response['message'] = $obj["error"];
+            $response['code'] = $obj["status"];
+            return $response;
         }
 
-        $response = array("map" => $map);
-        return $response;
-
-
+        return $res;
     }
 }

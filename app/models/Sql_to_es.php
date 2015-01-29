@@ -77,7 +77,10 @@ class Sql_to_es extends Model
             curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
             //echo $json;
             $buffer = curl_exec($ch);
-            echo $buffer;
+            $obj = json_decode($buffer, true);
+            if (isset($obj["errors"]) && $obj["errors"] == true) {
+                return $obj;
+            }
             curl_close($ch);
             $response['success'] = true;
             $response['message'] = "Indexed {$i} documents";

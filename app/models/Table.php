@@ -107,6 +107,10 @@ class Table extends Model
             $field['typeObj'] = array("type" => "timestamptz");
             $field['type'] = "timestamptz";
 
+        } elseif (preg_match("/date/", $field['type'])) {
+            $field['typeObj'] = array("type" => "date");
+            $field['type'] = "date";
+
         } elseif (preg_match("/uuid/", $field['type'])) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
