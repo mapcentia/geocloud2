@@ -214,10 +214,7 @@ class Elasticsearch extends \app\inc\Controller
     public function put_upsert()
     {
         $put = Input::get();
-        if (!$this->authApiKey(Input::getPath()->part(5), $put['key'])) {
-            $response['success'] = false;
-            $response['message'] = "Not the right key.";
-            $response['code'] = 403;
+        if ($response = $this->checkAuth(Input::getPath()->part(5), $put['key'])) {
             return $response;
         }
         $schema = Input::getPath()->part(6);
