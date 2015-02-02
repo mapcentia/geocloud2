@@ -287,6 +287,7 @@ MapCentia = function (globalId) {
                         dataType: 'jsonp',
                         jsonp: 'jsonp_callback',
                         success: function (response) {
+                            var zIndex;
                             metaData = response;
                             for (i = 0; i < metaData.data.length; i = i + 1) {
                                 metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
@@ -304,7 +305,12 @@ MapCentia = function (globalId) {
                                     wrapDateLine: false,
                                     name: layerName
                                 });
-                                cloud.setZIndexOfLayer(layers[layerName][0], metaData.data[i].sort_id + 1000);
+                                if (window.gc2Options.reverseLayerOrder) {
+                                    zIndex = (metaData.data[i].sort_id * -1) + 999999;
+                                } else {
+                                    zIndex = metaData.data[i].sort_id + 999999;
+                                }
+                                cloud.setZIndexOfLayer(layers[layerName][0], zIndex);
                                 if (metaData.data[i].baselayer) {
                                     text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
                                     $("#base-layer-list-" + id).append(
