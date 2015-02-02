@@ -502,7 +502,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
     Ext.MessageBox.confirm(__('Confirm'), __("This will ... . Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
-                var param = "&key=" + settings.api_key;
+                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&tt=" + record.data.triggertable : "");
                 Ext.Ajax.request(
                     {
                         url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name + '/' + record.data.f_table_name,
@@ -513,8 +513,14 @@ tableStructure.onIndexInElasticsearch = function (record) {
                         },
                         timeout: 300000,
                         success: function (response) {
-                            console.log(response);
-                            App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
+                            Ext.MessageBox.show({
+                                title: __("Info"),
+                                msg: "<b>" + __(Ext.decode(response.responseText).message + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.OK
+                            });
                         },
                         failure: function (response) {
                             Ext.MessageBox.show({
@@ -523,7 +529,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,
-                                icon: Ext.MessageBox.ERROR
+                                icon: Ext.MessageBox.INFO
                             });
                         }
                     }

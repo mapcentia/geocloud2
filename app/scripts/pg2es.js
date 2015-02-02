@@ -23,7 +23,7 @@ pg.connect(pgConString, function (err, client) {
         console.log(err);
     }
     client.on('notification', function (msg) {
-        var uri, split = msg.payload.split(","), url;
+        var uri, split = msg.payload.split(","), url, host = "127.0.0.1";
         if (split[0] === "UPDATE" || split[0] === "INSERT") {
             uri = "upsert/" + db + "/" + split[1] + "/" + split[2] + "/" + split[3] + "/" + split[4];
         }
