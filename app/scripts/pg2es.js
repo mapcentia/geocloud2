@@ -6,6 +6,7 @@ nconf.argv();
 var db = (nconf.get()._[0]);
 var host = nconf.get("host") || "127.0.0.1";
 var user = nconf.get("user") || "postgres";
+var key = nconf.get("key") || null;
 var pgConString = "postgres://" + user + "@" + host + "/" + db;
 
 if (!db) {
@@ -28,7 +29,11 @@ pg.connect(pgConString, function (err, client) {
             uri = "delete/" + db + "/" + split[1] + "/" + split[2] + "/" + split[3];
         }
         url = "http://" + host + "/api/v1/elasticsearch/" + uri;
+        if (key) {
+            url = url + "?key=" + key;
+        }
         request.get(url, function (err, res, body) {
+            console.log(body)
             if (!err) {
                 var resultsObj = JSON.parse(body);
                 console.log(resultsObj);

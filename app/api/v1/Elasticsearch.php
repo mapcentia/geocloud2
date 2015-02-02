@@ -2,6 +2,8 @@
 namespace app\api\v1;
 
 use \app\inc\Input;
+use \app\inc\Util;
+use \app\conf\App;
 
 class Elasticsearch extends \app\inc\Controller
 {
@@ -10,13 +12,21 @@ class Elasticsearch extends \app\inc\Controller
 
     function __construct()
     {
-        $this->guest = $_SERVER['SERVER_NAME'];
-        $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $this->clientIp = Util::clientIp();
+        $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
     }
 
     private function checkAuth($db, $key)
     {
-        if ($this->guest != "127.0.0.1" && $this->guest != "localhost") {
+        //die($this->clientIp);
+        $trusted = false;
+        foreach(App::$param["trustedAddresses"] as $address){
+            if (Util::ipInRange($this->clientIp,$address)){
+                $trusted = true;
+                break;
+            }
+        }
+        if (!$trusted) {
             if (!$this->authApiKey($db, $key)) {
                 $response['success'] = false;
                 $response['message'] = "Not the right key.";
@@ -132,6 +142,7 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
 
+        $triggerInstalled = false;
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
         $index = $schema;
@@ -141,8 +152,24 @@ class Elasticsearch extends \app\inc\Controller
         $fullTable = $schema . "." . $table;
 
         $model = new \app\inc\Model();
+        $relationType = $model->isTableOrView($fullTable);
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
+
+        $model->close();// Close the PDO connection
+
+        $pl = file_get_contents(\app\conf\App::$param["path"]."/app/scripts/sql/notify_transaction.sql");
+        $pl = sprintf($pl,$priKey,$priKey,$priKey);
+
+        $result = $model->execQuery($pl, "PG");
+        if (!$result) {
+            $response['success'] = false;
+            return $response;
+        }
+
+        // Drop the trigger
+        $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$fullTable}";
+        $result = $model->execQuery($pl, "PG");
 
         $settings = '{
           "settings": {
@@ -176,6 +203,16 @@ class Elasticsearch extends \app\inc\Controller
         }';
         $es = new \app\models\Elasticsearch();
 
+        // Delete the type
+        $res = $es->delete($fullIndex, $type);
+        $obj = json_decode($res["json"], true);
+        if (isset($obj["error"]) && $obj["error"] != false) {
+            /*$response['success'] = false;
+            $response['message'] = $obj["error"];
+            $response['code'] = $obj["status"];
+            return $response;*/
+        }
+
         // Create the index with settings
         $res = $es->createIndex($fullIndex, $settings);
         $obj = json_decode($res["json"], true);
@@ -206,8 +243,23 @@ class Elasticsearch extends \app\inc\Controller
         if (!$res["success"]) {
             return $res;
         }
+
+        // Create the trigger
+        if ($relationType["data"] == "table") {
+            $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$fullTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}')";
+            $result = $model->execQuery($pl, "PG");
+            if (!$result) {
+                $response['success'] = false;
+                return $response;
+            }
+            $triggerInstalled = true;
+
+        }
+
         $res["_index"] = $fullIndex;
         $res["_type"] = $type;
+        $res["relation"] = $relationType["data"];
+        $res["trigger_installed"] = $triggerInstalled;
         return $res;
     }
 
@@ -219,7 +271,7 @@ class Elasticsearch extends \app\inc\Controller
         }
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
-        $key = Input::getPath()->part(8);
+        $priKey = Input::getPath()->part(8);
         $id = Input::getPath()->part(9);
         $index = $schema;
         $type = $table;
@@ -227,10 +279,10 @@ class Elasticsearch extends \app\inc\Controller
         $fullTable = $schema . "." . $table;
         $fullIndex = $db . "_" . $index;
 
-        $sql = "SELECT * FROM {$fullTable} WHERE {$key}=" . $id;
+        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"=" . $id;
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        $res = $api->sql($sql, $index, $type, $key, $db);
+        $res = $api->sql($sql, $index, $type, $priKey, $db);
 
         if (!$res["success"]) {
             return $res;
