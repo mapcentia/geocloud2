@@ -25,7 +25,7 @@ if ($handle = opendir($dir)) {
             $zipCheck1 = explode(".", $entry);
             $zipCheck2 = array_reverse($zipCheck1);
             $groupArr = explode("_", $entry);
-            if (in_array(strtolower($zipCheck2[0]), $ext)) {
+            if (strtolower($zipCheck2[0]) == "tidf") {
                 for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                     $safeNameArr[] = $zipCheck1[$i];
                 }
@@ -71,6 +71,26 @@ if ($handle = opendir($dir)) {
                 $res = $join->updateRecord($data, "_key_");
                 print_r($res);
             }
+            if (strtolower($zipCheck2[0]) == "ecw") {
+                \app\conf\Connection::$param["postgisschema"] = $schema;
+                for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
+                    $safeNameArr[] = $zipCheck1[$i];
+                }
+                $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
+                // Create new table
+                $table = new \app\models\Table($safeName);
+                $res = $table->createAsRasterTable("32612");
+                print_r($res);
+
+                // Set bitmapsource
+                $key = $schema . "." . $safeName . ".rast";
+                $join = new \app\models\Table("settings.geometry_columns_join");
+                $json = '{"data":{"bitmapsource":"'.$entry.'","_key_":"' . $key . '"}}';
+                $data = (array)json_decode(urldecode($json));
+                $res = $join->updateRecord($data, "_key_");
+                print_r($res);
+            }
         }
+
     }
 }
