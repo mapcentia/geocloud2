@@ -222,6 +222,8 @@ class Elasticsearch extends \app\inc\Controller
         $res = $es->delete($fullIndex, $type);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
+            // If type not already exists we just ignore the error.
+            // TODO check if type exist before deleting it.
             /*$response['success'] = false;
             $response['message'] = $obj["error"];
             $response['code'] = $obj["status"];
@@ -232,6 +234,8 @@ class Elasticsearch extends \app\inc\Controller
         $res = $es->createIndex($fullIndex, $settings);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
+            // If index already exists we just ignore it.
+            // TODO check if index already exists before creating it.
             /*$response['success'] = false;
             $response['message'] = $obj["error"];
             $response['code'] = $obj["status"];
@@ -273,7 +277,6 @@ class Elasticsearch extends \app\inc\Controller
             }
             $triggerInstalled = true;
             $triggerInstalledIn = "{$triggerSchema}.{$triggerTable}";
-
         }
 
         $res["_index"] = $fullIndex;
@@ -310,6 +313,7 @@ class Elasticsearch extends \app\inc\Controller
         }
         $res["_index"] = $fullIndex;
         $res["_type"] = $type;
+        $res["_id"] = $id;
         return $res;
     }
 

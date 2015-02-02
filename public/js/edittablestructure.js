@@ -394,6 +394,14 @@ tableStructure.init = function (record, screenName) {
                 handler: function () {
                     tableStructure.onRemoveVersion(record);
                 }
+            },
+            {
+                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Index in Elasticsearch"),
+                id: "index-in-elasticsearch-btn",
+                disabled: (window.gc2Options.esIndexingInGui) ? false : true,
+                handler: function () {
+                    tableStructure.onIndexInElasticsearch(record);
+                }
             }
         ]
     });
@@ -471,6 +479,42 @@ tableStructure.onRemoveVersion = function (record) {
                         },
                         success: function () {
                             tableStructure.grid.getStore().reload();
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: __("Failure"),
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
+                        }
+                    }
+                );
+            } else {
+                return false;
+            }
+        });
+};
+tableStructure.onIndexInElasticsearch = function (record) {
+    "use strict";
+    Ext.MessageBox.confirm(__('Confirm'), __("This will ... . Do you want to proceed?"),
+        function (btn) {
+            if (btn === "yes") {
+                var param = "&key=" + settings.api_key;
+                Ext.Ajax.request(
+                    {
+                        url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name + '/' + record.data.f_table_name,
+                        method: 'post',
+                        params: param,
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        timeout: 300000,
+                        success: function (response) {
+                            console.log(response);
+                            App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
                         },
                         failure: function (response) {
                             Ext.MessageBox.show({
