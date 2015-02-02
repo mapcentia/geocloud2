@@ -20,8 +20,8 @@ class Elasticsearch extends \app\inc\Controller
     {
         //die($this->clientIp);
         $trusted = false;
-        foreach(App::$param["trustedAddresses"] as $address){
-            if (Util::ipInRange($this->clientIp,$address)){
+        foreach (App::$param["trustedAddresses"] as $address) {
+            if (Util::ipInRange($this->clientIp, $address)) {
                 $trusted = true;
                 break;
             }
@@ -150,16 +150,31 @@ class Elasticsearch extends \app\inc\Controller
         $db = Input::getPath()->part(5);
         $fullIndex = $db . "_" . $index;
         $fullTable = $schema . "." . $table;
+        $insert = Input::get('insert') ?: "t";
+        $triggerSchema = Input::get('ts') ?: $schema;
+        $triggerTable = Input::get('tt') ?: $table;
+        $installTrigger = false;
 
         $model = new \app\inc\Model();
+
+        $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
+        if (!$relationCheck["success"]) {
+            return $relationCheck;
+        }
+        else {
+            if ($relationCheck["data"] == "table") {
+                $installTrigger = true;
+            }
+        }
+
         $relationType = $model->isTableOrView($fullTable);
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
 
         $model->close();// Close the PDO connection
 
-        $pl = file_get_contents(\app\conf\App::$param["path"]."/app/scripts/sql/notify_transaction.sql");
-        $pl = sprintf($pl,$priKey,$priKey,$priKey);
+        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        $pl = sprintf($pl, $priKey, $priKey, $priKey);
 
         $result = $model->execQuery($pl, "PG");
         if (!$result) {
@@ -168,7 +183,7 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Drop the trigger
-        $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$fullTable}";
+        $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
         $result = $model->execQuery($pl, "PG");
 
         $settings = '{
@@ -235,24 +250,29 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Bulk insert
-        $sql = "SELECT * FROM {$fullTable}";
-        $api = new \app\models\Sql_to_es("4326");
-        $api->execQuery("set client_encoding='UTF8'", "PDO");
-        $res = $api->sql($sql, $index, $type, $priKey, $db);
-
-        if (!$res["success"]) {
-            return $res;
+        if ($insert == "t") {
+            $sql = "SELECT * FROM {$fullTable}";
+            $api = new \app\models\Sql_to_es("4326");
+            $api->execQuery("set client_encoding='UTF8'", "PDO");
+            $res = $api->sql($sql, $index, $type, $priKey, $db);
+            if (!$res["success"]) {
+                return $res;
+            }
+            $res["Indexed"] = true;
+        } else {
+            $res = array("succes" => true, "indexed" => false, "message" => "Indexing skipped");
         }
 
         // Create the trigger
-        if ($relationType["data"] == "table") {
-            $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$fullTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}')";
+        if ($relationType["data"] == "table" || ($installTrigger)) {
+            $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
             $result = $model->execQuery($pl, "PG");
             if (!$result) {
                 $response['success'] = false;
                 return $response;
             }
             $triggerInstalled = true;
+            $triggerInstalledIn = "{$triggerSchema}.{$triggerTable}";
 
         }
 
@@ -260,6 +280,7 @@ class Elasticsearch extends \app\inc\Controller
         $res["_type"] = $type;
         $res["relation"] = $relationType["data"];
         $res["trigger_installed"] = $triggerInstalled;
+        $res["trigger_installed_in"] = $triggerInstalledIn;
         return $res;
     }
 

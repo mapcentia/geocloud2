@@ -1,6 +1,8 @@
 var pg = require('pg');
 var nconf = require('nconf');
 var request = require("request");
+var winston = require('winston');
+winston.add(winston.transports.File, { filename: '/var/www/geocloud2/public/logs/pg2es.log' });
 
 nconf.argv();
 var db = (nconf.get()._[0]);
@@ -33,12 +35,13 @@ pg.connect(pgConString, function (err, client) {
             url = url + "?key=" + key;
         }
         request.get(url, function (err, res, body) {
-            console.log(body)
             if (!err) {
                 var resultsObj = JSON.parse(body);
-                console.log(resultsObj);
+                //console.log(resultsObj);
+                winston.log('info', resultsObj.message, resultsObj);
             } else {
-                console.log(err);
+                winston.log('error', err);
+
             }
         });
 

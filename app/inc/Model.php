@@ -377,8 +377,9 @@ class Model
             $response['success'] = true;
             return $response;
         }
-        $response['data'] = null;
-        $response['success'] = true;
+        $response['success'] = false;
+        $response['message'] = "Relation doesn't exists";
+        $response['code'] = 406;
         return $response;
     }
 
