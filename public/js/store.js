@@ -1246,6 +1246,7 @@ $(window).ready(function () {
                                         },
                                         params: param,
                                         success: function () {
+                                            //grid.getSelectionModel().clearSelections();
                                             store.reload();
                                             groupsStore.load();
                                             App.setAlert(App.STATUS_NOTICE, __("Settings updated"));

@@ -129,6 +129,9 @@ class Elasticsearch extends \app\inc\Controller
 
     public function get_map()
     {
+        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+            return $response;
+        }
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
         $fullTable = $schema . "." . $table;
