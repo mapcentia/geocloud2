@@ -462,7 +462,7 @@ var mygeocloud_ol = (function () {
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
-        this.addBaseLayer = function (l) {
+        this.addBaseLayer = function (l, db) {
             var o;
             switch (l) {
                 case "osm":
@@ -515,6 +515,16 @@ var mygeocloud_ol = (function () {
                     break;
                 case "hereNormalNightGrey":
                     o = this.addHere("hereNormalNightGrey");
+                    break;
+                default : // Try to add as tile layer
+                    this.addTileLayers([l], {
+                        db: db,
+                        isBaseLayer: true,
+                        visibility: false,
+                        wrapDateLine: false,
+                        displayInLayerSwitcher: true,
+                        name: l
+                    });
                     break;
             }
             return o;
