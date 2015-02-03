@@ -61,6 +61,10 @@ class Elasticsearch extends \app\inc\Controller
                 return $response;
             }
         }
+        $type = Input::getPath()->part(7);
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
         $q = urldecode($get['q']);
         $size = ($get['size']) ?: 10;
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
@@ -72,7 +76,7 @@ class Elasticsearch extends \app\inc\Controller
             $arr[] = $db . "_" . $v;
         }
         $index = implode(",", $arr);
-        $searchUrl = $this->host . ":9200/{$index}/" . Input::getPath()->part(7) . "/_search?pretty={$pretty}&size={$size}";
+        $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}&size={$size}";
         $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
@@ -109,12 +113,16 @@ class Elasticsearch extends \app\inc\Controller
     public function delete_delete()
     {
         $delete = Input::get();
+        $type = Input::getPath()->part(7);
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
         if ($response = $this->checkAuth(Input::getPath()->part(5), $delete['key'])) {
             return $response;
         }
         $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
         $es = new \app\models\Elasticsearch();
-        $res = $es->delete($index, Input::getPath()->part(7), Input::getPath()->part(8));
+        $res = $es->delete($index, $type, Input::getPath()->part(8));
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;
@@ -158,13 +166,16 @@ class Elasticsearch extends \app\inc\Controller
         $triggerTable = Input::get('tt') ?: $table;
         $installTrigger = false;
 
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
+
         $model = new \app\inc\Model();
 
         $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
         if (!$relationCheck["success"]) {
             return $relationCheck;
-        }
-        else {
+        } else {
             if ($relationCheck["data"] == "table") {
                 $installTrigger = true;
             }
@@ -305,6 +316,10 @@ class Elasticsearch extends \app\inc\Controller
         $db = Input::getPath()->part(5);
         $fullTable = $schema . "." . $table;
         $fullIndex = $db . "_" . $index;
+
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
 
         $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"=" . $id;
         $api = new \app\models\Sql_to_es("4326");

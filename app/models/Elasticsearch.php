@@ -58,6 +58,10 @@ class Elasticsearch extends Model
     public function createMapFromTable($table)
     {
         $split = explode(".", $table);
+        $type = $split[1];
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
         $table = new \app\models\Table($table);
         $schema = $table->getMapForEs();
         $settings = json_decode('{
@@ -85,7 +89,7 @@ class Elasticsearch extends Model
                                   }'
         );
         $map = array("mappings" =>
-            array($split[1] =>
+            array($type =>
                 array("properties" =>
                     array("properties" =>
                         array(
@@ -99,38 +103,38 @@ class Elasticsearch extends Model
         );
         foreach ($schema as $key => $value) {
             if ($value["type"] == "geometry") {
-                $map["mappings"][$split[1]]["properties"]["geometry"] =
+                $map["mappings"][$type]["properties"]["geometry"] =
                     array("type" => "geo_shape");
             } elseif ($value["type"] == "string" || $value["type"] == "text") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "string",
                         "search_analyzer" => "str_search_analyzer",
                         "index_analyzer" => "str_index_analyzer"
                     );
             } elseif ($value["type"] == "timestamptz") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "date",
                         "format" => "Y-MM-dd HH:mm:ss.SSSSSSZ"
                     );
             } elseif ($value["type"] == "date") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "date"
                     );
             } elseif ($value["type"] == "int") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "integer"
                     );
             } elseif ($value["type"] == "number") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "float"
                     );
             } elseif ($value["type"] == "boolean") {
-                $map["mappings"][$split[1]]["properties"]["properties"]["properties"][$key] =
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
                         "type" => "boolean"
                     );
