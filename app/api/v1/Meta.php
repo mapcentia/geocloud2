@@ -23,6 +23,5 @@ class Meta extends \app\inc\Controller
         else {
             return $this->layers->getAll(null, $q, Session::isAuth());
         }
-
     }
 }

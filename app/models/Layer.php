@@ -23,6 +23,7 @@ class Layer extends \app\models\Table
 
     function getAll($schema = false, $layer = false, $auth)
     {
+        // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";

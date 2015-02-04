@@ -1205,6 +1205,13 @@ $(window).ready(function () {
                         },
                         {
                             width: 300,
+                            xtype: 'textfield',
+                            fieldLabel: __('ES trigger table'),
+                            name: 'triggertable',
+                            value: r.data.triggertable
+                        },
+                        {
+                            width: 300,
                             xtype: 'textarea',
                             height: 100,
                             fieldLabel: __('View definition'),
@@ -1239,6 +1246,7 @@ $(window).ready(function () {
                                         },
                                         params: param,
                                         success: function () {
+                                            //grid.getSelectionModel().clearSelections();
                                             store.reload();
                                             groupsStore.load();
                                             App.setAlert(App.STATUS_NOTICE, __("Settings updated"));

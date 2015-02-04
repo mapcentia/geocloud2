@@ -84,10 +84,18 @@ class App
         //Hide layers without a group in viewer
         "hideUngroupedLayers" => true,
 
+        // Trust theese IPs
+        "trustedAddresses" => array(
+          "127.0.0.1/32"
+        ),
+
+        // Enable Elasticsearch indexing in GUI
+        "esIndexingInGui" => false,
+
         // Enable gc2scheduler
-                "gc2scheduler" => array(
-                    "mydb" => false,
-                ),
+        "gc2scheduler" => array(
+            "mydb" => false,
+        ),
 
         // Use API key for Elasticsearch Search API
         "useKeyForSearch" => true,

@@ -983,7 +983,7 @@ $(document).ready(function () {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                        window.parent.App.setAlert(App.STATUS_NOTICE,  __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
