@@ -84,7 +84,6 @@ class Elasticsearch extends \app\inc\Controller
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
-        //error_log($searchUrl);
         return $response;
     }
 
@@ -152,7 +151,6 @@ class Elasticsearch extends \app\inc\Controller
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
             return $response;
         }
-
         $triggerInstalled = false;
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
@@ -292,7 +290,6 @@ class Elasticsearch extends \app\inc\Controller
             $triggerInstalled = true;
             $triggerInstalledIn = "{$triggerSchema}.{$triggerTable}";
         }
-
         $res["_index"] = $fullIndex;
         $res["_type"] = $type;
         $res["relation"] = $relationType["data"];
