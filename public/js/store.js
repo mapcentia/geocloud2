@@ -1092,8 +1092,8 @@ $(window).ready(function () {
             title: __("Advanced settings on") + " '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
-            width: 500,
-            height: 400,
+            width: 450,
+            height: 420,
             closeAction: 'close',
             plain: true,
             items: [new Ext.Panel({
@@ -1246,6 +1246,7 @@ $(window).ready(function () {
                                         },
                                         params: param,
                                         success: function () {
+                                            //TODO deselect/select
                                             //grid.getSelectionModel().clearSelections();
                                             store.reload();
                                             groupsStore.load();

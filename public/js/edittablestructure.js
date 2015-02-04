@@ -515,7 +515,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                         success: function (response) {
                             Ext.MessageBox.show({
                                 title: __("Info"),
-                                msg: "<b>" + __(Ext.decode(response.responseText).message + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
+                                msg: "<b>" + __(Ext.decode(response.responseText).message + "</b>, with errors:<b> " + Ext.decode(response.responseText).errors + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,

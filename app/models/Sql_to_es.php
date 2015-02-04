@@ -16,6 +16,7 @@ class Sql_to_es extends Model
     function sql($q, $index, $type, $id, $db)
     {
         // We create a unique index name
+        $errors = false;
         $index = $db . "_" . $index;
         $name = "_" . rand(1, 999999999) . microtime();
         $name = $this->toAscii($name, null, "_");
@@ -94,25 +95,27 @@ class Sql_to_es extends Model
             $json .= "\n";
             $json .= json_encode($features);
             $json .= "\n";
-            //echo $json;
-
             if (is_int($i / 1000)) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-                curl_exec($ch);
+                $buffer = curl_exec($ch);
+                $obj = json_decode($buffer, true);
+                if (isset($obj["errors"]) && $obj["errors"] == true) {
+                    $errors = true;
+                }
                 $json = "";
             }
             $i++;
         }
         // Index the last bulk
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        //echo $json;
         $buffer = curl_exec($ch);
         $obj = json_decode($buffer, true);
         if (isset($obj["errors"]) && $obj["errors"] == true) {
-            return $obj;
+            $errors = true;
         }
         curl_close($ch);
         $response['success'] = true;
+        $response['errors'] = $errors;
         $response['message'] = "Indexed {$i} documents";
 
         $this->free($result);
