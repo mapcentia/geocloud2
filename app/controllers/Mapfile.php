@@ -372,7 +372,7 @@ class Mapfile extends \app\inc\Controller
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
                         if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport']);
-                        echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser']."' password='" . Connection::$param['postgispw'] . "'
+                        echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
                     }
@@ -586,6 +586,11 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                             <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
                             <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+
+                            <?php if ($class['label_expression']) {
+                                echo "EXPRESSION (" . $class['label_expression'] . ")\n";
+                            }
+                            ?>
                             #ANGLE
                             <?php
                             if ($class['label_angle']) {
@@ -650,6 +655,11 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
                             <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
                             <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+
+                            <?php if ($class['label2_expression']) {
+                                echo "EXPRESSION (" . $class['label2_expression'] . ")\n";
+                            }
+                            ?>
                             #ANGLE
                             <?php
                             if ($class['label2_angle']) {

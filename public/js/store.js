@@ -1700,7 +1700,7 @@ $(window).ready(function () {
                                                 plain: true,
                                                 id: "classTabs",
                                                 border: false,
-                                                height: 450,
+                                                height: 470,
                                                 defaults: {
                                                     layout: "fit",
                                                     border: false
