@@ -90,7 +90,7 @@ class App
         ),
 
         // Enable Elasticsearch indexing in GUI
-        "esIndexingInGui" => false,
+        "esIndexingInGui" => true,
 
         // Enable gc2scheduler
         "gc2scheduler" => array(
@@ -98,7 +98,7 @@ class App
         ),
 
         // Use API key for Elasticsearch Search API
-        "useKeyForSearch" => true,
+        "useKeyForSearch" => false,
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.
