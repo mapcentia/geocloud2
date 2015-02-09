@@ -523,8 +523,14 @@ $(document).ready(function () {
     cloud.bingApiKey = window.bingApiKey;
     cloud.digitalGlobeKey = window.digitalGlobeKey;
     window.setBaseLayers = window.setBaseLayers.reverse();
+    var altId, lName;
     for (var i = 0; i < window.setBaseLayers.length; i++) {
-        bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db);
+        // Local base layer
+        if (typeof window.setBaseLayers[i].db !== "undefined") {
+            altId = window.setBaseLayers[i].id + window.setBaseLayers[i].db;
+            lName = window.setBaseLayers[i].name;
+        }
+        bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
     }
     if (bl !== null) {
         cloud.setBaseLayer(bl);

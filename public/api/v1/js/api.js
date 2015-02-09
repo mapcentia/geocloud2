@@ -462,7 +462,7 @@ var mygeocloud_ol = (function () {
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
-        this.addBaseLayer = function (l, db) {
+        this.addBaseLayer = function (l, db, altId, lName) {
             var o;
             switch (l) {
                 case "osm":
@@ -523,7 +523,8 @@ var mygeocloud_ol = (function () {
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
-                        name: l
+                        name: lName,
+                        altId: altId
                     });
                     break;
             }
@@ -539,7 +540,8 @@ var mygeocloud_ol = (function () {
                 wrapDateLine: true,
                 tileCached: true,
                 displayInLayerSwitcher: true,
-                name: null
+                name: null,
+                altId: null
             };
             if (config) {
                 for (prop in config) {
@@ -565,7 +567,7 @@ var mygeocloud_ol = (function () {
                 layers: layer,
                 transparent: true
             }, defaults);
-            l.id = layer;
+            l.id = defaults.altId || layer;
             return l;
         };
         this.addTileLayerGroup = function (layers, config) {
