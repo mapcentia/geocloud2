@@ -1503,7 +1503,7 @@ $(window).ready(function () {
             plain: true,
             modal: true,
             resizable: false,
-            draggable: false,
+            draggable: true,
             border: false,
             closeAction: 'hide',
             x: 250,

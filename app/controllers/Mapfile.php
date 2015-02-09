@@ -561,7 +561,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT <?php echo ($class['label_font'] ?: "arialbd") . ($class['label_fontweight'] ?: "normal") ?>
+                            FONT <?php echo ($class['label_font'] ?: "arial") . ($class['label_fontweight'] ?: "normal") ?>
                             SIZE <?php
                             if ($class['label_size']) {
                                 if (is_numeric($class['label_size']))
@@ -624,7 +624,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT <?php echo ($class['label2_font'] ? $class['label2_font'] : "arialbd") . $class['label2_fontweight'] ?: "normal" ?>
+                            FONT <?php echo ($class['label2_font'] ? $class['label2_font'] : "arial") . $class['label2_fontweight'] ?: "normal" ?>
                             SIZE <?php
                             if ($class['label2_size']) {
                                 if (is_numeric($class['label2_size']))
