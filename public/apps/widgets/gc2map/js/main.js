@@ -19,7 +19,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, addLegend, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin,
+    var id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -133,6 +133,7 @@ MapCentia = function (globalId) {
                 // Must bee split in two parts. Yes, its f****** IE9
                 defaults.width = "100%";
                 defaults.height = "100%";
+                defaults.template = "body.tmpl";
                 MapappWin.document.write(
                     '<script>gc2map.init(' + JSON.stringify(defaults) + ')</script>'
                 );
@@ -151,8 +152,10 @@ MapCentia = function (globalId) {
         position: 'bottomright'
     }));
     init = function (conf) {
-        var metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
-        defaults = {};
+        var count = 0, metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
+        defaults = {
+            layers: []
+        };
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -182,8 +185,7 @@ MapCentia = function (globalId) {
         $("#legend-popover-li-" + id).show();
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
         $("#legend-popover-" + id).on('click', function () {
-            addLegend();
-            legendDirty = true;
+            $('#legend-' + id).html(list);
         });
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
         $("#legend-popover-" + id).popover('hide');
@@ -258,6 +260,10 @@ MapCentia = function (globalId) {
         }
 
         arr = defaults.layers;
+        //If no layers, when initiate call back
+        if (arr.length === 0) {
+            cloud.map.on('load', defaults.callBack(cloud));
+        }
         for (i = 0; i < arr.length; i = i + 1) {
             // If layer is schema, set as base layer
             if (arr[i].split(".").length < 2) {
@@ -273,6 +279,7 @@ MapCentia = function (globalId) {
                 $("#base-layer-list-" + id).append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
                 );
+                count = count + 1;
             } else {
                 $.ajax(
                     {
@@ -280,6 +287,7 @@ MapCentia = function (globalId) {
                         dataType: 'jsonp',
                         jsonp: 'jsonp_callback',
                         success: function (response) {
+                            var zIndex;
                             metaData = response;
                             for (i = 0; i < metaData.data.length; i = i + 1) {
                                 metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
@@ -297,12 +305,60 @@ MapCentia = function (globalId) {
                                     wrapDateLine: false,
                                     name: layerName
                                 });
-                                cloud.setZIndexOfLayer(layers[layerName][0], metaData.data[i].sort_id + 1000);
+                                if (window.gc2Options.reverseLayerOrder) {
+                                    zIndex = (metaData.data[i].sort_id * -1) + 999999;
+                                } else {
+                                    zIndex = metaData.data[i].sort_id + 999999;
+                                }
+                                cloud.setZIndexOfLayer(layers[layerName][0], zIndex);
                                 if (metaData.data[i].baselayer) {
                                     text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
                                     $("#base-layer-list-" + id).append(
                                         "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                                     );
+                                }
+                                // We first call back when all layers are initiated
+                                count = count + 1;
+                                if (count === arr.length) {
+                                    cloud.map.on('load', defaults.callBack(cloud));
+                                    $.ajax({
+                                        url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
+                                        dataType: 'jsonp',
+                                        jsonp: 'jsonp_callback',
+                                        success: function (response) {
+                                            var classUl, li, title, className;
+                                            list = $("<ul/>", {border: '0'});
+                                            $.each(response, function (i, v) {
+                                                try {
+                                                    title = metaDataKeys[v.id.split(".")[1]].f_table_title;
+                                                }
+                                                catch (e) {
+                                                }
+                                                var u, showLayer = false;
+                                                if (typeof v === "object") {
+                                                    for (u = 0; u < v.classes.length; u = u + 1) {
+                                                        if (v.classes[u].name !== "") {
+                                                            showLayer = true;
+                                                        }
+                                                    }
+                                                    if (showLayer) {
+                                                        li = $("<li/>");
+                                                        classUl = $("<ul/>");
+                                                        for (u = 0; u < v.classes.length; u = u + 1) {
+                                                            if (v.classes[u].name !== "") {
+                                                                className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
+                                                                classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
+                                                            }
+                                                        }
+                                                        // title
+                                                        list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
+                                                        list.append(li.append(classUl));
+                                                    }
+                                                }
+                                            });
+                                            $('#legend-' + id).html(list);
+                                        }
+                                    });
                                 }
                             }
                         }
@@ -310,50 +366,6 @@ MapCentia = function (globalId) {
                 );
             }
         }
-        addLegend = function () {
-            var param = 'l=' + cloud.getVisibleLayers(false);
-            if (legendDirty === true) {
-                return false;
-            }
-            $.ajax({
-                url: defaults.host + '/api/v1/legend/json/' + db + '/?' + param,
-                dataType: 'jsonp',
-                jsonp: 'jsonp_callback',
-                success: function (response) {
-                    var list = $("<ul/>", {border: '0'}), classUl, li, title, className;
-                    $.each(response, function (i, v) {
-                        try {
-                            title = metaDataKeys[v.id.split(".")[1]].f_table_title;
-                        }
-                        catch (e) {
-                        }
-                        var u, showLayer = false;
-                        if (typeof v === "object") {
-                            for (u = 0; u < v.classes.length; u = u + 1) {
-                                if (v.classes[u].name !== "") {
-                                    showLayer = true;
-                                }
-                            }
-                            if (showLayer) {
-                                li = $("<li/>");
-                                classUl = $("<ul/>");
-                                for (u = 0; u < v.classes.length; u = u + 1) {
-                                    if (v.classes[u].name !== "") {
-                                        className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
-                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
-                                    }
-                                }
-                                // title
-                                list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
-                                list.append(li.append(classUl));
-                            }
-                        }
-                    });
-                    $('#legend-' + id).html(list);
-                }
-            });
-        };
-        addLegend();
         cloud.on("dblclick", function () {
             clicktimer = undefined;
         });
@@ -385,7 +397,7 @@ MapCentia = function (globalId) {
                             res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                                 4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                                 76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                                1.19432856696, 0.597164283478, 0.298582141739];
+                                1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
                             distance = defaults.clickDistance * res[cloud.getZoom()];
                         }
                         qstore[index] = new geocloud.sqlStore({
@@ -462,7 +474,6 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
-        defaults.callBack(cloud);
     };
     return {
         init: init,

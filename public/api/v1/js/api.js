@@ -462,7 +462,7 @@ var mygeocloud_ol = (function () {
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
-        this.addBaseLayer = function (l) {
+        this.addBaseLayer = function (l, db, altId, lName) {
             var o;
             switch (l) {
                 case "osm":
@@ -516,6 +516,17 @@ var mygeocloud_ol = (function () {
                 case "hereNormalNightGrey":
                     o = this.addHere("hereNormalNightGrey");
                     break;
+                default : // Try to add as tile layer
+                    this.addTileLayers([l], {
+                        db: db,
+                        isBaseLayer: true,
+                        visibility: false,
+                        wrapDateLine: false,
+                        displayInLayerSwitcher: true,
+                        name: lName,
+                        altId: altId
+                    });
+                    break;
             }
             return o;
         };
@@ -529,7 +540,8 @@ var mygeocloud_ol = (function () {
                 wrapDateLine: true,
                 tileCached: true,
                 displayInLayerSwitcher: true,
-                name: null
+                name: null,
+                altId: null
             };
             if (config) {
                 for (prop in config) {
@@ -555,7 +567,7 @@ var mygeocloud_ol = (function () {
                 layers: layer,
                 transparent: true
             }, defaults);
-            l.id = layer;
+            l.id = defaults.altId || layer;
             return l;
         };
         this.addTileLayerGroup = function (layers, config) {

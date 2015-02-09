@@ -14,7 +14,7 @@ $_SESSION['postgisschema'] = "public";
 
 $prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
 if (App::$param['domain']) {
-    $host = "//" . $prefix . App::$param['domain'];
+    $host = "//" . $prefix . App::$param['domain'] . ":" . $_SERVER['SERVER_PORT'];
 } else {
     $host = App::$param['host'];
 }
@@ -27,15 +27,15 @@ if (App::$param['cdnSubDomain']) {
 }
 // If main user fetch all sub users
 //if (!$_SESSION['subuser']) {
-    $_SESSION['subusers'] = array();
-    $_SESSION['subuserEmails'] = array();
-    $sQuery = "SELECT * FROM {$sTable} WHERE parentdb = :sUserID";
-    $res = $postgisObject->prepare($sQuery);
-    $res->execute(array(":sUserID" => $_SESSION['screen_name']));
-    while ($rowSubUSers = $postgisObject->fetchRow($res)) {
-        $_SESSION['subusers'][] = $rowSubUSers["screenname"];
-        $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
-    };
+$_SESSION['subusers'] = array();
+$_SESSION['subuserEmails'] = array();
+$sQuery = "SELECT * FROM {$sTable} WHERE parentdb = :sUserID";
+$res = $postgisObject->prepare($sQuery);
+$res->execute(array(":sUserID" => $_SESSION['screen_name']));
+while ($rowSubUSers = $postgisObject->fetchRow($res)) {
+    $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+    $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+};
 //}
 ?>
 <div class="container">
@@ -105,15 +105,15 @@ if (App::$param['cdnSubDomain']) {
         <td><%= this . schema %></td>
         <td><a class="btn btn-xs btn-default fixed-width" target="_blank"
                href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span
-            class="glyphicon glyphicon-globe"></span>
-        </a></td>
+                    class="glyphicon glyphicon-globe"></span>
+            </a></td>
         <!--<td><a target="_blank"
                href="<?php echo $cdnHost . "/apps/heron/" ?><%= db %>/<%= this . schema %>">View
         </a></td>-->
         <td><a class="btn btn-xs btn-primary fixed-width" target="_blank"
                href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
-            class="glyphicon glyphicon-cog"></span>
-        </a></td>
+                    class="glyphicon glyphicon-cog"></span>
+            </a></td>
     </tr>
 </script>
 <script type="text/html" id="template-subuser-list">
@@ -123,7 +123,7 @@ if (App::$param['cdnSubDomain']) {
         <td>
             <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
                 <button class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
-                    class="glyphicon glyphicon-trash"></span></button>
+                        class="glyphicon glyphicon-trash"></span></button>
             </form>
         </td>
     </tr>
@@ -169,7 +169,7 @@ if (App::$param['cdnSubDomain']) {
                                     $('.delete').on('click', function (e) {
                                         var $form = $(this).closest('form');
                                         e.preventDefault();
-                                        $('#confirm-user-delete').modal({ backdrop: 'static', keyboard: false })
+                                        $('#confirm-user-delete').modal({backdrop: 'static', keyboard: false})
                                             .one('click', '#delete-user', function () {
                                                 $form.trigger('submit');
                                             });

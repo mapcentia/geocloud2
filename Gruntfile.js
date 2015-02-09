@@ -14,6 +14,15 @@ module.exports = function (grunt) {
                     // The Viewer
                     'public/css/build/styles.min.css': [
                         'public/css/styles.css'
+                    ],
+                    // The widget
+                    'public/apps/widgets/gc2map/css/build/all.min.css': [
+                        'public/apps/widgets/gc2map/css/bootstrap.css',
+                        'public/apps/widgets/gc2map/css/bootstrap-alert.css',
+                        'public/apps/widgets/gc2map/css/non-responsive.css',
+                        'public/apps/widgets/gc2map/css/styles.css',
+                        'public/js/leaflet/plugins/markercluster/MarkerCluster.css',
+                        'public/js/leaflet/plugins/markercluster/MarkerCluster.Default.css'
                     ]
                 }
             }
@@ -39,7 +48,13 @@ module.exports = function (grunt) {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             publish: {
                 files: {
-                    'public/js/ext/examples/ux/Spinner.min.js': ['public/js/ext/examples/ux/Spinner.js'],
+                    'public/js/leaflet/leaflet-all.js': [
+                        'public/js/leaflet/leaflet.js',
+                        'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
+                        'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js',
+                        'public/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
+                        'public/js/leaflet/plugins/Leaflet.label/leaflet.label.js'
+                    ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
                     // The Viewer
@@ -52,9 +67,7 @@ module.exports = function (grunt) {
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.js',
                         'public/apps/viewer/js/templates.js',
                         'public/apps/viewer/js/viewer.js',
-                        'public/js/leaflet/leaflet.js',
-                        'public//js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
-                        'public//js/leaflet/plugins/Leaflet.label/leaflet.label.js'
+                        'public/js/leaflet/leaflet-all.js'
                     ],
                     //store
                     'public/js/build/store/all.min.js': [
@@ -92,6 +105,17 @@ module.exports = function (grunt) {
                         'public/js/filterbuilder.js',
                         'public/js/comparisoncomboBox.js',
                         'public/js/openlayers/proj4js-combined.js'
+                    ],
+                    // The widget
+                    'public/apps/widgets/gc2map/js/build/all.min.js': [
+                        'public/js/leaflet/leaflet-all.js',
+                        'public/js/openlayers/proj4js-combined.js',
+                        'public/js/bootstrap3/js/bootstrap.min.js',
+                        'public/js/hogan/hogan-2.0.0.js',
+                        'public/apps/widgets/gc2map/js/bootstrap-alert.js',
+                        'public/api/v3/js/geocloud.js',
+                        'public/apps/widgets/gc2map/js/main.js',
+                        'public/apps/widgets/gc2map/js/templates.js'
                     ]
                 }
             }
@@ -105,7 +129,10 @@ module.exports = function (grunt) {
                 },
                 files: {
                     "public/apps/viewer/js/templates.js": ["public/apps/viewer/templates/body.tmpl"],
-                    "public/apps/widgets/gc2map/js/templates.js": ["public/apps/widgets/gc2map/templates/body.tmpl"]
+                    "public/apps/widgets/gc2map/js/templates.js": [
+                        "public/apps/widgets/gc2map/templates/body.tmpl",
+                        "public/apps/widgets/gc2map/templates/body2.tmpl"
+                    ]
                 }
             }
         },
@@ -141,6 +168,26 @@ module.exports = function (grunt) {
                     'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
+        },
+        preprocess: {
+            debug: {
+                options: {
+                    context: {
+                        DEBUG: true
+                    }
+                },
+                src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
+                dest: 'public/apps/widgets/gc2map/js/gc2map.js'
+            },
+            production: {
+                options: {
+                    context: {
+                        DEBUG: false
+                    }
+                },
+                src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
+                dest: 'public/apps/widgets/gc2map/js/gc2map.js'
+            }
         }
     });
     grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -150,9 +197,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-processhtml');
     grunt.loadNpmTasks('grunt-templates-hogan');
     grunt.loadNpmTasks('grunt-cache-bust');
+    grunt.loadNpmTasks('grunt-preprocess');
 
-    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'cacheBust']);
-    grunt.registerTask('production', ['processhtml', 'cacheBust']);
+    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
+    grunt.registerTask('production', ['processhtml', 'preprocess:production', 'cacheBust']);
 };
 
 

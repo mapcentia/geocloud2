@@ -1,0 +1,43 @@
+{
+    "type": "jsonstore",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "autoLoad": false,
+        "model": "SchemaModel",
+        "storeId": "SchemaStore",
+        "designer|userClassName": "SchemaStore"
+    },
+    "designerId": "d6b9e932-91e0-4469-848a-df7f12caf2f3",
+    "cn": [
+        {
+            "type": "Ext.data.proxy.Rest",
+            "reference": {
+                "name": "proxy",
+                "type": "object"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "url": "/controllers/database/schemas"
+            },
+            "designerId": "7f2b0d0e-1e90-401c-9150-25cac533a7b5",
+            "cn": [
+                {
+                    "type": "Ext.data.reader.Json",
+                    "reference": {
+                        "name": "reader",
+                        "type": "object"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "root": "data"
+                    },
+                    "designerId": "766a4130-31b3-4bfb-a378-a5fa8864985c"
+                }
+            ]
+        }
+    ]
+}

@@ -20,7 +20,7 @@ addRasterFile.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["asc", "tif", "tiff", "gen", "php"], srs, flag = false;
+            var arr = [], ext = ["asc", "tif", "tiff", "gen", "php", "ecw"], srs, flag = false, displayFile;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/raster',
@@ -34,7 +34,7 @@ addRasterFile.init = function () {
                             flag = true;
                             $.ajax({
                                 url: '/controllers/upload/processraster',
-                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0],
+                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&displayfile=" + displayFile,
                                 dataType: 'json',
                                 type: 'GET',
                                 success: function (response, textStatus, http) {
@@ -64,6 +64,7 @@ addRasterFile.init = function () {
                     },
                     BeforeUpload: function (up, file) {
                         srs = Ext.getCmp('srs').getValue();
+                        displayFile = Ext.getCmp('displayFile').getValue();
                         up.settings.multipart_params = {
                             name: file.name
                         };
@@ -83,15 +84,19 @@ addRasterFile.init = function () {
             }, 200);
         },
         tbar: [
-            {
-                text: 'Epsg:'
-            },
+            ' ',
+            'Epsg:',
             {
                 width: 60,
                 xtype: 'textfield',
                 id: 'srs',
                 value: window.gc2Options.epsg
-
+            },
+            ' ',
+            __('Display file instead of table'),
+            {
+                xtype: 'checkbox',
+                id: 'displayFile'
             }
         ]
     });

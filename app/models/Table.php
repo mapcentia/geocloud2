@@ -107,6 +107,10 @@ class Table extends Model
             $field['typeObj'] = array("type" => "timestamptz");
             $field['type'] = "timestamptz";
 
+        } elseif (preg_match("/date/", $field['type'])) {
+            $field['typeObj'] = array("type" => "date");
+            $field['type'] = "date";
+
         } elseif (preg_match("/uuid/", $field['type'])) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
@@ -129,6 +133,8 @@ class Table extends Model
         $response['success'] = true;
         $response['message'] = "Layers loaded";
         $response['data'] = array();
+        $views = array();
+        $viewDefinitions = array();
 
         $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
@@ -141,6 +147,20 @@ class Table extends Model
             $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         }
         $result = $this->execQuery($sql);
+        $sql = "SELECT table_schema,table_name,view_definition FROM information_schema.views WHERE table_schema = :sSchema";
+        $resView = $this->prepare($sql);
+        try {
+            $resView->execute(array("sSchema" => $whereClause));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($resView, "assoc")) {
+            $views[$row["table_name"]] = true;
+            $viewDefinitions[$row["table_name"]] = $row["view_definition"];
+        }
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
@@ -152,9 +172,9 @@ class Table extends Model
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-                    if ($key == "layergroup"){
+                    if ($key == "layergroup") {
                         if (!$value && \app\conf\App::$param['hideUngroupedLayers'] == true) {
-                            $value = "_gc2_hide_in_viewer";
+                            //$value = "_gc2_hide_in_viewer";
                         }
                     }
                     $arr = $this->array_push_assoc($arr, $key, $value);
@@ -163,6 +183,15 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
                     $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+                }
+                if (isset($views[$row['f_table_name']])) {
+                    $arr = $this->array_push_assoc($arr, "isview", true);
+                    $arr = $this->array_push_assoc($arr, "viewdefinition", $viewDefinitions[$row['f_table_name']]);
+
+                } else {
+                    $arr = $this->array_push_assoc($arr, "isview", false);
+                    $arr = $this->array_push_assoc($arr, "viewdefinition", null);
+
                 }
                 $response['data'][] = $arr;
             }
@@ -184,6 +213,26 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
         }
+        return $response;
+    }
+
+    function getGroupByAsArray($field) // All tables
+    {
+        $sql = "SELECT DISTINCT({$field}) as distinct FROM {$this->table} ORDER BY {$field}";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+            while ($row = $this->fetchRow($res, "assoc")) {
+                $arr[] = $row["distinct"];
+            }
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
@@ -325,8 +374,28 @@ class Table extends Model
         return $response;
     }
 
+    private function purgeFieldConf($_key_)
+    {
+        // Set metaData again in case of a column was dropped
+        $this->metaData = $this->getMetaData($this->table);
+        $this->setType();
+        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        foreach ($fieldconfArr as $key => $value) {
+            if (!$this->metaData[$key]) {
+                unset($fieldconfArr[$key]);
+            }
+        }
+        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['_key_'] = $_key_;
+        $geometryColumnsObj = new table("settings.geometry_columns_join");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        return $res;
+    }
+
     function updateColumn($data, $key) // Only geometry tables
     {
+        $res = $this->purgeFieldConf($key);
+
         $data = $this->makeArray($data);
         $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
@@ -368,11 +437,10 @@ class Table extends Model
         return $response;
     }
 
-    function deleteColumn($data, $whereClause = NULL) // Only geometry tables
+    function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
         $data = $this->makeArray($data);
         $sql = "";
-
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             if (in_array($value, $this->sysCols)) {
@@ -396,6 +464,8 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
         }
+        $res = $this->purgeFieldConf($_key_);
+        print_r($res);
         return $response;
     }
 
@@ -641,6 +711,12 @@ class Table extends Model
             $nowArray = $notArray; // Input was array. Return it unaltered
         }
         return $nowArray;
+    }
+
+    public function getMapForEs()
+    {
+        $schema = $this->metaData;
+        return $schema;
     }
 
 }

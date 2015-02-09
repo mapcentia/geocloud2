@@ -23,22 +23,21 @@ class Layer extends \app\models\Table
 
     function getAll($schema = false, $layer = false, $auth)
     {
+        // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
             "(authentication<>'foo')" :
             "(authentication='Write' OR authentication='None')";
+        $case = "CASE WHEN (layergroup = '' OR layergroup IS NULL) THEN 9999999 else sort_id END";
         if ($schema) {
             $ids = explode(",", $schema);
             $qMarks = str_repeat('?,', count($ids) - 1) . '?';
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort_id";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort";
         } elseif ($layer) {
-
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort_id";
-
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort";
         } else {
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort_id";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort";
         }
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        //die($sql);
         $res = $this->prepare($sql);
         try {
             if ($schema) {
@@ -73,10 +72,26 @@ class Layer extends \app\models\Table
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                $value = ($key == "layergroup" && (!$value)) ? ((\app\conf\App::$param['hideUngroupedLayers']) ? "_gc2_hide_in_viewer" : "Default group") : $value;
+                if ($key == "layergroup" && (!$value)) {
+                    $value = "<font color='red'>[Ungrouped]</font>";
+                }
+                if ($key == "fieldconf" && ($value)) {
+                    $obj = json_decode($value, true);
+                    foreach ($obj as $k => $val) {
+                        if ($obj[$k]["properties"] == "*") {
+                            $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
+                            $distinctValues = $table->getGroupByAsArray($k);
+                            $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
+                        }
+                    }
+                    $value = json_encode($obj);
+                }
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+                //$table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
+                //$schema = $table->getColumnsForExtGridAndStore();
+                //$arr = $this->array_push_assoc($arr, "fields", $schema["forGrid"]);
             }
             if ($row["authentication"] == "Read/write") {
                 $privileges = (array)json_decode($row["privileges"]);
@@ -359,3 +374,4 @@ class Layer extends \app\models\Table
     }
 
 }
+

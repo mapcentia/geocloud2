@@ -381,7 +381,7 @@ $(document).ready(function () {
                         var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
                             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                            1.19432856696, 0.597164283478, 0.298582141739];
+                            1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
                         distance = 5 * res[cloud.getZoom()];
                     }
                     qstore[index] = new geocloud.sqlStore({
@@ -520,8 +520,14 @@ $(document).ready(function () {
     cloud.bingApiKey = window.bingApiKey;
     cloud.digitalGlobeKey = window.digitalGlobeKey;
     window.setBaseLayers = window.setBaseLayers.reverse();
+    var altId, lName;
     for (var i = 0; i < window.setBaseLayers.length; i++) {
-        bl = cloud.addBaseLayer(window.setBaseLayers[i].id);
+        // Local base layer
+        if (typeof window.setBaseLayers[i].db !== "undefined") {
+            altId = window.setBaseLayers[i].id + window.setBaseLayers[i].db;
+            lName = window.setBaseLayers[i].name;
+        }
+        bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
     }
     if (bl !== null) {
         cloud.setBaseLayer(bl);
@@ -1016,7 +1022,7 @@ $(document).ready(function () {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE, eval('(' + response.responseText + ')').message);
+                        window.parent.App.setAlert(App.STATUS_NOTICE,  __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
@@ -1290,7 +1296,19 @@ saveStrategy = new OpenLayers.Strategy.Save({
                 message = "<p>Deleted: " + deleted + "</p>";
                 window.parent.App.setAlert(App.STATUS_OK, message);
             }
-            window.parent.writeFiles(schema + "." + layerBeingEditing + "." + layerBeingEditingGeomField, map);
+            window.parent.writeFiles(false, map);
+            var l;
+            l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
+            l.clearGrid();
+            var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            l.url = l.url.replace(l.url.split("?")[1], "");
+            l.url = l.url + "token=" + n;
+            setTimeout(function () {
+                l.redraw();
+            }, 500);
         }
     }
 });

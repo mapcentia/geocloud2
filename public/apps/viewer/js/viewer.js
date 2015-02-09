@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -93,6 +93,211 @@ Viewer = function () {
                 $('#legend').html(list);
             }
         });
+    };
+
+    addSqlFilterForm = function () {
+        var i, sqlFilterEnabled = false, layerPopup;
+        $("#sql-filter-table").append('<option value="">' + __("Choose layer") + '</option>');
+
+        for (i = 0; i < metaData.data.length; i = i + 1) {
+            if (metaData.data[i].enablesqlfilter) {
+                $("#sql-filter-table").append('<option value="' + metaData.data[i].f_table_name + '">' + metaData.data[i].f_table_name + '</option>');
+                sqlFilterEnabled = true;
+            }
+        }
+        if (sqlFilterEnabled) {
+            $("#filter-popover-li").show();
+            $("#filter-modal-li").show();
+        }
+        $("#sql-filter-table").on("change",
+            function () {
+                var fieldConf, formSchema = {}, form = [], table, value = $("#sql-filter-table").val(), arr, v;
+                try {
+                    cloud.removeGeoJsonStore(sqlFilterStore);
+                    sqlFilterStore.reset();
+                } catch (e) {
+                }
+                fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
+                table = schema + "." + value;
+                $.each(fieldConf, function (i, v) {
+                    if (v.type !== "geometry" && v.querable === true) {
+                        formSchema[i] = {
+                            sort_id: v.sort_id,
+                            type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
+                            title: v.alias || i
+                        };
+                        if (v.properties && v.properties !== "") {
+                            try {
+                                arr = $.parseJSON(v.properties);
+                                arr.unshift("");
+                                formSchema[i].enum = arr;
+                            } catch (e) {
+                            }
+                        }
+                    }
+                });
+
+                v = _.pairs(formSchema)
+                v.sort(function (a, b) {
+                    var keyA = a[1].sort_id,
+                        keyB = b[1].sort_id;
+                    if (keyA < keyB) {
+                        return -1;
+                    }
+                    if (keyA > keyB) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                formSchema = _.object(v);
+
+                formSchema._gc2_filter_operator = {
+                    "type": "string",
+                    "enum": ["and", "or"],
+                    "default": "and"
+                };
+                formSchema._gc2_filter_spatial = {};
+                sqlFilterStore = new geocloud.sqlStore({
+                    db: db,
+                    clickable: true,
+                    jsonp: false,
+                    error: function (e) {
+                        alert(e.responseJSON.message);
+                    },
+                    styleMap: {
+                        "color": "#ff0000",
+                        "weight": 5,
+                        "opacity": 0.65,
+                        "fillOpacity": 0
+                    },
+                    onEachFeature: function (feature, layer) {
+                        var html = "";
+                        $.each(formSchema, function (i, v) {
+                            if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                                html = html + v.title + " : " + feature.properties[i] + "<br>";
+                            }
+                        });
+                        layer.bindPopup(html);
+                    },
+                    onLoad: function () {
+                        $("#filter-submit").prop('disabled', false);
+                        $("#filter-submit .spinner").hide();
+                        if (sqlFilterStore.geoJSON) {
+                            cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
+                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/" + db + "?q=" + encodeURIComponent(this.sql).replace(/'/g, "%27") + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
+                        } else {
+                            alert(__("Query did not return any features"));
+                        }
+                    }
+                });
+                /*sqlFilterStore.layer.on({
+                 mouseover: function (e) {
+                 layerPopup = L.popup()
+                 .setLatLng(e.latlng)
+                 .setContent('Popup for feature #' */
+                /*+ e.layer.feature.properties.id*/
+                /*)
+                 .openOn(cloud.map);
+                 },
+                 mouseout: function (e) {
+                 cloud.map.closePopup(layerPopup);
+                 layerPopup = null;
+
+                 }
+                 });*/
+                cloud.addGeoJsonStore(sqlFilterStore);
+                $('#sql-filter-form').empty();
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Set filter values")
+                });
+                $.each(formSchema, function (i, v) {
+                    if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                        form.push({
+                            "key": i
+                        });
+                    }
+                });
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Match all or any values")
+                });
+                form.push({
+                    "key": "_gc2_filter_operator",
+                    "type": "radios",
+                    "titleMap": {
+                        "and": __("All"),
+                        "or": __("Any")
+                    }
+                });
+                form.push({
+                    "type": "help",
+                    "helpvalue": __("Only match within view extent")
+                });
+                form.push({
+                    "key": "_gc2_filter_spatial",
+                    "type": "checkbox"
+                });
+                form.push({
+                    "type": "button",
+                    "title": __("Load features"),
+                    "id": "filter-submit",
+                    "htmlClass": "btn-primary"
+                });
+
+                $('#sql-filter-form').jsonForm({
+                    schema: formSchema,
+                    form: form,
+                    "params": {
+                        "fieldHtmlClass": "filter-field"
+                    },
+                    onSubmit: function (errors, values) {
+                        var fields = [], where, sql, extent, spatialFilter;
+                        $('#sql-filter-res').empty();
+                        $("#filter-submit").prop('disabled', true);
+                        $("#filter-submit .spinner").show();
+                        if (errors) {
+                            $("#filter-submit").prop('disabled', false);
+                            $("#filter-submit .spinner").hide();
+                            $('#sql-filter-res').html('<p>' + __("Error in query. Please check types.") + '</p>');
+                        } else {
+                            sqlFilterStore.reset();
+                            $.each(formSchema, function (name, property) {
+                                if (values[name] !== undefined && name !== "_gc2_filter_operator" && name !== "_gc2_filter_spatial") {
+                                    if (property.type === "number") {
+                                        fields.push(name + "=" + values[name]);
+                                    } else {
+                                        fields.push(name + "='" + values[name] + "'");
+                                    }
+                                }
+                            });
+
+                            if (fields.length > 0) {
+                                where = fields.join(" " + values._gc2_filter_operator + " ");
+                            } else {
+                                where = "";
+                            }
+                            if (values._gc2_filter_spatial) {
+                                extent = cloud.getExtent();
+                                spatialFilter = metaDataKeys[value].f_geometry_column + " && ST_transform(ST_MakeEnvelope(" + extent.left + ", " + extent.bottom + ", " + extent.right + ", " + extent.top + ", 4326), " + metaDataKeys[value].srid + ")";
+                                if (where === "") {
+                                    where = spatialFilter;
+
+                                } else {
+                                    where = "(" + where + ")" + " AND " + spatialFilter;
+                                }
+                            }
+                            sql = "SELECT * FROM " + table;
+                            if (where && where !== "") {
+                                sql = sql + " WHERE " + where;
+                            }
+                            sqlFilterStore.sql = sql;
+                            sqlFilterStore.load(true);
+                        }
+                    }
+                });
+                $("#filter-submit").append("<img src='http://www.gifstache.com/images/ajax_loader.gif' class='spinner'/>");
+            });
     };
     share = function () {
         var url = hostname + linkToSimpleMap(), layers, arr = [], layersStr = "", i, p, javascript;
@@ -206,7 +411,7 @@ Viewer = function () {
         position: 'bottomright'
     });
     cloud.map.addControl(zoomControl);
-    // Start of draw
+// Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();
         cloud.map.on('draw:created', function (e) {
@@ -265,9 +470,9 @@ Viewer = function () {
             }
         });
     }
-    // Draw end
+// Draw end
     init = function () {
-        var metaData, layers = {}, jRes, node, modalFlag, extent = null, i;
+        var layers = {}, jRes, node, modalFlag, extent = null, i;
 
         $('.share-text').mouseup(function () {
             return false;
@@ -275,6 +480,7 @@ Viewer = function () {
         $(".share-text").focus(function () {
             $(this).select();
         });
+
 
         if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
@@ -363,7 +569,8 @@ Viewer = function () {
                             ]
                         };
                         for (u = 0; u < response.data.length; ++u) {
-                            if (response.data[u].layergroup === arr[i] && response.data[u].layergroup !== "_gc2_hide_in_viewer") {
+                            isBaseLayer = response.data[u].baselayer;
+                            if (response.data[u].layergroup === arr[i] && ((response.data[u].layergroup !== "<font color='red'>[Ungrouped]</font>" || window.gc2Options.hideUngroupedLayers !== true) || isBaseLayer === true )) {
                                 authIcon = (response.data[u].authentication === "Read/write") ? " <i data-toggle='tooltip' title='first tooltip' class='fa fa-lock'></i>" : "";
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" data-gc2-id="' + response.data[u].f_table_schema + "." + response.data[u].f_table_name + '"onchange="MapCentia.switchLayer($(this).data(\'gc2-id\'),this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
@@ -402,6 +609,7 @@ Viewer = function () {
                 $('#menu').multilevelpushmenu({
                     menu: arrMenu
                 });
+                addSqlFilterForm();
             }
         }); // Ajax call end
         $.ajax({
@@ -443,9 +651,14 @@ Viewer = function () {
                     $('#modal-legend').modal();
                     addLegend();
                 });
+                $("#modal-filter .modal-body").append($("#filter"));
+                $('#filter-modal').on('click', function (e) {
+                    $('#modal-filter').modal();
+                });
             },
             exit: function () {
                 $('#modal-legend').modal('hide');
+                $('#modal-filter').modal('hide');
             }
         });
         jRes.addFunc({
@@ -463,9 +676,15 @@ Viewer = function () {
                     addLegend();
                     $("#legend").css({"max-height": (eHeight - 100) + "px"});
                 });
+                $("#filter-popover").popover({
+                    offset: 10,
+                    html: true,
+                    content: $("#filter")
+                }).popover('show').popover('hide');
+                $('#filter-popover').on('click', function (e) {
+                    $("#filter").css({"max-height": (eHeight - 100) + "px"});
+                });
                 $(".modal-body").css({"max-height": (eHeight - sub) + "px"});
-                //$("#modal-info-body").css({"max-height": (eHeight < 350) ? (eHeight - sub) : (220) + "px"});
-                //$("#modal-share-body").css({"max-height": (eHeight - sub) + "px"});
             },
 
             exit: function () {
@@ -553,6 +772,12 @@ Viewer = function () {
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
                             id: index,
+                            styleMap: {
+                                "color": "#0000ff",
+                                "weight": 5,
+                                "opacity": 0.65,
+                                "fillOpacity": 0
+                            },
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
@@ -643,7 +868,8 @@ Viewer = function () {
         shareTumblr: shareTumblr,
         shareStumbleupon: shareStumbleupon
     };
-};
+}
+;
 
 
 

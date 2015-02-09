@@ -11,10 +11,12 @@ class Baselayerjs extends \app\inc\Controller
         echo "reverseLayerOrder: " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
         echo "epsg: '" . ((\app\conf\App::$param['epsg']) ? : "4326") . "',\n";
         echo "extraShareFields: " . ((\app\conf\App::$param['extraShareFields']) ? "true": "false") . ",\n";
+        echo "esIndexingInGui: " . ((\app\conf\App::$param['esIndexingInGui']) ? "true": "false") . ",\n";
         echo "hideUngroupedLayers: " . ((\app\conf\App::$param['hideUngroupedLayers']) ? "true": "false") . ",\n";
         echo "staticMapHost: '" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
+        echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
@@ -31,7 +33,7 @@ class Baselayerjs extends \app\inc\Controller
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
         }
 
-        $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT");
+        $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT", "de_DE");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         //echo $_SERVER['HTTP_ACCEPT_LANGUAGE'] . "\n";
         //echo $requestedLan."\n";

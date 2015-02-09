@@ -126,7 +126,11 @@ $(window).ready(function () {
         //plugins: [editor],
         store: store,
         viewConfig: {
-            forceFit: true
+            forceFit: true,
+            stripeRows: true,
+            getRowClass: function(record) {
+                return record.json.isview ? 'isview' : null;
+            }
         },
         height: 300,
         split: true,
@@ -417,14 +421,14 @@ $(window).ready(function () {
                         xtype: 'textfield',
                         flex: 1,
                         name: 'schema',
-                        emptyText: 'New schema',
+                        emptyText: __('New schema'),
                         allowBlank: false
                     }
                 ]
             },
             {
                 text: '<i class="icon-plus btn-gc"></i>',
-                tooltip: __('Add new schema'),
+                tooltip: __('New schema'),
                 disabled: subUser ? true : false,
                 handler: function () {
                     var f = Ext.getCmp('schemaform');
@@ -452,7 +456,11 @@ $(window).ready(function () {
             }
         ],
         listeners: {
-            // Listensers here
+            'mouseover' : {
+                fn: function(){
+                },
+                scope: this
+            }
         }
     });
     Ext.getCmp("schemabox").on('select', function (e) {
@@ -655,7 +663,7 @@ $(window).ready(function () {
             title: __('New layer'),
             layout: 'fit',
             modal: true,
-            width: 500,
+            width: 550,
             height: 390,
             closeAction: 'close',
             plain: true,
@@ -1076,8 +1084,8 @@ $(window).ready(function () {
             title: __("Advanced settings on") + " '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
-            width: 500,
-            height: 400,
+            width: 450,
+            height: 420,
             closeAction: 'close',
             plain: true,
             items: [new Ext.Panel({
@@ -1160,6 +1168,48 @@ $(window).ready(function () {
                             fieldLabel: __('SQL where clause'),
                             name: 'filter',
                             value: r.data.filter
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textfield',
+                            fieldLabel: __('File source'),
+                            name: 'bitmapsource',
+                            value: r.data.bitmapsource
+                        },
+                        {
+                            xtype: 'combo',
+                            store: new Ext.data.ArrayStore({
+                                fields: ['name', 'value'],
+                                data: [
+                                    ['true', true],
+                                    ['false', false]
+                                ]
+                            }),
+                            displayField: 'name',
+                            valueField: 'value',
+                            mode: 'local',
+                            typeAhead: false,
+                            editable: false,
+                            triggerAction: 'all',
+                            name: 'enablesqlfilter',
+                            fieldLabel: 'Enable sql filtering in Viewer',
+                            value: r.data.enablesqlfilter
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textfield',
+                            fieldLabel: __('ES trigger table'),
+                            name: 'triggertable',
+                            value: r.data.triggertable
+                        },
+                        {
+                            width: 300,
+                            xtype: 'textarea',
+                            height: 100,
+                            fieldLabel: __('View definition'),
+                            name: 'viewdefinition',
+                            value: r.json.viewdefinition,
+                            disabled: true
                         }
                     ],
                     buttons: [
@@ -1188,6 +1238,8 @@ $(window).ready(function () {
                                         },
                                         params: param,
                                         success: function () {
+                                            //TODO deselect/select
+                                            //grid.getSelectionModel().clearSelections();
                                             store.reload();
                                             groupsStore.load();
                                             App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
@@ -1439,12 +1491,12 @@ $(window).ready(function () {
                                 },
                                 html: "<ul>" +
                                 "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can se and query the layer.") + "</li>" +
+                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
                                 "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
                                 "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
                                 "<ul>" +
                                 "<br><p>" +
-                                __("The privileges is granted for both Admin and external services like WMS and WFS.") +
+                                __("The privileges are granted for both Admin and external services like WMS and WFS.") +
                                 "</p>"
                             }
                         )
@@ -1657,7 +1709,7 @@ $(window).ready(function () {
                                                 plain: true,
                                                 id: "classTabs",
                                                 border: false,
-                                                height: 450,
+                                                height: 470,
                                                 defaults: {
                                                     layout: "fit",
                                                     border: false
@@ -1746,7 +1798,7 @@ $(window).ready(function () {
                                     {
                                         xtype: "panel",
                                         title: __('Settings'),
-                                        height: 650,
+                                        height: 700,
                                         defaults: {
                                             border: false
                                         },
@@ -1796,6 +1848,20 @@ $(window).ready(function () {
             ct,
             {
                 xtype: "panel",
+                title: __('Scheduler'),
+                layout: 'border',
+                id: "schedulerPanel",
+                items: [
+                    {
+                        frame: false,
+                        border: false,
+                        region: "center",
+                        html: '<iframe frameborder="0" id="scheduler" style="width:100%;height:100%" src="/scheduler/index2.html"></iframe>'
+                    }
+                ]
+            },
+            {
+                xtype: "panel",
                 title: __('Log'),
                 layout: 'border',
                 listeners: {
@@ -1832,10 +1898,19 @@ $(window).ready(function () {
             }
         ]
     });
-    new Ext.Viewport({
+    var viewPort = new Ext.Viewport({
         layout: 'border',
         items: [tabs]
     });
+
+    // Hide tab if scheduler is not available for the db
+    if (window.gc2Options.gc2scheduler !== null) {
+        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
+            tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+        }
+    } else {
+        tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+    }
 
     writeFiles = function (clearCachedLayer, map) {
         $.ajax({

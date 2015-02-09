@@ -1,0 +1,96 @@
+#!/usr/bin/php
+<?php
+include_once("../App.php");
+new \app\conf\App();
+
+use \app\models\Database;
+use \app\inc\Model;
+
+$model = new Model();
+
+
+$dir = $argv[1];
+$schema = "test2";
+$db = "mydb";
+$ext = array("tif");
+
+Database::setDb($db);
+
+$vrtTmplXml = simplexml_load_string("<root>".file_get_contents("template.vrt")."</root>");
+
+if ($handle = opendir($dir)) {
+    while (false !== ($entry = readdir($handle))) {
+        $safeNameArr = array();
+        if ($entry !== "." && $entry !== "..") {
+            $zipCheck1 = explode(".", $entry);
+            $zipCheck2 = array_reverse($zipCheck1);
+            $groupArr = explode("_", $entry);
+            if (strtolower($zipCheck2[0]) == "tidf") {
+                for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
+                    $safeNameArr[] = $zipCheck1[$i];
+                }
+                $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
+                $cmd = "raster2pgsql -s 32612 -I -C -M -d {$dir}{$entry} -F -t 100x100  {$schema}.{$safeName} | psql {$db} -U postgres";
+                $cmd2 = "gdalbuildvrt -overwrite temp.vrt  {$dir}{$entry}";
+                echo $cmd . "\n";
+
+                //exec($cmd . ' 2>&1', $out);
+                exec($cmd2 . ' 2>&1', $out);
+                $xml = simplexml_load_string("<root>".file_get_contents("temp.vrt")."</root>");
+
+                $x = $xml->VRTDataset[0]["rasterXSize"];
+                $y = $xml->VRTDataset[0]["rasterYSize"];
+                $srs = $xml->VRTDataset->SRS;
+                $geoTransform = $xml->VRTDataset->GeoTransform;
+
+                $vrtTmplXml->VRTDataset[0]["rasterXSize"] = $x;
+                $vrtTmplXml->VRTDataset[0]["rasterYSize"] = $y;
+                $vrtTmplXml->VRTDataset->SRS = $srs;
+                $vrtTmplXml->VRTDataset->GeoTransform = $geoTransform;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->SourceProperties[0]["RasterXSize"] = $x;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->SourceProperties[0]["RasterYSize"] = $y;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->SrcRect[0]["xSize"] = $x;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->SrcRect[0]["ySize"] = $y;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->DstRect[0]["xSize"] = $x;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->DstRect[0]["ySize"] = $y;
+
+                $vrt = sprintf($vrtTmplXml->VRTDataset->asXML(), $entry);
+                $vrtFileName = $entry . ".vrt";
+                $vrtFilePath = $dir . $vrtFileName;
+                @unlink($vrtFilePath);
+                $fh = fopen($vrtFilePath, 'w');
+                fwrite($fh, $vrt);
+                fclose($fh);
+
+                $key = $schema . "." . $safeName . ".rast";
+
+                // Set layer editable
+                $join = new \app\models\Table("settings.geometry_columns_join");
+                $json = '{"data":{"editable":true,"_key_":"' . $key . '","bitmapsource":"' . $vrtFileName . '", "layergroup": "'.$groupArr[1].'"}}';
+                $data = (array)json_decode(urldecode($json));
+                $res = $join->updateRecord($data, "_key_");
+                print_r($res);
+            }
+            if (strtolower($zipCheck2[0]) == "ecw") {
+                \app\conf\Connection::$param["postgisschema"] = $schema;
+                for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
+                    $safeNameArr[] = $zipCheck1[$i];
+                }
+                $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
+                // Create new table
+                $table = new \app\models\Table($safeName);
+                $res = $table->createAsRasterTable("32612");
+                print_r($res);
+
+                // Set bitmapsource
+                $key = $schema . "." . $safeName . ".rast";
+                $join = new \app\models\Table("settings.geometry_columns_join");
+                $json = '{"data":{"bitmapsource":"'.$entry.'","_key_":"' . $key . '"}}';
+                $data = (array)json_decode(urldecode($json));
+                $res = $join->updateRecord($data, "_key_");
+                print_r($res);
+            }
+        }
+
+    }
+}

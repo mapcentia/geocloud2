@@ -20,6 +20,7 @@ class Sql extends \app\inc\Model
         $sqlView = "CREATE VIEW {$view} as {$q}";
         $result = $this->execQuery($sqlView);
         $arrayWithFields = $this->getMetaData($view);
+
         // First check. Is the SQL valid
         if ($this->PDOerror) {
             $response['success'] = false;
@@ -51,6 +52,7 @@ class Sql extends \app\inc\Model
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
         $result = $this->execQuery($sql);
+
         // Second check. Catched eg. transform errors
         if ($this->PDOerror) {
             $response['success'] = false;

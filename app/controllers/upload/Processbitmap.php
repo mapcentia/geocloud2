@@ -24,7 +24,7 @@ class Processbitmap extends \app\inc\Controller
         // Create new table
         $table = new Table($safeName);
         $res = $table->createAsRasterTable($srid);
-        // Set layer editable
+        // Set bitmapsource
         $join = new Table("settings.geometry_columns_join");
         $json = '{"data":{"bitmapsource":"'.$file.'","_key_":"' . $key . '"}}';
         $data = (array)json_decode(urldecode($json));

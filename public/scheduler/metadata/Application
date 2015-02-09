@@ -1,0 +1,28 @@
+{
+    "type": "Ext.app.Application",
+    "reference": {
+        "name": "items",
+        "type": "array"
+    },
+    "codeClass": null,
+    "userConfig": {
+        "models": [
+            "MyModel",
+            "SchemaModel"
+        ],
+        "stores": [
+            "MyJsonStore",
+            "SchemaStore"
+        ],
+        "views": [
+            "MyViewport",
+            "MyWindow"
+        ],
+        "autoCreateViewport": true,
+        "controllers": [
+            "MyController"
+        ],
+        "name": "MyApp"
+    },
+    "designerId": "application"
+}

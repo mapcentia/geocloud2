@@ -38,8 +38,8 @@ include("html_header.php");
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?0494cd822345d162"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?9890f37fd070dd05"></script>
-<script type="text/javascript" src="/api/v3/js/geocloud.js?a439ffa6e8bc2dd0" type="text/javascript"></script>
-<script type="text/javascript" src="/js/wfseditor.js?f2d620342775fa40"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js?91d5c4b0a2fc30d9" type="text/javascript"></script>
+<script type="text/javascript" src="/js/wfseditor.js?29465d09f1460950"></script>
 <script type="text/javascript" src="/js/attributeform.js?257465ed180e5e84"></script>
 <script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
 <script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>

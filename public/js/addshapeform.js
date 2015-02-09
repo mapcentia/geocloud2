@@ -19,7 +19,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif", "zip", "rar"], geoType, encoding, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif", "zip", "rar"], geoType, encoding, ignoreErrors, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/vector',
@@ -34,7 +34,7 @@ addShape.init = function () {
                             geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
                             $.ajax({
                                 url: '/controllers/upload/processvector',
-                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding,
+                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding + "&ignoreerrors=" + ignoreErrors,
                                 dataType: 'json',
                                 type: 'GET',
                                 success: function (response) {
@@ -66,6 +66,7 @@ addShape.init = function () {
                     BeforeUpload: function (up, file) {
                         geoType = Ext.getCmp('geotype').getValue();
                         encoding = Ext.getCmp('encoding').getValue();
+                        ignoreErrors = Ext.getCmp('ignoreErrors').getValue();
                         srs = Ext.getCmp('srs').getValue();
                         up.settings.multipart_params = {
                             name: file.name
@@ -81,14 +82,12 @@ addShape.init = function () {
                     e.fadeOut(500).fadeIn(500);
                 }, 500);
                 window.setTimeout(function () {
-                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .gdb*" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The gdb folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above"));
+                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .gdb*" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above"));
                 }, 1000);
             }, 200);
         },
         tbar: [
-            {
-                text: 'Epsg:'
-            },
+            'Epsg:',
             {
                 width: 60,
                 xtype: 'textfield',
@@ -96,9 +95,8 @@ addShape.init = function () {
                 value: window.gc2Options.epsg
 
             },
-            {
-                text: __('Type') + ":"
-            },
+            ' ',
+            __('Type'),
             {
                 width: 80,
                 xtype: 'combo',
@@ -133,9 +131,8 @@ addShape.init = function () {
                     ]
                 })
             },
-            {
-                text: __('Encoding') + ":"
-            },
+            ' ',
+             __('Encoding'),
             {
                 width: 150,
                 xtype: 'combo',
@@ -195,6 +192,12 @@ addShape.init = function () {
                         {name: "WIN1258", value: "WIN1258"}
                     ]
                 })
+            },
+            ' ',
+            __('Ignore errors'),
+            {
+                xtype: 'checkbox',
+                id: 'ignoreErrors'
             }
         ]
     });

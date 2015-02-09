@@ -11,6 +11,7 @@ class Response
     static function toJson($response)
     {
         $callback = Input::get('jsonp_callback');
+        header("Access-Control-Allow-Origin: *");
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');
             return $callback . '(' . json_encode($response) . ');';

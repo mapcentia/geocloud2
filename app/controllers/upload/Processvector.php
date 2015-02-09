@@ -79,8 +79,8 @@ class Processvector extends \app\inc\Controller
                 }
             }
         }
-        $srid = ($_REQUEST['srid']) ? : "4326";
-        $encoding = ($_REQUEST['encoding']) ? : "LATIN1";
+        $srid = ($_REQUEST['srid']) ?: "4326";
+        $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
 
         switch ($_REQUEST['type']) {
             case "Point":
@@ -100,13 +100,14 @@ class Processvector extends \app\inc\Controller
                 break;
         }
         $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+            (($_REQUEST["ignoreerrors"] == "true") ? "-skipfailures " : "") .
             "-overwrite " .
             "-dim 2 " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln {$safeName} " .
             "-nlt {$type}";
@@ -151,6 +152,8 @@ class Processvector extends \app\inc\Controller
             $response['success'] = true;
             $response['message'] = "Layer <b>{$safeName}</b> is created";
             $response['type'] = $geoType;
+            // Bust cache, in case of layer already exist
+            \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $safeName);
         } else {
 
             $response['success'] = false;

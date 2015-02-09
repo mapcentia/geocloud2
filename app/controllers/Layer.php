@@ -21,11 +21,9 @@ class Layer extends \app\inc\Controller
     public function get_groups()
     {
         $groups = $this->table->getGroupBy("layergroup");
-        if (array_search(array("group" => "_gc2_hide_in_viewer"), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => "_gc2_hide_in_viewer"), $groups["data"])]);
-        $groups["data"] = array_values($groups["data"]);
         if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
         $groups["data"] = array_values($groups["data"]);
-        array_unshift($groups["data"], array("group" => ""), array("group" => "_gc2_hide_in_viewer"));
+        array_unshift($groups["data"], array("group" => ""));
         return $groups;
     }
 

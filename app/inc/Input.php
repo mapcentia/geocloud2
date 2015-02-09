@@ -23,7 +23,7 @@ class Input
                 $query = $_GET;
                 break;
             case "post":
-                $query = $_POST;
+                $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
             case "put":
                 $query = static::parseQueryString(file_get_contents('php://input'), $raw);

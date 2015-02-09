@@ -410,6 +410,7 @@ classWizards.init = function (record) {
                                             i = 3;
                                         }
                                         return i;
+
                                     } else {
                                         return 0;
                                     }
@@ -975,10 +976,10 @@ classWizards.init = function (record) {
                         id: 'wizardLegend',
                         html: ""
                     })
+
                 ]
             })
         ]
-
     });
 };
 

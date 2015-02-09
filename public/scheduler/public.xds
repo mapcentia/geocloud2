@@ -1,0 +1,97 @@
+{
+    "name": "public",
+    "settings": {},
+    "xdsVersion": "2.2.2",
+    "xdsBuild": 991,
+    "schemaVersion": 1,
+    "upgradeVersion": 210000000503,
+    "framework": "ext42",
+    "topInstanceFileMap": {
+        "64fd95c1-abd1-460e-8e87-acfb51fde2de": {
+            "paths": [
+                "metadata/resource/Library"
+            ],
+            "className": "Library"
+        },
+        "c2311713-9db7-468d-a207-293792b60cbc": {
+            "paths": [
+                "metadata/view/MyViewport",
+                "app/view/override/MyViewport.js",
+                "app/view/MyViewport.js",
+                "app/view/Viewport.js"
+            ],
+            "className": "MyViewport"
+        },
+        "219c8580-746b-465e-a8f3-5174ccb0e893": {
+            "paths": [
+                "metadata/controller/MyController",
+                "app/controller/override/MyController.js",
+                "app/controller/MyController.js"
+            ],
+            "className": "MyController"
+        },
+        "35afd42e-aeac-4380-b0f0-9bcebe016ddb": {
+            "paths": [
+                "metadata/view/MyWindow",
+                "app/view/override/MyWindow.js",
+                "app/view/MyWindow.js"
+            ],
+            "className": "MyWindow"
+        },
+        "ed20249e-3db4-4119-9fc7-d71f142e9358": {
+            "paths": [
+                "metadata/store/MyJsonStore",
+                "app/store/override/MyJsonStore.js",
+                "app/store/MyJsonStore.js"
+            ],
+            "className": "MyJsonStore"
+        },
+        "bd2ee9d8-45d5-4989-a423-b21638c35da7": {
+            "paths": [
+                "metadata/model/MyModel",
+                "app/model/override/MyModel.js",
+                "app/model/MyModel.js"
+            ],
+            "className": "MyModel"
+        },
+        "d6b9e932-91e0-4469-848a-df7f12caf2f3": {
+            "paths": [
+                "metadata/store/SchemaStore",
+                "app/store/override/SchemaStore.js",
+                "app/store/SchemaStore.js"
+            ],
+            "className": "SchemaStore"
+        },
+        "8cde3751-ecd4-498e-a37f-d281f47e1431": {
+            "paths": [
+                "metadata/model/SchemaModel",
+                "app/model/override/SchemaModel.js",
+                "app/model/SchemaModel.js"
+            ],
+            "className": "SchemaModel"
+        }
+    },
+    "viewOrderMap": {
+        "view": [
+            "c2311713-9db7-468d-a207-293792b60cbc",
+            "35afd42e-aeac-4380-b0f0-9bcebe016ddb"
+        ],
+        "store": [
+            "ed20249e-3db4-4119-9fc7-d71f142e9358",
+            "d6b9e932-91e0-4469-848a-df7f12caf2f3"
+        ],
+        "controller": [
+            "219c8580-746b-465e-a8f3-5174ccb0e893"
+        ],
+        "model": [
+            "bd2ee9d8-45d5-4989-a423-b21638c35da7",
+            "8cde3751-ecd4-498e-a37f-d281f47e1431"
+        ],
+        "resource": [
+            "64fd95c1-abd1-460e-8e87-acfb51fde2de"
+        ],
+        "app": [
+            "application"
+        ]
+    }
+}

@@ -33,13 +33,12 @@ if (typeof gc2map === "undefined") {
         }
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
-                // Load loadDependencies
-                $.getScript(host + "/js/leaflet/leaflet.js");
+                $.getScript(host + "/api/v1/baselayerjs");
+                $.getScript(host + "/js/leaflet/leaflet-all.js?950f422fbabe9382#grunt-cache-bust");
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
                 $.getScript(host + "/js/hogan/hogan-2.0.0.js");
                 $.getScript(host + "/apps/widgets/gc2map/js/bootstrap-alert.js");
-                $.getScript(host + "/api/v1/baselayerjs");
                 (function pollForDependencies() {
                     if (typeof L !== "undefined" &&
                         typeof Proj4js !== "undefined" &&
@@ -47,12 +46,11 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.js?a439ffa6e8bc2dd0#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?92f1e87758e98a45#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?91d5c4b0a2fc30d9#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?e26cfe4c614e1c99#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/templates.js?9751459f2c18d094#grunt-cache-bust");
                         (function pollForDependants() {
-                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && typeof this.Templates !== "undefined") {
+                            if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {
                                 scriptsLoaded = true;
                             } else {
                                 setTimeout(pollForDependants, 10);
@@ -80,7 +78,17 @@ if (typeof gc2map === "undefined") {
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/css/styles.css?fe15deedc44b317d#grunt-cache-bust'
+                    href: host + '/apps/widgets/gc2map/css/styles.css?892a00862126d2bc#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.css?2145c86eef214f53#grunt-cache-bust'
+                }).appendTo('head');
+                $('<link/>').attr({
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: host + '/js/leaflet/plugins/markercluster/MarkerCluster.Default.css?0ba3d71ad0980967#grunt-cache-bust'
                 }).appendTo('head');
                 $('<link/>').attr({
                     rel: 'stylesheet',
@@ -109,6 +117,7 @@ if (typeof gc2map === "undefined") {
                     key: null,
                     clickDistance: 5,
                     baseLayers: null,
+                    template: "body.tmpl",
                     callBack: function () {
                     }
                 },
@@ -149,6 +158,7 @@ if (typeof gc2map === "undefined") {
                             context.id = gc2RandId;
                             context.infoText = defaults.infoText;
                             context.infoTextWidth = defaults.infoTextWidth;
+                            context.height = defaults.height;
                             if (defaults.staticMap) {
                                 if (typeof defaults.extent === "object") {
                                     var p1 = geocloud.transformPoint(defaults.extent[0], defaults.extent[1], "EPSG:4326", "EPSG:900913");
@@ -159,7 +169,7 @@ if (typeof gc2map === "undefined") {
                                     $("#" + gc2RandId).html("<img src='" + defaults.host + "/api/v1/staticmap/png/" + defaults.db + "?baselayer=" + defaults.setBaseLayer.toUpperCase() + "&layers=" + defaults.layers.join(",") + "&size=" + $("#" + gc2RandId).width() + "x" + $("#" + gc2RandId).height() + "&zoom=" + defaults.zoom[2] + "&center=" + defaults.zoom[1] + "," + defaults.zoom[0] + "&lifetime=10'>");
                                 }
                             } else {
-                                $("#" + gc2RandId).html(this.Templates["body.tmpl"].render(context));
+                                $("#" + gc2RandId).html(this.Templates[defaults.template].render(context));
                                 if (defaults.infoText) {
                                     $("#info-text-" + gc2RandId).show();
                                 }
@@ -190,7 +200,6 @@ if (typeof gc2map === "undefined") {
     }());
 }
 /*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
-;
 if ("document" in self && !("classList" in document.createElement("_"))) {
     (function (j) {
         "use strict";
@@ -291,12 +300,5 @@ if ("document" in self && !("classList" in document.createElement("_"))) {
                 m.__defineGetter__(a, i)
             }
         }
-    }(self))
+    }(self));
 }
-;
-
-
-
-
-
-

@@ -76,10 +76,29 @@ class App
         "heroText" => "<h2>GC2 is a geospatial platform built on powerful open source software</h2><p>PostGIS, MapServer, TileCache, Elasticsearch, WMS, WFS-T, SQL API, JavaScript API, OpenLayers, Leaflet and more in one integrated platform.</p>",
 
         // OSM server
-        "osmConfig" => array(
-            "server" => "hostaddr=127.0.0.1 port=5432 dbname=osm user=postgres password=1234",
-            "schemas" => array("DK"),
+        //"osmConfig" => array(
+        //    "server" => "hostaddr=127.0.0.1 port=5432 dbname=osm user=postgres password=1234",
+        //    "schemas" => array("DK"),
+        //),
+
+        //Hide layers without a group in viewer
+        "hideUngroupedLayers" => true,
+
+        // Trust theese IPs
+        "trustedAddresses" => array(
+          "127.0.0.1/32"
         ),
+
+        // Enable Elasticsearch indexing in GUI
+        "esIndexingInGui" => true,
+
+        // Enable gc2scheduler
+        "gc2scheduler" => array(
+            "mydb" => false,
+        ),
+
+        // Use API key for Elasticsearch Search API
+        "useKeyForSearch" => false,
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

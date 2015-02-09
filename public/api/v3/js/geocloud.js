@@ -93,7 +93,7 @@ geocloud = (function () {
             q: null,
             name: "Vector",
             id: null,
-            rendererOptions: { zIndexing: true },
+            rendererOptions: {zIndexing: true},
             projection: (MAPLIB === "leaflet") ? "4326" : "900913",
             //Only leaflet
             pointToLayer: function (feature, latlng) {
@@ -110,7 +110,10 @@ geocloud = (function () {
             clientEncoding: "UTF8",
             async: true,
             jsonp: true,
-            method: "GET"
+            method: "GET",
+            clickable: true,
+            error: function () {
+            }
         };
         this.hide = function () {
             this.layer.setVisibility(false);
@@ -144,13 +147,14 @@ geocloud = (function () {
                     this.layer = L.geoJson(null, {
                         style: this.defaults.styleMap,
                         pointToLayer: this.defaults.pointToLayer,
-                        onEachFeature: this.defaults.onEachFeature
+                        onEachFeature: this.defaults.onEachFeature,
+                        clickable: this.defaults.clickable
                     });
                     this.layer.id = this.defaults.name;
                     break;
             }
         };
-        this.geoJSON = {};
+        this.geoJSON = null;
         this.featureStore = null;
         this.reset = function () {
             switch (MAPLIB) {
@@ -231,9 +235,12 @@ geocloud = (function () {
                                     me.layer.addData(response);
                                     break;
                             }
+                        } else {
+                            me.geoJSON = null;
                         }
                     }
                 },
+                error: this.defaults.error,
                 complete: function () {
                     me.onLoad();
                 }
@@ -439,9 +446,17 @@ geocloud = (function () {
         //Load css
         if (MAPLIB === "leaflet") {
             // The css
-            $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/js/leaflet/leaflet.css' }).appendTo('head');
+            $('<link/>').attr({
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: host + '/js/leaflet/leaflet.css'
+            }).appendTo('head');
         }
-        $('<link/>').attr({ rel: 'stylesheet', type: 'text/css', href: host + '/api/v3/css/styles.css?b1639e04e4f6da62#grunt-cache-bust' }).appendTo('head');
+        $('<link/>').attr({
+            rel: 'stylesheet',
+            type: 'text/css',
+            href: host + '/api/v3/css/styles.css?b1639e04e4f6da62#grunt-cache-bust'
+        }).appendTo('head');
 
         this.bingApiKey = null;
         this.digitalGlobeKey = null;
@@ -682,8 +697,7 @@ geocloud = (function () {
             case "ol3":
                 this.map = new ol.Map({
                     target: defaults.el,
-                    view: new ol.View2D({
-                    })
+                    view: new ol.View2D({})
                     //renderers: ol.RendererHints.createFromQueryData()
                 });
                 break;
@@ -882,6 +896,7 @@ geocloud = (function () {
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
             }
+
             (function poll() {
                 if (typeof google !== "undefined" && typeof google.maps !== "undefined") {
                     switch (MAPLIB) {
@@ -909,7 +924,7 @@ geocloud = (function () {
                     }
                     return (l);
                 } else {
-                    setTimeout(poll, 10);
+                    setTimeout(poll, 100);
                 }
             }());
         };
@@ -965,7 +980,6 @@ geocloud = (function () {
                     l = new OpenLayers.Layer.XYZ(
                         type,
                         "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}"
-
                     );
                     this.map.addLayer(l);
                     l.setVisibility(false);
@@ -1114,7 +1128,7 @@ geocloud = (function () {
                             break;
                     }
                 } else {
-                    setTimeout(poll, 10);
+                    setTimeout(poll, 200);
                 }
             }());
         };
@@ -1422,12 +1436,14 @@ geocloud = (function () {
                         features = wkt.read(elements[i]);
                         queryLayers[i] = new OpenLayers.Layer.Vector(null, {
                             displayInLayerSwitcher: false,
-                            styleMap: new OpenLayers.StyleMap({'default': new OpenLayers.Style({
-                                strokeColor: '#000000',
-                                strokeWidth: 3,
-                                fillOpacity: 0,
-                                strokeOpacity: 0.8
-                            })})
+                            styleMap: new OpenLayers.StyleMap({
+                                'default': new OpenLayers.Style({
+                                    strokeColor: '#000000',
+                                    strokeWidth: 3,
+                                    fillOpacity: 0,
+                                    strokeOpacity: 0.8
+                                })
+                            })
                         });
                         geometry = features.geometry.transform(
                             new OpenLayers.Projection('EPSG:4326'),
@@ -1880,38 +1896,52 @@ if (geocloud.MAPLIB === "leaflet") {
         "use strict";
         L.AwesomeMarkers = {};
         L.AwesomeMarkers.version = "2.0.1";
-        L.AwesomeMarkers.Icon = L.Icon.extend({options: {iconSize: [35, 45], iconAnchor: [17, 42], popupAnchor: [1, -32], shadowAnchor: [10, 12], shadowSize: [36, 16], className: "awesome-marker", prefix: "glyphicon", spinClass: "fa-spin", icon: "home", markerColor: "blue", iconColor: "white"}, initialize: function (e) {
-            e = L.Util.setOptions(this, e)
-        }, createIcon: function () {
-            var e = t.createElement("div"), n = this.options;
-            n.icon && (e.innerHTML = this._createInner());
-            n.bgPos && (e.style.backgroundPosition = -n.bgPos.x + "px " + -n.bgPos.y + "px");
-            this._setIconStyles(e, "icon-" + n.markerColor);
-            return e
-        }, _createInner: function () {
-            var e, t = "", n = "", r = "", i = this.options;
-            i.icon.slice(0, i.prefix.length + 1) === i.prefix + "-" ? e = i.icon : e = i.prefix + "-" + i.icon;
-            i.spin && typeof i.spinClass == "string" && (t = i.spinClass);
-            i.iconColor && (i.iconColor === "white" || i.iconColor === "black" ? n = "icon-" + i.iconColor : r = "style='color: " + i.iconColor + "' ");
-            return"<i " + r + "class='" + i.prefix + " " + e + " " + t + " " + n + "'></i>"
-        }, _setIconStyles: function (e, t) {
-            var n = this.options, r = L.point(n[t === "shadow" ? "shadowSize" : "iconSize"]), i;
-            t === "shadow" ? i = L.point(n.shadowAnchor || n.iconAnchor) : i = L.point(n.iconAnchor);
-            !i && r && (i = r.divideBy(2, !0));
-            e.className = "awesome-marker-" + t + " " + n.className;
-            if (i) {
-                e.style.marginLeft = -i.x + "px";
-                e.style.marginTop = -i.y + "px"
+        L.AwesomeMarkers.Icon = L.Icon.extend({
+            options: {
+                iconSize: [35, 45],
+                iconAnchor: [17, 42],
+                popupAnchor: [1, -32],
+                shadowAnchor: [10, 12],
+                shadowSize: [36, 16],
+                className: "awesome-marker",
+                prefix: "glyphicon",
+                spinClass: "fa-spin",
+                icon: "home",
+                markerColor: "blue",
+                iconColor: "white"
+            }, initialize: function (e) {
+                e = L.Util.setOptions(this, e)
+            }, createIcon: function () {
+                var e = t.createElement("div"), n = this.options;
+                n.icon && (e.innerHTML = this._createInner());
+                n.bgPos && (e.style.backgroundPosition = -n.bgPos.x + "px " + -n.bgPos.y + "px");
+                this._setIconStyles(e, "icon-" + n.markerColor);
+                return e
+            }, _createInner: function () {
+                var e, t = "", n = "", r = "", i = this.options;
+                i.icon.slice(0, i.prefix.length + 1) === i.prefix + "-" ? e = i.icon : e = i.prefix + "-" + i.icon;
+                i.spin && typeof i.spinClass == "string" && (t = i.spinClass);
+                i.iconColor && (i.iconColor === "white" || i.iconColor === "black" ? n = "icon-" + i.iconColor : r = "style='color: " + i.iconColor + "' ");
+                return "<i " + r + "class='" + i.prefix + " " + e + " " + t + " " + n + "'></i>"
+            }, _setIconStyles: function (e, t) {
+                var n = this.options, r = L.point(n[t === "shadow" ? "shadowSize" : "iconSize"]), i;
+                t === "shadow" ? i = L.point(n.shadowAnchor || n.iconAnchor) : i = L.point(n.iconAnchor);
+                !i && r && (i = r.divideBy(2, !0));
+                e.className = "awesome-marker-" + t + " " + n.className;
+                if (i) {
+                    e.style.marginLeft = -i.x + "px";
+                    e.style.marginTop = -i.y + "px"
+                }
+                if (r) {
+                    e.style.width = r.x + "px";
+                    e.style.height = r.y + "px"
+                }
+            }, createShadow: function () {
+                var e = t.createElement("div");
+                this._setIconStyles(e, "shadow");
+                return e
             }
-            if (r) {
-                e.style.width = r.x + "px";
-                e.style.height = r.y + "px"
-            }
-        }, createShadow: function () {
-            var e = t.createElement("div");
-            this._setIconStyles(e, "shadow");
-            return e
-        }});
+        });
         L.AwesomeMarkers.icon = function (e) {
             return new L.AwesomeMarkers.Icon(e)
         }

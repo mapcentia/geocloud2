@@ -376,9 +376,9 @@ class Mapfile extends \app\inc\Controller
                         CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'" ?>"
                     <?php
                     } else {
-                        echo "DATA \"PG:host=" . Connection::$param['postgishost'];
+                        echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
                         if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport']);
-                        echo " dbname='" . Connection::$param['postgisdb'] . "' user='postgres' password='" . Connection::$param['postgispw'] . "'
+                        echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
                     }
@@ -386,6 +386,9 @@ class Mapfile extends \app\inc\Controller
                     TYPE <?php echo $type . "\n"; ?>
 
                 <?php } ?>
+                #OFFSITE
+                <?php if ($layerArr['data'][0]['offsite']) echo "OFFSITE " . $layerArr['data'][0]['offsite'] . "\n"; ?>
+
                 #CLASSITEM
                 <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
 
@@ -444,7 +447,7 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) && (!$row['bitmapsource'])) {
+                if (is_array($classArr['data'])) {
                     foreach ($classArr['data'] as $class) {
                         ?>
                         CLASS
@@ -589,6 +592,11 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                             <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
                             <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+
+                            <?php if ($class['label_expression']) {
+                                echo "EXPRESSION (" . $class['label_expression'] . ")\n";
+                            }
+                            ?>
                             #ANGLE
                             <?php
                             if ($class['label_angle']) {
@@ -652,6 +660,11 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
                             <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
                             <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+
+                            <?php if ($class['label2_expression']) {
+                                echo "EXPRESSION (" . $class['label2_expression'] . ")\n";
+                            }
+                            ?>
                             #ANGLE
                             <?php
                             if ($class['label2_angle']) {

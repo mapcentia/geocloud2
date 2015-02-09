@@ -337,6 +337,9 @@ wmsClass.init = function (id) {
             {
                 name: "label_fontweight"
             },
+            {
+                name: "label_expression"
+            },
 
             // label22 start
             {
@@ -394,6 +397,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: "label2_fontweight"
+            },
+            {
+                name: "label2_expression"
             },
 
             // Leader start
@@ -528,7 +534,8 @@ wmsClass.init = function (id) {
                             'label_backgroundcolor',
                             'label_backgroundpadding',
                             'label_offsetx',
-                            'label_offsety'
+                            'label_offsety',
+                            'label_expression'
                         ];
                         Ext.each(arr4, function (i, v) {
                             obj4[i] = store.getAt(0).data[i];
@@ -556,7 +563,8 @@ wmsClass.init = function (id) {
                             'label2_backgroundcolor',
                             'label2_backgroundpadding',
                             'label2_offsetx',
-                            'label2_offsety'
+                            'label2_offsety',
+                            'label2_expression'
                         ];
                         Ext.each(arr5, function (i, v) {
                             obj5[i] = store.getAt(0).data[i];
@@ -995,8 +1003,8 @@ wmsClass.init = function (id) {
             label_offsetx: 'Label: offset X',
             label_offsety: 'Label: offset Y',
             label_font: 'Label: font',
-            label_fontweight: 'Label: font weight'
-
+            label_fontweight: 'Label: font weight',
+            label_expression: 'Label: expression'
         },
         customEditors: {
             'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1173,8 +1181,8 @@ wmsClass.init = function (id) {
             label2_offsetx: 'Label: offset X',
             label2_offsety: 'Label: offset Y',
             label2_font: 'Label: font',
-            label2_fontweight: 'Label: font weight'
-
+            label2_fontweight: 'Label: font weight',
+            label2_expression: 'Label: expression'
         },
         customEditors: {
             'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({

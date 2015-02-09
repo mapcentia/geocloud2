@@ -5,12 +5,13 @@ use \app\conf\App;
 use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
+use \app\models\Table;
 
 class Processraster extends \app\inc\Controller
 {
     public function get_index()
     {
-        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__rasters";
+        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps";
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
 
         if (is_numeric($safeName[0])) {
@@ -24,7 +25,7 @@ class Processraster extends \app\inc\Controller
             $srid .
             " -I -C -M -d " .
             $dir . "/" . $_REQUEST['file'] .
-            " -F " .
+            " -F" .
             " -t 100x100 " .
             Connection::$param["postgisschema"] . "." . $safeName .
             " | psql " .
@@ -62,6 +63,12 @@ class Processraster extends \app\inc\Controller
             if (empty($arr['data'])) {
                 $class->insert();
                 $class->update("0", \app\models\Classification::createClass("POLYGON"));
+            }
+            if ($_REQUEST['displayfile']) {
+                $join = new Table("settings.geometry_columns_join");
+                $json = '{"data":{"bitmapsource":"' . $_REQUEST['file'] . '","_key_":"' . $key . '"}}';
+                $data = (array)json_decode(urldecode($json));
+                $join->updateRecord($data, "_key_");
             }
 
         } else {
