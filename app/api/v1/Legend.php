@@ -112,7 +112,7 @@ class Legend extends \app\inc\Controller
                         }
                     }
                 }
-                $html .= "</table></div>";
+                $html .= "</table>";
             }
         }
         $response['html'] = $html;
