@@ -6,10 +6,10 @@
     },
     "codeClass": null,
     "userConfig": {
+        "designer|userClassName": "MyController",
         "stores": [
             "MyJsonStore"
-        ],
-        "designer|userClassName": "MyController"
+        ]
     },
     "designerId": "219c8580-746b-465e-a8f3-5174ccb0e893",
     "cn": [
@@ -21,6 +21,8 @@
             },
             "codeClass": null,
             "userConfig": {
+                "designer|controlQuery": "button#new",
+                "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick",
                 "implHandler": [
                     "var wind = new MyApp.view.MyWindow();",
@@ -29,10 +31,9 @@
                     "Ext.ComponentQuery.query('#update')[0].setVisible(false);"
                 ],
                 "name": "click",
-                "scope": "me",
-                "designer|targetType": "Ext.button.Button",
-                "designer|controlQuery": "button#new"
+                "scope": "me"
             },
+            "name": "onButtonClick",
             "designerId": "f7a28765-67a7-4cfd-91f6-7e8ac82a15dc"
         },
         {
@@ -43,6 +44,8 @@
             },
             "codeClass": null,
             "userConfig": {
+                "designer|controlQuery": "button#delete",
+                "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick1",
                 "implHandler": [
                     "Ext.Msg.confirm(\"Confirmation\", \"Do you really want to delete the job?\", function(btnText){",
@@ -57,10 +60,9 @@
                     ""
                 ],
                 "name": "click",
-                "scope": "me",
-                "designer|targetType": "Ext.button.Button",
-                "designer|controlQuery": "button#delete"
+                "scope": "me"
             },
+            "name": "onButtonClick1",
             "designerId": "cad0eeae-7887-4945-a2de-8eba85f1c003"
         },
         {
@@ -71,6 +73,8 @@
             },
             "codeClass": null,
             "userConfig": {
+                "designer|controlQuery": "button#save",
+                "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick2",
                 "implHandler": [
                     "if (Ext.ComponentQuery.query('#form')[0].isValid() === false){",
@@ -83,10 +87,9 @@
                     ""
                 ],
                 "name": "click",
-                "scope": "me",
-                "designer|targetType": "Ext.button.Button",
-                "designer|controlQuery": "button#save"
+                "scope": "me"
             },
+            "name": "onButtonClick2",
             "designerId": "089c83fb-8d60-40a0-854c-760deea3dd88"
         },
         {
@@ -97,6 +100,8 @@
             },
             "codeClass": null,
             "userConfig": {
+                "designer|controlQuery": "button#edit",
+                "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick3",
                 "implHandler": [
                     "var wind = new MyApp.view.MyWindow();",
@@ -111,10 +116,9 @@
                     "wind.down('form').loadRecord(record);"
                 ],
                 "name": "click",
-                "scope": "me",
-                "designer|targetType": "Ext.button.Button",
-                "designer|controlQuery": "button#edit"
+                "scope": "me"
             },
+            "name": "onButtonClick3",
             "designerId": "7c79a43d-c2a0-4ad7-95d5-a78e8037f4a7"
         },
         {
@@ -125,6 +129,8 @@
             },
             "codeClass": null,
             "userConfig": {
+                "designer|controlQuery": "button#update",
+                "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick4",
                 "implHandler": [
                     "if (Ext.ComponentQuery.query('#form')[0].isValid() === false){",
@@ -138,10 +144,9 @@
                     ""
                 ],
                 "name": "click",
-                "scope": "me",
-                "designer|targetType": "Ext.button.Button",
-                "designer|controlQuery": "button#update"
+                "scope": "me"
             },
+            "name": "onButtonClick4",
             "designerId": "b45326a8-e968-41b9-a6d0-23812119694f"
         }
     ]

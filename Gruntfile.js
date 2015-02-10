@@ -188,6 +188,20 @@ module.exports = function (grunt) {
                 src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
                 dest: 'public/apps/widgets/gc2map/js/gc2map.js'
             }
+        },
+        gitfetch: {
+            production: {
+                options: {
+                    all: true
+                }
+            }
+        },
+        gitreset: {
+            production: {
+                options: {
+                    hard: true
+                }
+            }
         }
     });
     grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -198,9 +212,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-templates-hogan');
     grunt.loadNpmTasks('grunt-cache-bust');
     grunt.loadNpmTasks('grunt-preprocess');
+    grunt.loadNpmTasks('grunt-git');
 
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('production', ['gitfetch', 'gitreset', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
 };
 
 

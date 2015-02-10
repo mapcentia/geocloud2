@@ -7,9 +7,9 @@
     "codeClass": null,
     "userConfig": {
         "autoLoad": false,
+        "designer|userClassName": "SchemaStore",
         "model": "SchemaModel",
-        "storeId": "SchemaStore",
-        "designer|userClassName": "SchemaStore"
+        "storeId": "SchemaStore"
     },
     "designerId": "d6b9e932-91e0-4469-848a-df7f12caf2f3",
     "cn": [
@@ -23,6 +23,7 @@
             "userConfig": {
                 "url": "/controllers/database/schemas"
             },
+            "name": "MyRestProxy1",
             "designerId": "7f2b0d0e-1e90-401c-9150-25cac533a7b5",
             "cn": [
                 {
@@ -35,6 +36,7 @@
                     "userConfig": {
                         "root": "data"
                     },
+                    "name": "MyJsonReader1",
                     "designerId": "766a4130-31b3-4bfb-a378-a5fa8864985c"
                 }
             ]

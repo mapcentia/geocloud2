@@ -8,11 +8,11 @@
     "userConfig": {
         "autoLoad": true,
         "autoSync": true,
-        "model": "MyModel",
-        "storeId": "MyJsonStore",
-        "designer|userClassName": "MyJsonStore",
+        "data": null,
         "designer|userAlias": null,
-        "data": null
+        "designer|userClassName": "MyJsonStore",
+        "model": "MyModel",
+        "storeId": "MyJsonStore"
     },
     "designerId": "ed20249e-3db4-4119-9fc7-d71f142e9358",
     "cn": [
@@ -31,9 +31,10 @@
                     "                    destroy: '/controllers/job'",
                     "                }"
                 ],
-                "url": "/controllers/job",
-                "format": null
+                "format": null,
+                "url": "/controllers/job"
             },
+            "name": "MyRestProxy",
             "designerId": "f59a86ee-3f17-40eb-bf00-6d74ffa36f53",
             "cn": [
                 {
@@ -46,6 +47,7 @@
                     "userConfig": {
                         "root": "data"
                     },
+                    "name": "MyJsonReader",
                     "designerId": "873ace1f-86b3-45b3-902f-51fe7c70c111"
                 },
                 {
@@ -66,6 +68,7 @@
                         "name": "exception",
                         "scope": "me"
                     },
+                    "name": "onRestException",
                     "designerId": "689c557d-88f5-4da2-81f1-43777ab65240"
                 }
             ]
@@ -85,6 +88,7 @@
                 "name": "load",
                 "scope": "me"
             },
+            "name": "onJsonstoreLoad",
             "designerId": "79040c04-4a42-4f49-9046-d78653dc494d"
         },
         {
@@ -102,6 +106,7 @@
                 "name": "write",
                 "scope": "me"
             },
+            "name": "onJsonstoreWrite",
             "designerId": "71a4cf1b-e429-491c-b1d6-b27ed731ac76"
         }
     ]
