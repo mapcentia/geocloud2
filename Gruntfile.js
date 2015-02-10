@@ -189,11 +189,9 @@ module.exports = function (grunt) {
                 dest: 'public/apps/widgets/gc2map/js/gc2map.js'
             }
         },
-        gitfetch: {
+        gitpull: {
             production: {
-                options: {
-                    all: true
-                }
+                options: {}
             }
         },
         gitreset: {
@@ -215,7 +213,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-git');
 
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['gitfetch', 'gitreset', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
 };
 
 
