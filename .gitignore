@@ -17,7 +17,6 @@ public/logs
 
 .idea/
 .vagrant/
-geocloud2.bbprojectd/
 Vagrantfile
 
 
