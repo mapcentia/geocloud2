@@ -58,7 +58,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                                 catch (e) {
                                     alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
                                 }
-                            } else if (columnsForGrid[i].typeObj.type === "int" || validProperties === false) {
+                            } else if (columnsForGrid[i].typeObj.type === "int") {
                                 columnsForGrid[i].editor = new Ext.form.NumberField({
                                     decimalPrecision: 0,
                                     decimalSeparator: '¤'// Some strange char nobody is using
@@ -71,9 +71,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                             } else if (columnsForGrid[i].typeObj.type === "string") {
                                 columnsForGrid[i].editor = new Ext.form.TextField();
                             } else if (columnsForGrid[i].typeObj.type === "text") {
-                                columnsForGrid[i].editor = new Ext.form.TextArea();
+                                columnsForGrid[i].editor = new Ext.form.TextField();
                             }
-
                         }
                     }
                 }
