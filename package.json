@@ -23,12 +23,13 @@
     "grunt-contrib-cssmin": "^0.10.0",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-contrib-uglify": "^0.6.0",
+    "grunt-git": "~0.3.3",
     "grunt-preprocess": "^4.0.0",
     "grunt-processhtml": "^0.3.3",
     "grunt-templates-hogan": "^0.2.5",
-    "pg": "~4.2.0",
     "nconf": "~0.7.1",
-    "winston": "~0.8.3",
-    "grunt-git": "~0.3.3"
+    "pg": "~4.2.0",
+    "request": "^2.53.0",
+    "winston": "~0.8.3"
   }
 }

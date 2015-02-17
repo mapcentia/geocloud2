@@ -25,10 +25,12 @@ if ($handle = opendir($dir)) {
             $zipCheck1 = explode(".", $entry);
             $zipCheck2 = array_reverse($zipCheck1);
             $groupArr = explode("_", $entry);
-            if (strtolower($zipCheck2[0]) == "tidf") {
+            if (strtolower($zipCheck2[0]) == "tif") {
                 for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                     $safeNameArr[] = $zipCheck1[$i];
                 }
+
+
                 $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
                 $cmd = "raster2pgsql -s 32612 -I -C -M -d {$dir}{$entry} -F -t 100x100  {$schema}.{$safeName} | psql {$db} -U postgres";
                 $cmd2 = "gdalbuildvrt -overwrite temp.vrt  {$dir}{$entry}";
@@ -53,6 +55,7 @@ if ($handle = opendir($dir)) {
                 $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->SrcRect[0]["ySize"] = $y;
                 $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->DstRect[0]["xSize"] = $x;
                 $vrtTmplXml->VRTDataset->VRTRasterBand->ComplexSource->DstRect[0]["ySize"] = $y;
+                $vrtTmplXml->VRTDataset->VRTRasterBand->SrcRegion = "MULTIPOLYGON(((475878.567522148 5634238.96786163,421880.519161681 5455327.6441447,421788.255044374 5455328.15830453,421692.51245996 5455327.02052227,421596.804312962 5455324.21172581,421501.159770055 5455319.73277077,421405.607978449 5455313.58502193,421310.178057198 5455305.77035291,421214.899088092 5455296.29114551,421160.420944168 5455289.90905536,244828.614572899 5509108.73814989,298668.811267234 5687142.53349968,298680.135719297 5687141.10670416,298775.910923941 5687130.7342098,298871.852490184 5687122.03460461,298967.931203687 5687115.01053464,299064.117808525 5687109.66413595,299160.383016066 5687105.99703396,299256.697513696 5687104.01034288,299353.031974052 5687103.70466548,299359.241021783 5687103.79333089,475878.567522148 5634238.96786163)))";
 
                 $vrt = sprintf($vrtTmplXml->VRTDataset->asXML(), $entry);
                 $vrtFileName = $entry . ".vrt";

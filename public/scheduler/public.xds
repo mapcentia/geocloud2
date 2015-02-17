@@ -10,8 +10,9 @@
                 "width": null
             }
         },
-        "urlPrefix": "",
-        "exportPath": ""
+        "urlPrefix": "http://localhost/public/",
+        "exportPath": "",
+        "projectHasEnabledWebServer": false
     },
     "xdsVersion": "3.1.0",
     "xdsBuild": 1943,
