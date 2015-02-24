@@ -472,7 +472,7 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
-        var layers = {}, jRes, node, modalFlag, extent = null, i;
+        var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [];
 
         $('.share-text').mouseup(function () {
             return false;
@@ -502,6 +502,7 @@ Viewer = function () {
                 $("#base-layer-list").append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
                 );
+                addedBaseLayers.push(window.setBaseLayers[i]);
             }
         }
         $("#locate-btn").on("click", function () {
@@ -715,7 +716,7 @@ Viewer = function () {
                     cloud.zoomToPoint(p.x, p.y, hashArr[1]);
                 }
             } else {
-                setBaseLayer(window.setBaseLayers[0].id);
+                setBaseLayer(addedBaseLayers[0].id);
                 if (extent !== null) {
                     cloud.zoomToExtent(extent);
                 } else {
