@@ -517,7 +517,7 @@ var mygeocloud_ol = (function () {
                     o = this.addHere("hereNormalNightGrey");
                     break;
                 default : // Try to add as tile layer
-                    this.addTileLayers([l], {
+                    o = this.addTileLayers([l], {
                         db: db,
                         isBaseLayer: true,
                         visibility: false,
@@ -525,7 +525,7 @@ var mygeocloud_ol = (function () {
                         displayInLayerSwitcher: true,
                         name: lName,
                         altId: altId
-                    });
+                    })[0];
                     break;
             }
             return o;

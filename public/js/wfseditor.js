@@ -9,7 +9,7 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, addedBaseLayers=[];
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -525,12 +525,14 @@ $(document).ready(function () {
     window.setBaseLayers = window.setBaseLayers.reverse();
     var altId, lName;
     for (var i = 0; i < window.setBaseLayers.length; i++) {
-        // Local base layer
-        if (typeof window.setBaseLayers[i].db !== "undefined") {
-            altId = window.setBaseLayers[i].id + window.setBaseLayers[i].db;
-            lName = window.setBaseLayers[i].name;
-        }
-        bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+        if (typeof window.setBaseLayers[i].restrictTo === "undefined" || window.setBaseLayers[i].restrictTo.indexOf(schema) > -1) {
+            // Local base layer
+            if (typeof window.setBaseLayers[i].db !== "undefined") {
+                altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
+                lName = window.setBaseLayers[i].name;
+            }
+            bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+       }
     }
     if (bl !== null) {
         cloud.setBaseLayer(bl);
