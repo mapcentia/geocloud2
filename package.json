@@ -4,7 +4,6 @@
   "description": "GC2 is a open source project that ties PostGIS, MapServer, TileCache, WFS, WMS, OpenLayers and Leaflet together in one integrated geospatial solution.",
   "main": "Gruntfile.js",
   "scripts": {
-    "preinstall": "sudo npm i -g forever"
   },
   "repository": {
     "type": "git",
