@@ -7,22 +7,36 @@ attributeForm.init = function (layer, geomtype) {
         url: '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer,
         listeners: {
             load: {
-                scope: this, fn: function (_store) {
-                    attributeForm.attributeStoreCopy =
-                        new Ext.data.ArrayStore({
-                            fields: ['value', 'name'],
-                            data: [
-
-                            ]
-                        });
+                scope: this,
+                fn: function (_store) {
+                    attributeForm.attributeStoreCopy = new Ext.data.ArrayStore();
                     _store.each(function (record) {
                         var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(record.get("type"));
                         if (!match) {
-                            var newDataRow = {"name": record.get("name"), "value": getFieldType(record.get("type"))};
+                            var newDataRow = {"name": record.get("name"), "value": null};
+                            /*var newDataRow = {
+                             "name": record.get("name"), "value": new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                             store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                             editable: false,
+                             triggerAction: 'all'
+                             }), {})
+                             };*/
                             var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
+
                             attributeForm.attributeStoreCopy.add(newRecord);
                         }
                     }, this);
+                    /*setTimeout(function () {
+                        console.log(attributeForm.form.items.items[0]);
+                        attributeForm.form.items.items[0].setEditor(
+                            new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                                editable: false,
+                                triggerAction: 'all'
+                            }), {})
+                        );
+
+                    }, 100);*/
                     filter.filterBuilder = new gxp.FilterBuilder({
                         attributes: attributeForm.attributeStoreCopy,
                         allowGroups: false
@@ -78,11 +92,11 @@ attributeForm.init = function (layer, geomtype) {
                         height: 400,
                         closeAction: 'hide',
                         plain: true,
-                        items: [ new Ext.Panel({
+                        items: [new Ext.Panel({
                             frame: false,
                             layout: 'border',
                             items: [filter.queryPanel]
-                        }) ]
+                        })]
                     });
                 }
             }
