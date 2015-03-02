@@ -2154,6 +2154,7 @@ GeoExt.form.recordToField = function (i, q) {
     var c = i.get("nillable") || false;
     var o = i.get("label");
     var b = q.labelTpl;
+    // HACK. Render combo box if WFS enumeration
     var arrStore = null;
     if (typeof i.data.restriction !== "undefined") {
         if (typeof i.data.restriction.enumeration !== "undefined") {
@@ -4646,9 +4647,12 @@ GeoExt.plugins.AttributeForm.prototype = {
         this.fillForm()
     }, fillForm: function () {
         this.attributeStore.each(function (a) {
-            var b = GeoExt.form.recordToField(a, Ext.apply({checkboxLabelProperty: "fieldLabel"}, this.recordToFieldOptions || {}));
-            if (b) {
-                this.formPanel.add(b)
+            // HACK. Do not render gc2 system fields
+            if (a.data.name.substring(0, 4) !== "gc2_") {
+                var b = GeoExt.form.recordToField(a, Ext.apply({checkboxLabelProperty: "fieldLabel"}, this.recordToFieldOptions || {}));
+                if (b) {
+                    this.formPanel.add(b)
+                }
             }
         }, this);
         this.formPanel.doLayout()

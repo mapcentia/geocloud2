@@ -14,29 +14,10 @@ attributeForm.init = function (layer, geomtype) {
                         var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(record.get("type"));
                         if (!match) {
                             var newDataRow = {"name": record.get("name"), "value": null};
-                            /*var newDataRow = {
-                             "name": record.get("name"), "value": new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                             store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
-                             editable: false,
-                             triggerAction: 'all'
-                             }), {})
-                             };*/
                             var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
-
                             attributeForm.attributeStoreCopy.add(newRecord);
                         }
                     }, this);
-                    /*setTimeout(function () {
-                        console.log(attributeForm.form.items.items[0]);
-                        attributeForm.form.items.items[0].setEditor(
-                            new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
-                                editable: false,
-                                triggerAction: 'all'
-                            }), {})
-                        );
-
-                    }, 100);*/
                     filter.filterBuilder = new gxp.FilterBuilder({
                         attributes: attributeForm.attributeStoreCopy,
                         allowGroups: false
@@ -106,12 +87,13 @@ attributeForm.init = function (layer, geomtype) {
         autoScroll: true,
         region: 'center',
         border: false,
+        labelWidth: 150,
         bodyStyle: {
             background: '#ffffff',
             padding: '7px'
         },
         defaults: {
-            width: 110,
+            width: 150,
             maxLengthText: "too long",
             minLengthText: "too short"
         },

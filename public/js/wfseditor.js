@@ -279,7 +279,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         layout: 'fit',
         initCenter: true,
         border: false,
-        width: 270,
+        width: 340,
         height: 300,
         closeAction: 'hide',
         plain: true,
