@@ -465,7 +465,6 @@ class Table extends Model
             $response['message'] = $this->PDOerror[0];
         }
         $res = $this->purgeFieldConf($_key_);
-        print_r($res);
         return $response;
     }
 

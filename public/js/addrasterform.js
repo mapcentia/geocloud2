@@ -30,25 +30,40 @@ addRasterFile.init = function () {
                 urlstream_upload: true,
                 init: {
                     UploadComplete: function (up, files) {
-                        Ext.each(arr, function (e) {
-                            flag = true;
-                            $.ajax({
-                                url: '/controllers/upload/processraster',
-                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&displayfile=" + displayFile,
-                                dataType: 'json',
-                                type: 'GET',
-                                success: function (response, textStatus, http) {
-                                    if (response.success) {
-                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
-                                        writeFiles();
-                                        document.getElementById("wfseditor").contentWindow.window.reLoadTree();
-                                        store.load();
-                                    } else {
-                                        Ext.MessageBox.alert(__('Failure'), __(response.message));
-                                    }
+                        // *****
+                        var count = 0;
+                        (function iter() {
+                            var e = arr[count];
+                            if (arr.length === count) {
+                                if (flag) {
+                                    App.setAlert(App.STATUS_NOTICE, __("All files processed"));
+                                    writeFiles();
+                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                    store.load();
                                 }
-                            });
-                        });
+                                spinner(false);
+                                return;
+                            } else {
+                                spinner(true, __("processing " + e.split(".")[0]));
+                                flag = true;
+                                $.ajax({
+                                    url: '/controllers/upload/processraster',
+                                    data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&displayfile=" + displayFile,
+                                    dataType: 'json',
+                                    type: 'GET',
+                                    success: function (response) {
+                                        count = count + 1;
+                                        if (!response.success) {
+                                            Ext.MessageBox.alert(__('Failure'), __(response.message));
+                                        }
+                                        iter();
+                                    },
+                                    failure: function () {
+                                        iter();
+                                    }
+                                });
+                            }
+                        }());
                         if (!flag) {
                             Ext.MessageBox.alert(__('Failure'), __("No files you uploaded seems to be recognized as a valid image format."));
                         }

@@ -210,3 +210,21 @@ q:after, q:before {
 .isview {
     background-color: #d0e7ff;
 }
+#spinner{
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    display: none;
+}
+#spinner img{
+    width: 15px;
+    height: 15px;
+}
+#spinner span {
+    position: absolute;
+    top: 1px;
+    right: 20px;
+    font-family: verdana, arial, sans-serif;
+    font-size: 8pt;
+    white-space: nowrap;
+}

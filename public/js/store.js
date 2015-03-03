@@ -11,12 +11,11 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, spinner;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
     var winAdd, winMoreSettings, fieldsForStore = {}, groups, groupsStore, subUsers;
-
     $.ajax({
         url: '/controllers/layer/columnswithkey',
         async: false,
@@ -128,7 +127,7 @@ $(window).ready(function () {
         viewConfig: {
             forceFit: true,
             stripeRows: true,
-            getRowClass: function(record) {
+            getRowClass: function (record) {
                 return record.json.isview ? 'isview' : null;
             }
         },
@@ -456,8 +455,8 @@ $(window).ready(function () {
             }
         ],
         listeners: {
-            'mouseover' : {
-                fn: function(){
+            'mouseover': {
+                fn: function () {
                 },
                 scope: this
             }
@@ -1954,6 +1953,15 @@ $(window).ready(function () {
                     a6.doLayout();
                 }
             });
+        }
+    };
+    spinner = function(show, text){
+        if (show) {
+            $("#spinner").show();
+            $("#spinner span").html(text);
+        } else {
+            $("#spinner").hide();
+            $("#spinner span").empty();
         }
     };
 });

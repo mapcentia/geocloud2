@@ -380,7 +380,7 @@ tableStructure.init = function (record, screenName) {
                 handler: tableStructure.onDelete
             },
             {
-                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Start track changes"),
+                text: '<i class="icon-plus-sign btn-gc"></i> ' + __("Start track changes"),
                 id: "add-versioning-btn",
                 disabled: true,
                 handler: function () {
@@ -388,7 +388,7 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Stop track changes"),
+                text: '<i class="icon-minus-sign btn-gc"></i> ' + __("Stop track changes"),
                 id: "remove-versioning-btn",
                 disabled: true,
                 handler: function () {
@@ -396,7 +396,7 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-list-alt btn-gc"></i> ' + __("Index in Elasticsearch"),
+                text: '<i class="icon-search btn-gc"></i> ' + __("Index in Elasticsearch"),
                 id: "index-in-elasticsearch-btn",
                 disabled: (window.gc2Options.esIndexingInGui) ? false : true,
                 handler: function () {
@@ -499,9 +499,10 @@ tableStructure.onRemoveVersion = function (record) {
 };
 tableStructure.onIndexInElasticsearch = function (record) {
     "use strict";
-    Ext.MessageBox.confirm(__('Confirm'), __("This will ... . Do you want to proceed?"),
+    Ext.MessageBox.confirm(__('Confirm'), __("This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
+                spinner(true, __("Piping data to Elasticsearch"));
                 var param = "&key=" + settings.api_key + (record.data.triggertable ? "&tt=" + record.data.triggertable : "");
                 Ext.Ajax.request(
                     {
@@ -513,6 +514,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                         },
                         timeout: 300000,
                         success: function (response) {
+                            spinner(false);
                             Ext.MessageBox.show({
                                 title: __("Info"),
                                 msg: "<b>" + __(Ext.decode(response.responseText).message + "</b>, with errors:<b> " + Ext.decode(response.responseText).errors + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
@@ -523,6 +525,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                             });
                         },
                         failure: function (response) {
+                            spinner(false);
                             Ext.MessageBox.show({
                                 title: __("Failure"),
                                 msg: __(Ext.decode(response.responseText).message),
