@@ -197,7 +197,7 @@ module.exports = function (grunt) {
         gitreset: {
             production: {
                 options: {
-                    hard: true
+                    mode: 'hard'
                 }
             }
         }
