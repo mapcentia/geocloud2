@@ -200,6 +200,11 @@ module.exports = function (grunt) {
                     mode: 'hard'
                 }
             }
+        },
+        shell: {
+            migration: {
+                command: 'cd /var/www/geocloud2/app/conf/migration/ && ./run'
+            }
         }
     });
     grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -211,9 +216,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-cache-bust');
     grunt.loadNpmTasks('grunt-preprocess');
     grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-shell');
 
     grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
     grunt.registerTask('production', ['gitreset', 'gitpull', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('migration', ['shell:migration']);
 };
 
 

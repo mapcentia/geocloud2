@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "description": "GC2 is a open source project that ties PostGIS, MapServer, TileCache, WFS, WMS, OpenLayers and Leaflet together in one integrated geospatial solution.",
   "main": "Gruntfile.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "http://github.com/mapcentia/geocloud2.git"
@@ -25,6 +24,7 @@
     "grunt-git": "~0.3.3",
     "grunt-preprocess": "^4.0.0",
     "grunt-processhtml": "^0.3.3",
+    "grunt-shell": "^1.1.2",
     "grunt-templates-hogan": "0.2.5"
   },
   "dependencies": {
