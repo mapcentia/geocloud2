@@ -220,7 +220,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-npm-install');
 
     grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['npm-install', 'gitreset', 'gitpull', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
     grunt.registerTask('migration', ['shell:migration']);
 };
 

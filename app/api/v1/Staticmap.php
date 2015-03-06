@@ -16,6 +16,11 @@ class Staticmap extends \app\inc\Controller
         $this->get_file("png");
     }
 
+    public function post_png()
+    {
+        $this->get_file("png");
+    }
+
     public function get_jpg()
     {
         $this->get_file("jpg");
