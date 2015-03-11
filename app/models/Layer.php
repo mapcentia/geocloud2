@@ -372,8 +372,24 @@ class Layer extends \app\models\Table
         }
         return $response;
     }
-    public function getExtent($layer){
 
+    public function getExtent($_key_, $srs = "4326")
+    {
+        $split = explode(".", $_key_);
+        $srsTmp = $srs;
+        $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymax  FROM {$split[0]}.{$split[1]}";
+        $resExtent = $this->prepare($sql);
+        try {
+            $resExtent->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $resExtent;
+            $response['code'] = 403;
+            return $response;
+        }
+        $extent = $this->fetchRow($resExtent, "assoc");
+        $response['success'] = true;
+        $response['extent'] = $extent;
+        return $response;
     }
 }
-

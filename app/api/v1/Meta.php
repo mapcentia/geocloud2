@@ -24,9 +24,4 @@ class Meta extends \app\inc\Controller
             return $this->layers->getAll(null, $q, Session::isAuth());
         }
     }
-    public function get_extent()
-    {
-        $layer = Input::getPath()->part(6);
-        return $this->layers->getExtent($layer);
-    }
 }
