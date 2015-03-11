@@ -372,6 +372,8 @@ class Layer extends \app\models\Table
         }
         return $response;
     }
+    public function getExtent($layer){
 
+    }
 }
 
