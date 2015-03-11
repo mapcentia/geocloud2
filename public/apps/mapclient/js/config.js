@@ -13,14 +13,17 @@ Ext.namespace("Heron.options.map");
 Ext.namespace("Heron.options.wfs");
 Ext.namespace("Heron.options.center");
 Ext.namespace("Heron.options.zoom");
+Ext.namespace("Heron.options.extentrestrict");
+Ext.namespace("Heron.options.zoomrestrict");
+Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
+Ext.namespace("Heron.options.map.resolutions");
 MapCentia.setup = function () {
     "use strict";
     Heron.globals.serviceUrl = '/cgi/heron.cgi';
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-    //url = '/wms/' + db + '/' + schema,
         url = '/wms/' + db + '/tilecache/' + schema,
         wfsUrl = '/wfs/' + db + '/' + schema;
     $.ajax({
@@ -28,24 +31,46 @@ MapCentia.setup = function () {
         async: false,
         dataType: 'json',
         success: function (response) {
-            if (typeof response.data.extents === "object") {
-                if (typeof response.data.center[schema] === "object") {
-                    Heron.options.zoom = response.data.zoom[schema];
-                    Heron.options.center = response.data.center[schema];
-                }
+            if (typeof response.data.zoom !== "undefined" && typeof response.data.zoom[schema] !== "undefined") {
+                Heron.options.zoom = response.data.zoom[schema];
+            } else {
+                Heron.options.zoom = null;
+            }
+
+            if (typeof response.data.center !== "undefined" && typeof response.data.center[schema] !== "undefined") {
+                Heron.options.center = response.data.center[schema];
+            } else {
+                Heron.options.center = null;
+            }
+
+            if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[schema] !== "undefined") {
+                Heron.options.extentrestrict = response.data.extentrestricts[schema];
+            } else {
+                Heron.options.extentrestrict = null;
+            }
+            if (typeof response.data.zoomrestricts !== "undefined" && typeof response.data.zoomrestricts[schema] !== "undefined") {
+                Heron.options.zoomrestrict = response.data.zoomrestricts[schema];
+            } else {
+                Heron.options.zoomrestrict = null;
             }
         }
     }); // Ajax call end
+
+    Heron.options.map.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
 
     Heron.options.map.settings = {
         projection: 'EPSG:900913',
         displayProjection: new OpenLayers.Projection("EPSG:4326"),
         units: 'm',
-        maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+        maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
+        restrictedExtent: Heron.options.extentrestrict,
         center: Heron.options.center,
-        maxResolution: 'auto',
+        //maxResolution: 'auto',
         //xy_precision: 5,
-        zoom: Heron.options.zoom + 1, // Why?
+        zoom: Heron.options.zoom,
         theme: null,
         permalinks: {
             /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
@@ -96,13 +121,10 @@ MapCentia.setup = function () {
         new OpenLayers.Layer.Image(
             "None",
             Ext.BLANK_IMAGE_URL,
-            OpenLayers.Bounds.fromString(Heron.options.map.settings.maxExtent),
+            Heron.options.map.settings.maxExtent,
             new OpenLayers.Size(10, 10),
             {
-                resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                    4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                    76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                    1.19432856696, 0.597164283478, 0.298582141739],
+                resolutions: Heron.options.map.resolutions,
                 isBaseLayer: true,
                 visibility: false,
                 displayInLayerSwitcher: true,
@@ -145,12 +167,16 @@ MapCentia.setup = function () {
                             transparent: true
                         },
                         {
+                            maxResolution: Heron.options.map.resolutions[Heron.options.zoomrestrict],
                             isBaseLayer: false,
                             title: (!v.bitmapsource) ? text : " ",
                             singleTile: false,
                             visibility: false,
                             transitionEffect: 'resize',
                             featureInfoFormat: 'application/vnd.ogc.gml',
+                            displayOutsideMaxExtent: true,
+                            //maxExtent: (v.type !== "RASTER") ? new OpenLayers.Bounds(v.extent.xmin, v.extent.ymin, v.extent.xmax, v.extent.ymax) : null,
+                            tileOrigin: new OpenLayers.LonLat(-20037508.34, -20037508.34),
                             metadata: {
                                 wfs: {
                                     protocol: new OpenLayers.Protocol.WFS({
@@ -161,7 +187,9 @@ MapCentia.setup = function () {
                                         featureNS: "http://twitter/" + db
                                     })
                                 }
-                            }
+                            },
+                            geomField: v.f_geometry_column,
+                            db: db
 
                         }
                     ]
@@ -318,7 +346,8 @@ MapCentia.init = function () {
                     header: false,
                     autoConfig: true,
                     autoConfigMaxSniff: 100,
-                    exportFormats: Heron.options.exportFormats,
+                    //exportFormats: Heron.options.exportFormats,
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -347,7 +376,8 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: Heron.options.exportFormats,
+                    //exportFormats: Heron.options.exportFormats,
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -373,7 +403,8 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    //exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
+                    exportFormats: [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -387,40 +418,6 @@ MapCentia.init = function () {
     };
     Heron.options.map.toolbar = [
         {
-            type: "any",
-            options: {
-                text: 'MyMenu',
-                iconCls: 'bmenu',
-                handler: function () {
-                    console.log(Heron.App.map);
-                    var clickController = OpenLayers.Class(OpenLayers.Control, {
-                        defaultHandlerOptions: {
-                            'single': true,
-                            'double': false,
-                            'pixelTolerance': 0,
-                            'stopSingle': false,
-                            'stopDouble': false
-                        },
-                        initialize: function (options) {
-                            this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
-                            OpenLayers.Control.prototype.initialize.apply(this, arguments);
-                            this.handler = new OpenLayers.Handler.Click(this, {
-                                'click': this.trigger
-                            }, this.handlerOptions);
-                        },
-                        trigger: function (e) {
-                            alert();
-
-                        }
-                    });
-                    var click = new clickController();
-                    Heron.App.map.addControl(click);
-                    click.activate();
-
-                }
-            }
-        },
-        {
             type: "featureinfo",
             options: {
                 popupWindow: {
@@ -432,7 +429,8 @@ MapCentia.init = function () {
                         // Should column-names be capitalized? Default true.
                         columnCapitalize: true,
                         hideColumns: ['objectid', 'gid'],
-                        exportFormats: Heron.options.exportFormats,
+                        //exportFormats: Heron.options.exportFormats,
+                        exportFormats: [],
                         maxFeatures: 10,
                         discardStylesForDups: true
                     }
@@ -591,7 +589,7 @@ MapCentia.init = function () {
         },
         {
             type: "printdialog", options: {
-            url: 'http://kademo.nl/print/pdf28992', windowWidth: 360
+            url: 'http://54.77.123.219/geoserver/pdf', windowWidth: 360
             // , showTitle: true
             // , mapTitle: 'My Header - Print Dialog'
             // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
@@ -631,8 +629,7 @@ MapCentia.init = function () {
                 }
             }
         }
-    ]
-    ;
+    ];
 
     Heron.layout = {
         xtype: 'panel',
@@ -733,8 +730,7 @@ MapCentia.init = function () {
             }
         ]
     };
-}
-;
+};
 MapCentia.setup();
 MapCentia.init();
 

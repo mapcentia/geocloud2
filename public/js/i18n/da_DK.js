@@ -178,6 +178,11 @@ gc2i18n = {
         "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Skab et view ovenpå OSM databasen. Hvis du vælger at skabe en tabel i stedet for et view, vil data bliver kopieret fra OSM databasen. Brug denne mulighed ved større datasæt. Kortets udsnit vil blive brugt som filter. Du kan også bruge OSM tags som filter.",
         "Match all, any or none of the above": "Match alle, nogle eller ingen af ovenstående",
         "Create table instead of a view?": "Skab tabel i stedet for et view?",
-        "Ignore errors": "Tillad fejl"
+        "Ignore errors": "Tillad fejl",
+        "Lock extent": "Lås kortets udstrækning",
+        "Lock the map extent for sub-users in Admin and for all users in the public Viewer.": "Lås kortets udstrækning for sub-users i Admin og for alle brugere i den offentlige Viewer.",
+        "Extent locked": "Kortets udstrækning låst",
+        "Extent unlocked": "Kortets udstrækning ulåst"
+
     }
 };

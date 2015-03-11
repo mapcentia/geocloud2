@@ -66,11 +66,12 @@ foreach ($tables as $table) {
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
-            if ($def->geotype && $def->geotype!=="Default") {
+            $fieldConf = json_decode($typeRow['fieldconf']);
+            if ($def->geotype && $def->geotype !== "Default") {
                 if ($def->geotype == "LINE") {
                     $def->geotype = "LINESTRING";
                 }
-                $typeRow['type'] = "MULTI".$def->geotype;
+                $typeRow['type'] = "MULTI" . $def->geotype;
             }
             switch ($typeRow['type']) {
                 case "POINT":
@@ -92,8 +93,7 @@ foreach ($tables as $table) {
                     $atts["type"] = "gml:MultiPolygonPropertyType";
                     break;
             }
-        }
-        else {
+        } else {
             unset($atts["type"]);
         }
         $atts["minOccurs"] = "0";
@@ -110,19 +110,29 @@ foreach ($tables as $table) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
             if ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
-                $tableObj->metaData[$atts["name"]]['type'] = "string";
+                $tableObj->metaData[$atts["name"]]['type'] = "date";
             }
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">
-
-			</xsd:restriction></xsd:simpleType>';
+            echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
+            if ($fieldConf->$atts["name"]->properties) {
+                if ($fieldConf->$atts["name"]->properties == "*") {
+                    $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
+                    foreach($distinctValues["data"] as $prop){
+                        echo "<xsd:enumeration value=\"{$prop}\"/>";
+                    }
+                } else {
+                    foreach (json_decode($fieldConf->$atts["name"]->properties) as $prop) {
+                        echo "<xsd:enumeration value=\"{$prop}\"/>";
+                    }
+                }
+            }
+            echo '</xsd:restriction></xsd:simpleType>';
         }
         writeTag("close", "xsd", "element", NULL, False, True);
         $atts = Null;
     }
-
     $depth--;
     writeTag("close", "xsd", "sequence", Null, True, True);
     $depth--;

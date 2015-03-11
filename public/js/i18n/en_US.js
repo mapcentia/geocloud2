@@ -183,6 +183,10 @@ gc2i18n = {
         "Piping data to Elasticsearch": "Piping data to Elasticsearch",
         "All files processed": "All files processed",
         "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?": "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?",
-        "No files you uploaded seems to be recognized as a valid vector format.": "No files you uploaded seems to be recognized as a valid vector format."
+        "No files you uploaded seems to be recognized as a valid vector format.": "No files you uploaded seems to be recognized as a valid vector format.",
+        "Lock extent": "Lock extent",
+        "Lock the map extent for sub-users in Admin and for all users in the public Viewer.": "Lock the map extent for sub-users in Admin and for all users in the public Viewer.",
+        "Extent locked": "Extent locked",
+        "Extent unlocked": "Extent unlocked"
     }
 };

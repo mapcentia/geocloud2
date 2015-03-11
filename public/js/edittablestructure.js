@@ -336,6 +336,15 @@ tableStructure.init = function (record, screenName) {
                                     value: 'text'
                                 },
                                 {
+                                    name: 'Date',
+                                    value: 'date'
+                                },
+                                {
+                                    name: 'Boolean',
+                                    value: 'bool'
+                                },
+
+                                {
                                     name: 'Geometry',
                                     value: 'geometry'
                                 }

@@ -37,6 +37,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/meta", function () {
         Session::start();
     });
+    Route::add("api/v1/extent");
     Route::add("api/v1/schema");
     Route::add("api/v1/setting");
     Route::add("api/v1/twitter");

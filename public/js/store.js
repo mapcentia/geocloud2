@@ -11,7 +11,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, spinner;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted=false, spinner;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -34,6 +34,11 @@ $(window).ready(function () {
             if (typeof settings.extents !== "undefined") {
                 if (settings.extents[schema] !== undefined) {
                     initExtent = settings.extents[schema];
+                }
+            }
+            if (typeof settings.extentrestricts !== "undefined") {
+                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
+                    extentRestricted = true;
                 }
             }
         }

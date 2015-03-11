@@ -619,9 +619,18 @@ Viewer = function () {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
+                var p1, p2, restrictedExtent;
                 if (typeof response.data.extents === "object") {
                     if (typeof response.data.extents[schema] === "object") {
                         extent = response.data.extents[schema];
+                    }
+                }
+                if (typeof response.data.extentrestricts !== "undefined") {
+                    if (response.data.extentrestricts[schema] !== undefined && response.data.extentrestricts[schema] !== null) {
+                        restrictedExtent = response.data.extentrestricts[schema];
+                        p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", "EPSG:4326");
+                        p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", "EPSG:4326");
+                        cloud.map.setMaxBounds([[p1.y,p1.x],[p2.y,p2.x]]);
                     }
                 }
             }

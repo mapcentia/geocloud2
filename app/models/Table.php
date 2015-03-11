@@ -310,6 +310,14 @@ class Table extends Model
 
     function getColumnsForExtGridAndStore($createKeyFrom = NULL) // All tables
     {
+        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        foreach ($fieldconfArr as $key => $value) {
+            if ($value->properties == "*"){
+                $table = new \app\models\Table($this->table);
+                $distinctValues = $table->getGroupByAsArray($key);
+                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);;
+            }
+        }
         if ($this->geomType == "POLYGON" || $this->geomType == "MULTIPOLYGON") {
             $type = "Polygon";
         } elseif ($this->geomType == "POINT" || $this->geomType == "MULTIPOINT") {
@@ -325,8 +333,9 @@ class Table extends Model
         foreach ($this->metaData as $key => $value) {
             if ($value['type'] != "geometry" && $key != $this->primeryKey['attname']) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj']);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null);
             }
+
         }
         if ($createKeyFrom) {
             $fieldsForStore[] = array("name" => "_key_", "type" => "string");
@@ -497,6 +506,12 @@ class Table extends Model
                 break;
             case "Text":
                 $type = "text";
+                break;
+            case "Date":
+                $type = "date";
+                break;
+            case "Boolean":
+                $type = "bool";
                 break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
