@@ -123,7 +123,6 @@ class Processvector extends \app\inc\Controller
                 $response['success'] = false;
                 $response['message'] = "Could not delete from {$safeName}";
                 $response['code'] = 406;
-                //Session::createLog($e, $_REQUEST['file']);
                 return $response;
             }
         }
@@ -199,6 +198,6 @@ class Processvector extends \app\inc\Controller
             }
         }
         $response['cmd'] = $cmd;
-        return Response::json($response);
+        return $response;
     }
 }

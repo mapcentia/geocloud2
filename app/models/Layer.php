@@ -25,7 +25,7 @@ class Layer extends \app\models\Table
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
-            "(authentication<>'foo')" :
+            "(authentication<>'foo' OR authentication is NULL)" :
             "(authentication='Write' OR authentication='None')";
         $case = "CASE WHEN (layergroup = '' OR layergroup IS NULL) THEN 9999999 else sort_id END";
         if ($schema) {

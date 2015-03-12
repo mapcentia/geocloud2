@@ -594,9 +594,9 @@ $(document).ready(function () {
                             name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                         });
                     }
-                    for (var i = 0; i < arr.length; ++i) {
+                    for (i = 0; i < arr.length; ++i) {
                         var l = [], id;
-                        for (var u = 0; u < response.data.length; ++u) {
+                        for (u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
                                 id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
                                 l.push({
