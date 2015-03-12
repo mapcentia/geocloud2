@@ -396,7 +396,7 @@ class Layer extends \app\models\Table
             $resExtent->execute();
         } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $resExtent;
+            $response['message'] = $e;
             $response['code'] = 403;
             return $response;
         }

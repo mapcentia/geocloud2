@@ -187,6 +187,10 @@ gc2i18n = {
         "Lock extent": "Lock extent",
         "Lock the map extent for sub-users in Admin and for all users in the public Viewer.": "Lock the map extent for sub-users in Admin and for all users in the public Viewer.",
         "Extent locked": "Extent locked",
-        "Extent unlocked": "Extent unlocked"
+        "Extent unlocked": "Extent unlocked",
+        "Some file processing resulted in errors or warnings.": "Some file processing resulted in errors or warnings.",
+        "Overwrite": "Overwrite",
+        "Delete/append": "Delete/append",
+        "Layer tree reloaded": "Layer tree reloaded"
     }
 };

@@ -12,6 +12,9 @@ class Processvector extends \app\inc\Controller
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
+        $skipFailures = ($_REQUEST["ignoreerrors"] == "true") ? true : false;
+        $append = ($_REQUEST["append"] == "true") ? true : false;
+        $overwrite = ($_REQUEST["overwrite"] == "true") ? true : false;
 
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
@@ -99,22 +102,47 @@ class Processvector extends \app\inc\Controller
                 $type = "PROMOTE_TO_MULTI";
                 break;
         }
+
+        $model = new \app\inc\Model();
+        $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
+        $tableExist = $tableExist["success"];
+
+        if ($tableExist == true && $overwrite == false && $append == false) {
+            $response['success'] = false;
+            $response['message'] = "'{$safeName}' exists already, use 'Overwrite'";
+            $response['code'] = 406;
+            return $response;
+        }
+
+        if ($_REQUEST["append"] == "true") {
+            $sql = "DELETE FROM {$safeName}";
+            $res = $model->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = "Could not delete from {$safeName}";
+                $response['code'] = 406;
+                //Session::createLog($e, $_REQUEST['file']);
+                return $response;
+            }
+        }
         $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
-            (($_REQUEST["ignoreerrors"] == "true") ? "-skipfailures " : "") .
-            "-overwrite " .
+            ($skipFailures ? "-skipfailures " : " ") .
+            ($append ? "-append " : " ") .
+            (($overwrite == true && $append == false) ? "-overwrite " : " ") .
             "-dim 2 " .
-            "-lco 'GEOMETRY_NAME=the_geom' " .
-            "-lco 'FID=gid' " .
-            "-lco 'PRECISION=NO' " .
+            ($append ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
+            ($append ? "" : "-lco 'FID=gid' ") .
+            ($append ? "" : "-lco 'PRECISION=NO' ") .
+            ($append ? "" : "-lco 'PG_USE_COPY=YES' ") .
             "-a_srs 'EPSG:{$srid}' " .
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln {$safeName} " .
             "-nlt {$type}";
-
         exec($cmd . ' 2>&1', $out, $err);
 
-        $model = new \app\inc\Model();
         $geoType = $model->getGeometryColumns(Connection::$param["postgisschema"] . "." . $safeName, "type");
         $key = Connection::$param["postgisschema"] . "." . $safeName . ".the_geom";
         $class = new \app\models\Classification($key);
@@ -155,10 +183,20 @@ class Processvector extends \app\inc\Controller
             // Bust cache, in case of layer already exist
             \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $safeName);
         } else {
-
             $response['success'] = false;
-            $response['message'] = "Some thing went wrong. Check the log.";
+            $response['message'] = $safeName . ": Some thing went wrong. Check the log.";
+            $response['out'] = $out[0];
             Session::createLog($out, $_REQUEST['file']);
+            // Make sure the table is dropped if not skipping failures and it didn't exists before
+            if ($skipFailures == false && $tableExist == false) {
+                $sql = "DROP TABLE " . Connection::$param["postgisschema"] . "." . $safeName;
+                $res = $model->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+
+                }
+            }
         }
         $response['cmd'] = $cmd;
         return Response::json($response);

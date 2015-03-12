@@ -785,7 +785,7 @@ $(document).ready(function () {
                     }
                 }
                 else {
-                    window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree (re)loaded");
+                    window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
                 }
                 var west = Ext.getCmp("treepanel");
                 west.remove(tree);
