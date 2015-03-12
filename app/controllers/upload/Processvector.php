@@ -115,7 +115,7 @@ class Processvector extends \app\inc\Controller
         }
 
         if ($_REQUEST["append"] == "true") {
-            $sql = "DELETE FROM {$safeName}";
+            $sql = "DELETE FROM " . Connection::$param["postgisschema"] . "." . $safeName;
             $res = $model->prepare($sql);
             try {
                 $res->execute();
