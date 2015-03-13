@@ -436,16 +436,7 @@ geocloud = (function () {
                 numZoomLevels: 20,
                 projection: "EPSG:900913",
                 fadeAnimation: true,
-                zoomAnimation: true,
-                olControls: [
-                	new OpenLayers.Control.Zoom(),
-                    new OpenLayers.Control.Attribution(),
-                    new OpenLayers.Control.TouchNavigation({
-                    	dragPanOptions: {
-                                enableKinetic: true
-                        }
-                    })
-                ]
+                zoomAnimation: true
             };
         if (config) {
             for (prop in config) {
@@ -687,7 +678,15 @@ geocloud = (function () {
             case "ol2":
                 this.map = new OpenLayers.Map(defaults.el, {
                     //theme: null,
-                    controls: defaults.olControls,
+                    controls: [
+                        new OpenLayers.Control.Zoom(),
+                        new OpenLayers.Control.Attribution(),
+                        new OpenLayers.Control.TouchNavigation({
+                            dragPanOptions: {
+                                enableKinetic: true
+                            }
+                        })
+                    ],
                     numZoomLevels: defaults.numZoomLevels,
                     projection: defaults.projection,
                     maxResolution: defaults.maxResolution,
