@@ -70,7 +70,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                     } else if (columnsForGrid[i].typeObj.type === "string") {
                         columnsForGrid[i].editor = new Ext.form.TextField();
                     } else if (columnsForGrid[i].typeObj.type === "text") {
-                        columnsForGrid[i].editor = new Ext.form.TextField();
+                        columnsForGrid[i].editor = new Ext.form.TextArea();
                     }
                 }
             }
