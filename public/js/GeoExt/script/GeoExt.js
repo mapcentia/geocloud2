@@ -2181,7 +2181,11 @@ GeoExt.form.recordToField = function (i, q) {
         var e = g.maxLength !== undefined ? parseFloat(g.maxLength) : undefined;
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
-            n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
+            if (e){
+                n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
+            } else {
+                n = Ext.apply({xtype: "textarea", fieldLabel: o, maxLength: e, minLength: f}, h);
+            }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
                 store: arrStore,

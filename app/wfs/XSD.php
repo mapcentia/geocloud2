@@ -100,11 +100,14 @@ foreach ($tables as $table) {
         writeTag("open", "xsd", "element", $atts, True, True);
 
         if ($tableObj->metaData[$atts["name"]]['type'] != "geometry") {
+            $minLength = "0";
+            $maxLength = "256";
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $tableObj->metaData[$atts["name"]]['type'] = "decimal";
             }
             if ($tableObj->metaData[$atts["name"]]['type'] == "text") {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
+                $maxLength = null;
             }
             if ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
@@ -127,6 +130,10 @@ foreach ($tables as $table) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 }
+            }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "string"){
+                echo "<xsd:minLength value=\"{$minLength}\"/>";
+                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
             }
             echo '</xsd:restriction></xsd:simpleType>';
         }
