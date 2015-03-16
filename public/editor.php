@@ -42,11 +42,11 @@ include("html_header.php");
 <script type="text/javascript" src="/js/openlayers/OpenLayers.js?8b397f6ff00cc458"></script>
 <!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?0494cd822345d162"></script>
-<script type="text/javascript" src="/api/v1/js/api.js?fa3afe3a7dec8310"></script>
-<script type="text/javascript" src="/api/v3/js/geocloud.js?91d5c4b0a2fc30d9" type="text/javascript"></script>
-<script type="text/javascript" src="/js/wfseditor.js?3c25e34d7401d40c"></script>
-<script type="text/javascript" src="/js/attributeform.js?257465ed180e5e84"></script>
+<script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?8e81898ab2d0310b"></script>
+<script type="text/javascript" src="/api/v1/js/api.js?fe70a866771f550d"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js?74b5e96487b6672e" type="text/javascript"></script>
+<script type="text/javascript" src="/js/wfseditor.js?97a4b2d3663de22c"></script>
+<script type="text/javascript" src="/js/attributeform.js?f33e934f10e3d041"></script>
 <script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
 <script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>
 <script type="text/javascript" src="/js/comparisoncomboBox.js?8542bc57943e21ff"></script>

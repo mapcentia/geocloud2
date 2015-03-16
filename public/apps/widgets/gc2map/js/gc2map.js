@@ -46,7 +46,7 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        $.getScript(host + "/api/v3/js/geocloud.js?91d5c4b0a2fc30d9#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?74b5e96487b6672e#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/main.js?9f8906828cb06fdb#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?9751459f2c18d094#grunt-cache-bust");
                         (function pollForDependants() {

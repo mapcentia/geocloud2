@@ -299,7 +299,7 @@ class Table extends Model
             } else {
                 $response['success'] = false;
                 $response['message'] = $this->PDOerror;
-                //$response['code'] = 406;
+                $response['code'] = 406;
             }
             unset($pairArr);
             unset($keyArr);
@@ -365,6 +365,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
                 $arr = $this->array_push_assoc($arr, "querable", $fieldconfArr[$key]->querable);
+                $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
                 $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias);
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
@@ -410,6 +411,7 @@ class Table extends Model
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             $safeColumn = $this->toAscii($value->column, array(), "_");
+            // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
 
                 if ($safeColumn == "state") {
@@ -427,6 +429,10 @@ class Table extends Model
                 $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
+                $response['message'] = "Renamed";
+
+            } else {
+                $response['message'] = "Updated";
             }
             $fieldconfArr[$safeColumn] = $value;
         }
@@ -434,11 +440,17 @@ class Table extends Model
         $conf['_key_'] = $key;
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        if (!$res["success"]) {
+            $response['success'] = false;
+            $response['message'] = $res["message"];
+            $response['code'] = "406";
+            return $response;
+
+        }
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
             $response['success'] = true;
-            $response['message'] = "Column renamed";
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
