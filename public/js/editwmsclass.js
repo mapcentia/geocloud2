@@ -1,5 +1,6 @@
 Ext.namespace('wmsClasses');
 wmsClasses.init = function (record) {
+
     wmsClasses.table = record._key_;
     wmsClasses.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
@@ -228,6 +229,10 @@ function test() {
 
 Ext.namespace('wmsClass');
 wmsClass.init = function (id) {
+    var cc = function (value, meta) {
+        meta.style = meta.style + "background-color:" + value;
+        return value;
+    };
     wmsClass.classId = id;
     wmsClass.store = new Ext.data.JsonStore({
         autoLoad: true,
@@ -592,6 +597,9 @@ wmsClass.init = function (id) {
             leader_maxdistance: 'Leader: maxdistance',
             leader_color: 'Leader: color'
         },
+        customRenderers: {
+            leader_color: cc
+        },
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
@@ -644,11 +652,9 @@ wmsClass.init = function (id) {
             linecap: 'Style: line cap',
             pattern: 'Style: pattern'
         },
-
         customRenderers: {
-            color: function (value, meta) {
-                meta.style = "background-color:" + value;
-            }
+            color: cc,
+            outlinecolor: cc
         },
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -806,6 +812,10 @@ wmsClass.init = function (id) {
             overlaystyle_opacity: 'Style: opacity',
             overlaylinecap: 'Style: line cap',
             overlaypattern: 'Style: pattern'
+        },
+        customRenderers: {
+            overlaycolor: cc,
+            overlayoutlinecolor: cc
         },
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1012,6 +1022,11 @@ wmsClass.init = function (id) {
             label_fontweight: 'Label: font weight',
             label_expression: 'Label: expression'
         },
+        customRenderers: {
+            label_color: cc,
+            label_outlinecolor: cc,
+            label_backgroundcolor: cc
+        },
         customEditors: {
             'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
@@ -1189,6 +1204,11 @@ wmsClass.init = function (id) {
             label2_font: 'Label: font',
             label2_fontweight: 'Label: font weight',
             label2_expression: 'Label: expression'
+        },
+        customRenderers: {
+            label2_color: cc,
+            label2_outlinecolor: cc,
+            label2_backgroundcolor: cc
         },
         customEditors: {
             'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
