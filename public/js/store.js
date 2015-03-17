@@ -11,7 +11,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted=false, spinner;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted = false, spinner;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -1960,7 +1960,7 @@ $(window).ready(function () {
             });
         }
     };
-    spinner = function(show, text){
+    spinner = function (show, text) {
         if (show) {
             $("#spinner").show();
             $("#spinner span").html(text);

@@ -107,7 +107,7 @@ include("html_header.php");
         </table>
     </div>
 </div>
-<div id="spinner"><span></span><img src='http://www.gifstache.com/images/ajax_loader.gif'/></div>
+<div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif'/></div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>window.__ = function (string, toolTip) {
         'use strict';
