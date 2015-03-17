@@ -1550,7 +1550,7 @@ $(window).ready(function () {
         new Ext.Window({
             title: __("Class wizard"),
             layout: 'fit',
-            width: 600,
+            width: 700,
             height: 500,
             plain: true,
             modal: true,
@@ -1734,7 +1734,7 @@ $(window).ready(function () {
                                                             param = Ext.util.JSON.encode(param);
 
                                                             // Encode the json because it can contain "="
-                                                            param = encodeURIComponent(param);
+                                                            //param = encodeURIComponent(param);
 
                                                             Ext.Ajax.request({
                                                                 url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
@@ -1747,6 +1747,7 @@ $(window).ready(function () {
                                                                     App.setAlert(App.STATUS_OK, __("Style is updated"));
                                                                     writeFiles(wmsClasses.table);
                                                                     wmsClasses.store.load();
+                                                                    store.load();
                                                                 },
                                                                 failure: function (response) {
                                                                     Ext.MessageBox.show({

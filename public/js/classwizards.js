@@ -1,6 +1,19 @@
 Ext.namespace('classWizards');
 classWizards.init = function (record) {
+    console.log(Ext.decode(record.class));
     var customIsSet = false;
+    var classes = Ext.decode(record.class);
+    var classStore = new Ext.data.ArrayStore({
+        fields: ['name', 'color'],
+        idIndex: 0 // id for each record will be the first element
+    });
+
+    var myData = [];
+    for (var i = 0; i < classes.length; i = i + 1) {
+        myData.push([classes[i].name, classes[i].color]);
+    }
+    classStore.loadData(myData);
+
     classWizards.setting = Ext.util.JSON.decode(record.classwizard);
     if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
         customIsSet = true;
@@ -971,12 +984,48 @@ classWizards.init = function (record) {
                     }),
                     new Ext.Panel({
                         region: 'east',
-                        border: true,
-                        width: 150,
-                        id: 'wizardLegend',
-                        html: ""
+                        border: false,
+                        frame: false,
+                        width: 250,
+                        layout: "border",
+                        items: [
+                            new Ext.grid.EditorGridPanel({
+                                store: classStore,
+                                frame: false,
+                                border: false,
+                                region: "center",
+                                viewConfig: {
+                                    forceFit: true,
+                                    stripeRows: true
+                                },
+                                cm: new Ext.grid.ColumnModel({
+                                    defaults: {
+                                        editor: {
+                                            xtype: "textfield"
+                                        }
+                                    },
+                                    columns: [
+                                        {
+                                            header: __("Name"),
+                                            dataIndex: "name",
+                                            editable: true,
+                                            flex: 1
+                                        },
+                                        {
+                                            header: __("Color"),
+                                            dataIndex: "color",
+                                            editable: true,
+                                            flex: 1,
+                                            editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+                                            renderer: function (value, meta) {
+                                                meta.style = "background-color:" + value;
+                                            }
+                                        }
+                                    ]
+                                })
+                            })
+                        ]
                     })
-
                 ]
             })
         ]
