@@ -109,12 +109,28 @@ class Classification extends \app\inc\Model
 
     private function store($data)
     {
-
         // First we replace unicode escape sequence
         //$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
         $tableObj = new Table("settings.geometry_columns_join");
         $obj = new \stdClass;
         $obj->class = $data;
+        $obj->_key_ = $this->layer;
+        $tableObj->updateRecord($obj, "_key_");
+        if (!$tableObj->PDOerror) {
+            $response = true;
+        } else {
+            $response = false;
+        }
+        return $response;
+    }
+
+    private function storeWizard($data)
+    {
+        // First we replace unicode escape sequence
+        //$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
+        $tableObj = new Table("settings.geometry_columns_join");
+        $obj = new \stdClass;
+        $obj->classwizard = $data;
         $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
         if (!$tableObj->PDOerror) {
@@ -142,14 +158,10 @@ class Classification extends \app\inc\Model
 
     public function update($id, $data)
     {
-        if ($data->expression) {
-            urldecode($data->expression);
-        }
+        $data->expression = urldecode($data->expression);
         $classes = $this->getAll();
-        foreach((array)$data as $k=>$v){
-            $classes['data'][$id][$k] = $v;
-
-        }
+        //print_r($classes);
+        $classes['data'][$id] = $data;
         if ($this->store(json_encode($classes['data']))) {
             $response['success'] = true;
             $response['message'] = "Updated one class";
@@ -209,7 +221,7 @@ class Classification extends \app\inc\Model
 
     }
 
-    public function createSingle($data)
+    public function createSingle($data, $color)
     {
         $res = $this->setLayerDef();
         if (!$res['success']) {
@@ -221,7 +233,7 @@ class Classification extends \app\inc\Model
         $this->reset();
         $layer = new \app\models\Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
-        $res = $this->update("0", self::createClass($geometryType, "Single value", null, 10, null, $data));
+        $res = $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
         if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Updated one class";
@@ -230,6 +242,7 @@ class Classification extends \app\inc\Model
             $response['message'] = "Error";
             $response['code'] = 400;
         }
+        $this->storeWizard(json_encode($data));
         return $response;
     }
 
@@ -282,6 +295,7 @@ class Classification extends \app\inc\Model
         }
         $response['success'] = true;
         $response['message'] = "Updated " . sizeof($rows) . " classes";
+        $this->storeWizard(json_encode($data));
         return $response;
     }
 
@@ -332,8 +346,7 @@ class Classification extends \app\inc\Model
             $bottom = $top - $interval;
             if ($i == $num) {
                 $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<=" . $top;
-            }
-            else {
+            } else {
                 $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
             }
             $name = " < " . round(($top), 2);
@@ -348,8 +361,8 @@ class Classification extends \app\inc\Model
         }
         $response['success'] = true;
         $response['message'] = "Updated " . $num . " classes";
+        $this->storeWizard(json_encode($data));
         return $response;
-
     }
 
     public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
@@ -362,7 +375,7 @@ class Classification extends \app\inc\Model
             return $response;
         }
         $layer = new \app\models\Layer();
-        $geometryType = $layer->getValueFromKey($this->layer, type);
+        $geometryType = $layer->getValueFromKey($this->layer, "type");
         $query = "SELECT count(*) AS count FROM " . $this->table->table;
         $res = $this->prepare($query);
         try {
@@ -403,8 +416,7 @@ class Classification extends \app\inc\Model
                 $top = $row[$field];
                 if ($i == $count) {
                     $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<=" . $top;
-                }
-                else {
+                } else {
                     $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
                 }
                 $name = " < " . round(($top), 2);
@@ -426,6 +438,7 @@ class Classification extends \app\inc\Model
         $response['success'] = true;
         $response['values'] = $tops;
         $response['message'] = "Updated " . $num . " classes";
+        $this->storeWizard(json_encode($data));
         return $response;
     }
 
@@ -493,10 +506,9 @@ class Classification extends \app\inc\Model
             $response['code'] = 400;
             return $response;
         }
-
-
         $response['success'] = true;
         $response['message'] = "Updated 2 classes";
+        $this->storeWizard(json_encode($data));
         return $response;
     }
 
@@ -531,8 +543,11 @@ class Classification extends \app\inc\Model
             "overlaysize" => ($data->overlaySize) ?: "",
             "overlaywidth" => "",
             "label_text" => ($data->labelText) ?: "",
-            "label2_text" => ($data->labelText) ?: "",
             "label_position" => ($data->labelPosition) ?: "",
+            "label_font" => ($data->labelFont) ?: "",
+            "label_fontweight" => ($data->labelFontWeight) ?: "",
+            "label_angle" => ($data->labelAngle) ?: "",
+            "label_backgroundcolor" => ($data->labelBackgroundcolor) ?: "",
             "style_opacity" => ($data->opacity) ?: "",
             "overlaystyle_opacity" => ($data->overlayOpacity) ?: "",
             "label_force" => ($data->force) ?: "",
