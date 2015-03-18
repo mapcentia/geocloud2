@@ -123,7 +123,11 @@ class Layer extends \app\models\Table
 
             // Is indexed?
             if ($es) {
-                $url = "http://127.0.0.1:9200/{$this->postgisdb}_{$row['f_table_schema']}/{$row['f_table_name']}/";
+                $type = $row['f_table_name'];
+                if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                    $type = "a" . $type;
+                }
+                $url = "http://127.0.0.1:9200/{$this->postgisdb}_{$row['f_table_schema']}/{$type}/";
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                 curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
