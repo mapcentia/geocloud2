@@ -1,3 +1,9 @@
+/*global Ext:false */
+/*global classWizards:false */
+/*global store:false */
+/*global App:false */
+/*global wmsLayer:false */
+/*global __:false */
 Ext.namespace('classWizards');
 classWizards.init = function (record) {
     "use strict";
@@ -62,7 +68,7 @@ classWizards.init = function (record) {
     });
 
     store.load({
-        callback: function(){
+        callback: function () {
             updateClassGrid();
         }
     });
@@ -72,9 +78,8 @@ classWizards.init = function (record) {
         customIsSet = true;
     }
     classWizards.getAddvalues = function (pre) {
-        var values = Ext.getCmp(pre + '_addform').form.getFieldValues();
-        console.log(values);
-        var f = Ext.getCmp(pre + "Form").form.getValues();
+        var values = Ext.getCmp(pre + '_addform').form.getFieldValues(),
+            f = Ext.getCmp(pre + "Form").form.getValues();
         f.pre = pre;
         values.custom = f;
         return Ext.util.JSON.encode({data: values});
@@ -573,7 +578,7 @@ classWizards.init = function (record) {
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
                                                                                 store.load({
-                                                                                    callback: function(){
+                                                                                    callback: function () {
                                                                                         updateClassGrid();
                                                                                     }
                                                                                 });
@@ -695,7 +700,7 @@ classWizards.init = function (record) {
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
                                                                                 store.load({
-                                                                                    callback: function(){
+                                                                                    callback: function () {
                                                                                         updateClassGrid();
                                                                                     }
                                                                                 });
@@ -801,7 +806,7 @@ classWizards.init = function (record) {
                                                                                 name: "type",
                                                                                 allowBlank: false,
                                                                                 mode: 'local',
-                                                                                value: (customIsSet) ? classWizards.setting.custom.type : (record.type === "RASTER") ? 'Equal' : null
+                                                                                value: customIsSet ? classWizards.setting.custom.type : (record.type === "RASTER") ? 'Equal' : null
 
                                                                             },
                                                                             {
@@ -822,7 +827,7 @@ classWizards.init = function (record) {
                                                                                 incrementValue: 1,
                                                                                 accelerate: true,
                                                                                 allowBlank: false,
-                                                                                value: (customIsSet) ? classWizards.setting.custom.num : null
+                                                                                value: customIsSet ? classWizards.setting.custom.num : null
                                                                             })
                                                                         ]
                                                                     },
@@ -906,7 +911,7 @@ classWizards.init = function (record) {
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
                                                                                 store.load({
-                                                                                    callback: function(){
+                                                                                    callback: function () {
                                                                                         updateClassGrid();
                                                                                     }
                                                                                 });
@@ -1018,7 +1023,7 @@ classWizards.init = function (record) {
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
                                                                                 store.load({
-                                                                                    callback: function(){
+                                                                                    callback: function () {
                                                                                         updateClassGrid();
                                                                                     }
                                                                                 });

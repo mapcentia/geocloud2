@@ -8,6 +8,8 @@
 /*global window:false */
 /*global document:false */
 /*global gc2i18n:false */
+/*global subUser:false */
+/*global __:false */
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
@@ -277,7 +279,7 @@ $(window).ready(function () {
 
                         }
                     },
-                    renderer: function (value, id, r) {
+                    renderer: function () {
                         return ('<a href="#">' + __("Clear") + '</a>');
                     },
                     width: 70
