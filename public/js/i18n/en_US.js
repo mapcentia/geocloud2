@@ -31,7 +31,7 @@ gc2i18n = {
         "Save": "Save",
         "Reset": "Reset",
         "Delete": "Delete",
-        "Stop editing": "Stop editing",
+        "Stop editing": "Stop",
         "Quick draw": "Quick draw",
         "Reload tree": "Reload tree",
         "Save extent": "Save extent",

@@ -11,7 +11,7 @@
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -740,7 +740,7 @@ $(document).ready(function () {
                                                 map: map,
                                                 zoom: 5,
                                                 split: true,
-                                                tbar: wfsTools
+                                                tbar: mapTools
                                             },
                                             {
                                                 region: "south",
@@ -762,7 +762,7 @@ $(document).ready(function () {
                                 border: true,
                                 region: "west",
                                 collapsible: true,
-                                width: 300,
+                                width: 350,
                                 tbar: [{
                                     text: '<i class="icon-eye-open btn-gc"></i> ' + __('Style'),
                                     id: 'stylebutton',
@@ -826,6 +826,7 @@ $(document).ready(function () {
                                     {
                                         xtype: "panel",
                                         border: false,
+                                        tbar: wfsTools,
                                         html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>"
                                     },
                                     new Ext.Panel({
@@ -887,6 +888,7 @@ $(document).ready(function () {
             disabled: true,
             enableToggle: true
         }),
+        '-',
         {
             text: "<i class='icon-trash btn-gc'></i> " + __("Delete"),
             id: "editdeletebutton",
@@ -904,6 +906,7 @@ $(document).ready(function () {
                 });
             }
         },
+        '-',
         {
             text: "<i class='icon-ok btn-gc'></i> " + __("Save"),
             disabled: true,
@@ -962,32 +965,32 @@ $(document).ready(function () {
                     queryWin.hide();
                 }
             }
-        },
-        '->',
-        {
-            text: "<i class='icon-resize-vertical btn-gc'></i> " + __("Measure"),
-            menu: new Ext.menu.Menu({
-                items: [
-                    {
-                        text: __('Distance'),
-                        handler: function () {
-                            openMeasureWin();
-                            measureControls.polygon.deactivate();
-                            measureControls.line.activate();
-                        }
-                    },
-                    {
-                        text: __('Area'),
-                        handler: function () {
-                            openMeasureWin();
-                            measureControls.line.deactivate();
-                            measureControls.polygon.activate();
-                        }
+        }
+    ];
+    mapTools = [{
+        text: "<i class='icon-resize-vertical btn-gc'></i> " + __("Measure"),
+        menu: new Ext.menu.Menu({
+            items: [
+                {
+                    text: __('Distance'),
+                    handler: function () {
+                        openMeasureWin();
+                        measureControls.polygon.deactivate();
+                        measureControls.line.activate();
                     }
+                },
+                {
+                    text: __('Area'),
+                    handler: function () {
+                        openMeasureWin();
+                        measureControls.line.deactivate();
+                        measureControls.polygon.activate();
+                    }
+                }
 
-                ]
-            })
-        },
+            ]
+        })
+    },
         {
             text: "<i class='icon-search btn-gc'></i> " + __("Search"),
             handler: function (objRef) {
@@ -1146,8 +1149,7 @@ $(document).ready(function () {
             handler: function () {
                 attributeForm.win.show();
             }
-        }
-    ];
+        }];
     reLoadTree = function () {
         loadTree();
     };
