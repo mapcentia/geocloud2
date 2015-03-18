@@ -1,18 +1,71 @@
 Ext.namespace('classWizards');
 classWizards.init = function (record) {
-    console.log(Ext.decode(record.class));
-    var customIsSet = false;
-    var classes = Ext.decode(record.class);
-    var classStore = new Ext.data.ArrayStore({
-        fields: ['name', 'color'],
-        idIndex: 0 // id for each record will be the first element
+    "use strict";
+    var customIsSet = false, legendGrid,
+        classes,
+        classStore = new Ext.data.ArrayStore({
+            fields: ['name', 'color']
+        }),
+        updateClassGrid = function () {
+            var myData = [], i;
+            classes = Ext.decode(store.getById(record._key_).json.class);
+            for (i = 0; i < classes.length; i = i + 1) {
+                myData.push([classes[i].name, classes[i].color]);
+            }
+            classStore.loadData(myData);
+            legendGrid.doLayout();
+        };
+    legendGrid = new Ext.Panel({
+        region: 'east',
+        border: false,
+        frame: false,
+        width: 250,
+        layout: "border",
+        items: [
+            new Ext.grid.EditorGridPanel({
+                store: classStore,
+                frame: false,
+                border: false,
+                region: "center",
+                viewConfig: {
+                    forceFit: true,
+                    stripeRows: true
+                },
+                cm: new Ext.grid.ColumnModel({
+                    defaults: {
+                        editor: {
+                            xtype: "textfield"
+                        }
+                    },
+                    columns: [
+                        {
+                            header: __("Name"),
+                            dataIndex: "name",
+                            editable: true,
+                            flex: 1
+                        },
+                        {
+                            header: __("Color"),
+                            dataIndex: "color",
+                            editable: true,
+                            flex: 1,
+                            editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+                            renderer: function (value, meta) {
+                                meta.style = "background-color:" + value;
+                                return value;
+                            }
+                        }
+                    ]
+                })
+            })
+        ]
     });
 
-    var myData = [];
-    for (var i = 0; i < classes.length; i = i + 1) {
-        myData.push([classes[i].name, classes[i].color]);
-    }
-    classStore.loadData(myData);
+    store.load({
+        callback: function(){
+            updateClassGrid();
+        }
+    });
 
     classWizards.setting = Ext.util.JSON.decode(record.classwizard);
     if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
@@ -519,7 +572,11 @@ classWizards.init = function (record) {
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
-                                                                                store.load();
+                                                                                store.load({
+                                                                                    callback: function(){
+                                                                                        updateClassGrid();
+                                                                                    }
+                                                                                });
                                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                                             },
                                                                             failure: function (response) {
@@ -637,7 +694,11 @@ classWizards.init = function (record) {
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
-                                                                                store.load();
+                                                                                store.load({
+                                                                                    callback: function(){
+                                                                                        updateClassGrid();
+                                                                                    }
+                                                                                });
                                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                                             },
                                                                             failure: function (response) {
@@ -844,7 +905,11 @@ classWizards.init = function (record) {
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
-                                                                                store.load();
+                                                                                store.load({
+                                                                                    callback: function(){
+                                                                                        updateClassGrid();
+                                                                                    }
+                                                                                });
                                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                                             },
                                                                             failure: function (response) {
@@ -952,7 +1017,11 @@ classWizards.init = function (record) {
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
                                                                                 writeFiles(record._key_);
-                                                                                store.load();
+                                                                                store.load({
+                                                                                    callback: function(){
+                                                                                        updateClassGrid();
+                                                                                    }
+                                                                                });
                                                                                 App.setAlert(__(App.STATUS_NOTICE), __(Ext.decode(response.responseText).message));
                                                                             },
                                                                             failure: function (response) {
@@ -982,50 +1051,7 @@ classWizards.init = function (record) {
                                 ]
                             })]
                     }),
-                    new Ext.Panel({
-                        region: 'east',
-                        border: false,
-                        frame: false,
-                        width: 250,
-                        layout: "border",
-                        items: [
-                            new Ext.grid.EditorGridPanel({
-                                store: classStore,
-                                frame: false,
-                                border: false,
-                                region: "center",
-                                viewConfig: {
-                                    forceFit: true,
-                                    stripeRows: true
-                                },
-                                cm: new Ext.grid.ColumnModel({
-                                    defaults: {
-                                        editor: {
-                                            xtype: "textfield"
-                                        }
-                                    },
-                                    columns: [
-                                        {
-                                            header: __("Name"),
-                                            dataIndex: "name",
-                                            editable: true,
-                                            flex: 1
-                                        },
-                                        {
-                                            header: __("Color"),
-                                            dataIndex: "color",
-                                            editable: true,
-                                            flex: 1,
-                                            editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-                                            renderer: function (value, meta) {
-                                                meta.style = "background-color:" + value;
-                                            }
-                                        }
-                                    ]
-                                })
-                            })
-                        ]
-                    })
+                    legendGrid
                 ]
             })
         ]

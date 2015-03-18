@@ -8,6 +8,7 @@
 /*global attributeForm:false */
 /*global geocloud:false */
 /*global gc2i18n:false */
+OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, currentId;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
@@ -730,7 +731,6 @@ $(document).ready(function () {
                                     handler: function () {
                                         var node = tree.getSelectionModel().getSelectedNode();
                                         window.parent.styleWizardWin(node.id);
-                                        window.parent.updateLegend('wizardLegend');
                                     }
                                 }, '-', {
                                     text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
