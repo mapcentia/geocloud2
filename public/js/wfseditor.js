@@ -10,7 +10,8 @@
 /*global gc2i18n:false */
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, currentId;
+Ext.QuickTips.init();
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -33,34 +34,43 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         dataType: 'json',
         type: 'GET',
         success: function (data, textStatus, http) {
-            if (http.readyState === 4) {
-                if (http.status === 200) {
-                    var response = data;
-                    // JSON
-                    fieldsForStore = response.forStore;
-                    columnsForGrid = response.forGrid;
-                    type = response.type;
-                    multi = response.multi;
-                    // We add an editor to the fields
-                    for (var i in columnsForGrid) {
-                        columnsForGrid[i].editable = editable;
-                        if (columnsForGrid[i].typeObj !== undefined) {
-                            if (columnsForGrid[i].typeObj.type === "int") {
-                                columnsForGrid[i].editor = new Ext.form.NumberField({
-                                    decimalPrecision: 0,
-                                    decimalSeparator: '¤'// Some strange char nobody is using
-                                });
-                            } else if (columnsForGrid[i].typeObj.type === "decimal") {
-                                columnsForGrid[i].editor = new Ext.form.NumberField({
-                                    decimalPrecision: columnsForGrid[i].typeObj.scale,
-                                    decimalSeparator: '.'
-                                });
-                            } else if (columnsForGrid[i].typeObj.type === "string") {
-                                columnsForGrid[i].editor = new Ext.form.TextField();
-                            } else if (columnsForGrid[i].typeObj.type === "text") {
-                                columnsForGrid[i].editor = new Ext.form.TextArea();
-                            }
+            var response = data, validProperties = true;
+            // JSON
+            fieldsForStore = response.forStore;
+            columnsForGrid = response.forGrid;
+            type = response.type;
+            multi = response.multi;
+            // We add an editor to the fields
+            for (var i in columnsForGrid) {
+                columnsForGrid[i].editable = editable;
+                if (columnsForGrid[i].typeObj !== undefined) {
+                    if (columnsForGrid[i].properties) {
+                        try {
+                            var json = Ext.decode(columnsForGrid[i].properties);
+                            columnsForGrid[i].editor = new Ext.form.ComboBox({
+                                store: Ext.decode(columnsForGrid[i].properties),
+                                editable: true,
+                                triggerAction: 'all'
+                            });
+                            validProperties = false;
                         }
+                        catch (e) {
+                            alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                        }
+                    } else if (columnsForGrid[i].typeObj.type === "int") {
+                        columnsForGrid[i].editor = new Ext.form.NumberField({
+                            decimalPrecision: 0,
+                            decimalSeparator: '¤'// Some strange char nobody is using
+                        });
+                    } else if (columnsForGrid[i].typeObj.type === "decimal") {
+                        columnsForGrid[i].editor = new Ext.form.NumberField({
+                            decimalPrecision: columnsForGrid[i].typeObj.scale,
+                            decimalSeparator: '.'
+                        });
+                    } else if (columnsForGrid[i].typeObj.type === "string") {
+                        columnsForGrid[i].editor = new Ext.form.TextField();
+                    } else if (columnsForGrid[i].typeObj.type === "text") {
+                        columnsForGrid[i].editor = new Ext.form.TextArea();
                     }
                 }
             }
@@ -146,6 +156,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             }, rules
         )
     });
+
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
@@ -265,7 +276,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         layout: 'fit',
         initCenter: true,
         border: false,
-        width: 270,
+        width: 340,
         height: 300,
         closeAction: 'hide',
         plain: true,
@@ -292,10 +303,11 @@ $(document).ready(function () {
             }),
             new OpenLayers.Control.Zoom(),
             new OpenLayers.Control.Attribution()
-        ]
+        ],
+        restrictedExtent: subUser ? window.parent.settings.extentrestricts[schema] : null
     });
     map = cloud.map;
-    var metaData, metaDataKeys = [], metaDataKeysTitle = [], extent = null;
+    var metaData, metaDataKeys = [], metaDataKeysTitle = [], metaDataRealKeys = [], extent = null;
     var gc2 = new geocloud.map({});
     gc2.map = map;
     getMetaData = function () {
@@ -317,7 +329,6 @@ $(document).ready(function () {
         }); // Ajax call end
     };
     var clicktimer;
-    window.getMetaData();
     gc2.on("dblclick", function (e) {
         clicktimer = undefined;
     });
@@ -523,12 +534,14 @@ $(document).ready(function () {
     window.setBaseLayers = window.setBaseLayers.reverse();
     var altId, lName;
     for (var i = 0; i < window.setBaseLayers.length; i++) {
-        // Local base layer
-        if (typeof window.setBaseLayers[i].db !== "undefined") {
-            altId = window.setBaseLayers[i].id + window.setBaseLayers[i].db;
-            lName = window.setBaseLayers[i].name;
+        if (typeof window.setBaseLayers[i].restrictTo === "undefined" || window.setBaseLayers[i].restrictTo.indexOf(schema) > -1) {
+            // Local base layer
+            if (typeof window.setBaseLayers[i].db !== "undefined") {
+                altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
+                lName = window.setBaseLayers[i].name;
+            }
+            bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
         }
-        bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
     }
     if (bl !== null) {
         cloud.setBaseLayer(bl);
@@ -551,6 +564,7 @@ $(document).ready(function () {
                 if (response.data !== undefined) {
                     for (var i = 0; i < response.data.length; ++i) {
                         groups[i] = response.data[i].layergroup;
+                        metaDataRealKeys[response.data[i]._key_] = response.data[i];// Holds the layer extents
                     }
                     var arr = array_unique(groups);
                     for (var u = 0; u < response.data.length; ++u) {
@@ -577,9 +591,9 @@ $(document).ready(function () {
                             name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                         });
                     }
-                    for (var i = 0; i < arr.length; ++i) {
+                    for (i = 0; i < arr.length; ++i) {
                         var l = [], id;
-                        for (var u = 0; u < response.data.length; ++u) {
+                        for (u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
                                 id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
                                 l.push({
@@ -627,6 +641,11 @@ $(document).ready(function () {
                                         window.parent.onEditWMSClasses(e.id);
                                     }
                                 };
+                                try {
+                                    stopEdit();
+                                }
+                                catch (error) {
+                                }
                                 if (currentId !== e.id) {
                                     if (window.parent.Ext.getCmp("layerStylePanel").collapsed) {
                                         window.parent.Ext.getCmp("layerStylePanel").expand(false);
@@ -637,7 +656,6 @@ $(document).ready(function () {
                                     }
                                 }
                                 if (e.leaf === true && e.parentNode.id !== "baselayers") {
-
                                     Ext.getCmp('editlayerbutton').setDisabled(false);
                                     Ext.getCmp('quickdrawbutton').setDisabled(false);
                                     Ext.getCmp('stylebutton').setDisabled(false);
@@ -646,11 +664,6 @@ $(document).ready(function () {
                                     Ext.getCmp('quickdrawbutton').setDisabled(true);
                                     Ext.getCmp('stylebutton').setDisabled(true);
                                 }
-                                try {
-                                    stopEdit();
-                                }
-                                catch (error) {
-                                }
                                 if (typeof filter.win !== "undefined") {
                                     if (typeof  filter.win.hide !== "undefined") {
                                         filter.win.hide();
@@ -658,12 +671,38 @@ $(document).ready(function () {
                                     filter.win = false;
                                 }
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i>");
-
+                                $("#" + id).html("<i class='icon-cog btn-gc' style='cursor:pointer' id='style-" + id + "'></i><i class='icon-fullscreen btn-gc' style='cursor:pointer' id='ext-" + id + "'></i>");
+                                currentId = e.id;
                                 $("#style-" + id).on("click", function () {
                                     window.parent.Ext.getCmp("layerStylePanel").expand(true);
                                 });
-                                currentId = e.id;
+                                $("#ext-" + id).on("click", function () {
+                                    if (metaDataRealKeys[e.id].type === "RASTER") {
+                                        window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
+                                        return false;
+                                    }
+                                    Ext.Ajax.request({
+                                        url: '/api/v1/extent/' + screenName + '/' + e.id + '/900913',
+                                        method: 'get',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function (response) {
+                                            var ext = Ext.decode(response.responseText).extent;
+                                            cloud.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    });
+                                });
                             }
                         }
                     },
@@ -803,6 +842,7 @@ $(document).ready(function () {
                             })
                         ]
                     });
+
                     if (window.parent.initExtent !== null) {
                         cloud.map.zoomToExtent(window.parent.initExtent, false);
                     } else {
@@ -810,13 +850,31 @@ $(document).ready(function () {
                     }
                 }
                 else {
-                    window.parent.App.setAlert(App.STATUS_NOTICE, "Layer tree (re)loaded");
+                    window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
                 }
                 var west = Ext.getCmp("treepanel");
                 west.remove(tree);
                 west.add(tree);
                 west.doLayout();
                 window.parent.writeFiles();
+                // Last we add the restricted area layer.
+                extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
+                    styleMap: new OpenLayers.StyleMap({
+                        "default": new OpenLayers.Style({
+                            fillColor: "#000000",
+                            fillOpacity: 0.0,
+                            pointRadius: 5,
+                            strokeColor: "#ff0000",
+                            strokeWidth: 2,
+                            strokeOpacity: 0.7,
+                            graphicZIndex: 1
+                        })
+                    })
+                });
+                if (window.parent.extentRestricted) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
+                }
+                map.addLayers([extentRestrictLayer]);
             }
         })
         ;
@@ -1021,7 +1079,51 @@ $(document).ready(function () {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE,  __(Ext.decode(response.responseText).message));
+                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
+                    },
+                    failure: function (response) {
+                        Ext.MessageBox.show({
+                            title: 'Failure',
+                            msg: __(Ext.decode(response.responseText).message),
+                            buttons: Ext.MessageBox.OK,
+                            width: 400,
+                            height: 300,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                });
+            }
+        }, '-',
+        {
+            text: "<i class='icon-lock btn-gc'></i> " + __("Lock extent"),
+            id: "extentlockbutton",
+            enableToggle: true,
+            tooltip: __('Lock the map extent for sub-users in Admin and for all users in the public Viewer.'),
+            disabled: subUser ? true : false,
+            pressed: (window.parent.extentRestricted ? true : false),
+            handler: function () {
+                window.parent.extentRestricted = this.pressed;
+                if (window.parent.extentRestricted) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
+                }
+                else {
+                    extentRestrictLayer.destroyFeatures();
+                }
+                Ext.Ajax.request({
+                    url: '/controllers/setting/extentrestrict/',
+                    method: 'put',
+                    params: Ext.util.JSON.encode({
+                        data: {
+                            schema: schema,
+                            extent: window.parent.extentRestricted ? cloud.getExtent() : null,
+                            zoom: window.parent.extentRestricted ? cloud.getZoom() : null
+                        }
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    success: function (response) {
+                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
@@ -1160,8 +1262,7 @@ $(document).ready(function () {
     });
     map.addControl(measureControls.polygon);
     loadTree();
-})
-;
+});
 function stopEdit() {
     "use strict";
     layerBeingEditing = null;
@@ -1311,3 +1412,5 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
+
+

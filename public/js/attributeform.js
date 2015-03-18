@@ -7,18 +7,13 @@ attributeForm.init = function (layer, geomtype) {
         url: '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer,
         listeners: {
             load: {
-                scope: this, fn: function (_store) {
-                    attributeForm.attributeStoreCopy =
-                        new Ext.data.ArrayStore({
-                            fields: ['value', 'name'],
-                            data: [
-
-                            ]
-                        });
+                scope: this,
+                fn: function (_store) {
+                    attributeForm.attributeStoreCopy = new Ext.data.ArrayStore();
                     _store.each(function (record) {
                         var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(record.get("type"));
                         if (!match) {
-                            var newDataRow = {"name": record.get("name"), "value": getFieldType(record.get("type"))};
+                            var newDataRow = {"name": record.get("name"), "value": null};
                             var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
                             attributeForm.attributeStoreCopy.add(newRecord);
                         }
@@ -78,11 +73,11 @@ attributeForm.init = function (layer, geomtype) {
                         height: 400,
                         closeAction: 'hide',
                         plain: true,
-                        items: [ new Ext.Panel({
+                        items: [new Ext.Panel({
                             frame: false,
                             layout: 'border',
                             items: [filter.queryPanel]
-                        }) ]
+                        })]
                     });
                 }
             }
@@ -92,12 +87,13 @@ attributeForm.init = function (layer, geomtype) {
         autoScroll: true,
         region: 'center',
         border: false,
+        labelWidth: 150,
         bodyStyle: {
             background: '#ffffff',
             padding: '7px'
         },
         defaults: {
-            width: 110,
+            width: 150,
             maxLengthText: "too long",
             minLengthText: "too short"
         },
@@ -134,15 +130,16 @@ attributeForm.init = function (layer, geomtype) {
 function getFieldType(attrType) {
     "use strict";
     return ({
-        "xs:boolean": "boolean",
-        "xs:int": "int",
-        "xs:integer": "int",
-        "xs:short": "int",
-        "xs:long": "int",
-        "xs:date": "date",
-        "xs:string": "string",
-        "xs:float": "float",
-        "xs:double": "float",
+        "xsd:boolean": "boolean",
+        "xsd:int": "int",
+        "xsd:integer": "int",
+        "xsd:short": "int",
+        "xsd:long": "int",
+        "xsd:date": "date",
+        "xsd:string": "string",
+        "xsd:float": "float",
+        "xsd:double": "float",
+        "xsd:decimal": "float",
         "gml:PointPropertyType": "int"
     })[attrType];
 }

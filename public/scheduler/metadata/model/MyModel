@@ -6,8 +6,8 @@
     },
     "codeClass": null,
     "userConfig": {
-        "idProperty": null,
-        "designer|userClassName": "MyModel"
+        "designer|userClassName": "MyModel",
+        "idProperty": null
     },
     "designerId": "bd2ee9d8-45d5-4989-a423-b21638c35da7",
     "cn": [
@@ -21,6 +21,7 @@
             "userConfig": {
                 "name": "id"
             },
+            "name": "MyField",
             "designerId": "07ccd4b9-823c-4255-9c9e-35b0dae6a2bb"
         },
         {
@@ -33,6 +34,7 @@
             "userConfig": {
                 "name": "min"
             },
+            "name": "MyField1",
             "designerId": "a8177466-fb65-4a84-b38c-f94d7b3677b2"
         },
         {
@@ -45,6 +47,7 @@
             "userConfig": {
                 "name": "hour"
             },
+            "name": "MyField2",
             "designerId": "faffec16-c2a2-4e22-ac16-8f1d645d521a"
         },
         {
@@ -57,6 +60,7 @@
             "userConfig": {
                 "name": "dayofmonth"
             },
+            "name": "MyField3",
             "designerId": "3f5cd187-a02a-4198-95e5-d76ae1a8ef7e"
         },
         {
@@ -69,6 +73,7 @@
             "userConfig": {
                 "name": "month"
             },
+            "name": "MyField4",
             "designerId": "4442ff10-590c-47c8-af42-dc1b3140b2e5"
         },
         {
@@ -81,6 +86,7 @@
             "userConfig": {
                 "name": "dayofweek"
             },
+            "name": "MyField5",
             "designerId": "ec773022-0593-449a-99f3-76891c01648d"
         },
         {
@@ -93,6 +99,7 @@
             "userConfig": {
                 "name": "schema"
             },
+            "name": "MyField6",
             "designerId": "c6ecf05b-7d45-41d2-9dce-2a4c098bc3aa"
         },
         {
@@ -105,6 +112,7 @@
             "userConfig": {
                 "name": "name"
             },
+            "name": "MyField7",
             "designerId": "20d2cceb-2913-4436-b562-b8245c82a48c"
         },
         {
@@ -117,6 +125,7 @@
             "userConfig": {
                 "name": "url"
             },
+            "name": "MyField8",
             "designerId": "3aa91a74-6428-4169-a4a9-961545633d06"
         },
         {
@@ -129,6 +138,7 @@
             "userConfig": {
                 "name": "epsg"
             },
+            "name": "MyField9",
             "designerId": "d60eb6ac-c66b-478b-8f86-6ec54d2b65c8"
         },
         {
@@ -141,6 +151,7 @@
             "userConfig": {
                 "name": "extra"
             },
+            "name": "MyField10",
             "designerId": "0e53606e-937e-44a7-ae68-6a012ecee9cd"
         },
         {
@@ -153,6 +164,7 @@
             "userConfig": {
                 "name": "type"
             },
+            "name": "MyField11",
             "designerId": "d7973373-8cfb-49f9-b6ff-bb15ef21f9e9"
         },
         {
@@ -165,6 +177,7 @@
             "userConfig": {
                 "name": "encoding"
             },
+            "name": "MyField12",
             "designerId": "00c9efc2-4851-4ebd-96d5-6c545d249c4f"
         },
         {
@@ -177,6 +190,7 @@
             "userConfig": {
                 "name": "lastcheck"
             },
+            "name": "MyField13",
             "designerId": "371d9f03-c60e-4edb-9a38-6735d88d32fe"
         },
         {
@@ -189,6 +203,7 @@
             "userConfig": {
                 "name": "lasttimestamp"
             },
+            "name": "MyField14",
             "designerId": "7cb756be-31a3-49fb-b3cc-9b5b172d6133"
         },
         {
@@ -198,6 +213,7 @@
                 "type": "object"
             },
             "codeClass": null,
+            "name": "MyHasOneAssociation",
             "designerId": "0d21ffce-9c72-417d-b368-1e032f51ce56"
         }
     ]

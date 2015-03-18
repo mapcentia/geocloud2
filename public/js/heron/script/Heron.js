@@ -2142,27 +2142,36 @@ Ext.reg('hr_layernodemenustyle', Heron.widgets.LayerNodeMenuItem.Style);
 Heron.widgets.LayerNodeMenuItem.ZoomExtent = Ext.extend(Heron.widgets.LayerNodeMenuItem, {text: __('Zoom to Layer Extent'), iconCls: "icon-zoom-visible", initComponent: function () {
     Heron.widgets.LayerNodeMenuItem.ZoomExtent.superclass.initComponent.call(this);
 }, handler: function (menuItem, event) {
+    // HACK. This handler is hacked to use GC2 extent API
     var node = menuItem.ownerCt.contextNode;
-    //console.log(layer.name);
-
     if (!node || !node.layer) {
         return;
     }
     var layer = node.layer;
-    var zoomExtent;
-    if (this.hasMaxExtent) {
-        zoomExtent = layer.maxExtent;
-    } else {
-        zoomExtent = layer.getDataExtent();
-    }
-    if (!zoomExtent) {
-        Ext.Msg.alert(__('Warning'), __('Sorry, no data-extent is available for this Layer'));
-        return;
-    }
-    layer.map.zoomToExtent(zoomExtent);
+    Ext.Ajax.request({
+        url: '/api/v1/extent/' + layer.db + '/' + layer.name + "." + layer.geomField + '/900913',
+        method: 'get',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        success: function (response) {
+            var ext = Ext.decode(response.responseText).extent;
+            layer.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
+        },
+        failure: function (response) {
+            Ext.MessageBox.show({
+                title: 'Failure',
+                msg: __(Ext.decode(response.responseText).message),
+                buttons: Ext.MessageBox.OK,
+                width: 400,
+                height: 300,
+                icon: Ext.MessageBox.ERROR
+            });
+        }
+    });
 }, isApplicable: function (node) {
     this.hasMaxExtent = node.layer.maxExtent && !node.layer.maxExtent.equals(node.layer.map.maxExtent);
-    return node.layer.getDataExtent() || this.hasMaxExtent;
+    return node.layer.getDataExtent() || this.hasMaxExtent || true; // HACK
 }});
 Ext.reg('hr_layernodemenuzoomextent', Heron.widgets.LayerNodeMenuItem.ZoomExtent);
 Heron.widgets.LayerNodeMenuItem.LayerInfo = Ext.extend(Heron.widgets.LayerNodeMenuItem, {text: __('Get Layer information'), iconCls: "icon-information", initComponent: function () {

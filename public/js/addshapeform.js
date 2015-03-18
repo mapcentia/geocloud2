@@ -19,7 +19,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif", "zip", "rar"], geoType, encoding, ignoreErrors, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "mif", "zip", "rar"], geoType, encoding, ignoreErrors, overwrite, append, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/vector',
@@ -29,28 +29,58 @@ addShape.init = function () {
                 urlstream_upload: true,
                 init: {
                     UploadComplete: function (up, files) {
-                        Ext.each(arr, function (e) {
-                            flag = true;
-                            geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
-                            $.ajax({
-                                url: '/controllers/upload/processvector',
-                                data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding + "&ignoreerrors=" + ignoreErrors,
-                                dataType: 'json',
-                                type: 'GET',
-                                success: function (response) {
-                                    if (response.success) {
-                                        App.setAlert(App.STATUS_NOTICE, __(response.message));
-                                        writeFiles();
-                                        document.getElementById("wfseditor").contentWindow.window.reLoadTree();
-                                        store.load();
-                                    } else {
-                                        Ext.MessageBox.alert(__('Failure'), __(response.message));
+                        // *****
+                        var count = 0, errors = [], i;
+                        (function iter() {
+                            var e = arr[count], strings = [];
+                            if (arr.length === count) {
+                                if (flag) {
+                                    App.setAlert(App.STATUS_NOTICE, __("All files processed"));
+                                    writeFiles();
+                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                    store.load();
+                                    if (errors.length > 0) {
+                                        for (i = 0; i < errors.length; i = i + 1) {
+                                            strings.push(errors[i]);
+                                        }
+                                        var message = "<p>" + __("Some file processing resulted in errors or warnings.") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
+                                        Ext.MessageBox.show({
+                                            title: __('Failure'),
+                                            msg: message,
+                                            buttons: Ext.MessageBox.OK,
+                                            width: 500,
+                                            height: 400
+                                        });
                                     }
                                 }
-                            });
-                        });
+                                spinner(false);
+                                return;
+                            } else {
+                                spinner(true, __("processing " + e.split(".")[0]));
+                                geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
+                                flag = true;
+                                $.ajax({
+                                    url: '/controllers/upload/processvector',
+                                    data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding + "&ignoreerrors=" + ignoreErrors + "&overwrite=" + overwrite + "&append=" + append,
+                                    dataType: 'json',
+                                    type: 'GET',
+                                    success: function (response) {
+                                        count = count + 1;
+                                        if (!response.success) {
+                                            errors.push(__(response.message));
+                                        }
+                                        iter();
+                                    },
+                                    error: function (response) {
+                                        count = count + 1;
+                                        errors.push(__(Ext.decode(response.responseText).message));
+                                        iter();
+                                    }
+                                });
+                            }
+                        }());
                         if (!flag) {
-                            Ext.MessageBox.alert(__('Failure'), __("No files you uploaded seems to be recognized as a valid image format."));
+                            Ext.MessageBox.alert(__('Failure'), __("No files you uploaded seems to be recognized as a valid vector format."));
                         }
                     },
                     FilesAdded: function (up, files) {
@@ -67,6 +97,8 @@ addShape.init = function () {
                         geoType = Ext.getCmp('geotype').getValue();
                         encoding = Ext.getCmp('encoding').getValue();
                         ignoreErrors = Ext.getCmp('ignoreErrors').getValue();
+                        overwrite = Ext.getCmp('overwrite').getValue();
+                        append = Ext.getCmp('append').getValue();
                         srs = Ext.getCmp('srs').getValue();
                         up.settings.multipart_params = {
                             name: file.name
@@ -132,7 +164,7 @@ addShape.init = function () {
                 })
             },
             ' ',
-             __('Encoding'),
+            __('Encoding'),
             {
                 width: 150,
                 xtype: 'combo',
@@ -198,6 +230,18 @@ addShape.init = function () {
             {
                 xtype: 'checkbox',
                 id: 'ignoreErrors'
+            },
+            ' ',
+            __('Overwrite'),
+            {
+                xtype: 'checkbox',
+                id: 'overwrite'
+            },
+            ' ',
+            __('Delete/append'),
+            {
+                xtype: 'checkbox',
+                id: 'append'
             }
         ]
     });

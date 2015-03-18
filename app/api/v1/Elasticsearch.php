@@ -186,6 +186,7 @@ class Elasticsearch extends \app\inc\Controller
         $model->close();// Close the PDO connection
 
         $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
 
         $result = $model->execQuery($pl, "PG");
@@ -280,6 +281,7 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Create the trigger
+        $triggerInstalledIn = null;
         if ($relationType["data"] == "table" || ($installTrigger)) {
             $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
             $result = $model->execQuery($pl, "PG");
@@ -348,6 +350,7 @@ class Elasticsearch extends \app\inc\Controller
         return $this->delete_delete();
     }
 
+    // Wrappers for HTTP POST
     public function post_bulk()
     {
         return $this->get_bulk();

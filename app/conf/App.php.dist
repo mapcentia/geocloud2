@@ -84,7 +84,7 @@ class App
         //Hide layers without a group in viewer
         "hideUngroupedLayers" => true,
 
-        // Trust theese IPs
+        // Trusted IPs
         "trustedAddresses" => array(
           "127.0.0.1/32"
         ),

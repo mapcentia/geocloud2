@@ -472,7 +472,7 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
-        var layers = {}, jRes, node, modalFlag, extent = null, i;
+        var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [];
 
         $('.share-text').mouseup(function () {
             return false;
@@ -502,6 +502,7 @@ Viewer = function () {
                 $("#base-layer-list").append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + window.setBaseLayers[i].id + "')\">" + window.setBaseLayers[i].name + "</a></li>"
                 );
+                addedBaseLayers.push(window.setBaseLayers[i]);
             }
         }
         $("#locate-btn").on("click", function () {
@@ -618,9 +619,18 @@ Viewer = function () {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
+                var p1, p2, restrictedExtent;
                 if (typeof response.data.extents === "object") {
                     if (typeof response.data.extents[schema] === "object") {
                         extent = response.data.extents[schema];
+                    }
+                }
+                if (typeof response.data.extentrestricts !== "undefined") {
+                    if (response.data.extentrestricts[schema] !== undefined && response.data.extentrestricts[schema] !== null) {
+                        restrictedExtent = response.data.extentrestricts[schema];
+                        p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", "EPSG:4326");
+                        p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", "EPSG:4326");
+                        cloud.map.setMaxBounds([[p1.y,p1.x],[p2.y,p2.x]]);
                     }
                 }
             }
@@ -715,7 +725,7 @@ Viewer = function () {
                     cloud.zoomToPoint(p.x, p.y, hashArr[1]);
                 }
             } else {
-                setBaseLayer(window.setBaseLayers[0].id);
+                setBaseLayer(addedBaseLayers[0].id);
                 if (extent !== null) {
                     cloud.zoomToExtent(extent);
                 } else {

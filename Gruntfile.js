@@ -188,6 +188,23 @@ module.exports = function (grunt) {
                 src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
                 dest: 'public/apps/widgets/gc2map/js/gc2map.js'
             }
+        },
+        gitpull: {
+            production: {
+                options: {}
+            }
+        },
+        gitreset: {
+            production: {
+                options: {
+                    mode: 'hard'
+                }
+            }
+        },
+        shell: {
+            migration: {
+                command: 'cd /var/www/geocloud2/app/conf/migration/ && ./run'
+            }
         }
     });
     grunt.loadNpmTasks('grunt-contrib-cssmin');
@@ -198,9 +215,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-templates-hogan');
     grunt.loadNpmTasks('grunt-cache-bust');
     grunt.loadNpmTasks('grunt-preprocess');
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-shell');
+    grunt.loadNpmTasks('grunt-npm-install');
 
-    grunt.registerTask('default', ['cssmin', 'jshint', 'hogan', 'uglify', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust']);
+    grunt.registerTask('migration', ['shell:migration']);
 };
 
 

@@ -685,7 +685,8 @@ geocloud = (function () {
                             dragPanOptions: {
                                 enableKinetic: true
                             }
-                        })],
+                        })
+                    ],
                     numZoomLevels: defaults.numZoomLevels,
                     projection: defaults.projection,
                     maxResolution: defaults.maxResolution,

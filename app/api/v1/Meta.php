@@ -18,10 +18,10 @@ class Meta extends \app\inc\Controller
         $q = Input::getPath()->part(5);
         $split = explode(".",$q);
         if (sizeof($split) == 1) {
-            return $this->layers->getAll($q, null, Session::isAuth());
+            return $this->layers->getAll($q, null, Session::isAuth(), Input::get("iex"));
         }
         else {
-            return $this->layers->getAll(null, $q, Session::isAuth());
+            return $this->layers->getAll(null, $q, Session::isAuth(), Input::get("iex"));
         }
     }
 }

@@ -8,7 +8,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
-<link rel="stylesheet" type="text/css" href="/css/styles.css?e240952495887feb"/>
+<link rel="stylesheet" type="text/css" href="/css/styles.css?ab029c0ff82bf6ab"/>
 <!-- /build -->
 </head>
 <body>
@@ -107,6 +107,7 @@ include("html_header.php");
         </table>
     </div>
 </div>
+<div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif'/></div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>window.__ = function (string, toolTip) {
         'use strict';
@@ -133,15 +134,15 @@ include("html_header.php");
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/store.js?bda0814fa85ebfdb"></script>
-<script type="text/javascript" src="/js/edittablestructure.js?3e5e88d555665ea7"></script>
+<script type="text/javascript" src="/js/store.js?6200528cd8c83000"></script>
+<script type="text/javascript" src="/js/edittablestructure.js?ec4176bf4fe0d30b"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
-<script type="text/javascript" src="/js/editwmsclass.js?4f93fc8ac1ee2be8"></script>
-<script type="text/javascript" src="/js/editwmslayer.js?2015a7622e89fc9a"></script>
-<script type="text/javascript" src="/js/classwizards.js?352cbed369f994cd"></script>
-<script type="text/javascript" src="/js/addshapeform.js?9c4ac94310c47df3"></script>
-<script type="text/javascript" src="/js/addbitmapform.js?7f352c9bbaf8b3ce"></script>
-<script type="text/javascript" src="/js/addrasterform.js?da336a6959702c26"></script>
+<script type="text/javascript" src="/js/editwmsclass.js?657470fc27ac6e4f"></script>
+<script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
+<script type="text/javascript" src="/js/classwizards.js?1d00b17572d800a0"></script>
+<script type="text/javascript" src="/js/addshapeform.js?f9d573d87b235a08"></script>
+<script type="text/javascript" src="/js/addbitmapform.js?53b6dfd2a63ab812"></script>
+<script type="text/javascript" src="/js/addrasterform.js?af3d3b37eda75007"></script>
 <script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
 <script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>
 <script type="text/javascript" src="/js/addosmform.js?6fa514ebc5d91d01"></script>

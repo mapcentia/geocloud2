@@ -6,10 +6,14 @@
     },
     "codeClass": null,
     "userConfig": {
+        "controllers": [
+            "MyController"
+        ],
         "models": [
             "MyModel",
             "SchemaModel"
         ],
+        "name": "MyApp",
         "stores": [
             "MyJsonStore",
             "SchemaStore"
@@ -17,12 +21,8 @@
         "views": [
             "MyViewport",
             "MyWindow"
-        ],
-        "autoCreateViewport": true,
-        "controllers": [
-            "MyController"
-        ],
-        "name": "MyApp"
+        ]
     },
+    "name": "Application",
     "designerId": "application"
 }

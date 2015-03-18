@@ -16,6 +16,11 @@ class Staticmap extends \app\inc\Controller
         $this->get_file("png");
     }
 
+    public function post_png()
+    {
+        $this->get_file("png");
+    }
+
     public function get_jpg()
     {
         $this->get_file("jpg");
@@ -112,6 +117,7 @@ class Staticmap extends \app\inc\Controller
         <style>
         body {margin: 0px; padding: 0px;}
         .leaflet-control-zoom{display: none}
+        .leaflet-control-attribution{white-space: nowrap;}
         </style>
         <script>
             (function () {

@@ -178,6 +178,20 @@ gc2i18n = {
         "Create a view on top of the OSM database. If you choose to create a table instead of a view, the data will be copied. Use this option for large data sets. The extent of the map will be used as filter. You can also filter by OSM tags.": "Skab et view ovenpå OSM databasen. Hvis du vælger at skabe en tabel i stedet for et view, vil data bliver kopieret fra OSM databasen. Brug denne mulighed ved større datasæt. Kortets udsnit vil blive brugt som filter. Du kan også bruge OSM tags som filter.",
         "Match all, any or none of the above": "Match alle, nogle eller ingen af ovenstående",
         "Create table instead of a view?": "Skab tabel i stedet for et view?",
-        "Ignore errors": "Tillad fejl"
+        "Ignore errors": "Tillad fejl",
+
+
+        "Piping data to Elasticsearch": "Overfører data til Elasticsearch",
+        "All files processed": "Alle filer behandlet",
+        "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?": "Dette vil overføre date fra tabellen/viewet til et index i Elasticsearch. Vil du fortsætte?",
+        "No files you uploaded seems to be recognized as a valid vector format.": "Ingen af de filer du loadede er genkendt som valide vektorformatter.",
+        "Lock extent": "Lås kortets udstrækning",
+        "Lock the map extent for sub-users in Admin and for all users in the public Viewer.": "Lås kortets udstrækning for sub-users i Admin og for alle brugere i den offentlige Viewer.",
+        "Extent locked": "Kortets udstrækning låst",
+        "Extent unlocked": "Kortets udstrækning ulåst",
+        "Some file processing resulted in errors or warnings.": "Indlæsning af nogle filer gave fejl eller advarsler.",
+        "Overwrite": "Overskriv",
+        "Delete/append": "Tøm/tilføj",
+        "Layer tree reloaded": "Lagtræet genindlæst"
     }
 };

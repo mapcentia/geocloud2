@@ -65,7 +65,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr['pw'] = $this->encryptPw($pw);
         } else {
-            $arr['pw_subuser']->$_SESSION["subuser"] =  $this->encryptPw($pw);
+            $arr['pw_subuser']->$_SESSION["subuser"] = $this->encryptPw($pw);
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -111,6 +111,36 @@ class Setting extends Model
         if (!$this->PDOerror) {
             $response['success'] = true;
             $response['message'] = "Extent saved";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
+        }
+        return $response;
+    }
+
+    public function updateExtentRestrict($extentrestrict)
+    {
+        $arr = $this->getArray();
+
+        $obj = (array)$arr['extentrestricts'];
+        $obj[\app\conf\Connection::$param['postgisschema']] = $extentrestrict->extent;
+        $arr['extentrestricts'] = $obj;
+
+        $obj = (array)$arr['zoomrestricts'];
+        $obj[\app\conf\Connection::$param['postgisschema']] = $extentrestrict->zoom;
+        $arr['zoomrestricts'] = $obj;
+
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = ($extentrestrict->extent)? "Extent locked": "Extent unlocked";
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;

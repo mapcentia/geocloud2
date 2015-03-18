@@ -6,11 +6,11 @@
     },
     "codeClass": null,
     "userConfig": {
+        "designer|userClassName": "MyWindow",
         "height": 306,
         "itemId": "window",
-        "width": 600,
-        "designer|userClassName": "MyWindow",
-        "title": "My Window"
+        "title": "My Window",
+        "width": 600
     },
     "designerId": "35afd42e-aeac-4380-b0f0-9bcebe016ddb",
     "cn": [
@@ -22,14 +22,15 @@
             },
             "codeClass": null,
             "userConfig": {
+                "bodyPadding": 10,
                 "container|align": "stretch",
                 "height": null,
                 "itemId": "form",
                 "layout": "vbox",
-                "bodyPadding": 10,
                 "manageHeight": false,
                 "title": null
             },
+            "name": "MyForm",
             "designerId": "56642eae-b121-45a3-8045-e1ff95aa4afb",
             "cn": [
                 {
@@ -40,14 +41,15 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
                         "container|align": "stretch",
-                        "height": null,
-                        "width": 400,
-                        "layout": "hbox",
                         "fieldLabel": null,
-                        "hideEmptyLabel": false
+                        "height": null,
+                        "hideEmptyLabel": false,
+                        "layout": "hbox",
+                        "layout|flex": 1,
+                        "width": 400
                     },
+                    "name": "MyFieldContainer",
                     "designerId": "aac7f6e1-69ab-48ba-896b-c3c278c5eac5",
                     "cn": [
                         {
@@ -58,11 +60,12 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
                                 "html": [
                                     "Min"
-                                ]
+                                ],
+                                "layout|flex": 1
                             },
+                            "name": "MyContainer",
                             "designerId": "4f2acec9-1e6b-416a-a76e-1d630424f201"
                         },
                         {
@@ -73,12 +76,13 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
                                 "html": [
                                     "Hour",
                                     ""
-                                ]
+                                ],
+                                "layout|flex": 1
                             },
+                            "name": "MyContainer1",
                             "designerId": "e751c79a-e554-4714-9829-4e4fd9ffd9f6"
                         },
                         {
@@ -89,11 +93,12 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
                                 "html": [
                                     "Day of month"
-                                ]
+                                ],
+                                "layout|flex": 1
                             },
+                            "name": "MyContainer2",
                             "designerId": "5b77cb62-a1c9-4978-b746-17041874c6a8"
                         },
                         {
@@ -104,11 +109,12 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
                                 "html": [
                                     "Month"
-                                ]
+                                ],
+                                "layout|flex": 1
                             },
+                            "name": "MyContainer3",
                             "designerId": "f7fc4e69-88bb-45c3-ba80-e160c6abb8c0"
                         },
                         {
@@ -119,12 +125,13 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
                                 "html": [
                                     "Day of week",
                                     ""
-                                ]
+                                ],
+                                "layout|flex": 1
                             },
+                            "name": "MyContainer4",
                             "designerId": "69d98a9c-4b74-4937-8532-8bffd3e8d1cc"
                         }
                     ]
@@ -137,19 +144,20 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
                         "container|align": "stretch",
-                        "height": null,
-                        "width": 400,
                         "defaults": [
                             "{",
                             "    flex: 1",
                             "   ",
                             "}"
                         ],
+                        "fieldLabel": "Cron",
+                        "height": null,
                         "layout": "hbox",
-                        "fieldLabel": "Cron"
+                        "layout|flex": 1,
+                        "width": 400
                     },
+                    "name": "MyFieldContainer1",
                     "designerId": "0e0cbbdf-4440-4260-a691-c782584d2c56",
                     "cn": [
                         {
@@ -160,12 +168,8 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": null,
                                 "fieldLabel": null,
                                 "name": "min",
-                                "value": [
-                                    "*"
-                                ],
                                 "store": [
                                     "['*',",
                                     " 0,",
@@ -229,8 +233,13 @@
                                     "58,",
                                     "59",
                                     "]"
-                                ]
+                                ],
+                                "value": [
+                                    "*"
+                                ],
+                                "width": null
                             },
+                            "name": "MyComboBox",
                             "configAlternates": {
                                 "store": "array"
                             },
@@ -244,13 +253,9 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": null,
                                 "fieldLabel": null,
                                 "labelWidth": null,
                                 "name": "hour",
-                                "value": [
-                                    "*"
-                                ],
                                 "store": [
                                     "['*',",
                                     " 0,",
@@ -277,8 +282,13 @@
                                     "21,",
                                     "22,",
                                     "23]"
-                                ]
+                                ],
+                                "value": [
+                                    "*"
+                                ],
+                                "width": null
                             },
+                            "name": "MyComboBox1",
                             "configAlternates": {
                                 "store": "array"
                             },
@@ -292,13 +302,9 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": null,
                                 "fieldLabel": null,
                                 "labelWidth": null,
                                 "name": "dayofmonth",
-                                "value": [
-                                    "*"
-                                ],
                                 "store": [
                                     "['*',",
                                     "1,",
@@ -333,8 +339,13 @@
                                     "30,",
                                     "31",
                                     "    ]"
-                                ]
+                                ],
+                                "value": [
+                                    "*"
+                                ],
+                                "width": null
                             },
+                            "name": "MyComboBox2",
                             "configAlternates": {
                                 "store": "array"
                             },
@@ -348,13 +359,9 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "width": null,
                                 "fieldLabel": null,
                                 "labelWidth": null,
                                 "name": "month",
-                                "value": [
-                                    "*"
-                                ],
                                 "store": [
                                     "['*',",
                                     "1,",
@@ -369,8 +376,13 @@
                                     "10,",
                                     "11,",
                                     "12]"
-                                ]
+                                ],
+                                "value": [
+                                    "*"
+                                ],
+                                "width": null
                             },
+                            "name": "MyComboBox3",
                             "configAlternates": {
                                 "store": "array"
                             },
@@ -384,14 +396,10 @@
                             },
                             "codeClass": null,
                             "userConfig": {
-                                "layout|flex": 1,
-                                "width": null,
                                 "fieldLabel": null,
                                 "labelWidth": null,
+                                "layout|flex": 1,
                                 "name": "dayofweek",
-                                "value": [
-                                    "*"
-                                ],
                                 "store": [
                                     "['*',",
                                     "   0,",
@@ -402,8 +410,13 @@
                                     "5,",
                                     "6",
                                     " ]"
-                                ]
+                                ],
+                                "value": [
+                                    "*"
+                                ],
+                                "width": null
                             },
+                            "name": "MyComboBox4",
                             "configAlternates": {
                                 "store": "array"
                             },
@@ -419,10 +432,11 @@
                     },
                     "codeClass": null,
                     "userConfig": {
+                        "allowBlank": false,
                         "fieldLabel": "Table",
-                        "name": "name",
-                        "allowBlank": false
+                        "name": "name"
                     },
+                    "name": "MyTextField",
                     "designerId": "30a4eb10-fef8-4d55-b377-a0cb8b9031cd"
                 },
                 {
@@ -433,14 +447,15 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
-                        "fieldLabel": "Schema",
-                        "name": "schema",
                         "allowBlank": false,
-                        "editable": false,
                         "displayField": "schema",
+                        "editable": false,
+                        "fieldLabel": "Schema",
+                        "layout|flex": 1,
+                        "name": "schema",
                         "store": "SchemaStore"
                     },
+                    "name": "MyComboBox5",
                     "designerId": "b2ae4f82-2f38-4873-8753-1ea6e908b64c"
                 },
                 {
@@ -451,11 +466,12 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "width": 150,
+                        "allowBlank": false,
                         "fieldLabel": "Url",
                         "name": "url",
-                        "allowBlank": false
+                        "width": 150
                     },
+                    "name": "MyTextField1",
                     "designerId": "66c2aa66-1130-4a62-b016-c6f90e59d364"
                 },
                 {
@@ -466,11 +482,12 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
+                        "allowBlank": false,
                         "fieldLabel": "Epsg",
-                        "name": "epsg",
-                        "allowBlank": false
+                        "layout|flex": 1,
+                        "name": "epsg"
                     },
+                    "name": "MyTextField2",
                     "designerId": "33473fbf-eb1a-4807-9b16-0b4976642028"
                 },
                 {
@@ -481,15 +498,16 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
-                        "fieldLabel": "Type",
-                        "name": "type",
                         "allowBlank": false,
                         "editable": false,
+                        "fieldLabel": "Type",
+                        "layout|flex": 1,
+                        "name": "type",
                         "store": [
                             "    [\"AUTO\",\"POINT\",\"LINESTRING\",\"POLYGON\",\"MULTIPOINT\",\"MULTILINESTRING\",\"MULTIPOLYGON\"]"
                         ]
                     },
+                    "name": "MyComboBox6",
                     "configAlternates": {
                         "store": "array"
                     },
@@ -503,16 +521,17 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
-                        "fieldLabel": "Encoding",
-                        "name": "encoding",
                         "allowBlank": false,
+                        "fieldLabel": "Encoding",
+                        "layout|flex": 1,
+                        "name": "encoding",
                         "store": [
                             "",
                             "    [\"UTF8\",\"LATIN1\"]",
                             ""
                         ]
                     },
+                    "name": "MyComboBox7",
                     "configAlternates": {
                         "store": "array"
                     },
@@ -526,10 +545,11 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
                         "fieldLabel": "Extra fields",
+                        "layout|flex": 1,
                         "name": "extra"
                     },
+                    "name": "MyTextField3",
                     "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
                 },
                 {
@@ -540,10 +560,11 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
                         "itemId": "save",
+                        "layout|flex": 1,
                         "text": "Save"
                     },
+                    "name": "MyButton3",
                     "designerId": "acbc3125-6101-49bb-94fa-f89ec61ed886"
                 },
                 {
@@ -554,10 +575,11 @@
                     },
                     "codeClass": null,
                     "userConfig": {
-                        "layout|flex": 1,
                         "itemId": "update",
+                        "layout|flex": 1,
                         "text": "Update"
                     },
+                    "name": "MyButton4",
                     "designerId": "372fb25b-b751-4713-bc12-f51f4127f6b4"
                 }
             ]
