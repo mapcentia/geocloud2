@@ -158,10 +158,14 @@ class Classification extends \app\inc\Model
 
     public function update($id, $data)
     {
-        $data->expression = urldecode($data->expression);
+        if ($data->expression) {
+            urldecode($data->expression);
+        }
         $classes = $this->getAll();
-        //print_r($classes);
-        $classes['data'][$id] = $data;
+        foreach((array)$data as $k=>$v){
+            $classes['data'][$id][$k] = $v;
+
+        }
         if ($this->store(json_encode($classes['data']))) {
             $response['success'] = true;
             $response['message'] = "Updated one class";

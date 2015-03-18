@@ -787,8 +787,7 @@ $(document).ready(function () {
                                     {
                                         xtype: "panel",
                                         border: false,
-                                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>",
-                                        height: 60
+                                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>"
                                     },
                                     new Ext.Panel({
                                         border: false,

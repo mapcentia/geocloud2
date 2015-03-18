@@ -7,64 +7,120 @@
 Ext.namespace('classWizards');
 classWizards.init = function (record) {
     "use strict";
-    var customIsSet = false, legendGrid,
+    var customIsSet = false, legendPanel, classGrid,
         classes,
-        classStore = new Ext.data.ArrayStore({
-            fields: ['name', 'color']
+        classStore = new Ext.data.Store({
+            fields: ['id', 'name', 'color'],
+            writer: new Ext.data.JsonWriter({
+                writeAllFields: false,
+                encode: false
+            }),
+            reader: new Ext.data.ArrayReader({
+                idIndex: 0,
+                root: 'data'
+            }, Ext.data.Record.create([
+                {name: 'id'},
+                {name: 'name'},
+                {name: 'color'}
+            ])),
+            proxy: new Ext.data.HttpProxy({
+                restful: true,
+                type: 'json',
+                api: {
+                    update: '/controllers/classification/index/' + record._key_
+                },
+                listeners: {
+                    write: function () {
+                        classGrid.getSelectionModel().clearSelections();
+                        Ext.getCmp("a3").remove(wmsClass.grid);
+                        wmsClasses.store.load();
+                        wmsLayer.store.load();
+                        writeFiles(record._key_);
+                        store.load();
+                    },
+                    exception: function (proxy, type, action, options, response, arg) {
+                        if (type === 'remote') {
+                            var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
+                            Ext.MessageBox.show({
+                                title: __('Failure'),
+                                msg: message,
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
+                        } else {
+                            Ext.MessageBox.show({
+                                title: __("Failure"),
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
+                        }
+                    }
+                }
+            }),
+            autoSave: true
         }),
         updateClassGrid = function () {
             var myData = [], i;
             classes = Ext.decode(store.getById(record._key_).json.class);
             for (i = 0; i < classes.length; i = i + 1) {
-                myData.push([classes[i].name, classes[i].color]);
+                myData.push([i, classes[i].name, classes[i].color]);
             }
-            classStore.loadData(myData);
-            legendGrid.doLayout();
+            classStore.loadData({data: myData});
         };
-    legendGrid = new Ext.Panel({
+    classGrid = new Ext.grid.EditorGridPanel({
+        store: classStore,
+        frame: false,
+        border: false,
+        region: "center",
+        viewConfig: {
+            forceFit: true,
+            stripeRows: true
+        },
+        cm: new Ext.grid.ColumnModel({
+            defaults: {
+                editor: {
+                    xtype: "textfield"
+                }
+            },
+            columns: [
+
+                {
+                    header: __("Name"),
+                    dataIndex: "name",
+                    editable: true,
+                    flex: 1
+                },
+                {
+                    header: __("Color"),
+                    dataIndex: "color",
+                    editable: true,
+                    flex: 1,
+                    editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+                    renderer: function (value, meta) {
+                        meta.style = "background-color:" + value;
+                        return value;
+                    }
+                }
+            ]
+        })
+    });
+
+    legendPanel = new Ext.Panel({
         region: 'east',
         border: false,
         frame: false,
         width: 250,
         layout: "border",
-        items: [
-            new Ext.grid.EditorGridPanel({
-                store: classStore,
-                frame: false,
-                border: false,
-                region: "center",
-                viewConfig: {
-                    forceFit: true,
-                    stripeRows: true
-                },
-                cm: new Ext.grid.ColumnModel({
-                    defaults: {
-                        editor: {
-                            xtype: "textfield"
-                        }
-                    },
-                    columns: [
-                        {
-                            header: __("Name"),
-                            dataIndex: "name",
-                            editable: true,
-                            flex: 1
-                        },
-                        {
-                            header: __("Color"),
-                            dataIndex: "color",
-                            editable: true,
-                            flex: 1,
-                            editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-                            renderer: function (value, meta) {
-                                meta.style = "background-color:" + value;
-                                return value;
-                            }
-                        }
-                    ]
-                })
-            })
-        ]
+        items: [classGrid, new Ext.Panel({
+            region: 'north',
+            border: false,
+            frame: false,
+          //  height: 100,
+            html: "<div class=\"layer-desc\">Double click on value in the the legend to change it.</div>"
+        })]
     });
 
     store.load({
@@ -1056,7 +1112,7 @@ classWizards.init = function (record) {
                                 ]
                             })]
                     }),
-                    legendGrid
+                    legendPanel
                 ]
             })
         ]
