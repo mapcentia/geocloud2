@@ -114,7 +114,9 @@ class Layer extends \app\models\Table
 
             }
             $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+
             $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+
             if ($includeExtent == true) {
                 $arr = $this->array_push_assoc($arr, "extent", $extent);
             }
