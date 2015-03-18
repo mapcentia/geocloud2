@@ -21,7 +21,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $layer = false, $auth, $includeExtent = false)
+    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse)
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
@@ -98,6 +98,17 @@ class Layer extends \app\models\Table
                         }
                     }
                     $value = json_encode($obj);
+                }
+                if ($parse) {
+                    if (
+                        ($key == "fieldconf" ||
+                            $key == "def" ||
+                            $key == "class" ||
+                            $key == "classwizard"
+                        ) && ($value)
+                    ) {
+                        $value = json_decode($value);
+                    }
                 }
                 $arr = $this->array_push_assoc($arr, $key, $value);
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
