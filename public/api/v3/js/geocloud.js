@@ -267,7 +267,7 @@ geocloud = (function () {
                 q = q.replace(/\{maxX\}/g, map.getExtent().right);
                 q = q.replace(/\{minY\}/g, map.getExtent().bottom);
                 q = q.replace(/\{maxY\}/g, map.getExtent().top);
-                q = q.replace(/{bbox}/g, map.getExtent().toString());
+                q = q.replace(/\{bbox\}/g, map.getExtent().toString());
             } catch (e) {
             }
             $.ajax({
@@ -436,7 +436,8 @@ geocloud = (function () {
                 numZoomLevels: 20,
                 projection: "EPSG:900913",
                 fadeAnimation: true,
-                zoomAnimation: true
+                zoomAnimation: true,
+                showLayerSwitcher: false
             };
         if (config) {
             for (prop in config) {
@@ -676,17 +677,21 @@ geocloud = (function () {
         // map init
         switch (MAPLIB) {
             case "ol2":
+                var olControls = [
+                    new OpenLayers.Control.Zoom(),
+                    new OpenLayers.Control.Attribution(),
+                    new OpenLayers.Control.TouchNavigation({
+                        dragPanOptions: {
+                            enableKinetic: true
+                        }
+                    })
+                ];
+                if (defaults.showLayerSwitcher) {
+                    olControls.push(new OpenLayers.Control.LayerSwitcher());
+                }
                 this.map = new OpenLayers.Map(defaults.el, {
                     //theme: null,
-                    controls: [
-                        new OpenLayers.Control.Zoom(),
-                        new OpenLayers.Control.Attribution(),
-                        new OpenLayers.Control.TouchNavigation({
-                            dragPanOptions: {
-                                enableKinetic: true
-                            }
-                        })
-                    ],
+                    controls: olControls,
                     numZoomLevels: defaults.numZoomLevels,
                     projection: defaults.projection,
                     maxResolution: defaults.maxResolution,

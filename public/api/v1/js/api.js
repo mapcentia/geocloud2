@@ -6,6 +6,7 @@
 /*global mygeocloud_ol:false */
 /*global schema:false */
 /*global document:false */
+/*global mygeocloud_host:false */
 var popup;
 var scriptSource = (function (scripts) {
     'use strict';
