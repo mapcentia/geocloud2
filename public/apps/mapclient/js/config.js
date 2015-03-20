@@ -85,7 +85,7 @@ MapCentia.setup = function () {
         [
             "OpenLayers.Layer.Bing",
             {
-                key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
+                key: window.bingApiKey,
                 type: "Road",
                 name: "Bing Road",
                 transitionEffect: 'resize'
@@ -97,7 +97,7 @@ MapCentia.setup = function () {
         [
             "OpenLayers.Layer.Bing",
             {
-                key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
+                key: window.bingApiKey,
                 type: "Aerial",
                 name: "Bing Aerial",
                 transitionEffect: 'resize'
@@ -109,7 +109,7 @@ MapCentia.setup = function () {
         [
             "OpenLayers.Layer.Bing",
             {
-                key: "Ar00ZDTFpjaza5W0AvQrJq8lEuSgevERqr6MjpIXJHoV2vKnusZh1ExhLX6DTKLK",
+                key: window.bingApiKey,
                 type: "AerialWithLabels",
                 name: "Bing Aerial With Labels",
                 transitionEffect: 'resize'
@@ -134,7 +134,7 @@ MapCentia.setup = function () {
         new OpenLayers.Layer.OSM("osm"),
         new OpenLayers.Layer.XYZ(
             "DigitalGlobe:Imagery",
-            "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + "cc512ac4-bbf1-4279-972d-b698b47a0e22" + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + "DigitalGlobe:ImageryTileService" + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}",
+            "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + window.digitalGlobeKey + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + "DigitalGlobe:ImageryTileService" + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}",
             {numZoomLevels: 20}
         )
     ];
