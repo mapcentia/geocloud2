@@ -168,15 +168,15 @@ classWizards.init = function (record) {
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Angle") + __("Combo field. Either select an integer attribute or write an integer for symbol angling.", true)
+                                            html: __("Angle") + __("Angle, given in degrees, to rotate the symbol (counter clockwise). Combo field: Either select an integer attribute or write an integer.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Size") + __("Combo field. Either select an integer attribute or write an integer for symbol size.", true)
+                                            html: __("Size") + __("Height, in pixels, of the symbol/pattern to be used. Combo field: Either select an integer attribute or write an integer.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Outline color") + __('Pick color for outlining features.', true)
+                                            html: __("Outline color") + __('Color to use for outlining polygons and certain marker symbols (ellipse, vector polygons and truetype). Has no effect for lines.', true)
                                         }
                                     ]
                                 },
@@ -233,7 +233,7 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
-                                            html: __("Line width") + __('Pick thickness for outline.', true)
+                                            html: __("Line width") + __('Thickness of line work drawn, in pixels.', true)
                                         },
                                         {
                                             xtype: 'box',
@@ -249,10 +249,9 @@ classWizards.init = function (record) {
                                         width: 95
                                     },
                                     items: [
-
                                         new Ext.ux.form.SpinnerField({
                                             name: "lineWidth",
-                                            minValue: 1,
+                                            minValue: 0,
                                             maxValue: 10,
                                             allowDecimals: false,
                                             decimalPrecision: 0,
@@ -291,19 +290,19 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
-                                            html: __("Text") + __("Combo field. Select a attribute for label. You write around like &apos;My label [attribute]&apos; or concatenate two or more attributes like &apos;[attribute1] [attribute2]&apos;.", true)
+                                            html: __("Text") + __("Text to label features with. Combo field: You write around like &apos;My label [attribute]&apos; or concatenate two or more attributes like &apos;[attribute1] [attribute2]&apos;.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Color") + __("Select a label color.", true)
+                                            html: __("Color") + __("Color to draw text with.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Size") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
+                                            html: __("Size") + __("Size of the text in pixels. Combo field: Either select an integer attribute or write an integer.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Position") + __("Select a label position.", true)
+                                            html: __("Position") + __("Position of the label relative to the labeling point.", true)
                                         }
                                     ]
                                 },
@@ -399,15 +398,15 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
-                                            html: __("Angle") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
+                                            html: __("Angle") + __("Angle, counterclockwise, given in degrees, to draw the label. Combo field: Either select an integer attribute or write an integer.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Background") + __("Combo field. Either select an integer attribute or write an integer for label size.", true)
+                                            html: __("Background") + __("Color to draw a background rectangle (i.e. billboard)", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Font") + __("Choose font for labels.", true)
+                                            html: __("Font") + __("Font to use for labeling.", true)
                                         },
                                         {
                                             xtype: 'box',
@@ -732,7 +731,7 @@ classWizards.init = function (record) {
                                                                                             marginLeft: "4px"
                                                                                         },
                                                                                         inputValue: "-1",
-                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "-1") ? true : null
+                                                                                        checked: (customIsSet && (classWizards.setting.custom.colorramp === "-1" || typeof classWizards.setting.custom.colorramp === "undefined")) ? true : null
                                                                                     }
                                                                                 ]
                                                                             },

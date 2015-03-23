@@ -531,7 +531,7 @@ class Classification extends \app\inc\Model
     {
         $symbol = ($data->symbol) ?: "";
         $size = ($data->symbolSize) ?: "";
-        $outlineColor = ($data->outlineColor) ?: "#FFFFFF";
+        $outlineColor = ($data->outlineColor) ?: "";
         $color = ($color) ?: Util::randHexColor();
         if ($type == "POINT" || $type == "MULTIPOINT") {
             $symbol = ($data->symbol) ?: "circle";
