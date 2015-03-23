@@ -66,7 +66,8 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
         $q = urldecode($get['q']);
-        $size = ($get['size']) ?: 10;
+        $size = ($get['size']) ? "&size={$get['size']}": "";
+        $from = ($get['size']) ? "&from={$get['from']}": "";
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
 
@@ -76,7 +77,7 @@ class Elasticsearch extends \app\inc\Controller
             $arr[] = $db . "_" . $v;
         }
         $index = implode(",", $arr);
-        $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}&size={$size}";
+        $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
         $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
