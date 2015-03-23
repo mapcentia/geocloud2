@@ -86,9 +86,8 @@ classWizards.init = function (record) {
                 }
             },
             columns: [
-
                 {
-                    header: __("Name"),
+                    header: __("Title"),
                     dataIndex: "name",
                     editable: true,
                     flex: 1
@@ -118,7 +117,7 @@ classWizards.init = function (record) {
             region: 'north',
             border: false,
             frame: false,
-          //  height: 100,
+            //  height: 100,
             html: "<div class=\"layer-desc\">Double click on value in the the legend to change it.</div>"
         })]
     });
@@ -708,21 +707,190 @@ classWizards.init = function (record) {
                                                                 items: [
                                                                     {
                                                                         xtype: 'container',
-                                                                        defaults: {
-                                                                            width: 95
-                                                                        },
                                                                         items: [
                                                                             {
-                                                                                xtype: "combo",
-                                                                                store: wmsLayer.fieldsForStore,
-                                                                                editable: false,
-                                                                                triggerAction: "all",
-                                                                                name: "value",
-                                                                                allowBlank: false,
-                                                                                disabled: (record.type === "RASTER") ? true : false,
-                                                                                emptyText: __("Field"),
-                                                                                value: (customIsSet && classWizards.setting.custom.pre === "unique") ? classWizards.setting.custom.value : null
+                                                                                xtype: 'container',
+                                                                                layout: 'hbox',
+                                                                                items: [
+                                                                                    {
+                                                                                        xtype: "combo",
+                                                                                        store: wmsLayer.fieldsForStore,
+                                                                                        editable: false,
+                                                                                        triggerAction: "all",
+                                                                                        name: "value",
+                                                                                        width: 100,
+                                                                                        allowBlank: false,
+                                                                                        disabled: (record.type === "RASTER") ? true : false,
+                                                                                        emptyText: __("Field"),
+                                                                                        value: (customIsSet && classWizards.setting.custom.pre === "unique") ? classWizards.setting.custom.value : null
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: __("Random colors"),
+                                                                                        xtype: "radio",
+                                                                                        name: "colorramp",
+                                                                                        style: {
+                                                                                            marginLeft: "4px"
+                                                                                        },
+                                                                                        inputValue: "-1",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "-1") ? true : null
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                height: 7
+                                                                            },
+                                                                            {
+
+                                                                                xtype: 'radiogroup',
+                                                                                layout: 'hbox',
+                                                                                defaults: {
+                                                                                    xtype: "radio",
+                                                                                    name: "colorramp",
+                                                                                    width: 4,
+                                                                                    style: {
+                                                                                        margin: "4px"
+                                                                                    }
+                                                                                },
+                                                                                items: [
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#a6cee3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#1f78b4;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#b2df8a;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#33a02c;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fb9a99;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e31a1c;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fdbf6f;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#cab2d6;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#6a3d9a;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#b15928;"></span>',
+                                                                                        inputValue: "0",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "0") ? true : null
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#e41a1c;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#377eb8;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#4daf4a;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#984ea3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffff33;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#a65628;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#f781bf;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#999999;"></span>',
+                                                                                        inputValue: "3",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "3") ? true : null
+
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#7fc97f;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#beaed4;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fdc086;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#386cb0;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#f0027f;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#bf5b17;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#666666;"></span>',
+                                                                                        inputValue: "4",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "4") ? true : null
+
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#1b9e77;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#d95f02;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#7570b3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e7298a;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#66a61e;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e6ab02;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#a6761d;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#666666;"></span>',
+                                                                                        inputValue: "5",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "5") ? true : null
+
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+
+                                                                                xtype: 'radiogroup',
+                                                                                layout: 'hbox',
+                                                                                defaults: {
+                                                                                    xtype: "radio",
+                                                                                    name: "colorramp",
+                                                                                    width: 4,
+                                                                                    style: {
+                                                                                        margin: "4px"
+                                                                                    }
+                                                                                },
+                                                                                items: [
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#8dd3c7;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffffb3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#bebada;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fb8072;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#80b1d3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fdb462;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#b3de69;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fccde5;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#d9d9d9;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#bc80bd;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffed6f;"></span>',
+                                                                                        inputValue: "1",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "1") ? true : null
+
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#fbb4ae;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#b3cde3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#decbe4;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fed9a6;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffffcc;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e5d8bd;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fddaec;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#f2f2f2;"></span>',
+                                                                                        inputValue: "2",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "2") ? true : null
+
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel:  '<span class="color-ramp" style="background-color:#66c2a5;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fc8d62;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#8da0cb;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e78ac3;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#a6d854;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#ffd92f;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e5c494;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#b3b3b3;"></span>',
+                                                                                        inputValue: "8",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "8") ? true : null
+
+                                                                                    },
+                                                                                    {
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#b3e2cd;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fdcdac;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#cbd5e8;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#f4cae4;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#e6f5c9;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#fff2ae;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#f1e2cc;"></span>' +
+                                                                                        '<span class="color-ramp" style="background-color:#cccccc;"></span>',
+                                                                                        inputValue: "7",
+                                                                                        checked: (customIsSet && classWizards.setting.custom.colorramp === "7") ? true : null
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                height: 7
+                                                                            },
+                                                                            {
+                                                                                xtype: 'box',
+                                                                                html: "<span style='font-size: 7pt'>Colors from www.ColorBrewer.org by Cynthia A. Brewer, Penn State.</span>"
                                                                             }
+
                                                                         ]
                                                                     }
                                                                 ]

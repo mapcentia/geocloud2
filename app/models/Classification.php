@@ -162,7 +162,7 @@ class Classification extends \app\inc\Model
             urldecode($data->expression);
         }
         $classes = $this->getAll();
-        foreach((array)$data as $k=>$v){
+        foreach ((array)$data as $k => $v) {
             $classes['data'][$id][$k] = $v;
 
         }
@@ -281,6 +281,9 @@ class Classification extends \app\inc\Model
             $response['code'] = 405;
             return $response;
         }
+        if ($data->custom->colorramp != "-1") {
+            $colorBrewer = \app\inc\ColorBrewer::getQualitative($data->custom->colorramp);
+        }
         foreach ($rows as $key => $row) {
             if ($type == "number" || $type == "int") {
                 $expression = "[{$field}]={$row['value']}";
@@ -289,7 +292,14 @@ class Classification extends \app\inc\Model
                 $expression = "'[{$field}]'='{$row['value']}'";
             }
             $name = $row['value'];
-            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10, null, $data));
+            if ($data->custom->colorramp != "-1") {
+                $c = current($colorBrewer);
+                next($colorBrewer);
+            } else {
+                $c = null;
+            }
+            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data));
+
             if (!$res['success']) {
                 $response['success'] = false;
                 $response['message'] = "Error";

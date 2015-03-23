@@ -1557,7 +1557,7 @@ $(window).ready(function () {
             title: __("Class wizard"),
             layout: 'fit',
             width: 700,
-            height: 500,
+            height: 540,
             plain: true,
             modal: true,
             resizable: false,
@@ -1565,7 +1565,7 @@ $(window).ready(function () {
             border: false,
             closeAction: 'hide',
             x: 250,
-            y: 100,
+            y: 50,
             items: [
                 {
                     xtype: "panel",
