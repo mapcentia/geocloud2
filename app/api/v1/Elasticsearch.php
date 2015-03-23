@@ -67,7 +67,7 @@ class Elasticsearch extends \app\inc\Controller
         }
         $q = urldecode($get['q']);
         $size = ($get['size']) ? "&size={$get['size']}": "";
-        $from = ($get['size']) ? "&from={$get['from']}": "";
+        $from = ($get['from']) ? "&from={$get['from']}": "";
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
 
