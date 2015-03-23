@@ -64,7 +64,7 @@ classWizards.init = function (record) {
         }),
         updateClassGrid = function () {
             var myData = [], i;
-            classes = Ext.decode(store.getById(record._key_).json.class);
+            classes = Ext.decode(store.getById(record._key_).json["class"]);
             for (i = 0; i < classes.length; i = i + 1) {
                 myData.push([i, classes[i].name, classes[i].color]);
             }
