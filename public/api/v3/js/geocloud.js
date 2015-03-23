@@ -1336,7 +1336,7 @@ geocloud = (function () {
         //ol2
         this.getLayerById = function (id) {
             return this.map.getLayer(id);
-        }
+        };
         //ol2, ol3 and leaflet (rename to getLayerByName)
         this.getLayersByName = function (name) {
             var l;

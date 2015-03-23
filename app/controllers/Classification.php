@@ -28,7 +28,7 @@ class Classification extends \app\inc\Controller
     public function put_index()
     {
         $response = $this->auth(Input::getPath()->part(4));
-        return (!$response['success']) ? $response : $this->class->update(Input::getPath()->part(5), json_decode(urldecode(Input::get()))->data);
+        return (!$response['success']) ? $response : $this->class->update(Input::getPath()->part(5), json_decode(Input::get(null, true))->data);
     }
 
     public function delete_index()
@@ -46,7 +46,7 @@ class Classification extends \app\inc\Controller
     public function put_single()
     {
         $response = $this->auth(Input::getPath()->part(4));
-        return (!$response['success']) ? $response : $this->class->createSingle(json_decode(urldecode(Input::get()))->data);
+        return (!$response['success']) ? $response : $this->class->createSingle(json_decode(urldecode(Input::get()))->data, Input::getPath()->part(5));
     }
 
     public function put_equal()

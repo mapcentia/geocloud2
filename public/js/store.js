@@ -8,10 +8,12 @@
 /*global window:false */
 /*global document:false */
 /*global gc2i18n:false */
+/*global subUser:false */
+/*global __:false */
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted = false, spinner;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted = false, spinner, styleWizardWin;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -281,7 +283,7 @@ $(window).ready(function () {
 
                         }
                     },
-                    renderer: function (value, id, r) {
+                    renderer: function () {
                         return ('<a href="#">' + __("Clear") + '</a>');
                     },
                     width: 70
@@ -1033,12 +1035,11 @@ $(window).ready(function () {
             '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(1);
+        Ext.getCmp("layerStyleTabs").activate(2);
 
-        Ext.getCmp("layerStyleTabs").activate(3);
+        Ext.getCmp("layerStyleTabs").activate(1);
         var template = new Ext.Template(markup);
         template.overwrite(Ext.getCmp('a5').body, record);
-        Ext.getCmp("layerStylePanel").expand(true);
         var a1 = Ext.getCmp("a1");
         var a4 = Ext.getCmp("a4");
         a1.remove(wmsLayer.grid);
@@ -1051,7 +1052,7 @@ $(window).ready(function () {
         a1.doLayout();
         a4.doLayout();
 
-        Ext.getCmp("layerStyleTabs").activate(2);
+        Ext.getCmp("layerStyleTabs").activate(0);
         var a2 = Ext.getCmp("a2");
         a2.remove(wmsClasses.grid);
         wmsClasses.grid = null;
@@ -1073,13 +1074,6 @@ $(window).ready(function () {
         a9.doLayout();
         a10.doLayout();
         a11.doLayout();
-
-        Ext.getCmp("layerStyleTabs").activate(0);
-        var a7 = Ext.getCmp("a7");
-        a7.remove(classWizards.quantile);
-        classWizards.init(record);
-        a7.add(classWizards.quantile);
-        a7.doLayout();
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
         updateLegend();
@@ -1547,6 +1541,54 @@ $(window).ready(function () {
             }
         });
     };
+    styleWizardWin = function(e) {
+        var record = null;
+        grid.getStore().each(function (rec) {  // for each row
+            var row = rec.data; // get record
+            if (row._key_ === e) {
+                record = row;
+            }
+        });
+        if (!record) {
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+            return false;
+        }
+        new Ext.Window({
+            title: __("Class wizard"),
+            layout: 'fit',
+            width: 700,
+            height: 540,
+            plain: true,
+            modal: true,
+            resizable: false,
+            draggable: true,
+            border: false,
+            closeAction: 'hide',
+            x: 250,
+            y: 50,
+            items: [
+                {
+                    xtype: "panel",
+                    defaults: {
+                        border: false
+                    },
+                    items: [
+                        {
+                            xtype: "panel",
+                            id: "a7",
+                            layout: "fit"
+                        }
+                    ]
+                }
+            ]
+        }).show();
+        var a7 = Ext.getCmp("a7");
+        a7.remove(classWizards.quantile);
+        classWizards.init(record);
+        a7.add(classWizards.quantile);
+        a7.doLayout();
+
+    };
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +
@@ -1656,36 +1698,6 @@ $(window).ready(function () {
                                 items: [
                                     {
                                         xtype: "panel",
-                                        title: __('Class wizards'),
-                                        defaults: {
-                                            border: false
-                                        },
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                id: "a7",
-                                                layout: "fit"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        xtype: "panel",
-                                        title: 'Legend',
-                                        autoHeight: true,
-                                        defaults: {
-                                            border: false,
-                                            bodyStyle: "padding : 7px"
-                                        },
-                                        items: [
-                                            {
-                                                xtype: "panel",
-                                                id: "a6",
-                                                html: ""
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        xtype: "panel",
                                         title: __('Classes'),
                                         defaults: {
                                             border: false
@@ -1697,7 +1709,6 @@ $(window).ready(function () {
                                                 layout: "fit",
                                                 height: 150
                                             },
-
                                             new Ext.TabPanel({
                                                 activeTab: 0,
                                                 region: 'center',
@@ -1709,6 +1720,55 @@ $(window).ready(function () {
                                                     layout: "fit",
                                                     border: false
                                                 },
+                                                tbar: [
+                                                    {
+                                                        text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
+                                                        handler: function () {
+                                                            var grid = Ext.getCmp("propGrid");
+                                                            var grid2 = Ext.getCmp("propGrid2");
+                                                            var grid3 = Ext.getCmp("propGrid3");
+                                                            var grid4 = Ext.getCmp("propGrid4");
+                                                            var grid5 = Ext.getCmp("propGrid5");
+                                                            var source = grid.getSource();
+                                                            jQuery.extend(source, grid2.getSource());
+                                                            jQuery.extend(source, grid3.getSource());
+                                                            jQuery.extend(source, grid4.getSource());
+                                                            jQuery.extend(source, grid5.getSource());
+                                                            var param = {
+                                                                data: source
+                                                            };
+                                                            param = Ext.util.JSON.encode(param);
+
+                                                            // Encode the json because it can contain "="
+                                                            //param = encodeURIComponent(param);
+
+                                                            Ext.Ajax.request({
+                                                                url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
+                                                                method: 'put',
+                                                                params: param,
+                                                                headers: {
+                                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                                },
+                                                                success: function (response) {
+                                                                    App.setAlert(App.STATUS_OK, __("Style is updated"));
+                                                                    writeFiles(wmsClasses.table);
+                                                                    wmsClasses.store.load();
+                                                                    store.load();
+                                                                },
+                                                                failure: function (response) {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'Failure',
+                                                                        msg: __(Ext.decode(response.responseText).message),
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                ],
                                                 items: [
                                                     {
                                                         xtype: "panel",
@@ -1736,54 +1796,6 @@ $(window).ready(function () {
                                                         title: "Label2"
                                                     }
 
-                                                ],
-                                                tbar: [
-                                                    {
-                                                        text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
-                                                        handler: function () {
-                                                            var grid = Ext.getCmp("propGrid");
-                                                            var grid2 = Ext.getCmp("propGrid2");
-                                                            var grid3 = Ext.getCmp("propGrid3");
-                                                            var grid4 = Ext.getCmp("propGrid4");
-                                                            var grid5 = Ext.getCmp("propGrid5");
-                                                            var source = grid.getSource();
-                                                            jQuery.extend(source, grid2.getSource());
-                                                            jQuery.extend(source, grid3.getSource());
-                                                            jQuery.extend(source, grid4.getSource());
-                                                            jQuery.extend(source, grid5.getSource());
-                                                            var param = {
-                                                                data: source
-                                                            };
-                                                            param = Ext.util.JSON.encode(param);
-
-                                                            // Encode the json because it can contain "="
-                                                            param = encodeURIComponent(param);
-
-                                                            Ext.Ajax.request({
-                                                                url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
-                                                                method: 'put',
-                                                                params: param,
-                                                                headers: {
-                                                                    'Content-Type': 'application/json; charset=utf-8'
-                                                                },
-                                                                success: function (response) {
-                                                                    App.setAlert(App.STATUS_OK, __("Style is updated"));
-                                                                    writeFiles(wmsClasses.table);
-                                                                    wmsClasses.store.load();
-                                                                },
-                                                                failure: function (response) {
-                                                                    Ext.MessageBox.show({
-                                                                        title: 'Failure',
-                                                                        msg: __(Ext.decode(response.responseText).message),
-                                                                        buttons: Ext.MessageBox.OK,
-                                                                        width: 400,
-                                                                        height: 300,
-                                                                        icon: Ext.MessageBox.ERROR
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    }
                                                 ]
                                             })
 
@@ -1815,6 +1827,22 @@ $(window).ready(function () {
                                                     background: '#ffffff',
                                                     padding: '10px'
                                                 }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: 'Legend',
+                                        autoHeight: true,
+                                        defaults: {
+                                            border: false,
+                                            bodyStyle: "padding : 7px"
+                                        },
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a6",
+                                                html: ""
                                             }
                                         ]
                                     }
@@ -1947,15 +1975,21 @@ $(window).ready(function () {
         });
     };
     updateLegend = function () {
-        var a6 = Ext.getCmp("a6");
+        var a = Ext.getCmp("a6");
+        var b = Ext.getCmp("wizardLegend");
         if (activeLayer !== undefined) {
             $.ajax({
                 url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    a6.update(response.html);
-                    a6.doLayout();
+                    a.update(response.html);
+                    a.doLayout();
+                    try {
+                        b.update(response.html);
+                        b.doLayout();
+                    }
+                    catch (e){}
                 }
             });
         }

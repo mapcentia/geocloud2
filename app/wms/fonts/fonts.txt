@@ -1,5 +1,10 @@
-arial	arial.ttf
-arialbd	arialbd.ttf
-arialbi arialbi.ttf
-ariali	ariali.ttf
+arialnormal     arial.ttf
+arialbold  arialbd.ttf
+arialbolditalic  arialbi.ttf
+arialitalic   ariali.ttf
+couriernormal cour.ttf
+courierbold courbd.ttf
+courierbolditalic courbi.ttf
+courieritalic couri.ttf
+
 

@@ -19,6 +19,7 @@ class Sql
         $sqls[] = "CREATE EXTENSION \"dblink\"";
         $sqls[] = "CREATE EXTENSION \"pgcrypto\"";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD PRIMARY KEY (_key_)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN enablesqlfilter bool";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER enablesqlfilter set default false";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN triggertable VARCHAR(255)";
@@ -56,6 +57,7 @@ class Sql
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
                         geometry_columns_join.privileges,
+                        geometry_columns_join.classwizard
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard
@@ -98,6 +100,7 @@ class Sql
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
                         geometry_columns_join.privileges,
+                        geometry_columns_join.classwizard
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard
@@ -143,6 +146,7 @@ class Sql
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
                                 geometry_columns_join.privileges,
+                                geometry_columns_join.classwizard
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard
@@ -187,6 +191,7 @@ class Sql
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
                                 geometry_columns_join.privileges,
+                                geometry_columns_join.classwizard
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard

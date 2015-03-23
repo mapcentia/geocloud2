@@ -31,7 +31,7 @@ gc2i18n = {
         "Save": "Gem",
         "Reset": "Reset",
         "Delete": "Slet",
-        "Stop editing": "Stop editering",
+        "Stop editing": "Stop",
         "Quick draw": "Hurtigt tegn",
         "Reload tree": "Genindlæs lag",
         "Save extent": "Gem extent",

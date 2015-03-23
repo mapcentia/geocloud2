@@ -415,5 +415,4 @@ class Model
         }
         $row = $this->fetchRow($res);
     }
-
 }

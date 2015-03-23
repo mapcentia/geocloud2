@@ -36,8 +36,8 @@
 }
 
 .map-thumbs {
-    background-size: 283px 35px;
-    width: 283px;
+    background-size: 434px 55px;
+    width: 434px;
     height: 35px;
     vertical-align: middle !important
 }
@@ -227,4 +227,8 @@ q:after, q:before {
     font-family: verdana, arial, sans-serif;
     font-size: 8pt;
     white-space: nowrap;
+}
+.color-ramp {
+    padding-left: 6px;
+    padding-top: 5px;
 }

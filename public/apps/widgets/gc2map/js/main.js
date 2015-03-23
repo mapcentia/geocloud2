@@ -425,8 +425,7 @@ MapCentia = function (globalId) {
                                                     if (feature.properties[name] !== undefined) {
                                                         if (property.link) {
                                                             out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + ((property.linkprefix !== null) ? property.linkprefix : "") + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
-                                                        }
-                                                        else {
+                                                        } else {
                                                             out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
                                                         }
                                                     }

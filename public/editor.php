@@ -11,12 +11,6 @@ include("html_header.php");
 </head>
 <body>
 <div id="instructions"></div>
-<div id="upload">
-    <a href="#">
-        <img src="/assets/images/upload_black.png?00f5d5e5a884600f">
-        <div>.shp .geojson .gml .kml .tab .mif</div>
-    </a>
-</div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>
     window.__ = function (string, toolTip) {
