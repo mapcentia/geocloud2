@@ -764,7 +764,7 @@ $(document).ready(function () {
                                 collapsible: true,
                                 width: 350,
                                 tbar: [{
-                                    text: '<i class="icon-eye-open btn-gc"></i> ' + __('Style'),
+                                    text: '<i class="icon-eye-open btn-gc"></i> ' + __('Class wizard'),
                                     id: 'stylebutton',
                                     disabled: true,
                                     handler: function () {
