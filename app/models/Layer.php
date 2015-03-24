@@ -21,7 +21,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $layer = false, $auth, $includeExtent = false)
+    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse=false, $es=false)
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
@@ -99,13 +99,50 @@ class Layer extends \app\models\Table
                     }
                     $value = json_encode($obj);
                 }
+                if ($parse) {
+                    if (
+                        ($key == "fieldconf" ||
+                            $key == "def" ||
+                            $key == "class" ||
+                            $key == "classwizard"
+                        ) && ($value)
+                    ) {
+                        $value = json_decode($value);
+                    }
+                }
                 $arr = $this->array_push_assoc($arr, $key, $value);
-                $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
-                $arr = $this->array_push_assoc($arr, "versioning", $versioning);
-                if ($includeExtent == true) {
-                    $arr = $this->array_push_assoc($arr, "extent", $extent);
+
+            }
+            $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+
+            $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+
+            if ($includeExtent == true) {
+                $arr = $this->array_push_assoc($arr, "extent", $extent);
+            }
+
+            // Is indexed?
+            if ($es) {
+                $type = $row['f_table_name'];
+                if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                    $type = "a" . $type;
+                }
+                $url = "http://127.0.0.1:9200/{$this->postgisdb}_{$row['f_table_schema']}/{$type}/";
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+                curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                $output = curl_exec($ch);
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($httpcode == "200") {
+                    $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
+                } else {
+                    $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
             }
+
             if ($row["authentication"] == "Read/write") {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
@@ -114,6 +151,7 @@ class Layer extends \app\models\Table
             } else {
                 $response['data'][] = $arr;
             }
+
         }
         $response['data'] = ($response['data']) ?: array();
         if (!$this->PDOerror) {

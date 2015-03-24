@@ -18,6 +18,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
         echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
+        echo "showConflictFieldOption: " . (json_encode(\app\conf\App::$param['showConflictFieldOption']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {

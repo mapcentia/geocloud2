@@ -10,7 +10,7 @@ class Response
 
     static function toJson($response)
     {
-        $callback = Input::get('jsonp_callback');
+        $callback = Input::get('jsonp_callback') ?: Input::get('callback');
         header("Access-Control-Allow-Origin: *");
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');
@@ -23,7 +23,7 @@ class Response
 
     static function passthru($response)
     {
-        $callback = Input::get('jsonp_callback');
+        $callback = Input::get('jsonp_callback') ?: Input::get('callback');
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');
             return $callback . '(' . ($response) . ');';
