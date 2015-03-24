@@ -99,6 +99,11 @@ class App
 
         // Use API key for Elasticsearch Search API
         "useKeyForSearch" => false,
+
+        //Show field option for conflict search
+        "showConflictFieldOption" => array(
+            "mydb" => false,
+        ),
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.

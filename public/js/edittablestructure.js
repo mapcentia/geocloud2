@@ -215,12 +215,13 @@ tableStructure.init = function (record, screenName) {
                     header: __("Queryable"),
                     dataIndex: 'querable',
                     width: 35
-                },{
+                }, {
                     id: "conflict",
                     xtype: 'checkcolumn',
                     header: __("Conflict"),
                     dataIndex: 'conflict',
-                    width: 35
+                    width: 35,
+                    hidden: (window.gc2Options.showConflictFieldOption !== null && window.gc2Options.showConflictFieldOption[screenName] === true) ? false : true
                 },
                 {
                     id: "link",
