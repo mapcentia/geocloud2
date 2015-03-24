@@ -57,7 +57,6 @@ class Sql
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
                         geometry_columns_join.privileges,
-                        geometry_columns_join.classwizard
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard
@@ -100,7 +99,6 @@ class Sql
                         geometry_columns_join.filter,
                         geometry_columns_join.bitmapsource,
                         geometry_columns_join.privileges,
-                        geometry_columns_join.classwizard
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard
@@ -146,7 +144,6 @@ class Sql
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
                                 geometry_columns_join.privileges,
-                                geometry_columns_join.classwizard
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard
@@ -191,7 +188,6 @@ class Sql
                                 geometry_columns_join.filter,
                                 geometry_columns_join.bitmapsource,
                                 geometry_columns_join.privileges,
-                                geometry_columns_join.classwizard
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard
