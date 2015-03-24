@@ -132,6 +132,7 @@ classWizards.init = function (record) {
     if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
         customIsSet = true;
     }
+    //console.log(classWizards.setting);
     classWizards.getAddvalues = function (pre) {
         var values = Ext.getCmp(pre + '_addform').form.getFieldValues(),
             f = Ext.getCmp(pre + "Form").form.getValues();
@@ -731,7 +732,7 @@ classWizards.init = function (record) {
                                                                                             marginLeft: "4px"
                                                                                         },
                                                                                         inputValue: "-1",
-                                                                                        checked: (customIsSet && (classWizards.setting.custom.colorramp === "-1" || typeof classWizards.setting.custom.colorramp === "undefined")) ? true : null
+                                                                                        checked: (!customIsSet || (customIsSet && (typeof classWizards.setting.custom.colorramp === "undefined" || classWizards.setting.custom.colorramp === "-1"))) ? true : null
                                                                                     }
                                                                                 ]
                                                                             },
@@ -855,7 +856,7 @@ classWizards.init = function (record) {
 
                                                                                     },
                                                                                     {
-                                                                                        boxLabel:  '<span class="color-ramp" style="background-color:#66c2a5;"></span>' +
+                                                                                        boxLabel: '<span class="color-ramp" style="background-color:#66c2a5;"></span>' +
                                                                                         '<span class="color-ramp" style="background-color:#fc8d62;"></span>' +
                                                                                         '<span class="color-ramp" style="background-color:#8da0cb;"></span>' +
                                                                                         '<span class="color-ramp" style="background-color:#e78ac3;"></span>' +

@@ -281,7 +281,7 @@ class Classification extends \app\inc\Model
             $response['code'] = 405;
             return $response;
         }
-        if ($data->custom->colorramp != "-1") {
+        if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
             $colorBrewer = \app\inc\ColorBrewer::getQualitative($data->custom->colorramp);
         }
         foreach ($rows as $key => $row) {
@@ -292,7 +292,7 @@ class Classification extends \app\inc\Model
                 $expression = "'[{$field}]'='{$row['value']}'";
             }
             $name = $row['value'];
-            if ($data->custom->colorramp != "-1") {
+            if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
                 $c = current($colorBrewer);
                 next($colorBrewer);
             } else {
