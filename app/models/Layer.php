@@ -142,8 +142,8 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
             }
-
-            if ($row["authentication"] == "Read/write") {
+            // Session is sub-user we always check privileges
+            if ($_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;

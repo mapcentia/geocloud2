@@ -304,7 +304,7 @@ $(document).ready(function () {
             new OpenLayers.Control.Zoom(),
             new OpenLayers.Control.Attribution()
         ],
-        restrictedExtent: subUser ? window.parent.settings.extentrestricts[schema] : null
+        restrictedExtent: subUser && window.parent.settings.extentrestricts ? window.parent.settings.extentrestricts[schema] : null
     });
     map = cloud.map;
     var metaData, metaDataKeys = [], metaDataKeysTitle = [], metaDataRealKeys = [], extent = null;
