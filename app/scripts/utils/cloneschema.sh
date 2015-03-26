@@ -60,7 +60,7 @@ pg_dump --host ${HOST} ${CREDS} --format=c  ${TMPDB} > ${DUMPPATH}
 psql --host ${HOST} ${CREDS} --dbname ${db} -c "CREATE SCHEMA ${to}"
 pg_restore --host ${HOST} ${CREDS} --dbname ${db} --schema ${to} ${DUMPPATH}
 
-# Update the settings.geometry_columns_join table
+# Update the settings.geometry_columns_join table in the tmp DB
 psql --host ${HOST} ${CREDS} --dbname ${TMPDB} -c "UPDATE  settings.geometry_columns_join set _key_ = '${to}'||'.'||split_part(_key_, '.', 2)||'.'||split_part(_key_, '.', 3) WHERE split_part(_key_, '.', 1) = '${from}'"
 
 # Copy the updated rows from settings.geometry_columns_join and restore them in the original DB
