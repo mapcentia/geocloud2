@@ -45,10 +45,11 @@ fi
 echo "from=$from, to=$to, db=$db"
 
 # Dump the original DB
-pg_dump --host ${HOST} ${CREDS} --format=c  ${db} > ${DUMPPATH}
+pg_dump --host ${HOST} ${CREDS} --format=c  --schema public --schema settings --schema ${from} ${db} > ${DUMPPATH}
 
 # Create the tmp DB and restore the dump in it
 createdb --host ${HOST} ${CREDS} ${TMPDB}
+psql --host ${HOST} ${CREDS} ${TMPDB} -c "CREATE EXTENSION postgis"
 pg_restore --host ${HOST} ${CREDS} --dbname ${TMPDB} ${DUMPPATH}
 
 # Rename the schema in the tmp DB
