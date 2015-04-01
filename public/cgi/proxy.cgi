@@ -17,7 +17,7 @@ import os
 
 # Designed to prevent Open Proxy type stuff.
 # Add your hosts to be proxied here...
-allowedHosts = ['54.77.123.219','sensors.geonovum.nl', 'pdokviewer.pdok.nl', 'www.nationaalgeoregister.nl', 'mesonet.agron.iastate.edu', 'gis.opentraces.org', 'maps.warwickshire.gov.uk', 'suite.opengeo.org', 'gxp.opengeo.org', 'arcserve.lawr.ucdavis.edu', 'dinolab52.dinonet.nl', 'msgcpp-ogc-realtime.knmi.nl', 'geoservices.knmi.nl', 'www.kich.nl', 'open.mapquestapi.com', 'gis.kademo.nl', 'kademo.nl', 'www.dinoservices.nl','geodata.nationaalgeoregister.nl','www2.demis.nl', 'maps.opengeo.org', 'demo.opengeo.org','data.fao.org','suite.opengeo.org']
+# allowedHosts = ['192.168.33.10','54.77.123.219','sensors.geonovum.nl', 'pdokviewer.pdok.nl', 'www.nationaalgeoregister.nl', 'mesonet.agron.iastate.edu', 'gis.opentraces.org', 'maps.warwickshire.gov.uk', 'suite.opengeo.org', 'gxp.opengeo.org', 'arcserve.lawr.ucdavis.edu', 'dinolab52.dinonet.nl', 'msgcpp-ogc-realtime.knmi.nl', 'geoservices.knmi.nl', 'www.kich.nl', 'open.mapquestapi.com', 'gis.kademo.nl', 'kademo.nl', 'www.dinoservices.nl','geodata.nationaalgeoregister.nl','www2.demis.nl', 'maps.opengeo.org', 'demo.opengeo.org','data.fao.org','suite.opengeo.org']
 
 method = os.environ["REQUEST_METHOD"]
 

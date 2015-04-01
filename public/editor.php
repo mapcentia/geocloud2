@@ -38,7 +38,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?8e81898ab2d0310b"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?fe70a866771f550d"></script>
-<script type="text/javascript" src="/api/v3/js/geocloud.js?74b5e96487b6672e" type="text/javascript"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js?74b5e96487b6672e"></script>
 <script type="text/javascript" src="/js/wfseditor.js?97a4b2d3663de22c"></script>
 <script type="text/javascript" src="/js/attributeform.js?f33e934f10e3d041"></script>
 <script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>

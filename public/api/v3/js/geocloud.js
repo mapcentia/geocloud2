@@ -506,9 +506,20 @@ geocloud = (function () {
                     break;
             }
         };
-        this.getBaseLayers = function () {
+        this.getBaseLayers = function (removeMapReference) {
             var layerArr = [];
             switch (MAPLIB) {
+                case "ol2":
+                    for (var i = 0; i < this.map.layers.length; i++) {
+                        if (this.map.layers[i].isBaseLayer === true) {
+                            //console.log(this.map.layers[i]);
+                            if (removeMapReference){
+                                this.map.layers[i].map = null;
+                            }
+                            layerArr.push(this.map.layers[i]);
+                        }
+                    }
+                    break;
                 case "leaflet":
                     var layers = this.map._layers;
                     for (var key in layers) {

@@ -4,6 +4,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     <title>GC2 Map Client</title>
+    <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+
     <!-- External lib: ExtJS -->
     <link rel="stylesheet" type="text/css"
           href="http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/css/ext-all.css"/>
@@ -18,6 +20,9 @@
     <link rel="stylesheet" type="text/css"
           href="http://cdnjs.cloudflare.com/ajax/libs/openlayers/2.12/theme/default/style.css"/>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/openlayers/2.12/OpenLayers.js"></script>
+
+    <!-- Internal lib: Geocloud -->
+    <script type="text/javascript" src="/api/v3/js/geocloud.js"></script>
 
     <!-- External lib: GeoExt   -->
     <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js"></script>
@@ -36,6 +41,8 @@
     <script type="text/javascript" src="/js/common.js"></script>
     <script type="text/javascript" src="/js/heron/ux/oleditor/ole/ole.min.js"></script>
     <script type="text/javascript" src="/js/heron/script/Heron.js"></script>
+    <script type="text/javascript" src="/js/heron/lib/NoLaunch.js"></script>
+
     <script src="/api/v1/baselayerjs" type="text/javascript"></script>
     <script type="text/javascript" src="/apps/mapclient/js/config.js"></script>
 
@@ -44,6 +51,9 @@
     <style>
         .olControlAttribution {
             bottom: 0 !important;
+        }
+        .olImageLoadError {
+            background-color: transparent !important;
         }
     </style>
 </head>

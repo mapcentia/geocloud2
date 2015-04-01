@@ -18,278 +18,214 @@ Ext.namespace("Heron.options.zoomrestrict");
 Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
+var metaData, metaDataKeys = [], metaDataKeysTitle = [];
+
 MapCentia.setup = function () {
     "use strict";
+    Heron.globals.metaReady = false;
     Heron.globals.serviceUrl = '/cgi/heron.cgi';
+    MapCentia.gc2 = new geocloud.map({});
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
         url = '/wms/' + db + '/tilecache/' + schema,
         wfsUrl = '/wfs/' + db + '/' + schema;
+
     $.ajax({
         url: '/api/v1/setting/' + db,
-        async: false,
-        dataType: 'json',
+        dataType: 'jsonp',
+        jsonp: 'jsonp_callback',
         success: function (response) {
-            if (typeof response.data.zoom !== "undefined" && typeof response.data.zoom[schema] !== "undefined") {
-                Heron.options.zoom = response.data.zoom[schema];
-            } else {
-                Heron.options.zoom = null;
+            if (typeof response.data.extents === "object") {
+                if (typeof response.data.center[schema] === "object") {
+                    Heron.options.zoom = response.data.zoom[schema];
+                    Heron.options.center = response.data.center[schema];
+                }
             }
+            Heron.options.map.settings = {
+                projection: 'EPSG:900913',
+                displayProjection: new OpenLayers.Projection("EPSG:4326"),
+                units: 'm',
+                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+                center: Heron.options.center,
+                maxResolution: 'auto',
+                xy_precision: 5,
+                zoom: Heron.options.zoom + 1, // Why?
+                theme: null,
+                permalinks: {
+                    /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
+                    paramPrefix: 'map',
+                    /** Encodes values of permalink parameters ? default false*/
+                    encodeType: false,
+                    /** Use Layer names i.s.o. OpenLayers-generated Layer Id's in Permalinks */
+                    prettyLayerNames: true
+                }
+            };
+            var altId, lName, baseLayers = [], bl, i;
+            MapCentia.gc2.bingApiKey = window.bingApiKey;
+            MapCentia.gc2.digitalGlobeKey = window.digitalGlobeKey;
+            for (i = 0; i < window.setBaseLayers.length; i = i + 1) {
+                altId = undefined;
+                lName = undefined;
+                if (typeof window.setBaseLayers[i].restrictTo === "undefined" || window.setBaseLayers[i].restrictTo.indexOf(window.location.pathname.split("/")[4]) > -1) {
+                    // Local base layer
+                    if (typeof window.setBaseLayers[i].db !== "undefined") {
+                        altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
+                        lName = window.setBaseLayers[i].name;
+                    }
+                    bl = MapCentia.gc2.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+                    baseLayers.push({
+                        nodeType: "gx_layer",
+                        layer: window.setBaseLayers[i].id,
+                        text: window.setBaseLayers[i].name
+                    });
+                }
+            }
+            $.ajax({
+                url: "/api/v1/meta/" + db + "/" + schema,
+                contentType: "application/json; charset=utf-8",
+                scriptCharset: "utf-8",
+                dataType: 'jsonp',
+                jsonp: 'jsonp_callback',
+                success: function (response) {
+                    var groups = [], children = [], text, name, group, type, arr, lArr = [], bArr = [], isBaseLayer, layer, geomField;
+                    Heron.options.map.layers = [];
+                    metaData = response;
+                    for (var x = 0; x < metaData.data.length; x++) {
+                        metaDataKeys[metaData.data[x].f_table_name] = metaData.data[x];
+                        if (!metaData.data[x].f_table_title) {
+                            metaData.data[x].f_table_title = metaData.data[x].f_table_name;
+                        }
+                        metaDataKeysTitle[metaData.data[x].f_table_title] = metaData.data[x];
+                    }
+                    $.each(response.data, function (i, v) {
+                        text = (v.f_table_title === null || v.f_table_title === "") ? v.f_table_name : v.f_table_title;
+                        name = v.f_table_schema + "." + v.f_table_name;
+                        group = v.layergroup;
+                        type = v.type;
+                        geomField = v.f_geometry_column;
+                        isBaseLayer = v.baselayer;
 
-            if (typeof response.data.center !== "undefined" && typeof response.data.center[schema] !== "undefined") {
-                Heron.options.center = response.data.center[schema];
-            } else {
-                Heron.options.center = null;
-            }
+                        for (i = 0; i < response.data.length; i = i + 1) {
+                            groups[i] = response.data[i].layergroup;
+                        }
+                        layer = [
+                            "OpenLayers.Layer.WMS",
+                            name,
+                            url,
+                            {
+                                layers: name,
+                                format: 'image/png',
+                                transparent: true
+                            },
+                            {
+                                resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                                    4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                                    76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                                    1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
+                                isBaseLayer: isBaseLayer,
+                                title: (!v.bitmapsource) ? text : " ",
+                                singleTile: false,
+                                visibility: false,
+                                transitionEffect: 'resize',
+                                featureInfoFormat: isBaseLayer ? null : 'application/vnd.ogc.gml',
+                                metadata: {
+                                    wfs: {
+                                        protocol: new OpenLayers.Protocol.WFS({
+                                            version: "1.0.0",
+                                            url: '/wfs/' + db + '/' + schema + '/3857?',
+                                            srsName: "EPSG:3857",
+                                            featureType: v.f_table_name,
+                                            featureNS: "http://twitter/" + db
+                                        })
+                                    }
+                                },
+                                db: db,
+                                geomField: geomField
 
-            if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[schema] !== "undefined") {
-                Heron.options.extentrestrict = response.data.extentrestricts[schema];
-            } else {
-                Heron.options.extentrestrict = null;
-            }
-            if (typeof response.data.zoomrestricts !== "undefined" && typeof response.data.zoomrestricts[schema] !== "undefined") {
-                Heron.options.zoomrestrict = response.data.zoomrestricts[schema];
-            } else {
-                Heron.options.zoomrestrict = null;
-            }
+                            }
+                        ];
+                        if (!isBaseLayer) {
+                            lArr.push({text: text, name: name, group: group, type: type});
+                            Heron.options.map.layers.push(layer);
+                        } else {
+
+                            bArr.push(layer);
+                            baseLayers.push({
+                                nodeType: "gx_layer",
+                                layer: name,
+                                text: text
+                            });
+                        }
+
+                        Heron.options.map.layers.push(
+                            new OpenLayers.Layer.Vector(name + "_v", {
+                                strategies: [new OpenLayers.Strategy.BBOX()],
+                                visibility: false,
+                                title: (!v.bitmapsource) ? text : " ",
+                                protocol: new OpenLayers.Protocol.WFS({
+                                    version: "1.0.0",
+                                    url: '/wfs/' + db + '/' + schema + '/3857?',
+                                    srsName: "EPSG:3857",
+                                    featureType: v.f_table_name,
+                                    featureNS: "http://twitter/" + db
+                                })
+                            })
+                        );
+                    });
+                    Heron.options.map.layers = Heron.options.map.layers.concat(MapCentia.gc2.getBaseLayers(true)).concat(bArr);
+                    arr = array_unique(groups);
+                    $.each(arr, function (u, m) {
+                        var g;
+                        g = {
+                            text: m,
+                            nodeType: 'hr_cascader',
+                            children: []
+                        };
+                        $.each(lArr, function (i, v) {
+                            if (m === v.group) {
+                                /*if (v.type !== "RASTER") {
+                                 g.children.push(
+                                 {
+                                 nodeType: "gx_layer",
+                                 layer: v.name + "_v",
+                                 text: v.text + " (WFS)",
+                                 legend: false
+                                 }
+                                 );
+                                 }*/
+                                g.children.push(
+                                    {
+                                        nodeType: "gx_layer",
+                                        layer: v.name,
+                                        text: v.text,
+                                        //text: v.text + " (WMS)",
+                                        legend: false
+                                    }
+                                );
+
+                            }
+                        });
+                        g.children.reverse();
+                        children.push(g);
+                    });
+                    children.reverse();
+
+                    Heron.options.layertree.tree = [{
+                        text: 'BaseLayers',
+                        expanded: false,
+                        children: baseLayers
+                    }].concat(children);
+                    Heron.globals.metaReady = true;
+                }
+            });
         }
     }); // Ajax call end
-
-    Heron.options.map.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
-
-    Heron.options.map.settings = {
-        projection: 'EPSG:900913',
-        displayProjection: new OpenLayers.Projection("EPSG:4326"),
-        units: 'm',
-        maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
-        restrictedExtent: Heron.options.extentrestrict,
-        center: Heron.options.center,
-        //maxResolution: 'auto',
-        //xy_precision: 5,
-        zoom: Heron.options.zoom,
-        theme: null,
-        permalinks: {
-            /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
-            paramPrefix: 'map',
-            /** Encodes values of permalink parameters ? default false*/
-            encodeType: false,
-            /** Use Layer names i.s.o. OpenLayers-generated Layer Id's in Permalinks */
-            prettyLayerNames: true
-        }
-    };
-    Heron.options.map.layers = [
-        [
-            "OpenLayers.Layer.Bing",
-            {
-                key: window.bingApiKey,
-                type: "Road",
-                name: "Bing Road",
-                transitionEffect: 'resize'
-            },
-            {
-                isBaseLayer: true
-            }
-        ],
-        [
-            "OpenLayers.Layer.Bing",
-            {
-                key: window.bingApiKey,
-                type: "Aerial",
-                name: "Bing Aerial",
-                transitionEffect: 'resize'
-            },
-            {
-                isBaseLayer: true
-            }
-        ],
-        [
-            "OpenLayers.Layer.Bing",
-            {
-                key: window.bingApiKey,
-                type: "AerialWithLabels",
-                name: "Bing Aerial With Labels",
-                transitionEffect: 'resize'
-            },
-            {
-                isBaseLayer: true
-            }
-        ],
-        new OpenLayers.Layer.Image(
-            "None",
-            Ext.BLANK_IMAGE_URL,
-            Heron.options.map.settings.maxExtent,
-            new OpenLayers.Size(10, 10),
-            {
-                resolutions: Heron.options.map.resolutions,
-                isBaseLayer: true,
-                visibility: false,
-                displayInLayerSwitcher: true,
-                transitionEffect: 'resize'
-            }
-        ),
-        new OpenLayers.Layer.OSM("osm"),
-        new OpenLayers.Layer.XYZ(
-            "DigitalGlobe:Imagery",
-            "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + window.digitalGlobeKey + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + "DigitalGlobe:ImageryTileService" + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}",
-            {numZoomLevels: 20}
-        )
-    ];
-    $.ajax({
-        url: "/api/v1/meta/" + db + "/" + schema,
-        contentType: "application/json; charset=utf-8",
-        scriptCharset: "utf-8",
-        async: false,
-        dataType: 'json',
-        success: function (response) {
-            var groups = [], children = [], text, name, group, type, arr, lArr = [];
-            $.each(response.data, function (i, v) {
-                text = (v.f_table_title === null || v.f_table_title === "") ? v.f_table_name : v.f_table_title;
-                name = v.f_table_schema + "." + v.f_table_name;
-                group = v.layergroup;
-                type = v.type;
-                lArr.push({text: text, name: name, group: group, type: type});
-                for (i = 0; i < response.data.length; i = i + 1) {
-                    groups[i] = response.data[i].layergroup;
-
-                }
-                Heron.options.map.layers.push(
-                    [
-                        "OpenLayers.Layer.WMS",
-                        name,
-                        url,
-                        {
-                            layers: name,
-                            format: 'image/png',
-                            transparent: true
-                        },
-                        {
-                            maxResolution: Heron.options.map.resolutions[Heron.options.zoomrestrict],
-                            isBaseLayer: false,
-                            title: (!v.bitmapsource) ? text : " ",
-                            singleTile: false,
-                            visibility: false,
-                            transitionEffect: 'resize',
-                            featureInfoFormat: 'application/vnd.ogc.gml',
-                            displayOutsideMaxExtent: true,
-                            //maxExtent: (v.type !== "RASTER") ? new OpenLayers.Bounds(v.extent.xmin, v.extent.ymin, v.extent.xmax, v.extent.ymax) : null,
-                            tileOrigin: new OpenLayers.LonLat(-20037508.34, -20037508.34),
-                            metadata: {
-                                wfs: {
-                                    protocol: new OpenLayers.Protocol.WFS({
-                                        version: "1.0.0",
-                                        url: '/wfs/' + db + '/' + schema + '/3857?',
-                                        srsName: "EPSG:3857",
-                                        featureType: v.f_table_name,
-                                        featureNS: "http://twitter/" + db
-                                    })
-                                }
-                            },
-                            geomField: v.f_geometry_column,
-                            db: db
-
-                        }
-                    ]
-                );
-                Heron.options.map.layers.push(
-                    new OpenLayers.Layer.Vector(name + "_v", {
-                        strategies: [new OpenLayers.Strategy.BBOX()],
-                        visibility: false,
-                        title: (!v.bitmapsource) ? text : " ",
-                        protocol: new OpenLayers.Protocol.WFS({
-                            version: "1.0.0",
-                            url: '/wfs/' + db + '/' + schema + '/3857?',
-                            srsName: "EPSG:3857",
-                            featureType: v.f_table_name,
-                            featureNS: "http://twitter/" + db
-                        })
-                    })
-                );
-            });
-            arr = array_unique(groups);
-            $.each(arr, function (u, m) {
-                var g;
-                g = {
-                    text: m,
-                    nodeType: 'hr_cascader',
-                    children: []
-                };
-                $.each(lArr, function (i, v) {
-                    if (m === v.group) {
-                        /*if (v.type !== "RASTER") {
-                         g.children.push(
-                         {
-                         nodeType: "gx_layer",
-                         layer: v.name + "_v",
-                         text: v.text + " (WFS)",
-                         legend: false
-                         }
-                         );
-                         }*/
-                        g.children.push(
-                            {
-                                nodeType: "gx_layer",
-                                layer: v.name,
-                                text: v.text,
-                                //text: v.text + " (WMS)",
-                                legend: false
-                            }
-                        );
-
-                    }
-                });
-                g.children.reverse();
-                children.push(g);
-            });
-            children.reverse();
-            Heron.options.layertree.tree = [
-                {
-                    text: 'BaseLayers',
-                    expanded: true,
-                    children: [
-                        {
-                            nodeType: "gx_layer",
-                            layer: "Bing Road",
-                            text: 'Bing Road'
-                        },
-                        {
-                            nodeType: "gx_layer",
-                            layer: "Bing Aerial",
-                            text: 'Bing Aerial'
-                        },
-                        {
-                            nodeType: "gx_layer",
-                            layer: "Bing Aerial With Labels",
-                            text: 'Bing Aerial With Labels'
-                        },
-                        {
-                            nodeType: "gx_layer",
-                            layer: "osm",
-                            text: 'Osm'
-                        },
-                        {
-                            nodeType: "gx_layer",
-                            layer: "DigitalGlobe:Imagery",
-                            text: 'DigitalGlobe:Imagery'
-                        },
-                        {
-                            nodeType: "gx_layer",
-                            layer: "None",
-                            text: 'None'
-                        }
-                    ]
-                }
-            ].concat(children);
-        }
-    });
 };
 MapCentia.init = function () {
     "use strict";
-    OpenLayers.Util.onImageLoadErrorColor = "transparent";
     OpenLayers.ProxyHost = "/cgi/proxy.cgi?url=";
+    OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
     //OpenLayers.DOTS_PER_INCH = 25.4 / 0.28;
 
     Ext.BLANK_IMAGE_URL = 'http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
@@ -452,7 +388,6 @@ MapCentia.init = function () {
         {type: "measurearea", options: {geodesic: true}},
         {type: "-"},
         {type: "addbookmark"},
-        {type: "help", options: {tooltip: 'Help and info for this example', contentUrl: 'help.html'}},
         {
             type: "oleditor",
             options: {
@@ -589,7 +524,8 @@ MapCentia.init = function () {
         },
         {
             type: "printdialog", options: {
-            url: 'http://54.77.123.219/geoserver/pdf', windowWidth: 360
+            url: '/geoserver/pdf',
+            windowWidth: 360
             // , showTitle: true
             // , mapTitle: 'My Header - Print Dialog'
             // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
@@ -732,6 +668,18 @@ MapCentia.init = function () {
     };
 };
 MapCentia.setup();
-MapCentia.init();
+(function pollForLayers() {
+    if (Heron.globals.metaReady) {
+        MapCentia.init();
+        Heron.App.create();
+        Heron.App.show();
+        MapCentia.gc2.map = Heron.App.map;
+        var scalebar = new OpenLayers.Control.ScaleLine();
+        //Heron.App.map.addControl(scalebar);
+    } else {
+        setTimeout(pollForLayers, 100);
+    }
+}());
+
 
 

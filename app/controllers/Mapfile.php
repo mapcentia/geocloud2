@@ -79,7 +79,7 @@ class Mapfile extends \app\inc\Controller
         LABEL
         WRAP "#"
         TYPE truetype
-        FONT "arial"
+        FONT "arialnormal"
         SIZE 8
         COLOR 0 0 0
         #SHADOWSIZE 2 2
