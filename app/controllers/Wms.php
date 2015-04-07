@@ -40,10 +40,8 @@ class Wms extends \app\inc\Controller
             $layerSplit = explode(".", $layer);
             $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
             if ($auth == "Read/write") {
-
                 include('inc/http_basic_authen.php');
-            }
-            else {
+            } else {
                 include('inc/http_basic_authen_subuser.php');
             }
         }

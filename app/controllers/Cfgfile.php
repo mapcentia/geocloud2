@@ -37,7 +37,7 @@ class Cfgfile extends \app\inc\Controller
                 $meta_buffer = ($def->meta_buffer) ? : $meta_buffer = 0;
                 $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
-                //if (app::$param["tileRenderBackend"] == "wms"){
+                // If raster then use WMS backend, because of bug in Python backend.
                 if ($row['type'] == "RASTER") {
                     $parts = explode(":",App::$param['host']);
                     echo "type=WMS\n";
@@ -70,9 +70,10 @@ class Cfgfile extends \app\inc\Controller
                 echo "maxResolution=156543.0339\n";
                 echo "levels=21\n";
                 echo "metaBuffer=20\n";
-                echo "metaTile=no\n";
-                echo "metaSize=3,3\n";
+                echo "metaTile=yes\n";
+                echo "metaSize=5,5\n";
                 echo "srs=EPSG:900913\n";
+                echo "tms=google\n";
                 echo "expire=60\n\n";
             }
         }
