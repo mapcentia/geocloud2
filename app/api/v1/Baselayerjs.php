@@ -14,6 +14,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "esIndexingInGui: " . ((\app\conf\App::$param['esIndexingInGui']) ? "true": "false") . ",\n";
         echo "hideUngroupedLayers: " . ((\app\conf\App::$param['hideUngroupedLayers']) ? "true": "false") . ",\n";
         echo "staticMapHost: '" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "',\n";
+        echo "geoserverHost: '" . ((\app\conf\App::$param['geoserverHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
         echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";

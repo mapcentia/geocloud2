@@ -524,7 +524,7 @@ MapCentia.init = function () {
         },
         {
             type: "printdialog", options: {
-            url: '/geoserver/pdf:8080',
+            url: window.gc2Options.geoserverHost + '/geoserver/pdf',
             windowWidth: 360
             // , showTitle: true
             // , mapTitle: 'My Header - Print Dialog'
