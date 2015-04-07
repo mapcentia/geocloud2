@@ -6,6 +6,7 @@
 /*global ol:false */
 /*global GeoExt:false */
 /*global document:false */
+/*global array_unique:false */
 /*global window:false */
 Ext.namespace("MapCentia");
 Ext.namespace("Heron.options");
@@ -173,7 +174,7 @@ MapCentia.setup = function () {
                             })
                         );
                     });
-                    Heron.options.map.layers = Heron.options.map.layers.concat(MapCentia.gc2.getBaseLayers(true)).concat(bArr);
+                    Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr).concat(Heron.options.map.layers);
                     arr = array_unique(groups);
                     $.each(arr, function (u, m) {
                         var g;
