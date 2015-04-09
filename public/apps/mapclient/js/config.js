@@ -374,6 +374,7 @@ MapCentia.init = function () {
         ]
     };
     Heron.options.map.toolbar = [
+        {type: "scale", options: {width: 110}},
         {
             type: "featureinfo",
             options: {
@@ -398,7 +399,19 @@ MapCentia.init = function () {
         {type: "zoomin"},
         {type: "zoomout"},
         {type: "zoomvisible"},
-        {type: "coordinatesearch", options: {onSearchCompleteZoom: 8}},
+        {
+            type: "coordinatesearch", options: {
+            onSearchCompleteZoom: 8,
+            showProjection: false,
+            hropts: [{
+                projEpsg: 'EPSG:4326',
+                fieldLabelX: 'Lon',
+                fieldLabelY: 'Lat',
+                fieldEmptyTextX: 'Enter Lon-coordinate...',
+                fieldEmptyTextY: 'Enter Lat-coordinate...'
+            }]
+        }
+        },
         {type: "-"},
         {type: "zoomprevious"},
         {type: "zoomnext"},
@@ -676,6 +689,7 @@ MapCentia.init = function () {
                 region: "west",
                 width: 240,
                 collapsible: true,
+                split: true,
                 border: false,
                 items: [
                     {
@@ -714,13 +728,12 @@ MapCentia.init = function () {
                 region: 'center',
                 width: '100%',
                 collapsible: false,
-                split: false,
+                split: true,
                 border: false,
                 items: [
                     {
                         xtype: 'hr_mappanel',
                         id: 'hr-map',
-                        title: '&nbsp;',
                         region: 'center',
                         collapsible: false,
                         border: false,
@@ -735,7 +748,7 @@ MapCentia.init = function () {
                 region: "east",
                 width: 240,
                 collapsible: true,
-                split: false,
+                split: true,
                 border: false,
                 items: [
                     {

@@ -217,21 +217,21 @@ Heron.i18n.dict = {
     'Show single record': 'Show single record',
     'Show next record': 'Show next record',
     'Show previous record': 'Show previous record',
-	'Feature tooltips' : 'Feature tooltips',
-	'FeatureTooltip' : 'FeatureTooltip',
-	'Upload features from local file' : 'Upload features from local file',
-	'My Upload' : 'My Upload',
-	'Anything is allowed here' : 'Anything is allowed here',
-	'Edit vector Layer styles' : 'Edit vector Layer styles',
-	'Style Editor' : 'Style Editor',
-	'Open a map context (layers, styling, extent) from file' : 'Open a map context (layers, styling, extent) from file',
-	'Save current map context (layers, styling, extent) to file' : 'Save current map context (layers, styling, extent) to file',
-	'Upload' : 'Upload',
-	'Uploading file...' : 'Uploading file...',
-    'Change feature styles': 'Change feature styles'
-    'Error reading map file, map has not been loaded.':'Error reading map file, map has not been loaded.'
-    'Error on removing layers.':'Error on removing layers.'
-    'Error loading map file.':'Error loading map file.'
-    'Error reading layer tree.':'Error reading layer tree.'
+    'Feature tooltips': 'Feature tooltips',
+    'FeatureTooltip': 'FeatureTooltip',
+    'Upload features from local file': 'Upload features from local file',
+    'My Upload': 'My Upload',
+    'Anything is allowed here': 'Anything is allowed here',
+    'Edit vector Layer styles': 'Edit vector Layer styles',
+    'Style Editor': 'Style Editor',
+    'Open a map context (layers, styling, extent) from file': 'Open a map context (layers, styling, extent) from file',
+    'Save current map context (layers, styling, extent) to file': 'Save current map context (layers, styling, extent) to file',
+    'Upload': 'Upload',
+    'Uploading file...': 'Uploading file...',
+    'Change feature styles': 'Change feature styles',
+    'Error reading map file, map has not been loaded.': 'Error reading map file, map has not been loaded.',
+    'Error on removing layers.': 'Error on removing layers.',
+    'Error loading map file.': 'Error loading map file.',
+    'Error reading layer tree.': 'Error reading layer tree.'
 
 };
