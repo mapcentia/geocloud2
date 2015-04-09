@@ -25,7 +25,7 @@ MapCentia.setup = function () {
     "use strict";
     Heron.globals.metaReady = false;
     Heron.globals.serviceUrl = '/cgi/heron.cgi';
-    Ext.BLANK_IMAGE_URL = '//cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
+    Ext.BLANK_IMAGE_URL = '/js/ext/resources/images/default/s.gif';
     Heron.options.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
         4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
         76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
