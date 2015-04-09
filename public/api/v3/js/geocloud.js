@@ -438,7 +438,11 @@ geocloud = (function () {
                 fadeAnimation: true,
                 zoomAnimation: true,
                 showLayerSwitcher: false
-            };
+            },
+            resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
         if (config) {
             for (prop in config) {
                 defaults[prop] = config[prop];
@@ -513,7 +517,7 @@ geocloud = (function () {
                     for (var i = 0; i < this.map.layers.length; i++) {
                         if (this.map.layers[i].isBaseLayer === true) {
                             //console.log(this.map.layers[i]);
-                            if (removeMapReference){
+                            if (removeMapReference) {
                                 this.map.layers[i].map = null;
                             }
                             layerArr.push(this.map.layers[i]);
@@ -1031,10 +1035,7 @@ geocloud = (function () {
                         "//1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
                         {
                             attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>",
-                            resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                                1.19432856696, 0.597164283478, 0.298582141739, 0.149291]
+                            resolutions: resolutions
                         }
                     );
                     this.map.addLayer(l);
@@ -1063,7 +1064,9 @@ geocloud = (function () {
                         layers: layer
                     }, {
                         wrapDateLine: true,
-                        attribution: "&copy; Geodatastyrelsen"
+                        attribution: "&copy; Geodatastyrelsen",
+                        resolutions: resolutions
+
                     });
                     this.map.addLayer(l);
                     l.setVisibility(false);
