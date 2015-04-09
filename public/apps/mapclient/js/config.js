@@ -306,8 +306,7 @@ MapCentia.init = function () {
                     header: false,
                     autoConfig: true,
                     autoConfigMaxSniff: 100,
-                    //exportFormats: Heron.options.exportFormats,
-                    exportFormats: [],
+                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? Heron.options.exportFormats : [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -336,8 +335,7 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    //exportFormats: Heron.options.exportFormats,
-                    exportFormats: [],
+                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? Heron.options.exportFormats : [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -363,8 +361,7 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    //exportFormats: ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'],
-                    exportFormats: [],
+                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'] : [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -389,8 +386,7 @@ MapCentia.init = function () {
                         // Should column-names be capitalized? Default true.
                         columnCapitalize: true,
                         hideColumns: ['objectid', 'gid'],
-                        //exportFormats: Heron.options.exportFormats,
-                        exportFormats: [],
+                        exportFormats: window.gc2Options.showDownloadOtionsInHeron ? Heron.options.exportFormats : [],
                         maxFeatures: 10,
                         discardStylesForDups: true
                     }
@@ -629,8 +625,6 @@ MapCentia.init = function () {
 
                         placeMarkers = new OpenLayers.Layer.Markers("Markers");
                         MapCentia.gc2.map.addLayer(placeMarkers);
-                        var size = new OpenLayers.Size(21, 25);
-                        var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
                         placeMarkers.addMarker(new OpenLayers.Marker(point));
                         placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
                         MapCentia.gc2.map.addPopup(placePopup);
@@ -777,7 +771,7 @@ MapCentia.setup();
         MapCentia.gc2.map = Heron.App.map;
         Heron.App.map.addControl(new OpenLayers.Control.ScaleLine());
     } else {
-        setTimeout(pollForLayers, 100);
+        setTimeout(pollForLayers, 300);
     }
 }());
 

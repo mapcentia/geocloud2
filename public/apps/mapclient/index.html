@@ -4,9 +4,20 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     <title>GC2 Map Client</title>
+    <!-- External lib: Google   -->
     <script type="text/javascript"
-            src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+            src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&dlibraries=places"></script>
+    <!-- External lib: Heron-mc   -->
+    <link rel="stylesheet" type="text/css" href="/js/heron/ux/oleditor/ole/client/theme/geosilk/geosilk.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/heron/ux/gxp/git/src/theme/all.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/heron/resources/css/default.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/heron/resources/css/default-theme-gray.css"/>
 
+    <!-- External lib: ExtJS -->
+    <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
+
+    <!-- External lib: Ext   -->
     <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js"></script>
     <script type="text/javascript" src="/js/ext/ext-all.js"></script>
 
@@ -14,8 +25,7 @@
     <script type="text/javascript" src="/js/openlayers/OpenLayers.js"></script>
 
     <!-- External lib: Proj4 -->
-    <script type="text/javascript" src="http://eu1.mapcentia.com/js/openlayers/proj4js-combined.js"></script>
-
+    <script type="text/javascript" src="/js/openlayers/proj4js-combined.js"></script>
 
     <!-- Internal lib: Geocloud -->
     <script type="text/javascript" src="/api/v1/baselayerjs"></script>
@@ -31,20 +41,12 @@
           href="http://lib.heron-mc.org/heron/1.0.3/ux/printpreview/resources/css/printpreview.css"/>
 
     <!-- External lib: Heron-mc   -->
-    <script type="text/javascript" src="/js/common.js"></script>
+    <script type="text/javascript" src="/js/heron/ux/gxp/gxp.js"></script>
     <script type="text/javascript" src="/js/heron/ux/oleditor/ole/ole.min.js"></script>
     <script type="text/javascript" src="/js/heron/script/Heron.js"></script>
     <script type="text/javascript" src="/js/heron/lib/NoLaunch.js"></script>
-    <script type="text/javascript" src="/js/heron/ux/gxp/gxp.js"></script>
-    <link rel="stylesheet" type="text/css" href="/js/heron/ux/gxp/git/src/theme/all.css"/>
-    <link rel="stylesheet" type="text/css" href="/js/heron/resources/css/default.css"/>
-    <link rel="stylesheet" type="text/css" href="/js/heron/resources/css/default-theme-gray.css"/>
 
-    <!-- External lib: ExtJS -->
-    <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css"/>
-    <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css"/>
-    <link rel="stylesheet" type="text/css" href="/js/heron/ux/oleditor/ole/client/theme/geosilk/geosilk.css"/>
-
+    <script type="text/javascript" src="/js/common.js"></script>
     <script type="text/javascript" src="/apps/mapclient/js/config.js"></script>
 
     <style>
@@ -55,11 +57,19 @@
         .olImageLoadError {
             background-color: transparent !important;
         }
+
         .pac-container {
             z-index: 10000
         }
+
         .x-btn .icon-map-magnify {
             background-image: url("http://us1.mapcentia.com/js/heron/resources/images/silk/map_magnify.png") !important;
+        }
+
+        /* Google Maps will mess oleDialog up, so set to absolute position */
+        .oleDialog {
+            position: absolute;
+            right: 100px;
         }
     </style>
 </head>
