@@ -16,8 +16,14 @@ class App
         // When creating new databases use this db as template
         "databaseTemplate" => "template_geocloud",
 
+        // Is MapServer ver. 7 used?
+        "mapserver_ver_7" => true,
+
         // The host of Elasticsearch
-        "esHost" => "",
+        "esHost" => "http://127.0.0.1",
+
+        // geoserver host for printing. Deafaults to "host"
+        //"geoserverHost" => "",
 
         // Encrypt api key in database
         "encryptSettings" => false,
@@ -47,6 +53,12 @@ class App
 
         // Bing key
         "bingApiKey" => 'your_bing_map_key',
+
+        // HERE creds
+        "hereApp" => array(
+            "App_Id" => "your_app_id",
+            "App_Code" => "your_code",
+        ),
 
         //Force a locale. If not set it'll set set from the browsers language settings.
         //"locale" => "en_US",

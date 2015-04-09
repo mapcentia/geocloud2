@@ -19,12 +19,17 @@ Ext.namespace("Heron.options.zoomrestrict");
 Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
-var metaData, metaDataKeys = [], metaDataKeysTitle = [];
+var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup;
 
 MapCentia.setup = function () {
     "use strict";
     Heron.globals.metaReady = false;
     Heron.globals.serviceUrl = '/cgi/heron.cgi';
+    Ext.BLANK_IMAGE_URL = 'http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
+    Heron.options.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
     MapCentia.gc2 = new geocloud.map({});
     var uri = window.location.pathname.split("/"),
         db = uri[3],
@@ -120,10 +125,7 @@ MapCentia.setup = function () {
                                 transparent: true
                             },
                             {
-                                resolutions: [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                                    4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                                    76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                                    1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
+                                resolutions: Heron.options.resolutions,
                                 isBaseLayer: isBaseLayer,
                                 title: (!v.bitmapsource) ? text : " ",
                                 singleTile: false,
@@ -150,12 +152,12 @@ MapCentia.setup = function () {
                             lArr.push({text: text, name: name, group: group, type: type});
                             Heron.options.map.layers.push(layer);
                         } else {
-
                             bArr.push(layer);
                             baseLayers.push({
                                 nodeType: "gx_layer",
                                 layer: name,
-                                text: text
+                                text: text,
+                                legend: false
                             });
                         }
 
@@ -175,6 +177,23 @@ MapCentia.setup = function () {
                         );
                     });
                     Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr).concat(Heron.options.map.layers);
+
+                    // Define a blank base layer and add it
+                    var blank = new OpenLayers.Layer.Image(
+                        "None",
+                        Ext.BLANK_IMAGE_URL,
+                        OpenLayers.Bounds.fromString(Heron.options.map.settings.maxExtent),
+                        new OpenLayers.Size(10, 10),
+                        {
+                            resolutions: Heron.options.resolutions,
+                            isBaseLayer: true,
+                            visibility: false,
+                            displayInLayerSwitcher: false,
+                            transitionEffect: 'resize'
+                        }
+                    );
+                    Heron.options.map.layers.push(blank);
+
                     arr = array_unique(groups);
                     $.each(arr, function (u, m) {
                         var g;
@@ -211,7 +230,12 @@ MapCentia.setup = function () {
                         children.push(g);
                     });
                     children.reverse();
-
+                    baseLayers.push({
+                        nodeType: "gx_layer",
+                        layer: "None",
+                        text: "None",
+                        legend: false
+                    });
                     Heron.options.layertree.tree = [{
                         text: 'BaseLayers',
                         expanded: false,
@@ -229,7 +253,6 @@ MapCentia.init = function () {
     OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
     //OpenLayers.DOTS_PER_INCH = 25.4 / 0.28;
 
-    Ext.BLANK_IMAGE_URL = 'http://cdnjs.cloudflare.com/ajax/libs/extjs/3.4.1-1/resources/images/default/s.gif';
 
     Heron.options.bookmarks = [];
     Heron.options.exportFormats = ['CSV', 'GMLv2', 'Shapefile',
@@ -523,31 +546,7 @@ MapCentia.init = function () {
                 }
             }
         },
-        {
-            type: "printdialog", options: {
-            url: window.gc2Options.geoserverHost + '/geoserver/pdf',
-            windowWidth: 360
-            // , showTitle: true
-            // , mapTitle: 'My Header - Print Dialog'
-            // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
-            // , showComment: true
-            // , mapComment: 'My Comment - Print Dialog'
-            // , mapCommentYAML: "mapComment"	// MapFish - field name in config.yaml - default is: 'mapComment'
-            // , showFooter: true
-            // , mapFooter: 'My Footer - Print Dialog'
-            // , mapFooterYAML: "mapFooter"	    // MapFish - field name in config.yaml - default is: 'mapFooter'
-            // , printAttribution: true         // Flag for printing the attribution
-            // , mapAttribution: null           // Attribution text or null = visible layer attributions
-            // , mapAttributionYAML: "mapAttribution" // MapFish - field name in config.yaml - default is: 'mapAttribution'
-            , showOutputFormats: true
-            // , showRotation: true
-            // , showLegend: true
-            // , showLegendChecked: true
-            // , mapLimitScales: false
-            , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
-            // , mapPreviewHeight: 400
-        }
-        },
+        {type: "-"},
         {
             type: "searchcenter",
             // Options for SearchPanel window
@@ -565,6 +564,106 @@ MapCentia.init = function () {
                     ]
                 }
             }
+        },
+        {
+            type: "any",
+            options: {
+                text: '',
+                tooltip: 'Search with Google Places',
+                iconCls: 'icon-map-magnify',
+                id: "googleSearch",
+                handler: function (objRef) {
+                    if (!searchWin) {
+                        searchWin = new Ext.Window({
+                            title: "Find",
+                            layout: 'fit',
+                            width: 300,
+                            height: 70,
+                            plain: true,
+                            closeAction: 'hide',
+                            html: '<div style="padding: 5px" id="searchContent"><input style="width: 270px" type="text" id="gAddress" name="gAddress" value="" /></div>',
+                            x: 300,
+                            y: 70
+                        });
+                    }
+                    if (typeof(objRef) === "object") {
+                        searchWin.show(objRef);
+                    } else {
+                        searchWin.show();
+                    }//end if object reference was passed
+                    var input = document.getElementById('gAddress');
+                    var options = {
+                        //bounds: defaultBounds
+                        //types: ['establishment']
+                    };
+                    var autocomplete = new google.maps.places.Autocomplete(input, options);
+                    //console.log(autocomplete.getBounds());
+                    google.maps.event.addListener(autocomplete, 'place_changed', function () {
+                        var place = autocomplete.getPlace();
+                        var transformPoint = function (lat, lon, s, d) {
+                            var p = [];
+                            if (typeof Proj4js === "object") {
+                                var source = new Proj4js.Proj(s);    //source coordinates will be in Longitude/Latitude
+                                var dest = new Proj4js.Proj(d);
+                                p = new Proj4js.Point(lat, lon);
+                                Proj4js.transform(source, dest, p);
+                            }
+                            else {
+                                p.x = null;
+                                p.y = null;
+                            }
+                            return p;
+                        };
+                        var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+                        var point = new OpenLayers.LonLat(p.x, p.y);
+                        MapCentia.gc2.map.setCenter(point, 17);
+                        try {
+                            placeMarkers.destroy();
+                        } catch (e) {
+                        }
+
+                        try {
+                            placePopup.destroy();
+                        } catch (e) {
+                        }
+
+                        placeMarkers = new OpenLayers.Layer.Markers("Markers");
+                        MapCentia.gc2.map.addLayer(placeMarkers);
+                        var size = new OpenLayers.Size(21, 25);
+                        var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+                        placeMarkers.addMarker(new OpenLayers.Marker(point));
+                        placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
+                        MapCentia.gc2.map.addPopup(placePopup);
+                    });
+
+                }
+            }
+        },
+        {type: "-"},
+        {
+            type: "printdialog", options: {
+            url: window.gc2Options.geoserverHost + '/geoserver/pdf',
+            windowWidth: 360
+            // , showTitle: true
+            // , mapTitle: 'My Header - Print Dialog'
+            // , mapTitleYAML: "mapTitle"		// MapFish - field name in config.yaml - default is: 'mapTitle'
+            // , showComment: true
+            // , mapComment: 'My Comment - Print Dialog'
+            // , mapCommentYAML: "mapComment"	// MapFish - field name in config.yaml - default is: 'mapComment'
+            // , showFooter: true
+            , mapFooter: 'My Footer - Print Dialog'
+            // , mapFooterYAML: "mapFooter"	    // MapFish - field name in config.yaml - default is: 'mapFooter'
+            // , printAttribution: true         // Flag for printing the attribution
+            // , mapAttribution: null           // Attribution text or null = visible layer attributions
+            // , mapAttributionYAML: "mapAttribution" // MapFish - field name in config.yaml - default is: 'mapAttribution'
+            , showOutputFormats: true
+            // , showRotation: true
+            // , showLegend: true
+            // , showLegendChecked: true
+            // , mapLimitScales: false
+            , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
+            // , mapPreviewHeight: 400
+        }
         }
     ];
 
@@ -670,13 +769,13 @@ MapCentia.init = function () {
 };
 MapCentia.setup();
 (function pollForLayers() {
+    "use strict";
     if (Heron.globals.metaReady) {
         MapCentia.init();
         Heron.App.create();
         Heron.App.show();
         MapCentia.gc2.map = Heron.App.map;
-        var scalebar = new OpenLayers.Control.ScaleLine();
-        //Heron.App.map.addControl(scalebar);
+        Heron.App.map.addControl(new OpenLayers.Control.ScaleLine());
     } else {
         setTimeout(pollForLayers, 100);
     }

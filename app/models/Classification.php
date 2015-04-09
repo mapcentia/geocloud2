@@ -488,7 +488,12 @@ class Classification extends \app\inc\Model
             return $response;
         }
         //Set single class
-        $expression = "[Cluster:FeatureCount]=1";
+        if (\app\conf\App::$param["mapserver_ver_7"]){
+            $ClusterFeatureCount = "Cluster_FeatureCount";
+        } else {
+            $ClusterFeatureCount = "Cluster:FeatureCount";
+        }
+        $expression = "[{$ClusterFeatureCount}]=1";
         $name = "Single";
         $res = $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
         if (!$res['success']) {
@@ -499,9 +504,9 @@ class Classification extends \app\inc\Model
         }
 
         //Set cluster class
-        $expression = "[Cluster:FeatureCount]>1";
+        $expression = "[{$ClusterFeatureCount}]>1";
         $name = "Cluster";
-        $data->labelText = "[Cluster:FeatureCount]";
+        $data->labelText = "[{$ClusterFeatureCount}]";
         $data->labelSize = "9";
         $data->labelPosition = "cc";
         $data->symbolSize = "50";

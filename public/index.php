@@ -90,7 +90,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/job", function () {
         Database::setDb("gc2scheduler");
     });
-} elseif (Input::getPath()->part(1) == "wms") {
+} elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
     new \app\controllers\Wms();
 } elseif (Input::getPath()->part(1) == "wmsc") {

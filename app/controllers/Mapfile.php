@@ -59,6 +59,8 @@ class Mapfile extends \app\inc\Controller
         "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
+        "wfs_namespace_prefix" "gc2"
+        "wfs_namespace_uri" "http://eu1.mapcentia.com"
         END
         END
         #
@@ -433,8 +435,9 @@ class Mapfile extends \app\inc\Controller
                 "wms_enable_request"    "*"
                 "gml_include_items" "all"
                 "wms_include_items" "all"
+                "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-                "gml_the_geom_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
+                "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($row['wmssource']) {
                     $wmsCon = str_replace(array("layers","LAYERS"), "LAYER", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";

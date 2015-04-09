@@ -25,8 +25,8 @@ class Wms extends \app\inc\Controller
         $request = new \OWSRequestObj();
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             foreach ($_GET as $k => $v) {
-                if (strtolower($k) == "layers" || strtolower($k) == "layer") {
-                    $layer = $v;
+                if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
+                    $layers = $v;
                 }
                 $request->setParameter($k, $v);
             }
@@ -36,13 +36,15 @@ class Wms extends \app\inc\Controller
         if ($_SESSION['http_auth'] != $db) {
             \app\models\Database::setDb($db);
             $postgisObject = new \app\inc\Model();
-            $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-            $layerSplit = explode(".", $layer);
-            $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
-            if ($auth == "Read/write") {
-                include('inc/http_basic_authen.php');
-            } else {
-                include('inc/http_basic_authen_subuser.php');
+            foreach(explode(",",$layers) as $layer) {
+                $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+                $layerSplit = explode(".", $layer);
+                $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
+                if ($auth == "Read/write") {
+                    include('inc/http_basic_authen.php');
+                } else {
+                    include('inc/http_basic_authen_subuser.php');
+                }
             }
         }
         if ($_GET['sql_layer']) {
