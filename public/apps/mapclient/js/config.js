@@ -34,7 +34,7 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache/' + schema,
+        url = '/wms/' + db + '/tilecache',
         wfsUrl = '/wfs/' + db + '/' + schema;
 
     $.ajax({
@@ -135,7 +135,7 @@ MapCentia.setup = function () {
                             layer = [
                                 "OpenLayers.Layer.WMS",
                                 name,
-                                url,
+                                url + "/" + schema,
                                 {
                                     layers: name,
                                     format: 'image/png',
