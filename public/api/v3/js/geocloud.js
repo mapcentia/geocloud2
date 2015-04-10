@@ -31,6 +31,7 @@ geocloud = (function () {
         elasticStore,
         tileLayer,
         createTileLayer,
+        createTMSLayer,
         clickEvent,
         transformPoint,
         MAPLIB,
@@ -430,6 +431,37 @@ geocloud = (function () {
                     maxZoom: 20
                 });
                 l.id = layer;
+                break;
+        }
+        return l;
+    };
+
+    //ol2
+    createTMSLayer = function (layer, defaults) {
+        var l, url, urlArray;
+        url = defaults.host + "/wms/" + defaults.db + "/tilecache";
+        var url1 = url;
+        var url2 = url;
+        var url3 = url;
+        // For ol2
+        urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
+        // For leaflet
+        url = url.replace("cdn.", "{s}.");
+        switch (MAPLIB) {
+            case "ol2":
+                l = new OpenLayers.Layer.TMS(defaults.name, urlArray, {
+                    layername: layer,
+                    type: 'png',
+                    resolutions: defaults.resolutions,
+                    isBaseLayer: defaults.isBaseLayer
+                });
+                l.id = layer;
+                break;
+            case "ol3":
+
+                break;
+            case "leaflet":
+
                 break;
         }
         return l;
@@ -1059,16 +1091,15 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "//eu1.mapcentia.com/wms/dk/tilecache";
+                url = "//eu1.mapcentia.com/wms/dk/tilecache/";
             switch (MAPLIB) {
                 case "ol2":
-                    l = new OpenLayers.Layer.WMS(name, url, {
-                        layers: layer
-                    }, {
-                        wrapDateLine: true,
+                    l = new OpenLayers.Layer.TMS(name, url, {
+                        layername: layer,
+                        type: 'png',
                         attribution: "&copy; Geodatastyrelsen",
-                        resolutions: resolutions
-
+                        resolutions: resolutions,
+                        wrapDateLine: true
                     });
                     this.map.addLayer(l);
                     l.setVisibility(false);
@@ -1223,7 +1254,8 @@ geocloud = (function () {
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
-                        name: l
+                        name: l,
+                        type: "tms"
                     });
                     break;
             }
@@ -1242,7 +1274,9 @@ geocloud = (function () {
                 wrapDateLine: true,
                 tileCached: true,
                 displayInLayerSwitcher: true,
-                name: null
+                name: null,
+                resolutions: resolutions,
+                type: "wms"
             };
             if (config) {
                 for (prop in config) {
@@ -1252,7 +1286,18 @@ geocloud = (function () {
             var layers = defaults.layers;
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
-                var l = createTileLayer(layers[i], defaults);
+                var l;
+                switch (defaults.type) {
+                    case  "wms":
+                        l = createTileLayer(layers[i], defaults);
+                        break;
+                    case "tms":
+                        l = createTMSLayer(layers[i], defaults);
+                        break;
+                    default:
+                        l = createTileLayer(layers[i], defaults);
+                        break;
+                }
                 l.baseLayer = defaults.isBaseLayer;
                 switch (MAPLIB) {
                     case "ol2":

@@ -115,39 +115,57 @@ MapCentia.setup = function () {
                         for (i = 0; i < response.data.length; i = i + 1) {
                             groups[i] = response.data[i].layergroup;
                         }
-                        layer = [
-                            "OpenLayers.Layer.WMS",
-                            name,
-                            url,
-                            {
-                                layers: name,
-                                format: 'image/png',
-                                transparent: true
-                            },
-                            {
-                                resolutions: Heron.options.resolutions,
-                                isBaseLayer: isBaseLayer,
-                                title: (!v.bitmapsource) ? text : " ",
-                                singleTile: false,
-                                visibility: false,
-                                transitionEffect: 'resize',
-                                featureInfoFormat: isBaseLayer ? null : 'application/vnd.ogc.gml',
-                                metadata: {
-                                    wfs: {
-                                        protocol: new OpenLayers.Protocol.WFS({
-                                            version: "1.0.0",
-                                            url: '/wfs/' + db + '/' + schema + '/3857?',
-                                            srsName: "EPSG:3857",
-                                            featureType: v.f_table_name,
-                                            featureNS: "http://twitter/" + db
-                                        })
-                                    }
-                                },
-                                db: db,
-                                geomField: geomField
+                        if (isBaseLayer) {
+                            layer = [
+                                "OpenLayers.Layer.TMS",
+                                name,
+                                url,
+                                {
+                                    layername: name,
+                                    type: 'png',
+                                    resolutions: Heron.options.resolutions,
+                                    isBaseLayer: isBaseLayer,
+                                    title: (!v.bitmapsource) ? text : " ",
+                                    visibility: false,
+                                    transitionEffect: 'resize'
 
-                            }
-                        ];
+                                }
+                            ];
+                        } else {
+                            layer = [
+                                "OpenLayers.Layer.WMS",
+                                name,
+                                url,
+                                {
+                                    layers: name,
+                                    format: 'image/png',
+                                    transparent: true
+                                },
+                                {
+                                    resolutions: Heron.options.resolutions,
+                                    isBaseLayer: isBaseLayer,
+                                    title: (!v.bitmapsource) ? text : " ",
+                                    singleTile: false,
+                                    visibility: false,
+                                    transitionEffect: 'resize',
+                                    featureInfoFormat: isBaseLayer ? null : 'application/vnd.ogc.gml',
+                                    metadata: {
+                                        wfs: {
+                                            protocol: new OpenLayers.Protocol.WFS({
+                                                version: "1.0.0",
+                                                url: '/wfs/' + db + '/' + schema + '/3857?',
+                                                srsName: "EPSG:3857",
+                                                featureType: v.f_table_name,
+                                                featureNS: "http://twitter/" + db
+                                            })
+                                        }
+                                    },
+                                    db: db,
+                                    geomField: geomField
+
+                                }
+                            ];
+                        }
                         if (!isBaseLayer) {
                             lArr.push({text: text, name: name, group: group, type: type});
                             Heron.options.map.layers.push(layer);
