@@ -439,7 +439,7 @@ geocloud = (function () {
     //ol2
     createTMSLayer = function (layer, defaults) {
         var l, url, urlArray;
-        url = defaults.host + "/wms/" + defaults.db + "/tilecache";
+        url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
         var url1 = url;
         var url2 = url;
         var url3 = url;
