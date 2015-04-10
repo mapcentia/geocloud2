@@ -79,6 +79,11 @@ if (typeof gc2apiLoader === "undefined") {
                 type: 'text/css',
                 href: host + '/js/leaflet/plugins/Leaflet.label/leaflet.label.css'
             }).appendTo('head');
+            $('<link/>').attr({
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: host + '/js/leaflet/plugins/Leaflet.print/leaflet.print.css'
+            }).appendTo('head');
         }
         $('<link/>').attr({
             rel: 'stylesheet',

@@ -479,3 +479,6 @@ label {
 #sql-filter-table {
     width: 100%;
 }
+.leaflet-print-actions a {
+    color: #ffffff !important;
+}

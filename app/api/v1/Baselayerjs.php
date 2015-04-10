@@ -18,6 +18,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "geoserverHost: '" . ((\app\conf\App::$param['geoserverHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
+        echo "customPrintParams: " . json_encode(\app\conf\App::$param['customPrintParams']) . ",\n";
         echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
         echo "showConflictFieldOption: " . (json_encode(\app\conf\App::$param['showConflictFieldOption']) ? : "null")  .",\n";

@@ -844,7 +844,7 @@ geocloud = (function () {
                     this.map.addLayer(this.osm);
                     break;
                 case "leaflet":
-                    this.osm = new L.tileLayer("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    this.osm = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 20,
                         maxNativeZoom: 18
@@ -946,7 +946,7 @@ geocloud = (function () {
             // Load Google Maps API and make sure its not loaded more than once
             if (typeof window.GoogleMapsDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
                 window.GoogleMapsDirty = true;
-                jQuery.getScript("//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
+                jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
                 // Google Maps API is loaded
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
@@ -1066,7 +1066,7 @@ geocloud = (function () {
                 case "ol2":
                     l = new OpenLayers.Layer.XYZ(
                         type,
-                        "//1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
+                        "https//1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
                         {
                             attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>",
                             resolutions: resolutions
@@ -1076,7 +1076,7 @@ geocloud = (function () {
                     l.setVisibility(false);
                     break;
                 case "leaflet":
-                    l = new L.TileLayer("//{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
+                    l = new L.TileLayer("https//{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
                         maxZoom: 20,
                         subdomains: ["1", "2", "3", "4"],
                         attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
@@ -1091,7 +1091,7 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "//eu1.mapcentia.com/wms/dk/tilecache/";
+                url = "https://eu1.mapcentia.com/wms/dk/tilecache/";
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.TMS(name, url, {

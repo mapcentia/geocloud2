@@ -411,26 +411,21 @@ Viewer = function () {
         position: 'bottomright'
     });
     cloud.map.addControl(zoomControl);
+
     // Create the print provider, subscribing to print events
-    var printProvider = L.print.provider({
-        capabilities: printConfig,
-        method: 'POST',
-        dpi: 56,
-        outputFormat: 'pdf',
-        proxy: '/cgi/proxy.cgi?url=',
-        customParams: {
-            mapTitle: 'Print Test',
-            mapComment: 'Testing Leaflet printing',
-            mapAttribution: "sdsd",
-            mapFooter: "sd"
-        }
-    });
-    // Create a print control with the configured provider and add to the map
-    var printControl = L.control.print({
-        provider: printProvider,
+    window.gc2Options.customPrintParams.mapAttribution = "sdsd";
+    cloud.map.addControl(L.control.print({
+        provider: L.print.provider({
+            capabilities: window.printConfig,
+            method: 'POST',
+            dpi: 56,
+            outputFormat: 'pdf',
+            proxy: '/cgi/proxy.cgi?url=',
+            customParams: window.gc2Options.customPrintParams
+        }),
         position: 'bottomright'
-    });
-    cloud.map.addControl(printControl);
+    }));
+
 // Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();
@@ -650,7 +645,7 @@ Viewer = function () {
                         restrictedExtent = response.data.extentrestricts[schema];
                         p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", "EPSG:4326");
                         p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", "EPSG:4326");
-                        cloud.map.setMaxBounds([[p1.y,p1.x],[p2.y,p2.x]]);
+                        cloud.map.setMaxBounds([[p1.y, p1.x], [p2.y, p2.x]]);
                     }
                 }
             }
