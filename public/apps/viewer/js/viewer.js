@@ -411,6 +411,26 @@ Viewer = function () {
         position: 'bottomright'
     });
     cloud.map.addControl(zoomControl);
+    // Create the print provider, subscribing to print events
+    var printProvider = L.print.provider({
+        capabilities: printConfig,
+        method: 'POST',
+        dpi: 56,
+        outputFormat: 'pdf',
+        proxy: '/cgi/proxy.cgi?url=',
+        customParams: {
+            mapTitle: 'Print Test',
+            mapComment: 'Testing Leaflet printing',
+            mapAttribution: "sdsd",
+            mapFooter: "sd"
+        }
+    });
+    // Create a print control with the configured provider and add to the map
+    var printControl = L.control.print({
+        provider: printProvider,
+        position: 'bottomright'
+    });
+    cloud.map.addControl(printControl);
 // Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();

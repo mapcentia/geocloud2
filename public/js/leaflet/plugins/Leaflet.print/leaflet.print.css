@@ -1,0 +1,79 @@
+.leaflet-print-print {
+    background: #fff url(images/printer.png) no-repeat 50% 50%;
+}
+
+.leaflet-print-actions {
+	display: none;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	left: 26px;
+	top: 0;
+}
+
+.leaflet-right .leaflet-print-actions {
+    right: 26px;
+    left: auto;
+}
+
+.leaflet-print-actions li {
+	float: left;
+}
+
+.leaflet-print-actions li:first-child a {
+	border-left: none;
+}
+
+.leaflet-print-actions li:last-child a {
+	-webkit-border-radius: 0 4px 4px 0;
+	        border-radius: 0 4px 4px 0;
+}
+
+.leaflet-right .leaflet-print-actions li:first-child a {
+	-webkit-border-radius: 4px 0 0 4px;
+	        border-radius: 4px 0 0 4px;
+}
+
+.leaflet-right .leaflet-print-actions li:last-child a {
+	-webkit-border-radius: 0;
+	        border-radius: 0;
+}
+
+.leaflet-left .leaflet-print-actions-visible a:first-child {
+    -webkit-border-top-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.leaflet-left .leaflet-print-actions-visible a:last-child {
+    -webkit-border-bottom-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.leaflet-right .leaflet-print-actions-visible a:first-child {
+    -webkit-border-top-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.leaflet-right .leaflet-print-actions-visible a:last-child {
+    -webkit-border-bottom-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.leaflet-print-actions a {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+	background-color: #919187;
+	border-left: 1px solid #AAA;
+	color: #FFF;
+	font: 11px/19px "Helvetica Neue", Arial, Helvetica, sans-serif;
+	line-height: 26px;
+	text-decoration: none;
+	width: 100px;
+	height: 26px;
+}
+
+.leaflet-print-actions a:hover {
+	background-color: #A0A098;
+}
