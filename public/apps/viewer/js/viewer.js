@@ -413,18 +413,20 @@ Viewer = function () {
     cloud.map.addControl(zoomControl);
 
     // Create the print provider, subscribing to print events
-    window.gc2Options.customPrintParams.mapAttribution = "sdsd";
-    cloud.map.addControl(L.control.print({
-        provider: L.print.provider({
-            capabilities: window.printConfig,
-            method: 'POST',
-            dpi: 56,
-            outputFormat: 'pdf',
-            proxy: '/cgi/proxy.cgi?url=',
-            customParams: window.gc2Options.customPrintParams
-        }),
-        position: 'bottomright'
-    }));
+    if (window.gc2Options.customPrintParams !== null) {
+        window.gc2Options.customPrintParams.mapAttribution = "sdsd";
+        cloud.map.addControl(L.control.print({
+            provider: L.print.provider({
+                capabilities: window.printConfig,
+                method: 'POST',
+                dpi: 56,
+                outputFormat: 'pdf',
+                proxy: '/cgi/proxy.cgi?url=',
+                customParams: window.gc2Options.customPrintParams
+            }),
+            position: 'bottomright'
+        }));
+    }
 
 // Start of draw
     if (window.gc2Options.leafletDraw) {
