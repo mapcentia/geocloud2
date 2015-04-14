@@ -1324,7 +1324,7 @@ geocloud = (function () {
             }
             return layersArr;
         };
-        
+
         this.removeTileLayerByName = function (name) {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
