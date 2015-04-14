@@ -430,7 +430,7 @@ function doQuery($queryType)
                     $role = $roleObj["data"][$user];
                     switch ($role) {
                         case "author":
-                            $from .= " AND (gc2_status = 3 OR gc2_version_user = '{$user}')";
+                            $from .= " AND (gc2_status = 3 OR gc2_workflow @> 'author => {$user}')";
                             break;
                         case "reviewer":
                             $from .= "";
@@ -439,7 +439,7 @@ function doQuery($queryType)
                             $from .= "";
                             break;
                         default:
-                            $from .= " AND (gc2_status = 3 OR gc2_version_user = '{$user}')";
+                            $from .= " AND (gc2_status = 3)";
                             break;
                     }
 
@@ -790,6 +790,7 @@ function doParse($arr)
     global $user;
     global $postgisschema;
     global $layerObj;
+    global $parentUser;
     global $transaction;
     global $db;
 
@@ -810,6 +811,9 @@ function doParse($arr)
                             $fields[] = $field;
                             $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
                             $role = $roleObj["data"][$user];
+                            if (!$role && $parentUser == false){
+                                makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
+                            }
                             if (is_array($value)) { // Must be geom if array
                                 // We serialize the geometry back to XML for parsing
                                 $status = $Serializer->serialize($value);
@@ -832,7 +836,6 @@ function doParse($arr)
                                         $values[] = 3;
                                         break;
                                     default:
-                                        $values[] = 3;
                                         break;
                                 }
                             } elseif ($field == "gc2_workflow") {
@@ -847,7 +850,6 @@ function doParse($arr)
                                         $values[] = "hstore('publisher', '{$user}')";
                                         break;
                                     default:
-                                        $values[] = null;
                                         break;
                                 }
                             } else {
@@ -887,6 +889,9 @@ function doParse($arr)
                     $fields[$fid][] = $pair['Name'];
                     $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                     $role = $roleObj["data"][$user];
+                    if (!$role && $parentUser == false){
+                        makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
+                    }
                     if (is_array($pair['Value'])) { // Must be geom if array
                         // We serialize the geometry back to XML for parsing
                         $status = $Serializer->serialize($pair['Value']);
@@ -908,22 +913,22 @@ function doParse($arr)
                                 $values[$fid][] = 3;
                                 break;
                             default:
-                                $values[$fid][] = 3;
+                                $values[$fid][] = $pair['Value'];
                                 break;
                         }
                     } elseif ($pair['Name'] == "gc2_workflow") {
                         switch ($role) {
                             case "author":
-                                $values[$fid][] = "hstore('author', '{$user}')";
+                                $values[$fid][] = "'{$pair['Value']}'::hstore || hstore('author', '{$user}')";
                                 break;
                             case "reviewer":
-                                $values[$fid][] = "hstore('reviewer', '{$user}')";
+                                $values[$fid][] = "'{$pair['Value']}'::hstore || hstore('reviewer', '{$user}')";
                                 break;
                             case "publisher":
-                                $values[$fid][] = "hstore('publisher', '{$user}')";
+                                $values[$fid][] = "'{$pair['Value']}'::hstore || hstore('publisher', '{$user}')";
                                 break;
                             default:
-                                $values[$fid][] = null;
+                                $values[$fid][] = "'{$pair['Value']}'::hstore";
                                 break;
                         }
                     } else {
@@ -954,6 +959,11 @@ function doParse($arr)
             foreach ($featureMember as $hey) {
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
+                $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
+                $role = $roleObj["data"][$user];
+                if (!$role && $parentUser == false){
+                    makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
+                }
                 // Start HTTP basic authentication
                 $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                 if ($auth == "Write" OR $auth == "Read/write") {
@@ -1172,15 +1182,15 @@ function doParse($arr)
     }
     // InsertResult
     if (sizeof($results['insert']) > 0) {
-        reset($forSql['tables']);
+        if (isset($forSql['tables'])) reset($forSql['tables']);
         echo '<wfs:InsertResult>';
         foreach ($results['insert'] as $res) {
             echo '<ogc:FeatureId fid="';
-            echo current($forSql['tables']) . ".";
+            if (isset($forSql['tables'])) echo current($forSql['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
             echo $row['gid'];
             echo '"/>';
-            next($forSql['tables']);
+            if (isset($forSql['tables'])) next($forSql['tables']);
         }
         echo '</wfs:InsertResult>';
     }
