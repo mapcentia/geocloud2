@@ -96,4 +96,16 @@ class Layer extends \app\inc\Controller
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
+
+    public function get_roles()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->getRoles(Input::getPath()->part(4));
+    }
+
+    public function put_roles()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->updateRoles(json_decode(Input::get())->data);
+    }
 }

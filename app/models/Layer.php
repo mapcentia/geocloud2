@@ -21,7 +21,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse=false, $es=false)
+    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
@@ -57,14 +57,8 @@ class Layer extends \app\models\Table
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
             $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-            $versioning = true;
-            $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" LIMIT 1";
-            $resVersioning = $this->prepare($sql);
-            try {
-                $resVersioning->execute();
-            } catch (\PDOException $e) {
-                $versioning = false;
-            }
+            $resVersioning = $this->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
+            $versioning = $resVersioning["exists"];
 
             if ($row['type'] != "RASTER" && $includeExtent == true) {
 
@@ -424,6 +418,45 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    public function getRoles($_key_)
+    {
+        $roles = (array)json_decode($this->getValueFromKey($_key_, "roles"));
+
+        foreach ($_SESSION['subusers'] as $subuser) {
+            $roles[$subuser] = ($roles[$subuser]) ?: "none";
+            if ($subuser != \app\conf\Connection::$param['postgisschema']) {
+                $response['data'][] = array("subuser" => $subuser, "roles" => $roles[$subuser]);
+            }
+        }
+
+        if (!isset($response['data'])) {
+            $response['data'] = array();
+        }
+        $response['success'] = true;
+        $response['message'] = "Roles fetched";
+        return $response;
+    }
+
+    public function updateRoles($data)
+    {
+        $data = (array)$data;
+        $table = new Table("settings.geometry_columns_join");
+        $role = (array)json_decode($this->getValueFromKey($data['_key_'], "roles"));
+        $role[$data['subuser']] = $data['roles'];
+        $roles['roles'] = json_encode($role);
+        $roles['_key_'] = $data['_key_'];
+        $res = $table->updateRecord(json_decode(json_encode($roles)), "_key_");
+        if ($res['success'] == true) {
+            $response['success'] = true;
+            $response['message'] = "Roles updates";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $res['message'];
+            $response['code'] = 403;
+        }
+        return $response;
+    }
+
     public function getExtent($_key_, $srs = "4326")
     {
         $split = explode(".", $_key_);
@@ -441,6 +474,23 @@ class Layer extends \app\models\Table
         $extent = $this->fetchRow($resExtent, "assoc");
         $response['success'] = true;
         $response['extent'] = $extent;
+        return $response;
+    }
+
+    public function getRole($schema, $table, $user) {
+        $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''{$schema}'' AND geometry_columns.f_table_name=''{$table}''','raster_columns.r_table_schema=''{$schema}'' AND raster_columns.r_table_name=''{$table}''') ORDER BY sort_id";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e;
+            $response['code'] = 403;
+            return $response;
+        }
+        $row = $this->fetchRow($res, "assoc");
+        $response['success'] = true;
+        $response['data'] = json_decode($row['roles'], true);
         return $response;
     }
 }

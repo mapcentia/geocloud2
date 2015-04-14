@@ -50,17 +50,10 @@ class Table extends Model
             $this->primeryKey = $this->getPrimeryKey($this->table);
             $this->setType();
             $this->exits = true;
-            // Start assuming versioning and then check
-            if ($this->table != "settings.geometry_columns_view") {
-                $this->versioning = true;
-                $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM {$this->table} LIMIT 1";
-                $res = $this->prepare($sql);
-                try {
-                    $res->execute();
-                } catch (\PDOException $e) {
-                    $this->versioning = false;
-                }
-            }
+            $res = $this->doesColumnExist($this->table, "gc2_version_gid");
+            $this->versioning = $res["exists"];
+            $res = $this->doesColumnExist($this->table, "gc2_status");
+            $this->workflow = $res["exists"];
         }
         $this->sysCols = array("gc2_version_gid", "gc2_version_start_date", "gc2_version_end_date", "gc2_version_uuid", "gc2_version_user");
     }
@@ -312,7 +305,7 @@ class Table extends Model
     {
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($fieldconfArr as $key => $value) {
-            if ($value->properties == "*"){
+            if ($value->properties == "*") {
                 $table = new \app\models\Table($this->table);
                 $distinctValues = $table->getGroupByAsArray($key);
                 $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);;
@@ -381,6 +374,7 @@ class Table extends Model
         $response['success'] = true;
         $response['message'] = "Structure loaded";
         $response['versioned'] = $this->versioning;
+        $response['flowflow'] = $this->workflow;
         return $response;
     }
 
@@ -537,6 +531,7 @@ class Table extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = "400";
         }
         return $response;
     }
@@ -669,6 +664,37 @@ class Table extends Model
         return $response;
     }
 
+    public function addWorkflow()
+    {
+        $resAdd = $this->addColumn(Array
+        (
+            "column" => "gc2_status",
+            "type" => "Integer"
+        ));
+        $sql = "UPDATE {$this->table} SET gc2_status = 3";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            // Remove column
+            $sql = "ALTER TABLE {$this->table} DROP gc2_status";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        return $resAdd;
+    }
+
     function point2multipoint()
     {
         $sql = "BEGIN;";
@@ -718,7 +744,7 @@ class Table extends Model
         $this->execQuery($sql, "PDO", "transaction");
         $sql = "SELECT AddRasterConstraints('{$this->postgisschema}'::name,'{$table}'::name, 'rast'::name);";
         $this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror)) {
+        if (!$this->PDOerror) {
             $response['success'] = true;
             $response['tableName'] = $table;
             $response['message'] = "Layer created";
@@ -743,6 +769,17 @@ class Table extends Model
     {
         $schema = $this->metaData;
         return $schema;
+    }
+
+    public function checkcolumn($field)
+    {
+        $res = $this->doesColumnExist($this->table, $field);
+        if ($this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = $res;
+            return $response;
+        }
+        return $res;
     }
 
 }

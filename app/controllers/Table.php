@@ -60,7 +60,7 @@ class Table extends \app\inc\Controller
     public function get_structure()
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
-        return (!$response['success']) ? $response :  $this->table->getTableStructure();
+        return (!$response['success']) ? $response : $this->table->getTableStructure();
     }
 
     public function put_versions()
@@ -68,14 +68,27 @@ class Table extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->addVersioning(Input::getPath()->part(4));
     }
+
     public function delete_versions()
     {
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->removeVersioning(Input::getPath()->part(4));
     }
+
     public function get_distinct()
     {
         return $this->table->getGroupByAsArray(Input::getPath()->part(5));
+    }
+
+    public function put_workflow()
+    {
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->addWorkflow(Input::getPath()->part(4));
+    }
+
+    public function get_checkcolumn()
+    {
+        return $this->table->checkcolumn(Input::getPath()->part(5));
     }
 
 }

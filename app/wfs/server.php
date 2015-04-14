@@ -1,6 +1,7 @@
 <?php
 use \app\inc\Log;
 use \app\models\Table;
+use \app\models\Layer;
 use \app\conf\Connection;
 
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
@@ -24,6 +25,7 @@ if (!$gmlNameSpaceUri) {
 
 $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
+$layerObj = new Layer();
 
 $srs = \app\inc\Input::getPath()->part(4);
 
@@ -350,6 +352,9 @@ function doQuery($queryType)
     global $postgisschema;
     global $tableObj;
     global $timeSlice;
+    global $user;
+    global $parentUser;
+    global $layerObj;
     global $dbSplit;
     //global $fieldConfArr;
     global $geometryColumnsObj;
@@ -422,6 +427,26 @@ function doQuery($queryType)
                         $from .= "gc2_join._gc2_version_gid = gc2_version_gid AND gc2_version_start_date = gc2_join.max_gc2_version_start_date";
                     }
                 }
+                if ($tableObj->workflow && $parentUser == false) {
+                    $roleObj = $layerObj->getRole($postgisschema, $table, $user);
+                    $role = $roleObj["data"][$user];
+                    switch ($role) {
+                        case "author":
+                            $from .= " AND (gc2_status = 3 OR gc2_version_user = '{$user}')";
+                            break;
+                        case "reviewer":
+                            $from .= "";
+                            break;
+                        case "publisher":
+                            $from .= "";
+                            break;
+                        default:
+                            $from .= " AND (gc2_status = 3 OR gc2_version_user = '{$user}')";
+                            break;
+                    }
+
+                }
+                //die($from);
                 if ((!(empty($BBox))) || (!(empty($wheres[$table])))) {
                     //$from =dropLastChrs($from, 5);
                     //$from.=")";
@@ -767,6 +792,7 @@ function doParse($arr)
     global $postgisObject;
     global $user;
     global $postgisschema;
+    global $layerObj;
     global $transaction;
     global $db;
 
@@ -774,7 +800,7 @@ function doParse($arr)
         'indent' => '  ',
     );
 
-    $Serializer = &new XML_Serializer($serializer_options);
+    $Serializer = new XML_Serializer($serializer_options);
     foreach ($arr as $key => $featureMember) {
         if ($key == "Insert") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
@@ -795,6 +821,23 @@ function doParse($arr)
                                 unset($gmlCon);
                                 unset($wktArr);
                                 //Log::write($Serializer->getSerializedData()."\n\n");
+                            } elseif ($field == "gc2_status") {
+                                $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
+                                $role = $roleObj["data"][$user];
+                                switch ($role) {
+                                    case "author":
+                                        $values[] = pg_escape_string(1);
+                                        break;
+                                    case "reviewer":
+                                        $values[] = pg_escape_string(2);
+                                        break;
+                                    case "publisher":
+                                        $values[] = pg_escape_string(3);
+                                        break;
+                                    default:
+                                        $values[] = pg_escape_string(3);
+                                        break;
+                                }
                             } else {
                                 $values[] = pg_escape_string($value);
                             }
@@ -838,6 +881,23 @@ function doParse($arr)
                         $values[$fid][] = (array("{$pair['Name']}" => current($wktArr[0]), "srid" => current($wktArr[1])));
                         unset($gmlCon);
                         unset($wktArr);
+                    } elseif ($pair['Name'] == "gc2_status") {
+                        $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
+                        $role = $roleObj["data"][$user];
+                        switch ($role) {
+                            case "author":
+                                $values[$fid][] = pg_escape_string(1);
+                                break;
+                            case "reviewer":
+                                $values[$fid][] = pg_escape_string(2);
+                                break;
+                            case "publisher":
+                                $values[$fid][] = pg_escape_string(3);
+                                break;
+                            default:
+                                $values[$fid][] = pg_escape_string(3);
+                                break;
+                        }
                     } else {
                         $values[$fid][] = $pair['Value'];
                     }
@@ -859,7 +919,6 @@ function doParse($arr)
             $values = array();
             $fields = array();
         }
-
         if ($key == "Delete") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
@@ -1003,9 +1062,28 @@ function doParse($arr)
                 if ($checkRow["gc2_version_end_date"]) {
                     makeExceptionReport("You can't change the history!");
                 }
-
                 // Update old record start
                 $sql = "UPDATE {$postgisschema}.{$forSql3['tables'][$i]} SET gc2_version_end_date = now()";
+                $check = $postgisObject->doesColumnExist($forSql3['tables'][$i], "gc2_status");
+                if ($check["exists"]) {
+                    $roleObj = $layerObj->getRole($postgisschema, $forSql3['tables'][$i], $user);
+                    $role = $roleObj["data"][$user];
+                    switch ($role) {
+                        case "author":
+                            $value = pg_escape_string(1);
+                            break;
+                        case "reviewer":
+                            $value = pg_escape_string(2);
+                            break;
+                        case "publisher":
+                            $value = pg_escape_string(3);
+                            break;
+                        default:
+                            $value = pg_escape_string(3);
+                            break;
+                    }
+                    $sql .= ", gc2_status = {$value}";
+                }
                 $sql .= " WHERE {$forSql3['wheres'][$i]}";
                 $sqls['update'][] = $sql;
                 // Update old record end
@@ -1138,3 +1216,4 @@ function makeExceptionReport($value)
 
 //echo ob_get_clean();
 print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
+
