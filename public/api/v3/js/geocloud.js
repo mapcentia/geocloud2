@@ -436,7 +436,7 @@ geocloud = (function () {
         return l;
     };
 
-    //ol2
+    //ol2 and leaflet
     createTMSLayer = function (layer, defaults) {
         var l, url, urlArray;
         url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
@@ -461,7 +461,11 @@ geocloud = (function () {
 
                 break;
             case "leaflet":
-
+                l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
+                    tms: true,
+                    maxZoom: 20
+                });
+                l.id = layer;
                 break;
         }
         return l;
@@ -1091,7 +1095,7 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "//eu1.mapcentia.com/wms/dk/tilecache/";
+                url = "//cdn.eu1.mapcentia.com/wms/dk/tilecache/";
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.TMS(name, url, {
@@ -1106,10 +1110,8 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     url = url.replace("cdn.", "{s}.");
-                    l = new L.TileLayer.WMS(url, {
-                        layers: layer,
-                        format: 'image/png',
-                        transparent: true,
+                    l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
+                        tms: true,
                         subdomains: ["cdn1", "cdn2", "cdn3"],
                         attribution: "&copy; Geodatastyrelsen",
                         maxZoom: 20
@@ -1322,8 +1324,7 @@ geocloud = (function () {
             }
             return layersArr;
         };
-
-
+        
         this.removeTileLayerByName = function (name) {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
