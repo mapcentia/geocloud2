@@ -1,5 +1,5 @@
 <?php
-ini_set("display_errors", "Off");
+ini_set("display_errors", "On");
 ini_set('memory_limit', '256M');
 error_reporting(3);
 
@@ -103,8 +103,10 @@ if (Input::getPath()->part(1) == "api") {
     if (sizeof($dbSplit) == 2) {
         $db = $dbSplit[1];
         $user = $dbSplit[0];
+        $parentUser = false;
     } else {
         $user = $db;
+        $parentUser = true;
     }
     Database::setDb($db);
     Connection::$param["postgisschema"] = Input::getPath()->part(3);

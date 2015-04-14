@@ -57,7 +57,6 @@ $uri = str_replace("//", "/", $uri);
 $thePath = "http://" . $_SERVER['SERVER_NAME'] . $uri;
 $server = "http://" . $_SERVER['SERVER_NAME'];
 $BBox = null;
-//end added
 
 $currentTable = null;
 $currentTag = null;
@@ -283,7 +282,6 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         makeExceptionReport("Don't know that request");
         break;
 }
-
 
 /**
  *
@@ -730,7 +728,6 @@ function changeFieldName($field)
  * @param unknown $value
  * @return unknown
  */
-
 function altFieldValue($field, $value)
 {
     global $ODEUMhostName;
@@ -811,6 +808,8 @@ function doParse($arr)
                     if (is_array($feature)) { // Skip handles
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
+                            $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
+                            $role = $roleObj["data"][$user];
                             if (is_array($value)) { // Must be geom if array
                                 // We serialize the geometry back to XML for parsing
                                 $status = $Serializer->serialize($value);
@@ -822,20 +821,33 @@ function doParse($arr)
                                 unset($wktArr);
                                 //Log::write($Serializer->getSerializedData()."\n\n");
                             } elseif ($field == "gc2_status") {
-                                $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
-                                $role = $roleObj["data"][$user];
                                 switch ($role) {
                                     case "author":
-                                        $values[] = pg_escape_string(1);
+                                        $values[] = 1;
                                         break;
                                     case "reviewer":
-                                        $values[] = pg_escape_string(2);
+                                        $values[] = 2;
                                         break;
                                     case "publisher":
-                                        $values[] = pg_escape_string(3);
+                                        $values[] = 3;
                                         break;
                                     default:
-                                        $values[] = pg_escape_string(3);
+                                        $values[] = 3;
+                                        break;
+                                }
+                            } elseif ($field == "gc2_workflow") {
+                                switch ($role) {
+                                    case "author":
+                                        $values[] = "hstore('author', '{$user}')";
+                                        break;
+                                    case "reviewer":
+                                        $values[] = "hstore('reviewer', '{$user}')";
+                                        break;
+                                    case "publisher":
+                                        $values[] = "hstore('publisher', '{$user}')";
+                                        break;
+                                    default:
+                                        $values[] = null;
                                         break;
                                 }
                             } else {
@@ -845,6 +857,7 @@ function doParse($arr)
                         $forSql['tables'][] = $typeName;
                         $forSql['fields'][] = $fields;
                         $forSql['values'][] = $values;
+
 
                         $fields = array();
                         $values = array();
@@ -872,6 +885,8 @@ function doParse($arr)
                 }
                 foreach ($hey['Property'] as $pair) {
                     $fields[$fid][] = $pair['Name'];
+                    $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
+                    $role = $roleObj["data"][$user];
                     if (is_array($pair['Value'])) { // Must be geom if array
                         // We serialize the geometry back to XML for parsing
                         $status = $Serializer->serialize($pair['Value']);
@@ -882,20 +897,33 @@ function doParse($arr)
                         unset($gmlCon);
                         unset($wktArr);
                     } elseif ($pair['Name'] == "gc2_status") {
-                        $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
-                        $role = $roleObj["data"][$user];
                         switch ($role) {
                             case "author":
-                                $values[$fid][] = pg_escape_string(1);
+                                $values[$fid][] = 1;
                                 break;
                             case "reviewer":
-                                $values[$fid][] = pg_escape_string(2);
+                                $values[$fid][] = 2;
                                 break;
                             case "publisher":
-                                $values[$fid][] = pg_escape_string(3);
+                                $values[$fid][] = 3;
                                 break;
                             default:
-                                $values[$fid][] = pg_escape_string(3);
+                                $values[$fid][] = 3;
+                                break;
+                        }
+                    } elseif ($pair['Name'] == "gc2_workflow") {
+                        switch ($role) {
+                            case "author":
+                                $values[$fid][] = "hstore('author', '{$user}')";
+                                break;
+                            case "reviewer":
+                                $values[$fid][] = "hstore('reviewer', '{$user}')";
+                                break;
+                            case "publisher":
+                                $values[$fid][] = "hstore('publisher', '{$user}')";
+                                break;
+                            default:
+                                $values[$fid][] = null;
                                 break;
                         }
                     } else {
@@ -965,6 +993,8 @@ function doParse($arr)
                         $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
                     } elseif (!$value) {
                         $values[] = "NULL";
+                    } elseif ($forSql['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
+                        $values[] = $value;
                     } else {
                         $values[] = $postgisObject->quote($value);
 
@@ -1009,6 +1039,8 @@ function doParse($arr)
                             $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
                         } elseif (!$value) {
                             $values[] = "NULL";
+                        } elseif ($forSql2['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
+                            $values[] = $value;
                         } else {
                             $values[] = $postgisObject->quote($value);
                         }
@@ -1070,16 +1102,16 @@ function doParse($arr)
                     $role = $roleObj["data"][$user];
                     switch ($role) {
                         case "author":
-                            $value = pg_escape_string(1);
+                            $value = 1;
                             break;
                         case "reviewer":
-                            $value = pg_escape_string(2);
+                            $value = 2;
                             break;
                         case "publisher":
-                            $value = pg_escape_string(3);
+                            $value = 3;
                             break;
                         default:
-                            $value = pg_escape_string(3);
+                            $value = 3;
                             break;
                     }
                     $sql .= ", gc2_status = {$value}";
@@ -1216,4 +1248,3 @@ function makeExceptionReport($value)
 
 //echo ob_get_clean();
 print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
-

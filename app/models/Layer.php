@@ -493,4 +493,8 @@ class Layer extends \app\models\Table
         $response['data'] = json_decode($row['roles'], true);
         return $response;
     }
+
+    public function registerEdit($schema, $table, $id, $status, $user){
+
+    }
 }

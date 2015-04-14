@@ -107,6 +107,9 @@ class Table extends Model
         } elseif (preg_match("/uuid/", $field['type'])) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
+        } elseif (preg_match("/hstore/", $field['type'])) {
+            $field['typeObj'] = array("type" => "hstore");
+            $field['type'] = "hstore";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";
@@ -666,33 +669,45 @@ class Table extends Model
 
     public function addWorkflow()
     {
-        $resAdd = $this->addColumn(Array
-        (
-            "column" => "gc2_status",
-            "type" => "Integer"
-        ));
-        $sql = "UPDATE {$this->table} SET gc2_status = 3";
+        $this->begin();
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_status integer";
         $res = $this->prepare($sql);
         try {
             $res->execute();
         } catch (\PDOException $e) {
-            // Remove column
-            $sql = "ALTER TABLE {$this->table} DROP gc2_status";
-            $res = $this->prepare($sql);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
+            $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-        return $resAdd;
+        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_workflow hstore";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $sql = "UPDATE {$this->table} SET gc2_status = 3";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+
+        $this->commit();
+        $response['success'] = true;
+        $response['message'] = "Table has now workflow";
+        return $response;
     }
 
     function point2multipoint()
