@@ -494,7 +494,18 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function registerEdit($schema, $table, $id, $status, $user){
-
+    public function registerWorkflow($schema, $_table, $gid, $status, $user){
+        $sql ="INSERT INTO settings.workflow(schema, _table, gid, status, user) VALUES(':schema',':_table',:gid,:status,':user')";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(array("schema"=>$schema,"_table"=>$_table,"gid"=>$gid,"status"=>$status,"user"=>$user,));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e;
+            $response['code'] = 403;
+            return $response;
+        }
+        $response['success'] = true;
+        return $response;
     }
 }
