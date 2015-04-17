@@ -322,7 +322,7 @@ $(window).ready(function () {
                 text: '<i class="icon-user btn-gc"></i> ' + __('Workflow'),
                 id: 'workflow-btn',
                 handler: onWorkflow,
-                disabled: false
+                disabled: true
 
             },
             {
@@ -1911,6 +1911,7 @@ $(window).ready(function () {
             Ext.getCmp('advanced-btn').setDisabled(false);
             if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
+                Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
             }
         }
@@ -1918,6 +1919,7 @@ $(window).ready(function () {
             Ext.getCmp('cartomobile-btn').setDisabled(true);
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
+            Ext.getCmp('workflow-btn').setDisabled(true);
             Ext.getCmp('renamelayer-btn').setDisabled(true);
         }
         if (records.length > 0 && subUser === false) {
@@ -1933,6 +1935,7 @@ $(window).ready(function () {
         Ext.getCmp('cartomobile-btn').setDisabled(true);
         Ext.getCmp('advanced-btn').setDisabled(true);
         Ext.getCmp('privileges-btn').setDisabled(true);
+        Ext.getCmp('workflow-btn').setDisabled(true);
         Ext.getCmp('renamelayer-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
         Ext.getCmp('movelayer-btn').setDisabled(true);
@@ -2162,6 +2165,12 @@ $(window).ready(function () {
                                     sortable: true,
                                     width: 35,
                                     flex: 1
+                                },{
+                                    header: __("Schema"),
+                                    dataIndex: "f_schema_name",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 0.5
                                 },
                                 {
                                     header: __("Table"),
@@ -2169,13 +2178,7 @@ $(window).ready(function () {
                                     sortable: true,
                                     width: 50,
                                     flex: 0.5
-                                }, {
-                                    header: __("Schema"),
-                                    dataIndex: "f_schema_name",
-                                    sortable: true,
-                                    width: 50,
-                                    flex: 0.5
-                                }, {
+                                },  {
                                     header: __("Fid"),
                                     dataIndex: "gid",
                                     sortable: true,
