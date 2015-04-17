@@ -1,4 +1,5 @@
 <?php
+
 class Sql
 {
     public static function get()
@@ -10,7 +11,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD CONSTRAINT geometry_columns_join_key UNIQUE (_key_)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER data TYPE TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN privileges TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER sort_id set default 0";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER sort_id SET DEFAULT 0";
         $sqls[] = "UPDATE settings.geometry_columns_join SET sort_id = 0 WHERE sort_id IS NULL";
         $sqls[] = "CREATE EXTENSION \"uuid-ossp\"";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join DROP f_table_schema";
@@ -20,11 +21,25 @@ class Sql
         $sqls[] = "CREATE EXTENSION \"pgcrypto\"";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD PRIMARY KEY (_key_)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN enablesqlfilter bool";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER enablesqlfilter set default false";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN enablesqlfilter BOOL";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER enablesqlfilter SET DEFAULT FALSE";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN triggertable VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN roles TEXT";
+        $sqls[] = "CREATE TABLE settings.workflow
+                    (
+                      id SERIAL NOT NULL,
+                      f_schema_name CHARACTER(255),
+                      f_table_name CHARACTER VARYING(255),
+                      gid INTEGER,
+                      status INTEGER,
+                      gc2_user CHARACTER VARYING(255),
+                      roles hstore,
+                      workflow hstore,
+                      version_gid INTEGER,
+                      operation CHARACTER VARYING(255),
+                      created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
+                    )";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -208,8 +223,10 @@ class Sql
         ";
         return $sqls;
     }
-    public static function mapcentia(){
-        $sqls[] = "ALTER TABLE users ADD COLUMN parentdb varchar(255)";
+
+    public static function mapcentia()
+    {
+        $sqls[] = "ALTER TABLE users ADD COLUMN parentdb VARCHAR(255)";
         return $sqls;
     }
 }

@@ -803,6 +803,7 @@ function doParse($arr)
     $postgisObject->begin();
 
     $Serializer = new XML_Serializer($serializer_options);
+    $workflowData = array();
     foreach ($arr as $key => $featureMember) {
         if ($key == "Insert") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
@@ -811,14 +812,12 @@ function doParse($arr)
             foreach ($featureMember as $hey) {
                 foreach ($hey as $typeName => $feature) {
                     if (is_array($feature)) { // Skip handles
-
                         // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                         $tableObj = new table($postgisschema . "." . $typeName);
                         if (!array_key_exists("gc2_version_user", $feature) && $tableObj->versioning) $feature["gc2_version_user"] = null;
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
 
-                        //makeExceptionReport(print_r($feature, true));
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
                             $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
@@ -870,6 +869,7 @@ function doParse($arr)
                             } else {
                                 $values[] = pg_escape_string($value);
                             }
+
                         }
                         $forSql['tables'][] = $typeName;
                         $forSql['fields'][] = $fields;
@@ -920,7 +920,7 @@ function doParse($arr)
                     $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                     $role = $roleObj["data"][$user];
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
-                            makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
+                        makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                     }
                     if (is_array($pair['Value'])) { // Must be geom if array
                         // We serialize the geometry back to XML for parsing
@@ -984,6 +984,8 @@ function doParse($arr)
     if (sizeof($forSql['tables']) > 0) for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
             \app\controllers\Tilecache::bust($postgisschema . "." . $forSql['tables'][$i]);
+            $gc2_workflow_flag = false;
+            $roleObj = $layerObj->getRole($postgisschema, $forSql['tables'][$i], $user);
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql['tables'][$i]);
             $sql = "INSERT INTO {$postgisschema}.{$forSql['tables'][$i]} (";
             foreach ($forSql['fields'][$i] as $key => $field) {
@@ -1002,6 +1004,7 @@ function doParse($arr)
                         $values[] = "NULL";
                     } elseif ($forSql['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
                         $values[] = $value;
+                        $gc2_workflow_flag = true;
                     } else {
                         $values[] = $postgisObject->quote($value);
                     }
@@ -1010,6 +1013,10 @@ function doParse($arr)
             $sql .= implode(",", $values);
             unset($values);
             $sql .= ") RETURNING {$primeryKey['attname']} as gid"; // The query will return the new key
+            if ($gc2_workflow_flag) {
+                $sql .= ",gc2_version_gid,gc2_status,gc2_workflow," . \app\inc\PgHStore::toPg($roleObj["data"]) . " as roles";
+                $gc2_workflow_flag = false;
+            }
             $sqls['insert'][] = $sql;
         } else {
             $notEditable[$forSql['tables'][0]] = true;
@@ -1053,7 +1060,6 @@ function doParse($arr)
                 $postgisObject->execQuery($sql);
             }
             $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
-
             $roleObj = $layerObj->getRole($postgisschema, $forSql2['tables'][$i], $user);
             $role = $roleObj["data"][$user];
 
@@ -1095,7 +1101,7 @@ function doParse($arr)
                             $value = "'{$originalFeature[$field]}'::hstore || hstore('publisher', '{$user}')";;
                             break;
                         default:
-                            $value = "''";
+                            $value = "'{$originalFeature[$field]}'::hstore";
                             break;
                     }
                 } elseif ($field == "gc2_version_start_date") {
@@ -1110,6 +1116,9 @@ function doParse($arr)
             }
             $sql .= implode(",", $pairs);
             $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
+            if ($tableObj->workflow) {
+                $sql .= ",gc2_version_gid,gc2_status,gc2_workflow," . \app\inc\PgHStore::toPg($roleObj["data"]) . " as roles";
+            }
             //makeExceptionReport($sql);
             unset($pairs);
             $sqls['update'][] = $sql;
@@ -1121,6 +1130,7 @@ function doParse($arr)
     if (sizeof($forSql3['tables']) > 0) for ($i = 0; $i < sizeof($forSql3['tables']); $i++) {
         if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql3['tables'][$i], "editable")) {
             \app\controllers\Tilecache::bust($postgisschema . "." . $forSql3['tables'][$i]);
+            $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql3['tables'][$i]);
             $tableObj = new table($postgisschema . "." . $forSql3['tables'][$i]);
             if ($tableObj->versioning) {
                 // Check if its history
@@ -1177,18 +1187,21 @@ function doParse($arr)
                             $value = "'{$workflow}'::hstore || hstore('publisher', '{$user}')";;
                             break;
                         default:
-                            $value = "''";
+                            $value = "'{$workflow}'::hstore";
                             break;
                     }
                     $sql .= ", gc2_workflow = {$value}";
                 }
 
-                $sql .= " WHERE {$forSql3['wheres'][$i]}";
-                $sqls['update'][] = $sql;
+                $sql .= " WHERE {$forSql3['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
+                if ($tableObj->workflow) {
+                    $sql .= ",gc2_version_gid,gc2_status,gc2_workflow," . \app\inc\PgHStore::toPg($roleObj["data"]) . " as roles";
+                }
+                $sqls['delete'][] = $sql;
                 // Update old record end
             } // delete start for not versioned
             else {
-                $sqls['delete'][] = "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]};\n\n";
+                $sqls['delete'][] = "DELETE FROM {$postgisschema}.{$forSql3['tables'][$i]} WHERE {$forSql3['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";
             }
         } else {
             $notEditable[$forSql3['tables'][0]] = true;
@@ -1197,11 +1210,7 @@ function doParse($arr)
     // We fire the sqls
     if (isset($sqls)) foreach ($sqls as $operation => $sql) {
         foreach ($sql as $singleSql) {
-            if ($operation == "insert" || $operation == "update") {
-                $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
-            } else {
-                $results[$operation] += $postgisObject->execQuery($singleSql, "PDO", "transaction"); // Returning interger
-            }
+            $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
             Log::write("Sqls fired\n");
             Log::write("{$singleSql}\n");
         }
@@ -1241,6 +1250,19 @@ function doParse($arr)
             $row = $postgisObject->fetchRow($res);
             echo $row['gid'];
             echo '"/>';
+            if (isset($row["gc2_workflow"])) {
+                $workflowData[] = array(
+                    "schema" => $postgisschema,
+                    "table" => current($forSql['tables']),
+                    "gid" => $row['gid'],
+                    "user" => $user,
+                    "status" => $row['gc2_status'],
+                    "workflow" => $row['gc2_workflow'],
+                    "roles" => $row['roles'],
+                    "version_gid" => $row['gc2_version_gid'],
+                    "operation" => "insert",
+                );
+            }
             if (isset($forSql['tables'])) next($forSql['tables']);
         }
         echo '</wfs:InsertResult>';
@@ -1255,10 +1277,44 @@ function doParse($arr)
             $row = $postgisObject->fetchRow($res);
             echo $row['gid'];
             echo '" />';
+            if (isset($row["gc2_workflow"])) {
+                $workflowData[] = array(
+                    "schema" => $postgisschema,
+                    "table" => current($forSql2['tables']),
+                    "gid" => $row['gid'],
+                    "user" => $user,
+                    "status" => $row['gc2_status'],
+                    "workflow" => $row['gc2_workflow'],
+                    "roles" => $row['roles'],
+                    "version_gid" => $row['gc2_version_gid'],
+                    "operation" => "update",
+                );
+            }
             if (isset($forSql2['tables'])) next($forSql2['tables']);
         }
         echo '</wfs:UpdateResult>';
+    }// deleteResult
+    if (sizeof($results['delete']) > 0) {
+        if (isset($forSql3['tables'])) reset($forSql3['tables']);
+        foreach ($results['delete'] as $res) {
+            $row = $postgisObject->fetchRow($res);
+            if (isset($row["gc2_workflow"])) {
+                $workflowData[] = array(
+                    "schema" => $postgisschema,
+                    "table" => current($forSql3['tables']),
+                    "gid" => $row['gid'],
+                    "user" => $user,
+                    "status" => $row['gc2_status'],
+                    "workflow" => $row['gc2_workflow'],
+                    "roles" => $row['roles'],
+                    "version_gid" => $row['gc2_version_gid'],
+                    "operation" => "delete",
+                );
+            }
+            if (isset($forSql2['tables'])) next($forSql2['tables']);
+        }
     }
+
     // TransactionSummary
     echo '<wfs:TransactionSummary>';
     if (isset($results)) foreach ($results as $operation => $result) {
@@ -1270,11 +1326,28 @@ function doParse($arr)
             echo "<wfs:totalUpdated>" . sizeof($result) . "</wfs:totalUpdated>";
         }
         if ($operation == "delete") {
-            echo "<wfs:totalDeleted>" . $result . "</wfs:totalDeleted>";
+            echo "<wfs:totalDeleted>" . sizeof($result) . "</wfs:totalDeleted>";
         }
     }
     echo '</wfs:TransactionSummary>';
     echo '</wfs:WFS_TransactionResponse>';
+
+    if (sizeof($workflowData) > 0) {
+        $sqls = array();
+        foreach ($workflowData as $w) {
+            $sql = "INSERT INTO settings.workflow (f_schema_name,f_table_name,gid,status,gc2_user,roles,workflow,version_gid,operation)";
+            $sql .= " VALUES('{$w["schema"]}','{$w["table"]}',{$w["gid"]},{$w["status"]},'{$w["user"]}','{$w["roles"]}'::hstore,'{$w["workflow"]}'::hstore,{$w["version_gid"]},'{$w["operation"]}')";
+            $sqls[] = $sql;
+        }
+        // We fire the sqls
+        foreach ($sqls as $sql) {
+            $postgisObject->execQuery($sql, "PDO", "transaction");
+        }
+        if (sizeof($postgisObject->PDOerror) > 0) {
+            makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
+        }
+    }
+    //makeExceptionReport(print_r($sqls, true));
 
     $postgisObject->commit();
     $postgisObject->free($result);
@@ -1282,9 +1355,10 @@ function doParse($arr)
 
 function makeExceptionReport($value)
 {
+    global $postgisObject;
     ob_get_clean();
     ob_start();
-
+    //$postgisObject->rollback();
     echo '<ServiceExceptionReport
 	   version="1.2.0"
 	   xmlns="http://www.opengis.net/ogc"

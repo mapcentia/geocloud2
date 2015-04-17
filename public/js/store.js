@@ -13,7 +13,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -102,6 +102,26 @@ $(window).ready(function () {
         autoSave: true
     });
     store.load();
+
+    workflowStore = new Ext.data.JsonStore({
+        url: '/controllers/workflow',
+        autoDestroy: true,
+        root: 'data',
+        idProperty: 'id',
+        fields: [
+            {"name": "f_table_name", "type": "string"},
+            {"name": "f_schema_name", "type": "string"},
+            {"name": "gid", "type": "number"},
+            {"name": "status", "type": "integer"},
+            {"name": "gc2_user", "type": "string"},
+            {"name": "roles", "type": "string"},
+            {"name": "workflow", "type": "string"},
+            {"name": "version_gid", "type": "number"},
+            {"name": "operation", "type": "string"},
+            {"name": "created", "type": "date"}
+        ]
+    });
+    workflowStore.load({url: 'myPage.php'});
 
     groupsStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
@@ -1767,7 +1787,8 @@ $(window).ready(function () {
 
                 }
 
-            }});
+            }
+        });
 
 
     }
@@ -2113,6 +2134,117 @@ $(window).ready(function () {
                 ]
             },
             ct,
+            {
+                xtype: "panel",
+                title: __('Workflow'),
+                layout: 'border',
+                id: "workflowPanel",
+                items: [
+                    new Ext.grid.GridPanel({
+                        store: workflowStore,
+                        viewConfig: {
+                            forceFit: true,
+                            stripeRows: true
+                        },
+                        height: 300,
+                        split: true,
+                        region: 'center',
+                        frame: false,
+                        border: false,
+                        cm: new Ext.grid.ColumnModel({
+                            defaults: {
+                                sortable: true
+                            },
+                            columns: [
+                                {
+                                    header: __("Operation"),
+                                    dataIndex: "operation",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 1
+                                },
+                                {
+                                    header: __("Table"),
+                                    dataIndex: "f_table_name",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 0.5
+                                }, {
+                                    header: __("Schema"),
+                                    dataIndex: "f_schema_name",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 0.5
+                                }, {
+                                    header: __("Fid"),
+                                    dataIndex: "gid",
+                                    sortable: true,
+                                    width: 40,
+                                    flex: 1
+                                }, {
+                                    header: __("Version id"),
+                                    dataIndex: "version_gid",
+                                    sortable: true,
+                                    width: 40,
+                                    flex: 1
+                                }, {
+                                    header: __("Status"),
+                                    dataIndex: "status",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 1
+                                }, {
+                                    header: __("User"),
+                                    dataIndex: "gc2_user",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 1
+                                }, {
+                                    header: __("Workflow"),
+                                    dataIndex: "workflow",
+                                    sortable: true,
+                                    width: 250,
+
+                                    flex: 2
+                                }, {
+                                    header: __("Created"),
+                                    dataIndex: "created",
+                                    sortable: true,
+                                    width: 120,
+                                    flex: 1
+                                }
+                            ]
+                        }),
+                        tbar: [
+                            {
+                                text: '<i class="icon-user btn-gc"></i> ' + __('Reload'),
+                                tooltip: __("Reload the list"),
+                                handler: function () {
+                                    if (Ext.getCmp('workflowShowAllBtn').pressed) {
+                                        workflowStore.load({params: "all=t"});
+                                    } else {
+                                        workflowStore.load();
+                                    }
+                                }
+                            },
+                            {
+                                text: '<i class="icon-user btn-gc"></i> ' + __('Show all'),
+                                enableToggle: true,
+                                id: "workflowShowAllBtn",
+                                disabled: (subUser === false) ? true : false,
+                                tooltip: __("Show items you've taken action on."),
+                                handler: function () {
+                                    if (this.pressed) {
+                                        workflowStore.load({params: "all=t"});
+                                    } else {
+                                        workflowStore.load();
+                                    }
+                                }
+                            }
+                        ]
+                    })
+                ]
+            },
             {
                 xtype: "panel",
                 title: __('Scheduler'),
