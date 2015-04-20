@@ -1942,6 +1942,7 @@ $(window).ready(function () {
     };
 
     var tabs = new Ext.TabPanel({
+        id: "mainTabs",
         activeTab: 0,
         region: 'center',
         plain: true,
@@ -2144,6 +2145,7 @@ $(window).ready(function () {
                 id: "workflowPanel",
                 items: [
                     new Ext.grid.GridPanel({
+                        id: "workflowGrid",
                         store: workflowStore,
                         viewConfig: {
                             forceFit: true,
@@ -2154,6 +2156,9 @@ $(window).ready(function () {
                         region: 'center',
                         frame: false,
                         border: false,
+                        sm: new Ext.grid.RowSelectionModel({
+                            singleSelect: true
+                        }),
                         cm: new Ext.grid.ColumnModel({
                             defaults: {
                                 sortable: true
@@ -2165,7 +2170,7 @@ $(window).ready(function () {
                                     sortable: true,
                                     width: 35,
                                     flex: 1
-                                },{
+                                }, {
                                     header: __("Schema"),
                                     dataIndex: "f_schema_name",
                                     sortable: true,
@@ -2178,7 +2183,7 @@ $(window).ready(function () {
                                     sortable: true,
                                     width: 50,
                                     flex: 0.5
-                                },  {
+                                }, {
                                     header: __("Fid"),
                                     dataIndex: "gid",
                                     sortable: true,
@@ -2220,7 +2225,7 @@ $(window).ready(function () {
                         }),
                         tbar: [
                             {
-                                text: '<i class="icon-user btn-gc"></i> ' + __('Reload'),
+                                text: '<i class="icon-refresh btn-gc"></i> ' + __('Reload'),
                                 tooltip: __("Reload the list"),
                                 handler: function () {
                                     if (Ext.getCmp('workflowShowAllBtn').pressed) {
@@ -2231,11 +2236,11 @@ $(window).ready(function () {
                                 }
                             },
                             {
-                                text: '<i class="icon-user btn-gc"></i> ' + __('Show all'),
+                                text: '<i class="icon-tasks btn-gc"></i> ' + __('Show all'),
                                 enableToggle: true,
                                 id: "workflowShowAllBtn",
                                 disabled: (subUser === false) ? true : false,
-                                tooltip: __("Show items you've taken action on."),
+                                tooltip: __("Show all items, also those you've taken action on."),
                                 handler: function () {
                                     if (this.pressed) {
                                         workflowStore.load({params: "all=t"});
@@ -2243,9 +2248,93 @@ $(window).ready(function () {
                                         workflowStore.load();
                                     }
                                 }
+                            },
+                            {
+                                text: '<i class="icon-pencil btn-gc"></i> ' + __('See/edit feature'),
+                                tooltip: __("Switch to Map view with the feature loaded."),
+                                handler: function () {
+                                    var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
+                                    if (records.length === 0) {
+                                        App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                    }
+                                    Ext.Ajax.request({
+                                        url: '/api/v1/meta/' + screenName + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function (response) {
+                                            var r = Ext.decode(response.responseText),
+                                                filter = new OpenLayers.Filter.Comparison({
+                                                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                    property: "\"" + r.data[0].pkey + "\"",
+                                                    value: records[0].get("gid")
+                                                }), mapFrame = document.getElementById("wfseditor").contentWindow.window;
+                                            Ext.getCmp("mainTabs").activate(0);
+                                            setTimeout(function () {
+                                                mapFrame.attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
+                                                mapFrame.startWfsEdition(records[0].get("f_table_name"), r.data[0].f_geometry_column, filter, true);
+                                            }, 100);
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    });
+                                }
+                            },
+                            {
+                                text: '<i class="icon-ok btn-gc"></i> ' + __('Check feafure'),
+                                tooltip: __("This will update the feature with your role in the workflow."),
+                                handler: function () {
+                                    var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
+                                    if (records.length === 0) {
+                                        App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                    }
+                                    Ext.Ajax.request({
+                                        url: '/controllers/workflow/' + records[0].get("f_schema_name") + "/" + records[0].get("f_table_name") + "/" + records[0].get("gid"),
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function (response) {
+                                            if (Ext.getCmp('workflowShowAllBtn').pressed) {
+                                                workflowStore.load({params: "all=t"});
+                                            } else {
+                                                workflowStore.load();
+                                            }
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    });
+                                }
                             }
                         ]
-                    })
+                    }),{
+                        region: 'south',
+                        border: false,
+                        height: 70,
+                        bodyStyle: {
+                            background: '#777',
+                            color: '#fff',
+                            padding: '7px'
+                        },
+                        html: "Here comes some help text...."
+                    }
                 ]
             },
             {

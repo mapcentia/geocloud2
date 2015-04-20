@@ -1167,7 +1167,7 @@ function doParse($arr)
                             $value = 3;
                             break;
                         default:
-                            $value = 3;
+                            $value = $status;
                             break;
                     }
                     $sql .= ", gc2_status = {$value}";

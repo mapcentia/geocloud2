@@ -34,7 +34,7 @@ class PgHStore
     public static function toPg($data)
     {
         if (!is_array($data)) {
-            throw new PommException(sprintf("HStore::toPg takes an associative array as parameter ('%s' given).", gettype($data)));
+            throw new \PommException(sprintf("HStore::toPg takes an associative array as parameter ('%s' given).", gettype($data)));
         }
 
         $insert_values = array();

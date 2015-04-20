@@ -29,7 +29,7 @@ class Sql
         $sqls[] = "CREATE TABLE settings.workflow
                     (
                       id SERIAL NOT NULL,
-                      f_schema_name CHARACTER(255),
+                      f_schema_name CHARACTER VARYING(255),
                       f_table_name CHARACTER VARYING(255),
                       gid INTEGER,
                       status INTEGER,
