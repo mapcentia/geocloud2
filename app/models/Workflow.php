@@ -8,9 +8,11 @@ class Workflow extends Model
 {
     public function getRecords($subuser, $showAll)
     {
+        $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' as author,workflow->'reviewer' as reviewer,workflow->'publisher' as publisher, (case when status = 1 then 'Draft (1)'  when status = 2 then 'Reviewed (2)' when status =3 then 'Published (3)' END) as status_text FROM settings.workflow";
+
         if ($subuser && $showAll == false) {
             $sql = "SELECT * FROM (
-                    SELECT DISTINCT ON (version_gid) version_gid,* FROM settings.workflow WHERE exist(roles,:user1) AND roles->:user1 !='none'
+                    {$select} WHERE exist(roles,:user1) AND roles->:user1 !='none'
                     ORDER BY version_gid,created DESC
 
                     ) AS foo WHERE
@@ -26,7 +28,7 @@ class Workflow extends Model
                 "user4" => "publisher=>{$subuser}",
             );
         } else {
-            $sql = "SELECT DISTINCT ON (version_gid) version_gid AS x,* FROM settings.workflow ORDER BY version_gid,created DESC";
+            $sql = "{$select} ORDER BY version_gid,created DESC";
             $args = array();
         }
 

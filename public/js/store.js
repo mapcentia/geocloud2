@@ -113,9 +113,13 @@ $(window).ready(function () {
             {"name": "f_schema_name", "type": "string"},
             {"name": "gid", "type": "number"},
             {"name": "status", "type": "integer"},
+            {"name": "status_text", "type": "string"},
             {"name": "gc2_user", "type": "string"},
             {"name": "roles", "type": "string"},
             {"name": "workflow", "type": "string"},
+            {"name": "author", "type": "string"},
+            {"name": "reviewer", "type": "string"},
+            {"name": "publisher", "type": "string"},
             {"name": "version_gid", "type": "number"},
             {"name": "operation", "type": "string"},
             {"name": "created", "type": "date"}
@@ -2174,20 +2178,20 @@ $(window).ready(function () {
                                     header: __("Schema"),
                                     dataIndex: "f_schema_name",
                                     sortable: true,
-                                    width: 50,
+                                    width: 35,
                                     flex: 0.5
                                 },
                                 {
                                     header: __("Table"),
                                     dataIndex: "f_table_name",
                                     sortable: true,
-                                    width: 50,
+                                    width: 35,
                                     flex: 0.5
                                 }, {
                                     header: __("Fid"),
                                     dataIndex: "gid",
                                     sortable: true,
-                                    width: 40,
+                                    width: 25,
                                     flex: 1
                                 }, {
                                     header: __("Version id"),
@@ -2197,22 +2201,33 @@ $(window).ready(function () {
                                     flex: 1
                                 }, {
                                     header: __("Status"),
-                                    dataIndex: "status",
+                                    dataIndex: "status_text",
                                     sortable: true,
                                     width: 35,
                                     flex: 1
                                 }, {
-                                    header: __("User"),
+                                    header: __("Latest edit by"),
                                     dataIndex: "gc2_user",
                                     sortable: true,
                                     width: 50,
                                     flex: 1
                                 }, {
-                                    header: __("Workflow"),
-                                    dataIndex: "workflow",
+                                    header: __("Authored by"),
+                                    dataIndex: "author",
                                     sortable: true,
-                                    width: 250,
-
+                                    width: 50,
+                                    flex: 2
+                                }, {
+                                    header: __("Reviewed by"),
+                                    dataIndex: "reviewer",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 2
+                                }, {
+                                    header: __("Published by"),
+                                    dataIndex: "publisher",
+                                    sortable: true,
+                                    width: 50,
                                     flex: 2
                                 }, {
                                     header: __("Created"),
