@@ -56,6 +56,7 @@ if (typeof gc2map === "undefined") {
                         $.getScript(host + "/apps/widgets/gc2map/js/main.js?a431ad6b702c34a3#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?d65e510c44da571d#grunt-cache-bust");
                         // @endif
+                        L.Icon.Default.imagePath = host + "/js/leaflet/images";
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {
                                 scriptsLoaded = true;
