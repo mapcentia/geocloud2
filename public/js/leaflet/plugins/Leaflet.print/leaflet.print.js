@@ -70,6 +70,37 @@
                 error: L.Util.bind(this.onPrintError, this)
             }))
         },
+        getJson: function (i) {
+            if (i = L.extend(L.extend({}, this.options), i), !i.layout || !i.dpi)throw"Must provide a layout name and dpi value to print";
+            this.fire("beforeprint", {provider: this, map: this._map});
+            var e, o = JSON.stringify(L.extend({
+                units: L.print.Provider.UNITS,
+                srs: L.print.Provider.SRS,
+                layout: i.layout,
+                dpi: i.dpi,
+                outputFormat: i.outputFormat,
+                outputFilename: i.outputFilename,
+                layers: this._encodeLayers(this._map),
+                pages: [{
+                    center: this._projectCoords(L.print.Provider.SRS, this._map.getCenter()),
+                    scale: this._getScale(),
+                    rotation: i.rotation
+                }]
+            }, this.options.customParams, i.customParams, this._makeLegends(this._map)));
+            "GET" === i.method ? (e = this._capabilities.printURL + "?spec=" + encodeURIComponent(o), i.proxy && (e = i.proxy + encodeURIComponent(e)), t.open(e), this.fire("print", {
+                provider: this,
+                map: this._map
+            })) : (e = this._capabilities.createURL, i.proxy && (e = i.proxy + e), this._xhr && this._xhr.abort(), this._xhr = $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=UTF-8",
+                processData: !1,
+                dataType: "json",
+                url: e,
+                data: o,
+                success: L.Util.bind(this.onPrintSuccess, this),
+                error: L.Util.bind(this.onPrintError, this)
+            }))
+        },
         getCapabilities: function () {
             return this._capabilities
         },

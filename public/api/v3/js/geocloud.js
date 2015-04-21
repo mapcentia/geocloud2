@@ -494,7 +494,7 @@ geocloud = (function () {
         $('<link/>').attr({
             rel: 'stylesheet',
             type: 'text/css',
-            href: host + '/api/v3/css/styles.css?b1639e04e4f6da62#grunt-cache-bust'
+            href: host + '/api/v3/css/styles.css?8fc563d236b15cf3#grunt-cache-bust'
         }).appendTo('head');
 
         this.bingApiKey = null;
@@ -849,7 +849,7 @@ geocloud = (function () {
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
-                    lControl.addBaseLayer(this.osm);
+                    lControl.addBaseLayer(this.osm, "OSM");
                     break;
             }
             this.osm.baseLayer = true;
@@ -1275,6 +1275,7 @@ geocloud = (function () {
                 tileCached: true,
                 displayInLayerSwitcher: true,
                 name: null,
+                names: [],
                 resolutions: resolutions,
                 type: "wms"
             };
@@ -1308,10 +1309,10 @@ geocloud = (function () {
                         break;
                     case "leaflet":
                         if (defaults.isBaseLayer === true) {
-                            lControl.addBaseLayer(l);
+                            lControl.addBaseLayer(l, defaults.name || defaults.names[i]);
                         }
                         else {
-                            lControl.addOverlay(l);
+                            lControl.addOverlay(l, defaults.name || defaults.names[i] || layers[i]);
                         }
                         if (defaults.visibility === true) {
                             this.showLayer(layers[i]);

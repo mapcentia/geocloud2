@@ -8,7 +8,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
-<link rel="stylesheet" type="text/css" href="/css/styles.css?ab029c0ff82bf6ab"/>
+<link rel="stylesheet" type="text/css" href="/css/styles.css?9d3154ccff06f59e"/>
 <!-- /build -->
 </head>
 <body>
@@ -107,7 +107,7 @@ include("html_header.php");
         </table>
     </div>
 </div>
-<div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif'/></div>
+<div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif?5c2beec3d6a058e0'/></div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>window.__ = function (string, toolTip) {
         'use strict';
@@ -133,13 +133,13 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?7ba8b5b8eb4a6981"></script>
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
-<script type="text/javascript" src="/js/msg.js?e6ae61b3f174052d"></script>
-<script type="text/javascript" src="/js/store.js?0f1577ecda4c58c2"></script>
-<script type="text/javascript" src="/js/edittablestructure.js?dd0fee710d915275"></script>
+<script type="text/javascript" src="/js/msg.js?6871687e437cdbb4"></script>
+<script type="text/javascript" src="/js/store.js?f04fe6dd1f34350d"></script>
+<script type="text/javascript" src="/js/edittablestructure.js?bb67df2661e51253"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
-<script type="text/javascript" src="/js/editwmsclass.js?657470fc27ac6e4f"></script>
+<script type="text/javascript" src="/js/editwmsclass.js?56af35b4c3d1a77b"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
-<script type="text/javascript" src="/js/classwizards.js?1d00b17572d800a0"></script>
+<script type="text/javascript" src="/js/classwizards.js?4086ff021c7449fc"></script>
 <script type="text/javascript" src="/js/addshapeform.js?b101181cffcb21dc"></script>
 <script type="text/javascript" src="/js/addbitmapform.js?53b6dfd2a63ab812"></script>
 <script type="text/javascript" src="/js/addrasterform.js?af3d3b37eda75007"></script>

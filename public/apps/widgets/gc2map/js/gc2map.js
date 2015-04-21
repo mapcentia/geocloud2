@@ -34,7 +34,7 @@ if (typeof gc2map === "undefined") {
         (function pollForjQuery() {
             if (typeof $ !== "undefined") {
                 $.getScript(host + "/api/v1/baselayerjs");
-                $.getScript(host + "/js/leaflet/leaflet-all.js?950f422fbabe9382#grunt-cache-bust");
+                $.getScript(host + "/js/leaflet/leaflet-all.js?077e0d0c174ee9bf#grunt-cache-bust");
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
                 $.getScript(host + "/js/bootstrap3/js/bootstrap.min.js");
                 $.getScript(host + "/js/hogan/hogan-2.0.0.js");
@@ -46,8 +46,8 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        $.getScript(host + "/api/v3/js/geocloud.js?74b5e96487b6672e#grunt-cache-bust");
-                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?9f8906828cb06fdb#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?f952853b3576085a#grunt-cache-bust");
+                        $.getScript(host + "/apps/widgets/gc2map/js/main.js?415397719050d8d5#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?9751459f2c18d094#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined" && typeof MapCentia !== "undefined" && (typeof this !== "undefined" && typeof this.Templates !== "undefined")) {

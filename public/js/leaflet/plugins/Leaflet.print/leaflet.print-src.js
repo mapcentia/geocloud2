@@ -144,6 +144,35 @@ L.print.Provider = L.Class.extend({
 		}
 
 	},
+	getJson: function (options) {
+		options = L.extend(L.extend({}, this.options), options);
+
+		if (!options.layout || !options.dpi) {
+			throw 'Must provide a layout name and dpi value to print';
+		}
+
+		this.fire('beforeprint', {
+			provider: this,
+			map: this._map
+		});
+
+		var jsonData = JSON.stringify(L.extend({
+				units: L.print.Provider.UNITS,
+				srs: L.print.Provider.SRS,
+				layout: options.layout,
+				dpi: options.dpi,
+				outputFormat: options.outputFormat,
+				outputFilename: options.outputFilename,
+				layers: this._encodeLayers(this._map),
+				pages: [{
+					center: this._projectCoords(L.print.Provider.SRS, this._map.getCenter()),
+					scale: this._getScale(),
+					rotation: options.rotation
+				}]
+			}, this.options.customParams, options.customParams, this._makeLegends(this._map)));
+		return jsonData;
+
+	},
 
 	getCapabilities: function () {
 		return this._capabilities;
