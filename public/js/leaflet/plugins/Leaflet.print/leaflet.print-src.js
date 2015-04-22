@@ -456,7 +456,7 @@ L.print.Provider = L.Class.extend({
 					layers: [layerOpts.layers].join(',').split(',').filter(function (x) {return x !== ""; }), //filter out empty strings from the array
 					format: layerOpts.format,
 					styles: [layerOpts.styles].join(',').split(',').filter(function (x) {return x !== ""; }),
-					singleTile: true
+					singleTile: false
 				});
 
 				for (p in layer.wmsParams) {
