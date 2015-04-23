@@ -848,7 +848,7 @@ geocloud = (function () {
                     this.map.addLayer(this.osm);
                     break;
                 case "leaflet":
-                    this.osm = new L.tileLayer("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    this.osm = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 20,
                         maxNativeZoom: 18
@@ -922,7 +922,7 @@ geocloud = (function () {
                     this.map.addLayer(this.mapBoxNaturalEarth);
                     break;
                 case "leaflet":
-                    this.mapBoxNaturalEarth = new L.tileLayer("//a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
+                    this.mapBoxNaturalEarth = new L.tileLayer("https://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
                     lControl.addBaseLayer(this.mapBoxNaturalEarth);
                     break;
             }
@@ -1889,7 +1889,7 @@ if (geocloud.MAPLIB === "leaflet") {
                 }
                 _this.initMetadata();
             };
-            var url = "//dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
+            var url = "https://dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
             var script = document.createElement("script");
             script.type = "text/javascript";
             script.src = url;
@@ -2218,7 +2218,7 @@ var gc2SetLGoogle = function () {
             L.Google.asyncWait = [];
         }
     }
-}
+};
 
 
 
