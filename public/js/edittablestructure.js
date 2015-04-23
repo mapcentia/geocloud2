@@ -221,7 +221,7 @@ tableStructure.init = function (record, screenName) {
                     header: __("Conflict"),
                     dataIndex: 'conflict',
                     width: 35,
-                    hidden: (window.gc2Options.showConflictFieldOption !== null && window.gc2Options.showConflictFieldOption[screenName] === true) ? false : true
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
                 },
                 {
                     id: "link",

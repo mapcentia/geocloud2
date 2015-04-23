@@ -16,7 +16,7 @@ class Mapfile extends \app\inc\Controller
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
-        $srs = "4326";
+        $srs = "25832";
         ob_start();
         ?>
         MAP
@@ -50,8 +50,8 @@ class Mapfile extends \app\inc\Controller
         METADATA
         "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
         "wfs_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WFS"
-        "wms_srs"    "EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:3857 EPSG:900913"
-        "wfs_srs"    "EPSG:3857 EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:900913"
+        "wms_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
+        "wfs_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wms_name"    "<?php echo $user; ?>"
         "wfs_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
@@ -68,7 +68,7 @@ class Mapfile extends \app\inc\Controller
         #
 
         PROJECTION
-        "init=epsg:<?php echo $srs; ?>"
+        "init=epsg:4326"
         END
         #
         # Start of legend
@@ -425,7 +425,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "wms_srs"    "EPSG:<?php echo $row['srid']; ?> EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"

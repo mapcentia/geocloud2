@@ -207,6 +207,14 @@ $(window).ready(function () {
                     }
                 },
                 {
+                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
+                    dataIndex: "extra",
+                    sortable: true,
+                    width: 100,
+                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
+
+                },
+                {
                     header: __("Sort id"),
                     dataIndex: 'sort_id',
                     sortable: true,
@@ -244,6 +252,13 @@ $(window).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Editable"),
                     dataIndex: 'editable',
+                    width: 50
+                },
+                {
+                    xtype: 'checkcolumn',
+                    header: __("Skip conflict"),
+                    dataIndex: 'skipconflict',
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
                     width: 50
                 },
                 {

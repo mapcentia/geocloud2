@@ -112,9 +112,22 @@ class App
         // Use API key for Elasticsearch Search API
         "useKeyForSearch" => false,
 
-        //Show field option for conflict search
-        "showConflictFieldOption" => array(
-            "mydb" => false,
+        //Show "Extra" field in layer properties
+        "showExtraLayerProperty" => array(
+            "mydb" => true,
+        ),
+
+        "extraLayerPropertyName" => array(
+            "mydb" => "KLE",
+        ),
+
+        //Show download options in Heron-mc
+        "showDownloadOtionsInHeron" => true,
+
+        "customPrintParams" => array(
+            "mapTitle" => "Map title",
+            "mapComment" => "Map comment",
+            "mapFooter" => "Map footer",
         ),
     );
     function __construct(){

@@ -34,6 +34,9 @@ class Layer extends \app\inc\Controller
         if (isset($data["data"]->editable)) {
             $data["data"]->editable = ($data["data"]->editable) ?: "0";
         }
+        if (isset($data["data"]->skipconflict)) {
+            $data["data"]->skipconflict = ($data["data"]->skipconflict) ?: "0";
+        }
         $response = $this->auth($data["data"]->_key_);
         return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
     }

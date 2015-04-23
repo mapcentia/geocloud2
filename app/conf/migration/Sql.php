@@ -24,6 +24,8 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER enablesqlfilter set default false";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN triggertable VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN extra TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD skipconflict bool default false";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -59,7 +61,9 @@ class Sql
                         geometry_columns_join.privileges,
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
-                        geometry_columns_join.classwizard
+                        geometry_columns_join.classwizard,
+                        geometry_columns_join.extra,
+                        geometry_columns_join.skipconflict
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -101,7 +105,9 @@ class Sql
                         geometry_columns_join.privileges,
                         geometry_columns_join.enablesqlfilter,
                         geometry_columns_join.triggertable,
-                        geometry_columns_join.classwizard
+                        geometry_columns_join.classwizard,
+                        geometry_columns_join.extra,
+                        geometry_columns_join.skipconflict
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -146,7 +152,9 @@ class Sql
                                 geometry_columns_join.privileges,
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
-                                geometry_columns_join.classwizard
+                                geometry_columns_join.classwizard,
+                                geometry_columns_join.extra,
+                                geometry_columns_join.skipconflict
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -190,7 +198,9 @@ class Sql
                                 geometry_columns_join.privileges,
                                 geometry_columns_join.enablesqlfilter,
                                 geometry_columns_join.triggertable,
-                                geometry_columns_join.classwizard
+                                geometry_columns_join.classwizard,
+                                geometry_columns_join.extra,
+                                geometry_columns_join.skipconflict
                               FROM raster_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON
