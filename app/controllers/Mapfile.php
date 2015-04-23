@@ -425,7 +425,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "wms_srs"    "EPSG:<?php echo $row['srid']; ?> EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
+                "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
