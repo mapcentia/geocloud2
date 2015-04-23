@@ -460,6 +460,7 @@ L.print.Provider = L.Class.extend({
 						tileSize: [layer.options.tileSize, layer.options.tileSize],
 						maxExtent: L.print.Provider.MAX_EXTENT,
 						resolutions: resolutions,
+						tileOrigin: {x: L.print.Provider.MAX_EXTENT[0], y: L.print.Provider.MAX_EXTENT[0]},
 						singleTile: false
 					});
 				}
