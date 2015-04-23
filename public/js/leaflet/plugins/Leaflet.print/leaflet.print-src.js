@@ -423,7 +423,7 @@ L.print.Provider = L.Class.extend({
 				var enc = this._encoders.layers.httprequest.call(this, layer),
 				    baseUrl = layer._url.substring(0, layer._url.indexOf('{z}')),
 				    resolutions = [],
-				    zoom;
+				    zoom, split, layerName;
 
 				// If using multiple subdomains, replace the subdomain placeholder
 				if (baseUrl.indexOf('{s}') !== -1) {
@@ -434,17 +434,35 @@ L.print.Provider = L.Class.extend({
 					resolutions.push(L.print.Provider.MAX_RESOLUTION / Math.pow(2, zoom));
 				}
 
-				return L.extend(enc, {
-					// XYZ layer type would be a better fit but is not supported in mapfish plugin for GeoServer
-					// See https://github.com/mapfish/mapfish-print/pull/38
-					type: 'OSM',
-					baseURL: baseUrl,
-					extension: 'png',
-					tileSize: [layer.options.tileSize, layer.options.tileSize],
-					maxExtent: L.print.Provider.MAX_EXTENT,
-					resolutions: resolutions,
-					singleTile: false
-				});
+                if (layer.options.tms) {
+                    split = baseUrl.split("/");
+                    layerName = split[split.length - 2];
+                    split.splice(-3);
+                    baseUrl = split.join("/") + "/";
+                    return L.extend(enc, {
+                        type: 'TMS',
+                        baseURL: baseUrl,
+                        layer: layerName,
+                        format: 'png',
+                        tileSize: [layer.options.tileSize, layer.options.tileSize],
+                        maxExtent: L.print.Provider.MAX_EXTENT,
+                        resolutions: resolutions,
+                        tileOrigin: {x: L.print.Provider.MAX_EXTENT[0], y: L.print.Provider.MAX_EXTENT[0]},
+                        singleTile: false
+                    });
+                } else {
+                    return L.extend(enc, {
+                        // XYZ layer type would be a better fit but is not supported in mapfish plugin for GeoServer
+                        // See https://github.com/mapfish/mapfish-print/pull/38
+                        type: 'OSM',
+                        baseURL: baseUrl,
+                        extension: 'png',
+                        tileSize: [layer.options.tileSize, layer.options.tileSize],
+                        maxExtent: L.print.Provider.MAX_EXTENT,
+                        resolutions: resolutions,
+                        singleTile: false
+                    });
+                }
 			},
 			tilelayerwms: function (layer) {
 				var enc = this._encoders.layers.httprequest.call(this, layer),
