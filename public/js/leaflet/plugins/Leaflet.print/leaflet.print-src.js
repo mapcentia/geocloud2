@@ -156,7 +156,7 @@ L.print.Provider = L.Class.extend({
 			map: this._map
 		});
 
-		var jsonData = JSON.stringify(L.extend({
+		var jsonData = L.extend({
 				units: L.print.Provider.UNITS,
 				srs: L.print.Provider.SRS,
 				layout: options.layout,
@@ -169,7 +169,7 @@ L.print.Provider = L.Class.extend({
 					scale: this._getScale(),
 					rotation: options.rotation
 				}]
-			}, this.options.customParams, options.customParams, this._makeLegends(this._map)));
+			}, this.options.customParams, options.customParams, this._makeLegends(this._map));
 		return jsonData;
 
 	},
