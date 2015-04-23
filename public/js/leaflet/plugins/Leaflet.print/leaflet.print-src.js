@@ -100,7 +100,7 @@ L.print.Provider = L.Class.extend({
 			outputFilename: options.outputFilename,
 			layers: this._encodeLayers(this._map),
 			pages: [{
-				center: this._projectCoords(L.print.Provider.SRS, this._map.getCenter()),
+				center: this._projectCoords([Math.round(L.print.Provider.SRS, this._map.getCenter()[0] * 10000000)/10000000,Math.round(L.print.Provider.SRS, this._map.getCenter()[1] * 10000000)/10000000]),
 				scale: this._getScale(),
 				rotation: options.rotation
 			}]
