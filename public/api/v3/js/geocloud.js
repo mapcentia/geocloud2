@@ -1496,7 +1496,7 @@ geocloud = (function () {
             this.map.locate({
                 setView: true
             });
-        }
+        };
         //ol2 and leaflet
         this.addLayerFromWkt = function (elements) { // Take 4326
             switch (MAPLIB) {
