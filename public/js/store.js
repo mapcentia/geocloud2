@@ -1542,7 +1542,7 @@ $(window).ready(function () {
                 })
             ]
         }).show();
-    };
+    }
 
     updatePrivileges = function (subuser, key, privileges) {
         var param = {
