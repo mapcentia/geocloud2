@@ -26,6 +26,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN extra TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD skipconflict bool default false";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER wmssource TYPE TEXT";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
