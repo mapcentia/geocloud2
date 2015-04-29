@@ -194,6 +194,8 @@ gc2i18n = {
         "Layer tree reloaded": "Lagtræet genindlæst",
 
         "Select a layer from which you want to copy the classes": "Vælg hvilket lag der skal kopieres klasser fra.",
-        "Copy from": "Kopier fra"
+        "Copy from": "Kopier fra",
+        "Add": "Tilføj"
+
     }
 };

@@ -194,6 +194,7 @@ gc2i18n = {
         "Layer tree reloaded": "Layer tree reloaded",
 
         "Select a layer from which you want to copy the classes": "Select a layer from which you want to copy the classes",
-        "Copy from": "Copy from"
+        "Copy from": "Copy from",
+        "Add": "Add"
     }
 };
