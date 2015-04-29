@@ -531,6 +531,22 @@ class Classification extends \app\inc\Model
         return $response;
     }
 
+    public function copyClasses($to, $from) {
+        $query = "UPDATE settings.geometry_columns_join SET class = (SELECT class FROM settings.geometry_columns_join WHERE _key_ =:from) WHERE _key_ =:to";
+        $res = $this->prepare($query);
+        try {
+            $res->execute(array("from"=>$from, "to"=>$to));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = "Classes copied";
+        return $response;
+    }
+
 
     static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
     {

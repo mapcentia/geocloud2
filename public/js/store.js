@@ -1696,7 +1696,7 @@ $(window).ready(function () {
                         collapsible: true,
                         collapsed: true,
                         id: "layerStylePanel",
-                        width: 300,
+                        width: 340,
                         frame: false,
                         plain: true,
                         border: true,

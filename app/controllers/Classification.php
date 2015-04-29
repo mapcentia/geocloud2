@@ -65,4 +65,9 @@ class Classification extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(4));
         return (!$response['success']) ? $response : $this->class->createCluster(Input::getPath()->part(5), json_decode(urldecode(Input::get()))->data);
     }
+    public function put_copy()
+    {
+        $response = $this->auth(Input::getPath()->part(4));
+        return (!$response['success']) ? $response : $this->class->copyClasses(Input::getPath()->part(4), Input::getPath()->part(5));
+    }
 }

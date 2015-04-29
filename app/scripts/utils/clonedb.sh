@@ -4,7 +4,7 @@ sourcehost="127.0.0.1"
 targethost="127.0.0.1"
 sourcedb="mydb"
 targetdb="test4"
-file="/var/www/geocloud2/public/backups/127.0.0.1/latest/mydb.bak"
+file="/var/www/geocloud2/public/backups/${sourcehost}/latest/${sourcedb}.bak"
 ARRAY=("tomtomclone" "envimatix")
 
 for SCHEMA in `psql ${sourcedb} -h ${sourcehost} -c "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'" | grep -v "schema_name\|(\|---"`

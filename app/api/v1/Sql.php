@@ -102,7 +102,6 @@ class Sql extends \app\inc\Controller
                 ob_start();
                 $srs = (Input::get('srs')) ? : "900913";
                 $api = new \app\models\Sql($srs);
-                //$api->execQuery("set client_encoding='UTF8'", "PDO");
                 $this->response = $api->sql($this->q, $clientEncoding);
                 echo serialize($this->response);
                 // Cache script
