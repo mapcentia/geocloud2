@@ -532,19 +532,30 @@ class Classification extends \app\inc\Model
     }
 
     public function copyClasses($to, $from) {
-        $query = "UPDATE settings.geometry_columns_join SET class = (SELECT class FROM settings.geometry_columns_join WHERE _key_ =:from) WHERE _key_ =:to";
+        $query = "SELECT class FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
         try {
-            $res->execute(array("from"=>$from, "to"=>$to));
+            $res->execute(array("from"=>$from));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-        $response['success'] = true;
-        $response['message'] = "Classes copied";
-        return $response;
+        $row = $this->fetchRow($res);
+        $conf['class'] = $row["class"];
+        $conf['_key_'] = $to;
+
+
+        $geometryColumnsObj = new table("settings.geometry_columns_join");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        if (!$res["success"]) {
+            $response['success'] = false;
+            $response['message'] = $res["message"];
+            $response['code'] = "406";
+            return $response;
+        }
+        return $res;
     }
 
 
