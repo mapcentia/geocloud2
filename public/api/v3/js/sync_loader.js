@@ -1,4 +1,4 @@
-var host = window.geocloud_host;
+var host = window.geocloud_host || "";
 window.__ = function (string) {
     if (typeof gc2i18n !== 'undefined') {
         if (gc2i18n.dict[string]) {

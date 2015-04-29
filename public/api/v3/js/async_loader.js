@@ -12,11 +12,11 @@ if (typeof gc2apiLoader === "undefined") {
             return string;
         };
         var host, js;
-        host = window.geocloud_host;
+        host = window.geocloud_host || "";
         if (typeof $ === "undefined") {
             js = document.createElement("script");
             js.type = "text/javascript";
-            js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+            js.src = "https:://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
             document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
