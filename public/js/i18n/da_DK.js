@@ -180,7 +180,6 @@ gc2i18n = {
         "Create table instead of a view?": "Skab tabel i stedet for et view?",
         "Ignore errors": "Tillad fejl",
 
-
         "Piping data to Elasticsearch": "Overfører data til Elasticsearch",
         "All files processed": "Alle filer behandlet",
         "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?": "Dette vil overføre date fra tabellen/viewet til et index i Elasticsearch. Vil du fortsætte?",
@@ -192,6 +191,8 @@ gc2i18n = {
         "Some file processing resulted in errors or warnings.": "Indlæsning af nogle filer gave fejl eller advarsler.",
         "Overwrite": "Overskriv",
         "Delete/append": "Tøm/tilføj",
-        "Layer tree reloaded": "Lagtræet genindlæst"
+        "Layer tree reloaded": "Lagtræet genindlæst",
+
+        "Select a layer from which you want to copy the classes": "Vælg hvilket lag der skal kopieres klasser fra."
     }
 };

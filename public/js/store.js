@@ -229,7 +229,7 @@ $(window).ready(function () {
                     header: __("Authentication"),
                     dataIndex: 'authentication',
                     width: 80,
-                    tooltip: 'When accessing your layer from external clients, which level of authentication do you want?',
+                    tooltip: __('When accessing your layer from external clients, which level of authentication do you want?'),
                     editor: {
                         xtype: 'combo',
                         store: new Ext.data.ArrayStore({
