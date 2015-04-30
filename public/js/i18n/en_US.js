@@ -195,6 +195,9 @@ gc2i18n = {
 
         "Select a layer from which you want to copy the classes": "Select a layer from which you want to copy the classes",
         "Copy from": "Copy from",
-        "Add": "Add"
+        "Add": "Add",
+        "Copy properties": "Copy properties",
+        "Copy all properties from another layer": "Copy all properties from another layer",
+        "Layer properties copied": "Layer properties copied"
     }
 };

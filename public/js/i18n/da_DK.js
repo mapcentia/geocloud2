@@ -182,7 +182,7 @@ gc2i18n = {
 
         "Piping data to Elasticsearch": "Overfører data til Elasticsearch",
         "All files processed": "Alle filer behandlet",
-        "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?": "Dette vil overføre date fra tabellen/viewet til et index i Elasticsearch. Vil du fortsætte?",
+        "This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?": "Dette vil overføre data fra tabellen/viewet til et index i Elasticsearch. Vil du fortsætte?",
         "No files you uploaded seems to be recognized as a valid vector format.": "Ingen af de filer du loadede er genkendt som valide vektorformatter.",
         "Lock extent": "Lås kortets udstrækning",
         "Lock the map extent for sub-users in Admin and for all users in the public Viewer.": "Lås kortets udstrækning for sub-users i Admin og for alle brugere i den offentlige Viewer.",
@@ -195,7 +195,9 @@ gc2i18n = {
 
         "Select a layer from which you want to copy the classes": "Vælg hvilket lag der skal kopieres klasser fra.",
         "Copy from": "Kopier fra",
-        "Add": "Tilføj"
-
+        "Add": "Tilføj",
+        "Copy properties": "Kopier egenskaber",
+        "Copy all properties from another layer": "Kopier egenskaber fra et andet lag",
+        "Layer properties copied": "Egenskaber er kopieret"
     }
 };
