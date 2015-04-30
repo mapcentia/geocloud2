@@ -149,7 +149,6 @@ class Layer extends \app\models\Table
                     $response['data'][] = $arr;
                 } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
                     $response['data'][] = $arr;
-
                 }
             } else {
                 $response['data'][] = $arr;
