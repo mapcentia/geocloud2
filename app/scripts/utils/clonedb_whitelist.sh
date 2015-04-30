@@ -89,7 +89,7 @@ psql -c "CREATE EXTENSION \"uuid-ossp\";"
 psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
-pg_restore dump.bak --dbname=$targetdb
+pg_restore dump.bak --no-owner --dbname=$targetdb
 
 rm dump.bak
 

@@ -99,4 +99,9 @@ class Layer extends \app\inc\Controller
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
+    public function put_copymeta()
+    {
+        $response = $this->auth(Input::getPath()->part(4));
+        return (!$response['success']) ? $response : $this->table->copyMeta(Input::getPath()->part(4), Input::getPath()->part(5));
+    }
 }

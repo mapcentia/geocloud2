@@ -379,7 +379,7 @@ class Mapfile extends \app\inc\Controller
                     <?php
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
-                        if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: (Connection::$param['postgisport']) ?: "5432");
+                        echo " port=" . (Connection::$param['mapserverport'] ?: (Connection::$param['postgisport']) ?: "5432");
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
