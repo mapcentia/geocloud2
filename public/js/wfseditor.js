@@ -164,6 +164,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             version: "1.0.0",
             featureType: layerName,
             featureNS: "http://twitter/" + screenName,
+            featurePrefix: screenName,
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic
             defaultFilter: wfsFilter

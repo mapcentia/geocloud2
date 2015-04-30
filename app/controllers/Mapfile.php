@@ -262,14 +262,12 @@ class Mapfile extends \app\inc\Controller
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
-                $versioning = true;
-                $sql = "SELECT gc2_version_gid,gc2_version_start_date,gc2_version_end_date,gc2_version_uuid,gc2_version_user FROM \"{$row['f_table_schema']}\".\"{$row['f_table_name']}\" LIMIT 1";
-                $res = $postgisObject->prepare($sql);
-                try {
-                    $res->execute();
-                } catch (\PDOException $e) {
-                    $versioning = false;
-                }
+                $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}","gc2_version_gid");
+                $versioning = $versioning["exists"];
+
+                $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}","gc2_status");
+                $workflow = $workflow["exists"];
+
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -366,8 +364,14 @@ class Mapfile extends \app\inc\Controller
                             } else {
                                 $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             }
+                            if ($versioning || $workflow) {
+                                $dataSql .= " WHERE 1=1";
+                            }
                             if ($versioning) {
-                                $dataSql .= " WHERE gc2_version_end_date IS NULL";
+                                $dataSql .= " AND gc2_version_end_date IS NULL";
+                            }
+                            if ($versioning) {
+                                $dataSql .= " AND gc2_status = 3";
                             }
                         } else {
                             $dataSql = $row['data'];

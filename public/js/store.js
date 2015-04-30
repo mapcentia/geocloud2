@@ -13,7 +13,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, settings, extentRestricted = false, spinner, styleWizardWin;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -102,6 +102,30 @@ $(window).ready(function () {
         autoSave: true
     });
     store.load();
+
+    workflowStore = new Ext.data.JsonStore({
+        url: '/controllers/workflow',
+        autoDestroy: true,
+        root: 'data',
+        idProperty: 'id',
+        fields: [
+            {"name": "f_table_name", "type": "string"},
+            {"name": "f_schema_name", "type": "string"},
+            {"name": "gid", "type": "number"},
+            {"name": "status", "type": "integer"},
+            {"name": "status_text", "type": "string"},
+            {"name": "gc2_user", "type": "string"},
+            {"name": "roles", "type": "string"},
+            {"name": "workflow", "type": "string"},
+            {"name": "author", "type": "string"},
+            {"name": "reviewer", "type": "string"},
+            {"name": "publisher", "type": "string"},
+            {"name": "version_gid", "type": "number"},
+            {"name": "operation", "type": "string"},
+            {"name": "created", "type": "date"}
+        ]
+    });
+    workflowStore.load({url: 'myPage.php'});
 
     groupsStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
@@ -310,6 +334,13 @@ $(window).ready(function () {
                 text: '<i class="icon-user btn-gc"></i> ' + __('Privileges'),
                 id: 'privileges-btn',
                 handler: onPrivileges,
+                disabled: true
+
+            },
+            {
+                text: '<i class="icon-user btn-gc"></i> ' + __('Workflow'),
+                id: 'workflow-btn',
+                handler: onWorkflow,
                 disabled: true
 
             },
@@ -1707,6 +1738,260 @@ $(window).ready(function () {
             }
         });
     };
+
+    // Workflow
+    function onWorkflow(btn, ev) {
+        var records = grid.getSelectionModel().getSelections(), workflowWin;
+        if (records.length === 0) {
+            App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+            return false;
+        }
+        var workflowStore = new Ext.data.Store({
+            writer: new Ext.data.JsonWriter({
+                writeAllFields: false,
+                encode: false
+            }),
+            reader: new Ext.data.JsonReader(
+                {
+                    successProperty: 'success',
+                    idProperty: 'subuser',
+                    root: 'data',
+                    messageProperty: 'message'
+                },
+                [
+                    {
+                        name: "subuser"
+                    },
+                    {
+                        name: "roles"
+                    }
+                ]
+            ),
+            proxy: new Ext.data.HttpProxy({
+                restful: true,
+                type: 'json',
+                api: {
+                    read: '/controllers/layer/roles/' + records[0].get("_key_")
+                },
+                listeners: {
+                    exception: function (proxy, type, action, options, response, arg) {
+                        if (type === 'remote') {
+                            var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
+                            Ext.MessageBox.show({
+                                title: __('Failure'),
+                                msg: message,
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
+                        } else {
+                            workflowWin.close();
+                            Ext.MessageBox.show({
+                                title: __("Failure"),
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 300,
+                                height: 300
+                            });
+                        }
+                    }
+                }
+            }),
+            autoSave: true
+        });
+
+        Ext.Ajax.request({
+            url: '/controllers/table/checkcolumn/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name") + "/gc2_version_gid",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            success: function (response) {
+                var r = Ext.decode(response.responseText);
+                if (!r.exists) {
+                    Ext.MessageBox.show({
+                        title: 'Failure',
+                        msg: __("The table must be versioned"),
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                    return false;
+                } else {
+                    Ext.Ajax.request({
+                        url: '/controllers/table/checkcolumn/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name") + "/gc2_status",
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function (response) {
+                            var r = Ext.decode(response.responseText), go;
+                            go = function () {
+                                workflowWin = new Ext.Window({
+                                    title: __("Apply role to sub-users on") + " '" + records[0].get("f_table_name") + "'",
+                                    modal: true,
+                                    width: 500,
+                                    height: 330,
+                                    initCenter: true,
+                                    closeAction: 'hide',
+                                    border: false,
+                                    layout: 'border',
+                                    items: [
+                                        new Ext.Panel({
+                                            height: 200,
+                                            border: false,
+                                            region: "center",
+                                            items: [
+                                                new Ext.grid.EditorGridPanel({
+                                                    store: workflowStore,
+                                                    viewConfig: {
+                                                        forceFit: true
+                                                    },
+                                                    height: 200,
+                                                    region: 'center',
+                                                    frame: false,
+                                                    border: true,
+                                                    sm: new Ext.grid.RowSelectionModel({
+                                                        singleSelect: true
+                                                    }),
+                                                    cm: new Ext.grid.ColumnModel({
+                                                        defaults: {
+                                                            sortable: true
+                                                        },
+                                                        columns: [
+                                                            {
+                                                                header: __('Sub-user'),
+                                                                dataIndex: 'subuser',
+                                                                editable: false,
+                                                                width: 50
+                                                            },
+                                                            {
+                                                                header: __('Role'),
+                                                                dataIndex: 'roles',
+                                                                sortable: false,
+                                                                renderer: function (val, cell, record, rowIndex, colIndex, store) {
+                                                                    var _key_ = records[0].get("_key_");
+                                                                    var retval =
+                                                                            '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updateWorkflow(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
+                                                                            '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updateWorkflow(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="author" name="' + rowIndex + '"' + ((val === 'author') ? ' checked="checked"' : '') + '>&nbsp;' + __('Author') + '&nbsp;&nbsp;&nbsp;' +
+                                                                            '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updateWorkflow(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="reviewer" name="' + rowIndex + '"' + ((val === 'reviewer') ? ' checked="checked"' : '') + '>&nbsp;' + __('Reviewer') + '&nbsp;&nbsp;&nbsp;' +
+                                                                            '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updateWorkflow(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="publisher" name="' + rowIndex + '"' + ((val === 'publisher') ? ' checked="checked"' : '') + '>&nbsp;' + __('Publisher') + '&nbsp;&nbsp;&nbsp;'
+                                                                        ;
+                                                                    return retval;
+                                                                }
+                                                            }
+                                                        ]
+                                                    })
+                                                }),
+                                                new Ext.Panel({
+                                                        height: 110,
+                                                        border: false,
+                                                        region: "south",
+                                                        bodyStyle: {
+                                                            background: '#777',
+                                                            color: '#fff',
+                                                            padding: '7px'
+                                                        },
+                                                        html: "<ul>" +
+                                                        "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                                        "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                                        "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                                        "<ul>" +
+                                                        "<br><p>" +
+                                                        __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                                        "</p>"
+                                                    }
+                                                )
+                                            ]
+
+                                        })
+                                    ]
+                                }).show();
+                                workflowStore.load();
+                            };
+                            if (!r.exists) {
+                                Ext.MessageBox.confirm(__('Confirm'), __("You are about to .....") + " '" + records[0].get("f_table_name") + "'. " + __("Are you sure?"), function (btn) {
+                                    if (btn === "yes") {
+                                        Ext.Ajax.request({
+                                            url: '/controllers/table/workflow/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name"),
+                                            method: 'PUT',
+                                            headers: {
+                                                'Content-Type': 'application/json; charset=utf-8'
+                                            },
+                                            success: function () {
+                                                tableStructure.grid.getStore().reload();
+                                                go();
+                                            },
+                                            failure: function (response) {
+                                                Ext.MessageBox.show({
+                                                    title: 'Failure',
+                                                    msg: __(Ext.decode(response.responseText).message),
+                                                    buttons: Ext.MessageBox.OK,
+                                                    width: 400,
+                                                    height: 300,
+                                                    icon: Ext.MessageBox.ERROR
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        return false;
+
+                                    }
+                                });
+                            } else {
+                                go();
+                            }
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
+                        }
+                    });
+
+                }
+
+            }
+        });
+
+
+    }
+
+    updateWorkflow = function (subuser, key, roles) {
+        var param = {
+            data: {
+                _key_: key,
+                subuser: subuser,
+                roles: roles
+            }
+        };
+        param = Ext.util.JSON.encode(param);
+        Ext.Ajax.request({
+            url: '/controllers/layer/roles',
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            params: param,
+            failure: function (response) {
+                Ext.MessageBox.show({
+                    title: __('Failure'),
+                    msg: __(Ext.decode(response.responseText).message),
+                    buttons: Ext.MessageBox.OK,
+                    width: 400,
+                    height: 300,
+                    icon: Ext.MessageBox.ERROR
+                });
+            }
+        });
+    };
+
     styleWizardWin = function (e) {
         var record = null;
         grid.getStore().each(function (rec) {  // for each row
@@ -1796,6 +2081,7 @@ $(window).ready(function () {
             Ext.getCmp('advanced-btn').setDisabled(false);
             if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
+                Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
                 Ext.getCmp('copy-properties-btn').setDisabled(false);
             }
@@ -1804,6 +2090,7 @@ $(window).ready(function () {
             Ext.getCmp('cartomobile-btn').setDisabled(true);
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
+            Ext.getCmp('workflow-btn').setDisabled(true);
             Ext.getCmp('renamelayer-btn').setDisabled(true);
             Ext.getCmp('copy-properties-btn').setDisabled(true);
         }
@@ -1820,6 +2107,7 @@ $(window).ready(function () {
         Ext.getCmp('cartomobile-btn').setDisabled(true);
         Ext.getCmp('advanced-btn').setDisabled(true);
         Ext.getCmp('privileges-btn').setDisabled(true);
+        Ext.getCmp('workflow-btn').setDisabled(true);
         Ext.getCmp('renamelayer-btn').setDisabled(true);
         Ext.getCmp('copy-properties-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
@@ -1827,6 +2115,7 @@ $(window).ready(function () {
     };
 
     var tabs = new Ext.TabPanel({
+        id: "mainTabs",
         activeTab: 0,
         region: 'center',
         plain: true,
@@ -2022,6 +2311,216 @@ $(window).ready(function () {
                 ]
             },
             ct,
+            {
+                xtype: "panel",
+                title: __('Workflow'),
+                layout: 'border',
+                id: "workflowPanel",
+                items: [
+                    new Ext.grid.GridPanel({
+                        id: "workflowGrid",
+                        store: workflowStore,
+                        viewConfig: {
+                            forceFit: true,
+                            stripeRows: true
+                        },
+                        height: 300,
+                        split: true,
+                        region: 'center',
+                        frame: false,
+                        border: false,
+                        sm: new Ext.grid.RowSelectionModel({
+                            singleSelect: true
+                        }),
+                        cm: new Ext.grid.ColumnModel({
+                            defaults: {
+                                sortable: true
+                            },
+                            columns: [
+                                {
+                                    header: __("Operation"),
+                                    dataIndex: "operation",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 1
+                                }, {
+                                    header: __("Schema"),
+                                    dataIndex: "f_schema_name",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 0.5
+                                },
+                                {
+                                    header: __("Table"),
+                                    dataIndex: "f_table_name",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 0.5
+                                }, {
+                                    header: __("Fid"),
+                                    dataIndex: "gid",
+                                    sortable: true,
+                                    width: 25,
+                                    flex: 1
+                                }, {
+                                    header: __("Version id"),
+                                    dataIndex: "version_gid",
+                                    sortable: true,
+                                    width: 40,
+                                    flex: 1
+                                }, {
+                                    header: __("Status"),
+                                    dataIndex: "status_text",
+                                    sortable: true,
+                                    width: 35,
+                                    flex: 1
+                                }, {
+                                    header: __("Latest edit by"),
+                                    dataIndex: "gc2_user",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 1
+                                }, {
+                                    header: __("Authored by"),
+                                    dataIndex: "author",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 2
+                                }, {
+                                    header: __("Reviewed by"),
+                                    dataIndex: "reviewer",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 2
+                                }, {
+                                    header: __("Published by"),
+                                    dataIndex: "publisher",
+                                    sortable: true,
+                                    width: 50,
+                                    flex: 2
+                                }, {
+                                    header: __("Created"),
+                                    dataIndex: "created",
+                                    sortable: true,
+                                    width: 120,
+                                    flex: 1
+                                }
+                            ]
+                        }),
+                        tbar: [
+                            {
+                                text: '<i class="icon-refresh btn-gc"></i> ' + __('Reload'),
+                                tooltip: __("Reload the list"),
+                                handler: function () {
+                                    if (Ext.getCmp('workflowShowAllBtn').pressed) {
+                                        workflowStore.load({params: "all=t"});
+                                    } else {
+                                        workflowStore.load();
+                                    }
+                                }
+                            },
+                            {
+                                text: '<i class="icon-tasks btn-gc"></i> ' + __('Show all'),
+                                enableToggle: true,
+                                id: "workflowShowAllBtn",
+                                disabled: (subUser === false) ? true : false,
+                                tooltip: __("Show all items, also those you've taken action on."),
+                                handler: function () {
+                                    if (this.pressed) {
+                                        workflowStore.load({params: "all=t"});
+                                    } else {
+                                        workflowStore.load();
+                                    }
+                                }
+                            },
+                            {
+                                text: '<i class="icon-pencil btn-gc"></i> ' + __('See/edit feature'),
+                                tooltip: __("Switch to Map view with the feature loaded."),
+                                handler: function () {
+                                    var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
+                                    if (records.length === 0) {
+                                        App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                    }
+                                    Ext.Ajax.request({
+                                        url: '/api/v1/meta/' + screenName + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function (response) {
+                                            var r = Ext.decode(response.responseText),
+                                                filter = new OpenLayers.Filter.Comparison({
+                                                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                    property: "\"" + r.data[0].pkey + "\"",
+                                                    value: records[0].get("gid")
+                                                }), mapFrame = document.getElementById("wfseditor").contentWindow.window;
+                                            Ext.getCmp("mainTabs").activate(0);
+                                            setTimeout(function () {
+                                                mapFrame.attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
+                                                mapFrame.startWfsEdition(records[0].get("f_table_name"), r.data[0].f_geometry_column, filter, true);
+                                            }, 100);
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    });
+                                }
+                            },
+                            {
+                                text: '<i class="icon-ok btn-gc"></i> ' + __('Check feafure'),
+                                tooltip: __("This will update the feature with your role in the workflow."),
+                                handler: function () {
+                                    var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
+                                    if (records.length === 0) {
+                                        App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                    }
+                                    Ext.Ajax.request({
+                                        url: '/controllers/workflow/' + records[0].get("f_schema_name") + "/" + records[0].get("f_table_name") + "/" + records[0].get("gid"),
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json; charset=utf-8'
+                                        },
+                                        success: function (response) {
+                                            if (Ext.getCmp('workflowShowAllBtn').pressed) {
+                                                workflowStore.load({params: "all=t"});
+                                            } else {
+                                                workflowStore.load();
+                                            }
+                                        },
+                                        failure: function (response) {
+                                            Ext.MessageBox.show({
+                                                title: 'Failure',
+                                                msg: __(Ext.decode(response.responseText).message),
+                                                buttons: Ext.MessageBox.OK,
+                                                width: 400,
+                                                height: 300,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        ]
+                    }),{
+                        region: 'south',
+                        border: false,
+                        height: 70,
+                        bodyStyle: {
+                            background: '#777',
+                            color: '#fff',
+                            padding: '7px'
+                        },
+                        html: "Here comes some help text...."
+                    }
+                ]
+            },
             {
                 xtype: "panel",
                 title: __('Scheduler'),

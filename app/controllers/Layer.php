@@ -78,7 +78,7 @@ class Layer extends \app\inc\Controller
     public function put_name()
     {
         $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->rename(Input::getPath()->part(4),json_decode(Input::get())->data);
+        return (!$response['success']) ? $response : $this->table->rename(Input::getPath()->part(4), json_decode(Input::get())->data);
     }
 
     public function put_schema()
@@ -99,9 +99,22 @@ class Layer extends \app\inc\Controller
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
+
     public function put_copymeta()
     {
         $response = $this->auth(Input::getPath()->part(4));
         return (!$response['success']) ? $response : $this->table->copyMeta(Input::getPath()->part(4), Input::getPath()->part(5));
+    }
+
+    public function get_roles()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->getRoles(Input::getPath()->part(4));
+    }
+
+    public function put_roles()
+    {
+        $response = $this->auth(null, array());
+        return (!$response['success']) ? $response : $this->table->updateRoles(json_decode(Input::get())->data);
     }
 }

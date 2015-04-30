@@ -154,6 +154,7 @@ include("html_header.php");
 <script type="text/javascript"
         src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 <!-- /build -->
+<script type="text/javascript" src="/js/openlayers/OpenLayers.js?8b397f6ff00cc458"></script>
 </body>
 </html>
 

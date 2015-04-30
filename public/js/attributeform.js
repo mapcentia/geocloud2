@@ -37,6 +37,7 @@ attributeForm.init = function (layer, geomtype) {
                                 disabled: false,
                                 handler: function () {
                                     filter.queryPanel.query();
+                                    filter.win.close();
                                 }
                             }],
                         query: function () {
