@@ -207,6 +207,14 @@ $(window).ready(function () {
                     }
                 },
                 {
+                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
+                    dataIndex: "extra",
+                    sortable: true,
+                    width: 100,
+                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
+
+                },
+                {
                     header: __("Sort id"),
                     dataIndex: 'sort_id',
                     sortable: true,
@@ -221,7 +229,7 @@ $(window).ready(function () {
                     header: __("Authentication"),
                     dataIndex: 'authentication',
                     width: 80,
-                    tooltip: 'When accessing your layer from external clients, which level of authentication do you want?',
+                    tooltip: __('When accessing your layer from external clients, which level of authentication do you want?'),
                     editor: {
                         xtype: 'combo',
                         store: new Ext.data.ArrayStore({
@@ -244,6 +252,13 @@ $(window).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Editable"),
                     dataIndex: 'editable',
+                    width: 50
+                },
+                {
+                    xtype: 'checkcolumn',
+                    header: __("Skip conflict"),
+                    dataIndex: 'skipconflict',
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
                     width: 50
                 },
                 {
@@ -315,7 +330,6 @@ $(window).ready(function () {
                 handler: onGlobalSettings
 
             },
-
             {
                 text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
                 disabled: (subUser === schema || subUser === false) ? false : true,
@@ -384,6 +398,158 @@ $(window).ready(function () {
                     onDelete();
                 }
             },
+            '-',
+            {
+                text: __('Copy properties'),
+                id: 'copy-properties-btn',
+                tooltip: __("Copy all properties from another layer"),
+                disabled: true,
+                handler: function () {
+                    var record = grid.getSelectionModel().getSelected();
+                    if (!record) {
+                        App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                        return false;
+                    }
+                    var winCopyMeta = new Ext.Window({
+                        title: __("Copy all properties from another layer"),
+                        modal: true,
+                        layout: 'fit',
+                        width: 350,
+                        height: 120,
+                        closeAction: 'close',
+                        plain: true,
+                        items: [
+                            {
+                                defaults: {
+                                    border: false
+                                },
+                                items: [
+                                    {
+                                        xtype: "form",
+                                        id: "copyMetaForm",
+                                        layout: 'hbox',
+                                        bodyStyle: 'padding: 10px',
+                                        items: [
+                                            {
+                                                xtype: "combo",
+                                                store: schemasStore,
+                                                displayField: 'schema',
+                                                editable: false,
+                                                mode: 'local',
+                                                triggerAction: 'all',
+                                                lazyRender: true,
+                                                name: 'schema',
+                                                width: 150,
+                                                allowBlank: false,
+                                                emptyText: __('Schema'),
+                                                listeners: {
+                                                    'select': function (combo, value, index) {
+                                                        Ext.getCmp('copyMetaFormKeys').clearValue();
+                                                        (function () {
+                                                            Ext.Ajax.request({
+                                                                url: '/api/v1/meta/' + screenName + '/' + combo.getValue(),
+                                                                method: 'GET',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                                },
+                                                                success: function (response) {
+                                                                    Ext.getCmp('copyMetaFormKeys').store.loadData(
+                                                                        Ext.decode(response.responseText)
+                                                                    );
+                                                                },
+                                                                failure: function (response) {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'Failure',
+                                                                        msg: __(Ext.decode(response.responseText).message),
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                }
+                                                            });
+                                                        }());
+                                                    }
+                                                }
+                                            }, {
+                                                xtype: "combo",
+                                                id: "copyMetaFormKeys",
+                                                store: new Ext.data.Store({
+                                                    reader: new Ext.data.JsonReader({
+                                                        successProperty: 'success',
+                                                        root: 'data'
+                                                    }, [
+                                                        {
+                                                            "name": "f_table_name"
+                                                        },
+                                                        {
+                                                            "name": "_key_"
+                                                        }
+                                                    ]),
+                                                    url: '/controllers/layer/groups'
+                                                }),
+                                                displayField: 'f_table_name',
+                                                valueField: '_key_',
+                                                editable: false,
+                                                mode: 'local',
+                                                triggerAction: 'all',
+                                                name: 'key',
+                                                width: 150,
+                                                allowBlank: false,
+                                                emptyText: __('Layer')
+                                            }
+
+                                        ]
+                                    },
+                                    {
+                                        layout: 'form',
+                                        bodyStyle: 'padding: 10px',
+                                        items: [
+                                            {
+                                                xtype: 'button',
+                                                text: __('Copy'),
+                                                handler: function () {
+                                                    var f = Ext.getCmp('copyMetaForm');
+                                                    if (f.form.isValid()) {
+                                                        Ext.Ajax.request({
+                                                            url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
+                                                            method: 'put',
+                                                            headers: {
+                                                                'Content-Type': 'application/json; charset=utf-8'
+                                                            },
+                                                            success: function () {
+                                                                document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                                                store.reload();
+                                                                App.setAlert(App.STATUS_OK, __("Layer properties copied"));
+                                                            },
+                                                            failure: function (response) {
+                                                                Ext.MessageBox.show({
+                                                                    title: __('Failure'),
+                                                                    msg: __(Ext.decode(response.responseText).message),
+                                                                    buttons: Ext.MessageBox.OK,
+                                                                    width: 400,
+                                                                    height: 300,
+                                                                    icon: Ext.MessageBox.ERROR
+                                                                });
+                                                            }
+                                                        });
+                                                    } else {
+                                                        var s = '';
+                                                        Ext.iterate(f.form.getValues(), function (key, value) {
+                                                            s += String.format("{0} = {1}<br />", key, value);
+                                                        }, this);
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }).show(this);
+                }
+            },
+
             '-',
             {
                 text: '<i class="icon-th btn-gc"></i> ' + __('Schema'),
@@ -1541,7 +1707,7 @@ $(window).ready(function () {
             }
         });
     };
-    styleWizardWin = function(e) {
+    styleWizardWin = function (e) {
         var record = null;
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
@@ -1631,6 +1797,7 @@ $(window).ready(function () {
             if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
+                Ext.getCmp('copy-properties-btn').setDisabled(false);
             }
         }
         else {
@@ -1638,6 +1805,7 @@ $(window).ready(function () {
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('renamelayer-btn').setDisabled(true);
+            Ext.getCmp('copy-properties-btn').setDisabled(true);
         }
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
@@ -1653,6 +1821,7 @@ $(window).ready(function () {
         Ext.getCmp('advanced-btn').setDisabled(true);
         Ext.getCmp('privileges-btn').setDisabled(true);
         Ext.getCmp('renamelayer-btn').setDisabled(true);
+        Ext.getCmp('copy-properties-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
         Ext.getCmp('movelayer-btn').setDisabled(true);
     };
@@ -1681,7 +1850,7 @@ $(window).ready(function () {
                         collapsible: true,
                         collapsed: true,
                         id: "layerStylePanel",
-                        width: 300,
+                        width: 340,
                         frame: false,
                         plain: true,
                         border: true,
@@ -1989,7 +2158,8 @@ $(window).ready(function () {
                         b.update(response.html);
                         b.doLayout();
                     }
-                    catch (e){}
+                    catch (e) {
+                    }
                 }
             });
         }

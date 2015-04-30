@@ -109,15 +109,65 @@ wmsClasses.init = function (record) {
                 }
             ]
         }),
-        bbar: [
+        tbar: [
             {
-                text: '<i class="icon-plus btn-gc"></i> Add class',
+                text: '<i class="icon-plus btn-gc"></i> ' + __("Add"),
                 handler: wmsClasses.onAdd
             },
             {
-                text: '<i class="icon-trash btn-gc"></i> Delete class',
+                text: '<i class="icon-trash btn-gc"></i> ' + __("Delete"),
                 handler: wmsClasses.onDelete
-            }
+            },
+            '-',
+            {
+                text: __("Copy from"),
+                tooltip: __("Select a layer from which you want to copy the classes"),
+                handler: function () {
+                    var layer = Ext.getCmp("copylayerbox").value;
+                    if (layer === "") {
+                        App.setAlert(App.STATUS_NOTICE, __("Select a layer from which you want to copy the classes"));
+                        return false;
+                    }
+                    Ext.Ajax.request({
+                        url: '/controllers/classification/copy/' + wmsClasses.table + '/' + Ext.getCmp("copylayerbox").value,
+                        method: 'put',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function () {
+                            wmsClasses.store.load();
+                            Ext.getCmp("a3").remove(wmsClass.grid);
+                            Ext.getCmp("a8").remove(wmsClass.grid2);
+                            Ext.getCmp("a9").remove(wmsClass.grid3);
+                            Ext.getCmp("a10").remove(wmsClass.grid4);
+                            Ext.getCmp("a11").remove(wmsClass.grid5);
+                            wmsClasses.grid.getSelectionModel().clearSelections();
+                            writeFiles(wmsClasses.table);
+                        },
+                        failure: function (response) {
+                            Ext.MessageBox.show({
+                                title: 'Failure',
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.ERROR
+                            });
+                        }
+                    });
+                }
+            },
+            new Ext.form.ComboBox({
+                id: "copylayerbox",
+                store: store,
+                displayField: 'f_table_name',
+                valueField: '_key_',
+                editable: false,
+                mode: 'local',
+                triggerAction: 'all',
+                value: '',
+                width: 140
+            })
         ],
         listeners: {
             rowclick: function () {

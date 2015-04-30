@@ -28,7 +28,7 @@ function mkdbbackup {
 		rm -fv $BACKUPLATEST/*
 	fi
 	bl=("${!BLACKLIST}")
-	for DATABASE in `psql ${CREDS} --list |grep postgres |tr -d " " |cut -d "|" -f1`
+	for DATABASE in `psql ${CREDS} -c "SELECT datname FROM pg_database" | grep -v "datname\|(\|---"`
     	do
     	    ix=$( printf "%s\n" "${bl[@]}" | grep -n -m 1 "^${DATABASE}$" | cut -d ":" -f1 )
     	    if [[ -z $ix ]]

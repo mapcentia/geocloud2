@@ -16,7 +16,7 @@ class Mapfile extends \app\inc\Controller
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
-        $srs = "4326";
+        $srs = "25832";
         ob_start();
         ?>
         MAP
@@ -50,8 +50,8 @@ class Mapfile extends \app\inc\Controller
         METADATA
         "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
         "wfs_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WFS"
-        "wms_srs"    "EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:3857 EPSG:900913"
-        "wfs_srs"    "EPSG:3857 EPSG:<?php echo $srs; ?> EPSG:4326 EPSG:900913"
+        "wms_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
+        "wfs_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wms_name"    "<?php echo $user; ?>"
         "wfs_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
@@ -68,7 +68,7 @@ class Mapfile extends \app\inc\Controller
         #
 
         PROJECTION
-        "init=epsg:<?php echo $srs; ?>"
+        "init=epsg:4326"
         END
         #
         # Start of legend
@@ -379,7 +379,7 @@ class Mapfile extends \app\inc\Controller
                     <?php
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
-                        if (Connection::$param['postgisport']) echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport']);
+                        echo " port=" . (Connection::$param['mapserverport'] ?: (Connection::$param['postgisport']) ?: "5432");
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
@@ -439,7 +439,7 @@ class Mapfile extends \app\inc\Controller
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($row['wmssource']) {
-                    $wmsCon = str_replace(array("layers","LAYERS"), "LAYER", $row['wmssource']);
+                    $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
                 } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>

@@ -21,7 +21,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse=false, $es=false)
+    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
@@ -146,6 +146,8 @@ class Layer extends \app\models\Table
             if ($_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+                    $response['data'][] = $arr;
+                } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
                     $response['data'][] = $arr;
                 }
             } else {
@@ -442,5 +444,42 @@ class Layer extends \app\models\Table
         $response['success'] = true;
         $response['extent'] = $extent;
         return $response;
+    }
+
+    public function copyMeta($to, $from)
+    {
+        $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
+        $res = $this->prepare($query);
+        try {
+            $res->execute(array("from" => $from));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict");
+        $row = $this->fetchRow($res);
+        foreach ($row as $k => $v) {
+            if (in_array($k, $booleanFields)) {
+                $conf[$k] = $v ?: "0";
+            } else {
+                $conf[$k] = $v;
+            }
+        }
+        //print_r($conf);
+        //die();
+        $conf['_key_'] = $to;
+
+
+        $geometryColumnsObj = new table("settings.geometry_columns_join");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        if (!$res["success"]) {
+            $response['success'] = false;
+            $response['message'] = $res["message"];
+            $response['code'] = "406";
+            return $response;
+        }
+        return $res;
     }
 }

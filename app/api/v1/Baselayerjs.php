@@ -21,7 +21,9 @@ class Baselayerjs extends \app\inc\Controller
         echo "customPrintParams: " . json_encode(\app\conf\App::$param['customPrintParams']) . ",\n";
         echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
-        echo "showConflictFieldOption: " . (json_encode(\app\conf\App::$param['showConflictFieldOption']) ? : "null")  .",\n";
+        echo "showConflictOptions: " . (json_encode(\app\conf\App::$param['showConflictOptions']) ? : "null")  .",\n";
+        echo "showExtraLayerProperty: " . (json_encode(\app\conf\App::$param['showExtraLayerProperty']) ? : "null")  .",\n";
+        echo "extraLayerPropertyName: " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {

@@ -566,7 +566,8 @@ Viewer = function () {
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
-                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                        type: "tms"
                     });
                 }
                 for (i = 0; i < arr.length; i = i + 1) {

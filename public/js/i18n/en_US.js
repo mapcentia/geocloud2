@@ -191,6 +191,13 @@ gc2i18n = {
         "Some file processing resulted in errors or warnings.": "Some file processing resulted in errors or warnings.",
         "Overwrite": "Overwrite",
         "Delete/append": "Delete/append",
-        "Layer tree reloaded": "Layer tree reloaded"
+        "Layer tree reloaded": "Layer tree reloaded",
+
+        "Select a layer from which you want to copy the classes": "Select a layer from which you want to copy the classes",
+        "Copy from": "Copy from",
+        "Add": "Add",
+        "Copy properties": "Copy properties",
+        "Copy all properties from another layer": "Copy all properties from another layer",
+        "Layer properties copied": "Layer properties copied"
     }
 };

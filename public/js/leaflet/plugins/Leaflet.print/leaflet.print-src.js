@@ -156,7 +156,7 @@ L.print.Provider = L.Class.extend({
 			map: this._map
 		});
 
-		var jsonData = JSON.stringify(L.extend({
+		var jsonData = L.extend({
 				units: L.print.Provider.UNITS,
 				srs: L.print.Provider.SRS,
 				layout: options.layout,
@@ -169,7 +169,8 @@ L.print.Provider = L.Class.extend({
 					scale: this._getScale(),
 					rotation: options.rotation
 				}]
-			}, this.options.customParams, options.customParams, this._makeLegends(this._map)));
+
+			}, this.options.customParams, options.customParams, this._makeLegends(this._map));
 		return jsonData;
 
 	},
@@ -434,35 +435,37 @@ L.print.Provider = L.Class.extend({
 					resolutions.push(L.print.Provider.MAX_RESOLUTION / Math.pow(2, zoom));
 				}
 
-                if (layer.options.tms) {
-                    split = baseUrl.split("/");
-                    layerName = split[split.length - 2];
-                    split.splice(-3);
-                    baseUrl = split.join("/") + "/";
-                    return L.extend(enc, {
-                        type: 'TMS',
-                        baseURL: baseUrl,
-                        layer: layerName,
-                        format: 'png',
-                        tileSize: [layer.options.tileSize, layer.options.tileSize],
-                        maxExtent: L.print.Provider.MAX_EXTENT,
-                        resolutions: resolutions,
-                        tileOrigin: {x: L.print.Provider.MAX_EXTENT[0], y: L.print.Provider.MAX_EXTENT[0]},
-                        singleTile: false
-                    });
-                } else {
-                    return L.extend(enc, {
-                        // XYZ layer type would be a better fit but is not supported in mapfish plugin for GeoServer
-                        // See https://github.com/mapfish/mapfish-print/pull/38
-                        type: 'OSM',
-                        baseURL: baseUrl,
-                        extension: 'png',
-                        tileSize: [layer.options.tileSize, layer.options.tileSize],
-                        maxExtent: L.print.Provider.MAX_EXTENT,
-                        resolutions: resolutions,
-                        singleTile: false
-                    });
-                }
+
+				if (layer.options.tms) {
+					split = baseUrl.split("/");
+					layerName = split[split.length - 2];
+					split.splice(-3);
+					baseUrl = split.join("/") + "/";
+					return L.extend(enc, {
+						type: 'TMS',
+						baseURL: baseUrl,
+						layer: layerName,
+						format: 'png',
+						tileSize: [layer.options.tileSize, layer.options.tileSize],
+						maxExtent: L.print.Provider.MAX_EXTENT,
+						resolutions: resolutions,
+						tileOrigin: {x: L.print.Provider.MAX_EXTENT[0], y: L.print.Provider.MAX_EXTENT[0]},
+						singleTile: false
+					});
+				} else {
+					return L.extend(enc, {
+						// XYZ layer type would be a better fit but is not supported in mapfish plugin for GeoServer
+						// See https://github.com/mapfish/mapfish-print/pull/38
+						type: 'OSM',
+						baseURL: baseUrl,
+						extension: 'png',
+						tileSize: [layer.options.tileSize, layer.options.tileSize],
+						maxExtent: L.print.Provider.MAX_EXTENT,
+						resolutions: resolutions,
+						tileOrigin: {x: L.print.Provider.MAX_EXTENT[0], y: L.print.Provider.MAX_EXTENT[0]},
+						singleTile: false
+					});
+				}
 			},
 			tilelayerwms: function (layer) {
 				var enc = this._encoders.layers.httprequest.call(this, layer),
@@ -474,7 +477,8 @@ L.print.Provider = L.Class.extend({
 					layers: [layerOpts.layers].join(',').split(',').filter(function (x) {return x !== ""; }), //filter out empty strings from the array
 					format: layerOpts.format,
 					styles: [layerOpts.styles].join(',').split(',').filter(function (x) {return x !== ""; }),
-					singleTile: true
+
+					singleTile: false
 				});
 
 				for (p in layer.wmsParams) {

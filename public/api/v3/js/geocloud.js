@@ -922,7 +922,7 @@ geocloud = (function () {
                     this.map.addLayer(this.mapBoxNaturalEarth);
                     break;
                 case "leaflet":
-                    this.mapBoxNaturalEarth = new L.tileLayer("//a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
+                    this.mapBoxNaturalEarth = new L.tileLayer("https://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
                     lControl.addBaseLayer(this.mapBoxNaturalEarth);
                     break;
             }
@@ -1096,6 +1096,7 @@ geocloud = (function () {
         this.addDtkSkaermkort = function (name, layer) {
             var l,
                 url = "https://eu1.mapcentia.com/wms/dk/tilecache/";
+
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.TMS(name, url, {
@@ -1325,7 +1326,7 @@ geocloud = (function () {
             }
             return layersArr;
         };
-        
+
         this.removeTileLayerByName = function (name) {
             var arr = this.map.getLayersByName(name);
             this.map.removeLayer(arr[0]);
@@ -1497,7 +1498,7 @@ geocloud = (function () {
             this.map.locate({
                 setView: true
             });
-        }
+        };
         //ol2 and leaflet
         this.addLayerFromWkt = function (elements) { // Take 4326
             switch (MAPLIB) {
@@ -1890,7 +1891,7 @@ if (geocloud.MAPLIB === "leaflet") {
                 }
                 _this.initMetadata();
             };
-            var url = "//dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
+            var url = "https://dev.virtualearth.net/REST/v1/Imagery/Metadata/" + this.options.type + "?include=ImageryProviders&jsonp=" + cbid + "&key=" + this._key;
             var script = document.createElement("script");
             script.type = "text/javascript";
             script.src = url;
@@ -2219,7 +2220,7 @@ var gc2SetLGoogle = function () {
             L.Google.asyncWait = [];
         }
     }
-}
+};
 
 
 

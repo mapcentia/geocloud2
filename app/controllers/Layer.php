@@ -34,6 +34,9 @@ class Layer extends \app\inc\Controller
         if (isset($data["data"]->editable)) {
             $data["data"]->editable = ($data["data"]->editable) ?: "0";
         }
+        if (isset($data["data"]->skipconflict)) {
+            $data["data"]->skipconflict = ($data["data"]->skipconflict) ?: "0";
+        }
         $response = $this->auth($data["data"]->_key_);
         return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
     }
@@ -95,5 +98,10 @@ class Layer extends \app\inc\Controller
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
+    }
+    public function put_copymeta()
+    {
+        $response = $this->auth(Input::getPath()->part(4));
+        return (!$response['success']) ? $response : $this->table->copyMeta(Input::getPath()->part(4), Input::getPath()->part(5));
     }
 }

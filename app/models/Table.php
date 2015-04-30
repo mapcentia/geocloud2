@@ -446,7 +446,6 @@ class Table extends Model
             $response['message'] = $res["message"];
             $response['code'] = "406";
             return $response;
-
         }
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
