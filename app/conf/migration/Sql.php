@@ -80,7 +80,7 @@ class Sql
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard,
                         geometry_columns_join.extra,
-                        geometry_columns_join.skipconflict
+                        geometry_columns_join.skipconflict,
                         geometry_columns_join.roles
                       FROM geometry_columns
                         LEFT JOIN
@@ -125,7 +125,7 @@ class Sql
                         geometry_columns_join.triggertable,
                         geometry_columns_join.classwizard,
                         geometry_columns_join.extra,
-                        geometry_columns_join.skipconflict
+                        geometry_columns_join.skipconflict,
                         geometry_columns_join.roles
                       FROM raster_columns
                         LEFT JOIN
@@ -173,7 +173,7 @@ class Sql
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard,
                                 geometry_columns_join.extra,
-                                geometry_columns_join.skipconflict
+                                geometry_columns_join.skipconflict,
                                 geometry_columns_join.roles
 
                               FROM geometry_columns
@@ -220,7 +220,7 @@ class Sql
                                 geometry_columns_join.triggertable,
                                 geometry_columns_join.classwizard,
                                 geometry_columns_join.extra,
-                                geometry_columns_join.skipconflict
+                                geometry_columns_join.skipconflict,
                                 geometry_columns_join.roles
                               FROM raster_columns
                                 LEFT JOIN
