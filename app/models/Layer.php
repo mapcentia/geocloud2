@@ -147,6 +147,9 @@ class Layer extends \app\models\Table
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
+                } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
+                    $response['data'][] = $arr;
+
                 }
             } else {
                 $response['data'][] = $arr;
