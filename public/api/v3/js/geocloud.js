@@ -1038,7 +1038,10 @@ geocloud = (function () {
                 case "ol2":
                     l = new OpenLayers.Layer.XYZ(
                         type,
-                        "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}"
+                        "https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:${z}&TileRow=${y}&TileCol=${x}",
+                        {
+                            resolutions: resolutions
+                        }
                     );
                     this.map.addLayer(l);
                     l.setVisibility(false);
