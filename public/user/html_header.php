@@ -314,6 +314,17 @@ h2 span i {
 .padded {
     padding: 40px;
 }
+.delete {
+    float: right;
+}
+.right-border {
+    border-right: 1px solid #ddd;
+}
+
+
+#schema-list > table > thead > tr > th:last-child, #schema-list > table > tbody > tr > td:nth-child(n+2) {
+    text-align: right;
+}
 </style>
 </head>
 <body>

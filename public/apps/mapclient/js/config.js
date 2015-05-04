@@ -46,6 +46,9 @@ MapCentia.setup = function () {
                 if (typeof response.data.center[schema] === "object") {
                     Heron.options.zoom = response.data.zoom[schema];
                     Heron.options.center = response.data.center[schema];
+                } else {
+                    Heron.options.zoom = null;
+                    Heron.options.center = null;
                 }
             }
             Heron.options.map.settings = {
@@ -53,10 +56,10 @@ MapCentia.setup = function () {
                 displayProjection: new OpenLayers.Projection("EPSG:4326"),
                 units: 'm',
                 maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
-                center: Heron.options.center,
+                center: Heron.options.center || [0, 0],
                 maxResolution: 'auto',
                 xy_precision: 5,
-                zoom: Heron.options.zoom + 1, // Why?
+                zoom: Heron.options.zoom + 1 || 1, // Why?
                 theme: null,
                 permalinks: {
                     /** The prefix to be used for parameters, e.g. map_x, default is 'map' */

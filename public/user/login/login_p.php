@@ -38,48 +38,38 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
 };
 //}
 ?>
-<div class="container">
+<div class="container" xmlns="http://www.w3.org/1999/html">
     <div id="main">
-        <div id="db_exists" style="display: none">
-            <div class="row">
-                <div id="sb" class="col-md-12 dashboard" style="display: none">
-                    <div id="schema-list">
-                        <table class="table table-condensed" id="schema-table">
-                            <thead>
-                            <tr>
-                                <th class="col-md-2">Schema</th>
-                                <th class="col-md-3">Viewer</th>
-                                <!--<th>Viewer</th>-->
-                                <th>Admin</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 padded" id="subusers-el" style="display: none">
-                    <table class="table table-condensed" id="subusers-table">
-                        <thead>
-                        <tr>
-                            <th class="col-md-2">Sub-user</th>
-                            <th class="col-md-3">Email</th>
-                            <th>Delete</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div class="row">
+            <div class="col-md-8 right-border">
+                <div id="db_exists" style="display: none">
+                    <input id="schema-filter" type="text" class="form-control" placeholder="Filter by name..."
+                           style="width: 200px; margin-bottom: 15px">
 
-        <div id="db_exists_not" style="display: none">
-            <?php
-            echo "<a href='" . $host . "/user/createstore' id='btn-create' class='btn btn-lg btn-danger' title='' data-placement='right' data-content='Click here to create your PostGIS database.'>Create New Database</a>";
-            ?>
+<!--                    <div style="position: absolute">No schemas found.</div>-->
+                    <div id="schema-list"></div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div id="user-container" style="display: none">
+                    <input id="user-filter" type="text" class="form-control" placeholder="Filter by user..."
+                           style="width: 200px; margin-bottom: 15px">
+
+<!--                    <div style="position: absolute">No users found.</div>-->
+                    <div id="subusers-el"></div>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    <div id="db_exists_not" style="display: none">
+        <?php
+        echo "<a href='" . $host . "/user/createstore' id='btn-create' class='btn btn-lg btn-danger' title='' data-placement='right' data-content='Click here to create your PostGIS database.'>Create New Database</a>";
+        ?>
+    </div>
+</div>
 </div>
 <div id="confirm-user-delete" class="modal fade">
     <div class="modal-dialog">
@@ -101,32 +91,47 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
 </div><!-- /.modal -->
 
 <script type="text/html" id="template-schema-list">
-    <tr class="map-edntry">
-        <td><%= this . schema %></td>
-        <td><a class="btn btn-xs btn-default fixed-width" target="_blank"
-               href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span
-                    class="glyphicon glyphicon-globe"></span>
-            </a></td>
-        <!--<td><a target="_blank"
-               href="<?php echo $cdnHost . "/apps/heron/" ?><%= db %>/<%= this . schema %>">View
-        </a></td>-->
-        <td><a class="btn btn-xs btn-primary fixed-width" target="_blank"
-               href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
-                    class="glyphicon glyphicon-cog"></span>
-            </a></td>
-    </tr>
+    <div id="<%= this . schema %>">
+        <div class="panel panel-default">
+            <div class="panel-heading"><span class="glyphicon glyphicon-globe"></span> <%= this . schema %></div>
+            <div class="panel-body">
+                <div style="margin-bottom: 15px">
+                    Description coming...
+                </div>
+                <div style="float: right">
+                    <a data-toggle="tooltip" data-placement="top" title="Open '<%= this . schema %>' in the response Map Viewer"
+                       class="btn btn-xs btn-default" target="_blank"
+                       href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span>Viewer</span>
+                    </a>
+                    <a data-toggle="tooltip" data-placement="top" title="Open '<%= this . schema %>' in the advanced Map Client"
+                       class="btn btn-xs btn-default" target="_blank"
+                       href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
+                    </a>
+                    <a data-toggle="tooltip" data-placement="top" title="Open GC2 administration for '<%= this . schema %>'"
+                       class="btn btn-xs btn-primary fixed-width" target="_blank"
+                       href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
+                            class="glyphicon glyphicon-cog"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </script>
 <script type="text/html" id="template-subuser-list">
-    <tr class="subuser-entry">
-        <td><span class="glyphicon glyphicon-user"></span> <%= this %></td>
-        <td><%= subUserEmails[this] %></td>
-        <td>
-            <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
-                <button class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
-                        class="glyphicon glyphicon-trash"></span></button>
-            </form>
-        </td>
-    </tr>
+    <div id="<%= this %>">
+        <div class="panel panel-default">
+            <div class="panel-heading"><span class="glyphicon glyphicon-user"></span> <%= this %></div>
+            <div class="panel-body">
+                <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
+                    <span><%= subUserEmails[this] %></span>
+                    <button data-toggle="tooltip" data-placement="top" title="Delete the user <%= this %>"
+                            class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
+                            class="glyphicon glyphicon-trash"></span></button>
+
+                </form>
+            </div>
+        </div>
+    </div>
 </script>
 <script>
     var metaDataKeys = [];
@@ -144,6 +149,20 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
        }
    ?>
     $(window).ready(function () {
+        $("#schema-filter").keyup(function () {
+            $('#schema-list > div[id*="' + $("#schema-filter").val() + '"]').css("display", "inline");
+            $('#schema-list > div:not([id*="' + $("#schema-filter").val() + '"])').css("display", "none");
+            if ($("#schema-filter").val().length == 0) {
+                $('#schema-list > div').css("display", "inline");
+            }
+        });
+        $("#user-filter").keyup(function () {
+            $('#subusers-el > div[id*="' + $("#user-filter").val() + '"]').css("display", "inline");
+            $('#subusers-el > div:not([id*="' + $("#user-filter").val() + '"])').css("display", "none");
+            if ($("#user-filter").val().length == 0) {
+                $('#subusers-el > div').css("display", "inline");
+            }
+        });
         $.ajax({
             url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',
             dataType: 'jsonp',
@@ -160,12 +179,12 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                         jsonp: 'jsonp_callback',
                         success: function (response) {
                             //console.log(response);
-                            $('#schema-table tbody').append($('#template-schema-list').jqote(response.data));
+                            $('#schema-list').append($('#template-schema-list').jqote(response.data));
                             $('#sb').fadeIn(400);
                             if (subUsers) {
-                                $('#subusers-table tbody').append($('#template-subuser-list').jqote(subUsers));
+                                $('#subusers-el').append($('#template-subuser-list').jqote(subUsers));
                                 if (subUsers.length > 0) {
-                                    $("#subusers-el").delay(200).fadeIn(400);
+                                    $("#user-container").delay(200).fadeIn(400);
                                     $('.delete').on('click', function (e) {
                                         var $form = $(this).closest('form');
                                         e.preventDefault();
@@ -176,6 +195,9 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                     });
                                 }
                             }
+                            $(function () {
+                                $('[data-toggle="tooltip"]').tooltip()
+                            })
                         }
                     });
                     $.ajax({
