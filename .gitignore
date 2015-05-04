@@ -8,6 +8,9 @@ app/wms/mapfiles
 node_modules
 public/backups
 public/logs
+public/scheduler/.sencha
+public/scheduler/ext
+public/scheduler/sass
 
 !app/tmp/.gitignore
 !public/logs/.gitignore

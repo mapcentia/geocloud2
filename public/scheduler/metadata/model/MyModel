@@ -207,6 +207,20 @@
             "designerId": "7cb756be-31a3-49fb-b3cc-9b5b172d6133"
         },
         {
+            "type": "Ext.data.Field",
+            "reference": {
+                "name": "fields",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "name": "delete_append",
+                "type": null
+            },
+            "name": "MyField15",
+            "designerId": "33911be3-0f79-4423-ada2-5d4d63f55e4a"
+        },
+        {
             "type": "Ext.data.association.HasOne",
             "reference": {
                 "name": "hasOne",

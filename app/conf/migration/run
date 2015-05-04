@@ -13,10 +13,16 @@ foreach ($arr['data'] as $db) {
             \app\models\Database::setDb($db);
             $conn = new \app\inc\Model();
 
-            if ($db == "mapcentia") {
-                $sqls = Sql::mapcentia();
-            } else {
-                $sqls = Sql::get();
+            switch ($db) {
+                case "mapcentia":
+                    $sqls = Sql::mapcentia();
+                    break;
+                case "gc2scheduler":
+                    $sqls = Sql::gc2scheduler();
+                    break;
+                default:
+                    $sqls = Sql::get();
+                    break;
             }
 
             foreach ($sqls as $sql) {

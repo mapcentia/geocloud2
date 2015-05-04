@@ -20,10 +20,11 @@ Ext.define('MyApp.view.MyWindow', {
         'Ext.form.Panel',
         'Ext.form.FieldContainer',
         'Ext.form.field.ComboBox',
+        'Ext.form.field.Checkbox',
         'Ext.button.Button'
     ],
 
-    height: 306,
+    height: 336,
     itemId: 'window',
     width: 600,
     title: 'My Window',
@@ -333,6 +334,13 @@ Ext.define('MyApp.view.MyWindow', {
                             flex: 1,
                             fieldLabel: 'Extra fields',
                             name: 'extra'
+                        },
+                        {
+                            xtype: 'checkboxfield',
+                            flex: 1,
+                            fieldLabel: 'Delete/append',
+                            name: 'delete_append',
+                            uncheckedValue: 'false'
                         },
                         {
                             xtype: 'button',
