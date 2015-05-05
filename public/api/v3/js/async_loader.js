@@ -42,7 +42,11 @@ if (typeof gc2apiLoader === "undefined") {
                                 if (window.geocloud_maplib === "leaflet") {
                                     L.Icon.Default.imagePath = host + "/js/leaflet/images";
                                 }
-                                $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
+                                if (window.geocloud_i18n) {
+                                    $.getScript(window.geocloud_i18n + window.gc2Al + ".js");
+                                } else {
+                                    $.getScript(host + "/js/i18n/" + window.gc2Al + ".js");
+                                }
                                 (function pollForDict() {
                                     if (typeof gc2i18n !== "undefined") {
                                         window[window.geocloud_callback]();
