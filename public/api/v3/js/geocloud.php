@@ -13,7 +13,7 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
 
 echo "window.geocloud_host = \"" . \app\conf\App::$param['host'] . "\";\n";
 echo "window.geocloud_maplib = \"" . ((isset($_GET["maplib"])) ? $_GET["maplib"] : "leaflet") . "\";\n";
-echo "window.geocloud_i18n = " . (isset($_GET["i18n"]) ? "\"" .$_GET["i18n"] . "\"" : "null") .";\n";
+echo "window.geocloud_i18n = " . (isset($_GET["i18n"]) && $_GET["i18n"] == "false" ? "false"  : "true") .";\n";
 if (isset($_GET["callback"])) {
     echo "window.geocloud_callback = \"" . $_GET["callback"] . "\";\n";
     require_once('async_loader.js');
