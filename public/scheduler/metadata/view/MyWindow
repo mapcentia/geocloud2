@@ -7,7 +7,7 @@
     "codeClass": null,
     "userConfig": {
         "designer|userClassName": "MyWindow",
-        "height": 306,
+        "height": 336,
         "itemId": "window",
         "title": "My Window",
         "width": 600
@@ -551,6 +551,23 @@
                     },
                     "name": "MyTextField3",
                     "designerId": "742f7a63-ef7e-45b0-846e-a771fe8003b2"
+                },
+                {
+                    "type": "Ext.form.field.Checkbox",
+                    "reference": {
+                        "name": "items",
+                        "type": "array"
+                    },
+                    "codeClass": null,
+                    "userConfig": {
+                        "boxLabel": null,
+                        "fieldLabel": "Delete/append",
+                        "layout|flex": 1,
+                        "name": "delete_append",
+                        "uncheckedValue": "false"
+                    },
+                    "name": "MyCheckbox",
+                    "designerId": "95e36c5f-acdf-4a6a-b26e-4dba1f124426"
                 },
                 {
                     "type": "Ext.button.Button",

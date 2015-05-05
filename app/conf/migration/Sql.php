@@ -240,4 +240,11 @@ class Sql
         $sqls[] = "ALTER TABLE users ADD COLUMN parentdb VARCHAR(255)";
         return $sqls;
     }
+
+    public static function gc2scheduler()
+    {
+        $sqls[] = "ALTER TABLE jobs ALTER url TYPE TEXT";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE ";
+        return $sqls;
+    }
 }

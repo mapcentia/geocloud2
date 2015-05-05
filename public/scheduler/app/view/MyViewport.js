@@ -162,6 +162,11 @@ Ext.define('MyApp.view.MyViewport', {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'extra',
                                     text: 'Extra'
+                                },
+                                {
+                                    xtype: 'gridcolumn',
+                                    dataIndex: 'delete_append',
+                                    text: 'Delete/append'
                                 }
                             ]
                         }

@@ -66,6 +66,9 @@ Ext.define('MyApp.model.MyModel', {
         },
         {
             name: 'lasttimestamp'
+        },
+        {
+            name: 'delete_append'
         }
     ],
 

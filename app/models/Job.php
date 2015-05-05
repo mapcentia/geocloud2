@@ -34,10 +34,10 @@ class Job extends \app\inc\Model
 
     public function newJob($data, $db)
     {
-        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra)";
+        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append)";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":db" => $db, ":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding, ":extra"=>$data->extra));
+            $res->execute(array(":db" => $db, ":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, "delete_append" => $data->delete_append));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -45,7 +45,7 @@ class Job extends \app\inc\Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true){
+        if ($cronInstall !== true) {
             $response['success'] = false;
             $response['message'] = $cronInstall;
             $response['code'] = 400;
@@ -58,10 +58,11 @@ class Job extends \app\inc\Model
 
     public function updateJob($data)
     {
-        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra WHERE id=:id";
+
+        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append WHERE id=:id";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min"=>$data->min, ":hour"=>$data->hour, ":dayofmonth"=>$data->dayofmonth, ":month"=>$data->month, ":dayofweek"=>$data->dayofweek, ":encoding"=>$data->encoding, ":id" => $data->id, ":extra" => $data->extra));
+            $res->execute(array(":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -69,7 +70,7 @@ class Job extends \app\inc\Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true){
+        if ($cronInstall !== true) {
             $response['success'] = false;
             $response['message'] = $cronInstall;
             $response['code'] = 400;
@@ -93,7 +94,7 @@ class Job extends \app\inc\Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true){
+        if ($cronInstall !== true) {
             $response['success'] = false;
             $response['message'] = $cronInstall;
             $response['code'] = 400;
@@ -110,9 +111,10 @@ class Job extends \app\inc\Model
         $jobs = $this->getAll(null);
         exec("crontab -r");
         foreach ($jobs["data"] as $job) {
-            $cmd = "crontab -l | { cat; echo '{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php ". __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} ".base64_encode($job["extra"])." > ".__DIR__."/../../public/logs/{$job["id"]}_scheduler.log\n'; } | crontab - 2>&1";
+            if (!$job["delete_append"]) $job["delete_append"] = "0";
+            $cmd = "crontab -l | { cat; echo '{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . base64_encode($job["extra"]) . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n'; } | crontab - 2>&1";
             $out = exec($cmd);
-            if ($out){
+            if ($out) {
                 return $out . " ({$job["id"]})";
             }
         }

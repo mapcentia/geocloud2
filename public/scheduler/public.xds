@@ -1,7 +1,11 @@
 {
     "name": "public",
     "settings": {
-        "cmd": {},
+        "cmd": {
+            "license": "commercial",
+            "cmdVersion": "5.0.2.270",
+            "frameworkVersion": "4.2.1.883"
+        },
         "canvasControls": {
             "viewportSize": {
                 "name": "Auto Expand",
@@ -12,7 +16,14 @@
         },
         "urlPrefix": "http://localhost/public/",
         "exportPath": "",
-        "projectHasEnabledWebServer": false
+        "projectHasEnabledWebServer": false,
+        "spacesToIndent": 4,
+        "sdkPath": "",
+        "lineEnding": "LF",
+        "genTimestamps": false,
+        "cacheBust": false,
+        "buildShouldOverwriteIndex": true,
+        "generateArchitectVersion": true
     },
     "xdsVersion": "3.1.0",
     "xdsBuild": 1943,
