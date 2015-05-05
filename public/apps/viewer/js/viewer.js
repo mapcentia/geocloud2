@@ -847,13 +847,13 @@ Viewer = function () {
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             sql = "SELECT * FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
                             if (versioning) {
-                                sql = sql + " AND gc2_version_end_date IS NULL";
+                                sql = sql + " AND gc2_version_end_date IS NULL ";
                             }
                             sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                         } else {
                             sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
-                                sql = sql + " AND gc2_version_end_date IS NULL";
+                                sql = sql + " AND gc2_version_end_date IS NULL ";
                             }
                         }
                         sql = sql + "LIMIT 5";
