@@ -42,10 +42,11 @@ MapCentia.setup = function () {
         dataType: 'jsonp',
         jsonp: 'jsonp_callback',
         success: function (response) {
+            var firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
             if (typeof response.data.extents === "object") {
-                if (typeof response.data.center[schema] === "object") {
-                    Heron.options.zoom = response.data.zoom[schema];
-                    Heron.options.center = response.data.center[schema];
+                if (typeof response.data.center[firstSchema] === "object") {
+                    Heron.options.zoom = response.data.zoom[firstSchema];
+                    Heron.options.center = response.data.center[firstSchema];
                 } else {
                     Heron.options.zoom = null;
                     Heron.options.center = null;
