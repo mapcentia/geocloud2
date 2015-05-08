@@ -34,8 +34,8 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache/',
-        wfsUrl = '/wfs/' + db + '/' + schema;
+        url = '/wms/' + db + '/tilecache/'
+        //wfsUrl = '/wfs/' + db + '/' + schema;
 
     $.ajax({
         url: '/api/v1/setting/' + db,
@@ -139,7 +139,7 @@ MapCentia.setup = function () {
                             layer = [
                                 "OpenLayers.Layer.WMS",
                                 name,
-                                url + schema,
+                                url + name.split(".")[0],
                                 {
                                     layers: name,
                                     format: 'image/png',
@@ -157,7 +157,7 @@ MapCentia.setup = function () {
                                         wfs: {
                                             protocol: new OpenLayers.Protocol.WFS({
                                                 version: "1.0.0",
-                                                url: '/wfs/' + db + '/' + schema + '/3857?',
+                                                url: '/wfs/' + db + '/' + name.split(".")[0] + '/3857?',
                                                 srsName: "EPSG:3857",
                                                 featureType: v.f_table_name,
                                                 featureNS: "http://twitter/" + db
@@ -190,7 +190,7 @@ MapCentia.setup = function () {
                                 title: (!v.bitmapsource) ? text : " ",
                                 protocol: new OpenLayers.Protocol.WFS({
                                     version: "1.0.0",
-                                    url: '/wfs/' + db + '/' + schema + '/3857?',
+                                    url: '/wfs/' + db + '/' + name.split(".")[0] + '/3857?',
                                     srsName: "EPSG:3857",
                                     featureType: v.f_table_name,
                                     featureNS: "http://twitter/" + db
