@@ -428,7 +428,7 @@ geocloud = (function () {
                     format: 'image/png',
                     transparent: true,
                     subdomains: ["cdn1", "cdn2", "cdn3"],
-                    maxZoom: 20
+                    maxZoom: 21
                 });
                 l.id = layer;
                 break;
@@ -463,7 +463,7 @@ geocloud = (function () {
             case "leaflet":
                 l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
                     tms: true,
-                    maxZoom: 20
+                    maxZoom: 21
                 });
                 l.id = layer;
                 break;
@@ -761,6 +761,7 @@ geocloud = (function () {
                 });
                 break;
             case "leaflet":
+                defaults.maxZoom = defaults.numZoomLevels;
                 this.map = new L.map(defaults.el, defaults);
                 lControl = L.control.layers([], []);
                 this.map.addControl(lControl);
