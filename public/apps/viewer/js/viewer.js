@@ -489,6 +489,28 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
+        $('#new-search').click(function() {
+            $(this).animate({
+                right: '0'
+            }, 500, function() {
+                $("#pane").animate({
+                    right: '20%'
+                }, 500, function() {
+                });
+
+                $("#map").animate({
+                    width: '90%'
+                }, 500, function() {
+                });
+            });
+            $("#modal-info").animate({
+                right: '20%'
+            }, 500, function() {
+            });
+
+
+        });
+
         var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [];
 
         $('.share-text').mouseup(function () {
