@@ -14,9 +14,9 @@ if (typeof gc2apiLoader === "undefined") {
         var host, js;
         host = window.geocloud_host || "";
         if (typeof $ === "undefined") {
-            js = document.createElement("script");
+            var js = document.createElement("script");
             js.type = "text/javascript";
-            js.src = "https:://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+            js.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
             document.getElementsByTagName("head")[0].appendChild(js);
         }
         (function pollForjQuery() {
@@ -60,10 +60,7 @@ if (typeof gc2apiLoader === "undefined") {
                         setTimeout(pollForDependencies, 3);
                     }
                 }());
-            } else {
-                setTimeout(pollForjQuery, 3);
-            }
-        }());
+
         // Load some css
         if (window.geocloud_maplib === "leaflet") {
             $('<link/>').attr({
@@ -92,6 +89,10 @@ if (typeof gc2apiLoader === "undefined") {
             type: 'text/css',
             href: '//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css'
         }).appendTo('head');
+            } else {
+                setTimeout(pollForjQuery, 3);
+            }
+        }());
     }());
 }
 

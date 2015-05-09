@@ -957,7 +957,7 @@ geocloud = (function () {
             }
 
             (function poll() {
-                if (typeof google !== "undefined" && typeof google.maps !== "undefined") {
+                if (typeof L.Google !== "undefined") {
                     switch (MAPLIB) {
                         case "ol2":
                             l = new OpenLayers.Layer.Google(name, {
