@@ -198,6 +198,10 @@ gc2i18n = {
         "Add": "Add",
         "Copy properties": "Copy properties",
         "Copy all properties from another layer": "Copy all properties from another layer",
-        "Layer properties copied": "Layer properties copied"
+        "Layer properties copied": "Layer properties copied",
+        "Enable filtering": "Enable filtering",
+        "Show in conflict": "Show in conflict",
+        "Make link": "Make link",
+        "Show in click info": "Show in click info"
     }
 };

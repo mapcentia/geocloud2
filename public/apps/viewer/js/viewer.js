@@ -120,7 +120,7 @@ Viewer = function () {
                 fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
                 table = schema + "." + value;
                 $.each(fieldConf, function (i, v) {
-                    if (v.type !== "geometry" && v.querable === true) {
+                    if (v.type !== "geometry" && v.filter === true) {
                         formSchema[i] = {
                             sort_id: v.sort_id,
                             type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",

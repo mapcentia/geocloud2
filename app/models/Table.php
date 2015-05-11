@@ -365,6 +365,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
                 $arr = $this->array_push_assoc($arr, "querable", $fieldconfArr[$key]->querable);
+                $arr = $this->array_push_assoc($arr, "filter", $fieldconfArr[$key]->filter);
                 $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
                 $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias);
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);

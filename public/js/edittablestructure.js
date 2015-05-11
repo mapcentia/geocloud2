@@ -51,6 +51,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'filter',
+            allowBlank: true
+        },
+        {
             name: 'conflict',
             allowBlank: true
         },
@@ -212,13 +216,20 @@ tableStructure.init = function (record, screenName) {
                 {
                     id: "querable",
                     xtype: 'checkcolumn',
-                    header: __("Queryable"),
+                    header: __("Show in click info"),
                     dataIndex: 'querable',
+                    width: 40
+                },
+                {
+                    id: "filter",
+                    xtype: 'checkcolumn',
+                    header: __("Enable filtering"),
+                    dataIndex: 'filter',
                     width: 35
                 }, {
                     id: "conflict",
                     xtype: 'checkcolumn',
-                    header: __("Conflict"),
+                    header: __("Show in conflict"),
                     dataIndex: 'conflict',
                     width: 35,
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
@@ -226,9 +237,9 @@ tableStructure.init = function (record, screenName) {
                 {
                     id: "link",
                     xtype: 'checkcolumn',
-                    header: __("Link"),
+                    header: __("Make link"),
                     dataIndex: 'link',
-                    width: 20
+                    width: 35
                 },
                 {
                     id: "linkprefix",
