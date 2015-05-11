@@ -488,6 +488,7 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
+	return this;
     };
     return {
         init: init,

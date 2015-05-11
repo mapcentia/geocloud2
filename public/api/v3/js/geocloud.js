@@ -57,8 +57,8 @@ geocloud = (function () {
         resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-            1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
-
+            1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
+	    googleMapAdded = {};
     // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
         window.geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
@@ -957,7 +957,7 @@ geocloud = (function () {
             }
 
             (function poll() {
-                if (typeof L.Google !== "undefined") {
+                if (typeof google !== "undefined" && typeof google.maps !== "undefined" && typeof google.maps.Map !== "undefined") {
                     switch (MAPLIB) {
                         case "ol2":
                             l = new OpenLayers.Layer.Google(name, {
@@ -969,21 +969,23 @@ geocloud = (function () {
                             l.setVisibility(false);
                             l.baseLayer = true;
                             l.id = name;
+			    return (l);
                             break;
                         case "leaflet":
                             if (typeof L.Google !== "undefined") {
+				googleMapAdded[name] = true;
                                 l = new L.Google(type);
                                 l.baseLayer = true;
                                 lControl.addBaseLayer(l);
                                 l.id = name;
+				return (l);
                                 break;
                             } else {
                                 setTimeout(poll, 10);
                             }
                     }
-                    return (l);
                 } else {
-                    setTimeout(poll, 100);
+                    setTimeout(poll, 50);
                 }
             }());
         };
@@ -1156,7 +1158,7 @@ geocloud = (function () {
             var me = this;
             var layers;
             (function poll() {
-                if ((baseLayerName.search("google") > -1 && (typeof L.Google !== "undefined" && typeof google !== "undefined" && typeof google.maps !== "undefined")) || baseLayerName.search("google") === -1) {
+                if ((baseLayerName.search("google") > -1 && googleMapAdded[baseLayerName] !== undefined) || baseLayerName.search("google") === -1) {
                     switch (MAPLIB) {
                         case "ol2":
                             me.showLayer(baseLayerName);
