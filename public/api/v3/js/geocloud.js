@@ -495,12 +495,6 @@ geocloud = (function () {
                 href: host + '/js/leaflet/leaflet.css'
             }).appendTo('head');
         }
-        $('<link/>').attr({
-            rel: 'stylesheet',
-            type: 'text/css',
-            href: host + '/api/v3/css/styles.css?8fc563d236b15cf3#grunt-cache-bust'
-        }).appendTo('head');
-
         this.bingApiKey = null;
         this.digitalGlobeKey = null;
         //ol2, ol3

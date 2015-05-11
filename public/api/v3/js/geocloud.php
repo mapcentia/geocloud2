@@ -2,7 +2,6 @@
 use \app\conf\App;
 use \app\inc\Util;
 
-
 header('Content-type: application/javascript');
 include_once("../../../../app/conf/App.php");
 new \app\conf\App();
@@ -17,7 +16,6 @@ echo "window.geocloud_i18n = " . (isset($_GET["i18n"]) && $_GET["i18n"] == "fals
 if (isset($_GET["callback"])) {
     echo "window.geocloud_callback = \"" . $_GET["callback"] . "\";\n";
     require_once('async_loader.js');
-
 } else {
     require_once('sync_loader.js');
 }
