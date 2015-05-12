@@ -57,8 +57,8 @@ geocloud = (function () {
         resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-            1.19432856696, 0.597164283478, 0.298582141739, 0.1492910708695];
-
+            1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
+        googleMapAdded = {}, yandexMapAdded = {};
     // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
         window.geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
@@ -86,40 +86,41 @@ geocloud = (function () {
     extend = function (ChildClass, ParentClass) {
         ChildClass.prototype = new ParentClass();
     };
+    var STOREDEFAULTS = {
+        styleMap: null,
+        visibility: true,
+        lifetime: 0,
+        host: host,
+        db: null,
+        sql: null,
+        q: null,
+        name: "Vector",
+        id: null,
+        rendererOptions: {zIndexing: true},
+        projection: (MAPLIB === "leaflet") ? "4326" : "900913",
+        //Only leaflet
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng);
+        },
+        //Only leaflet
+        onEachFeature: function () {
+        },
+        onLoad: function () {
+        },
+        index: "",
+        type: "",
+        size: 3,
+        clientEncoding: "UTF8",
+        async: true,
+        jsonp: true,
+        method: "GET",
+        clickable: true,
+        error: function () {
+        }
+    };
     // Base class for stores
     storeClass = function () {
-        this.defaults = {
-            styleMap: null,
-            visibility: true,
-            lifetime: 0,
-            host: host,
-            db: null,
-            sql: null,
-            q: null,
-            name: "Vector",
-            id: null,
-            rendererOptions: {zIndexing: true},
-            projection: (MAPLIB === "leaflet") ? "4326" : "900913",
-            //Only leaflet
-            pointToLayer: function (feature, latlng) {
-                return L.circleMarker(latlng);
-            },
-            //Only leaflet
-            onEachFeature: function () {
-            },
-            onLoad: function () {
-            },
-            index: "",
-            type: "",
-            size: 3,
-            clientEncoding: "UTF8",
-            async: true,
-            jsonp: true,
-            method: "GET",
-            clickable: true,
-            error: function () {
-            }
-        };
+        //this.defaults = STOREDEFAULTS;
         this.hide = function () {
             this.layer.setVisibility(false);
         };
@@ -187,12 +188,14 @@ geocloud = (function () {
     };
     geoJsonStore = sqlStore = function (config) {
         var prop, me = this, map, sql;
+        this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
             }
         }
         this.init();
+        this.name = this.defaults.name;
         this.id = this.defaults.id;
         this.sql = this.defaults.sql;
         this.db = this.defaults.db;
@@ -428,7 +431,7 @@ geocloud = (function () {
                     format: 'image/png',
                     transparent: true,
                     subdomains: ["cdn1", "cdn2", "cdn3"],
-                    maxZoom: 21
+                    maxZoom: 20
                 });
                 l.id = layer;
                 break;
@@ -463,7 +466,7 @@ geocloud = (function () {
             case "leaflet":
                 l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
                     tms: true,
-                    maxZoom: 21
+                    maxZoom: 20
                 });
                 l.id = layer;
                 break;
@@ -495,12 +498,6 @@ geocloud = (function () {
                 href: host + '/js/leaflet/leaflet.css'
             }).appendTo('head');
         }
-        $('<link/>').attr({
-            rel: 'stylesheet',
-            type: 'text/css',
-            href: host + '/api/v3/css/styles.css?b1639e04e4f6da62#grunt-cache-bust'
-        }).appendTo('head');
-
         this.bingApiKey = null;
         this.digitalGlobeKey = null;
         //ol2, ol3
@@ -761,7 +758,6 @@ geocloud = (function () {
                 });
                 break;
             case "leaflet":
-                defaults.maxZoom = defaults.numZoomLevels;
                 this.map = new L.map(defaults.el, defaults);
                 lControl = L.control.layers([], []);
                 this.map.addControl(lControl);
@@ -796,7 +792,7 @@ geocloud = (function () {
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
-                    lControl.addBaseLayer(this.mapQuestOSM);
+                    lControl.addBaseLayer(this.mapQuestOSM, "MapQuest OSM");
                     break;
             }
             this.mapQuestOSM.baseLayer = true;
@@ -824,7 +820,7 @@ geocloud = (function () {
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
-                    lControl.addBaseLayer(this.mapQuestAerial);
+                    lControl.addBaseLayer(this.mapQuestAerial, "Map Quest Aerial");
                     break;
 
             }
@@ -854,7 +850,7 @@ geocloud = (function () {
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
-                    lControl.addBaseLayer(this.osm);
+                    lControl.addBaseLayer(this.osm, "OSM");
                     break;
             }
             this.osm.baseLayer = true;
@@ -863,13 +859,15 @@ geocloud = (function () {
         };
         //ol2, ol3 and leaflet
         this.addStamen = function (type) {
-            var name;
+            var name, prettyName;
             switch (type) {
                 case "toner":
                     name = "stamenToner";
+                    prettyName = "Stamen Toner";
                     break;
                 case "toner-lite":
                     name = "stamenTonerLite";
+                    prettyName = "Stamen Toner Lite";
                     break;
             }
             switch (MAPLIB) {
@@ -891,7 +889,7 @@ geocloud = (function () {
                 case "leaflet":
                     try {
                         this.stamenToner = new L.StamenTileLayer(type);
-                        lControl.addBaseLayer(this.stamenToner);
+                        lControl.addBaseLayer(this.stamenToner, prettyName);
                     }
                     catch (e) {
                     }
@@ -924,7 +922,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.mapBoxNaturalEarth = new L.tileLayer("https://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png");
-                    lControl.addBaseLayer(this.mapBoxNaturalEarth);
+                    lControl.addBaseLayer(this.mapBoxNaturalEarth, "Mapbox Natural Earth");
                     break;
             }
             this.mapBoxNaturalEarth.baseLayer = true;
@@ -933,38 +931,43 @@ geocloud = (function () {
         };
         //ol2 and leaflet
         this.addGoogle = function (type) {
-            var l, name, me = this;
+            var l, name, prettyName, me = this;
             switch (type) {
                 case "ROADMAP":
                     name = "googleStreets";
+                    prettyName = "Google Streets";
                     break;
                 case "HYBRID":
                     name = "googleHybrid";
+                    prettyName = "Google Hybrid";
                     break;
                 case "SATELLITE":
                     name = "googleSatellite";
+                    prettyName = "Google Satellite";
                     break;
                 case "TERRAIN":
                     name = "googleTerrain";
+                    prettyName = "Google Terrain";
                     break;
             }
             // Load Google Maps API and make sure its not loaded more than once
             if (typeof window.GoogleMapsDirty === "undefined" && !(typeof google !== "undefined" && typeof google.maps !== "undefined")) {
                 window.GoogleMapsDirty = true;
-                jQuery.getScript("//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
+                jQuery.getScript("https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=gc2SetLGoogle");
                 // Google Maps API is loaded
             } else if (typeof window.GoogleMapsDirty === "undefined") {
                 window.gc2SetLGoogle();
             }
 
             (function poll() {
-                if (typeof google !== "undefined" && typeof google.maps !== "undefined") {
+                if (typeof google !== "undefined" && typeof google.maps !== "undefined" && typeof google.maps.Map !== "undefined") {
                     switch (MAPLIB) {
                         case "ol2":
                             l = new OpenLayers.Layer.Google(name, {
                                 type: google.maps.MapTypeId[type],
                                 wrapDateLine: true,
-                                numZoomLevels: 20
+                                numZoomLevels: 20,
+                                title: prettyName
                             });
                             me.map.addLayer(l);
                             l.setVisibility(false);
@@ -972,34 +975,34 @@ geocloud = (function () {
                             l.id = name;
                             break;
                         case "leaflet":
-                            if (typeof L.Google !== "undefined") {
-                                l = new L.Google(type);
-                                l.baseLayer = true;
-                                lControl.addBaseLayer(l);
-                                l.id = name;
-                                break;
-                            } else {
-                                setTimeout(poll, 10);
-                            }
+                            l = new L.Google(type);
+                            l.baseLayer = true;
+                            lControl.addBaseLayer(l, prettyName);
+                            l.id = name;
+                            break;
                     }
-                    return (l);
+                    googleMapAdded[name] = true;
+                    return l;
                 } else {
-                    setTimeout(poll, 100);
+                    setTimeout(poll, 50);
                 }
             }());
         };
         //ol2 and leaflet
         this.addBing = function (type) {
-            var l, name;
+            var l, name, prettyName;
             switch (type) {
                 case "Road":
                     name = "bingRoad";
+                    prettyName = "Bing Road";
                     break;
                 case "Aerial":
                     name = "bingAerial";
+                    prettyName = "Bing Aerial";
                     break;
                 case "AerialWithLabels":
                     name = "bingAerialWithLabels";
+                    prettyName = "Bing Aerial w Labels";
                     break;
             }
             switch (MAPLIB) {
@@ -1007,7 +1010,7 @@ geocloud = (function () {
                     l = new OpenLayers.Layer.Bing({
                         name: name,
                         wrapDateLine: true,
-                        key: this.bingApiKey,
+                        key: window.bingApiKey || this.bingApiKey,
                         type: type
                     });
                     this.map.addLayer(l);
@@ -1016,23 +1019,24 @@ geocloud = (function () {
                     l.id = name;
                     return (l);
                 case "leaflet":
-                    l = new L.BingLayer(this.bingApiKey, {
+                    l = new L.BingLayer(this.bingApiKey || window.bingApiKey, {
                         type: type,
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
                     l.baseLayer = true;
-                    lControl.addBaseLayer(l);
+                    lControl.addBaseLayer(l, prettyName);
                     l.id = name;
                     return (l);
             }
         };
         //ol2 and leaflet
         this.addDigitalGlobe = function (type) {
-            var l, name, key = this.digitalGlobeKey;
+            var l, name, prettyName, key = this.digitalGlobeKey;
             switch (type) {
                 case "DigitalGlobe:Imagery":
                     name = "DigitalGlobe:ImageryTileService";
+                    prettyName = "Digital Globe";
                     break;
             }
             switch (MAPLIB) {
@@ -1051,7 +1055,7 @@ geocloud = (function () {
                     l = new L.TileLayer("https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:{z}&TileRow={y}&TileCol={x}", {
                         maxZoom: 20
                     });
-                    lControl.addBaseLayer(l);
+                    lControl.addBaseLayer(l, prettyName);
                     break;
             }
             l.baseLayer = true;
@@ -1061,20 +1065,22 @@ geocloud = (function () {
         };
         //ol2 and leaflet
         this.addHere = function (type) {
-            var l, name;
+            var l, name, prettyName;
             switch (type) {
                 case "hereNormalNightGrey":
                     name = "normal.night.grey";
+                    prettyName = "HERE Normal Night Grey"
                     break;
                 case "hereNormalDayGrey":
                     name = "normal.day.grey";
+                    prettyName = "HERE Normal day Grey"
                     break;
             }
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.XYZ(
                         type,
-                        "//1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
+                        "https://1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
                         {
                             attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>",
                             resolutions: resolutions
@@ -1084,12 +1090,12 @@ geocloud = (function () {
                     l.setVisibility(false);
                     break;
                 case "leaflet":
-                    l = new L.TileLayer("//{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
+                    l = new L.TileLayer("https://{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
                         maxZoom: 20,
                         subdomains: ["1", "2", "3", "4"],
-                        attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
+                        attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='https://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
                     });
-                    lControl.addBaseLayer(l);
+                    lControl.addBaseLayer(l, prettyName);
                     break;
             }
             l.baseLayer = true;
@@ -1100,6 +1106,7 @@ geocloud = (function () {
         this.addDtkSkaermkort = function (name, layer) {
             var l,
                 url = "https://eu1.mapcentia.com/wms/dk/tilecache/";
+
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.TMS(name, url, {
@@ -1127,36 +1134,64 @@ geocloud = (function () {
             l.id = name;
             return (l);
         };
-        this.addYandex = function () {/*
-         switch (MAPLIB) {
-         case "ol2":
-         this.osm = new OpenLayers.Layer.OSM("osm");
-         this.osm.wrapDateLine = false;
-         this.map.addLayer(this.osm);
-         this.osm.setVisibility(false);
-         break;
-         case "ol3":
-         this.osm = new ol.layer.TileLayer({
-         source: new ol.source.OSM(),
-         visible: false
-         });
-         this.map.addLayer(this.osm);
-         break;
-         case "leaflet":
-         this.yandex = new L.Yandex();
-         lControl.addBaseLayer(this.yandex);
-         break;
-         }
-         this.yandex.baseLayer = true;
-         this.yandex.id = "yandex";
-         return (this.yandex);*/
+        this.addYandex = function (type) {
+            var name, prettyName;
+            switch (type) {
+                //map, satellite, hybrid, publicMap, publicMapHybrid
+                case "map":
+                    name = "yandexMap"
+                    prettyName = "Yandex Map";
+                    break;
+                case "satellite":
+                    name = "yandexSatellite"
+                    prettyName = "Yandex Satellite";
+                    break;
+                case "hybrid":
+                    name = "yandexHybrid"
+                    prettyName = "Yandex Hybrid";
+                    break;
+                case "publicMap":
+                    name = "yandexPublicMap"
+                    prettyName = "Yandex Public Map";
+                    break;
+                case "publicMapHybrid":
+                    name = "yandexPublicMapHybrid"
+                    prettyName = "Yandex Public Map Hybrid";
+                    break;
+            }
+
+            // Load Yandex Maps API and make sure its not loaded more than once
+            if (typeof window.YandexMapsDirty === "undefined" && !(typeof ymaps !== "undefined" && typeof ymaps.Map !== "undefined")) {
+                window.YandexMapsDirty = true;
+                jQuery.getScript("https://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU");
+            }
+
+            (function poll() {
+                if (typeof ymaps !== "undefined" && typeof ymaps.Map !== "undefined") {
+                    switch (MAPLIB) {
+                        case "leaflet":
+                            this.yandex = new L.Yandex(type);
+                            yandexMapAdded[name] = true;
+                            lControl.addBaseLayer(this.yandex, prettyName);
+                            this.yandex.baseLayer = true;
+                            this.yandex.id = name;
+                            return (this.yandex);
+                            break;
+                    }
+                } else {
+                    setTimeout(poll, 100);
+                }
+            }());
+
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
             var me = this;
             var layers;
             (function poll() {
-                if ((baseLayerName.search("google") > -1 && (typeof L.Google !== "undefined" && typeof google !== "undefined" && typeof google.maps !== "undefined")) || baseLayerName.search("google") === -1) {
+                if (((baseLayerName.search("google") > -1 && googleMapAdded[baseLayerName] !== undefined)) ||
+                    ((baseLayerName.search("yandex") > -1 && yandexMapAdded[baseLayerName] !== undefined)) ||
+                    (baseLayerName.search("google") === -1 && baseLayerName.search("yandex") === -1)) {
                     switch (MAPLIB) {
                         case "ol2":
                             me.showLayer(baseLayerName);
@@ -1180,7 +1215,7 @@ geocloud = (function () {
                                     }
                                     if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
                                         // Move all others than Google maps back
-                                        if (baseLayerName.search("google") === -1) {
+                                        if (baseLayerName.search("google") === -1 && baseLayerName.search("yandex") === -1) {
                                             layers[key].layer.setZIndex(1);
                                         }
                                         me.map.addLayer(layers[key].layer, false);
@@ -1203,6 +1238,9 @@ geocloud = (function () {
                     break;
                 case "mapQuestOSM":
                     o = this.addMapQuestOSM();
+                    break;
+                case "addMapQuestAerial":
+                    o = this.addMapQuestAerial();
                     break;
                 case "mapBoxNaturalEarth":
                     o = this.addMapBoxNaturalEarth();
@@ -1234,8 +1272,20 @@ geocloud = (function () {
                 case "bingAerialWithLabels":
                     o = this.addBing("AerialWithLabels");
                     break;
-                case "yandex":
-                    o = this.addYandex();
+                case "yandexMap":
+                    o = this.addYandex("map");
+                    break;
+                case "yandexSatellite":
+                    o = this.addYandex("satellite");
+                    break;
+                case "yandexHybrid":
+                    o = this.addYandex("hybrid");
+                    break;
+                case "yandexPublicMap":
+                    o = this.addYandex("publicMap");
+                    break;
+                case "yandexPublicMapHybrid":
+                    o = this.addYandex("publicMapHybrid");
                     break;
                 case "dtkSkaermkort":
                     o = this.addDtkSkaermkort("dtkSkaermkort", "dtk_skaermkort");
@@ -1281,6 +1331,7 @@ geocloud = (function () {
                 tileCached: true,
                 displayInLayerSwitcher: true,
                 name: null,
+                names: [],
                 resolutions: resolutions,
                 type: "wms"
             };
@@ -1293,6 +1344,7 @@ geocloud = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l;
+                defaults.name = defaults.names[i];
                 switch (defaults.type) {
                     case  "wms":
                         l = createTileLayer(layers[i], defaults);
@@ -1314,10 +1366,10 @@ geocloud = (function () {
                         break;
                     case "leaflet":
                         if (defaults.isBaseLayer === true) {
-                            lControl.addBaseLayer(l);
+                            lControl.addBaseLayer(l, defaults.name || defaults.names[i]);
                         }
                         else {
-                            lControl.addOverlay(l);
+                            lControl.addOverlay(l, defaults.name || defaults.names[i] || layers[i]);
                         }
                         if (defaults.visibility === true) {
                             this.showLayer(layers[i]);
@@ -1357,11 +1409,27 @@ geocloud = (function () {
                     this.map.addLayer(store.layer);
                     break;
                 case "leaflet":
-                    lControl.addOverlay(store.layer);
+                    lControl.addOverlay(store.layer, store.name);
                     this.showLayer(store.layer.id);
                     break;
             }
         };
+        this.addHeatMap = function(store, weight, factor, config){
+            var points = [], features = store.geoJSON.features;
+            weight = weight || 1;
+            factor = factor || 1;
+            config = config || {};
+            for (var key in features) {
+                if (features.hasOwnProperty(key)) {
+                    features[key].geometry.coordinates.reverse();
+                    features[key].geometry.coordinates.push((features[key].properties[weight] * factor) + "")
+                    points.push(features[key].geometry.coordinates)
+                }
+            }
+            store.layer = L.heatLayer(points, config);
+            this.addGeoJsonStore(store);
+        }
+
         //ol2 and leaflet
         this.removeGeoJsonStore = function (store) {
             switch (MAPLIB) {
@@ -2223,13 +2291,163 @@ var gc2SetLGoogle = function () {
         }
     }
 };
+/*
+ * L.TileLayer is used for standard xyz-numbered tile layers.
+ */
+if (geocloud.MAPLIB === "leaflet") {
+    L.Yandex = L.Class.extend({
+        includes: L.Mixin.Events,
 
+        options: {
+            minZoom: 0,
+            maxZoom: 18,
+            attribution: '',
+            opacity: 1,
+            traffic: false
+        },
 
+        // Possible types: map, satellite, hybrid, publicMap, publicMapHybrid
+        initialize: function (type, options) {
+            L.Util.setOptions(this, options);
 
+            this._type = "yandex#" + (type || 'map');
+        },
 
+        onAdd: function (map, insertAtTheBottom) {
+            this._map = map;
+            this._insertAtTheBottom = insertAtTheBottom;
 
+            // create a container div for tiles
+            this._initContainer();
+            this._initMapObject();
 
+            // set up events
+            map.on('viewreset', this._resetCallback, this);
 
+            this._limitedUpdate = L.Util.limitExecByInterval(this._update, 150, this);
+            map.on('move', this._update, this);
 
+            map._controlCorners['bottomright'].style.marginBottom = "3em";
 
+            this._reset();
+            this._update(true);
+        },
 
+        onRemove: function (map) {
+            this._map._container.removeChild(this._container);
+
+            this._map.off('viewreset', this._resetCallback, this);
+
+            this._map.off('move', this._update, this);
+
+            map._controlCorners['bottomright'].style.marginBottom = "0em";
+        },
+
+        getAttribution: function () {
+            return this.options.attribution;
+        },
+
+        setOpacity: function (opacity) {
+            this.options.opacity = opacity;
+            if (opacity < 1) {
+                L.DomUtil.setOpacity(this._container, opacity);
+            }
+        },
+
+        setElementSize: function (e, size) {
+            e.style.width = size.x + "px";
+            e.style.height = size.y + "px";
+        },
+
+        _initContainer: function () {
+            var tilePane = this._map._container,
+                first = tilePane.firstChild;
+
+            if (!this._container) {
+                this._container = L.DomUtil.create('div', 'leaflet-yandex-layer leaflet-top leaflet-left');
+                this._container.id = "_YMapContainer_" + L.Util.stamp(this);
+                this._container.style.zIndex = "auto";
+            }
+
+            if (this.options.overlay) {
+                first = this._map._container.getElementsByClassName('leaflet-map-pane')[0];
+                first = first.nextSibling;
+                // XXX: Bug with layer order
+                if (L.Browser.opera)
+                    this._container.className += " leaflet-objects-pane";
+            }
+            tilePane.insertBefore(this._container, first);
+
+            this.setOpacity(this.options.opacity);
+            this.setElementSize(this._container, this._map.getSize());
+        },
+
+        _initMapObject: function () {
+            if (this._yandex) return;
+
+            // Check that ymaps.Map is ready
+            if (ymaps.Map === undefined) {
+                if (console) {
+                    console.debug("L.Yandex: Waiting on ymaps.load('package.map')");
+                }
+                return ymaps.load(["package.map"], this._initMapObject, this);
+            }
+
+            // If traffic layer is requested check if control.TrafficControl is ready
+            if (this.options.traffic)
+                if (ymaps.control === undefined ||
+                    ymaps.control.TrafficControl === undefined) {
+                    if (console) {
+                        console.debug("L.Yandex: loading traffic and controls");
+                    }
+                    return ymaps.load(["package.traffic", "package.controls"],
+                        this._initMapObject, this);
+                }
+
+            var map = new ymaps.Map(this._container, {center: [0, 0], zoom: 0, behaviors: []});
+
+            if (this.options.traffic)
+                map.controls.add(new ymaps.control.TrafficControl({shown: true}));
+
+            if (this._type == "yandex#null") {
+                this._type = new ymaps.MapType("null", []);
+                map.container.getElement().style.background = "transparent";
+            }
+            map.setType(this._type);
+
+            this._yandex = map;
+            this._update(true);
+        },
+
+        _resetCallback: function (e) {
+            this._reset(e.hard);
+        },
+
+        _reset: function (clearOldContainer) {
+            this._initContainer();
+        },
+
+        _update: function (force) {
+            if (!this._yandex) return;
+            this._resize(force);
+
+            var center = this._map.getCenter();
+            var _center = [center.lat, center.lng];
+            var zoom = this._map.getZoom();
+
+            if (force || this._yandex.getZoom() != zoom)
+                this._yandex.setZoom(zoom);
+            this._yandex.panTo(_center, {duration: 0, delay: 0});
+        },
+
+        _resize: function (force) {
+            var size = this._map.getSize(), style = this._container.style;
+            if (style.width == size.x + "px" &&
+                style.height == size.y + "px")
+                if (force != true) return;
+            this.setElementSize(this._container, size);
+            var b = this._map.getBounds(), sw = b.getSouthWest(), ne = b.getNorthEast();
+            this._yandex.container.fitToViewport();
+        }
+    });
+}
