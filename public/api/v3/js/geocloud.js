@@ -58,7 +58,7 @@ geocloud = (function () {
             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
             1.19432856696, 0.597164283478, 0.298582141739, 0.149291],
-        googleMapAdded = {};
+        googleMapAdded = {}, yandexMapAdded = {};
     // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
         window.geocloud_host = host = (scriptSource.charAt(0) === "/") ? "" : scriptSource.split("/")[0] + "//" + scriptSource.split("/")[2];
@@ -975,20 +975,16 @@ geocloud = (function () {
                             return (l);
                             break;
                         case "leaflet":
-                            if (typeof L.Google !== "undefined") {
-                                googleMapAdded[name] = true;
-                                l = new L.Google(type);
-                                l.baseLayer = true;
-                                lControl.addBaseLayer(l, prettyName);
-                                l.id = name;
-                                return (l);
-                                break;
-                            } else {
-                                setTimeout(poll, 10);
-                            }
+                            googleMapAdded[name] = true;
+                            l = new L.Google(type);
+                            l.baseLayer = true;
+                            lControl.addBaseLayer(l, prettyName);
+                            l.id = name;
+                            return (l);
+                            break;
                     }
                 } else {
-                    setTimeout(poll, 50);
+                    setTimeout(poll, 100);
                 }
             }());
         };
@@ -1139,54 +1135,64 @@ geocloud = (function () {
             return (l);
         };
         this.addYandex = function (type) {
-            var prettyName;
+            var name, prettyName;
             switch (type) {
                 //map, satellite, hybrid, publicMap, publicMapHybrid
                 case "map":
+                    name = "yandexMap"
                     prettyName = "Yandex Map";
                     break;
                 case "satellite":
+                    name = "yandexSatellite"
                     prettyName = "Yandex Satellite";
                     break;
                 case "hybrid":
+                    name = "yandexHybrid"
                     prettyName = "Yandex Hybrid";
                     break;
                 case "publicMap":
+                    name = "yandexPublicMap"
                     prettyName = "Yandex Public Map";
                     break;
                 case "publicMapHybrid":
+                    name = "yandexPublicMapHybrid"
                     prettyName = "Yandex Public Map Hybrid";
                     break;
             }
-            switch (MAPLIB) {
-                case "ol2":
-                    this.osm = new OpenLayers.Layer.OSM("osm");
-                    this.osm.wrapDateLine = false;
-                    this.map.addLayer(this.osm);
-                    this.osm.setVisibility(false);
-                    break;
-                case "ol3":
-                    this.osm = new ol.layer.TileLayer({
-                        source: new ol.source.OSM(),
-                        visible: false
-                    });
-                    this.map.addLayer(this.osm);
-                    break;
-                case "leaflet":
-                    this.yandex = new L.Yandex(type);
-                    lControl.addBaseLayer(this.yandex, prettyName);
-                    break;
+
+            // Load Yandex Maps API and make sure its not loaded more than once
+            if (typeof window.YandexMapsDirty === "undefined" && !(typeof ymaps !== "undefined" && typeof ymaps.Map !== "undefined")) {
+                window.YandexMapsDirty = true;
+                jQuery.getScript("https://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU");
             }
-            this.yandex.baseLayer = true;
-            this.yandex.id = "yandex";
-            return (this.yandex);
+
+            (function poll() {
+                if (typeof ymaps !== "undefined" && typeof ymaps.Map !== "undefined") {
+                    switch (MAPLIB) {
+                        case "leaflet":
+                            this.yandex = new L.Yandex(type);
+                            yandexMapAdded[name] = true;
+                            lControl.addBaseLayer(this.yandex, prettyName);
+                            this.yandex.baseLayer = true;
+                            this.yandex.id = name;
+                            return (this.yandex);
+                            break;
+                    }
+                } else {
+                    setTimeout(poll, 100);
+                }
+            }());
+
         };
         //ol2, ol3 and leaflet
         this.setBaseLayer = function (baseLayerName) {
             var me = this;
             var layers;
+
             (function poll() {
-                if ((baseLayerName.search("google") > -1 && googleMapAdded[baseLayerName] !== undefined) || baseLayerName.search("google") === -1) {
+                if (((baseLayerName.search("google") > -1 && googleMapAdded[baseLayerName] !== undefined)) ||
+                    ((baseLayerName.search("yandex") > -1 && yandexMapAdded[baseLayerName] !== undefined)) ||
+                    (baseLayerName.search("google") === -1 && baseLayerName.search("yandex") === -1)) {
                     switch (MAPLIB) {
                         case "ol2":
                             me.showLayer(baseLayerName);
@@ -1210,7 +1216,7 @@ geocloud = (function () {
                                     }
                                     if (layers[key].layer.baseLayer === true && layers[key].layer.id === baseLayerName) {
                                         // Move all others than Google maps back
-                                        if (baseLayerName.search("google") === -1) {
+                                        if (baseLayerName.search("google") === -1 && baseLayerName.search("yandex") === -1) {
                                             layers[key].layer.setZIndex(1);
                                         }
                                         me.map.addLayer(layers[key].layer, false);
@@ -1233,6 +1239,9 @@ geocloud = (function () {
                     break;
                 case "mapQuestOSM":
                     o = this.addMapQuestOSM();
+                    break;
+                case "addMapQuestAerial":
+                    o = this.addMapQuestAerial();
                     break;
                 case "mapBoxNaturalEarth":
                     o = this.addMapBoxNaturalEarth();
@@ -1264,7 +1273,6 @@ geocloud = (function () {
                 case "bingAerialWithLabels":
                     o = this.addBing("AerialWithLabels");
                     break;
-
                 case "yandexMap":
                     o = this.addYandex("map");
                     break;
@@ -2270,164 +2278,163 @@ var gc2SetLGoogle = function () {
 /*
  * L.TileLayer is used for standard xyz-numbered tile layers.
  */
-//(function (ymaps, L) {
+if (geocloud.MAPLIB === "leaflet") {
+    L.Yandex = L.Class.extend({
+        includes: L.Mixin.Events,
 
-L.Yandex = L.Class.extend({
-    includes: L.Mixin.Events,
+        options: {
+            minZoom: 0,
+            maxZoom: 18,
+            attribution: '',
+            opacity: 1,
+            traffic: false
+        },
 
-    options: {
-        minZoom: 0,
-        maxZoom: 18,
-        attribution: '',
-        opacity: 1,
-        traffic: false
-    },
+        // Possible types: map, satellite, hybrid, publicMap, publicMapHybrid
+        initialize: function (type, options) {
+            L.Util.setOptions(this, options);
 
-    // Possible types: map, satellite, hybrid, publicMap, publicMapHybrid
-    initialize: function(type, options) {
-        L.Util.setOptions(this, options);
+            this._type = "yandex#" + (type || 'map');
+        },
 
-        this._type = "yandex#" + (type || 'map');
-    },
+        onAdd: function (map, insertAtTheBottom) {
+            this._map = map;
+            this._insertAtTheBottom = insertAtTheBottom;
 
-    onAdd: function(map, insertAtTheBottom) {
-        this._map = map;
-        this._insertAtTheBottom = insertAtTheBottom;
+            // create a container div for tiles
+            this._initContainer();
+            this._initMapObject();
 
-        // create a container div for tiles
-        this._initContainer();
-        this._initMapObject();
+            // set up events
+            map.on('viewreset', this._resetCallback, this);
 
-        // set up events
-        map.on('viewreset', this._resetCallback, this);
+            this._limitedUpdate = L.Util.limitExecByInterval(this._update, 150, this);
+            map.on('move', this._update, this);
 
-        this._limitedUpdate = L.Util.limitExecByInterval(this._update, 150, this);
-        map.on('move', this._update, this);
+            map._controlCorners['bottomright'].style.marginBottom = "3em";
 
-        map._controlCorners['bottomright'].style.marginBottom = "3em";
+            this._reset();
+            this._update(true);
+        },
 
-        this._reset();
-        this._update(true);
-    },
+        onRemove: function (map) {
+            this._map._container.removeChild(this._container);
 
-    onRemove: function(map) {
-        this._map._container.removeChild(this._container);
+            this._map.off('viewreset', this._resetCallback, this);
 
-        this._map.off('viewreset', this._resetCallback, this);
+            this._map.off('move', this._update, this);
 
-        this._map.off('move', this._update, this);
+            map._controlCorners['bottomright'].style.marginBottom = "0em";
+        },
 
-        map._controlCorners['bottomright'].style.marginBottom = "0em";
-    },
+        getAttribution: function () {
+            return this.options.attribution;
+        },
 
-    getAttribution: function() {
-        return this.options.attribution;
-    },
-
-    setOpacity: function(opacity) {
-        this.options.opacity = opacity;
-        if (opacity < 1) {
-            L.DomUtil.setOpacity(this._container, opacity);
-        }
-    },
-
-    setElementSize: function(e, size) {
-        e.style.width = size.x + "px";
-        e.style.height = size.y + "px";
-    },
-
-    _initContainer: function() {
-        var tilePane = this._map._container,
-            first = tilePane.firstChild;
-
-        if (!this._container) {
-            this._container = L.DomUtil.create('div', 'leaflet-yandex-layer leaflet-top leaflet-left');
-            this._container.id = "_YMapContainer_" + L.Util.stamp(this);
-            this._container.style.zIndex = "auto";
-        }
-
-        if (this.options.overlay) {
-            first = this._map._container.getElementsByClassName('leaflet-map-pane')[0];
-            first = first.nextSibling;
-            // XXX: Bug with layer order
-            if (L.Browser.opera)
-                this._container.className += " leaflet-objects-pane";
-        }
-        tilePane.insertBefore(this._container, first);
-
-        this.setOpacity(this.options.opacity);
-        this.setElementSize(this._container, this._map.getSize());
-    },
-
-    _initMapObject: function() {
-        if (this._yandex) return;
-
-        // Check that ymaps.Map is ready
-        if (ymaps.Map === undefined) {
-            if (console) {
-                console.debug("L.Yandex: Waiting on ymaps.load('package.map')");
+        setOpacity: function (opacity) {
+            this.options.opacity = opacity;
+            if (opacity < 1) {
+                L.DomUtil.setOpacity(this._container, opacity);
             }
-            return ymaps.load(["package.map"], this._initMapObject, this);
-        }
+        },
 
-        // If traffic layer is requested check if control.TrafficControl is ready
-        if (this.options.traffic)
-            if (ymaps.control === undefined ||
-                ymaps.control.TrafficControl === undefined) {
+        setElementSize: function (e, size) {
+            e.style.width = size.x + "px";
+            e.style.height = size.y + "px";
+        },
+
+        _initContainer: function () {
+            var tilePane = this._map._container,
+                first = tilePane.firstChild;
+
+            if (!this._container) {
+                this._container = L.DomUtil.create('div', 'leaflet-yandex-layer leaflet-top leaflet-left');
+                this._container.id = "_YMapContainer_" + L.Util.stamp(this);
+                this._container.style.zIndex = "auto";
+            }
+
+            if (this.options.overlay) {
+                first = this._map._container.getElementsByClassName('leaflet-map-pane')[0];
+                first = first.nextSibling;
+                // XXX: Bug with layer order
+                if (L.Browser.opera)
+                    this._container.className += " leaflet-objects-pane";
+            }
+            tilePane.insertBefore(this._container, first);
+
+            this.setOpacity(this.options.opacity);
+            this.setElementSize(this._container, this._map.getSize());
+        },
+
+        _initMapObject: function () {
+            if (this._yandex) return;
+
+            // Check that ymaps.Map is ready
+            if (ymaps.Map === undefined) {
                 if (console) {
-                    console.debug("L.Yandex: loading traffic and controls");
+                    console.debug("L.Yandex: Waiting on ymaps.load('package.map')");
                 }
-                return ymaps.load(["package.traffic", "package.controls"],
-                    this._initMapObject, this);
+                return ymaps.load(["package.map"], this._initMapObject, this);
             }
 
-        var map = new ymaps.Map(this._container, {center: [0,0], zoom: 0, behaviors: []});
+            // If traffic layer is requested check if control.TrafficControl is ready
+            if (this.options.traffic)
+                if (ymaps.control === undefined ||
+                    ymaps.control.TrafficControl === undefined) {
+                    if (console) {
+                        console.debug("L.Yandex: loading traffic and controls");
+                    }
+                    return ymaps.load(["package.traffic", "package.controls"],
+                        this._initMapObject, this);
+                }
 
-        if (this.options.traffic)
-            map.controls.add(new ymaps.control.TrafficControl({shown: true}));
+            var map = new ymaps.Map(this._container, {center: [0, 0], zoom: 0, behaviors: []});
 
-        if (this._type == "yandex#null") {
-            this._type = new ymaps.MapType("null", []);
-            map.container.getElement().style.background = "transparent";
+            if (this.options.traffic)
+                map.controls.add(new ymaps.control.TrafficControl({shown: true}));
+
+            if (this._type == "yandex#null") {
+                this._type = new ymaps.MapType("null", []);
+                map.container.getElement().style.background = "transparent";
+            }
+            map.setType(this._type);
+
+            this._yandex = map;
+            this._update(true);
+        },
+
+        _resetCallback: function (e) {
+            this._reset(e.hard);
+        },
+
+        _reset: function (clearOldContainer) {
+            this._initContainer();
+        },
+
+        _update: function (force) {
+            if (!this._yandex) return;
+            this._resize(force);
+
+            var center = this._map.getCenter();
+            var _center = [center.lat, center.lng];
+            var zoom = this._map.getZoom();
+
+            if (force || this._yandex.getZoom() != zoom)
+                this._yandex.setZoom(zoom);
+            this._yandex.panTo(_center, {duration: 0, delay: 0});
+        },
+
+        _resize: function (force) {
+            var size = this._map.getSize(), style = this._container.style;
+            if (style.width == size.x + "px" &&
+                style.height == size.y + "px")
+                if (force != true) return;
+            this.setElementSize(this._container, size);
+            var b = this._map.getBounds(), sw = b.getSouthWest(), ne = b.getNorthEast();
+            this._yandex.container.fitToViewport();
         }
-        map.setType(this._type);
-
-        this._yandex = map;
-        this._update(true);
-    },
-
-    _resetCallback: function(e) {
-        this._reset(e.hard);
-    },
-
-    _reset: function(clearOldContainer) {
-        this._initContainer();
-    },
-
-    _update: function(force) {
-        if (!this._yandex) return;
-        this._resize(force);
-
-        var center = this._map.getCenter();
-        var _center = [center.lat, center.lng];
-        var zoom = this._map.getZoom();
-
-        if (force || this._yandex.getZoom() != zoom)
-            this._yandex.setZoom(zoom);
-        this._yandex.panTo(_center, {duration: 0, delay: 0});
-    },
-
-    _resize: function(force) {
-        var size = this._map.getSize(), style = this._container.style;
-        if (style.width == size.x + "px" &&
-            style.height == size.y + "px")
-            if (force != true) return;
-        this.setElementSize(this._container, size);
-        var b = this._map.getBounds(), sw = b.getSouthWest(), ne = b.getNorthEast();
-        this._yandex.container.fitToViewport();
-    }
-});
-//})(ymaps, L)
+    });
+}
 
 
 
