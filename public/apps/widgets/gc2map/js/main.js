@@ -19,7 +19,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list,
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, count = 0, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -151,8 +151,101 @@ MapCentia = function (globalId) {
     cloud.map.addControl(L.control.zoom({
         position: 'bottomright'
     }));
+    addTiles = function (layers) {
+        $.each(layers, function (i, v) {
+            addTileLayers(v, true, layers.length);
+        });
+    };
+    addTileLayers = function (layer, async, length) {
+        $.ajax(
+            {
+                url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + layer,
+                dataType: 'jsonp',
+                jsonp: 'jsonp_callback',
+                success: function (response) {
+                    var zIndex, layerName;
+                    metaData = response;
+                    for (i = 0; i < metaData.data.length; i = i + 1) {
+                        metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                        if (!metaData.data[i].f_table_title) {
+                            metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                        }
+                        metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+                        layerName = metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name;
+                        layers[layerName] = cloud.addTileLayers({
+                            host: defaults.host,
+                            layers: [layerName],
+                            isBaseLayer: metaData.data[i].baselayer,
+                            visibility: !metaData.data[i].baselayer,
+                            db: db,
+                            wrapDateLine: false,
+                            name: layerName
+                        });
+                        if (window.gc2Options.reverseLayerOrder) {
+                            zIndex = (metaData.data[i].sort_id * -1) + 999999;
+                        } else {
+                            zIndex = metaData.data[i].sort_id + 999999;
+                        }
+                        cloud.setZIndexOfLayer(layers[layerName][0], zIndex);
+                        if (metaData.data[i].baselayer) {
+                            text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
+                            $("#base-layer-list-" + id).append(
+                                "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
+                            );
+                        }
+                        // We first call back when all layers are initiated
+                        count = count + 1;
+                        if (count === arr.length || count === length) {
+                            if (!async) {
+                                cloud.map.on('load', defaults.callBack(cloud, init));
+                            }
+                            $.ajax({
+                                url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
+                                dataType: 'jsonp',
+                                jsonp: 'jsonp_callback',
+                                success: function (response) {
+                                    var classUl, li, title, className;
+                                    list = $("<ul/>", {border: '0'});
+                                    $.each(response, function (i, v) {
+                                        try {
+                                            title = metaDataKeys[v.id.split(".")[1]].f_table_title;
+                                        }
+                                        catch (e) {
+                                        }
+                                        var u, showLayer = false;
+                                        if (typeof v === "object") {
+                                            for (u = 0; u < v.classes.length; u = u + 1) {
+                                                if (v.classes[u].name !== "") {
+                                                    showLayer = true;
+                                                }
+                                            }
+                                            if (showLayer) {
+                                                li = $("<li/>");
+                                                classUl = $("<ul/>");
+                                                for (u = 0; u < v.classes.length; u = u + 1) {
+                                                    if (v.classes[u].name !== "") {
+                                                        className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
+                                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
+                                                    }
+                                                }
+                                                // title
+                                                list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
+                                                list.append(li.append(classUl));
+                                            }
+                                        }
+                                    });
+                                    $('#legend-' + id).html(list);
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        );
+    };
+
     init = function (conf) {
-        var count = 0, metaData, metaDataKeys = [], metaDataKeysTitle = [], layers = {}, clicktimer, p, p1, p2, arr, prop, sub, legendDirty = false, i, text;
+        var clicktimer, p, p1, p2, prop, sub;
         defaults = {
             layers: []
         };
@@ -260,10 +353,12 @@ MapCentia = function (globalId) {
         }
 
         arr = defaults.layers;
+
         //If no layers, when initiate call back
         if (arr.length === 0) {
-            cloud.map.on('load', defaults.callBack(cloud));
+            cloud.map.on('load', defaults.callBack(cloud, this));
         }
+
         for (i = 0; i < arr.length; i = i + 1) {
             // If layer is schema, set as base layer
             if (arr[i].split(".").length < 2) {
@@ -281,91 +376,10 @@ MapCentia = function (globalId) {
                 );
                 count = count + 1;
             } else {
-                $.ajax(
-                    {
-                        url: defaults.host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + arr[i],
-                        dataType: 'jsonp',
-                        jsonp: 'jsonp_callback',
-                        success: function (response) {
-                            var zIndex;
-                            metaData = response;
-                            for (i = 0; i < metaData.data.length; i = i + 1) {
-                                metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                                if (!metaData.data[i].f_table_title) {
-                                    metaData.data[i].f_table_title = metaData.data[i].f_table_name;
-                                }
-                                metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
-                                var layerName = metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name;
-                                layers[layerName] = cloud.addTileLayers({
-                                    host: defaults.host,
-                                    layers: [layerName],
-                                    isBaseLayer: metaData.data[i].baselayer,
-                                    visibility: !metaData.data[i].baselayer,
-                                    db: db,
-                                    wrapDateLine: false,
-                                    name: layerName
-                                });
-                                if (window.gc2Options.reverseLayerOrder) {
-                                    zIndex = (metaData.data[i].sort_id * -1) + 999999;
-                                } else {
-                                    zIndex = metaData.data[i].sort_id + 999999;
-                                }
-                                cloud.setZIndexOfLayer(layers[layerName][0], zIndex);
-                                if (metaData.data[i].baselayer) {
-                                    text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
-                                    $("#base-layer-list-" + id).append(
-                                        "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
-                                    );
-                                }
-                                // We first call back when all layers are initiated
-                                count = count + 1;
-                                if (count === arr.length) {
-                                    cloud.map.on('load', defaults.callBack(cloud));
-                                    $.ajax({
-                                        url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
-                                        dataType: 'jsonp',
-                                        jsonp: 'jsonp_callback',
-                                        success: function (response) {
-                                            var classUl, li, title, className;
-                                            list = $("<ul/>", {border: '0'});
-                                            $.each(response, function (i, v) {
-                                                try {
-                                                    title = metaDataKeys[v.id.split(".")[1]].f_table_title;
-                                                }
-                                                catch (e) {
-                                                }
-                                                var u, showLayer = false;
-                                                if (typeof v === "object") {
-                                                    for (u = 0; u < v.classes.length; u = u + 1) {
-                                                        if (v.classes[u].name !== "") {
-                                                            showLayer = true;
-                                                        }
-                                                    }
-                                                    if (showLayer) {
-                                                        li = $("<li/>");
-                                                        classUl = $("<ul/>");
-                                                        for (u = 0; u < v.classes.length; u = u + 1) {
-                                                            if (v.classes[u].name !== "") {
-                                                                className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
-                                                                classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
-                                                            }
-                                                        }
-                                                        // title
-                                                        list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
-                                                        list.append(li.append(classUl));
-                                                    }
-                                                }
-                                            });
-                                            $('#legend-' + id).html(list);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    }
-                );
+                addTileLayers(arr[i]);
             }
         }
+
         cloud.on("dblclick", function () {
             clicktimer = undefined;
         });
@@ -474,6 +488,7 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
+        return this;
     };
     return {
         init: init,
@@ -488,7 +503,9 @@ MapCentia = function (globalId) {
         shareLinkedIn: shareLinkedIn,
         shareGooglePlus: shareGooglePlus,
         shareTumblr: shareTumblr,
-        shareStumbleupon: shareStumbleupon
+        shareStumbleupon: shareStumbleupon,
+        addTileLayers: addTileLayers,
+        addTiles: addTiles
     };
 };
 
