@@ -966,25 +966,25 @@ geocloud = (function () {
                             l = new OpenLayers.Layer.Google(name, {
                                 type: google.maps.MapTypeId[type],
                                 wrapDateLine: true,
-                                numZoomLevels: 20
+                                numZoomLevels: 20,
+                                title: prettyName
                             });
                             me.map.addLayer(l);
                             l.setVisibility(false);
                             l.baseLayer = true;
                             l.id = name;
-                            return (l);
                             break;
                         case "leaflet":
-                            googleMapAdded[name] = true;
                             l = new L.Google(type);
                             l.baseLayer = true;
                             lControl.addBaseLayer(l, prettyName);
                             l.id = name;
-                            return (l);
                             break;
                     }
+                    googleMapAdded[name] = true;
+                    return l;
                 } else {
-                    setTimeout(poll, 100);
+                    setTimeout(poll, 50);
                 }
             }());
         };
@@ -1188,7 +1188,6 @@ geocloud = (function () {
         this.setBaseLayer = function (baseLayerName) {
             var me = this;
             var layers;
-
             (function poll() {
                 if (((baseLayerName.search("google") > -1 && googleMapAdded[baseLayerName] !== undefined)) ||
                     ((baseLayerName.search("yandex") > -1 && yandexMapAdded[baseLayerName] !== undefined)) ||
@@ -1345,6 +1344,7 @@ geocloud = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l;
+                defaults.name = defaults.names[i];
                 switch (defaults.type) {
                     case  "wms":
                         l = createTileLayer(layers[i], defaults);
@@ -1414,6 +1414,22 @@ geocloud = (function () {
                     break;
             }
         };
+        this.addHeatMap = function(store, weight, factor, config){
+            var points = [], features = store.geoJSON.features;
+            weight = weight || 1;
+            factor = factor || 1;
+            config = config || {};
+            for (var key in features) {
+                if (features.hasOwnProperty(key)) {
+                    features[key].geometry.coordinates.reverse();
+                    features[key].geometry.coordinates.push((features[key].properties[weight] * factor) + "")
+                    points.push(features[key].geometry.coordinates)
+                }
+            }
+            store.layer = L.heatLayer(points, config);
+            this.addGeoJsonStore(store);
+        }
+
         //ol2 and leaflet
         this.removeGeoJsonStore = function (store) {
             switch (MAPLIB) {
