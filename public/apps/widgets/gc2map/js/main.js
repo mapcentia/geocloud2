@@ -145,9 +145,17 @@ MapCentia = function (globalId) {
         }
     };
     addLegend = function () {
+        var legendFlag = false;
         $('#legend-' + id + ' ul').remove();
+        if ($('#legend-' + id).length === 0) {
+            $("#legend-popover-" + id).popover('show');
+            legendFlag = true;
+        }
         if (cloud.getVisibleLayers(false) === "") {
             $('#legend-' + id).html("<i>" + __("No layers") + "</i>");
+            if (legendFlag) {
+                $("#legend-popover-" + id).popover('hide');
+            }
             return false;
         }
         $.ajax({
@@ -186,6 +194,9 @@ MapCentia = function (globalId) {
                     }
                 });
                 $('#legend-' + id).html(list);
+                if (legendFlag) {
+                    $("#legend-popover-" + id).popover('hide');
+                }
             }
         });
     };
@@ -259,7 +270,9 @@ MapCentia = function (globalId) {
     };
 
     var showLegend = function () {
-        $("#legend-popover-" + id).popover('show');
+        setTimeout(function () {
+            $("#legend-popover-" + id).popover('show');
+        }, 500);
     };
 
     init = function (conf) {
@@ -293,18 +306,14 @@ MapCentia = function (globalId) {
         });
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
-        
-        // By default we hide legend
-        $("#legend-popover-" + id).popover('hide');
 
         // Media queries
-        $("#legend-popover-li-" + id).show();
-        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
+        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
         $("#legend-popover-" + id).on('click', function () {
-            $('#legend-' + id).html(list);
+            //$('#legend-' + id).html(list);
+
         });
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
-        //$("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
 
         if (eWidth < 400) {
