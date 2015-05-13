@@ -19,7 +19,7 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, count = 0, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles,
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -215,7 +215,6 @@ MapCentia = function (globalId) {
     removeTiles = function (layers) {
         $.each(layers, function (i, v) {
             cloud.removeTileLayerByName(v);
-            count = count - 1;
         });
         addLegend();
     };
@@ -256,11 +255,7 @@ MapCentia = function (globalId) {
                                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                             );
                         }
-                        // We first call back when all layers are initiated
-                        count = count + 1;
-                        if (count === arr.length || count === length) {
-                            addLegend();
-                        }
+                        addLegend();
                     }
                 }
             }
@@ -400,7 +395,6 @@ MapCentia = function (globalId) {
                 $("#base-layer-list-" + id).append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
                 );
-                count = count + 1;
             } else {
                 addTileLayers(arr[i]);
             }
