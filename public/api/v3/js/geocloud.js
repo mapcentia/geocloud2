@@ -1344,7 +1344,7 @@ geocloud = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l;
-                defaults.name = defaults.names[i];
+                //defaults.name = defaults.names[i];
                 switch (defaults.type) {
                     case  "wms":
                         l = createTileLayer(layers[i], defaults);
@@ -1381,9 +1381,18 @@ geocloud = (function () {
             return layersArr;
         };
 
+        //ol2 and leaflet
         this.removeTileLayerByName = function (name) {
-            var arr = this.map.getLayersByName(name);
-            this.map.removeLayer(arr[0]);
+            switch (MAPLIB) {
+                case "ol2":
+                    var arr = this.map.getLayersByName(name);
+                    this.map.removeLayer(arr[0]);
+                    break;
+                case "leaflet":
+                    this.map.removeLayer(this.getLayersByName(name));
+                    lControl.removeLayer(this.getLayersByName(name));
+                    break;
+            }
         };
 
         // Leaflet
