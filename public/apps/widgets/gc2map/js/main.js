@@ -215,6 +215,7 @@ MapCentia = function (globalId) {
     removeTiles = function (layers) {
         $.each(layers, function (i, v) {
             cloud.removeTileLayerByName(v);
+            count = count - 1;
         });
         addLegend();
     };
@@ -225,7 +226,7 @@ MapCentia = function (globalId) {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var zIndex, layerName, count = 0;
+                    var zIndex, layerName;
                     metaData = response;
                     for (i = 0; i < metaData.data.length; i = i + 1) {
                         metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
@@ -258,9 +259,6 @@ MapCentia = function (globalId) {
                         // We first call back when all layers are initiated
                         count = count + 1;
                         if (count === arr.length || count === length) {
-                            if (!async) {
-                                cloud.map.on('load', defaults.callBack(cloud, init));
-                            }
                             addLegend();
                         }
                     }
@@ -268,11 +266,9 @@ MapCentia = function (globalId) {
             }
         );
     };
-
+    //cloud.map.on('load', defaults.callBack(cloud, init));
     var showLegend = function () {
-        setTimeout(function () {
-            $("#legend-popover-" + id).popover('show');
-        }, 500);
+        $("#legend-popover-" + id).popover('show');
     };
 
     init = function (conf) {
@@ -386,10 +382,8 @@ MapCentia = function (globalId) {
 
         arr = defaults.layers;
 
-        //If no layers, when initiate call back
-        if (arr.length === 0) {
-            cloud.map.on('load', defaults.callBack(cloud, this));
-        }
+
+        cloud.map.on('load', defaults.callBack(cloud, this));
 
         for (i = 0; i < arr.length; i = i + 1) {
             // If layer is schema, set as base layer
