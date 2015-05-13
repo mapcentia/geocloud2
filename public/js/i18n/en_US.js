@@ -202,6 +202,7 @@ gc2i18n = {
         "Enable filtering": "Enable filtering",
         "Show in conflict": "Show in conflict",
         "Make link": "Make link",
-        "Show in click info": "Show in click info"
+        "Show in click info": "Show in click info",
+        "No layers": "No layers"
     }
 };

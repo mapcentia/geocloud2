@@ -202,6 +202,7 @@ gc2i18n = {
         "Enable filtering": "Aktiver filtrering",
         "Show in conflict": "Vis i konflikt",
         "Make link": "Gør til link",
-        "Show in click info": "Vis i klik-info"
+        "Show in click info": "Vis i klik-info",
+        "No layers": "Ingen kort"
     }
 };
