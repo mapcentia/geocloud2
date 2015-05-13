@@ -293,6 +293,9 @@ MapCentia = function (globalId) {
         });
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
+        
+        // By default we hide legend
+        $("#legend-popover-" + id).popover('hide');
 
         // Media queries
         $("#legend-popover-li-" + id).show();
