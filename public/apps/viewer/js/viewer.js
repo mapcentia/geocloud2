@@ -159,7 +159,7 @@ Viewer = function () {
                 formSchema._gc2_filter_spatial = {};
                 sqlFilterStore = new geocloud.sqlStore({
                     db: db,
-                    clickable: true,
+                    clickable: false,
                     jsonp: false,
                     error: function (e) {
                         alert(e.responseJSON.message);
@@ -170,7 +170,7 @@ Viewer = function () {
                         "opacity": 0.65,
                         "fillOpacity": 0
                     },
-                    onEachFeature: function (feature, layer) {
+                    /*onEachFeature: function (feature, layer) {
                         var html = "";
                         $.each(formSchema, function (i, v) {
                             if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
@@ -178,7 +178,7 @@ Viewer = function () {
                             }
                         });
                         layer.bindPopup(html);
-                    },
+                    },*/
                     onLoad: function () {
                         $("#filter-submit").prop('disabled', false);
                         $("#filter-submit .spinner").hide();
