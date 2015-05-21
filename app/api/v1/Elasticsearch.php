@@ -200,36 +200,36 @@ class Elasticsearch extends \app\inc\Controller
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
         $result = $model->execQuery($pl, "PG");
 
-        $settings = '{
-          "settings": {
-            "analysis": {
-              "analyzer": {
-                "str_search_analyzer": {
-                  "type" : "custom",
-                  "tokenizer": "whitespace",
-                  "filter": [
-                    "lowercase"
-                  ]
-                },
-                "str_index_analyzer": {
-                  "type" : "custom",
-                  "tokenizer": "whitespace",
-                  "filter": [
-                    "lowercase",
-                    "substring"
-                  ]
-                }
-              },
-              "filter": {
-                "substring": {
-                  "type": "edgeNGram",
-                  "min_gram": 1,
-                  "max_gram": 255
+            $settings = '{
+              "settings": {
+                "analysis": {
+                  "analyzer": {
+                    "str_search_analyzer": {
+                      "type" : "custom",
+                      "tokenizer": "whitespace",
+                      "filter": [
+                        "lowercase"
+                      ]
+                    },
+                    "str_index_analyzer": {
+                      "type" : "custom",
+                      "tokenizer": "whitespace",
+                      "filter": [
+                        "lowercase",
+                        "substring"
+                      ]
+                    }
+                  },
+                  "filter": {
+                    "substring": {
+                      "type": "edgeNGram",
+                      "min_gram": 1,
+                      "max_gram": 255
+                    }
+                  }
                 }
               }
-            }
-          }
-        }';
+            }';
         $es = new \app\models\Elasticsearch();
 
         // Delete the type

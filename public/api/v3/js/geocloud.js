@@ -1381,9 +1381,18 @@ geocloud = (function () {
             return layersArr;
         };
 
+        //ol2 and leaflet
         this.removeTileLayerByName = function (name) {
-            var arr = this.map.getLayersByName(name);
-            this.map.removeLayer(arr[0]);
+            switch (MAPLIB) {
+                case "ol2":
+                    var arr = this.map.getLayersByName(name);
+                    this.map.removeLayer(arr[0]);
+                    break;
+                case "leaflet":
+                    this.map.removeLayer(this.getLayersByName(name));
+                    lControl.removeLayer(this.getLayersByName(name));
+                    break;
+            }
         };
 
         // Leaflet
@@ -2451,13 +2460,4 @@ if (geocloud.MAPLIB === "leaflet") {
         }
     });
 }
-
-
-
-
-
-
-
-
-
 

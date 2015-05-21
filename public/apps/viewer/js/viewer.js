@@ -120,7 +120,7 @@ Viewer = function () {
                 fieldConf = $.parseJSON(metaDataKeys[value].fieldconf);
                 table = schema + "." + value;
                 $.each(fieldConf, function (i, v) {
-                    if (v.type !== "geometry" && v.querable === true) {
+                    if (v.type !== "geometry" && v.filter === true) {
                         formSchema[i] = {
                             sort_id: v.sort_id,
                             type: (v.type === "decimal (3 10)" || v.type === "int") ? "number" : "string",
@@ -159,7 +159,7 @@ Viewer = function () {
                 formSchema._gc2_filter_spatial = {};
                 sqlFilterStore = new geocloud.sqlStore({
                     db: db,
-                    clickable: true,
+                    clickable: false,
                     jsonp: false,
                     error: function (e) {
                         alert(e.responseJSON.message);
@@ -170,7 +170,7 @@ Viewer = function () {
                         "opacity": 0.65,
                         "fillOpacity": 0
                     },
-                    onEachFeature: function (feature, layer) {
+                    /*onEachFeature: function (feature, layer) {
                         var html = "";
                         $.each(formSchema, function (i, v) {
                             if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
@@ -178,7 +178,7 @@ Viewer = function () {
                             }
                         });
                         layer.bindPopup(html);
-                    },
+                    },*/
                     onLoad: function () {
                         $("#filter-submit").prop('disabled', false);
                         $("#filter-submit .spinner").hide();
@@ -659,15 +659,16 @@ Viewer = function () {
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var p1, p2, restrictedExtent;
+                var p1, p2, restrictedExtent,
+                    firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
                 if (typeof response.data.extents === "object") {
-                    if (typeof response.data.extents[schema] === "object") {
-                        extent = response.data.extents[schema];
+                    if (typeof response.data.extents[firstSchema] === "object") {
+                        extent = response.data.extents[firstSchema];
                     }
                 }
                 if (typeof response.data.extentrestricts !== "undefined") {
-                    if (response.data.extentrestricts[schema] !== undefined && response.data.extentrestricts[schema] !== null) {
-                        restrictedExtent = response.data.extentrestricts[schema];
+                    if (response.data.extentrestricts[firstSchema] !== undefined && response.data.extentrestricts[firstSchema] !== null) {
+                        restrictedExtent = response.data.extentrestricts[firstSchema];
                         p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", "EPSG:4326");
                         p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", "EPSG:4326");
                         cloud.map.setMaxBounds([[p1.y, p1.x], [p2.y, p2.x]]);
@@ -918,8 +919,7 @@ Viewer = function () {
         shareTumblr: shareTumblr,
         shareStumbleupon: shareStumbleupon
     };
-}
-;
+};
 
 
 

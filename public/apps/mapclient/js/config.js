@@ -29,23 +29,24 @@ MapCentia.setup = function () {
     Heron.options.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
         4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
         76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
+        1.19432856696, 0.597164283478, 0.298582141739, 0.1492910708695, 0.07464553543475];
     MapCentia.gc2 = new geocloud.map({});
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache/',
-        wfsUrl = '/wfs/' + db + '/' + schema;
+        url = '/wms/' + db + '/tilecache/'
+        //wfsUrl = '/wfs/' + db + '/' + schema;
 
     $.ajax({
         url: '/api/v1/setting/' + db,
         dataType: 'jsonp',
         jsonp: 'jsonp_callback',
         success: function (response) {
+            var firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
             if (typeof response.data.extents === "object") {
-                if (typeof response.data.center[schema] === "object") {
-                    Heron.options.zoom = response.data.zoom[schema];
-                    Heron.options.center = response.data.center[schema];
+                if (typeof response.data.center[firstSchema] === "object") {
+                    Heron.options.zoom = response.data.zoom[firstSchema];
+                    Heron.options.center = response.data.center[firstSchema];
                 } else {
                     Heron.options.zoom = null;
                     Heron.options.center = null;
@@ -138,7 +139,7 @@ MapCentia.setup = function () {
                             layer = [
                                 "OpenLayers.Layer.WMS",
                                 name,
-                                url + schema,
+                                url + name.split(".")[0],
                                 {
                                     layers: name,
                                     format: 'image/png',
@@ -156,7 +157,7 @@ MapCentia.setup = function () {
                                         wfs: {
                                             protocol: new OpenLayers.Protocol.WFS({
                                                 version: "1.0.0",
-                                                url: '/wfs/' + db + '/' + schema + '/3857?',
+                                                url: '/wfs/' + db + '/' + name.split(".")[0] + '/3857?',
                                                 srsName: "EPSG:3857",
                                                 featureType: v.f_table_name,
                                                 featureNS: "http://twitter/" + db
@@ -189,7 +190,7 @@ MapCentia.setup = function () {
                                 title: (!v.bitmapsource) ? text : " ",
                                 protocol: new OpenLayers.Protocol.WFS({
                                     version: "1.0.0",
-                                    url: '/wfs/' + db + '/' + schema + '/3857?',
+                                    url: '/wfs/' + db + '/' + name.split(".")[0] + '/3857?',
                                     srsName: "EPSG:3857",
                                     featureType: v.f_table_name,
                                     featureNS: "http://twitter/" + db
@@ -209,8 +210,7 @@ MapCentia.setup = function () {
                             resolutions: Heron.options.resolutions,
                             isBaseLayer: true,
                             visibility: false,
-                            displayInLayerSwitcher: false,
-                            transitionEffect: 'resize'
+                            displayInLayerSwitcher: false
                         }
                     );
                     Heron.options.map.layers.push(blank);
@@ -808,6 +808,3 @@ MapCentia.setup();
         setTimeout(pollForLayers, 300);
     }
 }());
-
-
-

@@ -27,7 +27,7 @@ Ext.define('MyApp.view.MyWindow', {
     height: 336,
     itemId: 'window',
     width: 600,
-    title: 'My Window',
+    title: 'Job',
 
     initComponent: function() {
         var me = this;

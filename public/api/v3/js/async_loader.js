@@ -95,9 +95,3 @@ if (typeof gc2apiLoader === "undefined") {
         }());
     }());
 }
-
-
-
-
-
-

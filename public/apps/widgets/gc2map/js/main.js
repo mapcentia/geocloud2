@@ -19,7 +19,8 @@
 var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
-    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, count = 0, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles,
+
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -144,6 +145,62 @@ MapCentia = function (globalId) {
             }
         }
     };
+    addLegend = function () {
+        var legendFlag = false;
+        $('#legend-' + id + ' ul').remove();
+        if ($('#legend-' + id).length === 0) {
+            $("#legend-popover-" + id).popover('show');
+            legendFlag = true;
+        }
+        if (cloud.getVisibleLayers(false) === "") {
+            $('#legend-' + id).html("<i>" + __("No layers") + "</i>");
+            if (legendFlag) {
+                $("#legend-popover-" + id).popover('hide');
+            }
+            return false;
+        }
+        $.ajax({
+            url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
+            dataType: 'jsonp',
+            jsonp: 'jsonp_callback',
+            success: function (response) {
+                var classUl, li, title, className;
+                list = $("<ul/>", {border: '0'});
+                $.each(response, function (i, v) {
+                    try {
+                        title = metaDataKeys[v.id.split(".")[1]].f_table_title;
+                    }
+                    catch (e) {
+                    }
+                    var u, showLayer = false;
+                    if (typeof v === "object") {
+                        for (u = 0; u < v.classes.length; u = u + 1) {
+                            if (v.classes[u].name !== "") {
+                                showLayer = true;
+                            }
+                        }
+                        if (showLayer) {
+                            li = $("<li/>");
+                            classUl = $("<ul/>");
+                            for (u = 0; u < v.classes.length; u = u + 1) {
+                                if (v.classes[u].name !== "") {
+                                    className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
+                                    classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
+                                }
+                            }
+                            // title
+                            list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
+                            list.append(li.append(classUl));
+                        }
+                    }
+                });
+                $('#legend-' + id).html(list);
+                if (legendFlag) {
+                    $("#legend-popover-" + id).popover('hide');
+                }
+            }
+        });
+    };
     cloud = new geocloud.map({
         el: "map-" + id,
         zoomControl: false
@@ -155,6 +212,13 @@ MapCentia = function (globalId) {
         $.each(layers, function (i, v) {
             addTileLayers(v, true, layers.length);
         });
+    };
+
+    removeTiles = function (layers) {
+        $.each(layers, function (i, v) {
+            cloud.removeTileLayerByName(v);
+        });
+        addLegend();
     };
     addTileLayers = function (layer, async, length) {
         $.ajax(
@@ -193,55 +257,16 @@ MapCentia = function (globalId) {
                                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                             );
                         }
-                        // We first call back when all layers are initiated
-                        count = count + 1;
-                        if (count === arr.length || count === length) {
-                            if (!async) {
-                                cloud.map.on('load', defaults.callBack(cloud, init));
-                            }
-                            $.ajax({
-                                url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
-                                dataType: 'jsonp',
-                                jsonp: 'jsonp_callback',
-                                success: function (response) {
-                                    var classUl, li, title, className;
-                                    list = $("<ul/>", {border: '0'});
-                                    $.each(response, function (i, v) {
-                                        try {
-                                            title = metaDataKeys[v.id.split(".")[1]].f_table_title;
-                                        }
-                                        catch (e) {
-                                        }
-                                        var u, showLayer = false;
-                                        if (typeof v === "object") {
-                                            for (u = 0; u < v.classes.length; u = u + 1) {
-                                                if (v.classes[u].name !== "") {
-                                                    showLayer = true;
-                                                }
-                                            }
-                                            if (showLayer) {
-                                                li = $("<li/>");
-                                                classUl = $("<ul/>");
-                                                for (u = 0; u < v.classes.length; u = u + 1) {
-                                                    if (v.classes[u].name !== "") {
-                                                        className = (v.classes[u].name !== "_gc2_wms_legend") ? "<span class='legend-text'>" + v.classes[u].name + "</span>" : "";
-                                                        classUl.append("<li><img class='legend-img' src='data:image/png;base64, " + v.classes[u].img + "' />" + className + "</li>");
-                                                    }
-                                                }
-                                                // title
-                                                list.append($("<li>" + "<span class='layer-title' style='width:15px;'><input onchange=\"gc2map.maps['" + id + "'].switchLayer(this.id, this.checked)\" id='" + v.id + "' type='checkbox' checked></span>" + title + "</li>"));
-                                                list.append(li.append(classUl));
-                                            }
-                                        }
-                                    });
-                                    $('#legend-' + id).html(list);
-                                }
-                            });
-                        }
+                        addLegend();
                     }
                 }
             }
         );
+    };
+
+    //cloud.map.on('load', defaults.callBack(cloud, init));
+    var showLegend = function () {
+        $("#legend-popover-" + id).popover('show');
     };
 
     init = function (conf) {
@@ -273,15 +298,16 @@ MapCentia = function (globalId) {
                 qstore[i].reset();
             });
         });
+        // Start by rendering legend, so "empty" placeholder is displayed.
+        addLegend();
 
         // Media queries
-        $("#legend-popover-li-" + id).show();
-        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)}).popover('show');
+        $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
         $("#legend-popover-" + id).on('click', function () {
-            $('#legend-' + id).html(list);
+            //$('#legend-' + id).html(list);
+
         });
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
-        $("#legend-popover-" + id).popover('hide');
         $("#locate-btn-" + id).css({"margin-left": "10px"});
 
         if (eWidth < 400) {
@@ -354,10 +380,7 @@ MapCentia = function (globalId) {
 
         arr = defaults.layers;
 
-        //If no layers, when initiate call back
-        if (arr.length === 0) {
-            cloud.map.on('load', defaults.callBack(cloud, this));
-        }
+        cloud.map.on('load', defaults.callBack(cloud, this));
 
         for (i = 0; i < arr.length; i = i + 1) {
             // If layer is schema, set as base layer
@@ -374,7 +397,6 @@ MapCentia = function (globalId) {
                 $("#base-layer-list-" + id).append(
                     "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + arr[i] + "')\">" + arr[i] + "</a></li>"
                 );
-                count = count + 1;
             } else {
                 addTileLayers(arr[i]);
             }
@@ -488,7 +510,7 @@ MapCentia = function (globalId) {
                 }, 250);
             }
         });
-	return this;
+        return this;
     };
     return {
         init: init,
@@ -505,7 +527,9 @@ MapCentia = function (globalId) {
         shareTumblr: shareTumblr,
         shareStumbleupon: shareStumbleupon,
         addTileLayers: addTileLayers,
-        addTiles: addTiles
+        addTiles: addTiles,
+        removeTiles: removeTiles,
+        showLegend: showLegend
     };
 };
 

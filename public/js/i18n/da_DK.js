@@ -198,6 +198,11 @@ gc2i18n = {
         "Add": "Tilføj",
         "Copy properties": "Kopier egenskaber",
         "Copy all properties from another layer": "Kopier egenskaber fra et andet lag",
-        "Layer properties copied": "Egenskaber er kopieret"
+        "Layer properties copied": "Egenskaber er kopieret",
+        "Enable filtering": "Aktiver filtrering",
+        "Show in conflict": "Vis i konflikt",
+        "Make link": "Gør til link",
+        "Show in click info": "Vis i klik-info",
+        "No layers": "Ingen kort"
     }
 };
