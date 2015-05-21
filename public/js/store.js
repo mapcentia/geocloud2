@@ -13,7 +13,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -123,9 +123,36 @@ $(window).ready(function () {
             {"name": "version_gid", "type": "number"},
             {"name": "operation", "type": "string"},
             {"name": "created", "type": "date"}
-        ]
+        ],
+        listeners: {
+            load: function (store, records) {
+                var _1, _2, _3, markup = [
+                    '<table>' +
+                    '<tr class="x-grid3-row"><td><b>' + __('Drafted') + ':</b></td><td  width="50">{_1}</td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>' + __('Reviewed') + ':</b></td><td  width="50">{_2}</td></tr>' +
+                    '<tr class="x-grid3-row"><td><b>' + __('Published') + ':</b></td><td  width="50">{_3}</td></tr>' +
+                    '</table>'
+                ], template;
+                template = new Ext.Template(markup);
+                _1 = _2 = _3 = 0;
+                Ext.each(records, function (v) {
+
+                        if (v.json.status === 1) {
+                            _1 = _1 + 1;
+                        }
+                        if (v.json.status === 2) {
+                            _2 = _2 + 1;
+                        }
+                        if (v.json.status === 3) {
+                            _3 = _3 + 1;
+                        }
+                    }
+                );
+                template.overwrite(Ext.getCmp('workflow_footer').body, {_1: _1, _2: _2, _3: _3});
+            }
+        }
     });
-    workflowStore.load({url: 'myPage.php'});
+    //workflowStore.load();
 
     groupsStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
@@ -2316,6 +2343,14 @@ $(window).ready(function () {
                 title: __('Workflow'),
                 layout: 'border',
                 id: "workflowPanel",
+                listeners: {
+                    activate: function () {
+                        if (!workflowStoreLoaded) {
+                            workflowStore.load();
+                            workflowStoreLoaded = true;
+                        }
+                    }
+                },
                 items: [
                     new Ext.grid.GridPanel({
                         id: "workflowGrid",
@@ -2329,12 +2364,23 @@ $(window).ready(function () {
                         region: 'center',
                         frame: false,
                         border: false,
+                        plugins: [new Ext.ux.grid.GridFilters({
+                            // encode and local configuration options defined previously for easier reuse
+                            //encode: encode, // json encode the filter query
+                            local: true,   // defaults to false (remote filtering)
+                            filters: [{
+                                type: 'string',
+                                dataIndex: 'f_table_name',
+                                disabled: false
+                            }]
+                        })],
                         sm: new Ext.grid.RowSelectionModel({
                             singleSelect: true
                         }),
                         cm: new Ext.grid.ColumnModel({
                             defaults: {
-                                sortable: true
+                                sortable: true,
+                                menuDisabled: true
                             },
                             columns: [
                                 {
@@ -2355,7 +2401,8 @@ $(window).ready(function () {
                                     dataIndex: "f_table_name",
                                     sortable: true,
                                     width: 35,
-                                    flex: 0.5
+                                    flex: 0.5,
+                                    menuDisabled: false
                                 }, {
                                     header: __("Fid"),
                                     dataIndex: "gid",
@@ -2508,16 +2555,16 @@ $(window).ready(function () {
                                 }
                             }
                         ]
-                    }),{
+                    }), {
                         region: 'south',
+                        id: 'workflow_footer',
                         border: false,
                         height: 70,
                         bodyStyle: {
                             background: '#777',
                             color: '#fff',
                             padding: '7px'
-                        },
-                        html: "Here comes some help text...."
+                        }
                     }
                 ]
             },

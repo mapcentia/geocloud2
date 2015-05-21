@@ -4,6 +4,8 @@ use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
 
+//die($_GET["start"]);
+
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 

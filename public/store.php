@@ -5,6 +5,8 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css?49593e1feb591d0b"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css?35ea7a99ab8c2113"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css" />
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css" />
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
@@ -131,6 +133,13 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?7ba8b5b8eb4a6981"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/RangeMenu.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/ListMenu.js"></script>
+
+<script type="text/javascript" src="/js/ext/examples/ux/gridfilters/GridFilters.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/StringFilter.js"></script>
+
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/msg.js?6871687e437cdbb4"></script>

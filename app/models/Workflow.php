@@ -8,7 +8,7 @@ class Workflow extends Model
 {
     public function getRecords($subuser, $showAll)
     {
-        $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' as author,workflow->'reviewer' as reviewer,workflow->'publisher' as publisher, (case when status = 1 then 'Draft (1)'  when status = 2 then 'Reviewed (2)' when status =3 then 'Published (3)' END) as status_text FROM settings.workflow";
+        $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' as author,workflow->'reviewer' as reviewer,workflow->'publisher' as publisher, (case when status = 1 then 'Drafted (1)'  when status = 2 then 'Reviewed (2)' when status =3 then 'Published (3)' END) as status_text FROM settings.workflow";
 
         if ($subuser && $showAll == false) {
             $sql = "SELECT * FROM (
@@ -183,6 +183,9 @@ class Workflow extends Model
         }
 
         $this->commit();
+
+        // Bust the cache
+        \app\controllers\Tilecache::bust($schema . "." . $table);
 
         $response['success'] = true;
         $response['message'] = "Workflow updated";
