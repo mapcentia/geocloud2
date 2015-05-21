@@ -265,7 +265,14 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 }
             },
             columns: columnsForGrid
-        })
+        })/*,
+        bbar: [new Ext.PagingToolbar({
+            pageSize: 2,
+            store: store,
+            displayInfo: true,
+            displayMsg: 'Features {0} - {1} of {2}',
+            emptyMsg: "No features"
+        })]*/
     });
 
     south.add(grid);
@@ -778,7 +785,7 @@ $(document).ready(function () {
                                     handler: function () {
                                         window.parent.onAdd();
                                     }
-                                },'-',
+                                }, '-',
                                     {
                                         text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
                                         id: "editlayerbutton",
