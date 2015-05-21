@@ -370,8 +370,8 @@ class Mapfile extends \app\inc\Controller
                             if ($versioning) {
                                 $dataSql .= " AND gc2_version_end_date IS NULL";
                             }
-                            if ($versioning) {
-                                $dataSql .= " AND gc2_status = 3";
+                            if ($workflow) {
+                                //$dataSql .= " AND gc2_status = 3";
                             }
                         } else {
                             $dataSql = $row['data'];
