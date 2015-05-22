@@ -12,7 +12,7 @@
  * Though required in the full build, if the GML format is excluded, we set
  * the namespace here.
  */
-if(!OpenLayers.Format.GML) {
+if (!OpenLayers.Format.GML) {
     OpenLayers.Format.GML = {};
 }
 
@@ -24,7 +24,7 @@ if(!OpenLayers.Format.GML) {
  *  - <OpenLayers.Format.XML>
  */
 OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
-    
+
     /**
      * Property: namespaces
      * {Object} Mapping of namespace aliases to namespace URIs.
@@ -35,7 +35,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
         xsi: "http://www.w3.org/2001/XMLSchema-instance",
         wfs: "http://www.opengis.net/wfs" // this is a convenience for reading wfs:FeatureCollection
     },
-    
+
     /**
      * Property: defaultPrefix
      */
@@ -46,13 +46,13 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      * {String} Schema location for a particular minor version.
      */
     schemaLocation: null,
-    
+
     /**
      * APIProperty: featureType
      * {Array(String) or String} The local (without prefix) feature typeName(s).
      */
     featureType: null,
-    
+
     /**
      * APIProperty: featureNS
      * {String} The feature namespace.  Must be set in the options at
@@ -72,7 +72,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      * {Boolean} Extract attributes from GML.  Default is true.
      */
     extractAttributes: true,
-    
+
     /**
      * APIProperty: srsName
      * {String} URI for spatial reference system.  This is optional for
@@ -86,7 +86,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      * APIProperty: xy
      * {Boolean} Order of the GML coordinate true:(x,y) or false:(y,x)
      * Changing is not recommended, a new Format should be instantiated.
-     */ 
+     */
     xy: true,
 
     /**
@@ -102,7 +102,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      *     of featuretypes.
      */
     singleFeatureType: null,
-    
+
     /**
      * Property: autoConfig
      * {Boolean} Indicates if the format was configured without a <featureNS>,
@@ -138,20 +138,20 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      *     this instance.
      *
      * Valid options properties:
-     * featureType - {Array(String) or String} Local (without prefix) feature 
+     * featureType - {Array(String) or String} Local (without prefix) feature
      *     typeName(s) (required for write).
      * featureNS - {String} Feature namespace (required for write).
      * geometryName - {String} Geometry element name (required for write).
      */
-    initialize: function(options) {
+    initialize: function (options) {
         OpenLayers.Format.XML.prototype.initialize.apply(this, [options]);
         this.setGeometryTypes();
-        if(options && options.featureNS) {
+        if (options && options.featureNS) {
             this.setNamespace("feature", options.featureNS);
         }
         this.singleFeatureType = !options || (typeof options.featureType === "string");
     },
-    
+
     /**
      * Method: read
      *
@@ -162,22 +162,22 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      * Returns:
      * {Array(<OpenLayers.Feature.Vector>)} An array of features.
      */
-    read: function(data) {
-        if(typeof data == "string") { 
+    read: function (data) {
+        if (typeof data == "string") {
             data = OpenLayers.Format.XML.prototype.read.apply(this, [data]);
         }
-        if(data && data.nodeType == 9) {
+        if (data && data.nodeType == 9) {
             data = data.documentElement;
         }
         var features = [];
         this.readNode(data, {features: features}, true);
-        if(features.length == 0) {
+        if (features.length == 0) {
             // look for gml:featureMember elements
             var elements = this.getElementsByTagNameNS(
                 data, this.namespaces.gml, "featureMember"
             );
-            if(elements.length) {
-                for(var i=0, len=elements.length; i<len; ++i) {
+            if (elements.length) {
+                for (var i = 0, len = elements.length; i < len; ++i) {
                     this.readNode(elements[i], {features: features}, true);
                 }
             } else {
@@ -185,7 +185,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                 var elements = this.getElementsByTagNameNS(
                     data, this.namespaces.gml, "featureMembers"
                 );
-                if(elements.length) {
+                if (elements.length) {
                     // there can be only one
                     this.readNode(elements[0], {features: features}, true);
                 }
@@ -193,7 +193,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
         }
         return features;
     },
-    
+
     /**
      * Method: readNode
      * Shorthand for applying one of the named readers given the node
@@ -210,7 +210,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      * Returns:
      * {Object} The input object, modified (or a new one if none was provided).
      */
-    readNode: function(node, obj, first) {
+    readNode: function (node, obj, first) {
         // on subsequent calls of format.read(), we want to reset auto-
         // configured properties and auto-configure again.
         if (first === true && this.autoConfig === true) {
@@ -221,8 +221,8 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
         }
         // featureType auto-configuration
         if (!this.featureNS && (!(node.prefix in this.namespaces) &&
-                node.parentNode.namespaceURI == this.namespaces["gml"] &&
-                this.regExes.featureMember.test(node.parentNode.nodeName))) {
+            node.parentNode.namespaceURI == this.namespaces["gml"] &&
+            this.regExes.featureMember.test(node.parentNode.nodeName))) {
             this.featureType = node.nodeName.split(":").pop();
             this.setNamespace("feature", node.namespaceURI);
             this.featureNS = node.namespaceURI;
@@ -241,31 +241,31 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      */
     readers: {
         "gml": {
-            "featureMember": function(node, obj) {
+            "featureMember": function (node, obj) {
                 this.readChildNodes(node, obj);
             },
-            "featureMembers": function(node, obj) {
-                this.readChildNodes(node, obj);                
+            "featureMembers": function (node, obj) {
+                this.readChildNodes(node, obj);
             },
-            "name": function(node, obj) {
+            "name": function (node, obj) {
                 obj.name = this.getChildValue(node);
             },
-            "boundedBy": function(node, obj) {
+            "boundedBy": function (node, obj) {
                 var container = {};
                 this.readChildNodes(node, container);
-                if(container.components && container.components.length > 0) {
+                if (container.components && container.components.length > 0) {
                     obj.bounds = container.components[0];
                 }
             },
-            "Point": function(node, container) {
+            "Point": function (node, container) {
                 var obj = {points: []};
                 this.readChildNodes(node, obj);
-                if(!container.components) {
+                if (!container.components) {
                     container.components = [];
                 }
                 container.components.push(obj.points[0]);
             },
-            "coordinates": function(node, obj) {
+            "coordinates": function (node, obj) {
                 var str = this.getChildValue(node).replace(
                     this.regExes.trimSpace, ""
                 );
@@ -274,7 +274,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                 var coords;
                 var numPoints = pointList.length;
                 var points = new Array(numPoints);
-                for(var i=0; i<numPoints; ++i) {
+                for (var i = 0; i < numPoints; ++i) {
                     coords = pointList[i].split(",");
                     if (this.xy) {
                         points[i] = new OpenLayers.Geometry.Point(
@@ -288,96 +288,96 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                 }
                 obj.points = points;
             },
-            "coord": function(node, obj) {
+            "coord": function (node, obj) {
                 var coord = {};
                 this.readChildNodes(node, coord);
-                if(!obj.points) {
+                if (!obj.points) {
                     obj.points = [];
                 }
                 obj.points.push(new OpenLayers.Geometry.Point(
                     coord.x, coord.y, coord.z
                 ));
             },
-            "X": function(node, coord) {
+            "X": function (node, coord) {
                 coord.x = this.getChildValue(node);
             },
-            "Y": function(node, coord) {
+            "Y": function (node, coord) {
                 coord.y = this.getChildValue(node);
             },
-            "Z": function(node, coord) {
+            "Z": function (node, coord) {
                 coord.z = this.getChildValue(node);
             },
-            "MultiPoint": function(node, container) {
+            "MultiPoint": function (node, container) {
                 var obj = {components: []};
                 this.readChildNodes(node, obj);
                 container.components = [
                     new OpenLayers.Geometry.MultiPoint(obj.components)
                 ];
             },
-            "pointMember": function(node, obj) {
+            "pointMember": function (node, obj) {
                 this.readChildNodes(node, obj);
             },
-            "LineString": function(node, container) {
+            "LineString": function (node, container) {
                 var obj = {};
                 this.readChildNodes(node, obj);
-                if(!container.components) {
+                if (!container.components) {
                     container.components = [];
                 }
                 container.components.push(
                     new OpenLayers.Geometry.LineString(obj.points)
                 );
             },
-            "MultiLineString": function(node, container) {
+            "MultiLineString": function (node, container) {
                 var obj = {components: []};
                 this.readChildNodes(node, obj);
                 container.components = [
                     new OpenLayers.Geometry.MultiLineString(obj.components)
                 ];
             },
-            "lineStringMember": function(node, obj) {
+            "lineStringMember": function (node, obj) {
                 this.readChildNodes(node, obj);
             },
-            "Polygon": function(node, container) {
+            "Polygon": function (node, container) {
                 var obj = {outer: null, inner: []};
                 this.readChildNodes(node, obj);
                 obj.inner.unshift(obj.outer);
-                if(!container.components) {
+                if (!container.components) {
                     container.components = [];
                 }
                 container.components.push(
                     new OpenLayers.Geometry.Polygon(obj.inner)
                 );
             },
-            "LinearRing": function(node, obj) {
+            "LinearRing": function (node, obj) {
                 var container = {};
                 this.readChildNodes(node, container);
                 obj.components = [new OpenLayers.Geometry.LinearRing(
                     container.points
                 )];
             },
-            "MultiPolygon": function(node, container) {
+            "MultiPolygon": function (node, container) {
                 var obj = {components: []};
                 this.readChildNodes(node, obj);
                 container.components = [
                     new OpenLayers.Geometry.MultiPolygon(obj.components)
                 ];
             },
-            "polygonMember": function(node, obj) {
+            "polygonMember": function (node, obj) {
                 this.readChildNodes(node, obj);
             },
-            "GeometryCollection": function(node, container) {
+            "GeometryCollection": function (node, container) {
                 var obj = {components: []};
                 this.readChildNodes(node, obj);
                 container.components = [
                     new OpenLayers.Geometry.Collection(obj.components)
                 ];
             },
-            "geometryMember": function(node, obj) {
+            "geometryMember": function (node, obj) {
                 this.readChildNodes(node, obj);
             }
         },
         "feature": {
-            "*": function(node, obj) {
+            "*": function (node, obj) {
                 // The node can either be named like the featureType, or it
                 // can be a child of the feature:featureType.  Children can be
                 // geometry or attributes.
@@ -391,30 +391,31 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                     if (!this.singleFeatureType &&
                         (OpenLayers.Util.indexOf(this.featureType, local) !== -1)) {
                         name = "_typeName";
-                    } else if(local === this.featureType) {
+                    } else if (local === this.featureType) {
                         name = "_typeName";
                     }
                 } else {
                     // Assume attribute elements have one child node and that the child
                     // is a text node.  Otherwise assume it is a geometry node.
-                    if(node.childNodes.length == 0 ||
-                       (node.childNodes.length == 1 && node.firstChild.nodeType == 3)) {
-                        if(this.extractAttributes) {
+                    if (node.childNodes.length == 0 ||
+                        (node.childNodes.length == 1 && node.firstChild.nodeType == 3) ||
+                        (node.childNodes.length == 1 && node.firstChild.nodeType == 4)) {
+                        if (this.extractAttributes) {
                             name = "_attribute";
                         }
                     } else {
                         name = "_geometry";
                     }
                 }
-                if(name) {
+                if (name) {
                     this.readers.feature[name].apply(this, [node, obj]);
                 }
             },
-            "_typeName": function(node, obj) {
+            "_typeName": function (node, obj) {
                 var container = {components: [], attributes: {}};
                 this.readChildNodes(node, container);
                 // look for common gml namespaced elements
-                if(container.name) {
+                if (container.name) {
                     container.attributes.name = container.name;
                 }
                 var feature = new OpenLayers.Feature.Vector(
@@ -426,39 +427,39 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                 }
                 var fid = node.getAttribute("fid") ||
                     this.getAttributeNS(node, this.namespaces["gml"], "id");
-                if(fid) {
+                if (fid) {
                     feature.fid = fid;
                 }
-                if(this.internalProjection && this.externalProjection &&
-                   feature.geometry) {
+                if (this.internalProjection && this.externalProjection &&
+                    feature.geometry) {
                     feature.geometry.transform(
                         this.externalProjection, this.internalProjection
                     );
                 }
-                if(container.bounds) {
+                if (container.bounds) {
                     feature.bounds = container.bounds;
                 }
                 obj.features.push(feature);
             },
-            "_geometry": function(node, obj) {
+            "_geometry": function (node, obj) {
                 if (!this.geometryName) {
                     this.geometryName = node.nodeName.split(":").pop();
                 }
                 this.readChildNodes(node, obj);
             },
-            "_attribute": function(node, obj) {
+            "_attribute": function (node, obj) {
                 var local = node.localName || node.nodeName.split(":").pop();
                 var value = this.getChildValue(node);
                 obj.attributes[local] = value;
             }
         },
         "wfs": {
-            "FeatureCollection": function(node, obj) {
+            "FeatureCollection": function (node, obj) {
                 this.readChildNodes(node, obj);
             }
         }
     },
-    
+
     /**
      * Method: write
      *
@@ -471,9 +472,9 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      *     element will be returned.  Given a single feature, a doc with a
      *     gml:featureMember element will be returned.
      */
-    write: function(features) {
+    write: function (features) {
         var name;
-        if(OpenLayers.Util.isArray(features)) {
+        if (OpenLayers.Util.isArray(features)) {
             name = "featureMembers";
         } else {
             name = "featureMember";
@@ -486,7 +487,7 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
 
         return OpenLayers.Format.XML.prototype.write.apply(this, [root]);
     },
-    
+
     /**
      * Property: writers
      * As a compliment to the readers property, this structure contains public
@@ -495,60 +496,60 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
      */
     writers: {
         "gml": {
-            "featureMember": function(feature) {
+            "featureMember": function (feature) {
                 var node = this.createElementNSPlus("gml:featureMember");
                 this.writeNode("feature:_typeName", feature, node);
                 return node;
             },
-            "MultiPoint": function(geometry) {
+            "MultiPoint": function (geometry) {
                 var node = this.createElementNSPlus("gml:MultiPoint");
                 var components = geometry.components || [geometry];
-                for(var i=0, ii=components.length; i<ii; ++i) {
+                for (var i = 0, ii = components.length; i < ii; ++i) {
                     this.writeNode("pointMember", components[i], node);
                 }
                 return node;
             },
-            "pointMember": function(geometry) {
+            "pointMember": function (geometry) {
                 var node = this.createElementNSPlus("gml:pointMember");
                 this.writeNode("Point", geometry, node);
                 return node;
             },
-            "MultiLineString": function(geometry) {
+            "MultiLineString": function (geometry) {
                 var node = this.createElementNSPlus("gml:MultiLineString");
                 var components = geometry.components || [geometry];
-                for(var i=0, ii=components.length; i<ii; ++i) {
+                for (var i = 0, ii = components.length; i < ii; ++i) {
                     this.writeNode("lineStringMember", components[i], node);
                 }
                 return node;
             },
-            "lineStringMember": function(geometry) {
+            "lineStringMember": function (geometry) {
                 var node = this.createElementNSPlus("gml:lineStringMember");
                 this.writeNode("LineString", geometry, node);
                 return node;
             },
-            "MultiPolygon": function(geometry) {
+            "MultiPolygon": function (geometry) {
                 var node = this.createElementNSPlus("gml:MultiPolygon");
                 var components = geometry.components || [geometry];
-                for(var i=0, ii=components.length; i<ii; ++i) {
+                for (var i = 0, ii = components.length; i < ii; ++i) {
                     this.writeNode(
                         "polygonMember", components[i], node
                     );
                 }
                 return node;
             },
-            "polygonMember": function(geometry) {
+            "polygonMember": function (geometry) {
                 var node = this.createElementNSPlus("gml:polygonMember");
                 this.writeNode("Polygon", geometry, node);
                 return node;
             },
-            "GeometryCollection": function(geometry) {
+            "GeometryCollection": function (geometry) {
                 var node = this.createElementNSPlus("gml:GeometryCollection");
-                for(var i=0, len=geometry.components.length; i<len; ++i) {
+                for (var i = 0, len = geometry.components.length; i < len; ++i) {
                     this.writeNode("geometryMember", geometry.components[i], node);
                 }
                 return node;
             },
-            "geometryMember": function(geometry) {
+            "geometryMember": function (geometry) {
                 var node = this.createElementNSPlus("gml:geometryMember");
                 var child = this.writeNode("feature:_geometry", geometry);
                 node.appendChild(child.firstChild);
@@ -556,16 +557,16 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
             }
         },
         "feature": {
-            "_typeName": function(feature) {
+            "_typeName": function (feature) {
                 var node = this.createElementNSPlus("feature:" + this.featureType, {
                     attributes: {fid: feature.fid}
                 });
-                if(feature.geometry) {
+                if (feature.geometry) {
                     this.writeNode("feature:_geometry", feature.geometry, node);
                 }
-                for(var name in feature.attributes) {
+                for (var name in feature.attributes) {
                     var value = feature.attributes[name];
-                    if(value != null) {
+                    if (value != null) {
                         this.writeNode(
                             "feature:_attribute",
                             {name: name, value: value}, node
@@ -574,30 +575,30 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                 }
                 return node;
             },
-            "_geometry": function(geometry) {
-                if(this.externalProjection && this.internalProjection) {
+            "_geometry": function (geometry) {
+                if (this.externalProjection && this.internalProjection) {
                     geometry = geometry.clone().transform(
                         this.internalProjection, this.externalProjection
                     );
-                }    
+                }
                 var node = this.createElementNSPlus(
                     "feature:" + this.geometryName
                 );
                 var type = this.geometryTypes[geometry.CLASS_NAME];
                 var child = this.writeNode("gml:" + type, geometry, node);
-                if(this.srsName) {
+                if (this.srsName) {
                     child.setAttribute("srsName", this.srsName);
                 }
                 return node;
             },
-            "_attribute": function(obj) {
+            "_attribute": function (obj) {
                 return this.createElementNSPlus("feature:" + obj.name, {
                     value: obj.value
                 });
             }
         },
         "wfs": {
-            "FeatureCollection": function(features) {
+            "FeatureCollection": function (features) {
                 /**
                  * This is only here because GML2 only describes abstract
                  * feature collections.  Typically, you would not be using
@@ -606,19 +607,19 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
                  * featureMembers element, so that is used by default instead.
                  */
                 var node = this.createElementNSPlus("wfs:FeatureCollection");
-                for(var i=0, len=features.length; i<len; ++i) {
+                for (var i = 0, len = features.length; i < len; ++i) {
                     this.writeNode("gml:featureMember", features[i], node);
                 }
                 return node;
             }
         }
     },
-    
+
     /**
      * Method: setGeometryTypes
      * Sets the <geometryTypes> mapping.
      */
-    setGeometryTypes: function() {
+    setGeometryTypes: function () {
         this.geometryTypes = {
             "OpenLayers.Geometry.Point": "Point",
             "OpenLayers.Geometry.MultiPoint": "MultiPoint",
@@ -630,6 +631,6 @@ OpenLayers.Format.GML.Base = OpenLayers.Class(OpenLayers.Format.XML, {
         };
     },
 
-    CLASS_NAME: "OpenLayers.Format.GML.Base" 
+    CLASS_NAME: "OpenLayers.Format.GML.Base"
 
 });

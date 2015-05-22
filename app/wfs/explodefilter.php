@@ -3,8 +3,10 @@ function parseFilter($filter, $table, $operator = "=")
 {
     global $postgisObject;
     global $postgisschema;
-    //global $forUseInSpatialFilter;
     global $srs;
+
+    $table = dropAllNameSpaces($table);
+    //die($table);
     $st = \app\inc\Model::explodeTableName($table);
     if (!$st['schema']) {
         $st['schema'] = $postgisschema;

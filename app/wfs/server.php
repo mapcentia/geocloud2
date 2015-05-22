@@ -81,6 +81,7 @@ $unserializer = new XML_Unserializer($unserializer_options);
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
+    //die($HTTP_RAW_POST_DATA);
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
     $request = $unserializer->getRootName();
@@ -97,6 +98,7 @@ if ($HTTP_RAW_POST_DATA) {
             }
             $HTTP_FORM_VARS["REQUEST"] = "GetFeature";
             foreach ($arr['Query'] as $queries) {
+                $queries['typeName'] = dropAllNameSpaces($queries['typeName']);
                 $HTTP_FORM_VARS["TYPENAME"] .= $queries['typeName'] . ",";
                 if ($queries['PropertyName'][0]) {
                     foreach ($queries['PropertyName'] as $PropertyNames) {
@@ -143,7 +145,7 @@ if ($HTTP_RAW_POST_DATA) {
         Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
         $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case insensative
-        $HTTP_FORM_VARS["TYPENAME"] = dropNameSpace($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
+        $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
 
         if ($HTTP_FORM_VARS['FILTER']) {
             @$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
@@ -162,9 +164,9 @@ if ($HTTP_RAW_POST_DATA) {
 
 //HTTP_FORM_VARS is set in script if POST is used
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
-$HTTP_FORM_VARS["TYPENAME"] = dropNameSpace($HTTP_FORM_VARS["TYPENAME"]);
+$HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]);
 $tables = explode(",", $HTTP_FORM_VARS["TYPENAME"]);
-$properties = explode(",", dropNameSpace($HTTP_FORM_VARS["PROPERTYNAME"]));
+$properties = explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"]));
 $featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
 $bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
 $resultType = $HTTP_FORM_VARS["RESULTTYPE"];
@@ -677,6 +679,7 @@ function dropFirstChrs($str, $no)
  */
 function dropNameSpace($tag)
 {
+
     //$tag = html_entity_decode($tag);
     //$tag = gmlConverter::oneLineXML($tag);
     $tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/', "", $tag); // Remove xmlns with "
@@ -687,8 +690,13 @@ function dropNameSpace($tag)
     $tag = preg_replace('/ cs(?:.*?)?=\'.*?\'/', "", $tag);
     $tag = preg_replace('/ ts(?:.*?)?=\".*?\"/', "", $tag);
     $tag = preg_replace('/ decimal(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/ decimal(?:.*?)?=\'.*?\'/', "", $tag);
-    $tag = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $tag); // remove any namespaces
+    $tag = preg_replace('/wfs:(?:.*?)/', "", $tag);
+    $tag = preg_replace('/gml:(?:.*?)/', "", $tag);
+    $tag = preg_replace('/ogc:(?:.*?)/', "", $tag);
+    //$tag = preg_replace('/EPSG:(?:.*?)/', "", $tag);
+
+
+    //$tag = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $tag); // remove any namespaces
     return ($tag);
 }
 
@@ -813,6 +821,7 @@ function doParse($arr)
             }
             foreach ($featureMember as $hey) {
                 foreach ($hey as $typeName => $feature) {
+                    $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
                         // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                         $tableObj = new table($postgisschema . "." . $typeName);
@@ -820,6 +829,10 @@ function doParse($arr)
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
 
+                        foreach ($feature as $field => $value) {
+                            $feature[dropAllNameSpaces($field)] = $value;
+                            unset($feature[$field]);
+                        }
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
                             $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
@@ -899,6 +912,7 @@ function doParse($arr)
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
+                $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
                 }
