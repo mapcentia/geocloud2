@@ -26,5 +26,5 @@ if (window.geocloud_maplib === "leaflet") {
     document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/Leaflet.draw/leaflet.draw.css'>");
     document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/Leaflet.label/leaflet.label.css'>");
     document.write("<link rel='stylesheet' type='text/css' href='" + host + "/js/leaflet/plugins/markercluster/MarkerCluster.Default.css'>");
-    document.write("<link rel='stylesheet' type='text/css' href='https://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.min.css'>");
+    document.write("<link rel='stylesheet' type='text/css' href='https://netdna.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'>");
 }
