@@ -770,7 +770,7 @@ function altFieldValue($field, $value)
 function altUseCdataOnStrings($value, $name)
 {
     if (!is_numeric($value) && ($value)) {
-        //$value = "<![CDATA[".$value."]]>";
+        $value = "<![CDATA[".$value."]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
     } else {
@@ -977,6 +977,7 @@ function doParse($arr)
                 $featureMember = array(0 => $featureMember);
             }
             foreach ($featureMember as $hey) {
+                $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);

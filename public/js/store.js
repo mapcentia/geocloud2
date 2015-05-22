@@ -2496,11 +2496,12 @@ $(window).ready(function () {
                                         },
                                         success: function (response) {
                                             var r = Ext.decode(response.responseText),
-                                                filter = new OpenLayers.Filter.Comparison({
-                                                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                mapFrame = document.getElementById("wfseditor").contentWindow.window,
+                                                filter = new mapFrame.OpenLayers.Filter.Comparison({
+                                                    type: mapFrame.OpenLayers.Filter.Comparison.EQUAL_TO,
                                                     property: "\"" + r.data[0].pkey + "\"",
                                                     value: records[0].get("gid")
-                                                }), mapFrame = document.getElementById("wfseditor").contentWindow.window;
+                                                });
                                             Ext.getCmp("mainTabs").activate(0);
                                             setTimeout(function () {
                                                 mapFrame.attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
