@@ -823,16 +823,20 @@ function doParse($arr)
                 foreach ($hey as $typeName => $feature) {
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
+
+                        // Remove ns from properties
+                        foreach ($feature as $field => $value) {
+                            $feature[dropAllNameSpaces($field)] = $value;
+                            unset($feature[$field]);
+                        }
+
                         // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                         $tableObj = new table($postgisschema . "." . $typeName);
                         if (!array_key_exists("gc2_version_user", $feature) && $tableObj->versioning) $feature["gc2_version_user"] = null;
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
 
-                        foreach ($feature as $field => $value) {
-                            $feature[dropAllNameSpaces($field)] = $value;
-                            unset($feature[$field]);
-                        }
+
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
                             $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
