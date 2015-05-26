@@ -4,10 +4,19 @@
 		<div class="span9 offset2">
 		<?php
 
-		include ("../../app/conf/Connection.php");
-		include ("../../app/inc/Model.php");
-		include("../../app/models/Database.php");
-		include("../../app/models/Dbchecks.php");
+		use \app\inc\Util;
+		use \app\conf\App;
+		use \app\models\Database;
+		use \app\models\Dbcheck;
+
+
+		include ("../../app/conf/App.php");
+		new \app\conf\App();
+
+		App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
+		App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+
+		//print_r(App::$param);
 
 		echo "<div>PHP version " . phpversion() . " ";
 		if (function_exists(apache_get_modules)) {
@@ -39,6 +48,17 @@
             echo "<div class='alert alert-error'>app/wms/cfgfiles dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
         }
 
+		$ourFileName = "../../app/tmp/testFile.txt";
+		$ourFileHandle = @fopen($ourFileName, 'w');
+
+		if ($ourFileHandle) {
+			echo "<div class='alert alert-success'>app/tmp dir is writeable</div>";
+			@fclose($ourFileHandle);
+			@unlink($ourFileName);
+		} else {
+			echo "<div class='alert alert-error'>app/wms/tmp dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
+		}
+
 		$mod_rewrite = FALSE;
 		if (function_exists("apache_get_modules")) {
 			$modules = apache_get_modules();
@@ -49,7 +69,7 @@
 		}
 		if (!$mod_rewrite) {
 			// last solution; call a specific page as "mod-rewrite" have been enabled; based on result, we decide.
-			$result = @file_get_contents("{$hostName}/mod_rewrite");
+			$result = @file_get_contents("{$hostName}/user/login/");
 			$mod_rewrite = ($result == "ok" ? TRUE : FALSE);
 		}
 
@@ -66,28 +86,28 @@
 			echo "<div class='alert alert-error'>MapScript is not installed</div>";
 			$mod_apache = false;
 		}
-		$headers = get_headers("{$hostName}/cgi/tilecache.fcgi", 1);
-
-		if ($headers['Content-Type'] == "text/html") {
-			echo "<div class='alert alert-success'>It seems that Python is installed</div>";
+		$headers = get_headers(App::$param['host'] . "/cgi/tilecache.py?cfg=_gc2test", 1);
+		if ($headers[0] == "HTTP/1.1 200 OK") {
+			echo "<div class='alert alert-success'>TileCache is working</div>";
 		} else {
-			echo "<div class='alert alert-error	'>It seems that Python is not installed</div>";
+			echo "<div class='alert alert-error	'>It seems that TileCache is not working</div>";
 		}
 
-		$dbList = new app\models\Database();
+		$dbList = new Database();
 		try {
-			$arr = $dbList -> listAllDbs();
-		
 
-		$i = 1;
+			$arr = $dbList -> listAllDbs();
+
+
+			$i = 1;
 		echo "<table class='table table-striped'>";
-		echo "<thead><tr><th>Databases</th><th>PostGIS</th><th>MyGeoCloud</th><th></th></tr></thead>";
+		echo "<thead><tr><th>Databases</th><th>PostGIS</th><th>GC2 settings schema</th><th></th></tr></thead>";
 		foreach ($arr['data'] as $db) {
 
 			if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template") {
 				echo "<tr><td>{$db}</td>";
-                \app\models\Database::setDb($db);
-				$dbc = new app\models\Dbcheck();
+                Database::setDb($db);
+				$dbc = new Dbcheck();
 
 				// Check if postgis is installed
 				$checkPostGIS = $dbc->isPostGISInstalled();
