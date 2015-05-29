@@ -578,7 +578,7 @@ Ext.override(GeoExt.PrintMapPanel, {initComponent: function () {
     if (!this.map) {
         this.map = {};
     }
-    Ext.applyIf(this.map, {projection: this.sourceMap.getProjection(), maxExtent: this.sourceMap.getMaxExtent(), maxResolution: this.sourceMap.getMaxResolution(), resolutions: this.sourceMap.resolutions ? this.sourceMap.resolutions.slice(0) : this.map.resolutions, units: this.sourceMap.getUnits()});
+    Ext.applyIf(this.map, {numZoomLevels: this.sourceMap.getNumZoomLevels(), projection: this.sourceMap.getProjection(), maxExtent: this.sourceMap.getMaxExtent(), maxResolution: this.sourceMap.getMaxResolution(), resolutions: this.sourceMap.resolutions ? this.sourceMap.resolutions.slice(0) : this.map.resolutions, units: this.sourceMap.getUnits()});
     if (!(this.printProvider instanceof GeoExt.data.PrintProvider)) {
         this.printProvider = new GeoExt.data.PrintProvider(this.printProvider);
     }

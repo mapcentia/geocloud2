@@ -58,7 +58,8 @@ MapCentia.setup = function () {
                 units: 'm',
                 maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
                 center: Heron.options.center || [0, 0],
-                maxResolution: 'auto',
+                numZoomLevels: 22,
+                maxResolution: Heron.options.resolutions,
                 xy_precision: 5,
                 zoom: Heron.options.zoom + 1 || 1, // Why?
                 theme: null,
@@ -688,7 +689,7 @@ MapCentia.init = function () {
             // , showRotation: true
             // , showLegend: true
             // , showLegendChecked: true
-            // , mapLimitScales: false
+            , mapLimitScales: false
             , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
             // , mapPreviewHeight: 400
         }

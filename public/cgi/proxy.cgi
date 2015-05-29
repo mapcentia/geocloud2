@@ -64,6 +64,8 @@ try:
 
         if i.has_key("Content-Disposition"):
             print "Content-Disposition: %s" % (i["Content-Disposition"])
+
+        print "Access-Control-Allow-Origin: *"
         print
 
         print y.read()
