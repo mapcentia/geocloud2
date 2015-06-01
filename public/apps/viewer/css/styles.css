@@ -482,3 +482,28 @@ label {
  div.leaflet-control-print.leaflet-control > ul > li > a {
      color: #ffffff;
  }
+.custom-popup .leaflet-popup-content {
+    margin: 7px 12px !important;
+}
+.custom-popup .leaflet-popup-content-wrapper {
+    background:#2c3e50 !important;
+    color:#fff !important;
+    font-size:16px !important;
+    line-height:24px !important;
+    border-radius: 5px !important;
+}
+.custom-popup .leaflet-popup-content-wrapper a {
+    color:rgba(0,255,255,0.5) !important;
+}
+.custom-popup .leaflet-popup-tip-container {
+    width:30px !important;
+    height:15px !important;
+}
+.custom-popup .leaflet-popup-tip {
+    background:#2c3e50 !important;
+}
+.custom-popup td {
+    padding-right: 10px;
+    vertical-align: top;
+    padding-bottom: 5px;
+}

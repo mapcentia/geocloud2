@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers;
     hostname = geocloud_host;
     uri = geocloud.pathName;
     hash = decodeURIComponent(geocloud.urlHash);
@@ -43,6 +43,7 @@ Viewer = function () {
         } catch (e) {
         }
         addLegend();
+        visibleLayers = cloud.getVisibleLayers(true);
     };
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
@@ -171,14 +172,14 @@ Viewer = function () {
                         "fillOpacity": 0
                     },
                     /*onEachFeature: function (feature, layer) {
-                        var html = "";
-                        $.each(formSchema, function (i, v) {
-                            if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
-                                html = html + v.title + " : " + feature.properties[i] + "<br>";
-                            }
-                        });
-                        layer.bindPopup(html);
-                    },*/
+                     var html = "";
+                     $.each(formSchema, function (i, v) {
+                     if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                     html = html + v.title + " : " + feature.properties[i] + "<br>";
+                     }
+                     });
+                     layer.bindPopup(html);
+                     },*/
                     onLoad: function () {
                         $("#filter-submit").prop('disabled', false);
                         $("#filter-submit .spinner").hide();
@@ -489,23 +490,23 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
-        $('#new-search').click(function() {
+        $('#new-search').click(function () {
             $(this).animate({
                 right: '0'
-            }, 500, function() {
+            }, 500, function () {
                 $("#pane").animate({
                     right: '20%'
-                }, 500, function() {
+                }, 500, function () {
                 });
 
                 $("#map").animate({
                     width: '90%'
-                }, 500, function() {
+                }, 500, function () {
                 });
             });
             $("#modal-info").animate({
                 right: '20%'
-            }, 500, function() {
+            }, 500, function () {
             });
 
 
@@ -558,7 +559,7 @@ Viewer = function () {
             $('#modal-info').modal({"backdrop": false});
         };
         $.ajax({
-            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0] + ',') + schema,
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0] + ',') + schema + "?es=1",
             dataType: 'jsonp',
             scriptCharset: "utf-8",
             async: false,
@@ -571,6 +572,9 @@ Viewer = function () {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                    }
+                    if (metaData.data[i].indexed_in_es) {
+                        indexedLayers.push(metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name);
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
@@ -773,6 +777,7 @@ Viewer = function () {
                     cloud.zoomToExtent();
                 }
             }
+            visibleLayers = cloud.getVisibleLayers(true);
         }());
         var moveEndCallBack = function () {
             try {
@@ -904,6 +909,54 @@ Viewer = function () {
                 }, 250);
             }
         });
+        var mouseOverLayer = new L.layerGroup(), mouseOverPopUp, mouseOverStyle = {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.0
+        };
+        mouseOverLayer.addTo(cloud.map);
+        mouseOverDisplay = _.debounce(function (e) {
+            var visLayers = visibleLayers.split(";");
+            mouseOverLayer.clearLayers();
+            try {
+                cloud.map.removeLayer(mouseOverPopUp);
+            } catch (e) {
+            }
+            $.each(indexedLayers, function (i, v) {
+                if (visLayers.indexOf(v) !== -1) {
+                    mouseOverLayer.addLayer(new geocloud.elasticStore({
+                        db: db,
+                        index: schema + "/" + v.split(".")[1],
+                        size: 100,
+                        clickable: false,
+                        styleMap: mouseOverStyle,
+                        q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "100m"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
+                        onEachFeature: function (feature, layer) {
+                            var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf);
+                            $.each(fieldConf, function (i, v) {
+                                if (v.type !== "geometry" && v.querable === true) {
+                                    html = html + "<tr><td>" + (v.alias || v.column) + "</td><td>" + feature.properties[i] + "</td></tr>";
+                                }
+                            });
+                            html = html + "</table>";
+                            mouseOverPopUp = L.popup({
+                                offset: L.point(0, -25),
+                                className: "custom-popup"
+                            }).setLatLng(e.latlng)
+                                .setContent(html)
+                                .openOn(cloud.map);
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {clickable: false});
+                        },
+                    }).load());
+                    /*mouseOverLayer.on("add", function () {
+                     console.log("hej")
+                     });*/
+                }
+            });
+        }, 200);
+        cloud.on("mousemove", mouseOverDisplay);
     };
     return {
         init: init,

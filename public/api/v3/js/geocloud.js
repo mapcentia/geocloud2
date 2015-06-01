@@ -259,6 +259,7 @@ geocloud = (function () {
     };
     tweetStore = function (config) {
         var prop, me = this;
+        this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -310,6 +311,7 @@ geocloud = (function () {
     };
     elasticStore = function (config) {
         var prop, me = this;
+        this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
