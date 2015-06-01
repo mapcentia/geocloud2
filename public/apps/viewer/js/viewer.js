@@ -17,9 +17,13 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers;
-    hostname = geocloud_host;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers,
+        res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+            4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+            76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+            1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
     uri = geocloud.pathName;
+    hostname = geocloud_host;
     hash = decodeURIComponent(geocloud.urlHash);
     db = uri[3];
     schema = uri[4];
@@ -819,10 +823,6 @@ Viewer = function () {
                         var not_querable = metaDataKeys[value.split(".")[1]].not_querable;
                         var versioning = metaDataKeys[value.split(".")[1]].versioning;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                                1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
                             distance = 5 * res[cloud.getZoom()];
                         }
                         qstore[index] = new geocloud.sqlStore({
@@ -834,6 +834,7 @@ Viewer = function () {
                                 "opacity": 0.65,
                                 "fillOpacity": 0
                             },
+                            clickable: false,
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
@@ -909,14 +910,17 @@ Viewer = function () {
                 }, 250);
             }
         });
+
+        // Mouse over pop-up begin
         var mouseOverLayer = new L.layerGroup(), mouseOverPopUp, mouseOverStyle = {
-            color: 'red',
-            fillColor: '#f03',
-            fillOpacity: 0.0
+            color: '#aaa',
+            fillColor: '#aaa',
+            fillOpacity: 0.5,
+            opacity: 0.5
         };
         mouseOverLayer.addTo(cloud.map);
         mouseOverDisplay = _.debounce(function (e) {
-            var visLayers = visibleLayers.split(";");
+            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()];
             mouseOverLayer.clearLayers();
             try {
                 cloud.map.removeLayer(mouseOverPopUp);
@@ -930,7 +934,7 @@ Viewer = function () {
                         size: 100,
                         clickable: false,
                         styleMap: mouseOverStyle,
-                        q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "100m"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
+                        q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "' + distance + 'm"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
                         onEachFeature: function (feature, layer) {
                             var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf);
                             $.each(fieldConf, function (i, v) {
@@ -941,7 +945,9 @@ Viewer = function () {
                             html = html + "</table>";
                             mouseOverPopUp = L.popup({
                                 offset: L.point(0, -25),
-                                className: "custom-popup"
+                                className: "custom-popup",
+                                autoPan: false,
+                                closeButton: false
                             }).setLatLng(e.latlng)
                                 .setContent(html)
                                 .openOn(cloud.map);
