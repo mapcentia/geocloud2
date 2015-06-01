@@ -368,9 +368,9 @@ $(window).ready(function () {
                 text: '<i class="icon-user btn-gc"></i> ' + __('Workflow'),
                 id: 'workflow-btn',
                 handler: onWorkflow,
-                disabled: true
-
-            },
+                disabled: true,
+                hidden: (window.gc2Options.enableWorkflow !== null && window.gc2Options.enableWorkflow[screenName] === true) ? false : true
+    },
             {
                 text: '<i class="icon-camera btn-gc"></i> ' + __('CartoMobile'),
                 handler: onEditCartomobile,
@@ -2633,6 +2633,15 @@ $(window).ready(function () {
         }
     } else {
         tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+    }
+
+    // Hide tab if workflow is not available for the db
+    if (window.gc2Options.enableWorkflow !== null) {
+        if (window.gc2Options.enableWorkflow.hasOwnProperty(screenName) === false || window.gc2Options.enableWorkflow[screenName] === false) {
+            tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
+        }
+    } else {
+        tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
     }
 
     writeFiles = function (clearCachedLayer, map) {

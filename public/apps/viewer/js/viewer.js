@@ -418,7 +418,7 @@ Viewer = function () {
     cloud.map.addControl(zoomControl);
 
     // Create the print provider, subscribing to print events
-    if (window.gc2Options.customPrintParams !== null) {
+    if (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) {
         window.gc2Options.customPrintParams.mapAttribution = "sdsd";
         cloud.map.addControl(L.control.print({
             provider: L.print.provider({
@@ -524,7 +524,6 @@ Viewer = function () {
         $(".share-text").focus(function () {
             $(this).select();
         });
-
 
         if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
@@ -936,21 +935,24 @@ Viewer = function () {
                         styleMap: mouseOverStyle,
                         q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "' + distance + 'm"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
                         onEachFeature: function (feature, layer) {
-                            var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf);
+                            var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), show = false;
                             $.each(fieldConf, function (i, v) {
-                                if (v.type !== "geometry" && v.querable === true) {
+                                if (v.type !== "geometry" && v.mouseover === true) {
+                                    show = true
                                     html = html + "<tr><td>" + (v.alias || v.column) + "</td><td>" + feature.properties[i] + "</td></tr>";
                                 }
                             });
                             html = html + "</table>";
-                            mouseOverPopUp = L.popup({
-                                offset: L.point(0, -25),
-                                className: "custom-popup",
-                                autoPan: false,
-                                closeButton: false
-                            }).setLatLng(e.latlng)
-                                .setContent(html)
-                                .openOn(cloud.map);
+                            if (show) {
+                                mouseOverPopUp = L.popup({
+                                    offset: L.point(0, -25),
+                                    className: "custom-popup",
+                                    autoPan: false,
+                                    closeButton: false
+                                }).setLatLng(e.latlng)
+                                    .setContent(html)
+                                    .openOn(cloud.map);
+                            }
                         },
                         pointToLayer: function (feature, latlng) {
                             return L.circleMarker(latlng, {clickable: false});

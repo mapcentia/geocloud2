@@ -51,6 +51,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'mouseover',
+            allowBlank: true
+        },
+        {
             name: 'filter',
             allowBlank: true
         },
@@ -218,6 +222,13 @@ tableStructure.init = function (record, screenName) {
                     xtype: 'checkcolumn',
                     header: __("Show in click info"),
                     dataIndex: 'querable',
+                    width: 40
+                },
+                {
+                    id: "mouseover",
+                    xtype: 'checkcolumn',
+                    header: __("Show in mouse-over"),
+                    dataIndex: 'mouseover',
                     width: 40
                 },
                 {
