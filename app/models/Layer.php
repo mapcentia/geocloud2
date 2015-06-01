@@ -8,6 +8,12 @@ class Layer extends \app\models\Table
         parent::__construct("settings.geometry_columns_view");
     }
 
+    /**
+     * @param string $_key_
+     * @param string $column
+     * @return mixed
+     */
+    // Secure. Using nu user input.
     public function getValueFromKey($_key_, $column)
     {
         $rows = $this->getRecords();
@@ -19,9 +25,20 @@ class Layer extends \app\models\Table
                 }
             }
         }
+        return false;
     }
 
-    function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
+    /**
+     * @param bool $schema
+     * @param bool $layer
+     * @param bool $auth
+     * @param bool $includeExtent
+     * @param bool $parse
+     * @param bool $es
+     * @return mixed
+     */
+    // Secure. Using prepared statements.
+    public function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
     {
         // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
@@ -161,7 +178,11 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    function getSchemas() // All tables
+    /**
+     * @return array
+     */
+    // Secure. Using nu user input.
+    public function getSchemas() // All tables
     {
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
@@ -287,7 +308,6 @@ class Layer extends \app\models\Table
         $response['message'] = "Layer renamed";
         return $response;
     }
-
 
     public function setSchema($tables, $schema)
     {

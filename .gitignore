@@ -15,6 +15,7 @@ public/scheduler/sass
 !app/tmp/.gitignore
 !public/logs/.gitignore
 !app/wms/cfgfiles/.gitignore
+!app/wms/cfgfiles/_gc2test.tilecache.cfg
 !app/wms/mapfiles/.gitignore
 
 
