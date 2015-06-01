@@ -939,7 +939,7 @@ Viewer = function () {
                             $.each(fieldConf, function (i, v) {
                                 if (v.type !== "geometry" && v.mouseover === true) {
                                     show = true
-                                    html = html + "<tr><td>" + (v.alias || v.column) + "</td><td>" + feature.properties[i] + "</td></tr>";
+                                    html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + feature.properties[i] + "</td></tr>";
                                 }
                             });
                             html = html + "</table>";
