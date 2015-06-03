@@ -410,7 +410,24 @@ Viewer = function () {
     zoomControl = L.control.zoom({
         position: 'bottomright'
     });
+
     cloud.map.addControl(zoomControl);
+
+    // Create the print provider, subscribing to print events
+    if (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) {
+        window.gc2Options.customPrintParams.mapAttribution = "sdsd";
+        cloud.map.addControl(L.control.print({
+            provider: L.print.provider({
+                capabilities: window.printConfig,
+                method: 'POST',
+                dpi: 56,
+                outputFormat: 'pdf',
+                proxy: '/cgi/proxy.cgi?url=',
+                customParams: window.gc2Options.customPrintParams
+            }),
+            position: 'bottomright'
+        }));
+    }
 // Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();
