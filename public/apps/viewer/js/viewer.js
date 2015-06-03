@@ -17,9 +17,13 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore;
-    hostname = geocloud_host;
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers,
+        res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+            4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+            76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+            1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
     uri = geocloud.pathName;
+    hostname = geocloud_host;
     hash = decodeURIComponent(geocloud.urlHash);
     db = uri[3];
     schema = uri[4];
@@ -43,6 +47,7 @@ Viewer = function () {
         } catch (e) {
         }
         addLegend();
+        visibleLayers = cloud.getVisibleLayers(true);
     };
     setBaseLayer = function (str) {
         cloud.setBaseLayer(str);
@@ -171,14 +176,14 @@ Viewer = function () {
                         "fillOpacity": 0
                     },
                     /*onEachFeature: function (feature, layer) {
-                        var html = "";
-                        $.each(formSchema, function (i, v) {
-                            if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
-                                html = html + v.title + " : " + feature.properties[i] + "<br>";
-                            }
-                        });
-                        layer.bindPopup(html);
-                    },*/
+                     var html = "";
+                     $.each(formSchema, function (i, v) {
+                     if (i !== "_gc2_filter_operator" && i !== "_gc2_filter_spatial") {
+                     html = html + v.title + " : " + feature.properties[i] + "<br>";
+                     }
+                     });
+                     layer.bindPopup(html);
+                     },*/
                     onLoad: function () {
                         $("#filter-submit").prop('disabled', false);
                         $("#filter-submit .spinner").hide();
@@ -410,7 +415,6 @@ Viewer = function () {
     zoomControl = L.control.zoom({
         position: 'bottomright'
     });
-
     cloud.map.addControl(zoomControl);
 
     // Create the print provider, subscribing to print events
@@ -428,6 +432,7 @@ Viewer = function () {
             position: 'bottomright'
         }));
     }
+
 // Start of draw
     if (window.gc2Options.leafletDraw) {
         $("#draw-button-li").show();
@@ -489,6 +494,28 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
+        $('#new-search').click(function () {
+            $(this).animate({
+                right: '0'
+            }, 500, function () {
+                $("#pane").animate({
+                    right: '20%'
+                }, 500, function () {
+                });
+
+                $("#map").animate({
+                    width: '90%'
+                }, 500, function () {
+                });
+            });
+            $("#modal-info").animate({
+                right: '20%'
+            }, 500, function () {
+            });
+
+
+        });
+
         var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [];
 
         $('.share-text').mouseup(function () {
@@ -497,7 +524,6 @@ Viewer = function () {
         $(".share-text").focus(function () {
             $(this).select();
         });
-
 
         if (window.gc2Options.extraShareFields) {
             $("#group-javascript-object").show();
@@ -536,7 +562,7 @@ Viewer = function () {
             $('#modal-info').modal({"backdrop": false});
         };
         $.ajax({
-            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0] + ',') + schema,
+            url: geocloud_host.replace("cdn.", "") + '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + (typeof urlVars.i === "undefined" ? "" : urlVars.i.split("#")[0] + ',') + schema + "?es=1",
             dataType: 'jsonp',
             scriptCharset: "utf-8",
             async: false,
@@ -549,6 +575,9 @@ Viewer = function () {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
                     if (!metaData.data[i].f_table_title) {
                         metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                    }
+                    if (metaData.data[i].indexed_in_es) {
+                        indexedLayers.push(metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name);
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
@@ -566,7 +595,8 @@ Viewer = function () {
                         visibility: false,
                         wrapDateLine: false,
                         displayInLayerSwitcher: true,
-                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name,
+                        type: "tms"
                     });
                 }
                 for (i = 0; i < arr.length; i = i + 1) {
@@ -750,6 +780,7 @@ Viewer = function () {
                     cloud.zoomToExtent();
                 }
             }
+            visibleLayers = cloud.getVisibleLayers(true);
         }());
         var moveEndCallBack = function () {
             try {
@@ -791,10 +822,6 @@ Viewer = function () {
                         var not_querable = metaDataKeys[value.split(".")[1]].not_querable;
                         var versioning = metaDataKeys[value.split(".")[1]].versioning;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-                                4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-                                76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-                                1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
                             distance = 5 * res[cloud.getZoom()];
                         }
                         qstore[index] = new geocloud.sqlStore({
@@ -806,6 +833,7 @@ Viewer = function () {
                                 "opacity": 0.65,
                                 "fillOpacity": 0
                             },
+                            clickable: false,
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
@@ -881,6 +909,62 @@ Viewer = function () {
                 }, 250);
             }
         });
+
+        // Mouse over pop-up begin
+        var mouseOverLayer = new L.layerGroup(), mouseOverPopUp, mouseOverStyle = {
+            color: '#aaa',
+            fillColor: '#aaa',
+            fillOpacity: 0.5,
+            opacity: 0.5
+        };
+        mouseOverLayer.addTo(cloud.map);
+        mouseOverDisplay = _.debounce(function (e) {
+            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()];
+            mouseOverLayer.clearLayers();
+            try {
+                cloud.map.removeLayer(mouseOverPopUp);
+            } catch (e) {
+            }
+            $.each(indexedLayers, function (i, v) {
+                if (visLayers.indexOf(v) !== -1) {
+                    mouseOverLayer.addLayer(new geocloud.elasticStore({
+                        db: db,
+                        index: schema + "/" + v.split(".")[1],
+                        size: 100,
+                        clickable: false,
+                        styleMap: mouseOverStyle,
+                        q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "' + distance + 'm"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
+                        onEachFeature: function (feature, layer) {
+                            var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), show = false;
+                            $.each(fieldConf, function (i, v) {
+                                if (v.type !== "geometry" && v.mouseover === true) {
+                                    show = true
+                                    html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + feature.properties[i] + "</td></tr>";
+                                }
+                            });
+                            html = html + "</table>";
+                            if (show) {
+                                mouseOverPopUp = L.popup({
+                                    offset: L.point(0, -25),
+                                    className: "custom-popup",
+                                    autoPan: false,
+                                    closeButton: false
+                                }).setLatLng(e.latlng)
+                                    .setContent(html)
+                                    .openOn(cloud.map);
+                            }
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {clickable: false});
+                        },
+                    }).load());
+                    /*mouseOverLayer.on("add", function () {
+                     console.log("hej")
+                     });*/
+                }
+            });
+        }, 200);
+        //cloud.on("mousemove", mouseOverDisplay);
     };
     return {
         init: init,
@@ -897,7 +981,3 @@ Viewer = function () {
         shareStumbleupon: shareStumbleupon
     };
 };
-
-
-
-
