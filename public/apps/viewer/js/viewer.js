@@ -434,7 +434,7 @@ Viewer = function () {
     }
 
 // Start of draw
-    if (window.gc2Options.leafletDraw) {
+    if (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) {
         $("#draw-button-li").show();
         cloud.map.on('draw:created', function (e) {
             var type = e.layerType;
