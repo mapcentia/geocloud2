@@ -22,6 +22,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
         echo "showConflictOptions: " . (json_encode(\app\conf\App::$param['showConflictOptions']) ? : "null")  .",\n";
         echo "showExtraLayerProperty: " . (json_encode(\app\conf\App::$param['showExtraLayerProperty']) ? : "null")  .",\n";
+        echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         echo "extraLayerPropertyName: " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
