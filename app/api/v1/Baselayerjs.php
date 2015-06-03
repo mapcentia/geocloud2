@@ -18,12 +18,14 @@ class Baselayerjs extends \app\inc\Controller
         echo "geoserverHost: '" . ((\app\conf\App::$param['geoserverHost']) ? : \app\conf\App::$param['host']) . "',\n";
         echo "encoding: '" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "',\n";
         echo "osmConfig: " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
+        echo "customPrintParams: " . json_encode(\app\conf\App::$param['customPrintParams']) . ",\n";
         echo "gc2scheduler: " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
         echo "mergeSchemata: " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
         echo "showConflictOptions: " . (json_encode(\app\conf\App::$param['showConflictOptions']) ? : "null")  .",\n";
         echo "showExtraLayerProperty: " . (json_encode(\app\conf\App::$param['showExtraLayerProperty']) ? : "null")  .",\n";
-        echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         echo "extraLayerPropertyName: " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
+        echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
+        echo "enableWorkflow: " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
