@@ -424,7 +424,7 @@ Viewer = function () {
             provider: L.print.provider({
                 capabilities: window.printConfig,
                 method: 'POST',
-                dpi: 56,
+                dpi: 127,
                 outputFormat: 'pdf',
                 proxy: '/cgi/proxy.cgi?url=',
                 customParams: window.gc2Options.customPrintParams
