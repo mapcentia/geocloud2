@@ -479,3 +479,6 @@ label {
 #sql-filter-table {
     width: 100%;
 }
+div.leaflet-control-print.leaflet-control > ul > li > a {
+    color: #ffffff;
+}
