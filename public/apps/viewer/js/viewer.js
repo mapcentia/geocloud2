@@ -1013,23 +1013,74 @@ Viewer = function () {
 
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
             (function iter() {
-                var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q;
+                var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [];
                 if (1 === 2) {
 
                 } else {
                     if (fieldConf) {
+                        searchLayers[v].clearLayers();
                         $.each(fieldConf, function (i, v) {
                             if (v.type !== "geometry" && v.mouseover === true) {
-                                fields.push(v.column)
+                                fields.push(v.column);
                             }
                         });
-                        searchLayers[v].clearLayers();
-                        if ($("#inside-view-input").is(":checked")) {
-                            q = '{"query":{"filtered":{ "query": {"query_string": { "fields" : ' + JSON.stringify(fields) + ', "query": "' + encodeURIComponent(query) + '", "default_operator":"AND"}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"envelope","coordinates" : [ [' + cloud.getExtent().left + ', ' + cloud.getExtent().top + '], [' + cloud.getExtent().right + ', ' + cloud.getExtent().bottom + '] ]}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}';
+                        var qJson = {
+                            "query": {
+                                "filtered": {
+                                    "query": {},
+                                    "filter": {
+                                        "bool": {
+                                            "must": [{"missing": {"field": "gc2_version_end_date"}}]
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        sFilter = {
+                            "geo_shape": {
+                                "geometry": {
+                                    "shape": {
+                                        "type": "envelope",
+                                        "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
+                                    }
+                                }
+                            }
+                        };
 
+                        // Create terms and fields
+                        var med = {"bool": {"must": []}};
+                        $.each(query.split(" "), function (x, token) {
+                            $.each(fields, function (i, v) {
+                                if (($.isNumeric(token) === true && (fieldConf[v].type === "int" || fieldConf[v].type === "decimal")) || fieldConf[v].type !== "int") {
+                                    var a = v, b = {};
+                                    b[a] = fieldConf[v].type === "int" ? token : String(token);
+                                    terms.push({
+                                        "term": b
+                                    })
+                                    qFields.push(v)
+                                }
+                            });
+                            med.bool.must.push({"bool": {"should": terms}});
+                            terms = []
+                        });
+
+                        // Create query_string
+                        queryStr = {
+                            "fields": qFields,
+                            "query": encodeURIComponent(query),
+                            "default_operator": "AND"
+                        };
+
+                        if (1 === 1) { // Using terms
+                            qJson.query.filtered.query = {"bool": {"should": med}};
                         } else {
-                            q = '{"query":{"filtered":{ "query": {"query_string": { "fields" : ' + JSON.stringify(fields) + ', "query": "' + encodeURIComponent(query) + '", "default_operator":"AND"}},"filter":{ "missing" : {"field" : "gc2_version_end_date"}}}}}';
+                            qJson.query.filtered.query = {"query_string": queryStr};
                         }
+
+                        if ($("#inside-view-input").is(":checked")) {
+                            qJson.query.filtered.filter.bool.must.push(sFilter);
+                        }
+                        q = JSON.stringify(qJson);
                         searchLayers[v].addLayer(new geocloud.elasticStore({
                             db: db,
                             index: schema + "/" + v.split(".")[1],
@@ -1038,7 +1089,6 @@ Viewer = function () {
                             styleMap: searchStyle,
                             q: q,
                             onEachFeature: function (feature, layer) {
-
                             },
                             pointToLayer: function (feature, latlng) {
                                 return L.circleMarker(latlng, {clickable: false});
@@ -1061,7 +1111,7 @@ Viewer = function () {
                                 if (count > 5 && singleLayer === undefined) {
                                     more[table] = true;
                                     html = "<section class='search-list-item more'>";
-                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title+ "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
+                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
                                     html = html + __("More items from") + " " + title;
                                     html = html + "</table></div></a></section>";
                                 } else {
@@ -1149,8 +1199,3 @@ Viewer = function () {
         shareStumbleupon: shareStumbleupon
     };
 };
-
-
-
-
-
