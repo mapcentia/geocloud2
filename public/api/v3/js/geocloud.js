@@ -200,6 +200,7 @@ geocloud = (function () {
         this.sql = this.defaults.sql;
         this.db = this.defaults.db;
         this.host = this.defaults.host.replace("cdn.", "");
+        this.onLoad = this.defaults.onLoad;
         this.load = function (doNotShowAlertOnError) {
             try {
                 map = me.map;
@@ -319,6 +320,9 @@ geocloud = (function () {
         }
         this.init();
         this.q = this.defaults.q;
+        this.db = this.defaults.db;
+        this.host = this.defaults.host.replace("cdn.", "");
+        this.onLoad = this.defaults.onLoad;
         this.load = function (doNotShowAlertOnError) {
             var map = me.map, q = this.q;
             try {
