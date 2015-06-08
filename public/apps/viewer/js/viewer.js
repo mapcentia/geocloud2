@@ -494,29 +494,47 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
-        $('#new-search').click(function () {
-            $(this).animate({
-                right: '0'
-            }, 500, function () {
+        var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [], searchPanelOpen = false,
+            searchShow = function () {
+                $("#search-ribbon").animate({
+                    right: '0'
+                }, 500, function () {
+                    $("#pane").animate({
+                        right: '24%'
+                    }, 500);
+
+                    $("#map").animate({
+                        width: '88%'
+                    }, 500);
+                });
+                $("#modal-info").animate({
+                    right: '24%'
+                }, 500);
+                searchPanelOpen = true;
+            },
+            searchHide = function () {
                 $("#pane").animate({
-                    right: '20%'
-                }, 500, function () {
-                });
-
+                    right: '3%'
+                }, 500);
                 $("#map").animate({
-                    width: '90%'
+                    width: '100%'
                 }, 500, function () {
+                    $("#search-ribbon").animate({
+                        right: '-21%'
+                    }, 500);
                 });
-            });
-            $("#modal-info").animate({
-                right: '20%'
-            }, 500, function () {
-            });
-
-
+                $("#modal-info").animate({
+                    right: '0'
+                }, 500);
+                searchPanelOpen = false
+            };
+        $('#search-border').click(function () {
+            if (searchPanelOpen) {
+                searchHide();
+            } else {
+                searchShow()
+            }
         });
-
-        var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [];
 
         $('.share-text').mouseup(function () {
             return false;
@@ -965,6 +983,158 @@ Viewer = function () {
             });
         }, 200);
         cloud.on("mousemove", mouseOverDisplay);
+        // Search begin
+        var searchLayers = [], searchStyle = {
+            color: '#ff0000',
+            fillColor: '#ff0000',
+            fillOpacity: 0.5,
+            opacity: 0.5
+        }, highlighter = function (value, item) {
+            _($.trim(value).split(' ')).each(
+                function (s) {
+                    var regex = new RegExp('(\\b' + s + ')', 'gi');
+                    item = item.replace(regex, "<i class=\"highlighted\">$1</i>");
+                }
+            );
+            return item;
+        }, search = function (query) {
+            var num = 0, singleLayer, layerArr;
+            $("#search-list").empty();
+            if (query.split(":").length > 1) {
+                singleLayer = query.split(":")[0];
+                try {
+                    singleLayer = metaDataKeysTitle[singleLayer].f_table_schema + "." + metaDataKeysTitle[singleLayer].f_table_name;
+                } catch (e) {
+                    return;
+                }
+                query = query.split(":")[1];
+            }
+            query = query.toLowerCase().replace(/\s\s+/g, ' ');
+
+            layerArr = singleLayer ? [singleLayer] : indexedLayers;
+            (function iter() {
+                var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q;
+                if (1 === 2) {
+
+                } else {
+                    if (fieldConf) {
+                        $.each(fieldConf, function (i, v) {
+                            if (v.type !== "geometry" && v.mouseover === true) {
+                                fields.push(v.column)
+                            }
+                        });
+                        searchLayers[v].clearLayers();
+                        if ($("#inside-view-input").is(":checked")) {
+                            q = '{"query":{"filtered":{ "query": {"query_string": { "fields" : ' + JSON.stringify(fields) + ', "query": "' + encodeURIComponent(query) + '", "default_operator":"AND"}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"envelope","coordinates" : [ [' + cloud.getExtent().left + ', ' + cloud.getExtent().top + '], [' + cloud.getExtent().right + ', ' + cloud.getExtent().bottom + '] ]}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}';
+
+                        } else {
+                            q = '{"query":{"filtered":{ "query": {"query_string": { "fields" : ' + JSON.stringify(fields) + ', "query": "' + encodeURIComponent(query) + '", "default_operator":"AND"}},"filter":{ "missing" : {"field" : "gc2_version_end_date"}}}}}';
+                        }
+                        searchLayers[v].addLayer(new geocloud.elasticStore({
+                            db: db,
+                            index: schema + "/" + v.split(".")[1],
+                            size: 100,
+                            clickable: false,
+                            styleMap: searchStyle,
+                            q: q,
+                            onEachFeature: function (feature, layer) {
+
+                            },
+                            pointToLayer: function (feature, latlng) {
+                                return L.circleMarker(latlng, {clickable: false});
+                            },
+                            onLoad: function (response) {
+                                var count = response.responseJSON.hits.hits.length, more = [], title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
+                                    header = "<h4>" + title + " (" + (count === 100 ? count + "+" : count) + ")</h4>",
+                                    table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
+                                $.each(response.responseJSON.hits.hits, function (i, hit) {
+                                    //console.log(hit._source.properties)
+                                    html = html + "<section class='search-list-item'>";
+                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties["gid"] + "'>";
+                                    html = html + "<div><table>";
+                                    $.each(fieldConf, function (u, v) {
+                                        if (v.type !== "geometry" && v.mouseover === true) {
+                                            html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
+                                        }
+                                    });
+                                    html = html + "</table></div></a></section>";
+                                });
+                                if (count > 5 && singleLayer === undefined) {
+                                    more[table] = true;
+                                    html = "<section class='search-list-item more'>";
+                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
+                                    html = html + __("More items from") + " " + title;
+                                    html = html + "</table></div></a></section>";
+                                } else {
+                                    more[table] = false;
+
+                                }
+                                if (count > 0) {
+                                    $("#search-list").append(header + html);
+                                }
+                                num = num + 1
+                                if (layerArr.length === num) {
+                                    $('a.list-group-item').on("click", function (e) {
+                                        var table = $(this).data('gc2-sf-table'), newQuery;
+                                        $(".list-group-item").addClass("unselected");
+                                        $(this).removeClass("unselected");
+                                        $(this).addClass("selected");
+                                        if (more[table]) {
+                                            newQuery = title + ":" + query;
+                                            $("input[name=custom-search]").val(newQuery);
+                                            search(newQuery)
+                                        }
+                                        else {
+                                            var id = $(this).data('gc2-sf-fid');
+                                            $.each(searchLayers[table].getLayers(), function (i, v) {
+                                                v.eachLayer(function (l) {
+                                                    if (l.feature.properties.gid === id) {
+                                                        cloud.map.off("moveend", searchByMove);
+                                                        $("#update-search-input").prop("checked", false);
+                                                        cloud.map.fitBounds(l.getBounds());
+                                                    }
+                                                })
+                                            });
+                                        }
+                                        e.stopPropagation();
+                                    });
+                                    return true;
+                                }
+                                iter();
+                            }
+                        }).load());
+                    }
+                }
+            })();
+        };
+        // Hide search ribbon if no layers are indexed
+        if (indexedLayers.length === 0) {
+            $("#search-ribbon").css("display", "none");
+            $("#pane").css("right", "0");
+        }
+        $.each(indexedLayers, function (i, v) {
+            searchLayers[v] = new L.layerGroup();
+            searchLayers[v].addTo(cloud.map);
+        })
+
+        $("input[name=custom-search]").on('input', _.debounce(function (e) {
+            search(e.target.value)
+        }, 300));
+        var searchByMove = function () {
+            search($("input[name=custom-search]").val());
+        }
+        $("#update-search-input").on("click", function (e) {
+            if ($(this).is(":checked")) {
+                search($("input[name=custom-search]").val());
+                cloud.on("moveend", searchByMove);
+            } else {
+                cloud.map.off("moveend", searchByMove);
+            }
+        });
+        $("#inside-view-input").click(function () {
+            search($("input[name=custom-search]").val());
+        })
+        cloud.on("moveend", searchByMove);
     };
     return {
         init: init,
@@ -981,6 +1151,7 @@ Viewer = function () {
         shareStumbleupon: shareStumbleupon
     };
 };
+
 
 
 

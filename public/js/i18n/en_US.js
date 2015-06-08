@@ -203,6 +203,11 @@ gc2i18n = {
         "Show in conflict": "Show in conflict",
         "Make link": "Make link",
         "Show in click info": "Show in click info",
-        "No layers": "No layers"
+        "No layers": "No layers",
+
+        "Search anything": "Search anything",
+        "Update on movement": "Update on movement",
+        "Search only inside view": "Search only inside view",
+        "More items from": "More items from"
     }
 };

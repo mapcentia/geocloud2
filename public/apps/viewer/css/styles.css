@@ -5,6 +5,7 @@ body {
     font-size: 16px;
     font-weight: normal;
     background: #fff;
+    overflow: hidden;
 }
 
 .modal-title {
@@ -31,7 +32,7 @@ body {
     position: fixed;
     top: 0px;
     bottom: 0px;
-    right: 0px;
+    right: 3%;
     width: 100%;
     z-index: 0;
 }
@@ -40,7 +41,7 @@ body {
     z-index: 2 !important;
 }
 
-#sql-filter{
+#sql-filter {
 
 }
 
@@ -450,6 +451,7 @@ div.olControlZoom {
         transform: translateX(-40px);
     }
 }
+
 .spinner {
     position: absolute;
     width: 25px;
@@ -458,52 +460,196 @@ div.olControlZoom {
     display: none;
     top: 3px;
 }
-#filter-submit{
+
+#filter-submit {
     width: 100%;
     position: relative;
     margin-top: 10px;
 }
+
 .filter-field {
     width: 100%;
 }
-#sql-filter-form  label {
+
+#sql-filter-form label {
     margin-bottom: 0 !important;
     margin-top: 5px !important;
 }
+
 .help-block {
     margin-bottom: 0 !important;
 }
+
 label {
     display: inline-block !important;
 }
+
 #sql-filter-table {
     width: 100%;
 }
- div.leaflet-control-print.leaflet-control > ul > li > a {
-     color: #ffffff;
- }
+
+div.leaflet-control-print.leaflet-control > ul > li > a {
+    color: #ffffff;
+}
+
 .custom-popup .leaflet-popup-content {
     margin: 7px 12px !important;
 }
+
 .custom-popup .leaflet-popup-content-wrapper {
-    background:#2c3e50 !important;
-    color:#fff !important;
-    font-size:16px !important;
-    line-height:24px !important;
+    background: #2c3e50 !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
     border-radius: 5px !important;
 }
+
 .custom-popup .leaflet-popup-content-wrapper a {
-    color:rgba(0,255,255,0.5) !important;
+    color: rgba(0, 255, 255, 0.5) !important;
 }
+
 .custom-popup .leaflet-popup-tip-container {
-    width:30px !important;
-    height:15px !important;
+    width: 30px !important;
+    height: 15px !important;
 }
+
 .custom-popup .leaflet-popup-tip {
-    background:#2c3e50 !important;
+    background: #2c3e50 !important;
 }
+
 .custom-popup td {
     padding-right: 10px;
     vertical-align: top;
     padding-bottom: 5px;
 }
+
+#search-ribbon {
+    min-width: 100px;
+    top: 0;
+    width: 24%;
+    right: -21%;
+    position: absolute;
+    height: 100%;
+    background-color: white;
+    border-left: 1px solid #e7e7e7;
+}
+
+.highlighted {
+    background-color: yellow;
+    font-size: 1em;
+    font-weight: bold;
+    font-style: normal;
+}
+
+section {
+    margin-top: 10px;
+}
+
+.selected {
+    box-shadow: 0 0 10px 3px #9ecaed;
+}
+
+.unselected {
+    box-shadow: none;
+}
+
+#search-list {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: 5px;
+    padding-top: 74px;
+    box-sizing: border-box;
+}
+
+#places {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+}
+
+.search-list-item td {
+    vertical-align: top;
+    padding-right: 7px;
+}
+
+#search-option {
+    position: absolute;
+    top: 44px;
+    left: 8px;
+    font-size: 12px;
+    color: #a1a1a1;
+    background-color: #ffffff;
+}
+
+#search-option input {
+    margin-right: 1px !important;
+}
+
+#search-option span {
+    white-space: nowrap;
+}
+
+#search-option span {
+    margin-right: 10px !important;
+}
+
+#places button {
+    display: inline;
+}
+
+#search-container {
+    margin-left: 32px;
+    position: relative;
+    height: 100%;
+}
+
+#search-border {
+    position: relative;
+    float: left;
+    width: 32px;
+    height: 100%;
+}
+
+#search-ribbon > div > i {
+    top: 20px;
+    font-size: 1.5em;
+    line-height: 1em;
+    color: #1f4164;
+    padding: 0 .4em 0 .4em;
+    position: absolute;
+    cursor: pointer;
+}
+
+#custom-search {
+    display: inline;
+    width: 100%;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+}
+
+#expand-layers-btn {
+    margin-left: 40px;
+}
+
+.more a {
+    background-color: #DEE7EF;
+}
+

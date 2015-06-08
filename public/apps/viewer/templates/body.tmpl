@@ -15,11 +15,9 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav" style="float: left">
                     <li>
-                        <!--<a href="javascript:void(0)" title="Layers" onclick="$('#menu').multilevelpushmenu('expand');">
-                            {{{Layers}}} <span class="glyphicon glyphicon-arrow-right"></span></a>-->
-                        <button type="button" class="btn btn-default navbar-btn"
+                        <button id="expand-layers-btn" type="button" class="btn btn-default navbar-btn left"
                                 onclick="$('#menu').multilevelpushmenu('expand');">
-                            <span class="fa fa-location-arrow"></span> {{{Layers}}}
+                            <span class="glyphicon glyphicon-arrow-right"></span>{{{Layers}}}
                         </button>
                     </li>
                 </ul>
@@ -85,6 +83,7 @@
     <div id="filter">
         <div id="sql-filter">
             <select id="sql-filter-table"></select>
+
             <form id="sql-filter-form"></form>
             <div id="sql-filter-res"></div>
         </div>
@@ -231,6 +230,7 @@
                     </div>
                     <div class="form-group" id="group-extent" style="display: none">
                         <label for="share-extent" class="col-sm-1 control-label">Extent</label>
+
                         <div class="col-sm-10">
                             <textarea data-toggle="tooltip" data-placement="top"
                                       title="{{{JavaScript object}}}" class="form-control share-text"
@@ -248,6 +248,19 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
-<!--
-<div id="new-search" style="min-width:150px; top:0;width: 20%; right: -19%; position: absolute; height: 100%;background-color: red"></div>
--->
+<div id="search-ribbon">
+    <div id="search-border"><i class="floatRight cursorPointer fa fa-reorder"></i></div>
+    <div id="search-container">
+        <div id="search-list"></div>
+        <div id="places">
+            <form class="form-inline">
+                <input name="custom-search" id="custom-search" type="search" class="form-control"
+                       placeholder="{{Search anything}}">
+            </form>
+        </div>
+        <div id="search-option">
+            <span><input id="update-search-input" type="checkbox" checked>{{Update on movement}}</span>
+            <span><input id="inside-view-input" type="checkbox" checked>{{Search only inside view}}</span>
+        </div>
+    </div>
+</div>

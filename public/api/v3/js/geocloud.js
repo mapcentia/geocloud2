@@ -356,8 +356,8 @@ geocloud = (function () {
                     }
 
                 },
-                complete: function () {
-                    me.onLoad();
+                complete: function (response) {
+                    me.onLoad(response);
                 }
             });
             return this.layer;
