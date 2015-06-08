@@ -1084,7 +1084,7 @@ Viewer = function () {
                                         }
                                         else {
                                             var id = $(this).data('gc2-sf-fid');
-                                            $.each(searchLayers[table].getLayers(), function (i, v) {
+                                            $.each(searchLayers[clickedTable].getLayers(), function (i, v) {
                                                 v.eachLayer(function (l) {
                                                     if (l.feature.properties.gid === id) {
                                                         cloud.map.off("moveend", searchByMove);
