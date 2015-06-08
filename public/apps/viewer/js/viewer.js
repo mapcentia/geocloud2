@@ -999,6 +999,9 @@ Viewer = function () {
             return item;
         }, search = function (query) {
             var num = 0, singleLayer, layerArr, more = [];
+            $.each(function(i, v){
+                v.clearLayers();
+            })
             $("#search-list").empty();
             if (query.split(":").length > 1) {
                 singleLayer = query.split(":")[0];
@@ -1018,7 +1021,7 @@ Viewer = function () {
 
                 } else {
                     if (fieldConf) {
-                        searchLayers[v].clearLayers();
+
                         $.each(fieldConf, function (i, v) {
                             if (v.type !== "geometry" && v.mouseover === true) {
                                 fields.push(v.column);
