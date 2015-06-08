@@ -999,9 +999,12 @@ Viewer = function () {
             return item;
         }, search = function (query) {
             var num = 0, singleLayer, layerArr, more = [];
-            $.each(searchLayers, function(i, v){
-                v.clearLayers();
-            })
+            // Clear all layers
+            for (var key in searchLayers) {
+                if (searchLayers.hasOwnProperty(key)) {
+                    searchLayers[key].clearLayers();
+                }
+            }
             $("#search-list").empty();
             if (query.split(":").length > 1) {
                 singleLayer = query.split(":")[0];
