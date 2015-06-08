@@ -999,7 +999,7 @@ Viewer = function () {
             return item;
         }, search = function (query) {
             var num = 0, singleLayer, layerArr, more = [];
-            $.each(function(i, v){
+            $.each(searchLayers, function(i, v){
                 v.clearLayers();
             })
             $("#search-list").empty();
