@@ -109,7 +109,7 @@ geocloud = (function () {
         },
         index: "",
         type: "",
-        size: 3,
+        size: 100,
         clientEncoding: "UTF8",
         async: true,
         jsonp: true,
@@ -200,6 +200,11 @@ geocloud = (function () {
         this.sql = this.defaults.sql;
         this.db = this.defaults.db;
         this.host = this.defaults.host.replace("cdn.", "");
+        this.onLoad = this.defaults.onLoad;
+        this.dataType = this.defaults.dataType;
+        this.async = this.defaults.async;
+        this.jsonp = this.defaults.jsonp;
+        this.method = this.defaults.method;
         this.load = function (doNotShowAlertOnError) {
             try {
                 map = me.map;
@@ -259,6 +264,7 @@ geocloud = (function () {
     };
     tweetStore = function (config) {
         var prop, me = this;
+        this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -310,6 +316,7 @@ geocloud = (function () {
     };
     elasticStore = function (config) {
         var prop, me = this;
+        this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
                 this.defaults[prop] = config[prop];
@@ -317,6 +324,15 @@ geocloud = (function () {
         }
         this.init();
         this.q = this.defaults.q;
+        this.db = this.defaults.db;
+        this.host = this.defaults.host.replace("cdn.", "");
+        this.onLoad = this.defaults.onLoad;
+        this.total = 0;
+        this.size = this.defaults.size;
+        this.dataType = this.defaults.dataType;
+        this.async = this.defaults.async;
+        this.jsonp = this.defaults.jsonp;
+        this.method = this.defaults.method;
         this.load = function (doNotShowAlertOnError) {
             var map = me.map, q = this.q;
             try {
@@ -331,31 +347,37 @@ geocloud = (function () {
             }
 
             $.ajax({
-                dataType: 'jsonp',
-                data: 'q=' + encodeURIComponent(q) + "&size=" + this.defaults.size,
-                jsonp: 'jsonp_callback',
+                method: this.method,
+                dataType: (this.jsonp) ? 'jsonp' : 'json',
+                async: this.async,
+                jsonp: (this.jsonp) ? 'jsonp_callback' : false,
+                data: 'q=' + encodeURIComponent(q) + "&size=" + this.size,
                 url: this.defaults.host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
-                    var features = [];
+                    if (typeof response.error !== "undefined") {
+                        return false;
+                    }
+                    var features = [], geoJson = {};
+                    me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
                     });
-                    response.features = features;
+                    geoJson.features = features;
                     if (response.features !== null) {
                         me.geoJSON = response;
                         switch (MAPLIB) {
                             case "ol2":
-                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(geoJson));
                                 break;
                             case "leaflet":
-                                me.layer.addData(response);
+                                me.layer.addData(geoJson);
                                 break;
                         }
                     }
 
                 },
-                complete: function () {
-                    me.onLoad();
+                complete: function (response) {
+                    me.onLoad(response);
                 }
             });
             return this.layer;
@@ -1344,6 +1366,7 @@ geocloud = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l;
+                defaults.name = defaults.names[i];
                 switch (defaults.type) {
                     case  "wms":
                         l = createTileLayer(layers[i], defaults);
@@ -2459,3 +2482,4 @@ if (geocloud.MAPLIB === "leaflet") {
         }
     });
 }
+
