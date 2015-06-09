@@ -1067,7 +1067,6 @@ Viewer = function () {
                                 type = "str";
                             }
                             $.each(fields, function (i, v) {
-
                                 if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && type === "float") || (fieldConf[v].type === "string" && type === "str")) {
                                     var a = v, b = {};
                                     b[a] = n;
@@ -1099,10 +1098,11 @@ Viewer = function () {
                             qJson.query.filtered.filter.bool.must.push(sFilter);
                         }
                         q = JSON.stringify(qJson);
+
                         searchLayers[v].addLayer(new geocloud.elasticStore({
                             db: db,
                             index: schema + "/" + v.split(".")[1],
-                            size: 100,
+                            size: med.bool.must[0].bool.should.length === 0 ? 0 : 100,
                             clickable: false,
                             styleMap: searchStyle,
                             jsonp: false,
@@ -1115,31 +1115,33 @@ Viewer = function () {
                                 return L.circleMarker(latlng, {clickable: false});
                             },
                             onLoad: function (response) {
-                                var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
-                                    header = "<h4>" + title + " (" + this.total + ")</h4>",
-                                    table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
-                                $.each(response.responseJSON.hits.hits, function (i, hit) {
-                                    html = html + "<section class='search-list-item'>";
-                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties["gid"] + "'>";
-                                    html = html + "<div><table>";
-                                    $.each(fieldConf, function (u, v) {
-                                        if (v.type !== "geometry" && v.searchable === true) {
-                                            html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
-                                        }
+                                if(typeof response.responseJSON.error === "undefined") {
+                                    var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
+                                        header = "<h4>" + title + " (" + this.total + ")</h4>",
+                                        table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
+                                    $.each(response.responseJSON.hits.hits, function (i, hit) {
+                                        html = html + "<section class='search-list-item'>";
+                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties["gid"] + "'>";
+                                        html = html + "<div><table>";
+                                        $.each(fieldConf, function (u, v) {
+                                            if (v.type !== "geometry" && v.searchable === true) {
+                                                html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
+                                            }
+                                        });
+                                        html = html + "</table></div></a></section>";
                                     });
-                                    html = html + "</table></div></a></section>";
-                                });
-                                if (count > 5 && singleLayer === undefined) {
-                                    more[table] = true;
-                                    html = "<section class='search-list-item more'>";
-                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
-                                    html = html + __("More items from") + " " + title;
-                                    html = html + "</table></div></a></section>";
-                                } else {
-                                    more[table] = false;
-                                }
-                                if (count > 0 && fields.length > 0 ) {
-                                    $("#search-list").append(header + html);
+                                    if (count > 5 && singleLayer === undefined) {
+                                        more[table] = true;
+                                        html = "<section class='search-list-item more'>";
+                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
+                                        html = html + __("More items from") + " " + title;
+                                        html = html + "</table></div></a></section>";
+                                    } else {
+                                        more[table] = false;
+                                    }
+                                    if (count > 0) {
+                                        $("#search-list").append(header + html);
+                                    }
                                 }
                                 num = num + 1
                                 if (layerArr.length === num) {

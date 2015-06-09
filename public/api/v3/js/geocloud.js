@@ -109,7 +109,7 @@ geocloud = (function () {
         },
         index: "",
         type: "",
-        size: 3,
+        size: 100,
         clientEncoding: "UTF8",
         async: true,
         jsonp: true,
@@ -328,6 +328,7 @@ geocloud = (function () {
         this.host = this.defaults.host.replace("cdn.", "");
         this.onLoad = this.defaults.onLoad;
         this.total = 0;
+        this.size = this.defaults.size;
         this.dataType = this.defaults.dataType;
         this.async = this.defaults.async;
         this.jsonp = this.defaults.jsonp;
@@ -350,9 +351,12 @@ geocloud = (function () {
                 dataType: (this.jsonp) ? 'jsonp' : 'json',
                 async: this.async,
                 jsonp: (this.jsonp) ? 'jsonp_callback' : false,
-                data: 'q=' + encodeURIComponent(q) + "&size=" + this.defaults.size,
+                data: 'q=' + encodeURIComponent(q) + "&size=" + this.size,
                 url: this.defaults.host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
+                    if (typeof response.error !== "undefined") {
+                        return false;
+                    }
                     var features = [], geoJson = {};
                     me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
