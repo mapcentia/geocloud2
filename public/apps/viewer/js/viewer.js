@@ -1068,7 +1068,7 @@ Viewer = function () {
                                 type = "str";
                             }
                             $.each(fields, function (i, v) {
-                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && type === "float") || fieldConf[v].type === "string") {
+                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && (type === "float" || type === "int")) || fieldConf[v].type === "string") {
                                     var a = v, b = {};
                                     b[a] = n;
                                     terms.push({
