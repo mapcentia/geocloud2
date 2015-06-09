@@ -364,7 +364,7 @@ geocloud = (function () {
                     });
                     geoJson.features = features;
                     if (response.features !== null) {
-                        me.geoJSON = response;
+                        me.geoJSON = geoJson;
                         switch (MAPLIB) {
                             case "ol2":
                                 me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(geoJson));
