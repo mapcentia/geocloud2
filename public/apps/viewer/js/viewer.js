@@ -1015,14 +1015,14 @@ Viewer = function () {
             if (!query || query === "") {
                 return false;
             }
-
-            query = query.toLowerCase().replace(/\s\s+/g, ' ');
+            // Trim and delete multiple spaces
+            query = query.toLowerCase().replace(/\s\s+/g, ' ').trim();
 
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
             (function iter() {
                 var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [];
                 if (1 === 2) {
-
+                    // Pass
                 } else {
                     if (fieldConf) {
                         $.each(fieldConf, function (i, v) {
@@ -1138,7 +1138,7 @@ Viewer = function () {
                                 } else {
                                     more[table] = false;
                                 }
-                                if (count > 0) {
+                                if (count > 0 && fields.length > 0 ) {
                                     $("#search-list").append(header + html);
                                 }
                                 num = num + 1
@@ -1204,6 +1204,12 @@ Viewer = function () {
             search($("input[name=custom-search]").val());
         })
         cloud.on("moveend", searchByMove);
+        $("body").keydown(function (e) {
+            if (typeof $(e.target)[0].form === "undefined" && searchPanelOpen === false) {
+                searchShow();
+                $("#custom-search").focus();
+            }
+        });
     };
     return {
         init: init,
