@@ -208,6 +208,7 @@ gc2i18n = {
         "Search anything": "Search anything",
         "Update on movement": "Update on movement",
         "Search only inside view": "Search only inside view",
-        "More items from": "More items from"
+        "More items from": "More items from",
+        "Google search": "Google search"
     }
 };

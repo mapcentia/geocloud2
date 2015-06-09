@@ -976,9 +976,6 @@ Viewer = function () {
                             return L.circleMarker(latlng, {clickable: false});
                         },
                     }).load());
-                    /*mouseOverLayer.on("add", function () {
-                     console.log("hej")
-                     });*/
                 }
             });
         }, 200);
@@ -1024,7 +1021,6 @@ Viewer = function () {
 
                 } else {
                     if (fieldConf) {
-
                         $.each(fieldConf, function (i, v) {
                             if (v.type !== "geometry" && v.mouseover === true) {
                                 fields.push(v.column);
@@ -1052,19 +1048,31 @@ Viewer = function () {
                                 }
                             }
                         };
-
                         // Create terms and fields
                         var med = {"bool": {"must": []}};
-                        $.each(query.split(" "), function (x, token) {
+                        $.each(query.split(" "), function (x, n) {
+                            var type;
+                            if (!isNaN(num) && Number(n) && n % 1 === 0) {
+                                type = "int";
+
+                            }
+                            else if (!isNaN(num) && Number(n) && n % 1 !== 0) {
+                                type = "float";
+                            }
+                            else {
+                                type = "str";
+                            }
                             $.each(fields, function (i, v) {
-                                if (($.isNumeric(token) === true && (fieldConf[v].type === "int" || fieldConf[v].type === "decimal")) || fieldConf[v].type !== "int") {
+
+                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && type === "float") || (fieldConf[v].type === "string" && type === "str")) {
                                     var a = v, b = {};
-                                    b[a] = fieldConf[v].type === "int" ? token : String(token);
+                                    b[a] = n;
                                     terms.push({
                                         "term": b
                                     })
                                     qFields.push(v)
                                 }
+
                             });
                             med.bool.must.push({"bool": {"should": terms}});
                             terms = []
@@ -1101,7 +1109,7 @@ Viewer = function () {
                             },
                             onLoad: function (response) {
                                 var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
-                                    header = "<h4>" + title + " (" + (count === 100 ? count + "+" : count) + ")</h4>",
+                                    header = "<h4>" + title + " (" + this.total + ")</h4>",
                                     table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
                                 $.each(response.responseJSON.hits.hits, function (i, hit) {
                                     html = html + "<section class='search-list-item'>";

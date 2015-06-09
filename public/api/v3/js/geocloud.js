@@ -323,6 +323,7 @@ geocloud = (function () {
         this.db = this.defaults.db;
         this.host = this.defaults.host.replace("cdn.", "");
         this.onLoad = this.defaults.onLoad;
+        this.total = 0;
         this.load = function (doNotShowAlertOnError) {
             var map = me.map, q = this.q;
             try {
@@ -342,19 +343,20 @@ geocloud = (function () {
                 jsonp: 'jsonp_callback',
                 url: this.defaults.host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
-                    var features = [];
+                    var features = [], geoJson = {};
+                    me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
                     });
-                    response.features = features;
+                    geoJson.features = features;
                     if (response.features !== null) {
                         me.geoJSON = response;
                         switch (MAPLIB) {
                             case "ol2":
-                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(geoJson));
                                 break;
                             case "leaflet":
-                                me.layer.addData(response);
+                                me.layer.addData(geoJson);
                                 break;
                         }
                     }
