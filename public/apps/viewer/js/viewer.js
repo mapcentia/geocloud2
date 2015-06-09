@@ -499,6 +499,7 @@ Viewer = function () {
                 $("#search-ribbon").animate({
                     right: '0'
                 }, 500, function () {
+                    $("#custom-search").focus();
                     $("#pane").animate({
                         right: '24%'
                     }, 500);
@@ -1067,7 +1068,7 @@ Viewer = function () {
                                 type = "str";
                             }
                             $.each(fields, function (i, v) {
-                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && type === "float") || (fieldConf[v].type === "string" && type === "str")) {
+                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && type === "float") || fieldConf[v].type === "string") {
                                     var a = v, b = {};
                                     b[a] = n;
                                     terms.push({
@@ -1209,7 +1210,6 @@ Viewer = function () {
         $("body").keydown(function (e) {
             if (typeof $(e.target)[0].form === "undefined" && searchPanelOpen === false) {
                 searchShow();
-                $("#custom-search").focus();
             }
         });
     };
