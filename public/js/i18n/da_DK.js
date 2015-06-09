@@ -209,6 +209,8 @@ gc2i18n = {
         "Update on movement": "Opdater ved flytning",
         "Search only inside view": "Søg kun indenfor view",
         "More items from": "Flere resultater fra",
-        "Google search": "Google søgning"
+        "Google search": "Google søgning",
+        "Show in mouse-over": "Vis i mouse-over",
+        "Searchable": "Søgbar"
     }
 };

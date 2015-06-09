@@ -55,6 +55,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'searchable',
+            allowBlank: true
+        },
+        {
             name: 'filter',
             allowBlank: true
         },
@@ -232,17 +236,24 @@ tableStructure.init = function (record, screenName) {
                     width: 40
                 },
                 {
+                    id: "searchable",
+                    xtype: 'checkcolumn',
+                    header: __("Searchable"),
+                    dataIndex: 'searchable',
+                    width: 40
+                },
+                {
                     id: "filter",
                     xtype: 'checkcolumn',
                     header: __("Enable filtering"),
                     dataIndex: 'filter',
-                    width: 35
+                    width: 40
                 }, {
                     id: "conflict",
                     xtype: 'checkcolumn',
                     header: __("Show in conflict"),
                     dataIndex: 'conflict',
-                    width: 35,
+                    width: 40,
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
                 },
                 {

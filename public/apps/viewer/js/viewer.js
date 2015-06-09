@@ -1012,6 +1012,10 @@ Viewer = function () {
                 }
                 query = query.split(":")[1];
             }
+            if (!query || query === "") {
+                return false;
+            }
+
             query = query.toLowerCase().replace(/\s\s+/g, ' ');
 
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
@@ -1022,7 +1026,7 @@ Viewer = function () {
                 } else {
                     if (fieldConf) {
                         $.each(fieldConf, function (i, v) {
-                            if (v.type !== "geometry" && v.mouseover === true) {
+                            if (v.type !== "geometry" && v.searchable === true) {
                                 fields.push(v.column);
                             }
                         });
@@ -1101,6 +1105,9 @@ Viewer = function () {
                             size: 100,
                             clickable: false,
                             styleMap: searchStyle,
+                            jsonp: false,
+                            dataType: "json",
+                            method: "POST",
                             q: q,
                             onEachFeature: function (feature, layer) {
                             },
@@ -1116,7 +1123,7 @@ Viewer = function () {
                                     html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties["gid"] + "'>";
                                     html = html + "<div><table>";
                                     $.each(fieldConf, function (u, v) {
-                                        if (v.type !== "geometry" && v.mouseover === true) {
+                                        if (v.type !== "geometry" && v.searchable === true) {
                                             html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
                                         }
                                     });

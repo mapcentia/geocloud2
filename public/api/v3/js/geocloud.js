@@ -201,6 +201,10 @@ geocloud = (function () {
         this.db = this.defaults.db;
         this.host = this.defaults.host.replace("cdn.", "");
         this.onLoad = this.defaults.onLoad;
+        this.dataType = this.defaults.dataType;
+        this.async = this.defaults.async;
+        this.jsonp = this.defaults.jsonp;
+        this.method = this.defaults.method;
         this.load = function (doNotShowAlertOnError) {
             try {
                 map = me.map;
@@ -324,6 +328,10 @@ geocloud = (function () {
         this.host = this.defaults.host.replace("cdn.", "");
         this.onLoad = this.defaults.onLoad;
         this.total = 0;
+        this.dataType = this.defaults.dataType;
+        this.async = this.defaults.async;
+        this.jsonp = this.defaults.jsonp;
+        this.method = this.defaults.method;
         this.load = function (doNotShowAlertOnError) {
             var map = me.map, q = this.q;
             try {
@@ -338,9 +346,11 @@ geocloud = (function () {
             }
 
             $.ajax({
-                dataType: 'jsonp',
+                method: this.method,
+                dataType: (this.jsonp) ? 'jsonp' : 'json',
+                async: this.async,
+                jsonp: (this.jsonp) ? 'jsonp_callback' : false,
                 data: 'q=' + encodeURIComponent(q) + "&size=" + this.defaults.size,
-                jsonp: 'jsonp_callback',
                 url: this.defaults.host + '/api/v1/elasticsearch/search/' + this.defaults.db + "/" + this.defaults.index + "/" + this.defaults.type,
                 success: function (response) {
                     var features = [], geoJson = {};

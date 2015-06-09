@@ -363,6 +363,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "querable", $fieldconfArr[$key]->querable);
                 $arr = $this->array_push_assoc($arr, "mouseover", $fieldconfArr[$key]->mouseover);
                 $arr = $this->array_push_assoc($arr, "filter", $fieldconfArr[$key]->filter);
+                $arr = $this->array_push_assoc($arr, "searchable", $fieldconfArr[$key]->searchable);
                 $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
                 $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias);
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
