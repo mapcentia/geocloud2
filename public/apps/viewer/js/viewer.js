@@ -17,7 +17,7 @@
 var Viewer;
 Viewer = function () {
     "use strict";
-    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers,
+    var init, switchLayer, arrMenu, setBaseLayer, addLegend, autocomplete, hostname, cloud, db, schema, uri, urlVars, hash, osm, showInfoModal, qstore = [], share, permaLink, anchor, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, linkToSimpleMap, drawOn = false, drawLayer, drawnItems, drawControl, zoomControl, metaData, metaDataKeys = [], metaDataKeysTitle = [], awesomeMarker, addSqlFilterForm, sqlFilterStore, indexedLayers = [], mouseOverDisplay, visibleLayers, enablePrint,
         res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
@@ -36,6 +36,7 @@ Viewer = function () {
             items: []
         }
     ];
+    enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || window.gc2Options.enablePrint["*"] === true;
     switchLayer = function (name, visible) {
         if (visible) {
             cloud.showLayer(name);
@@ -418,7 +419,7 @@ Viewer = function () {
     cloud.map.addControl(zoomControl);
 
     // Create the print provider, subscribing to print events
-    if (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) {
+    if (enablePrint) {
         window.gc2Options.customPrintParams.mapAttribution = "sdsd";
         cloud.map.addControl(L.control.print({
             provider: L.print.provider({
@@ -434,7 +435,7 @@ Viewer = function () {
     }
 
 // Start of draw
-    if (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) {
+    if (enablePrint) {
         $("#draw-button-li").show();
         cloud.map.on('draw:created', function (e) {
             var type = e.layerType;
@@ -1116,7 +1117,7 @@ Viewer = function () {
                                 return L.circleMarker(latlng, {clickable: false});
                             },
                             onLoad: function (response) {
-                                if(typeof response.responseJSON.error === "undefined") {
+                                if (typeof response.responseJSON.error === "undefined") {
                                     var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
                                         header = "<h4>" + title + " (" + this.total + ")</h4>",
                                         table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
