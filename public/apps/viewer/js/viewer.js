@@ -1209,7 +1209,7 @@ Viewer = function () {
         cloud.on("moveend", searchByMove);
         $("body").keydown(function (e) {
             if (typeof $(e.target)[0].form === "undefined" && searchPanelOpen === false) {
-                searchShow();
+                //searchShow();
             }
         });
     };
