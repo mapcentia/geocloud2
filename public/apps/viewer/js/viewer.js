@@ -36,7 +36,7 @@ Viewer = function () {
             items: []
         }
     ];
-    enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || window.gc2Options.enablePrint["*"] === true;
+    enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
     switchLayer = function (name, visible) {
         if (visible) {
             cloud.showLayer(name);
