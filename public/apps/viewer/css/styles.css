@@ -653,3 +653,6 @@ section {
     background-color: #DEE7EF;
 }
 
+div.leaflet-control-print.leaflet-control > ul > li > a {
+    color: #ffffff;
+}
