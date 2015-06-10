@@ -95,9 +95,13 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
         <div class="panel panel-default">
             <div class="panel-heading"><span class="glyphicon glyphicon-globe"></span> <%= this . schema %></div>
             <div class="panel-body">
-                <div style="margin-bottom: 15px">
+                <!--<div style="margin-bottom: 15px">
                     Description coming...
+                </div>-->
+                <div style="margin-bottom: 15px">
+                    Number of layers <span class="badge"><%= this . count || "0" %></span>
                 </div>
+
                 <div style="float: right">
                     <a data-toggle="tooltip" data-placement="top" title="Open '<%= this . schema %>' in the response Map Viewer"
                        class="btn btn-xs btn-default" target="_blank"

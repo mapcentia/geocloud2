@@ -96,19 +96,36 @@ class Database extends \app\inc\Model
 
     public function listAllSchemas()
     {
-        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi'";
-        $result = $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result, "assoc")) {
-                $arr[] = array("schema" => $row['schema_name']);
-            }
-            $response['success'] = true;
-            $response['data'] = $arr;
-        } else {
+        $arr = array();
+        $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns GROUP BY f_table_schema";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 406;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
         }
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $count[$row['f_table_schema']] = $row['count'];
+        }
+
+        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']]);
+        }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
@@ -229,7 +246,7 @@ class Database extends \app\inc\Model
             return $response;
         }
         $setObj = new \app\models\Setting();
-        $settings =  $setObj->getArray();
+        $settings = $setObj->getArray();
         $extents = $settings['extents']->$schema;
         $center = $settings['center']->$schema;
         $zoom = $settings['zoom']->$schema;
@@ -261,7 +278,8 @@ class Database extends \app\inc\Model
         return $response;
     }
 
-    public function deleteSchema($schema){
+    public function deleteSchema($schema)
+    {
         if ($schema == "public") {
             $response['success'] = false;
             $response['message'] = "You can't delete 'public'";
