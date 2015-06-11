@@ -326,7 +326,7 @@ class Classification extends \app\inc\Model
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         if ($geometryType == "RASTER") {
             $parts = explode(".", $this->layer);
-            $setSchema = "set search_path to {$parts[0]}";
+            $setSchema = "set search_path to public,{$parts[0]}";
             $res = $this->prepare($setSchema);
             try {
                 $res->execute();
