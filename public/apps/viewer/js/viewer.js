@@ -998,13 +998,7 @@ Viewer = function () {
             return item;
         }, search = function (query) {
             var num = 0, singleLayer, layerArr, more = [];
-            // Clear all layers
-            for (var key in searchLayers) {
-                if (searchLayers.hasOwnProperty(key)) {
-                    searchLayers[key].clearLayers();
-                }
-            }
-            $("#search-list").empty();
+
             if (query.split(":").length > 1) {
                 singleLayer = query.split(":")[0];
                 try {
@@ -1023,6 +1017,15 @@ Viewer = function () {
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
             (function iter() {
                 var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [];
+                if (num === 0){
+                    // Clear all layers
+                    for (var key in searchLayers) {
+                        if (searchLayers.hasOwnProperty(key)) {
+                            searchLayers[key].clearLayers();
+                        }
+                    }
+                    $("#search-list").empty();
+                }
                 if (1 === 2) {
                     // Pass
                 } else {
