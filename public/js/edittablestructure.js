@@ -449,11 +449,19 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-search btn-gc"></i> ' + __("Index in Elasticsearch"),
+                text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
                 id: "index-in-elasticsearch-btn",
                 disabled: (window.gc2Options.esIndexingInGui) ? false : true,
                 handler: function () {
                     tableStructure.onIndexInElasticsearch(record);
+                }
+            },
+            {
+                text: '<i class="icon-search btn-gc"></i> ' + __("Delete from Elasticsearch"),
+                id: "delete-from-elasticsearch-btn",
+                disabled: window.gc2Options.esIndexingInGui ? record.data.indexed_in_es ? false : true : true,
+                handler: function () {
+                    tableStructure.onDeleteFromElasticsearch(record);
                 }
             }
         ]
@@ -559,7 +567,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key + (record.data.triggertable ? "&tt=" + record.data.triggertable : "");
                 Ext.Ajax.request(
                     {
-                        url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name + '/' + record.data.f_table_name,
+                        url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'post',
                         params: param,
                         headers: {
@@ -568,6 +576,8 @@ tableStructure.onIndexInElasticsearch = function (record) {
                         timeout: 300000,
                         success: function (response) {
                             spinner(false);
+                            store.reload();
+                            Ext.getCmp('delete-from-elasticsearch-btn').setDisabled(false);
                             Ext.MessageBox.show({
                                 title: __("Info"),
                                 msg: "<b>" + __(Ext.decode(response.responseText).message + "</b>, with errors:<b> " + Ext.decode(response.responseText).errors + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
@@ -576,6 +586,43 @@ tableStructure.onIndexInElasticsearch = function (record) {
                                 height: 300,
                                 icon: Ext.MessageBox.OK
                             });
+                        },
+                        failure: function (response) {
+                            spinner(false);
+                            Ext.MessageBox.show({
+                                title: __("Failure"),
+                                msg: __(Ext.decode(response.responseText).message),
+                                buttons: Ext.MessageBox.OK,
+                                width: 400,
+                                height: 300,
+                                icon: Ext.MessageBox.INFO
+                            });
+                        }
+                    }
+                );
+            } else {
+                return false;
+            }
+        });
+};
+tableStructure.onDeleteFromElasticsearch = function (record) {
+    "use strict";
+    Ext.MessageBox.confirm(__('Confirm'), __("This will delete the type from Elasticsearch. Do you want to proceed?"),
+        function (btn) {
+            if (btn === "yes") {
+                var param = "&key=" + settings.api_key;
+                Ext.Ajax.request(
+                    {
+                        url: '/api/v1/elasticsearch/delete/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        method: 'delete',
+                        params: param,
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        success: function (response) {
+                            App.setAlert(App.STATUS_NOTICE, __("Type deleted in Elasticsearch"));
+                            Ext.getCmp('delete-from-elasticsearch-btn').setDisabled(true);
+                            store.reload();
                         },
                         failure: function (response) {
                             spinner(false);

@@ -113,12 +113,11 @@ class Elasticsearch extends \app\inc\Controller
 
     public function delete_delete()
     {
-        $delete = Input::get();
         $type = Input::getPath()->part(7);
         if (mb_substr($type, 0, 1, 'utf-8') == "_") {
             $type = "a" . $type;
         }
-        if ($response = $this->checkAuth(Input::getPath()->part(5), $delete['key'])) {
+        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
             return $response;
         }
         $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
