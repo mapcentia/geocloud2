@@ -1118,12 +1118,12 @@ Viewer = function () {
                             },
                             onLoad: function (response) {
                                 if (typeof response.responseJSON.error === "undefined") {
-                                    var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "",
+                                    var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "", fidKey = metaDataKeys[v.split(".")[1]].pkey,
                                         header = "<h4>" + title + " (" + this.total + ")</h4>",
                                         table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
                                     $.each(response.responseJSON.hits.hits, function (i, hit) {
                                         html = html + "<section class='search-list-item'>";
-                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties["gid"] + "'>";
+                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties[fidKey] + "'>";
                                         html = html + "<div><table>";
                                         $.each(fieldConf, function (u, v) {
                                             if (v.type !== "geometry" && v.searchable === true) {
@@ -1161,7 +1161,7 @@ Viewer = function () {
                                             var id = $(this).data('gc2-sf-fid');
                                             $.each(searchLayers[clickedTable].getLayers(), function (i, v) {
                                                 v.eachLayer(function (l) {
-                                                    if (l.feature.properties.gid === id) {
+                                                    if (l.feature.properties[fidKey] === id) {
                                                         cloud.map.off("moveend", searchByMove);
                                                         $("#update-search-input").prop("checked", false);
                                                         cloud.map.fitBounds(l.getBounds());
