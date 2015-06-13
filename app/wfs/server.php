@@ -81,7 +81,7 @@ $unserializer = new XML_Unserializer($unserializer_options);
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
-    //die($HTTP_RAW_POST_DATA);
+    //makeExceptionReport($HTTP_RAW_POST_DATA);
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
     $request = $unserializer->getRootName();
@@ -826,16 +826,19 @@ function doParse($arr)
 
                         // Remove ns from properties
                         foreach ($feature as $field => $value) {
-                            $feature[dropAllNameSpaces($field)] = $value;
-                            unset($feature[$field]);
+                            $split = explode(":", $field);
+                            if ($split[1]) {
+                                $feature[dropAllNameSpaces($field)] = $value;
+                                unset($feature[$field]);
+                            }
                         }
+                        //makeExceptionReport(print_r($feature,true));
 
                         // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                         $tableObj = new table($postgisschema . "." . $typeName);
                         if (!array_key_exists("gc2_version_user", $feature) && $tableObj->versioning) $feature["gc2_version_user"] = null;
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
-
 
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
