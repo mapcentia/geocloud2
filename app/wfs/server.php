@@ -824,7 +824,6 @@ function doParse($arr)
 
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
-
                         // Remove ns from properties
                         foreach ($feature as $field => $value) {
                             $split = explode(":", $field);
@@ -833,8 +832,6 @@ function doParse($arr)
                                 unset($feature[$field]);
                             }
                         }
-                        //makeExceptionReport(print_r($feature,true));
-
                         // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                         $tableObj = new table($postgisschema . "." . $typeName);
                         if (!array_key_exists("gc2_version_user", $feature) && $tableObj->versioning) $feature["gc2_version_user"] = null;
