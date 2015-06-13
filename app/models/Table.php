@@ -189,6 +189,27 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "viewdefinition", null);
 
                 }
+                // Is indexed?
+                if (1==1) {
+                    $type = $row['f_table_name'];
+                    if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                        $type = "a" . $type;
+                    }
+                    $url = "http://127.0.0.1:9200/{$this->postgisdb}_{$row['f_table_schema']}/{$type}/";
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+                    curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    $output = curl_exec($ch);
+                    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    if ($httpcode == "200") {
+                        $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
+                    } else {
+                        $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
+                    }
+                }
                 $response['data'][] = $arr;
             }
         }

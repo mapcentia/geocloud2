@@ -24,6 +24,7 @@ $(window).ready(function () {
         dataType: 'json',
         success: function (data) {
             fieldsForStore = data.forStore;
+            fieldsForStore.push({name: "indexed_in_es", type: "bool"});
         }
     });
     $.ajax({
@@ -370,7 +371,7 @@ $(window).ready(function () {
                 handler: onWorkflow,
                 disabled: true,
                 hidden: (window.gc2Options.enableWorkflow !== null && window.gc2Options.enableWorkflow[screenName] === true) ? false : true
-    },
+            },
             {
                 text: '<i class="icon-camera btn-gc"></i> ' + __('CartoMobile'),
                 handler: onEditCartomobile,
