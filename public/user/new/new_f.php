@@ -82,6 +82,17 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
                                 </label>
                             </label>
                         </div>
+                        <div>
+                        <select name="Usergroup" class="form-control">
+                        <option value=\""></option>
+                        <?php
+foreach($_SESSION['subusers'] as $subuser) {
+        echo "<option value=\"{$subuser}\">{$subuser}</option>";
+}
+
+?>
+</select>
+</div>
                         <div class="controls">
                             <input type="submit" class="btn btn-danger full-width" value="Create Sub-User">
                         </div>

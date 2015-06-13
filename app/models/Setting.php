@@ -148,6 +148,31 @@ class Setting extends Model
         }
         return $response;
     }
+    public function updateUserGroups($userGroup)
+    {
+        $arr = $this->getArray();
+        $obj = (array)$arr['userGroups'];
+        foreach($userGroup as $key => $value) {
+            $obj[$key] =$value;
+        }
+        $arr['userGroups'] = $obj;
+        if (\app\conf\App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        if (!$this->PDOerror) {
+            $response['success'] = true;
+            $response['message'] = "Usergroups updated";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror;
+            $response['code'] = 400;
+        }
+        return $response;
+    }
 
     public function get($unsetPw = false)
     {

@@ -160,7 +160,7 @@ class Table extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
-            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
                         $def = json_decode($row['def']);

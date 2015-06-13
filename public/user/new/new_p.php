@@ -45,14 +45,15 @@ $sUserID = VDFormat($_POST['UserID'], true);
 $sPassword = VDFormat($_POST['Password'], true);
 $sEmail = VDFormat($_POST['Email'], true);
 $sZone = VDFormat($_POST['Zone'], true);
+$sUsergroup = VDFormat($_POST['Usergroup'], true);
 
 $sUserID = Model::toAscii($sUserID, NULL, "_");
 $sPassword = Setting::encryptPw($sPassword);
 
-$sQuery = "INSERT INTO {$sTable} (screenname,pw,email,zone,parentdb) VALUES( :sUserID, :sPassword, :sEmail, :sZone, :sParentDb) RETURNING created";
+$sQuery = "INSERT INTO {$sTable} (screenname,pw,email,zone,parentdb,usergroup) VALUES( :sUserID, :sPassword, :sEmail, :sZone, :sParentDb, :sUsergroup) RETURNING created";
 
 $res = $postgisObject->prepare($sQuery);
-$res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword, ":sEmail" => $sEmail, ":sZone" => $_SESSION['zone'], ":sParentDb" => $_SESSION['screen_name']));
+$res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword, ":sEmail" => $sEmail, ":sZone" => $_SESSION['zone'], ":sParentDb" => $_SESSION['screen_name'], ":sUsergroup" => $sUsergroup));
 $row = $res->fetch();
 
 if (!$row['created']) {
@@ -74,7 +75,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
                             $("#alert-schema").show();
                         }
                         else {
-                            $('#schema-failure').modal({ backdrop: 'static', keyboard: false })
+                            $('#schema-failure').modal({backdrop: 'static', keyboard: false})
                         }
                     }
                 });

@@ -43,6 +43,7 @@ function UserIDCheck($sValue, &$oStatus)
         $_SESSION['screen_name'] = ($row['parentdb']) ? : $sUserID;
         $_SESSION['subuser'] = ($row['parentdb']) ? $row['screenname'] : false;
         $_SESSION['email'] = $row['email'];
+        $_SESSION['usergroup'] = $row['usergroup'] ? :false;
         $_SESSION['created'] = strtotime($row['created']);
     } else {
         $oStatus->bValid = 0;

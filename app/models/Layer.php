@@ -156,7 +156,7 @@ class Layer extends \app\models\Table
             // Session is sub-user we always check privileges
             if ($_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
-                if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
+                if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
                 } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
                     $response['data'][] = $arr;

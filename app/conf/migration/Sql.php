@@ -238,6 +238,7 @@ class Sql
     public static function mapcentia()
     {
         $sqls[] = "ALTER TABLE users ADD COLUMN parentdb VARCHAR(255)";
+        $sqls[] = "ALTER TABLE users ADD COLUMN usergroup VARCHAR(255)";
         return $sqls;
     }
 

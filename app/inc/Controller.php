@@ -4,7 +4,8 @@ namespace app\inc;
 class Controller
 {
     public $response;
-    public function auth($key=null, $level = array("all" => true), $neverAllowSubUser = false)
+
+    public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
     {
         if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
             $response['success'] = true;
@@ -17,7 +18,8 @@ class Controller
             } else {
                 $layer = new \app\models\Layer();
                 $privileges = (array)json_decode($layer->getValueFromKey($key, "privileges"));
-                $subuserLevel = $privileges[$_SESSION['subuser']];
+                //print_r($_SESSION);
+                $subuserLevel = $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']];
                 if (!isset($level[$subuserLevel])) {
                     $response['success'] = false;
                     $response['message'] = $text;
