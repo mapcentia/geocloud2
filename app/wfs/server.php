@@ -821,6 +821,7 @@ function doParse($arr)
             }
             foreach ($featureMember as $hey) {
                 foreach ($hey as $typeName => $feature) {
+
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
 
