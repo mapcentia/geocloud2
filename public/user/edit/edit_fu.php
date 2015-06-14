@@ -19,8 +19,9 @@ $user = $_GET["user"];
                     <div class="center">
                         <div class="alert alert-info first" style="margin-bottom: 0">
                             <h3>Change sub-user settings</h3>
+
                             <div class="center">
-                                    Leave password field empty for keeping the current one.
+                                Leave password field empty for keeping the current one.
                             </div>
                         </div>
                     </div>
@@ -53,11 +54,13 @@ $user = $_GET["user"];
                             $res->execute(array(":sUserID" => $user));
                             $row = $postgisObject->fetchRow($res);
                             foreach ($_SESSION['subusers'] as $subuser) {
-                                echo "<option value=\"{$subuser}\"";
-                                if ($subuser == $row["usergroup"]) {
-                                    echo " SELECTED";
+                                if ($subuser != $user) {
+                                    echo "<option value=\"{$subuser}\"";
+                                    if ($subuser == $row["usergroup"]) {
+                                        echo " SELECTED";
+                                    }
+                                    echo ">{$subuser}</option>";
                                 }
-                                echo ">{$subuser}</option>";
                             }
                             ?>
                         </select>

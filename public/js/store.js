@@ -13,7 +13,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups;
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -43,6 +43,9 @@ $(window).ready(function () {
                 if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
                     extentRestricted = true;
                 }
+            }
+            if (typeof settings.userGroups !== "undefined") {
+                subUserGroups = settings.userGroups;
             }
         }
     });
@@ -1619,6 +1622,9 @@ $(window).ready(function () {
                     },
                     {
                         name: "privileges"
+                    },
+                    {
+                        name: "group"
                     }
                 ]
             ),
@@ -1658,7 +1664,7 @@ $(window).ready(function () {
         var privilgesWin = new Ext.Window({
             title: __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
             modal: true,
-            width: 500,
+            width: 600,
             height: 330,
             initCenter: true,
             closeAction: 'hide',
@@ -1666,19 +1672,20 @@ $(window).ready(function () {
             layout: 'border',
             items: [
                 new Ext.Panel({
-                    height: 200,
-                    border: false,
+                    height: 500,
+                    border: true,
                     region: "center",
+                    layout: 'border',
+
                     items: [
                         new Ext.grid.EditorGridPanel({
                             store: privilegesStore,
                             viewConfig: {
                                 forceFit: true
                             },
-                            height: 200,
                             region: 'center',
                             frame: false,
-                            border: true,
+                            border: false,
                             sm: new Ext.grid.RowSelectionModel({
                                 singleSelect: true
                             }),
@@ -1698,21 +1705,34 @@ $(window).ready(function () {
                                         dataIndex: 'privileges',
                                         sortable: false,
                                         renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                            var _key_ = records[0].get("_key_");
+                                            var _key_ = records[0].get("_key_"), disabled;
+                                            if (typeof subUserGroups[record.data.subuser] === "undefined" || subUserGroups[record.data.subuser] === "") {
+                                                disabled = "";
+                                            } else {
+                                                disabled = "disabled";
+                                            }
                                             var retval =
-                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
-                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
-                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
-                                                    '<input data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All')
+                                                    '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
+                                                    '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
+                                                    '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
+                                                    '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All') + '&nbsp;&nbsp;&nbsp;'
                                                 ;
                                             return retval;
+                                        }
+                                    },
+                                    {
+                                        header: __('Inherit privileges from'),
+                                        dataIndex: 'group',
+                                        editable: false,
+                                        width: 50,
+                                        renderer: function (val, cell, record, rowIndex, colIndex, store) {
+                                            return subUserGroups[record.data.subuser];
                                         }
                                     }
                                 ]
                             })
                         }),
                         new Ext.Panel({
-                                height: 110,
                                 border: false,
                                 region: "south",
                                 bodyStyle: {
@@ -1726,6 +1746,9 @@ $(window).ready(function () {
                                 "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
                                 "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
                                 "<ul>" +
+                                "<br><p>" +
+                                __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
+                                "</p>" +
                                 "<br><p>" +
                                 __("The privileges are granted for both Admin and external services like WMS and WFS.") +
                                 "</p>"
