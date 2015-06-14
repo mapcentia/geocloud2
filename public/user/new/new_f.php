@@ -84,7 +84,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
                         </div>
                         <div class="center">
                             <div class="alert alert-info first" style="margin-bottom: 20px">
-                                Inherit the privileges of another sub-user.
+                                Inherit the privileges from another sub-user. If set the new sub-users will have the same privileges as the selected. That is, the selected sub-user will serve as a user group. You will not be able to grant privileges directly to the new sub-user.
                             </div>
                         </div>
                         <div class="controls">

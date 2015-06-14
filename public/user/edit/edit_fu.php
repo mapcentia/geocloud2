@@ -42,7 +42,7 @@ $user = $_GET["user"];
                     </div>
                     <div class="center">
                         <div class="alert alert-info first">
-                            Select empty user group for setting no group.
+                            Inherit the privileges from another sub-user. Set to blank if you don't want the sub-user to inherit privileges.
                         </div>
                     </div>
                     <div class="controls" style="margin-bottom: 20px">
