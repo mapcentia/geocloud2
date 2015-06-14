@@ -232,3 +232,6 @@ q:after, q:before {
     padding-left: 6px;
     padding-top: 5px;
 }
+.x-tree-node {
+    white-space: pre-wrap;
+}
