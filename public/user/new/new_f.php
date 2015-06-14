@@ -82,18 +82,23 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || $_SESSION['subuser'] != f
                                 </label>
                             </label>
                         </div>
-                        <div>
-                        <select name="Usergroup" class="form-control">
-                        <option value=\""></option>
+                        <div class="center">
+                            <div class="alert alert-info first" style="margin-bottom: 20px">
+                                Inherit the privileges of another sub-user.
+                            </div>
+                        </div>
+                        <div class="controls">
+                        <select name="Usergroup" class="form-control" >
+                        <option value=""></option>
                         <?php
-foreach($_SESSION['subusers'] as $subuser) {
-        echo "<option value=\"{$subuser}\">{$subuser}</option>";
+foreach ($_SESSION['subusers'] as $subuser) {
+    echo "<option value=\"{$subuser}\">{$subuser}</option>";
 }
 
 ?>
 </select>
 </div>
-                        <div class="controls">
+                        <div class="controls" style="margin-top: 20px">
                             <input type="submit" class="btn btn-danger full-width" value="Create Sub-User">
                         </div>
                     </div>

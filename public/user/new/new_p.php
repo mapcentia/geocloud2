@@ -79,9 +79,29 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
                         }
                     }
                 });
+
             });
         </script>
-    <?php } ?>
+    <?php }
+    if ($_POST['Usergroup']) {
+    ?>
+    <script>
+        var hostName = "<?php echo $host ?>";
+        $.ajax({
+            url: hostName + '/controllers/setting/usergroups',
+            dataType: 'jsonp',
+            jsonp: 'jsonp_callback',
+            data: 'q={"data":{"<?php echo $_POST['UserID'];?>":"<?php echo $_POST['Usergroup'];?>"}}',
+            success: function (response) {
+                if (response.success === true) {
+                }
+                else {
+                    $('#schema-failure').modal({backdrop: 'static', keyboard: false})
+                }
+            }
+        });
+    </script>
+<?php } ?>
     <div id="schema-failure" class="modal fade">
         <div class="modal-dialog">
             <div class="modal-content">

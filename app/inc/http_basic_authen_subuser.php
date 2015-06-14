@@ -32,7 +32,11 @@ if (sizeof($dbSplit) == 2) { //Sub-user
     $db = $dbSplit[1];
     // We set the SESSION, if request is coming from outside a session
     $subUser = $_SESSION["subuser"] = $dbSplit[0];
-    $userGroup = $_SESSION['usergroup'] = "mr_sub";
+
+    $settings_viewer = new \app\models\Setting();
+    $response = $settings_viewer->get();
+    $userGroup = $response["data"]["userGroups"]->$subUser;
+
     if ($dbSplit[0] != $postgisschema) {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
         $res = $postgisObject->prepare($sql);

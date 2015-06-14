@@ -12,19 +12,7 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 // Set schema for the mapfiles write request
 $_SESSION['postgisschema'] = "public";
 
-$prefix = ($_SESSION['zone']) ? App::$param['domainPrefix'] . $_SESSION['zone'] . "." : "";
-if (App::$param['domain']) {
-    $host = "//" . $prefix . App::$param['domain'] . ":" . $_SERVER['SERVER_PORT'];
-} else {
-    $host = App::$param['host'];
-}
 
-if (App::$param['cdnSubDomain']) {
-    $bits = explode("://", $host);
-    $cdnHost = $bits[0] . "://" . App::$param['cdnSubDomain'] . "." . $bits[1];
-} else {
-    $cdnHost = $host;
-}
 // If main user fetch all sub users
 //if (!$_SESSION['subuser']) {
 $_SESSION['subusers'] = array();
@@ -46,7 +34,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                     <input id="schema-filter" type="text" class="form-control" placeholder="Filter by name..."
                            style="width: 200px; margin-bottom: 15px">
 
-<!--                    <div style="position: absolute">No schemas found.</div>-->
+                    <!--                    <div style="position: absolute">No schemas found.</div>-->
                     <div id="schema-list"></div>
                 </div>
             </div>
@@ -56,7 +44,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                     <input id="user-filter" type="text" class="form-control" placeholder="Filter by user..."
                            style="width: 200px; margin-bottom: 15px">
 
-<!--                    <div style="position: absolute">No users found.</div>-->
+                    <!--                    <div style="position: absolute">No users found.</div>-->
                     <div id="subusers-el"></div>
                 </div>
             </div>
@@ -103,15 +91,18 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                 </div>
 
                 <div style="float: right">
-                    <a data-toggle="tooltip" data-placement="top" title="Open '<%= this . schema %>' in the response Map Viewer"
+                    <a data-toggle="tooltip" data-placement="top"
+                       title="Open '<%= this . schema %>' in the response Map Viewer"
                        class="btn btn-xs btn-default" target="_blank"
                        href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span>Viewer</span>
                     </a>
-                    <a data-toggle="tooltip" data-placement="top" title="Open '<%= this . schema %>' in the advanced Map Client"
+                    <a data-toggle="tooltip" data-placement="top"
+                       title="Open '<%= this . schema %>' in the advanced Map Client"
                        class="btn btn-xs btn-default" target="_blank"
                        href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
                     </a>
-                    <a data-toggle="tooltip" data-placement="top" title="Open GC2 administration for '<%= this . schema %>'"
+                    <a data-toggle="tooltip" data-placement="top"
+                       title="Open GC2 administration for '<%= this . schema %>'"
                        class="btn btn-xs btn-primary fixed-width" target="_blank"
                        href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
                             class="glyphicon glyphicon-cog"></span>
@@ -126,13 +117,24 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
         <div class="panel panel-default">
             <div class="panel-heading"><span class="glyphicon glyphicon-user"></span> <%= this %></div>
             <div class="panel-body">
-                <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
-                    <span><%= subUserEmails[this] %></span>
-                    <button data-toggle="tooltip" data-placement="top" title="Delete the user <%= this %>"
-                            class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
-                            class="glyphicon glyphicon-trash"></span></button>
+                <div style="margin-bottom: 15px">
+                    <%= subUserEmails[this] %>
+                </div>
 
-                </form>
+                <div class="user-btns">
+                    <form method="get" action="/user/edit/u"><input name="user" type="hidden" value="<%= this %>"/>
+                        <button data-user="<%= this %>" data-toggle="tooltip" data-placement="top"
+                                title="Change the pw and group of user <%= this %>"
+                                class="btn btn-xs btn-primary fixed-width change" type="submit"><span
+                                class="glyphicon glyphicon-cog"></span></button>
+                    </form>
+                    <form method="post" action="/user/delete/p"><input name="user" type="hidden" value="<%= this %>"/>
+                        <button data-toggle="tooltip" data-placement="top" title="Delete the user <%= this %>"
+                                class="btn btn-xs btn-danger fixed-width delete" type="submit"><span
+                                class="glyphicon glyphicon-trash"></span></button>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
@@ -196,6 +198,12 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                             .one('click', '#delete-user', function () {
                                                 $form.trigger('submit');
                                             });
+                                    });
+                                    $('.change').on('click', function (e) {
+                                        var $form = $(this).closest('form');
+                                        e.preventDefault();
+                                        $form.trigger('submit');
+
                                     });
                                 }
                             }

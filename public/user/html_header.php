@@ -314,8 +314,15 @@ h2 span i {
 .padded {
     padding: 40px;
 }
+.user-btns {
+    float: right;
+    width: 84px;
+}
 .delete {
     float: right;
+}
+.change {
+    float: left;
 }
 .right-border {
     border-right: 1px solid #ddd;

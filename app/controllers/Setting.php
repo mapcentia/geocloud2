@@ -43,8 +43,8 @@ class Setting extends \app\inc\Controller
         $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->settings->updateExtentRestrict(json_decode(Input::get())->data);
     }
-    public function put_usergroups()
+    public function get_usergroups() // Will update - used with jsonp
     {
-        return $this->settings->updateUserGroups(json_decode(Input::get())->data);
+        return $this->settings->updateUserGroups(json_decode(Input::get("q"))->data);
     }
 }
