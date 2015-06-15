@@ -1157,6 +1157,13 @@ $(document).ready(function () {
             handler: function () {
                 attributeForm.win.show();
             }
+        },
+        '-',
+        {
+            text: "<i class='icon-screenshot btn-gc'></i> " + __("Locate me"),
+                handler: function () {
+                cloud.locate();
+            }
         }];
     reLoadTree = function () {
         loadTree();
