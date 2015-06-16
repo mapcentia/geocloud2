@@ -87,6 +87,9 @@ attributeForm.init = function (layer, geomtype) {
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,
         region: 'center',
+        viewConfig: {
+            forceFit: true
+        },
         border: false,
         labelWidth: 150,
         bodyStyle: {
@@ -94,9 +97,10 @@ attributeForm.init = function (layer, geomtype) {
             padding: '7px'
         },
         defaults: {
-            width: 150,
+            //width: 150,
             maxLengthText: "too long",
-            minLengthText: "too short"
+            minLengthText: "too short",
+            anchor: '100%'
         },
         plugins: [
             new GeoExt.plugins.AttributeForm({

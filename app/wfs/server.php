@@ -247,15 +247,6 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
-        /*if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['subuser']] != "none" && $privileges[$_SESSION['subuser']] != false)) {
-
-        }
-        else {
-            $code = 400;
-            header("HTTP/1.0 {$code} " . \app\inc\Util::httpCodeText($code));
-            makeExceptionReport("dsdsd");
-        }*/
-
         if (!$gmlFeatureCollection) {
             $gmlFeatureCollection = "wfs:FeatureCollection";
         }
@@ -269,7 +260,9 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         if ($gmlSchemaLocation) {
             print "xsi:schemaLocation=\"{$gmlSchemaLocation}\"";
         } else {
-            print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] . " http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd\"";
+            print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] .
+                " http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd\"" .
+                " ";
         }
         if ($resultType != "hits") print ">\n";
         doQuery("Select");
@@ -358,7 +351,7 @@ function doQuery($queryType)
     global $parentUser;
     global $layerObj;
     global $dbSplit;
-    //global $fieldConfArr;
+    global $fieldConfArr;
     global $geometryColumnsObj;
 
     if (!$srs) {
@@ -372,7 +365,7 @@ function doQuery($queryType)
                 include_once("inc/http_basic_authen_subuser.php");
                 $tableObj = new table($postgisschema . "." . $table);
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
-                //$fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom","fieldconf"));
+                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom", "fieldconf"));
                 $sql = "SELECT ";
                 if ($resultType != "hits") {
                     if (!(empty($fields[$table]))) {
@@ -400,6 +393,9 @@ function doQuery($queryType)
                                 $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
                             }
                             $sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
+                        }
+                        if ($arr['type'] == "bytea") {
+                            $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
                         }
                     }
                 } else {
@@ -457,6 +453,7 @@ function doQuery($queryType)
                 if (!(empty($limits[$table]))) {
                     //$from .= " LIMIT " . $limits[$table];
                 }
+                //die($sql.$from);
                 doSelect($table, $sql, $sql2, $from);
             }
             break;
@@ -526,6 +523,7 @@ function doSelect($table, $sql, $sql2, $from)
     global $postgisschema;
     global $fieldConfArr;
     global $resultType;
+    global $server;
 
     if (!$gmlFeature[$table]) {
         $gmlFeature[$table] = $table;
@@ -580,32 +578,28 @@ function doSelect($table, $sql, $sql2, $from)
                 $FieldName = $keys[$i];
                 $FieldValue = $myrow[$FieldName];
                 if (($tableObj->metaData[$FieldName]['type'] != "geometry") && ($FieldName != "txmin") && ($FieldName != "tymin") && ($FieldName != "txmax") && ($FieldName != "tymax") && ($FieldName != "tymax") && ($FieldName != "oid")) {
-
                     if ($gmlUseAltFunctions['altFieldValue']) {
                         $FieldValue = altFieldValue($FieldName, $FieldValue);
                     }
-
                     if ($gmlUseAltFunctions['altFieldNameToUpper']) {
                         $FieldName = altFieldNameToUpper($FieldName);
                     }
                     if ($gmlUseAltFunctions['changeFieldName']) {
                         $FieldName = changeFieldName($FieldName);
                     }
-
                     $fieldProperties = ((array)json_decode($fieldConfArr[$FieldName]->properties));
                     if ($fieldProperties['cartomobilePictureUrl']) {
-                        //if ($myrow[$fieldProperties['cartomobilePictureUrl']]) {
                         $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
-                        //}
                     }
-
-                    //$FieldValue = htmlentities($FieldValue);
                     $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
 
-
                     if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
-                        writeTag("open", $gmlNameSpace, $FieldName, null, True, False);
-                        //$FieldType = pg_field_type($result, $i);
+                        if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
+                            $imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
+                        } else {
+                            $imageAttr = null;
+                        }
+                        writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
                         echo $FieldValue;
                         writeTag("close", $gmlNameSpace, $FieldName, null, False, True);
                     }
@@ -770,7 +764,7 @@ function altFieldValue($field, $value)
 function altUseCdataOnStrings($value, $name)
 {
     if (!is_numeric($value) && ($value)) {
-        $value = "<![CDATA[".$value."]]>";
+        $value = "<![CDATA[" . $value . "]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
     } else {

@@ -110,6 +110,9 @@ class Table extends Model
         } elseif (preg_match("/hstore/", $field['type'])) {
             $field['typeObj'] = array("type" => "hstore");
             $field['type'] = "hstore";
+        } elseif (preg_match("/bytea/", $field['type'])) {
+            $field['typeObj'] = array("type" => "bytea");
+            $field['type'] = "bytea";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";
@@ -544,6 +547,9 @@ class Table extends Model
                 break;
             case "Boolean":
                 $type = "bool";
+                break;
+            case "Bytea":
+                $type = "bytea";
                 break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";

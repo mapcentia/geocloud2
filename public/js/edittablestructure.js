@@ -387,6 +387,10 @@ tableStructure.init = function (record, screenName) {
                                     name: 'Boolean',
                                     value: 'bool'
                                 },
+                                {
+                                    name: 'Bytea',
+                                    value: 'bytea'
+                                },
 
                                 {
                                     name: 'Geometry',

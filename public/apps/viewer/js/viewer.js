@@ -878,7 +878,8 @@ Viewer = function () {
                                                             out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + (property.linkprefix !== null ? property.linkprefix : "") + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
                                                         }
                                                         else {
-                                                            out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
+                                                            //out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
+                                                            out.push([name, property.sort_id, fieldLabel, "<img src='" + feature.properties[name] + "'/>"]);
                                                         }
                                                     }
                                                 }
@@ -917,7 +918,7 @@ Viewer = function () {
                             }
                             sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                         } else {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                            sql = "SELECT gid,the_geom,encode(bytea,'escape') as bytea FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL ";
                             }

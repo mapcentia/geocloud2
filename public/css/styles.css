@@ -235,3 +235,9 @@ q:after, q:before {
 .x-tree-node {
     white-space: pre-wrap;
 }
+.x-form-file-btn {
+    display: none !important;
+}
+.x-form-file-wrap {
+    white-space: normal !important;
+}

@@ -284,8 +284,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         layout: 'fit',
         initCenter: true,
         border: false,
-        width: 340,
-        height: 300,
+        width: 420,
+        height: 350,
         closeAction: 'hide',
         plain: true,
         items: [new Ext.Panel({

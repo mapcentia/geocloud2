@@ -2181,7 +2181,7 @@ GeoExt.form.recordToField = function (i, q) {
         var e = g.maxLength !== undefined ? parseFloat(g.maxLength) : undefined;
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
-            if (e){
+            if (e) {
                 n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
             } else {
                 n = Ext.apply({xtype: "textarea", fieldLabel: o, maxLength: e, minLength: f}, h);
@@ -2194,46 +2194,84 @@ GeoExt.form.recordToField = function (i, q) {
                 fieldLabel: o, maxLength: e, minLength: f
             }), h)
         }
-    } else {
-        if (l.match(a.number)) {
-            var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
-            var m = g.minInclusive !== undefined ? parseFloat(g.minInclusive) : undefined;
-            if (!arrStore) {
-                n = Ext.apply({xtype: "numberfield", fieldLabel: o, maxValue: j, minValue: m}, h)
-            } else {
-                n = Ext.apply(new Ext.form.ComboBox({
-                    store: arrStore,
-                    editable: false,
-                    triggerAction: 'all',
-                    fieldLabel: o, maxValue: j, minValue: m
-                }), h)
-            }
+    } else if (l.match(a.number)) {
+        var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
+        var m = g.minInclusive !== undefined ? parseFloat(g.minInclusive) : undefined;
+        if (!arrStore) {
+            n = Ext.apply({xtype: "numberfield", fieldLabel: o, maxValue: j, minValue: m}, h)
         } else {
-            if (l.match(a["boolean"])) {
-                n = Ext.apply({xtype: "checkbox"}, h);
-                var p = q.checkboxLabelProperty || "boxLabel";
-                n[p] = o
-            } else {
-                if (l.match(a.date)) {
-                    //n = Ext.apply({xtype: "datefield", fieldLabel: o, format: "Y-m-d G:i:s"}, h)
-                    n = Ext.apply(new Ext.form.DateField({
-                        fieldLabel: o,
-                        convert: function (value, records) {
-                            var rcptDate = new Date(value);
-                            return Ext.Date.format(rcptDate, 'm-d-Y g:i A');
+            n = Ext.apply(new Ext.form.ComboBox({
+                store: arrStore,
+                editable: false,
+                triggerAction: 'all',
+                fieldLabel: o, maxValue: j, minValue: m
+            }), h)
+        }
+    } else if (l.match(a.boolean)) {
+        n = Ext.apply({xtype: "checkbox"}, h);
+        var p = q.checkboxLabelProperty || "boxLabel";
+        n[p] = o
+    } else if (l.match(a.date)) {
+        n = Ext.apply(new Ext.form.DateField({
+            fieldLabel: o,
+            convert: function (value, records) {
+                var rcptDate = new Date(value);
+                return Ext.Date.format(rcptDate, 'm-d-Y g:i A');
+            }
+        }), h)
+    } else if (l.match(a.base64Binary)) {
+        n = Ext.apply({
+            xtype: 'fileuploadfield',
+            emptyText: 'Select a file',
+            fieldLabel: o,
+            readOnly: false,
+            buttonText: '',
+            buttonCfg: {
+                iconCls: 'upload-icon'
+            },
+            listeners: {
+                'fileselected': function (fb, v) {
+                    var reader = new FileReader(), img = document.createElement("img"),
+                        file = document.querySelector('#' + fb.fileInput.id).files[0];
+                    reader.onload = function (e) {
+                        img.src = e.target.result;
+                        var canvas = document.createElement("canvas"),
+                            ctx = canvas.getContext("2d"),
+                            MAX_WIDTH = 300,
+                            MAX_HEIGHT = 300,
+                            width = img.width,
+                            height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
                         }
-                    }), h)
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        $("#" + fb.id).val(canvas.toDataURL("image/png"));
+                    };
+                    reader.readAsDataURL(file);
                 }
             }
-        }
+        }, h);
     }
     return n
-};
+}
+;
 GeoExt.form.recordToField.REGEXES = {
     text: new RegExp("^(text|string)$", "i"),
     number: new RegExp("^(number|float|decimal|double|int|long|integer|short)$", "i"),
     "boolean": new RegExp("^(boolean)$", "i"),
-    date: new RegExp("^(date|dateTime)$", "i")
+    date: new RegExp("^(date|dateTime)$", "i"),
+    base64Binary: new RegExp("^(base64Binary)$", "i")
 };
 Ext.namespace("GeoExt");
 GeoExt.FeatureRenderer = Ext.extend(Ext.BoxComponent, {

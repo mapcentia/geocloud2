@@ -33,6 +33,7 @@ include("html_header.php");
 <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7453012a468a8a38"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js"></script>
 <script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js"></script>
 <!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/msg.js?6871687e437cdbb4"></script>

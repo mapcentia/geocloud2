@@ -2,6 +2,7 @@
 $atts["targetNamespace"] = $gmlNameSpaceUri;
 $atts["xmlns:xsd"] = "http://www.w3.org/2001/XMLSchema";
 $atts["xmlns:gml"] = "http://www.opengis.net/gml";
+$atts["xmlns:image"] = "http://www.mapcentia.com/image";
 $atts["xmlns:{$gmlNameSpace}"] = $gmlNameSpaceUri;
 $atts["elementFormDefault"] = "qualified";
 $atts["version"] = "1.0";
@@ -10,6 +11,9 @@ $atts = null;
 $depth++;
 $atts["namespace"] = "http://www.opengis.net/gml";
 $atts["schemaLocation"] = "http://schemas.opengis.net/gml/2.1.2/feature.xsd";
+writeTag("selfclose", "xsd", "import", $atts, True, True);
+$atts["namespace"] = "http://www.mapcentia.com/image";
+$atts["schemaLocation"] = $server . "/xmlschemas/image.xsd";
 writeTag("selfclose", "xsd", "import", $atts, True, True);
 $atts = null;
 
@@ -96,6 +100,13 @@ foreach ($tables as $table) {
         } else {
             unset($atts["type"]);
         }
+        $properties = json_decode($fieldConf->$atts["name"]->properties);
+        if (isset($properties->type) && $properties->type == "image") {
+            $atts["type"] = "image:image";
+        }
+        else {
+            unset($atts["type"]);
+        }
         $atts["minOccurs"] = "0";
         writeTag("open", "xsd", "element", $atts, True, True);
 
@@ -115,27 +126,32 @@ foreach ($tables as $table) {
             if ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
                 $tableObj->metaData[$atts["name"]]['type'] = "date";
             }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+                $tableObj->metaData[$atts["name"]]['type'] = "base64Binary";
+            }
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
-            if ($fieldConf->$atts["name"]->properties) {
-                if ($fieldConf->$atts["name"]->properties == "*") {
-                    $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
-                    foreach($distinctValues["data"] as $prop){
-                        echo "<xsd:enumeration value=\"{$prop}\"/>";
-                    }
-                } else {
-                    foreach (json_decode($fieldConf->$atts["name"]->properties) as $prop) {
-                        echo "<xsd:enumeration value=\"{$prop}\"/>";
+            if (!isset($properties->type)) {
+                echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
+                if ($fieldConf->$atts["name"]->properties) {
+                    if ($fieldConf->$atts["name"]->properties == "*") {
+                        $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
+                        foreach ($distinctValues["data"] as $prop) {
+                            echo "<xsd:enumeration value=\"{$prop}\"/>";
+                        }
+                    } else {
+                        foreach ($properties as $prop) {
+                            echo "<xsd:enumeration value=\"{$prop}\"/>";
+                        }
                     }
                 }
+                if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+                    echo "<xsd:minLength value=\"{$minLength}\"/>";
+                    if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
+                }
+                echo '</xsd:restriction></xsd:simpleType>';
             }
-            if ($tableObj->metaData[$atts["name"]]['type'] == "string"){
-                echo "<xsd:minLength value=\"{$minLength}\"/>";
-                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
-            }
-            echo '</xsd:restriction></xsd:simpleType>';
         }
         writeTag("close", "xsd", "element", NULL, False, True);
         $atts = Null;
