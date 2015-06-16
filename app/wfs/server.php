@@ -591,13 +591,13 @@ function doSelect($table, $sql, $sql2, $from)
                     if ($fieldProperties['cartomobilePictureUrl']) {
                         $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
                     }
-                    $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
 
                     if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
                         if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
                             $imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
                             $imageAttr = null;
+                            $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
                         }
                         writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
                         echo $FieldValue;
