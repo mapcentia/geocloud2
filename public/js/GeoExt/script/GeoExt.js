@@ -2219,7 +2219,7 @@ GeoExt.form.recordToField = function (i, q) {
                 return Ext.Date.format(rcptDate, 'm-d-Y g:i A');
             }
         }), h)
-    } else if (l.match(a.image)) {
+    } else if (l.match(a.imageType)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
             emptyText: 'Select a file',
@@ -2272,7 +2272,7 @@ GeoExt.form.recordToField.REGEXES = {
     "boolean": new RegExp("^(boolean)$", "i"),
     date: new RegExp("^(date|dateTime)$", "i"),
     base64Binary: new RegExp("^(base64Binary)$", "i"),
-    image: new RegExp("^(image)$", "i")
+    imageType: new RegExp("^(imageType)$", "i")
 };
 Ext.namespace("GeoExt");
 GeoExt.FeatureRenderer = Ext.extend(Ext.BoxComponent, {
