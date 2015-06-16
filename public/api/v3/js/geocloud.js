@@ -1366,7 +1366,6 @@ geocloud = (function () {
             var layersArr = [];
             for (var i = 0; i < layers.length; i++) {
                 var l;
-                defaults.name = defaults.names[i];
                 switch (defaults.type) {
                     case  "wms":
                         l = createTileLayer(layers[i], defaults);
