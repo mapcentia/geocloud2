@@ -261,7 +261,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
             print "xsi:schemaLocation=\"{$gmlSchemaLocation}\"";
         } else {
             print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] .
-                " http://www.opengis.net/wfs http://wfs.plansystem.dk:80/geoserver/schemas/wfs/1.0.0/WFS-basic.xsd\"" .
+                " http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd\"" .
                 " ";
         }
         if ($resultType != "hits") print ">\n";
