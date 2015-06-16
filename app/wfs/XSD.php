@@ -12,9 +12,9 @@ $depth++;
 $atts["namespace"] = "http://www.opengis.net/gml";
 $atts["schemaLocation"] = "http://schemas.opengis.net/gml/2.1.2/feature.xsd";
 writeTag("selfclose", "xsd", "import", $atts, True, True);
-$atts["namespace"] = "http://www.mapcentia.com/image";
+/*$atts["namespace"] = "http://www.mapcentia.com/image";
 $atts["schemaLocation"] = $server . "/xmlschemas/image.xsd";
-writeTag("selfclose", "xsd", "import", $atts, True, True);
+writeTag("selfclose", "xsd", "import", $atts, True, True);*/
 $atts = null;
 
 if (!$tables[0]) {
@@ -71,6 +71,7 @@ foreach ($tables as $table) {
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
             $fieldConf = json_decode($typeRow['fieldconf']);
+            $properties = json_decode($fieldConf->$atts["name"]->properties);
             if ($def->geotype && $def->geotype !== "Default") {
                 if ($def->geotype == "LINE") {
                     $def->geotype = "LINESTRING";
@@ -100,12 +101,12 @@ foreach ($tables as $table) {
         } else {
             unset($atts["type"]);
         }
-        $properties = json_decode($fieldConf->$atts["name"]->properties);
-        if (isset($properties->type) && $properties->type == "image") {
-            $atts["type"] = "image:image";
-        }
-        else {
-            unset($atts["type"]);
+        if ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+            if (isset($properties->type) && $properties->type == "image") {
+                $atts["type"] = "image:image";
+            } else {
+                unset($atts["type"]);
+            }
         }
         $atts["minOccurs"] = "0";
         writeTag("open", "xsd", "element", $atts, True, True);
