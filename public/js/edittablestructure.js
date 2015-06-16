@@ -75,6 +75,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'image',
+            allowBlank: true
+        },
+        {
             name: 'linkprefix',
             allowBlank: true
         },
@@ -264,6 +268,13 @@ tableStructure.init = function (record, screenName) {
                     width: 35
                 },
                 {
+                    id: "image",
+                    xtype: 'checkcolumn',
+                    header: __("Image"),
+                    dataIndex: 'image',
+                    width: 35
+                },
+                {
                     id: "linkprefix",
                     header: __("Link prefix"),
                     dataIndex: "linkprefix",
@@ -391,7 +402,6 @@ tableStructure.init = function (record, screenName) {
                                     name: 'Bytea',
                                     value: 'bytea'
                                 },
-
                                 {
                                     name: 'Geometry',
                                     value: 'geometry'

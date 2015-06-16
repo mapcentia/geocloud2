@@ -2256,7 +2256,7 @@ GeoExt.form.recordToField = function (i, q) {
                         canvas.width = width;
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
-                        $("#" + fb.id).val(canvas.toDataURL("image/png"));
+                        $("#" + fb.id).val(btoa(canvas.toDataURL("image/png")));
                     };
                     reader.readAsDataURL(file);
                 }

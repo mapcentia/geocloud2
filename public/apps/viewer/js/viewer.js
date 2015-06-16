@@ -841,6 +841,7 @@ Viewer = function () {
                         var layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name;
                         var not_querable = metaDataKeys[value.split(".")[1]].not_querable;
                         var versioning = metaDataKeys[value.split(".")[1]].versioning;
+                        var fieldConf = metaDataKeys[value.split(".")[1]].fieldconf;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             distance = 5 * res[cloud.getZoom()];
                         }
@@ -876,10 +877,11 @@ Viewer = function () {
                                                     if (feature.properties[name] !== undefined) {
                                                         if (property.link) {
                                                             out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + (property.linkprefix !== null ? property.linkprefix : "") + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
+                                                        } else if (property.image) {
+                                                            out.push([name, property.sort_id, fieldLabel, "<img src='" + atob(feature.properties[name]) + "'/>"]);
                                                         }
                                                         else {
-                                                            //out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
-                                                            out.push([name, property.sort_id, fieldLabel, "<img src='" + feature.properties[name] + "'/>"]);
+                                                            out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
                                                         }
                                                     }
                                                 }
@@ -910,15 +912,30 @@ Viewer = function () {
                             }
                         });
                         cloud.addGeoJsonStore(qstore[index]);
-                        var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column;
+                        var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column, fields = [], fieldStr;
+                        //console.log($.parseJSON(fieldConf))
+                        if (fieldConf) {
+                            $.each($.parseJSON(fieldConf), function (i, v) {
+                                console.log(i)
+                                console.log(v)
+                                if (v.type === "bytea") {
+                                    fields.push("encode(\"" + i + "\",'escape') as " + i);
+                                } else {
+                                    fields.push("\"" + i + "\"");
+                                }
+                            });
+                            fieldStr = fields.join(",") + "," + f_geometry_column;
+                        } else {
+                            fieldStr = "*";
+                        }
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
+                            sql = "SELECT " + fieldStr + " FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL ";
                             }
                             sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                         } else {
-                            sql = "SELECT gid,the_geom,encode(bytea,'escape') as bytea FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                            sql = "SELECT " + fieldStr + " FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL ";
                             }

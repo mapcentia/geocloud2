@@ -391,6 +391,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
                 $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias);
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
+                $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
                 $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
                 if ($value['typeObj']['type'] == "decimal") {
