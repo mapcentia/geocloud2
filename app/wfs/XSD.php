@@ -2,7 +2,7 @@
 $atts["targetNamespace"] = $gmlNameSpaceUri;
 $atts["xmlns:xsd"] = "http://www.w3.org/2001/XMLSchema";
 $atts["xmlns:gml"] = "http://www.opengis.net/gml";
-$atts["xmlns:image"] = "http://www.mapcentia.com/image";
+$atts["xmlns:gc2"] = "http://www.mapcentia.com/gc2";
 $atts["xmlns:{$gmlNameSpace}"] = $gmlNameSpaceUri;
 $atts["elementFormDefault"] = "qualified";
 $atts["version"] = "1.0";
@@ -12,8 +12,8 @@ $depth++;
 $atts["namespace"] = "http://www.opengis.net/gml";
 $atts["schemaLocation"] = "http://schemas.opengis.net/gml/2.1.2/feature.xsd";
 writeTag("selfclose", "xsd", "import", $atts, True, True);
-$atts["namespace"] = "http://www.mapcentia.com/image";
-$atts["schemaLocation"] = $server . "/xmlschemas/image.xsd";
+$atts["namespace"] = "http://www.mapcentia.com/gc2";
+$atts["schemaLocation"] = $server . "/xmlschemas/gc2.xsd";
 writeTag("selfclose", "xsd", "import", $atts, True, True);
 $atts = null;
 
@@ -106,7 +106,7 @@ foreach ($tables as $table) {
             }
         } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
             if (isset($properties->type) && $properties->type == "image") {
-                $atts["type"] = "image:image";
+                $atts["type"] = "gc2:imageType";
             }
         } else {
             unset($atts["type"]);
