@@ -594,7 +594,7 @@ function doSelect($table, $sql, $sql2, $from)
 
                     if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
                         if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
-                            $imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
+                            //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
                             $imageAttr = null;
                             $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
