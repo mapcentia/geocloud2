@@ -104,21 +104,15 @@ foreach ($tables as $table) {
                     $atts["type"] = "gml:MultiPolygonPropertyType";
                     break;
             }
+        } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+            if (isset($properties->type) && $properties->type == "image") {
+                $atts["type"] = "image:image";
+            }
         } else {
             unset($atts["type"]);
-        }
-
-        if (isset($properties->type) && $properties->type == "image") {
-            $atts["type"] = "image:image";
-        } else {
-            unset($atts["type"]);
-
         }
         $atts["minOccurs"] = "0";
-
-
         writeTag("open", "xsd", "element", $atts, True, True);
-
         if (!isset($atts["type"])) {
             $minLength = "0";
             $maxLength = "256";
