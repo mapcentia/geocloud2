@@ -1066,13 +1066,15 @@ function doParse($arr)
                         }
                     }
                 }
-                $sql = "INSERT INTO {$forSql2['tables'][$i]}(";
+                $sql = "INSERT INTO {$postgisschema}.{$forSql2['tables'][$i]}(";
                 $sql .= implode(",", $intoArr);
                 $sql .= ")";
                 $sql .= " SELECT ";
                 $sql .= implode(",", $selectArr);
-                $sql .= " FROM {$forSql2['tables'][$i]}";
+                $sql .= " FROM {$postgisschema}.{$forSql2['tables'][$i]}";
                 $sql .= " WHERE {$forSql2['wheres'][$i]}";
+                //makeExceptionReport($sql);
+
                 $postgisObject->execQuery($sql);
             }
             $sql = "UPDATE {$postgisschema}.{$forSql2['tables'][$i]} SET ";
