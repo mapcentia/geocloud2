@@ -916,8 +916,6 @@ Viewer = function () {
                         //console.log($.parseJSON(fieldConf))
                         if (fieldConf) {
                             $.each($.parseJSON(fieldConf), function (i, v) {
-                                console.log(i)
-                                console.log(v)
                                 if (v.type === "bytea") {
                                     fields.push("encode(\"" + i + "\",'escape') as " + i);
                                 } else {

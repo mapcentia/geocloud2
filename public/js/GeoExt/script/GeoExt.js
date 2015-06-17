@@ -2222,7 +2222,7 @@ GeoExt.form.recordToField = function (i, q) {
     } else if (l.match(a.imageType)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
-            emptyText: 'Select a file',
+            emptyText: 'Select an image',
             fieldLabel: o,
             readOnly: false,
             buttonText: '',
@@ -2237,8 +2237,8 @@ GeoExt.form.recordToField = function (i, q) {
                         img.src = e.target.result;
                         var canvas = document.createElement("canvas"),
                             ctx = canvas.getContext("2d"),
-                            MAX_WIDTH = 300,
-                            MAX_HEIGHT = 300,
+                            MAX_WIDTH = 800,
+                            MAX_HEIGHT = 800,
                             width = img.width,
                             height = img.height;
                         ctx.drawImage(img, 0, 0);
@@ -2257,6 +2257,27 @@ GeoExt.form.recordToField = function (i, q) {
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
                         $("#" + fb.id).val(btoa(canvas.toDataURL("image/png")));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }, h);
+    } else if (l.match(a.base64Binary)) {
+        n = Ext.apply({
+            xtype: 'fileuploadfield',
+            emptyText: 'Select a file',
+            fieldLabel: o,
+            readOnly: false,
+            buttonText: '',
+            buttonCfg: {
+                iconCls: 'upload-icon'
+            },
+            listeners: {
+                'fileselected': function (fb, v) {
+                    var reader = new FileReader()
+                        file = document.querySelector('#' + fb.fileInput.id).files[0];
+                    reader.onload = function (e) {
+                        $("#" + fb.id).val(btoa(reader.result));
                     };
                     reader.readAsDataURL(file);
                 }
