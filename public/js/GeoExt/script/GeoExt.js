@@ -2222,7 +2222,7 @@ GeoExt.form.recordToField = function (i, q) {
     } else if (l.match(a.imageType)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
-            emptyText: 'Select an image',
+            emptyText: 'Image byte string',
             fieldLabel: o,
             readOnly: false,
             buttonText: '',
@@ -2265,7 +2265,7 @@ GeoExt.form.recordToField = function (i, q) {
     } else if (l.match(a.base64Binary)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
-            emptyText: 'Select a file',
+            emptyText: 'File byte string',
             fieldLabel: o,
             readOnly: false,
             buttonText: '',

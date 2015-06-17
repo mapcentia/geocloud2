@@ -914,16 +914,15 @@ Viewer = function () {
                         });
                         cloud.addGeoJsonStore(qstore[index]);
                         var sql, f_geometry_column = metaDataKeys[value.split(".")[1]].f_geometry_column, fields = [], fieldStr;
-                        //console.log($.parseJSON(fieldConf))
                         if (fieldConf) {
                             $.each($.parseJSON(fieldConf), function (i, v) {
                                 if (v.type === "bytea") {
-                                    fields.push("encode(\"" + i + "\",'escape') as " + i);
-                                } else {
+                                    fields.push("encode(\"" + i + "\",'escape') as \"" + i + "\"");
+                                } else if (i !== f_geometry_column){
                                     fields.push("\"" + i + "\"");
                                 }
                             });
-                            fieldStr = fields.join(",") + "," + f_geometry_column;
+                            fieldStr = fields.join(",") + ",\"" + f_geometry_column + "\"";
                         } else {
                             fieldStr = "*";
                         }
@@ -934,7 +933,7 @@ Viewer = function () {
                             }
                             sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                         } else {
-                            sql = "SELECT " + fieldStr + " FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                            sql = "SELECT " + fieldStr + " FROM \"" + value.split(".")[0] + "\".\"" + value.split(".")[1] + "\" WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',3857)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL ";
                             }
