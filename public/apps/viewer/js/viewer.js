@@ -860,7 +860,7 @@ Viewer = function () {
                                 isEmpty = layerObj.isEmpty();
                                 if (!isEmpty && !not_querable) {
                                     showInfoModal();
-                                    var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf);
+                                    var fieldConf = $.parseJSON(metaDataKeys[value.split(".")[1]].fieldconf), imageUrl;
                                     $("#info-tab").append('<li><a data-toggle="tab" href="#_' + index + '">' + layerTitel + '</a></li>');
                                     $("#info-pane").append('<div class="tab-pane" id="_' + index + '"><table class="table table-condensed"><thead><tr><th>' + __("Property") + '</th><th>' + __("Value") + '</th></tr></thead></table></div>');
 
@@ -878,7 +878,8 @@ Viewer = function () {
                                                         if (property.link) {
                                                             out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + (property.linkprefix !== null ? property.linkprefix : "") + feature.properties[name] + "'>" + feature.properties[name] + "</a>"]);
                                                         } else if (property.image) {
-                                                            out.push([name, property.sort_id, fieldLabel, "<img src='" + atob(feature.properties[name]) + "'/>"]);
+                                                            imageUrl = (property.type === "bytea" ? atob(feature.properties[name]) : feature.properties[name]);
+                                                            out.push([name, property.sort_id, fieldLabel, "<a target='_blank' href='" + imageUrl + "'><img style='width:178px' src='" + imageUrl + "'/></a>"]);
                                                         }
                                                         else {
                                                             out.push([name, property.sort_id, fieldLabel, feature.properties[name]]);
