@@ -177,8 +177,10 @@ module.exports = function (grunt) {
                         DEBUG: true
                     }
                 },
-                src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
-                dest: 'public/apps/widgets/gc2map/js/gc2map.js'
+                files: {
+                    "public/apps/widgets/gc2map/js/gc2map.js": "public/apps/widgets/gc2map/js/gc2map.preprocessed.js",
+                    "public/api/v3/js/async_loader.js": "public/api/v3/js/async_loader.preprocessed.js"
+                }
             },
             production: {
                 options: {
@@ -186,8 +188,10 @@ module.exports = function (grunt) {
                         DEBUG: false
                     }
                 },
-                src: 'public/apps/widgets/gc2map/js/gc2map.preprocessed.js',
-                dest: 'public/apps/widgets/gc2map/js/gc2map.js'
+                files: {
+                    "public/apps/widgets/gc2map/js/gc2map.js": "public/apps/widgets/gc2map/js/gc2map.preprocessed.js",
+                    "public/api/v3/js/async_loader.js": "public/api/v3/js/async_loader.preprocessed.js"
+                }
             }
         },
         gitpull: {
