@@ -19,7 +19,7 @@ class Logstash extends \app\inc\Controller
 
     public function post_index()
     {
-        $content = Input::get();
+        $content = urldecode(Input::get());
         $ch = curl_init("http://127.0.0.1:1337/data");
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

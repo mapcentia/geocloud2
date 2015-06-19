@@ -91,10 +91,10 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                                                   role="tab"
                                                                   data-toggle="tab">Tile</a></li>
                         <li role="presentation"><a href="#es-content" aria-controls="" role="tab"
-                                                   data-toggle="tab">Elasticsearch</a></li>
-                        <!--<li role="presentation"><a href="#wms-content" aria-controls="" role="tab"
-                                                   data-toggle="tab">WFS</a></li>
-                        <li role="presentation"><a href="#wfs-content" aria-controls="" role="tab"
+                                                   data-toggle="tab">Elasticsearch queries</a></li>
+                        <li role="presentation"><a href="#wms-content" aria-controls="" role="tab"
+                                                   data-toggle="tab">OWS requests</a></li>
+                        <!--<li role="presentation"><a href="#wfs-content" aria-controls="" role="tab"
                                                    data-toggle="tab">WMS</a></li>-->
                     </ul>
                 </div>
@@ -243,7 +243,8 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                     host = '/controllers/logstash';
 
                                 $('#widget1').logstashWidget(host, template, 'Tile downloads', 'tilecache ' + db + ' ' + schema);
-                                $('#widget2').logstashWidget(host, template, 'Elastic searches', 'api elasticsearch' + db + ' ' + schema);
+                                $('#widget2').logstashWidget(host, template, 'Elasticsearch queries', 'api elasticsearch' + db + ' ' + schema);
+                                $('#widget3').logstashWidget(host, template, 'OWS request', 'ows ' + db + ' ' + schema);
                                 $('#logstash-modal').modal();
                                 $('#logstash-modal h4').html("Stats for " + schema);
                             });
