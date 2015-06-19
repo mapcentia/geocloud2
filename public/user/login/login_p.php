@@ -58,7 +58,6 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
         ?>
     </div>
 </div>
-</div>
 <div id="confirm-user-delete" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -71,6 +70,51 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="delete-user">Delete</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<div id="logstash-modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div role="tabpanel">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist" id="main-tabs">
+                        <li role="presentation" class="active"><a href="#tile-content" aria-controls=""
+                                                                  role="tab"
+                                                                  data-toggle="tab">Tile</a></li>
+                        <li role="presentation"><a href="#es-content" aria-controls="" role="tab"
+                                                   data-toggle="tab">Elasticsearch</a></li>
+                        <!--<li role="presentation"><a href="#wms-content" aria-controls="" role="tab"
+                                                   data-toggle="tab">WFS</a></li>
+                        <li role="presentation"><a href="#wfs-content" aria-controls="" role="tab"
+                                                   data-toggle="tab">WMS</a></li>-->
+                    </ul>
+                </div>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="tile-content">
+                        <div id="widget1"></div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="es-content">
+                        <div id="widget2"></div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="wms-content">
+                        <div id="widget3"></div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="wfs-content">
+                        <div id="widget4"></div>
+                    </div>
+                </div>
+
+
             </div>
         </div>
         <!-- /.modal-content -->
@@ -100,6 +144,11 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                        title="Open '<%= this . schema %>' in the advanced Map Client"
                        class="btn btn-xs btn-default" target="_blank"
                        href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
+                    </a>
+                    <a data-toggle="tooltip" data-placement="top" data-schema="<%= this . schema %>"
+                       title="See statistics for '<%= this . schema %>'"
+                       class="btn btn-xs btn-default fixed-width logstash"><span
+                            class="glyphicon glyphicon-stats"></span>
                     </a>
                     <a data-toggle="tooltip" data-placement="top"
                        title="Open GC2 administration for '<%= this . schema %>'"
@@ -170,7 +219,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
             }
         });
         $.ajax({
-            url: hostName + '/controllers/database/exist/<?php echo $_SESSION['screen_name'] ?>',
+            url: hostName + '/controllers/database/exist/' + db,
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
@@ -187,6 +236,17 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                             //console.log(response);
                             $('#schema-list').append($('#template-schema-list').jqote(response.data));
                             $('#sb').fadeIn(400);
+                            $('.logstash').on('click', function (e) {
+                                e.preventDefault();
+                                var schema = $(this).data("schema"),
+                                    template = $('#widgetTemplate'),
+                                    host = '/controllers/logstash';
+
+                                $('#widget1').logstashWidget(host, template, 'Tile downloads', 'tilecache ' + db + ' ' + schema);
+                                $('#widget2').logstashWidget(host, template, 'Elastic searches', 'api elasticsearch' + db + ' ' + schema);
+                                $('#logstash-modal').modal();
+                                $('#logstash-modal h4').html("Stats for " + schema);
+                            });
                             if (subUsers) {
                                 $('#subusers-el').append($('#template-subuser-list').jqote(subUsers));
                                 if (subUsers.length > 0) {

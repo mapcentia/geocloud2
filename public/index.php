@@ -87,6 +87,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/processvector");
     Route::add("controllers/upload/processbitmap");
     Route::add("controllers/upload/processraster");
+    Route::add("controllers/logstash");
     Route::add("controllers/job", function () {
         Database::setDb("gc2scheduler");
     });

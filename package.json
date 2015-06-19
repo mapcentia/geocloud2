@@ -9,7 +9,7 @@
     "url": "http://github.com/mapcentia/geocloud2.git"
   },
   "author": "Martin Høgh",
-  "license": "GMLv3",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/mapcentia/geocloud2/issues"
   },
