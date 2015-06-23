@@ -89,7 +89,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                     <ul class="nav nav-tabs" role="tablist" id="main-tabs">
                         <li role="presentation" class="active"><a href="#tile-content" aria-controls=""
                                                                   role="tab"
-                                                                  data-toggle="tab">Tile</a></li>
+                                                                  data-toggle="tab">Tile downloads</a></li>
                         <li role="presentation"><a href="#es-content" aria-controls="" role="tab"
                                                    data-toggle="tab">Elasticsearch queries</a></li>
                         <li role="presentation"><a href="#wms-content" aria-controls="" role="tab"
@@ -145,11 +145,13 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                        class="btn btn-xs btn-default" target="_blank"
                        href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
                     </a>
+                    <?php if (App::$param['logstashHost']) { ?>
                     <a data-toggle="tooltip" data-placement="top" data-schema="<%= this . schema %>"
                        title="See statistics for '<%= this . schema %>'"
                        class="btn btn-xs btn-default fixed-width logstash"><span
                             class="glyphicon glyphicon-stats"></span>
                     </a>
+                    <?php } ?>
                     <a data-toggle="tooltip" data-placement="top"
                        title="Open GC2 administration for '<%= this . schema %>'"
                        class="btn btn-xs btn-primary fixed-width" target="_blank"
@@ -243,7 +245,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                     host = '/controllers/logstash';
 
                                 $('#widget1').logstashWidget(host, template, 'Tile downloads', 'tilecache ' + db + ' ' + schema);
-                                $('#widget2').logstashWidget(host, template, 'Elasticsearch queries', 'api elasticsearch' + db + ' ' + schema);
+                                $('#widget2').logstashWidget(host, template, 'Elasticsearch queries', 'api elasticsearch ' + db + ' ' + schema);
                                 $('#widget3').logstashWidget(host, template, 'OWS request', 'ows ' + db + ' ' + schema);
                                 $('#logstash-modal').modal();
                                 $('#logstash-modal h4').html("Stats for " + schema);

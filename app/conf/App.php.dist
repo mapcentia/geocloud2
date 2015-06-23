@@ -22,6 +22,9 @@ class App
         // The host of Elasticsearch
         "esHost" => "http://127.0.0.1",
 
+        // The host of Logstash proxy
+        "logstashHost" => "http://127.0.0.1:1337",
+
         // geoserver host for printing. Deafaults to "host"
         //"geoserverHost" => "",
 
