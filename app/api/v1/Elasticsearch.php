@@ -66,8 +66,8 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
         $q = urldecode($get['q']);
-        $size = ($get['size'] !== false && $get['size'] !== NULL) ? "&size={$get['size']}": "";
-        $from = ($get['from'] !== false && $get['from'] !== NULL) ? "&from={$get['from']}": "";
+        $size = ($get['size'] !== false && $get['size'] !== NULL) ? "&size={$get['size']}" : "";
+        $from = ($get['from'] !== false && $get['from'] !== NULL) ? "&from={$get['from']}" : "";
         $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
         $arr = array();
 
@@ -173,7 +173,12 @@ class Elasticsearch extends \app\inc\Controller
 
         $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
         if (!$relationCheck["success"]) {
-            return $relationCheck;
+            return Array
+            (
+                "success" => false,
+                "message" => "Trigger table doesn't exists",
+                "code" => "406"
+            );
         } else {
             if ($relationCheck["data"] == "table") {
                 $installTrigger = true;
@@ -200,7 +205,7 @@ class Elasticsearch extends \app\inc\Controller
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
         $result = $model->execQuery($pl, "PG");
 
-            $settings = '{
+        $settings = '{
               "settings": {
                 "analysis": {
                   "analyzer": {

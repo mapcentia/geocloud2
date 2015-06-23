@@ -563,8 +563,19 @@ tableStructure.onIndexInElasticsearch = function (record) {
     Ext.MessageBox.confirm(__('Confirm'), __("This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
+                if (record.data.triggertable && record.data.triggertable.split(".").length < 2) {
+                    Ext.MessageBox.show({
+                        title: __("Info"),
+                        msg: __("A trigger table must have schema as prefix"),
+                        buttons: Ext.MessageBox.OK,
+                        width: 400,
+                        height: 300,
+                        icon: Ext.MessageBox.OK
+                    });
+                    return false;
+                }
                 spinner(true, __("Piping data to Elasticsearch"));
-                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&tt=" + record.data.triggertable : "");
+                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] : "");
                 Ext.Ajax.request(
                     {
                         url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
