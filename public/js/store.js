@@ -1473,10 +1473,11 @@ $(window).ready(function () {
                                         params: param,
                                         success: function () {
                                             //TODO deselect/select
-                                            //grid.getSelectionModel().clearSelections();
+                                            grid.getSelectionModel().clearSelections();
                                             store.reload();
                                             groupsStore.load();
                                             App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
+                                            winMoreSettings.close();
                                         },
                                         failure: function (response) {
                                             winMoreSettings.close();
