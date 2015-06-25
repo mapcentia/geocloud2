@@ -12,7 +12,6 @@ class Logstash extends \app\inc\Controller
 
     function __construct()
     {
-
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['logstashHost'] ?: "http://127.0.0.1:1337";
     }
