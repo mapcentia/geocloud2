@@ -44,12 +44,27 @@ MapCentia.setup = function () {
         success: function (response) {
             var firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
             if (typeof response.data.extents === "object") {
-                if (typeof response.data.center[firstSchema] === "object") {
+                if (typeof response.data.zoom !== "undefined" && typeof response.data.zoom[firstSchema] !== "undefined") {
                     Heron.options.zoom = response.data.zoom[firstSchema];
-                    Heron.options.center = response.data.center[firstSchema];
                 } else {
                     Heron.options.zoom = null;
+                }
+
+                if (typeof response.data.center !== "undefined" &&  typeof response.data.center[firstSchema] !== "undefined") {
+                    Heron.options.center = response.data.center[firstSchema];
+                } else {
                     Heron.options.center = null;
+                }
+
+                if (typeof response.data.extentrestricts !== "undefined" &&  typeof response.data.extentrestricts[firstSchema] !== "undefined") {
+                    Heron.options.extentrestrict = response.data.extentrestricts[firstSchema];
+                } else {
+                    Heron.options.extentrestrict = null;
+                }
+                if (typeof response.data.zoomrestricts !== "undefined" &&  typeof response.data.zoomrestricts[firstSchema] !== "undefined") {
+                    Heron.options.zoomrestrict = response.data.zoomrestricts[firstSchema];
+                } else {
+                    Heron.options.zoomrestrict = null;
                 }
             }
             Heron.options.map.settings = {
@@ -57,6 +72,7 @@ MapCentia.setup = function () {
                 displayProjection: new OpenLayers.Projection("EPSG:4326"),
                 units: 'm',
                 maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+                restrictedExtent: Heron.options.extentrestrict,
                 center: Heron.options.center || [0, 0],
                 numZoomLevels: 22,
                 maxResolution: Heron.options.resolutions,
