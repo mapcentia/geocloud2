@@ -1823,7 +1823,7 @@ geocloud = (function () {
             };
         },
         PROVIDERS = {
-            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
+            "toner": MAKE_PROVIDER("toner", "png", 0, 21),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
             "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
