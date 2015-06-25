@@ -241,3 +241,10 @@ q:after, q:before {
 .x-form-file-wrap {
     white-space: normal !important;
 }
+#service-dialog input {
+    padding: 10px;
+    font-size: 13px;
+}
+#service-dialog td {
+    color: #808080;
+}

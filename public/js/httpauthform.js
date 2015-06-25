@@ -3,14 +3,14 @@ httpAuth.form = new Ext.FormPanel({
     method: 'put',
     frame: false,
     border: false,
-    autoHeight: false,
+    region: "north",
     labelWidth: 1,
     defaults: {
         anchor: '95%',
         allowBlank: false,
         msgTarget: 'side'
     },
-    items: [ new Ext.Panel({
+    items: [new Ext.Panel({
         frame: false,
         border: false,
         bodyStyle: 'padding: 7px 7px 10px 7px;',
@@ -21,8 +21,7 @@ httpAuth.form = new Ext.FormPanel({
         id: 'httpAuthForm',
         name: 'pw',
         emptyText: 'Password'
-    }
-    ],
+    }],
     buttons: [
         {
             text: __('Update'),

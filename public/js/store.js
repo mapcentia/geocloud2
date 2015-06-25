@@ -1511,90 +1511,74 @@ $(window).ready(function () {
             title: "Services",
             modal: true,
             width: 700,
-            height: 272,
+            height: 430,
             initCenter: true,
             closeAction: 'hide',
             border: false,
             layout: 'border',
             items: [
                 new Ext.Panel({
-                    border: false,
-                    layout: 'border',
                     region: "center",
+                    layout: 'border',
                     items: [
                         new Ext.Panel({
+                            border: false,
                             region: "center",
-                            items: [httpAuth.form, apiKey.form,
-                                new Ext.Panel({
-                                    region: "south",
-                                    border: false,
-                                    bodyStyle: {
-                                        background: '#777',
-                                        color: '#fff',
-                                        padding: '7px'
-                                    },
-                                    html: __("HTTP Basic auth password and API key are set for the specific (sub) user.")
-                                })
-                            ]
-                        }), new Ext.Panel({
-                            layout: "border",
-                            region: "east",
-                            width: 400,
-                            height: 72,
+                            items: [
+                                httpAuth.form,
+                                apiKey.form
+                            ]}),
+
+                        new Ext.Panel({
+                            region: "south",
+                            border: false,
+                            bodyStyle: {
+                                background: '#777',
+                                color: '#fff',
+                                padding: '7px'
+                            },
+                            html: __("HTTP Basic auth password and API key are set for the specific (sub) user.")
+                        })
+                    ]
+
+                }), new Ext.Panel({
+                    layout: "border",
+                    region: "east",
+                    width: 445,
+                    id: "service-dialog",
+                    items: [
+                        new Ext.Panel({
+                            border: false,
+                            region: "center",
+                            defaults: {
+                                bodyStyle: {
+                                    background: '#ffffff',
+                                    padding: '7px'
+                                },
+                                border: false,
+                                layout: 'fit'
+
+
+                            },
                             items: [
                                 new Ext.Panel({
-                                    //title: 'WFS',
-                                    region: "north",
-                                    border: false,
-                                    //height: 50,
-                                    bodyStyle: {
-                                        background: '#ffffff',
-                                        padding: '7px'
-                                    },
                                     contentEl: "wfs-dialog"
-                                }), new Ext.Panel({
-                                    //title: 'WMS',
-                                    border: false,
-                                    //height: 50,
-                                    region: "center",
-                                    bodyStyle: {
-                                        background: '#ffffff',
-                                        padding: '7px'
-                                    },
+                                }),
+                                new Ext.Panel({
                                     contentEl: "wms-dialog"
-
-                                }), new Ext.Panel({
-                                    //title: 'SQL',
-                                    height: 135,
-                                    border: false,
-                                    region: "south",
-                                    items: [
-                                        new Ext.Panel({
-                                            //title: 'SQL',
-                                            // height: 50,
-                                            border: false,
-                                            region: "north",
-                                            bodyStyle: {
-                                                background: '#ffffff',
-                                                padding: '7px'
-                                            },
-                                            contentEl: "sql-dialog"
-
-                                        }), new Ext.Panel({
-                                            //title: 'elasticsearch',
-                                            //height: 60,
-                                            border: false,
-                                            region: "center",
-                                            bodyStyle: {
-                                                background: '#ffffff',
-                                                padding: '7px'
-                                            },
-                                            contentEl: "elasticsearch-dialog"
-                                        })
-                                    ]
+                                }),
+                                new Ext.Panel({
+                                    contentEl: "tms-dialog"
+                                }),
+                                new Ext.Panel({
+                                    contentEl: "sql-dialog"
+                                }),
+                                new Ext.Panel({
+                                    contentEl: "elasticsearch-dialog"
                                 })
                             ]
-                        })]
+                        })
+                    ]
                 })]
         }).show(this);
     }

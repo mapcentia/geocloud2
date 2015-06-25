@@ -29,7 +29,7 @@ include("html_header.php");
         <table border="0" class="pretty-tables">
             <tbody>
             <tr>
-                <td>Use this string in GIS that supports WFS:</td>
+                <td>For WFS-T (editable WFS). This service supports workflow management and track changes.</td>
             </tr>
             <tr>
                 <td>
@@ -45,12 +45,12 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>Use this string in GIS that supports WMS:</td>
+                <td>The OWS services includes WMS (up to 1.3) and WFS (up to 2.0).</td>
             </tr>
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>/"
                            size="65"/>
                 </td>
             </tr>
@@ -61,14 +61,17 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>Use this string in GIS that supports TMS (Google style):</td>
+                <td>Tile Map Service (TMS, Google style).</td>
             </tr>
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}/7/32/25.png"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}"
                            size="65"/>
                 </td>
+            </tr>
+            <tr>
+                <td>Eg. <?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>.mylayer</td>
             </tr>
             </tbody>
         </table>
@@ -77,7 +80,7 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>This is the SQL API end point:</td>
+                <td>The HTTP SQL API end point.</td>
             </tr>
             <tr>
                 <td>
@@ -93,7 +96,7 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>This is the elasticsearch API end point:</td>
+                <td>Elasticsearch API end point.</td>
             </tr>
             <tr>
                 <td>

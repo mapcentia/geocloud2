@@ -16,7 +16,6 @@ class Mapfile extends \app\inc\Controller
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
-        $srs = "25832";
         ob_start();
         ?>
         MAP

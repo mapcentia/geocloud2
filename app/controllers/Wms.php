@@ -122,6 +122,5 @@ class Wms extends \app\inc\Controller
         }
         ms_iogetStdoutBufferBytes();
         ms_ioresethandlers();
-
     }
 }
