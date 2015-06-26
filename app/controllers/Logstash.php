@@ -19,6 +19,12 @@ class Logstash extends \app\inc\Controller
     public function post_index()
     {
         $content = urldecode(Input::get());
+        $obj = json_decode($content);
+        $query = $obj->body->query->filtered->query->query_string->query;
+        $split = explode(" ", $query);
+        if ($split[0] != $_SESSION["screen_name"]) {
+            die("What");
+        }
         $ch = curl_init($this->host . "/data");
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

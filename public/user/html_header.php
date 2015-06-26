@@ -110,11 +110,10 @@
                         'query': {
                             'filtered': {
                                 'query': {
-                                    'match': {
-                                        'message': {
-                                            'query': pattern,
-                                            'operator': 'and'
-                                        }
+                                    "query_string" : {
+                                        "default_field" : "request",
+                                        "default_operator": "AND",
+                                        "query" : pattern
                                     }
                                 },
                                 'filter': {
