@@ -244,6 +244,14 @@ q:after, q:before {
 #service-dialog input {
     padding: 10px;
     font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+
+}
+#service-dialog table {
+    width: 100%;
+    box-sizing: border-box;
+
 }
 #service-dialog td {
     color: #808080;

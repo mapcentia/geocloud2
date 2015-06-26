@@ -35,7 +35,7 @@ include("html_header.php");
                 <td>
                     <input type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo (\app\conf\App::$param["epsg"]) ?: "4326" ?>"
-                           size="65"/>
+                           />
                 </td>
             </tr>
             </tbody>
@@ -50,8 +50,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>/"
-                           size="65"/>
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>/"/>
                 </td>
             </tr>
             </tbody>
@@ -67,7 +66,7 @@ include("html_header.php");
                 <td>
                     <input type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}"
-                           size="65"/>
+                           />
                 </td>
             </tr>
             <tr>
@@ -86,7 +85,7 @@ include("html_header.php");
                 <td>
                     <input type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
-                           size="65"/>
+                           />
                 </td>
             </tr>
             </tbody>
@@ -102,7 +101,7 @@ include("html_header.php");
                 <td>
                     <input type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
-                           size="65"/>
+                           />
                 </td>
             </tr>
             <tr>

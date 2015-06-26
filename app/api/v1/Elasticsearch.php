@@ -205,36 +205,57 @@ class Elasticsearch extends \app\inc\Controller
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
         $result = $model->execQuery($pl, "PG");
 
-        $settings = '{
-              "settings": {
-                "analysis": {
-                  "analyzer": {
-                    "str_search_analyzer": {
-                      "type" : "custom",
-                      "tokenizer": "whitespace",
-                      "filter": [
-                        "lowercase"
-                      ]
-                    },
-                    "str_index_analyzer": {
-                      "type" : "custom",
-                      "tokenizer": "whitespace",
-                      "filter": [
-                        "lowercase",
-                        "substring"
-                      ]
-                    }
-                  },
-                  "filter": {
-                    "substring": {
-                      "type": "edgeNGram",
-                      "min_gram": 1,
-                      "max_gram": 255
-                    }
-                  }
-                }
-              }
-            }';
+        // Define default settings for the new index
+        $defaultSettings = array(
+            "settings" => array(
+                "number_of_shards" => 1,
+                "analysis" => array
+                (
+                    "analyzer" => array
+                    (
+                        "str_search_analyzer" => array
+                        (
+                            "type" => "custom",
+                            "tokenizer" => "whitespace",
+                            "filter" => array
+                            (
+                                "0" => "lowercase"
+                            )
+
+                        ),
+                        "str_index_analyzer" => array
+                        (
+                            "type" => "custom",
+                            "tokenizer" => "whitespace",
+                            "filter" => array
+                            (
+                                "0" => "lowercase",
+                                "1" => "substring"
+                            )
+
+                        )
+
+                    ),
+                    "filter" => array
+                    (
+                        "substring" => array
+                        (
+                            "type" => "edgeNGram",
+                            "min_gram" => 1,
+                            "max_gram" => 255
+                        )
+
+                    )
+
+                )
+
+            )
+        );
+
+        // Check if there are custom settings
+        if (!$settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+            $settings = json_encode($defaultSettings);
+        }
         $es = new \app\models\Elasticsearch();
 
         // Delete the type

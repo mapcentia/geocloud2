@@ -64,30 +64,6 @@ class Elasticsearch extends Model
         }
         $table = new \app\models\Table($table);
         $schema = $table->getMapForEs();
-        $settings = json_decode('{
-                                    "analysis" : {
-                                      "analyzer" : {
-                                        "str_search_analyzer" : {
-                                          "type" : "custom",
-                                          "tokenizer" : "whitespace",
-                                          "filter" : ["lowercase"]
-                                        },
-                                        "str_index_analyzer" : {
-                                          "type" : "custom",
-                                          "tokenizer" : "whitespace",
-                                          "filter" : ["lowercase", "substring"]
-                                        }
-                                      },
-                                      "filter" : {
-                                        "substring" : {
-                                          "type" : "edgeNGram",
-                                          "min_gram" : 1,
-                                          "max_gram"  : 255
-                                        }
-                                      }
-                                    }
-                                  }'
-        );
         $map = array("mappings" =>
             array($type =>
                 array("properties" =>
@@ -140,7 +116,6 @@ class Elasticsearch extends Model
                     );
             }
         }
-        $map["settings"] = $settings;
         $response = array("map" => $map);
         return $response["map"]["mappings"];
     }

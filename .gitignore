@@ -2,6 +2,8 @@ app/conf/App.php
 app/conf/Connection.php
 app/conf/secret.key
 app/conf/public.key
+app/conf/public.key
+elasticsearch_settings.json
 app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles

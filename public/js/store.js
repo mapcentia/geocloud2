@@ -1510,7 +1510,7 @@ $(window).ready(function () {
         new Ext.Window({
             title: "Services",
             modal: true,
-            width: 700,
+            width: 850,
             height: 430,
             initCenter: true,
             closeAction: 'hide',
@@ -1544,7 +1544,7 @@ $(window).ready(function () {
                 }), new Ext.Panel({
                     layout: "border",
                     region: "east",
-                    width: 445,
+                    width: 600,
                     id: "service-dialog",
                     items: [
                         new Ext.Panel({
@@ -1555,10 +1555,7 @@ $(window).ready(function () {
                                     background: '#ffffff',
                                     padding: '7px'
                                 },
-                                border: false,
-                                layout: 'fit'
-
-
+                                border: false
                             },
                             items: [
                                 new Ext.Panel({

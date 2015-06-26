@@ -38,6 +38,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
     </div>
     <script>
         $('#alert').bind('closed', function () {
+            alert()
             window.location = '/user/login/p';
         });
         var hostName = "<?php echo $host ?>";
