@@ -91,5 +91,15 @@ psql -c "CREATE EXTENSION hstore;"
 
 pg_restore dump.bak --no-owner --dbname=$targetdb
 
-rm dump.bak
+# Disconnect all from the old db
+psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = 'ballerup'
+  AND pid <> pg_backend_pid();"
 
+# Rename target to old
+psql postgres -c "drop database ballerup"
+psql postgres -c "alter database $targetdb rename to ballerup"
+
+#Clean up
+rm dump.bak
