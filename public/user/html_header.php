@@ -345,7 +345,7 @@ h2 span i {
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New Sub-User</a>
             <?php } ?>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/edit">Change
-                Password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
+                Password</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a target="_blank"
                 href="http://mapcentia.screenstepslive.com/">Help</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a
                 href="/user/logout">Log Out</a>&nbsp;&nbsp;&nbsp;
         <?php } ?>
