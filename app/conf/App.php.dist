@@ -17,7 +17,7 @@ class App
         "databaseTemplate" => "template_geocloud",
 
         // Is MapServer ver. 7 used?
-        "mapserver_ver_7" => true,
+        "mapserver_ver_7" => false,
 
         // The host of Elasticsearch
         "esHost" => "http://127.0.0.1",

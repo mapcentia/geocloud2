@@ -434,7 +434,7 @@ class Mapfile extends \app\inc\Controller
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
-                "wms_extent" "-180 -90 180 90"
+                #"wms_extent" "-180 -90 180 90"
                 "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
                 "appformap_queryable"    "true"
                 "appformap_loader"    "true"
