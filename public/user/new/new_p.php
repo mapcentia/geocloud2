@@ -131,10 +131,10 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
         <h3>Schema <?php echo $sUserID ?> is created</h3>
     </div>
     <script>
-        $('#alert').bind('closed', function () {
+        $('#alert').bind('closed.bs.alert', function () {
             window.location = '/user/login/p';
         });
-        $('#alert-schema').bind('closed', function () {
+        $('#alert-schema').bind('closed.bs.alert', function () {
             window.location = '/user/login/p';
         });
     </script>

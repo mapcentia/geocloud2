@@ -37,8 +37,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
         <h3>Sub-user settings are changed</h3>
     </div>
     <script>
-        $('#alert').bind('closed', function () {
-            alert()
+        $('#alert').bind('closed.bs.alert', function () {
             window.location = '/user/login/p';
         });
         var hostName = "<?php echo $host ?>";

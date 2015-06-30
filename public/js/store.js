@@ -2642,12 +2642,9 @@ $(window).ready(function () {
     }
 
     // Hide tab if workflow is not available for the db
-    if (window.gc2Options.enableWorkflow !== null) {
-        if (window.gc2Options.enableWorkflow.hasOwnProperty(screenName) === false || window.gc2Options.enableWorkflow[screenName] === false) {
+    var enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
+    if (!enableWorkflow) {
             tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
-        }
-    } else {
-        tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
     }
 
     writeFiles = function (clearCachedLayer, map) {
