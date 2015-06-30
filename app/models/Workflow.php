@@ -3,16 +3,17 @@
 namespace app\models;
 
 use app\inc\Model;
+use \app\conf\Connection;
 
 class Workflow extends Model
 {
     public function getRecords($subuser, $showAll)
     {
-        $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' as author,workflow->'reviewer' as reviewer,workflow->'publisher' as publisher, (case when status = 1 then 'Drafted (1)'  when status = 2 then 'Reviewed (2)' when status =3 then 'Published (3)' END) as status_text FROM settings.workflow";
+        $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' AS author,workflow->'reviewer' AS reviewer,workflow->'publisher' AS publisher, (CASE WHEN status = 1 THEN 'Drafted (1)'  WHEN status = 2 THEN 'Reviewed (2)' WHEN status =3 THEN 'Published (3)' END) AS status_text FROM settings.workflow";
 
         if ($subuser && $showAll == false) {
             $sql = "SELECT * FROM (
-                    {$select} WHERE exist(roles,:user1) AND roles->:user1 !='none'
+                    {$select} WHERE f_schema_name='" . Connection::$param["postgisschema"] . "' AND exist(roles,:user1) AND roles->:user1 !='none'
                     ORDER BY version_gid,created DESC
 
                     ) AS foo WHERE
@@ -28,7 +29,7 @@ class Workflow extends Model
                 "user4" => "publisher=>{$subuser}",
             );
         } else {
-            $sql = "{$select} ORDER BY version_gid,created DESC";
+            $sql = "{$select} WHERE f_schema_name='" . Connection::$param["postgisschema"] . "' ORDER BY version_gid,created DESC";
             $args = array();
         }
 
@@ -155,7 +156,7 @@ class Workflow extends Model
         }
 
         // Update feature
-        $query = "UPDATE \"{$schema}\".\"{$table}\" SET gc2_status = {$status}, gc2_workflow = {$workflow} WHERE {$primeryKey['attname']}=:gid";
+        $query = "UPDATE \"{$schema}\".\"{$table}\" SET gc2_version_user='{$user}', gc2_status = {$status}, gc2_workflow = {$workflow} WHERE {$primeryKey['attname']}=:gid";
         $res = $this->prepare($query);
         try {
             $res->execute(array("gid" => $gid));

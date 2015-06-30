@@ -13,7 +13,9 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups;
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups,
+    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
+
 $(window).ready(function () {
     "use strict";
     Ext.Container.prototype.bufferResize = false;
@@ -373,7 +375,7 @@ $(window).ready(function () {
                 id: 'workflow-btn',
                 handler: onWorkflow,
                 disabled: true,
-                hidden: (window.gc2Options.enableWorkflow !== null && window.gc2Options.enableWorkflow[screenName] === true) ? false : true
+                hidden: !enableWorkflow
             },
             {
                 text: '<i class="icon-camera btn-gc"></i> ' + __('CartoMobile'),
@@ -1527,7 +1529,8 @@ $(window).ready(function () {
                             items: [
                                 httpAuth.form,
                                 apiKey.form
-                            ]}),
+                            ]
+                        }),
 
                         new Ext.Panel({
                             region: "south",
@@ -2395,13 +2398,13 @@ $(window).ready(function () {
                                     sortable: true,
                                     width: 35,
                                     flex: 1
-                                }, {
+                                }, /*{
                                     header: __("Schema"),
                                     dataIndex: "f_schema_name",
                                     sortable: true,
                                     width: 35,
                                     flex: 0.5
-                                },
+                                },*/
                                 {
                                     header: __("Table"),
                                     dataIndex: "f_table_name",
@@ -2642,9 +2645,8 @@ $(window).ready(function () {
     }
 
     // Hide tab if workflow is not available for the db
-    var enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
     if (!enableWorkflow) {
-            tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
+        tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
     }
 
     writeFiles = function (clearCachedLayer, map) {
