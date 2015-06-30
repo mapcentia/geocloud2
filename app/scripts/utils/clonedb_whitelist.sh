@@ -103,4 +103,3 @@ psql postgres -c "alter database $targetdb rename to ballerup"
 
 #Clean up
 rm dump.bak
-

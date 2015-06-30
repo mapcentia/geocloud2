@@ -630,7 +630,7 @@ Viewer = function () {
                             link: '#',
                             items: [
                                 {
-                                    title: arr[i],
+                                    title: arr[i] === "<font color='red'>[Ungrouped]</font>" ? "[Ungrouped]" : arr[i],
                                     icon: 'fa fa-folder',
                                     items: []
                                 }

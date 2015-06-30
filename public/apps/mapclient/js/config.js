@@ -109,7 +109,7 @@ MapCentia.setup = function () {
                 }
             }
             $.ajax({
-                url: "/api/v1/meta/" + db + "/" + schema,
+                url: '/api/v1/meta/' + db + '/' + (window.gc2Options.mergeSchemata === null ? "" : window.gc2Options.mergeSchemata.join(",") + ',') + schema,
                 contentType: "application/json; charset=utf-8",
                 scriptCharset: "utf-8",
                 dataType: 'jsonp',
