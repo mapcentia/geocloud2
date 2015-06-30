@@ -403,7 +403,7 @@ function doQuery($queryType)
                 }
                 $from = " FROM {$postgisschema}.{$table}";
                 if ($tableObj->versioning && $timeSlice != false && $timeSlice != "all") {
-                    $from .= ",(SELECT gc2_version_gid as _gc2_version_gid,max(gc2_version_start_date) as max_gc2_version_start_date from version_test where gc2_version_start_date <= '{$timeSlice}' GROUP BY gc2_version_gid) as gc2_join";
+                    $from .= ",(SELECT gc2_version_gid as _gc2_version_gid,max(gc2_version_start_date) as max_gc2_version_start_date from {$postgisschema}.{$table} where gc2_version_start_date <= '{$timeSlice}' GROUP BY gc2_version_gid) as gc2_join";
                 }
                 if ((!(empty($BBox))) || (!(empty($wheres[$table]))) || (!(empty($filters[$table])))) {
                     $from .= " WHERE ";
@@ -547,6 +547,7 @@ function doSelect($table, $sql, $sql2, $from)
     } else {
         print $defaultBoundedBox;
     }
+    //die($sql . $from);
     $result = $postgisObject->execQuery($sql . $from . " LIMIT 1000000");
     if ($postgisObject->numRows($result) < 1) {
         $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
