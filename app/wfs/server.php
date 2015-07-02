@@ -403,7 +403,7 @@ function doQuery($queryType)
                 }
                 $from = " FROM {$postgisschema}.{$table}";
                 if ($tableObj->versioning && $timeSlice != false && $timeSlice != "all") {
-                    $from .= ",(SELECT gc2_version_gid as _gc2_version_gid,max(gc2_version_start_date) as max_gc2_version_start_date from {$postgisschema}.{$table} where gc2_version_start_date <= '{$timeSlice}' GROUP BY gc2_version_gid) as gc2_join";
+                    $from .= ",(SELECT gc2_version_gid as _gc2_version_gid,max(gc2_version_start_date) as max_gc2_version_start_date from {$postgisschema}.{$table} where gc2_version_start_date <= '{$timeSlice}' AND (gc2_version_end_date > '{$timeSlice}' OR gc2_version_end_date is null) GROUP BY gc2_version_gid) as gc2_join";
                 }
                 if ((!(empty($BBox))) || (!(empty($wheres[$table]))) || (!(empty($filters[$table])))) {
                     $from .= " WHERE ";
