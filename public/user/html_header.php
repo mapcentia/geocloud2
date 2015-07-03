@@ -13,14 +13,14 @@
     <link href="/css/banner-ie.css" rel="stylesheet">
     <![endif]-->
 
-    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
 
     <!-- Elasticsearch -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/elasticsearch/5.0.0/elasticsearch.jquery.min.js"></script>
 
     <!-- HighCharts -->
-    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
