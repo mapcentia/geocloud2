@@ -133,7 +133,6 @@ class Layer extends \app\models\Table
             if ($includeExtent == true) {
                 $arr = $this->array_push_assoc($arr, "extent", $extent);
             }
-
             // Is indexed?
             if ($es) {
                 $type = $row['f_table_name'];
