@@ -28,8 +28,8 @@ class Processraster extends \app\inc\Controller
             " -F" .
             " -t 100x100 " .
             Connection::$param["postgisschema"] . "." . $safeName .
-            " | psql " .
-            Connection::$param["postgisdb"] .
+            " | PGPASSWORD=" . Connection::$param["postgispw"] .
+            " psql " . Connection::$param["postgisdb"] .
             " -U " .
             Connection::$param["postgisuser"] .
             " -h " .
