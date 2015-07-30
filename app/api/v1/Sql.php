@@ -100,7 +100,7 @@ class Sql extends \app\inc\Controller
             } else {
                 //echo "Not cached";
                 ob_start();
-                $srs = (Input::get('srs')) ? : "900913";
+                $srs = Input::get('srs') ? : "900913";
                 $api = new \app\models\Sql($srs);
                 $this->response = $api->sql($this->q, $clientEncoding);
                 echo serialize($this->response);
