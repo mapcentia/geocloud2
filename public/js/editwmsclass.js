@@ -1298,7 +1298,42 @@ wmsClass.init = function (id) {
                 // nobody is using
             }), {}),
             'label2_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Auto',
+                            value: 'auto'
+                        }, {
+                            name: '↖',
+                            value: 'ul'
+                        }, {
+                            name: '↑',
+                            value: 'uc'
+                        }, {
+                            name: '↗',
+                            value: 'ur'
+                        }, {
+                            name: '←',
+                            value: 'cl'
+                        }, {
+                            name: '.',
+                            value: 'cc'
+                        }, {
+                            name: '→',
+                            value: 'cr'
+                        }, {
+                            name: '↙',
+                            value: 'll'
+                        }, {
+                            name: '↓',
+                            value: 'lc'
+                        }, {
+                            name: '↘',
+                            value: 'lr'
+                        }
+                    ]
+                }),
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -1320,6 +1355,7 @@ wmsClass.init = function (id) {
                         }
                     ]
                 })
+
             }), {}),
             'label2_fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 displayField: 'name',
