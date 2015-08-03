@@ -677,7 +677,7 @@ MapCentia.init = function () {
                         placeMarkers = new OpenLayers.Layer.Markers("Markers");
                         MapCentia.gc2.map.addLayer(placeMarkers);
                         placeMarkers.addMarker(new OpenLayers.Marker(point));
-                        placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
+                        placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:100000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true);
                         MapCentia.gc2.map.addPopup(placePopup);
                     });
 
