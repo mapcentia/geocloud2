@@ -23,12 +23,12 @@ class Model
         $this->postgisuser = Connection::$param['postgisuser'];
         $this->postgisdb = Connection::$param['postgisdb'];
         $this->postgispw = Connection::$param['postgispw'];
-        $this->postgisschema = Connection::$param['postgisschema'];
+        $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
     }
 
     function fetchRow($result, $result_type = "assoc")
     {
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             //throw new \Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
@@ -78,7 +78,7 @@ class Model
         $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
         $result = $this->execQuery($query);
 
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             return NULL;
         }
         if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
@@ -223,7 +223,6 @@ class Model
                 break;
             case "PDO" :
                 try {
-
                     $this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost};" . (($this->postgisport) ? "port={$this->postgisport}" : ""), "{$this->postgisuser}", "{$this->postgispw}");
                     $this->execQuery("set client_encoding='UTF8'", "PDO");
                 } catch (\PDOException $e) {

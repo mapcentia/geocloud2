@@ -103,14 +103,18 @@ class Layer extends \app\models\Table
                 }
                 if ($key == "fieldconf" && ($value)) {
                     $obj = json_decode($value, true);
-                    foreach ($obj as $k => $val) {
-                        if ($obj[$k]["properties"] == "*") {
-                            $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
-                            $distinctValues = $table->getGroupByAsArray($k);
-                            $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
+                    if (is_array($obj)) {
+                        foreach ($obj as $k => $val) {
+                            if ($obj[$k]["properties"] == "*") {
+                                $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
+                                $distinctValues = $table->getGroupByAsArray($k);
+                                $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
+                            }
                         }
+                        $value = json_encode($obj);
+                    } else {
+                        $value = null;
                     }
-                    $value = json_encode($obj);
                 }
                 if ($parse) {
                     if (
@@ -155,7 +159,7 @@ class Layer extends \app\models\Table
                 }
             }
             // Session is sub-user we always check privileges
-            if ($_SESSION['subuser']) {
+            if (isset($_SESSION) && $_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
@@ -167,8 +171,8 @@ class Layer extends \app\models\Table
             }
 
         }
-        $response['data'] = ($response['data']) ?: array();
-        if (!$this->PDOerror) {
+        $response['data'] = isset($response['data']) ? $response['data'] : array();
+        if (!isset($this->PDOerror)) {
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
         } else {

@@ -13,7 +13,7 @@ sourceuser=""
 targetuser=""
 sourcepw=""
 targetpw=""
-usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -H TargetHost -D TargetDb -u SourceUser -U TargetUser"
+usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -H TargetHost -D TargetDb -u SourceUser -U TargetUser p- SourcePw -P TargetPw"
 
 while getopts "k?:h:d:H:D:u:U:p:P:" opt; do
     case "$opt" in

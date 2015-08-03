@@ -1,0 +1,30 @@
+#!/usr/bin/php
+<?php
+use \app\models\Database;
+
+header("Content-type: text/plain");
+include_once("../App.php");
+new \app\conf\App();
+$database = new Database();
+$arr = $database->listAllDbs();
+
+foreach ($arr['data'] as $db) {
+    if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
+        Database::setDb($db);
+        $layer = new \app\models\Layer();
+        $meta = $layer->getAll(null, null, true, false, true, true);
+        if (isset($meta["data"])) {
+            foreach ($meta["data"] as $l) {
+                if ($l["indexed_in_es"]) {
+                    $url = "http://127.0.0.1/api/v1/elasticsearch/river/{$db}/{$l["f_table_schema"]}/{$l["f_table_name"]}";
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+                    echo curl_exec($ch);
+                    curl_close($ch);
+                }
+            }
+        }
+    }
+}
