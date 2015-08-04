@@ -278,7 +278,7 @@ class Model
         }
         if ($field == 'type') {
             $arr = (array)json_decode($row['def']);
-            if (($arr['geotype']) && $arr['geotype'] != "Default") {
+            if (isset($arr['geotype']) && $arr['geotype'] != "Default") {
                 return $arr['geotype'];
             } else {
                 return $row['type'];
