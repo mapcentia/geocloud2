@@ -5,6 +5,23 @@ use \app\models\Database;
 header("Content-type: text/plain");
 include_once("../App.php");
 new \app\conf\App();
+
+$shortopts  = "";
+$shortopts .= "h:";
+$shortopts .= "k:";
+
+$options = getopt($shortopts);
+
+if (!isset($options["h"])) {
+    echo "usage:\n";
+    echo "  build_indexes [options]\n";
+    echo "    -h       GC2 host\n";
+    echo "    -k       API key\n";
+    exit();
+}
+$host = $options["h"];
+$key = $options["k"];
+
 $database = new Database();
 $arr = $database->listAllDbs();
 
@@ -13,15 +30,25 @@ foreach ($arr['data'] as $db) {
         Database::setDb($db);
         $layer = new \app\models\Layer();
         $meta = $layer->getAll(null, null, true, false, true, true);
+
+        /*$url = "http://{$host}/api/v1/elasticsearch/delete/{$db}*";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        echo curl_exec($ch)."\n\n";
+        curl_close($ch);*/
+
         if (isset($meta["data"])) {
             foreach ($meta["data"] as $l) {
                 if ($l["indexed_in_es"]) {
-                    $url = "http://127.0.0.1/api/v1/elasticsearch/river/{$db}/{$l["f_table_schema"]}/{$l["f_table_name"]}";
+                    $url = "http://{$host}/api/v1/elasticsearch/river/{$db}/{$l["f_table_schema"]}/{$l["f_table_name"]}";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, "key={$key}");
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-                    echo curl_exec($ch);
+                    echo curl_exec($ch)."\n\n";;
                     curl_close($ch);
                 }
             }
