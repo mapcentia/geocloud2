@@ -1298,6 +1298,9 @@ wmsClass.init = function (id) {
                 // nobody is using
             }), {}),
             'label2_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
                 store: new Ext.data.JsonStore({
                     fields: ['name', 'value'],
                     data: [
