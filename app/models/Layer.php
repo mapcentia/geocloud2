@@ -94,7 +94,7 @@ class Layer extends \app\models\Table
             foreach ($row as $key => $value) {
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
-                    if (($def->geotype) && $def->geotype != "Default") {
+                    if (isset($def->geotype) && $def->geotype != "Default") {
                         $value = "MULTI" . $def->geotype;
                     }
                 }
