@@ -266,6 +266,7 @@ MapCentia = function (globalId) {
 
     //cloud.map.on('load', defaults.callBack(cloud, init));
     var showLegend = function () {
+        $('#legend-' + id).show();
         $("#legend-popover-" + id).popover('show');
     };
 
