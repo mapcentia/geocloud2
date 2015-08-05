@@ -1,3 +1,10 @@
-MapCentia GC2 is a open source project that ties PostGIS, MapServer, TileCache, WFS, WMS, OpenLayers and Leaflet together in one integrated geospatial solution.
+
+   _|_|_|    _|_|_|    _|_|
+ _|        _|        _|    _|
+ _|  _|_|  _|            _|    MapCentia GC2
+ _|    _|  _|          _|
+   _|_|_|    _|_|_|  _|_|_|_|
+
+A complete platform for managing geospatial data, making map visualisations and creating applications. Built on the best open source and standard based software.
 
 http://www.mapcentia.com/en/geocloud/geocloud.htm
