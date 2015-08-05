@@ -304,7 +304,7 @@ MapCentia = function (globalId) {
         // Media queries
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
         $("#legend-popover-" + id).on('click', function () {
-            //$('#legend-' + id).html(list);
+            $('#legend-' + id).show();
 
         });
         $("#legend-" + id).css({"max-height": (eHeight - 65) + "px"});
