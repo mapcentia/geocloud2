@@ -92,6 +92,21 @@
                                     },
                                     "codeClass": null,
                                     "userConfig": {
+                                        "itemId": "reload",
+                                        "layout|flex": null,
+                                        "text": "Reload"
+                                    },
+                                    "name": "MyButton6",
+                                    "designerId": "37a4b9c5-fbb5-4770-b250-96d237b1ab89"
+                                },
+                                {
+                                    "type": "Ext.button.Button",
+                                    "reference": {
+                                        "name": "items",
+                                        "type": "array"
+                                    },
+                                    "codeClass": null,
+                                    "userConfig": {
                                         "designer|createAlias": null,
                                         "designer|displayName": null,
                                         "itemId": "new",
@@ -130,6 +145,21 @@
                                     },
                                     "name": "MyButton2",
                                     "designerId": "b4bc2a5b-2410-4864-9db9-463afc064408"
+                                },
+                                {
+                                    "type": "Ext.button.Button",
+                                    "reference": {
+                                        "name": "items",
+                                        "type": "array"
+                                    },
+                                    "codeClass": null,
+                                    "userConfig": {
+                                        "itemId": "run",
+                                        "layout|flex": null,
+                                        "text": "Run"
+                                    },
+                                    "name": "MyButton5",
+                                    "designerId": "69377a6d-9155-4b03-98ba-fa615cd52ac7"
                                 }
                             ]
                         },

@@ -55,6 +55,11 @@ Ext.define('MyApp.view.MyViewport', {
                                     items: [
                                         {
                                             xtype: 'button',
+                                            itemId: 'reload',
+                                            text: 'Reload'
+                                        },
+                                        {
+                                            xtype: 'button',
                                             itemId: 'new',
                                             text: 'New'
                                         },
@@ -67,6 +72,11 @@ Ext.define('MyApp.view.MyViewport', {
                                             xtype: 'button',
                                             itemId: 'edit',
                                             text: 'Edit'
+                                        },
+                                        {
+                                            xtype: 'button',
+                                            itemId: 'run',
+                                            text: 'Run'
                                         }
                                     ]
                                 }

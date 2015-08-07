@@ -48,12 +48,15 @@
                 "designer|targetType": "Ext.button.Button",
                 "fn": "onButtonClick1",
                 "implHandler": [
+                    "var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
+                    "if (!record){",
+                    "    return false;",
+                    "}",
                     "Ext.Msg.confirm(\"Confirmation\", \"Do you really want to delete the job?\", function(btnText){",
                     "    if(btnText === \"no\"){",
                     "        return false;",
                     "    }",
                     "    else if(btnText === \"yes\"){",
-                    "        var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
                     "        Ext.getStore(\"MyJsonStore\").remove(record);",
                     "    }",
                     "}, this);",
@@ -148,6 +151,58 @@
             },
             "name": "onButtonClick4",
             "designerId": "b45326a8-e968-41b9-a6d0-23812119694f"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "designer|controlQuery": "button#run",
+                "designer|targetType": "Ext.button.Button",
+                "fn": "onButtonClick5",
+                "implHandler": [
+                    "var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];",
+                    "if (!record){",
+                    "    return false;",
+                    "}",
+                    "Ext.Ajax.request({",
+                    "    url: '/controllers/job/run/' + record.data.id,",
+                    "    success: function(response){",
+                    "        var text = response.responseText;",
+                    "        console.log(response);",
+                    "        Ext.getStore(\"MyJsonStore\").reload();",
+                    "    }",
+                    "});",
+                    ""
+                ],
+                "name": "click",
+                "scope": "me"
+            },
+            "name": "onButtonClick5",
+            "designerId": "b4411905-672a-40ad-a4b4-51c9d70aaf3c"
+        },
+        {
+            "type": "controlleraction",
+            "reference": {
+                "name": "listeners",
+                "type": "array"
+            },
+            "codeClass": null,
+            "userConfig": {
+                "designer|controlQuery": "button#reload",
+                "designer|targetType": "Ext.button.Button",
+                "fn": "onButtonClick6",
+                "implHandler": [
+                    "Ext.getStore(\"MyJsonStore\").reload();"
+                ],
+                "name": "click",
+                "scope": "me"
+            },
+            "name": "onButtonClick6",
+            "designerId": "02be32fc-186f-4ceb-9349-96ec1bea2953"
         }
     ]
 }

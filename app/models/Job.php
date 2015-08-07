@@ -105,6 +105,25 @@ class Job extends \app\inc\Model
         return $response;
     }
 
+    public function runJob($id, $db)
+    {
+        $cmd = null;
+        $jobs = $this->getAll($db);
+        exec("crontab -r");
+        foreach ($jobs["data"] as $job) {
+            if ($id == $job["id"]) {
+                if (!$job["delete_append"]) $job["delete_append"] = "0";
+                $cmd = " php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . base64_encode($job["extra"]) . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n";
+                break;
+            }
+        }
+        exec($cmd  . ' 2>&1', $out, $err);
+        $response['cmd'] = $cmd;
+        $response['success'] = true;
+        $response['message'] = "Job completed";
+        return $response;
+    }
+
     public function createCronJobs()
     {
 

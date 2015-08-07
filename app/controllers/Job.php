@@ -43,4 +43,10 @@ class Job extends \app\inc\Controller
         $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->job->deleteJob(json_decode(Input::get(null, true)));
     }
+
+    public function get_run()
+    {
+        $response = $this->auth(null, array(), true); // Never sub-user
+        return (!$response['success']) ? $response : $this->job->runJob(Input::getPath()->part(4), $_SESSION['screen_name']);
+    }
 }

@@ -28,12 +28,15 @@ Ext.define('MyApp.controller.MyController', {
     },
 
     onButtonClick1: function(button, e, eOpts) {
+        var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];
+        if (!record){
+            return false;
+        }
         Ext.Msg.confirm("Confirmation", "Do you really want to delete the job?", function(btnText){
             if(btnText === "no"){
                 return false;
             }
             else if(btnText === "yes"){
-                var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];
                 Ext.getStore("MyJsonStore").remove(record);
             }
         }, this);
@@ -76,6 +79,26 @@ Ext.define('MyApp.controller.MyController', {
 
     },
 
+    onButtonClick5: function(button, e, eOpts) {
+        var record = Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().getSelection()[0];
+        if (!record){
+            return false;
+        }
+        Ext.Ajax.request({
+            url: '/controllers/job/run/' + record.data.id,
+            success: function(response){
+                var text = response.responseText;
+                console.log(response);
+                Ext.getStore("MyJsonStore").reload();
+            }
+        });
+
+    },
+
+    onButtonClick6: function(button, e, eOpts) {
+        Ext.getStore("MyJsonStore").reload();
+    },
+
     init: function(application) {
         this.control({
             "button#new": {
@@ -92,6 +115,12 @@ Ext.define('MyApp.controller.MyController', {
             },
             "button#update": {
                 click: this.onButtonClick4
+            },
+            "button#run": {
+                click: this.onButtonClick5
+            },
+            "button#reload": {
+                click: this.onButtonClick6
             }
         });
     }
