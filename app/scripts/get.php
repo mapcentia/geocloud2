@@ -19,7 +19,7 @@ $extra = isset($argv[10]) ? base64_decode($argv[10]) : null;
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand()) . ".gml";
-$randTableName = "_".md5(microtime() . rand());
+$randTableName = "_" . md5(microtime() . rand());
 $out = null;
 
 if (!file_exists(App::$param['path'] . "app/tmp/" . $db)) {
@@ -72,7 +72,7 @@ if ($deleteAppend == "1" && $table->exits) {
     $sql = "CREATE TABLE {$schema}.{$randTableName} AS SELECT * FROM {$schema}.{$safeName}";
     $res = $table->prepare($sql);
     print "SQL run:\n";
-    print $sql. "\n\n";
+    print $sql . "\n\n";
     try {
         $res->execute();
     } catch (\PDOException $e) {
@@ -95,7 +95,7 @@ if ($deleteAppend == "1" && $table->exits) {
     $sql = "DROP TABLE {$schema}.{$randTableName}";
     $res = $table->prepare($sql);
     print "SQL run:\n";
-    print $sql. "\n\n";
+    print $sql . "\n\n";
     try {
         $res->execute();
     } catch (\PDOException $e) {
@@ -113,7 +113,7 @@ if ($pass) {
             $o = "-append";
             $sql = "DELETE FROM {$schema}.{$safeName}";
             print "SQL run:\n";
-            print $sql. "\n\n";
+            print $sql . "\n\n";
             $res = $table->prepare($sql);
             try {
                 $res->execute();
@@ -138,7 +138,7 @@ if ($pass) {
     }
     exec($cmd = getCmd(false, $o) . ' 2>&1', $out, $err);
     print "Wet run command:\n";
-    print $cmd."\n\n";
+    print $cmd . "\n\n";
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
             $pass = false;
@@ -148,7 +148,7 @@ if ($pass) {
 }
 
 if ($pass) {
-    print $url . " imported to " . $schema . "." . $safeName."\n\n";
+    print $url . " imported to " . $schema . "." . $safeName . "\n\n";
     $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
 
@@ -157,6 +157,20 @@ if ($pass) {
     print "\n\n";
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
+
+    # Output the first few lines of file
+    Print "Outputting the first few lines of the file:\n\n";
+    $handle = @fopen($dir . "/" . $tempFile, "r");
+    if ($handle) {
+        for ($i = 0; $i < 40; $i++) {
+            $buffer = fgets($handle, 4096);
+            echo $buffer;
+        }
+        if (!feof($handle)) {
+            echo "Error: unexpected fgets() fail\n";
+        }
+        fclose($handle);
+    }
 }
 
 \app\models\Database::setDb("gc2scheduler");
@@ -195,7 +209,7 @@ if ($extra && $pass) {
     }
     $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
     print "SQL run:\n";
-    print $sql. "\n\n";
+    print $sql . "\n\n";
     $res = $model->prepare($sql);
     try {
         $res->execute(array(":value" => $fieldValue));
