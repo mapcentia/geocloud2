@@ -14,9 +14,16 @@ use \app\models\Database;
 include_once("../app/conf/App.php");
 new \app\conf\App();
 
+// Setup host
 App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
 App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
 App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host'];
+
+// Write Access-Control-Allow-Origin if origin is white listed
+$http_origin = $_SERVER['HTTP_ORIGIN'];
+if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
+    header("Access-Control-Allow-Origin: " . $http_origin);
+}
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {

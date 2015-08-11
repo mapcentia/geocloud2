@@ -92,6 +92,7 @@ if ($deleteAppend == "1" && $table->exits) {
             }
         }
     }
+    # Clean up
     $sql = "DROP TABLE {$schema}.{$randTableName}";
     $res = $table->prepare($sql);
     print "SQL run:\n";
