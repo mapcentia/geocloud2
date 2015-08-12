@@ -19,7 +19,7 @@ Ext.namespace("Heron.options.zoomrestrict");
 Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
-var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup;
+var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup, enablePrint;
 
 MapCentia.setup = function () {
     "use strict";
@@ -36,7 +36,7 @@ MapCentia.setup = function () {
         schema = uri[4],
         url = '/wms/' + db + '/tilecache/'
         //wfsUrl = '/wfs/' + db + '/' + schema;
-
+    enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
     $.ajax({
         url: '/api/v1/setting/' + db,
         dataType: 'jsonp',
@@ -687,7 +687,7 @@ MapCentia.init = function () {
                 }
             }
         },
-        {type: "-"},
+        enablePrint ? {type: "-"} : {},
         {
             type: "printdialog", options: {
             url: window.gc2Options.geoserverHost + '/geoserver/pdf',
@@ -710,7 +710,8 @@ MapCentia.init = function () {
             // , showLegendChecked: true
             , mapLimitScales: false
             , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
-            // , mapPreviewHeight: 400
+            // , mapPreviewHeight: 400,
+            ,hidden: !enablePrint
         }
         }
     ];
