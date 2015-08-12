@@ -420,7 +420,6 @@ Viewer = function () {
 
     // Create the print provider, subscribing to print events
     if (enablePrint) {
-        window.gc2Options.customPrintParams.mapAttribution = "sdsd";
         cloud.map.addControl(L.control.print({
             provider: L.print.provider({
                 capabilities: window.printConfig,
@@ -495,6 +494,7 @@ Viewer = function () {
     }
 // Draw end
     init = function () {
+
         var layers = {}, jRes, node, modalFlag, extent = null, i, addedBaseLayers = [], searchPanelOpen = false,
             searchShow = function () {
                 $("#search-ribbon").animate({
@@ -801,6 +801,8 @@ Viewer = function () {
                 }
             }
             visibleLayers = cloud.getVisibleLayers(true);
+            window.gc2Options.customPrintParams.mapAttribution = cloud.getActiveBaseLayer().layer.options.attribution;
+
         }());
         var moveEndCallBack = function () {
             try {

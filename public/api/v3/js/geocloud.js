@@ -594,6 +594,18 @@ geocloud = (function () {
             }
             return layerArr;
         };
+        this.getActiveBaseLayer = function () {
+            var layers = lControl._layers
+            for (var layerId in layers) {
+                if (layers.hasOwnProperty(layerId)) {
+                    var layer = layers[layerId]
+                    if (!layer.overlay && lControl._map.hasLayer(layer.layer)) {
+                        return layer
+                    }
+                }
+            }
+            throw new Error('Control doesn\'t have any active base layer!')
+        }
         //ol2, ol3 and leaflet
         this.getVisibleLayers = function (getBaseLayers) {
             getBaseLayers = (getBaseLayers === true) ? true : false;
