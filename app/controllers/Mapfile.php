@@ -16,13 +16,14 @@ class Mapfile extends \app\inc\Controller
     function get_index()
     {
         $postgisObject = new \app\inc\Model();
+        $user = Connection::$param['postgisdb'];
         ob_start();
         ?>
         MAP
         #
         # Start of map file
         #
-        NAME "<?php echo Connection::$param['postgisdb']; ?>"
+        NAME "<?php echo $user; ?>"
         STATUS on
         EXTENT -180 -90 180 90
         SIZE 2000 1500
@@ -58,8 +59,8 @@ class Mapfile extends \app\inc\Controller
         "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
-        "wfs_namespace_prefix" "gc2"
-        "wfs_namespace_uri" "http://eu1.mapcentia.com"
+        "wfs_namespace_prefix" "<?php echo $user; ?>"
+        "wfs_namespace_uri" "http://mapcentia.com/<?php echo $user; ?>"
         "wms_encoding" "UTF8"
         "wfs_encoding" "UTF8"
         END

@@ -22,7 +22,7 @@ if (!$gmlNameSpace) {
 }
 
 if (!$gmlNameSpaceUri) {
-    $gmlNameSpaceUri = "http://twitter/" . Connection::$param["postgisdb"];
+    $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
 }
 
 $postgisdb = Connection::$param["postgisdb"];
