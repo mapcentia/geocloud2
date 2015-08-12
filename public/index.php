@@ -23,7 +23,9 @@ App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host']
 $http_origin = $_SERVER['HTTP_ORIGIN'];
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
+    header("Access-Control-Allow-Headers: Content-Type");
 }
+
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
