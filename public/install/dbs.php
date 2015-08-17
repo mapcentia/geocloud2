@@ -56,7 +56,7 @@
 			@fclose($ourFileHandle);
 			@unlink($ourFileName);
 		} else {
-			echo "<div class='alert alert-error'>app/wms/tmp dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
+			echo "<div class='alert alert-error'>app/tmp dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
 		}
 
 		$mod_rewrite = FALSE;
