@@ -13,7 +13,7 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = [],
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
     enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 $(window).ready(function () {
@@ -47,7 +47,7 @@ $(window).ready(function () {
                 }
             }
             if (typeof settings.userGroups !== "undefined") {
-                subUserGroups = settings.userGroups;
+                subUserGroups = settings.userGroups || {};
             }
         }
     });
