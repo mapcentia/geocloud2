@@ -1139,7 +1139,7 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache";
+                url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache/";
 
             switch (MAPLIB) {
                 case "ol2":
