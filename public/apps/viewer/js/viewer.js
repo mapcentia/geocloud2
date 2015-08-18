@@ -801,11 +801,13 @@ Viewer = function () {
                 }
             }
             visibleLayers = cloud.getVisibleLayers(true);
-            if (typeof cloud.getActiveBaseLayer().layer.options.attribution !== "undefined") {
-                window.gc2Options.customPrintParams.mapAttribution = cloud.getActiveBaseLayer().layer.options.attribution;
-            } else {
-                window.gc2Options.customPrintParams.mapAttribution = "";
-            }
+            try {
+                if (typeof cloud.getActiveBaseLayer().layer.options.attribution !== "undefined") {
+                    window.gc2Options.customPrintParams.mapAttribution = cloud.getActiveBaseLayer().layer.options.attribution;
+                } else {
+                    window.gc2Options.customPrintParams.mapAttribution = "";
+                }
+            } catch(e) {}
 
         }());
         var moveEndCallBack = function () {
