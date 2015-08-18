@@ -46,7 +46,7 @@ class Layer extends \app\models\Table
         $where = ($auth) ?
             "(authentication<>'foo' OR authentication is NULL)" :
             "(authentication='Write' OR authentication='None')";
-        $case = "CASE WHEN (layergroup = '' OR layergroup IS NULL) THEN 9999999 else sort_id END";
+        $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
         if ($schema) {
             $ids = explode(",", $schema);
             $qMarks = str_repeat('?,', count($ids) - 1) . '?';
