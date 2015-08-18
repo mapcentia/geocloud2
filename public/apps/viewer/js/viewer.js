@@ -801,7 +801,11 @@ Viewer = function () {
                 }
             }
             visibleLayers = cloud.getVisibleLayers(true);
-            window.gc2Options.customPrintParams.mapAttribution = cloud.getActiveBaseLayer().layer.options.attribution;
+            if (typeof cloud.getActiveBaseLayer().layer.options.attribution !== "undefined") {
+                window.gc2Options.customPrintParams.mapAttribution = cloud.getActiveBaseLayer().layer.options.attribution;
+            } else {
+                window.gc2Options.customPrintParams.mapAttribution = "";
+            }
 
         }());
         var moveEndCallBack = function () {
