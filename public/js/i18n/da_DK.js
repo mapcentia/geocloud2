@@ -211,6 +211,8 @@ gc2i18n = {
         "More items from": "Flere resultater fra",
         "Google search": "Google søgning",
         "Show in mouse-over": "Vis i mouse-over",
-        "Searchable": "Søgbar"
+        "Searchable": "Søgbar",
+
+        "MapClient Print": "MapClient Print"
     }
 };
