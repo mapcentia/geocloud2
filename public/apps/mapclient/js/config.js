@@ -691,6 +691,7 @@ MapCentia.init = function () {
         {
             type: "printdialog", options: {
             url: window.gc2Options.geoserverHost + '/geoserver/pdf',
+            id: "print-btn",
             windowWidth: 360
             // , showTitle: true
             // , mapTitle: 'My Header - Print Dialog'
@@ -825,6 +826,17 @@ MapCentia.setup();
         Heron.App.show();
         MapCentia.gc2.map = Heron.App.map;
         Heron.App.map.addControl(new OpenLayers.Control.ScaleLine());
+        var urlVars = (function getUrlVars() {
+                var mapvars = {};
+                window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                    mapvars[key] = value;
+                });
+                return mapvars;
+            })(),
+            printBtn = Ext.getCmp("print-btn");
+        if (typeof urlVars.print !=="undefined" && urlVars.print === "1") {
+            printBtn.handler.call(printBtn.scope, printBtn, Ext.EventObject);
+        }
     } else {
         setTimeout(pollForLayers, 300);
     }

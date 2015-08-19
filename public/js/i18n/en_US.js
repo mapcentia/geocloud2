@@ -211,6 +211,8 @@ gc2i18n = {
         "More items from": "More items from",
         "Google search": "Google search",
         "Show in mouse-over": "Show in mouse-over",
-        "Searchable": "Searchable"
+        "Searchable": "Searchable",
+
+        "MapClient Print": "MapClient Print"
     }
 };

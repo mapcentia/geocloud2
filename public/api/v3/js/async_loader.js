@@ -36,7 +36,7 @@ if (typeof gc2apiLoader === "undefined") {
                         typeof window.setBaseLayers !== "undefined"
                     ) {
                         // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.js#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?f144c3252d79dbe2#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined") {
                                 if (window.geocloud_maplib === "leaflet") {

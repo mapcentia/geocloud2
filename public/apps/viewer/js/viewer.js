@@ -435,6 +435,7 @@ Viewer = function () {
 
 // Start of draw
     if (enablePrint) {
+        $("#mapclient-button-li").show();
         $("#draw-button-li").show();
         cloud.map.on('draw:created', function (e) {
             var type = e.layerType;
@@ -543,6 +544,19 @@ Viewer = function () {
         });
         $(".share-text").focus(function () {
             $(this).select();
+        });
+
+        $("#mapclient-button").on("click", function () {
+            var center = cloud.getCenter(), zoom = cloud.getZoom(), req, layers = cloud.getVisibleLayers(true).split(";"),
+                layerStrs = [];
+
+            for (i = 0; i < layers.length; i = i + 1) {
+                if (layers[i] !== "") {
+                    layerStrs.push("map_visibility_" + layers[i] + "=true");
+                }
+            }
+            req = "map_x=" + center.x + "&map_y=" + center.y + "&map_zoom=" + zoom + "&" + layerStrs.join("&");
+            window.open(hostname + "/apps/mapclient/" + db + "/" + schema + "?" + req + "&print=1");
         });
 
         if (window.gc2Options.extraShareFields) {
