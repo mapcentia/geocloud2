@@ -403,6 +403,10 @@ tableStructure.init = function (record, screenName) {
                                     value: 'bytea'
                                 },
                                 {
+                                    name: 'Hstore',
+                                    value: 'Hstore'
+                                },
+                                {
                                     name: 'Geometry',
                                     value: 'geometry'
                                 }

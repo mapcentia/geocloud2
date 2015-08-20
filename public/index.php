@@ -59,6 +59,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/baselayerjs");
     Route::add("api/v1/staticmap");
     Route::add("api/v1/getheader");
+    Route::add("api/v1/collector");
 } elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");

@@ -553,6 +553,9 @@ class Table extends Model
             case "Bytea":
                 $type = "bytea";
                 break;
+            case "Hstore":
+                $type = "hstore";
+                break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
                 break;

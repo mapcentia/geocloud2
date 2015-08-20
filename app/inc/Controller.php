@@ -4,6 +4,12 @@ namespace app\inc;
 class Controller
 {
     public $response;
+    
+    // Implement OPTIONS method for all action controllers. Used in CORS.
+    public function options_index()
+    {
+		//Pass
+    }
 
     public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
     {
