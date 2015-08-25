@@ -1,6 +1,8 @@
 <?php
 namespace app\inc;
 
+use \app\conf\Connection;
+
 class Controller
 {
     public $response;
@@ -13,7 +15,8 @@ class Controller
 
     public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
     {
-        if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
+        //die($_SESSION['usergroup']);
+        if (($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['usergroup'] == Connection::$param['postgisschema']) && $neverAllowSubUser == false) {
             $response['success'] = true;
         } elseif ($_SESSION['subuser']) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";

@@ -13,8 +13,8 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
-    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {}, group = false;
+enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 $(window).ready(function () {
     "use strict";
@@ -48,6 +48,7 @@ $(window).ready(function () {
             }
             if (typeof settings.userGroups !== "undefined") {
                 subUserGroups = settings.userGroups || {};
+                group = subUserGroups[subUser];
             }
         }
     });
@@ -396,7 +397,7 @@ $(window).ready(function () {
             },
             {
                 text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (subUser === schema || group === schema || subUser === false) ? false : true,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
@@ -430,7 +431,7 @@ $(window).ready(function () {
             '->',
             {
                 text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (subUser === schema || group === schema || subUser === false) ? false : true,
                 handler: function () {
                     onAdd();
                 }
@@ -2117,7 +2118,7 @@ $(window).ready(function () {
         if (records.length === 1) {
             Ext.getCmp('cartomobile-btn').setDisabled(false);
             Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false || subUser === schema) {
+            if (subUser === false || group === schema || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
@@ -2135,7 +2136,7 @@ $(window).ready(function () {
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
         }
-        if (records.length > 0 && (subUser === false || subUser === schema)) {
+        if (records.length > 0 && (subUser === false || group === schema || subUser === schema)) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);
         }
         onEdit();

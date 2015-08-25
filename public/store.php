@@ -60,17 +60,17 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>Tile Map Service (TMS, Google style).</td>
+                <td>Tile Map Service (TMS).</td>
             </tr>
             <tr>
                 <td>
                     <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/tms/<?php echo $_SESSION['screen_name']; ?>/1.0.0/{layer}"
                            />
                 </td>
             </tr>
             <tr>
-                <td>Eg. <?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>.mylayer</td>
+                <td>Eg. <?php echo $_SERVER['HTTP_HOST']; ?>/tms/mydb/1.0.0/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>.mylayer</td>
             </tr>
             </tbody>
         </table>

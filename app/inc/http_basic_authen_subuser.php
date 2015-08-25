@@ -37,7 +37,7 @@ if (sizeof($dbSplit) == 2) { //Sub-user
     $response = $settings_viewer->get();
     $userGroup = $response["data"]["userGroups"]->$subUser;
 
-    if ($dbSplit[0] != $postgisschema) {
+    if ($dbSplit[0] != $postgisschema && $userGroup != $postgisschema) {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
         $res = $postgisObject->prepare($sql);
         try {
