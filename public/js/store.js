@@ -1711,7 +1711,7 @@ $(window).ready(function () {
                                         editable: false,
                                         width: 50,
                                         renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                            if (typeof subUserGroups[record.data.subuser] === "undefined" || subUserGroups[record.data.subuser] === "") {
+                                            if (typeof subUserGroups[record.data.subuser] !== "undefined" && subUserGroups[record.data.subuser] !== "") {
                                                 return subUserGroups[record.data.subuser];
                                             }
                                         }
