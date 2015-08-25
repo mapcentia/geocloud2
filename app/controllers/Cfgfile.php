@@ -55,7 +55,7 @@ class Cfgfile extends \app\inc\Controller
                 echo "metaTile={$meta_tiles}\n";
                 echo "metaSize={$meta_size},{$meta_size}\n";
                 echo "srs=EPSG:900913\n";
-                echo "tms=google\n";
+                //echo "tms_type=google\n";
                 echo "expire={$expire}\n\n";
             }
         }
@@ -73,7 +73,7 @@ class Cfgfile extends \app\inc\Controller
                 echo "metaTile=yes\n";
                 echo "metaSize=5,5\n";
                 echo "srs=EPSG:900913\n";
-                echo "tms=google\n";
+                //echo "tms=google\n";
                 echo "expire=60\n\n";
             }
         }
