@@ -45,11 +45,14 @@ function UserIDCheck($sValue, &$oStatus)
         $_SESSION['email'] = $row['email'];
         $_SESSION['usergroup'] = $row['usergroup'] ? :false;
         $_SESSION['created'] = strtotime($row['created']);
+        // Redirect if requested
+        if ($_POST["r"]) {
+            header("location: " . urldecode($_POST["r"]));
+        }
     } else {
         $oStatus->bValid = 0;
     }
 }
-
 if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
     header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
 }
@@ -93,6 +96,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
                             Account</a>
                     </div>
                 </div>
+                <input type="hidden" name="r" value="<?php echo $_GET["r"] ?>">
             </form>
         </div>
     </div>
