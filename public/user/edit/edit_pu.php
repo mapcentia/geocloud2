@@ -6,8 +6,8 @@ include('../header.php');
 $postgisObject = new Model();
 include('../vdaemon/vdaemon.php');
 include('../html_header.php');
-//  Check if user is logged in - and redirect if this is the case
-if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
+//  Check if user is logged in and is not sub-user- and redirect if this is not the case
+if (!$_SESSION['auth'] || !$_SESSION['screen_name'] || ($_SESSION['subuser'])) {
     die("<script>window.location='{$userHostName}/user/login'</script>");
 }
 $sNewPassword = VDFormat($_POST['Password'], true);

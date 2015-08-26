@@ -173,6 +173,7 @@ class Layer extends \app\models\Table
         }
         $response['data'] = isset($response['data']) ? $response['data'] : array();
         if (!isset($this->PDOerror)) {
+            $response['auth'] = $auth ?: false;
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
         } else {
@@ -540,7 +541,9 @@ class Layer extends \app\models\Table
         }
         return $res;
     }
-    public function getRole($schema, $table, $user) {
+
+    public function getRole($schema, $table, $user)
+    {
         $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''{$schema}'' AND geometry_columns.f_table_name=''{$table}''','raster_columns.r_table_schema=''{$schema}'' AND raster_columns.r_table_name=''{$table}''') ORDER BY sort_id";
         $res = $this->prepare($sql);
         try {
@@ -557,11 +560,12 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function registerWorkflow($schema, $_table, $gid, $status, $user){
-        $sql ="INSERT INTO settings.workflow(schema, _table, gid, status, user) VALUES(':schema',':_table',:gid,:status,':user')";
+    public function registerWorkflow($schema, $_table, $gid, $status, $user)
+    {
+        $sql = "INSERT INTO settings.workflow(schema, _table, gid, status, user) VALUES(':schema',':_table',:gid,:status,':user')";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array("schema"=>$schema,"_table"=>$_table,"gid"=>$gid,"status"=>$status,"user"=>$user,));
+            $res->execute(array("schema" => $schema, "_table" => $_table, "gid" => $gid, "status" => $status, "user" => $user,));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e;
