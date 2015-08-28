@@ -45,7 +45,7 @@ gc2i18n = {
         "Delete schema": "Slet schema",
         "New schema": "Nyt schema",
         "New schema created": "Nyt schema oprettet",
-        "You've to select a layer": "YDu skal vælge et lag",
+        "You've to select a layer": "Du skal vælge et lag",
         "Are you sure you want to delete": "Er du sikker på, at du vil slette",
         "table(s)": "tabel(ler)",
         "layers deleted": "lag slettet",
