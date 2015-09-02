@@ -2672,6 +2672,11 @@ $(window).ready(function () {
          success: function (response) {
          }
          });*/
+        $.ajax({
+            url: '/controllers/mapcachefile',
+            success: function (response) {
+            }
+        });
     };
     clearTileCache = function (layer, map) {
         var key = layer.split(".")[0] + "." + layer.split(".")[1];

@@ -866,7 +866,8 @@ Viewer = function () {
                         var fieldConf = metaDataKeys[value.split(".")[1]].fieldconf;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             distance = 5 * res[cloud.getZoom()];
-                        }
+                        };
+                        var orderBy;
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
                             id: index,
@@ -953,7 +954,8 @@ Viewer = function () {
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL ";
                             }
-                            sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
+                            orderBy = " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
+                            sql = sql + orderBy;
                         } else {
                             sql = "SELECT " + fieldStr + " FROM \"" + value.split(".")[0] + "\".\"" + value.split(".")[1] + "\" WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',3857)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
@@ -961,6 +963,13 @@ Viewer = function () {
                             }
                         }
                         sql = sql + "LIMIT 5";
+                        var selectJson = {
+                            fields: fieldStr,
+                            from: value,
+                            order: orderBy,
+                            limit: "LIMIT 5"
+
+                        }
                         qstore[index].sql = sql;
                         qstore[index].load();
                     });

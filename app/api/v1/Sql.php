@@ -21,6 +21,7 @@ class Sql extends \app\inc\Controller
         }
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
+        print_r($res);
         $this->apiKey = $res['data']['api_key'];
 
         $this->response = $this->transaction($this->q, Input::get('client_encoding'));
@@ -32,6 +33,26 @@ class Sql extends \app\inc\Controller
         return unserialize($this->data);
     }
 
+    public function post_select()
+    {
+        $input = json_decode(Input::get());
+        $tokens = $input->data;
+        print_r($tokens);
+
+        $sql = "SELECT " . $tokens->fields . " FROM " . $tokens->from;
+        if (isset($tokens->where)) {
+            $sql.=" WHERE " . $tokens->where;
+        }
+        if (isset($tokens->order)) {
+            $sql.=" ORDER BY " . $tokens->where;
+        }
+        if (isset($tokens->LIMIT)) {
+            $sql.=" LIMIT " . $tokens->where;
+        }
+        print_r($sql);
+
+    }
+
     public function post_index()
     {
         return $this->get_index();
@@ -40,6 +61,24 @@ class Sql extends \app\inc\Controller
     private function transaction($sql, $clientEncoding = null)
     {
         $parsedSQL = \app\inc\SqlParser::ParseString($sql)->getArray();
+        if ($parsedSQL['from']) {
+            $data    = $parsedSQL['from'];
+            $search  = 'from';
+            $replace = '';
+
+            $clean = preg_replace_callback('/\b'.$search.'\b/i', function($matches) use ($replace)
+            {
+                $i=0;
+                return join('', array_map(function($char) use ($matches, &$i)
+                {
+                    return ctype_lower($matches[0][$i++])?strtolower($char):strtoupper($char);
+                }, str_split($replace)));
+            }, $data);
+            $relations = explode(",", $clean);
+            foreach ($relations as $relations) {
+                echo trim($relations)."\n";
+            }
+        }
         if ($parsedSQL['from']) {
             if (
                 strpos(strtolower($parsedSQL['from']), 'settings.') !== false ||
@@ -92,7 +131,7 @@ class Sql extends \app\inc\Controller
                 $this->response['code'] = 403;
             }
         } elseif ($parsedSQL['select']) {
-            $lifetime = (Input::get('lifetime')) ? : 0;
+            $lifetime = (Input::get('lifetime')) ?: 0;
             $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
             $Cache_Lite = new \Cache_Lite($options);
             if ($this->data = $Cache_Lite->get($this->q)) {
@@ -100,7 +139,7 @@ class Sql extends \app\inc\Controller
             } else {
                 //echo "Not cached";
                 ob_start();
-                $srs = Input::get('srs') ? : "900913";
+                $srs = Input::get('srs') ?: "900913";
                 $api = new \app\models\Sql($srs);
                 $this->response = $api->sql($this->q, $clientEncoding);
                 echo serialize($this->response);

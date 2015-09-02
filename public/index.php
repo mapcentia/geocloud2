@@ -31,11 +31,11 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
 if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default
     Route::add("api/v1/sql", function () {
+        Session::start();
         $db = Input::getPath()->part(4);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            Session::start();
             $_SESSION['subuser'] = $dbSplit[0];
         }
         Database::setDb($db);
@@ -85,6 +85,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/layer/");
     Route::add("controllers/mapfile");
     Route::add("controllers/tinyowsfile");
+    Route::add("controllers/mapcachefile");
     Route::add("controllers/setting");
     Route::add("controllers/table/");
     Route::add("controllers/tile/");
