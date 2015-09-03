@@ -930,9 +930,8 @@ function doParse($arr)
                 if (!$gc2_status_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_status", "Value" => null);
                 if (!$gc2_workflow_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_workflow", "Value" => null);
 
-                //makeExceptionReport(print_r($hey, true));
-
                 foreach ($hey['Property'] as $pair) {
+                    // Some clients use ns in the Name element, so it must be stripped
                     $split = explode(":", $pair['Name']);
                     if ($split[1]) {
                         $pair['Name'] = dropAllNameSpaces($pair['Name']);
