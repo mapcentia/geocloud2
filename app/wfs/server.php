@@ -933,6 +933,10 @@ function doParse($arr)
                 //makeExceptionReport(print_r($hey, true));
 
                 foreach ($hey['Property'] as $pair) {
+                    $split = explode(":", $pair['Name']);
+                    if ($split[1]) {
+                        $pair['Name'] = dropAllNameSpaces($pair['Name']);
+                    }
                     $fields[$fid][] = $pair['Name'];
                     $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                     $role = $roleObj["data"][$user];
