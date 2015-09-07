@@ -2,6 +2,7 @@
 namespace app\controllers;
 
 use \app\conf\App;
+use \app\inc\Util;
 
 class Wms extends \app\inc\Controller
 {
@@ -34,17 +35,27 @@ class Wms extends \app\inc\Controller
             $request->loadParams();
         }
 
-        if ($_SESSION['http_auth'] != $db) {
-            \app\models\Database::setDb($db);
-            $postgisObject = new \app\inc\Model();
-            foreach(explode(",",$layers) as $layer) {
-                $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-                $layerSplit = explode(".", $layer);
-                $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
-                if ($auth == "Read/write") {
-                    include('inc/http_basic_authen.php');
-                } else {
-                    include('inc/http_basic_authen_subuser.php');
+        // Chech if client is trusted
+        $trusted = false;
+        foreach (App::$param["trustedAddresses"] as $address) {
+            if (Util::ipInRange(Util::clientIp(), $address)) {
+                $trusted = true;
+                break;
+            }
+        }
+        if (!$trusted) {
+            if ($_SESSION['http_auth'] != $db) {
+                \app\models\Database::setDb($db);
+                $postgisObject = new \app\inc\Model();
+                foreach (explode(",", $layers) as $layer) {
+                    $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+                    $layerSplit = explode(".", $layer);
+                    $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
+                    if ($auth == "Read/write") {
+                        include('inc/http_basic_authen.php');
+                    } else {
+                        include('inc/http_basic_authen_subuser.php');
+                    }
                 }
             }
         }

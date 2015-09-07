@@ -106,9 +106,9 @@ if (Input::getPath()->part(1) == "api") {
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
     new \app\controllers\Wms();
-} elseif (Input::getPath()->part(1) == "wmsc") {
+} elseif (Input::getPath()->part(1) == "mapcache") {
     Session::start();
-    new \app\controllers\Wmsc();
+    new \app\controllers\mapcache();
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
     $db = Input::getPath()->part(2);
