@@ -36,7 +36,7 @@ if (Input::getPath()->part(1) == "api") {
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            $_SESSION['subuser'] = $dbSplit[0];
+            //$_SESSION['subuser'] = $dbSplit[0];
         }
         Database::setDb($db);
     });

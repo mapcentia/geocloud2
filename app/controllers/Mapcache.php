@@ -18,22 +18,7 @@ class Mapcache extends \app\inc\Controller
         $this->fetch();
     }
 
-    private function authLayer($layer)
-    {
-        $_SESSION['http_auth'] = "";
-        //die($_SESSION['http_auth']);
-        if ($_SESSION['http_auth'] != $this->db) {
-            \app\models\Database::setDb($this->db);
-            $postgisObject = new \app\inc\Model();
-            $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-            if ($auth == "Read/write") {
-                include('inc/http_basic_authen.php');
-            }
-            $_SESSION['http_auth'] = $this->db;
-        }
-    }
-
-    public function fetch()
+    private function fetch()
     {
         $uriParts = array();
         $parts = explode("/", $_SERVER['REQUEST_URI']);
@@ -54,10 +39,9 @@ class Mapcache extends \app\inc\Controller
         $uri = implode("/",$uriParts);
         //die($uri);
         $layer = explode("@", $parts[5])[0];
-
-        $this->authLayer($layer);
+        $this->basicHttpAuthLayer($layer, $this->db);
         $url = $this->host . $uri;
-
+        //die($url);
         $res = imagecreatefrompng($url);
         if (!$res) {
             $response['success'] = false;

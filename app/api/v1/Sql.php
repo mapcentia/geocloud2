@@ -9,11 +9,22 @@ class Sql extends \app\inc\Controller
     private $q;
     private $apiKey;
     private $data;
+    private $subUser;
 
     public function get_index()
     {
         include_once 'Cache_Lite/Lite.php';
 
+        $db = Input::getPath()->part(4);
+        $dbSplit = explode("@", $db);
+
+        if (sizeof($dbSplit) == 2) {
+            $this->subUser = $dbSplit[0];
+        } elseif (isset($_SESSION["subuser"])) {
+            $this->subUser = $_SESSION["subuser"];
+        } else {
+            $this->subUser = null;
+        }
         if (Input::get('base64') === "true") {
             $this->q = base64_decode(Input::get('q'));
         } else {
@@ -21,7 +32,6 @@ class Sql extends \app\inc\Controller
         }
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
-        print_r($res);
         $this->apiKey = $res['data']['api_key'];
 
         $this->response = $this->transaction($this->q, Input::get('client_encoding'));
@@ -41,13 +51,13 @@ class Sql extends \app\inc\Controller
 
         $sql = "SELECT " . $tokens->fields . " FROM " . $tokens->from;
         if (isset($tokens->where)) {
-            $sql.=" WHERE " . $tokens->where;
+            $sql .= " WHERE " . $tokens->where;
         }
         if (isset($tokens->order)) {
-            $sql.=" ORDER BY " . $tokens->where;
+            $sql .= " ORDER BY " . $tokens->where;
         }
         if (isset($tokens->LIMIT)) {
-            $sql.=" LIMIT " . $tokens->where;
+            $sql .= " LIMIT " . $tokens->where;
         }
         print_r($sql);
 
@@ -60,54 +70,108 @@ class Sql extends \app\inc\Controller
 
     private function transaction($sql, $clientEncoding = null)
     {
-        $parsedSQL = \app\inc\SqlParser::ParseString($sql)->getArray();
-        if ($parsedSQL['from']) {
-            $data    = $parsedSQL['from'];
-            $search  = 'from';
-            $replace = '';
-
-            $clean = preg_replace_callback('/\b'.$search.'\b/i', function($matches) use ($replace)
-            {
-                $i=0;
-                return join('', array_map(function($char) use ($matches, &$i)
-                {
-                    return ctype_lower($matches[0][$i++])?strtolower($char):strtoupper($char);
-                }, str_split($replace)));
-            }, $data);
-            $relations = explode(",", $clean);
-            foreach ($relations as $relations) {
-                echo trim($relations)."\n";
-            }
-        }
-        if ($parsedSQL['from']) {
-            if (
-                strpos(strtolower($parsedSQL['from']), 'settings.') !== false ||
-                strpos(strtolower($parsedSQL['from']), 'geometry_columns') !== false
-            ) {
-                $this->response['success'] = false;
-                $this->response['message'] = "Can't complete the query";
-                $this->response['code'] = 406;
-                return serialize($this->response);
-            }
-        }
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "You can't use ';'. Use the bulk transaction API instead";
-        } elseif (strpos($sql, '--') !== false) {
+            return serialize($this->response);
+        }
+        if (strpos($sql, '--') !== false) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "SQL comments '--' are not allowed";
-        } elseif ($parsedSQL['drop']) {
+            return serialize($this->response);
+        }
+        require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
+        $parser = new \PHPSQLParser($sql, true);
+        $parsedSQL = $parser->parsed;
+
+        //print_r($parsedSQL);
+
+        // Check SQL SELECT
+        if (isset($parsedSQL['SELECT']) && isset($parsedSQL['FROM'])) {
+            foreach ($parsedSQL['FROM'] as $table) {
+                $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
+                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                    $table["no_quotes"] == "geometry_columns"
+                ) {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Can't complete the query";
+                    $this->response['code'] = 406;
+                    return serialize($this->response);
+                }
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, false, Input::get('key'));
+                if (!$response["success"]) {
+                    return serialize($response);
+                }
+            }
+
+            // Check SQL UPDATE
+        } elseif (isset($parsedSQL['UPDATE'])) {
+            foreach ($parsedSQL['UPDATE'] as $table) {
+                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                    $table["no_quotes"] == "geometry_columns"
+                ) {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Can't complete the query";
+                    $this->response['code'] = 406;
+                    return serialize($this->response);
+                }
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                if (!$response["success"]) {
+                    return serialize($response);
+                }
+            }
+
+            // Check SQL DELETE
+        } elseif (isset($parsedSQL['DELETE']) && isset($parsedSQL['FROM'])) {
+            foreach ($parsedSQL['FROM'] as $table) {
+                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                    $table["no_quotes"] == "geometry_columns"
+                ) {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Can't complete the query";
+                    $this->response['code'] = 406;
+                    return serialize($this->response);
+                }
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                if (!$response["success"]) {
+                    return serialize($response);
+                }
+            }
+
+            // Check SQL INSERT
+        } elseif (isset($parsedSQL['INSERT'])) {
+            foreach ($parsedSQL['INSERT'] as $table) {
+                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                    $table["no_quotes"] == "geometry_columns"
+                ) {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Can't complete the query";
+                    $this->response['code'] = 406;
+                    return serialize($this->response);
+                }
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                if (!$response["success"]) {
+                    return serialize($response);
+                }
+            }
+        }
+
+        if ($parsedSQL['DROP']) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "DROP is not allowed through the API";
-        } elseif ($parsedSQL['alter']) {
+        } elseif ($parsedSQL['ALTER']) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
-        } elseif ($parsedSQL['create']) {
-            if (strpos(strtolower($parsedSQL['create']), 'create view') !== false) {
+        } elseif ($parsedSQL['CREATE']) {
+            if (strpos(strtolower($parsedSQL['CREATE']), 'create view') !== false) {
                 if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                     $api = new \app\models\Sql();
                     $this->response = $api->transaction($this->q);
@@ -121,16 +185,10 @@ class Sql extends \app\inc\Controller
                 $this->response['message'] = "Only CREATE VIEW is allowed through the API";
                 $this->response['code'] = 403;
             }
-        } elseif ($parsedSQL['update'] || $parsedSQL['insert'] || $parsedSQL['delete']) {
-            if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
-                $api = new \app\models\Sql();
-                $this->response = $api->transaction($this->q);
-            } else {
-                $this->response['success'] = false;
-                $this->response['message'] = "Not the right key!";
-                $this->response['code'] = 403;
-            }
-        } elseif ($parsedSQL['select']) {
+        } elseif ($parsedSQL['UPDATE'] || $parsedSQL['INSERT'] || $parsedSQL['DELETE']) {
+            $api = new \app\models\Sql();
+            $this->response = $api->transaction($this->q);
+        } elseif ($parsedSQL['SELECT']) {
             $lifetime = (Input::get('lifetime')) ?: 0;
             $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
             $Cache_Lite = new \Cache_Lite($options);
