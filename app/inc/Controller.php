@@ -78,6 +78,8 @@ class Controller
             $response = $settings_viewer->get();
             if (isset($response["data"]["userGroups"]->$subUser)) {
                 $userGroup = $response["data"]["userGroups"]->$subUser;
+            } else {
+                $userGroup = null;
             }
             //print_r($response);
             if ($subUser) {
@@ -85,14 +87,11 @@ class Controller
             } else {
                 $apiKey = $response['data']['api_key'];
             }
-            //die($subUser);
-            //die($apiKey);
             //if ($dbSplit[0] != $postgisschema) {
             $sql = "SELECT * FROM settings.geometry_columns_join WHERE _key_ LIKE :schema";
             $res = $postgisObject->prepare($sql);
             try {
                 $res->execute(array("schema" => $layer . ".%"));
-
             } catch (\PDOException $e) {
                 $response = array();
                 $response2['success'] = false;
@@ -152,7 +151,6 @@ class Controller
                     $response = array();
                     $response['auth_level'] = $auth;
                     $response['session'] = $_SESSION["subuser"] ?:$_SESSION["screen_name"];
-
                     if ($auth == "Read/write" || ($transaction)) {
                         if (($apiKey == Input::get('key') && $apiKey != false) || $_SESSION["auth"]) {
                             $response['success'] = true;
@@ -172,8 +170,6 @@ class Controller
                 }
             }
             //}
-        } else {
-
         }
     }
 }
