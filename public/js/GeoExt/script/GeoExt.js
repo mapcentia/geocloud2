@@ -2230,6 +2230,11 @@ GeoExt.form.recordToField = function (i, q) {
                 iconCls: 'upload-icon'
             },
             listeners: {
+                'afterrender': function(cmp) {
+                    cmp.getEl().next().set({
+                        "accept": "image/*"
+                    });
+                },
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
@@ -2275,7 +2280,7 @@ GeoExt.form.recordToField = function (i, q) {
             listeners: {
                 'fileselected': function (fb, v) {
                     var reader = new FileReader()
-                        file = document.querySelector('#' + fb.fileInput.id).files[0];
+                    file = document.querySelector('#' + fb.fileInput.id).files[0];
                     reader.onload = function (e) {
                         $("#" + fb.id).val(btoa(reader.result));
                     };

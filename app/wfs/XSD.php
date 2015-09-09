@@ -58,16 +58,15 @@ foreach ($tables as $table) {
     $atts = null;
     $depth++;
 
-
     $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}''',
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
     $fieldConfRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
     $fieldConf = json_decode($fieldConfRow['fieldconf']);
-
+    
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = "true";
         $atts["name"] = $hello;
-        $properties = json_decode($fieldConf->$atts["name"]->properties);
+        $properties = $fieldConf->$atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }
@@ -105,7 +104,7 @@ foreach ($tables as $table) {
                     break;
             }
         } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
-            if (isset($properties->type) && $properties->type == "image") {
+            if (isset($properties->image) && $properties->image == true) {
                 $atts["type"] = "gc2:imageType";
             }
         } else {
