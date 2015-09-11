@@ -317,7 +317,6 @@ geocloud = (function () {
 
                                     break;
                                 case "leaflet":
-				    console.log(response);
                                     me.layer.addData(response);
                                     break;
                             }
