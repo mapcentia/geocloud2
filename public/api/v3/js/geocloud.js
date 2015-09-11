@@ -299,7 +299,7 @@ geocloud = (function () {
                 async: this.defaults.async,
                 data: 'format=geojson&q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: (this.defaults.jsonp) ? 'callback' : false,
-                url: 'http://' + 'mhoegh' + '.cartodb.com' + '/api/v2/sql',
+                url: 'http://' + this.db + '.cartodb.com' + '/api/v2/sql',
                 type: this.defaults.method,
                 success: function (response) {
                         if (response.features !== null) {
