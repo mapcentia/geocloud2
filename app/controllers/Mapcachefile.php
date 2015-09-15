@@ -11,9 +11,6 @@ class Mapcachefile extends \app\inc\Controller
     {
         $postgisObject = new Model();
         ob_start();?>
-        <?xml version = "1.0" encoding = "UTF-8"?>
-
-<!-- see the accompanying mapcache.xml.sample for a fully commented configuration file -->
 
 <mapcache>
     <cache name="disk" type="disk">
@@ -38,7 +35,7 @@ class Mapcachefile extends \app\inc\Controller
                      </params>
               </getmap>
               <http>
-                    <url>http://192.168.33.10/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
+                    <url><?php echo App::$param["WMSHostForMapCache"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
               </http>
         </source>
         <tileset name="<?php echo $row["f_table_schema"] . "." . $row["f_table_name"] ?>">
@@ -62,7 +59,7 @@ class Mapcachefile extends \app\inc\Controller
     <service type="wms" enabled="true">
         <full_wms>assemble</full_wms>
         <resample_mode>bilinear</resample_mode>
-        <format>JPEG</format>
+        <format allow_client_override="true">PNG</format>
         <maxsize>4096</maxsize>
     </service>
     <service type="wmts" enabled="true"/>

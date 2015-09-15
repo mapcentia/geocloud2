@@ -35,7 +35,7 @@ class Wms extends \app\inc\Controller
             $request->loadParams();
         }
 
-        //error_log(Util::clientIp());
+        error_log(Util::clientIp());
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
             if (Util::ipInRange(Util::clientIp(), $address)) {
