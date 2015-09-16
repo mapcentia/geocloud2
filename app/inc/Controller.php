@@ -56,16 +56,21 @@ class Controller
         }
     }
 
-    public function basicHttpAuthLayer($layer, $db)
+    public function basicHttpAuthLayer($layer, $db, $subUser)
     {
-        if ($_SESSION['http_auth'] != $db) {
+        $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
+        if (!$_SESSION[$key]) {
+            \app\inc\Log::write("Checking auth");
             \app\models\Database::setDb($db);
             $postgisObject = new \app\inc\Model();
             $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+            $layerSplit = explode(".", $layer);
+            $postgisschema = $layerSplit[0];
+            $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
             if ($auth == "Read/write") {
                 include('inc/http_basic_authen.php');
             }
-            $_SESSION['http_auth'] = $db;
+            $_SESSION[$key] = true;
         }
     }
 
@@ -105,7 +110,7 @@ class Controller
                     if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
                         $response = array();
                         $response['auth_level'] = $auth;
-                        $response['privileges'] = $privileges;
+                        $response['privileges'] = $privileges[$subUser];
                         switch ($transaction) {
                             case false:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
@@ -133,8 +138,8 @@ class Controller
                     } else {
                         $response = array();
                         $response['auth_level'] = $auth;
-                        $response['privileges'] = $privileges;
-                        $response['session'] = $_SESSION["subuser"] ?:$_SESSION["screen_name"];
+                        $response['privileges'] = $privileges[$subUser];
+                        $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
@@ -150,7 +155,7 @@ class Controller
                 } else {
                     $response = array();
                     $response['auth_level'] = $auth;
-                    $response['session'] = $_SESSION["subuser"] ?:$_SESSION["screen_name"];
+                    $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
                     if ($auth == "Read/write" || ($transaction)) {
                         if (($apiKey == Input::get('key') && $apiKey != false) || $_SESSION["auth"]) {
                             $response['success'] = true;

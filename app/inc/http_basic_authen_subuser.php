@@ -32,7 +32,6 @@ if (sizeof($dbSplit) == 2) { //Sub-user
     $db = $dbSplit[1];
     // We set the SESSION, if request is coming from outside a session
     $subUser = $_SESSION["subuser"] = $dbSplit[0];
-
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
     $userGroup = $response["data"]["userGroups"]->$subUser;
@@ -51,6 +50,7 @@ if (sizeof($dbSplit) == 2) { //Sub-user
         }
         while ($row = $postgisObject->fetchRow($res, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
+            //die(print_r($privileges,true));
             switch ($transaction) {
                 case false:
                     if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {

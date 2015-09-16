@@ -5,6 +5,7 @@ class Mapcache extends \app\inc\Controller
 {
     private $db;
     private $host;
+    private $subUser;
 
     function __construct()
     {
@@ -13,12 +14,14 @@ class Mapcache extends \app\inc\Controller
 
         $dbSplit = explode("@", $this->db);
         if (sizeof($dbSplit) == 2) {
+            $this->subUser = $dbSplit[0];
             $this->db = $dbSplit[1];
+        } else {
+            $this->subUser = null;
         }
-        $this->fetch();
     }
 
-    private function fetch()
+    public function fetch()
     {
         $uriParts = array();
         $parts = explode("/", $_SERVER['REQUEST_URI']);
@@ -36,6 +39,7 @@ class Mapcache extends \app\inc\Controller
             }
             $uriParts[] = $parts[$i];
         }
+        $url = null;
         $uri = implode("/", $uriParts);
         $layer = null;
         switch (explode("?", $parts[3])[0]) {
@@ -49,6 +53,21 @@ class Mapcache extends \app\inc\Controller
                 } else {
                     $layer = explode("@", $parts[5])[0];
                 }
+                break;
+            case "wms";
+                $get = array_change_key_case($_GET, CASE_UPPER);
+                if (strtolower($get["REQUEST"]) == "getcapabilities" ||
+                    strtolower($get["REQUEST"]) == "getlegendgraphic" ||
+                    strtolower($get["REQUEST"]) == "getfeatureinfo" ||
+                    strtolower($get["REQUEST"]) == "describefeaturetype" ||
+                    isset($get["FORMAT_OPTIONS"]) == true
+                ) {
+                    $url = "http://127.0.0.1" . "/wms/" . $this->db . "/" . $parts[4] . "?" . explode("?", explode("?",$uri)[1])[1];
+
+                } else {
+                    $layer = $get["LAYERS"];
+                }
+                break;
                 break;
             case "xyz";
                 die("xyz");
@@ -67,33 +86,37 @@ class Mapcache extends \app\inc\Controller
                 break;
         }
         //die(print_r($layer, true));
-        $url = $this->host . $uri;
+
+        $url = $url ?: $this->host . $uri;
         //die($url);
         $type = get_headers($url, 1)["Content-Type"];
+        //$type = "image/png";
         //die($type);
         switch ($type) {
+            case "text/plain":
+                header('Content-type: text/plain');
+                $response['success'] = false;
+                $response['message'] = "Could create tile";
+                $response['code'] = 406;
+                header("HTTP/1.0 {$response['code']} " . \app\inc\Util::httpCodeText($response['code']));
+                echo \app\inc\Response::toJson($response);
+                exit();
+                break;
             case "application/xml":
+                header('Content-type: application/xml');
+                echo file_get_contents($url);
+                exit();
+                break;
+            case "text/xml":
                 header('Content-type: text/xml');
                 echo file_get_contents($url);
                 exit();
                 break;
             case "image/png":
-                $this->basicHttpAuthLayer($layer, $this->db);
-                $res = imagecreatefrompng($url);
-                if (!$res) {
-                    $response['success'] = false;
-                    $response['message'] = "Could create tile";
-                    $response['code'] = 406;
-                    header("HTTP/1.0 {$response['code']} " . \app\inc\Util::httpCodeText($response['code']));
-                    echo \app\inc\Response::toJson($response);
-                    exit();
-                }
+                $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
                 header('Content-type: image/png');
                 header('X-Powered-By: GC2 MapCache');
-                imageAlphaBlending($res, true);
-                imageSaveAlpha($res, true);
-                imagepng($res);
-                imagedestroy($res);
+                readfile($url);
                 exit();
                 break;
         }

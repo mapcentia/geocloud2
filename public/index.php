@@ -106,9 +106,17 @@ if (Input::getPath()->part(1) == "api") {
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
     new \app\controllers\Wms();
+
+} elseif (Input::getPath()->part(1) == "tilecache") {
+    Session::start();
+    $tileCache = new \app\controllers\tilecache();
+    $tileCache->fetch();
+
 } elseif (Input::getPath()->part(1) == "mapcache") {
     Session::start();
-    new \app\controllers\mapcache();
+    $mapCache = new \app\controllers\mapcache();
+    $mapCache->fetch();
+
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();
     $db = Input::getPath()->part(2);
@@ -124,6 +132,7 @@ if (Input::getPath()->part(1) == "api") {
     Database::setDb($db);
     Connection::$param["postgisschema"] = Input::getPath()->part(3);
     include_once("app/wfs/server.php");
+
 } elseif (!Input::getPath()->part(1)) {
     if (App::$param["redirectTo"]) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
