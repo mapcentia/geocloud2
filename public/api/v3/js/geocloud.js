@@ -333,7 +333,7 @@ geocloud = (function () {
             return this.layer;
         };
     };
-    
+
     tweetStore = function (config) {
         var prop, me = this;
         this.defaults = $.extend({}, STOREDEFAULTS);
