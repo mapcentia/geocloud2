@@ -420,7 +420,11 @@ geocloud = (function () {
             url = defaults.host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
-            url = defaults.host + "/wms/" + defaults.db + "/tilecache";
+            if (1 === 1) {
+                url = defaults.host + "/mapcache/" + defaults.db + "/wms";
+            } else {
+                url = defaults.host + "/wms/" + defaults.db + "/tilecache";
+            }
             var url1 = url;
             var url2 = url;
             var url3 = url;
@@ -464,7 +468,11 @@ geocloud = (function () {
     //ol2 and leaflet
     createTMSLayer = function (layer, defaults) {
         var l, url, urlArray;
-        url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
+        if (1 === 1) {
+            url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
+        } else {
+            url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
+        }
         var url1 = url;
         var url2 = url;
         var url3 = url;
@@ -1456,7 +1464,7 @@ geocloud = (function () {
                     break;
             }
         };
-        this.addHeatMap = function(store, weight, factor, config){
+        this.addHeatMap = function (store, weight, factor, config) {
             var points = [], features = store.geoJSON.features;
             weight = weight || 1;
             factor = factor || 1;

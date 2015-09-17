@@ -33,19 +33,12 @@ class Cfgfile extends \app\inc\Controller
                 $layerArr[$row['f_table_schema']][] = $row['f_table_schema'] . "." . $row['f_table_name'];
                 $def = json_decode($row['def']);
                 $def->meta_tiles == true ? $meta_tiles = "yes" : $meta_tiles = "no";
-                $meta_size = ($def->meta_size) ? : $meta_size = 3;
-                $meta_buffer = ($def->meta_buffer) ? : $meta_buffer = 0;
+                $meta_size = ($def->meta_size) ?: $meta_size = 3;
+                $meta_buffer = ($def->meta_buffer) ?: $meta_buffer = 0;
                 $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
-                // If raster then use WMS backend, because of bug in Python backend.
-                if ($row['type'] == "RASTER") {
-                    $parts = explode(":",App::$param['host']);
-                    echo "type=WMS\n";
-                    echo "url=" . "http://127.0.0.1" . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
-                } else {
-                    echo "type=MapServerLayer\n";
-                    echo "mapfile=" . App::$param['path'] . "/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row['f_table_schema'] . ".map\n";
-                }
+                echo "type=WMS\n";
+                echo "url=" . "http://127.0.0.1" . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
                 echo "debug=no\n";
                 echo "extension=png\n";
                 echo "bbox=-20037508.3427892,-20037508.3427892,20037508.3427892,20037508.3427892\n";

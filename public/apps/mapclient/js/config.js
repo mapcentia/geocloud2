@@ -34,8 +34,13 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/wms/' + db + '/tilecache/'
-        //wfsUrl = '/wfs/' + db + '/' + schema;
+        url;
+    if (1 === 1) {
+        url = '/mapcache/' + db + '/wms/';
+    } else {
+        url = '/wms/' + db + '/tilecache/';
+    }
+    //wfsUrl = '/wfs/' + db + '/' + schema;
     enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
     $.ajax({
         url: '/api/v1/setting/' + db,
@@ -50,18 +55,18 @@ MapCentia.setup = function () {
                     Heron.options.zoom = null;
                 }
 
-                if (typeof response.data.center !== "undefined" &&  typeof response.data.center[firstSchema] !== "undefined") {
+                if (typeof response.data.center !== "undefined" && typeof response.data.center[firstSchema] !== "undefined") {
                     Heron.options.center = response.data.center[firstSchema];
                 } else {
                     Heron.options.center = null;
                 }
 
-                if (typeof response.data.extentrestricts !== "undefined" &&  typeof response.data.extentrestricts[firstSchema] !== "undefined") {
+                if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[firstSchema] !== "undefined") {
                     Heron.options.extentrestrict = response.data.extentrestricts[firstSchema];
                 } else {
                     Heron.options.extentrestrict = null;
                 }
-                if (typeof response.data.zoomrestricts !== "undefined" &&  typeof response.data.zoomrestricts[firstSchema] !== "undefined") {
+                if (typeof response.data.zoomrestricts !== "undefined" && typeof response.data.zoomrestricts[firstSchema] !== "undefined") {
                     Heron.options.zoomrestrict = response.data.zoomrestricts[firstSchema];
                 } else {
                     Heron.options.zoomrestrict = null;
@@ -677,7 +682,7 @@ MapCentia.init = function () {
                         placeMarkers = new OpenLayers.Layer.Markers("Markers");
                         MapCentia.gc2.map.addLayer(placeMarkers);
                         placeMarkers.addMarker(new OpenLayers.Marker(point));
-                        placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true, function(){
+                        placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + place.formatted_address + "</div>", null, true, function () {
                             placePopup.destroy();
                             placeMarkers.destroy();
                         });
@@ -712,7 +717,7 @@ MapCentia.init = function () {
             , mapLimitScales: false
             , mapPreviewAutoHeight: true // Adapt height of preview map automatically, if false mapPreviewHeight is used.
             // , mapPreviewHeight: 400,
-            ,hidden: !enablePrint
+            , hidden: !enablePrint
         }
         }
     ];
@@ -834,7 +839,7 @@ MapCentia.setup();
                 return mapvars;
             })(),
             printBtn = Ext.getCmp("print-btn");
-        if (typeof urlVars.print !=="undefined" && urlVars.print === "1") {
+        if (typeof urlVars.print !== "undefined" && urlVars.print === "1") {
             printBtn.handler.call(printBtn.scope, printBtn, Ext.EventObject);
         }
     } else {
