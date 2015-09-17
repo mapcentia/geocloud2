@@ -180,7 +180,8 @@ class Model
 
     function getMetaData($table, $temp = false)
     {
-        $this->connect("PG");
+        $arr = array();
+        //$this->connect("PG");
 
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];
@@ -190,13 +191,47 @@ class Model
 
         if (!$_schema) {
             $_schema = $this->postgisschema;
+        } else {
+            $_schema = str_replace(".", "", $_schema);
         }
-        if (!$temp) {
+        /*if (!$temp) {
             $arr = pg_meta_data($this->db, str_replace(".", "", $_schema) . "." . $_table);
         } else {
             $arr = pg_meta_data($this->db, $_table);
         }
-        $this->close();
+        $this->close();*/
+
+        $sql = "SELECT
+                    g.*,
+                    f.type,
+                    f.srid
+                FROM
+                     information_schema.columns AS g left JOIN
+                     geometry_columns AS f
+                         ON (g.table_schema = f.f_table_schema AND g.table_name = f.f_table_name )
+                WHERE
+                    table_schema = :schema AND table_name = :table";
+
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(array("schema" => $_schema, "table" => $_table));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($res)) {
+            $arr[$row["column_name"]] = array(
+                "num" => $row["ordinal_position"],
+                "type" => $row["udt_name"],
+                "srid" => ($row["udt_name"] == "geometry") ? $row["srid"] : null,
+                "geom_type" => ($row["udt_name"] == "geometry") ? $row["type"] : null,
+
+            );
+        }
+
+
         return ($arr);
     }
 
@@ -400,7 +435,9 @@ class Model
         $response['version'] = $row["postgis_lib_version"];
         return $response;
     }
-    public function doesColumnExist($t, $c){
+
+    public function doesColumnExist($t, $c)
+    {
         $bits = explode(".", $t);
         $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$bits[0]}' AND table_name='{$bits[1]}' and column_name='{$c}'";
         $res = $this->prepare($sql);

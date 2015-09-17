@@ -821,7 +821,8 @@ Viewer = function () {
                 } else {
                     window.gc2Options.customPrintParams.mapAttribution = "";
                 }
-            } catch(e) {}
+            } catch (e) {
+            }
 
         }());
         var moveEndCallBack = function () {
@@ -940,7 +941,7 @@ Viewer = function () {
                             $.each($.parseJSON(fieldConf), function (i, v) {
                                 if (v.type === "bytea") {
                                     fields.push("encode(\"" + i + "\",'escape') as \"" + i + "\"");
-                                } else if (i !== f_geometry_column){
+                                } else if (i !== f_geometry_column) {
                                     fields.push("\"" + i + "\"");
                                 }
                             });
@@ -977,7 +978,7 @@ Viewer = function () {
         };
         mouseOverLayer.addTo(cloud.map);
         mouseOverDisplay = _.debounce(function (e) {
-            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()];
+            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()], qJson, sFilter;
             mouseOverLayer.clearLayers();
             try {
                 cloud.map.removeLayer(mouseOverPopUp);
@@ -985,13 +986,48 @@ Viewer = function () {
             }
             $.each(indexedLayers, function (i, v) {
                 if (visLayers.indexOf(v) !== -1) {
+                    if (metaDataKeys[v.split(".")[1]].type === "POINT") {
+                        sFilter = {
+                            "geo_distance": {
+                                "distance": distance + "m",
+                                "coordinates": {
+                                    "lat": e.latlng.lat,
+                                    "lon": e.latlng.lng
+                                }
+                            }
+                        };
+                    } else {
+                        sFilter = {
+                            "bool": {
+                                "must": [{
+                                    "geo_shape": {
+                                        "geometry": {
+                                            "shape": {
+                                                "type": "circle",
+                                                "coordinates": [e.latlng.lng, e.latlng.lat],
+                                                "radius": distance + "m"
+                                            }
+                                        }
+                                    }
+                                }, {"missing": {"field": "gc2_version_end_date"}}]
+                            }
+                        };
+                    }
+                    qJson = {
+                        "query": {
+                            "filtered": {
+                                "query": {"match_all": {}},
+                                "filter": sFilter
+                            }
+                        }
+                    };
                     mouseOverLayer.addLayer(new geocloud.elasticStore({
                         db: db,
                         index: schema + "/" + v.split(".")[1],
                         size: 100,
                         clickable: false,
                         styleMap: mouseOverStyle,
-                        q: '{"query":{"filtered":{"query":{"match_all" : {}},"filter":{"bool":{"must":[{"geo_shape":{"geometry":{"shape":{"type":"circle","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + '], "radius" : "' + distance + 'm"}}}},{ "missing" : {"field" : "gc2_version_end_date"}}]}}}}}',
+                        q: JSON.stringify(qJson),
                         onEachFeature: function (feature, layer) {
                             var html = "<table>", fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), show = false;
                             $.each(fieldConf, function (i, v) {
@@ -1055,7 +1091,7 @@ Viewer = function () {
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
             (function iter() {
                 var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [];
-                if (num === 0){
+                if (num === 0) {
                     // Clear all layers
                     for (var key in searchLayers) {
                         if (searchLayers.hasOwnProperty(key)) {
@@ -1085,16 +1121,34 @@ Viewer = function () {
                                 }
                             }
                         };
-                        sFilter = {
-                            "geo_shape": {
-                                "geometry": {
-                                    "shape": {
-                                        "type": "envelope",
-                                        "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
+                        if (metaDataKeys[v.split(".")[1]].type === "POINT") {
+                            sFilter = {
+                                "geo_bounding_box": {
+                                    "coordinates": {
+                                        "top_left": {
+                                            "lat": cloud.getExtent().top,
+                                            "lon": cloud.getExtent().left
+                                        },
+                                        "bottom_right": {
+                                            "lat": cloud.getExtent().bottom,
+                                            "lon": cloud.getExtent().right
+                                        }
                                     }
                                 }
-                            }
-                        };
+                            };
+                        } else {
+                            sFilter = {
+                                "geo_shape": {
+                                    "geometry": {
+                                        "shape": {
+                                            "type": "envelope",
+                                            "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
+                                        }
+                                    }
+                                }
+                            };
+                        }
+
                         // Create terms and fields
                         var med = {"bool": {"must": []}};
                         $.each(query.split(" "), function (x, n) {

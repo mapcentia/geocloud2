@@ -62,6 +62,8 @@ class Table extends Model
     private function setType()
     {
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
+        //die(print_r($this->metaData, true));
+
     }
 
     private function getType($field)

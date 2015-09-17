@@ -71,16 +71,23 @@ class Elasticsearch extends Model
                         array(
                             "type" => "object",
                             "properties" => array()
-                        ),
-                        "geometry" => array()
+                        )
                     )
                 )
             )
         );
         foreach ($schema as $key => $value) {
             if ($value["type"] == "geometry") {
-                $map["mappings"][$type]["properties"]["geometry"] =
-                    array("type" => "geo_shape");
+
+                if ($value["geom_type"] == "POINT") {
+                    $map["mappings"][$type]["properties"]["geometry"]["properties"]["coordinates"] =
+                        array("type" => "geo_point");
+                } else {
+                    $map["mappings"][$type]["properties"]["geometry"] =
+                        array("type" => "geo_shape");
+                }
+
+
             } elseif ($value["type"] == "string" || $value["type"] == "text") {
                 $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
                     array(
