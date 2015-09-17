@@ -10,7 +10,7 @@ class Mapcache extends \app\inc\Controller
     function __construct()
     {
         $this->db = \app\inc\Input::getPath()->part(2);
-        $this->host = \app\conf\App::$param["mapcacheHost"];
+        $this->host = \app\conf\App::$param["mapCache"]["mapcacheHost"];
 
         $dbSplit = explode("@", $this->db);
         if (sizeof($dbSplit) == 2) {

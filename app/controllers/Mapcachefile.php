@@ -35,7 +35,7 @@ class Mapcachefile extends \app\inc\Controller
                      </params>
               </getmap>
               <http>
-                    <url><?php echo App::$param["WMSHostForMapCache"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
+                    <url><?php echo App::$param["mapCache"]["MapCacheWmsHost"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
               </http>
         </source>
         <tileset name="<?php echo $row["f_table_schema"] . "." . $row["f_table_name"] ?>">
