@@ -1116,175 +1116,173 @@ Viewer = function () {
                 if (1 === 2) {
                     // Pass
                 } else {
-                    if (fieldConf) {
-                        $.each(fieldConf, function (i, v) {
-                            if (v.type !== "geometry" && v.searchable === true) {
-                                fields.push(v.column);
+                    $.each(fieldConf || [], function (i, v) {
+                        if (v.type !== "geometry" && v.searchable === true) {
+                            fields.push(v.column);
+                        }
+                    });
+                    var qJson = {
+                        "query": {
+                            "filtered": {
+                                "query": {},
+                                "filter": {
+                                    "bool": {
+                                        "must": [{"missing": {"field": "gc2_version_end_date"}}]
+                                    }
+                                }
                             }
-                        });
-                        var qJson = {
-                            "query": {
-                                "filtered": {
-                                    "query": {},
-                                    "filter": {
-                                        "bool": {
-                                            "must": [{"missing": {"field": "gc2_version_end_date"}}]
-                                        }
+                        }
+                    };
+                    if (isPoint) {
+                        sFilter = {
+                            "geo_bounding_box": {
+                                "coordinates": {
+                                    "top_left": {
+                                        "lat": cloud.getExtent().top,
+                                        "lon": cloud.getExtent().left
+                                    },
+                                    "bottom_right": {
+                                        "lat": cloud.getExtent().bottom,
+                                        "lon": cloud.getExtent().right
                                     }
                                 }
                             }
                         };
-                        if (isPoint) {
-                            sFilter = {
-                                "geo_bounding_box": {
-                                    "coordinates": {
-                                        "top_left": {
-                                            "lat": cloud.getExtent().top,
-                                            "lon": cloud.getExtent().left
-                                        },
-                                        "bottom_right": {
-                                            "lat": cloud.getExtent().bottom,
-                                            "lon": cloud.getExtent().right
-                                        }
+                    } else {
+                        sFilter = {
+                            "geo_shape": {
+                                "geometry": {
+                                    "shape": {
+                                        "type": "envelope",
+                                        "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
                                     }
                                 }
-                            };
-                        } else {
-                            sFilter = {
-                                "geo_shape": {
-                                    "geometry": {
-                                        "shape": {
-                                            "type": "envelope",
-                                            "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
-                                        }
-                                    }
-                                }
-                            };
-                        }
-
-                        // Create terms and fields
-                        var med = {"bool": {"must": []}};
-                        $.each(query.split(" "), function (x, n) {
-                            var type;
-                            if (!isNaN(num) && Number(n) && n % 1 === 0) {
-                                type = "int";
-
                             }
-                            else if (!isNaN(num) && Number(n) && n % 1 !== 0) {
-                                type = "float";
-                            }
-                            else {
-                                type = "str";
-                            }
-                            $.each(fields, function (i, v) {
-                                if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && (type === "float" || type === "int")) || fieldConf[v].type === "string") {
-                                    var a = v, b = {};
-                                    b[a] = n;
-                                    terms.push({
-                                        "term": b
-                                    })
-                                    qFields.push(v)
-                                }
-
-                            });
-                            med.bool.must.push({"bool": {"should": terms}});
-                            terms = []
-                        });
-
-                        // Create query_string
-                        queryStr = {
-                            "fields": qFields,
-                            "query": encodeURIComponent(query),
-                            "default_operator": "AND"
                         };
-
-                        if (1 === 1) { // Using terms
-                            qJson.query.filtered.query = {"bool": {"should": med}};
-                        } else {
-                            qJson.query.filtered.query = {"query_string": queryStr};
-                        }
-
-                        if ($("#inside-view-input").is(":checked")) {
-                            qJson.query.filtered.filter.bool.must.push(sFilter);
-                        }
-                        q = JSON.stringify(qJson);
-
-                        searchLayers[v].addLayer(new geocloud.elasticStore({
-                            db: db,
-                            index: schema + "/" + v.split(".")[1],
-                            size: med.bool.must[0].bool.should.length === 0 ? 0 : 100,
-                            clickable: false,
-                            styleMap: searchStyle,
-                            jsonp: false,
-                            dataType: "json",
-                            method: "POST",
-                            q: q,
-                            onEachFeature: function (feature, layer) {
-                            },
-                            pointToLayer: function (feature, latlng) {
-                                return L.circleMarker(latlng, {clickable: false});
-                            },
-                            onLoad: function (response) {
-                                if (typeof response.responseJSON.error === "undefined") {
-                                    var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "", fidKey = metaDataKeys[v.split(".")[1]].pkey,
-                                        header = "<h4>" + title + " (" + this.total + ")</h4>",
-                                        table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
-                                    $.each(response.responseJSON.hits.hits, function (i, hit) {
-                                        html = html + "<section class='search-list-item'>";
-                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties[fidKey] + "'>";
-                                        html = html + "<div><table>";
-                                        $.each(fieldConf, function (u, v) {
-                                            if (v.type !== "geometry" && v.searchable === true) {
-                                                html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
-                                            }
-                                        });
-                                        html = html + "</table></div></a></section>";
-                                    });
-                                    if (count > 5 && singleLayer === undefined) {
-                                        more[table] = true;
-                                        html = "<section class='search-list-item more'>";
-                                        html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
-                                        html = html + __("More items from") + " " + title;
-                                        html = html + "</table></div></a></section>";
-                                    } else {
-                                        more[table] = false;
-                                    }
-                                    if (count > 0) {
-                                        $("#search-list").append(header + html);
-                                    }
-                                }
-                                num = num + 1
-                                if (layerArr.length === num) {
-                                    $('a.list-group-item').on("click", function (e) {
-                                        var clickedTable = $(this).data('gc2-sf-table'), clickedTitle = $(this).data('gc2-sf-title'), newQuery;
-                                        $(".list-group-item").addClass("unselected");
-                                        $(this).removeClass("unselected");
-                                        $(this).addClass("selected");
-                                        if (more[clickedTable]) {
-                                            newQuery = clickedTitle + ":" + query;
-                                            $("input[name=custom-search]").val(newQuery);
-                                            search(newQuery)
-                                        }
-                                        else {
-                                            var id = $(this).data('gc2-sf-fid');
-                                            $.each(searchLayers[clickedTable].getLayers(), function (i, v) {
-                                                v.eachLayer(function (l) {
-                                                    if (l.feature.properties[fidKey] === id) {
-                                                        cloud.map.off("moveend", searchByMove);
-                                                        $("#update-search-input").prop("checked", false);
-                                                        cloud.map.fitBounds(l.getBounds());
-                                                    }
-                                                })
-                                            });
-                                        }
-                                        e.stopPropagation();
-                                    });
-                                    return true;
-                                }
-                                iter();
-                            }
-                        }).load());
                     }
+
+                    // Create terms and fields
+                    var med = {"bool": {"must": []}};
+                    $.each(query.split(" "), function (x, n) {
+                        var type;
+                        if (!isNaN(num) && Number(n) && n % 1 === 0) {
+                            type = "int";
+
+                        }
+                        else if (!isNaN(num) && Number(n) && n % 1 !== 0) {
+                            type = "float";
+                        }
+                        else {
+                            type = "str";
+                        }
+                        $.each(fields, function (i, v) {
+                            if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && (type === "float" || type === "int")) || fieldConf[v].type === "string") {
+                                var a = v, b = {};
+                                b[a] = n;
+                                terms.push({
+                                    "term": b
+                                })
+                                qFields.push(v)
+                            }
+
+                        });
+                        med.bool.must.push({"bool": {"should": terms}});
+                        terms = []
+                    });
+
+                    // Create query_string
+                    queryStr = {
+                        "fields": qFields,
+                        "query": encodeURIComponent(query),
+                        "default_operator": "AND"
+                    };
+
+                    if (1 === 1) { // Using terms
+                        qJson.query.filtered.query = {"bool": {"should": med}};
+                    } else {
+                        qJson.query.filtered.query = {"query_string": queryStr};
+                    }
+
+                    if ($("#inside-view-input").is(":checked")) {
+                        qJson.query.filtered.filter.bool.must.push(sFilter);
+                    }
+                    q = JSON.stringify(qJson);
+
+                    searchLayers[v].addLayer(new geocloud.elasticStore({
+                        db: db,
+                        index: schema + "/" + v.split(".")[1],
+                        size: med.bool.must[0].bool.should.length === 0 ? 0 : 100,
+                        clickable: false,
+                        styleMap: searchStyle,
+                        jsonp: false,
+                        dataType: "json",
+                        method: "POST",
+                        q: q,
+                        onEachFeature: function (feature, layer) {
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {clickable: false});
+                        },
+                        onLoad: function (response) {
+                            if (typeof response.responseJSON.error === "undefined") {
+                                var count = response.responseJSON.hits.hits.length, title = metaDataKeys[v.split(".")[1]].f_table_title || metaDataKeys[v.split(".")[1]].f_table_name, html = "", fidKey = metaDataKeys[v.split(".")[1]].pkey,
+                                    header = "<h4>" + title + " (" + this.total + ")</h4>",
+                                    table = metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name;
+                                $.each(response.responseJSON.hits.hits, function (i, hit) {
+                                    html = html + "<section class='search-list-item'>";
+                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + table + "' data-gc2-sf-fid='" + hit._source.properties[fidKey] + "'>";
+                                    html = html + "<div><table>";
+                                    $.each(fieldConf, function (u, v) {
+                                        if (v.type !== "geometry" && v.searchable === true) {
+                                            html = html + "<tr><td>" + (v.alias || v.column) + ":</td><td>" + highlighter(query, _.unescape(hit._source.properties[v.column])) + "</td></tr>";
+                                        }
+                                    });
+                                    html = html + "</table></div></a></section>";
+                                });
+                                if (count > 5 && singleLayer === undefined) {
+                                    more[table] = true;
+                                    html = "<section class='search-list-item more'>";
+                                    html = html + "<a href='javascript:void(0)' class='list-group-item' data-gc2-sf-title='" + title + "' data-gc2-sf-table='" + metaDataKeys[v.split(".")[1]].f_table_schema + "." + metaDataKeys[v.split(".")[1]].f_table_name + "'>";
+                                    html = html + __("More items from") + " " + title;
+                                    html = html + "</table></div></a></section>";
+                                } else {
+                                    more[table] = false;
+                                }
+                                if (count > 0) {
+                                    $("#search-list").append(header + html);
+                                }
+                            }
+                            num = num + 1
+                            if (layerArr.length === num) {
+                                $('a.list-group-item').on("click", function (e) {
+                                    var clickedTable = $(this).data('gc2-sf-table'), clickedTitle = $(this).data('gc2-sf-title'), newQuery;
+                                    $(".list-group-item").addClass("unselected");
+                                    $(this).removeClass("unselected");
+                                    $(this).addClass("selected");
+                                    if (more[clickedTable]) {
+                                        newQuery = clickedTitle + ":" + query;
+                                        $("input[name=custom-search]").val(newQuery);
+                                        search(newQuery)
+                                    }
+                                    else {
+                                        var id = $(this).data('gc2-sf-fid');
+                                        $.each(searchLayers[clickedTable].getLayers(), function (i, v) {
+                                            v.eachLayer(function (l) {
+                                                if (l.feature.properties[fidKey] === id) {
+                                                    cloud.map.off("moveend", searchByMove);
+                                                    $("#update-search-input").prop("checked", false);
+                                                    cloud.map.fitBounds(l.getBounds());
+                                                }
+                                            })
+                                        });
+                                    }
+                                    e.stopPropagation();
+                                });
+                                return true;
+                            }
+                            iter();
+                        }
+                    }).load());
                 }
             })();
         };
