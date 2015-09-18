@@ -978,7 +978,7 @@ Viewer = function () {
         };
         mouseOverLayer.addTo(cloud.map);
         mouseOverDisplay = _.debounce(function (e) {
-            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()], qJson, sFilter;
+            var visLayers = visibleLayers.split(";"), distance = 3 * res[cloud.getZoom()], qJson, sFilter, mapping, isPoint, metaKeys;
             mouseOverLayer.clearLayers();
             try {
                 cloud.map.removeLayer(mouseOverPopUp);
@@ -986,7 +986,14 @@ Viewer = function () {
             }
             $.each(indexedLayers, function (i, v) {
                 if (visLayers.indexOf(v) !== -1) {
-                    if (metaDataKeys[v.split(".")[1]].type === "POINT") {
+                    metaKeys = metaDataKeys[v.split(".")[1]];
+                    mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping);
+                    if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.f_table_name].properties.geometry.type === "undefined") {
+                        isPoint = true;
+                    } else {
+                        isPoint = false;
+                    }
+                    if (isPoint) {
                         sFilter = {
                             "geo_distance": {
                                 "distance": distance + "m",
@@ -1090,7 +1097,13 @@ Viewer = function () {
 
             layerArr = singleLayer ? [singleLayer] : indexedLayers;
             (function iter() {
-                var v = layerArr[num], fieldConf = $.parseJSON(metaDataKeys[v.split(".")[1]].fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [];
+                var v = layerArr[num], metaKeys = metaDataKeys[v.split(".")[1]], fieldConf = $.parseJSON(metaKeys.fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [],
+                    mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping), isPoint;
+                if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.f_table_name].properties.geometry.type === "undefined") {
+                    isPoint = true;
+                } else {
+                    isPoint = false;
+                }
                 if (num === 0) {
                     // Clear all layers
                     for (var key in searchLayers) {
@@ -1121,7 +1134,7 @@ Viewer = function () {
                                 }
                             }
                         };
-                        if (metaDataKeys[v.split(".")[1]].type === "POINT") {
+                        if (isPoint) {
                             sFilter = {
                                 "geo_bounding_box": {
                                     "coordinates": {
