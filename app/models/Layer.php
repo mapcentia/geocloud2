@@ -167,6 +167,15 @@ class Layer extends \app\models\Table
                     }
                     $arr = $this->array_push_assoc($arr, "es_mapping", $output);
 
+                    // Set type name
+                    if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                        $typeName = "a" . $type;
+                    } else {
+                        $typeName = $type;
+                    }
+                    $arr = $this->array_push_assoc($arr, "es_type_name", $typeName);
+
+
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
