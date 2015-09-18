@@ -988,7 +988,7 @@ Viewer = function () {
                 if (visLayers.indexOf(v) !== -1) {
                     metaKeys = metaDataKeys[v.split(".")[1]];
                     mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping);
-                    if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.f_table_name].properties.geometry.type === "undefined") {
+                    if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
                         isPoint = true;
                     } else {
                         isPoint = false;
@@ -1099,7 +1099,7 @@ Viewer = function () {
             (function iter() {
                 var v = layerArr[num], metaKeys = metaDataKeys[v.split(".")[1]], fieldConf = $.parseJSON(metaKeys.fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [],
                     mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping), isPoint;
-                if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.f_table_name].properties.geometry.type === "undefined") {
+                if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
                     isPoint = true;
                 } else {
                     isPoint = false;
