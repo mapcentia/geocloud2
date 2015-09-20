@@ -602,7 +602,7 @@ Viewer = function () {
             async: false,
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "", i, u, l;
+                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "", i, u, l, baseLayersLi=[];
                 groups = [];
                 metaData = response;
                 for (i = 0; i < metaData.data.length; i = i + 1) {
@@ -657,9 +657,8 @@ Viewer = function () {
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" data-gc2-id="' + response.data[u].f_table_schema + "." + response.data[u].f_table_name + '"onchange="MapCentia.switchLayer($(this).data(\'gc2-id\'),this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
                                 if (response.data[u].baselayer) {
-                                    $("#base-layer-list").append(
-                                        "<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>"
-                                    );
+                                        baseLayersLi.push("<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>");
+
                                 } else {
                                     l.push(
                                         {
@@ -680,6 +679,15 @@ Viewer = function () {
                                 }
                             }
                         }
+                        // Append baselayers
+                        baseLayersLi.reverse();
+                        for (u = 0; u < baseLayersLi.length; ++u) {
+                            $("#base-layer-list").append(baseLayersLi[u]);
+                        }
+
+                        $("#base-layer-list").append(
+                        );
+
                         // Don't add empty group
                         if (node.items[0].items.length > 0) {
                             node.items[0].items.reverse();

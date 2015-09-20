@@ -115,7 +115,7 @@ MapCentia.setup = function () {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var groups = [], children = [], text, name, group, type, arr, lArr = [], bArr = [], isBaseLayer, layer, geomField;
+                    var groups = [], children = [], text, name, group, type, arr, lArr = [], bArr = [], isBaseLayer, layer, geomField,  custombaseLayers=[];
                     Heron.options.map.layers = [];
                     metaData = response;
                     for (var x = 0; x < metaData.data.length; x++) {
@@ -192,7 +192,7 @@ MapCentia.setup = function () {
                             Heron.options.map.layers.push(layer);
                         } else {
                             bArr.push(layer);
-                            baseLayers.push({
+                            custombaseLayers.push({
                                 nodeType: "gx_layer",
                                 layer: name,
                                 text: text,
@@ -215,7 +215,8 @@ MapCentia.setup = function () {
                             })
                         );
                     });
-                    Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr).concat(Heron.options.map.layers);
+                    baseLayers = baseLayers.concat(custombaseLayers.reverse());
+                    Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr.reverse()).concat(Heron.options.map.layers);
 
                     // Define a blank base layer and add it
                     var blank = new OpenLayers.Layer.Image(
