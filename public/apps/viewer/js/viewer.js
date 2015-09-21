@@ -685,9 +685,6 @@ Viewer = function () {
                             $("#base-layer-list").append(baseLayersLi[u]);
                         }
 
-                        $("#base-layer-list").append(
-                        );
-
                         // Don't add empty group
                         if (node.items[0].items.length > 0) {
                             node.items[0].items.reverse();
