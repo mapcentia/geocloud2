@@ -181,8 +181,6 @@ class Model
     function getMetaData($table, $temp = false)
     {
         $arr = array();
-        //$this->connect("PG");
-
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];
 
@@ -194,12 +192,6 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        /*if (!$temp) {
-            $arr = pg_meta_data($this->db, str_replace(".", "", $_schema) . "." . $_table);
-        } else {
-            $arr = pg_meta_data($this->db, $_table);
-        }
-        $this->close();*/
 
         $sql = "SELECT
                     g.*,
@@ -227,11 +219,8 @@ class Model
                 "type" => $row["udt_name"],
                 "srid" => ($row["udt_name"] == "geometry") ? $row["srid"] : null,
                 "geom_type" => ($row["udt_name"] == "geometry") ? $row["type"] : null,
-
             );
         }
-
-
         return ($arr);
     }
 
@@ -336,6 +325,9 @@ class Model
         }
         if ($field == 'id') {
             return $row['id'];
+        }
+        if ($field == 'elasticsearch') {
+            return $row['elasticsearch'];
         }
     }
 

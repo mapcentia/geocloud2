@@ -77,6 +77,7 @@ module.exports = function (grunt) {
                         'public/js/store.js',
                         'public/js/edittablestructure.js',
                         'public/js/cartomobilesetup.js',
+                        'public/js/elasticsearchmapping.js',
                         'public/js/editwmsclass.js',
                         'public/js/editwmslayer.js',
                         'public/js/classwizards.js',

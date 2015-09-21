@@ -2,8 +2,6 @@
 namespace app\models;
 
 use app\inc\Model;
-use app\inc\log;
-use \app\conf\Connection;
 
 class Elasticsearch extends Model
 {
@@ -62,8 +60,8 @@ class Elasticsearch extends Model
         if (mb_substr($type, 0, 1, 'utf-8') == "_") {
             $type = "a" . $type;
         }
-        $table = new \app\models\Table($table);
-        $schema = $table->getMapForEs();
+        $tableObj = new \app\models\Table($table);
+        $schema = $tableObj->getMapForEs();
         $map = array("mappings" =>
             array($type =>
                 array("properties" =>
@@ -76,51 +74,88 @@ class Elasticsearch extends Model
                 )
             )
         );
+        $layer = new \app\models\Layer();
+        $esTypes = $layer->getElasticsearchMapping($table);
+        $arr = array();
+        foreach ($esTypes["data"] as $key => $value) {
+            $arr[$value["column"]] = array(
+                "elasticsearchtype" => $value["elasticsearchtype"],
+                "format" => $value["format"],
+                "indexanalyzer" => $value["indexanalyzer"],
+                "searchanalyzer" => $value["searchanalyzer"],
+                "type" => $value["type"],
+            );
+        }
         foreach ($schema as $key => $value) {
-            if ($value["type"] == "geometry") {
-                if ($value["geom_type"] == "POINT") {
-                    $map["mappings"][$type]["properties"]["geometry"]["properties"]["coordinates"] =
-                        array("type" => "geo_point");
+            $pgType = $value["type"];
+            $mapArr = array();
+            $mapArr["type"] = $arr[$key]["elasticsearchtype"];
+            if (isset($arr[$key]["format"]) && ($arr[$key]["format"])) $mapArr["format"] = $arr[$key]["format"];
+            if (isset($arr[$key]["searchanalyzer"]) && ($arr[$key]["searchanalyzer"])) $mapArr["search_analyzer"] = $arr[$key]["searchanalyzer"];
+            if (isset($arr[$key]["indexanalyzer"]) && ($arr[$key]["indexanalyzer"])) $mapArr["index_analyzer"] = $arr[$key]["indexanalyzer"];
+            if ($pgType == "geometry") {
+                if ($mapArr["type"] == "geo_point") {
+                    $map["mappings"][$type]["properties"]["geometry"]["properties"]["coordinates"] = $mapArr;
                 } else {
-                    $map["mappings"][$type]["properties"]["geometry"] =
-                        array("type" => "geo_shape");
+                    $map["mappings"][$type]["properties"]["geometry"] = $mapArr;
                 }
-            } elseif ($value["type"] == "string" || $value["type"] == "text") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "string",
-                        "search_analyzer" => "str_search_analyzer",
-                        "index_analyzer" => "str_index_analyzer"
-                    );
-            } elseif ($value["type"] == "timestamptz") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "date",
-                        "format" => "Y-MM-dd HH:mm:ss.SSSSSSZ"
-                    );
-            } elseif ($value["type"] == "date") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "date"
-                    );
-            } elseif ($value["type"] == "int") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "integer"
-                    );
-            } elseif ($value["type"] == "number") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "float"
-                    );
-            } elseif ($value["type"] == "boolean") {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] =
-                    array(
-                        "type" => "boolean"
-                    );
+            } else {
+                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] = $mapArr;
             }
         }
         $response = array("map" => $map);
         return $response["map"]["mappings"];
+    }
+
+    public function mapPg2EsType($pgType, $point = false)
+    {
+        $esType = null;
+        if ($pgType == "geometry") {
+            if ($point) {
+                $esType = array("type" => "geo_point");
+            } else {
+                $esType = array("type" => "geo_shape");
+            }
+        } elseif ($pgType == "string" || $pgType == "text") {
+            $esType = array(
+                "type" => "string",
+                "search_analyzer" => "str_search_analyzer",
+                "index_analyzer" => "str_index_analyzer"
+            );
+        } elseif ($pgType == "timestamptz") {
+            $esType = array(
+                "type" => "date",
+                "format" => "Y-MM-dd HH:mm:ss.SSSSSSZ"
+            );
+        } elseif ($pgType == "date") {
+            $esType = array(
+                "type" => "date"
+            );
+        } elseif ($pgType == "int") {
+            $esType = array(
+                "type" => "integer"
+            );
+        } elseif ($pgType == "number") {
+            $esType = array(
+                "type" => "float"
+            );
+        } elseif ($pgType == "boolean") {
+            $esType = array(
+                "type" => "boolean"
+            );
+        } elseif ($pgType == "uuid") {
+            $esType = array(
+                "type" => "string"
+            );
+        } elseif ($pgType == "hstore") {
+            $esType = array(
+                "type" => "string"
+            );
+        } else {
+            $esType = array(
+                "type" => "string"
+            );
+        }
+        return $esType;
     }
 }

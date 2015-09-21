@@ -467,6 +467,32 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
+                text: '<i class="icon-search btn-gc"></i> ' + __('Mapping'),
+                handler: function () {
+                    elasticsearch.grid = null;
+                    elasticsearch.init(record, screenName);
+                    elasticsearch.winElasticsearch = new Ext.Window({
+                        title: __("Mapping settings for the layer") + " '" + record.get("f_table_name") + "'",
+                        modal: true,
+                        layout: 'fit',
+                        width: 750,
+                        height: 350,
+                        initCenter: false,
+                        closeAction: 'close',
+                        plain: true,
+                        frame: true,
+                        border: false,
+                        items: [new Ext.Panel({
+                            frame: false,
+                            border: false,
+                            layout: 'border',
+                            items: [elasticsearch.grid]
+                        })]
+                    }).show(this);
+                },
+                id: 'elasticsearch-btn'
+            },
+            {
                 text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
                 id: "index-in-elasticsearch-btn",
                 disabled: (window.gc2Options.esIndexingInGui) ? false : true,
