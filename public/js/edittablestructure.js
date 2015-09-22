@@ -175,7 +175,8 @@ tableStructure.init = function (record, screenName) {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
-                }
+                },
+                menuDisabled: true
             },
             columns: [
                 {
@@ -475,7 +476,7 @@ tableStructure.init = function (record, screenName) {
                         title: __("Mapping settings for the layer") + " '" + record.get("f_table_name") + "'",
                         modal: true,
                         layout: 'fit',
-                        width: 750,
+                        width: 900,
                         height: 350,
                         initCenter: false,
                         closeAction: 'close',

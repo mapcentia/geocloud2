@@ -295,8 +295,12 @@ class Layer extends \app\models\Table
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
                 $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
-                $arr = $this->array_push_assoc($arr, "indexanalyzer", $elasticsearchArr[$key]->indexanalyzer);
-                $arr = $this->array_push_assoc($arr, "searchanalyzer", $elasticsearchArr[$key]->searchanalyzer);
+                $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
+                $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
+                $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
+                $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
+                $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
+                $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
