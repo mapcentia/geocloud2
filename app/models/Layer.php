@@ -287,7 +287,7 @@ class Layer extends \app\models\Table
         $response['message'] = "Map loaded";
         $arr = array();
         $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1]);
+        $table = new Table($keySplit[0] . "." . $keySplit[1], false, true); // Add geometry types
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
             $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);

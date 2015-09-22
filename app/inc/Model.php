@@ -178,7 +178,7 @@ class Model
         return $response;
     }
 
-    function getMetaData($table, $temp = false)
+    function getMetaData($table, $temp = false, $addGeomType = false)
     {
         $arr = array();
         preg_match("/^[\w'-]*\./", $table, $matches);
@@ -193,14 +193,7 @@ class Model
             $_schema = str_replace(".", "", $_schema);
         }
 
-        if ($_table == "geometry_columns_view") {
-            $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name
-                FROM
-                     information_schema.columns as g
-                WHERE
-                    table_schema = :schema AND table_name = :table";
-        } else {
+        if ($addGeomType) {
             $sql = "SELECT
                     g.column_name, g.ordinal_position, g.udt_name,
                     f.type,
@@ -211,6 +204,14 @@ class Model
                          ON (g.table_schema = f.f_table_schema AND g.table_name = f.f_table_name )
                 WHERE
                     table_schema = :schema AND table_name = :table";
+        } else {
+            $sql = "SELECT
+                    g.column_name, g.ordinal_position, g.udt_name
+                FROM
+                     information_schema.columns AS g
+                WHERE
+                    table_schema = :schema AND table_name = :table";
+
         }
 
         $res = $this->prepare($sql);
