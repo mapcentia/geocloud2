@@ -291,22 +291,22 @@ class Layer extends \app\models\Table
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
             $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);
-                $arr = $this->array_push_assoc($arr, "id", $key);
-                $arr = $this->array_push_assoc($arr, "column", $key);
-                $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
-                $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
-                $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
-                $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
-                $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
-                $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
-                $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
-                $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
-                if ($value['typeObj']['type'] == "decimal") {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
-                } else {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
-                }
-                $response['data'][] = $arr;
+            $arr = $this->array_push_assoc($arr, "id", $key);
+            $arr = $this->array_push_assoc($arr, "column", $key);
+            $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
+            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
+            $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
+            $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
+            $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
+            $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
+            $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
+            $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
+            if ($value['typeObj']['type'] == "decimal") {
+                $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
+            } else {
+                $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
+            }
+            $response['data'][] = $arr;
 
         }
         return $response;

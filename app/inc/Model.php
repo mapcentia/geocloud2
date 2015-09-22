@@ -193,16 +193,25 @@ class Model
             $_schema = str_replace(".", "", $_schema);
         }
 
-        $sql = "SELECT
-                    g.*,
+        if ($_table == "geometry_columns_view") {
+            $sql = "SELECT
+                    g.column_name, g.ordinal_position, g.udt_name
+                FROM
+                     information_schema.columns as g
+                WHERE
+                    table_schema = :schema AND table_name = :table";
+        } else {
+            $sql = "SELECT
+                    g.column_name, g.ordinal_position, g.udt_name,
                     f.type,
                     f.srid
                 FROM
-                     information_schema.columns AS g left JOIN
+                     information_schema.columns AS g JOIN
                      geometry_columns AS f
                          ON (g.table_schema = f.f_table_schema AND g.table_name = f.f_table_name )
                 WHERE
                     table_schema = :schema AND table_name = :table";
+        }
 
         $res = $this->prepare($sql);
         try {
