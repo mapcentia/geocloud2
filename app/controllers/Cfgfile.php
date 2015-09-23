@@ -38,7 +38,7 @@ class Cfgfile extends \app\inc\Controller
                 $def->ttl < 30 ? $expire = 30 : $expire = $def->ttl;
                 echo "[{$row['f_table_schema']}.{$row['f_table_name']}]\n";
                 // If raster then use WMS backend, because of bug in Python backend.
-                if ($row['type'] == "RASTER") {
+                if ($row['type'] == "RASTER" || ($row['bitmapsource'])){
                     $parts = explode(":",App::$param['host']);
                     echo "type=WMS\n";
                     echo "url=" . "http://127.0.0.1" . "/wms/" . Connection::$param['postgisdb'] . "/{$row['f_table_schema']}/?";
