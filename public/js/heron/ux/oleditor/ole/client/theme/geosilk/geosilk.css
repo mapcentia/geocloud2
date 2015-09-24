@@ -372,3 +372,33 @@
 .olEditorWaiting {
     cursor: wait !important;
 }
+
+.olGc2Save {
+    width: 100%;
+    height: 100%;
+    background-image: url(img/bg-map.png);
+    z-index: 10000!important;
+    top:0;
+    left:0;
+    position: absolute;
+}
+/**
+ *  Gc2Save
+ */
+.olEditorControlGc2SaveItemInactive {
+    background-image: url("/js/heron/resources/images/silk/disk.png");
+}
+
+/**
+ *  Gc2Save
+ */
+.olEditorControlGc2SaveItemInactive {
+    background-image: url("/js/heron/resources/images/silk/drive_disk.png");
+}
+
+/**
+ *  Gc2Load
+ */
+.olEditorControlGc2LoadItemInactive {
+    background-image: url("/js/heron/resources/images/silk/drive_go.png");
+}
