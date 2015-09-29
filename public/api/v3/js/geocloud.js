@@ -429,7 +429,7 @@ geocloud = (function () {
                     if (typeof response.error !== "undefined") {
                         return false;
                     }
-                    var features = [], geoJson = {};
+                    var features = [], geoJson = {type: "FeatureCollection"};
                     me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
