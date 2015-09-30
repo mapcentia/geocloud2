@@ -41,6 +41,9 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb($db);
     });
     Route::add("api/v1/elasticsearch", function () {
+        if (Input::getPath()->part(4) == "river") {
+            Session::start();
+        }
         Database::setDb(Input::getPath()->part(5));
     });
     Route::add("api/v1/meta", function () {

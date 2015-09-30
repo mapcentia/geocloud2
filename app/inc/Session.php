@@ -11,8 +11,8 @@ class Session
             session_name("PHPSESSID");
             session_set_cookie_params(0, '/', "." . App::$param['domain']);
         }
-        ini_set("session.cookie_lifetime","86400");
-        ini_set("session.gc_maxlifetime","86400");
+        ini_set("session.cookie_lifetime", "86400");
+        ini_set("session.gc_maxlifetime", "86400");
         session_start();
     }
 
@@ -23,8 +23,7 @@ class Session
         } elseif ($redirect) {
             \app\inc\Redirect::to($redirect);
             exit();
-        }
-        else {
+        } else {
             \app\inc\Redirect::to("/nosession.php");
             exit();
         }
@@ -37,8 +36,8 @@ class Session
 
     static function getLog()
     {
-        if (!$_SESSION["log"]){
-            $_SESSION["log"] = "<i>Log started @ ". date('l jS \of F Y h:i:s A')."</i><br/>";
+        if (!$_SESSION["log"]) {
+            $_SESSION["log"] = "<i>Log started @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
         }
         return $_SESSION["log"];
     }
@@ -52,6 +51,20 @@ class Session
             $_SESSION["log"] .= htmlentities($lines[$i]) . "</br>";
             if ($i >= $num) {
                 $_SESSION["log"] .= "<i>" . (sizeof($lines) - $num - 1) . " more lines</i><br/>";
+                return;
+            }
+        }
+    }
+
+    static function createLogEs($obj)
+    {
+        $num = 25;
+        $_SESSION["log"] .= "<br/<br/>";
+        $_SESSION["log"] .= "<i>Failed indexing of records @ " . date('l jS \of F Y h:i:s A') . "</i><br/>";
+        for ($i = 0; $i <= sizeof($obj); $i++) {
+            $_SESSION["log"] .= $obj[$i]["id"] . ": " . htmlentities($obj[$i]["error"]) . "</br>";
+            if ($i >= $num) {
+                $_SESSION["log"] .= "<i>" . (sizeof($obj) - $num - 1) . " more lines</i><br/>";
                 return;
             }
         }

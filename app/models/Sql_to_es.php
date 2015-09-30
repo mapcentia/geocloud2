@@ -13,10 +13,25 @@ class Sql_to_es extends Model
         $this->srs = $srs;
     }
 
-    function sql($q, $index, $type, $id, $db)
+    private function checkForErrors($obj)
+    {
+        $res = array();
+        foreach ($obj["items"] as $item) {
+            if ($item["index"]["status"] != "201") {
+                $res[] = array(
+                    "id" => $item["index"]["_id"],
+                    "error" => $item["index"]["error"],
+                );
+            }
+        }
+        return $res;
+    }
+
+    public function sql($q, $index, $type, $id, $db)
     {
         // We create a unique index name
         $errors = false;
+        $errors_in = array();
         $index = $db . "_" . $index;
         $name = "_" . rand(1, 999999999) . microtime();
         $name = $this->toAscii($name, null, "_");
@@ -101,6 +116,7 @@ class Sql_to_es extends Model
                 $obj = json_decode($buffer, true);
                 if (isset($obj["errors"]) && $obj["errors"] == true) {
                     $errors = true;
+                    $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
                 }
                 $json = "";
             }
@@ -112,10 +128,14 @@ class Sql_to_es extends Model
         $obj = json_decode($buffer, true);
         if (isset($obj["errors"]) && $obj["errors"] == true) {
             $errors = true;
+            $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
+
         }
         curl_close($ch);
+        \app\inc\Session::createLogEs($errors_in);
         $response['success'] = true;
         $response['errors'] = $errors;
+        $response['errors_in'] = $errors_in;
         $response['message'] = "Indexed {$i} documents";
 
         $this->free($result);

@@ -636,11 +636,10 @@ tableStructure.onIndexInElasticsearch = function (record) {
                             Ext.getCmp('delete-from-elasticsearch-btn').setDisabled(false);
                             Ext.MessageBox.show({
                                 title: __("Info"),
-                                msg: "<b>" + __(Ext.decode(response.responseText).message + "</b>, with errors:<b> " + Ext.decode(response.responseText).errors + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
+                                msg: "<p>" + __("Result of the indexing") + "</p><br/><textarea rows=7' cols='74'>" + __(Ext.decode(response.responseText).message + "\nErrors: " + Ext.decode(response.responseText).errors + (Ext.decode(response.responseText).errors ? " (See log)" : "") + "\nIndex: " + Ext.decode(response.responseText)._index + "\nType: " + Ext.decode(response.responseText)._type + "\nRelation type: " + Ext.decode(response.responseText).relation + "\nTrigger installed in: " + Ext.decode(response.responseText).trigger_installed_in) + "</textarea>",
                                 buttons: Ext.MessageBox.OK,
-                                width: 400,
-                                height: 300,
-                                icon: Ext.MessageBox.OK
+                                width: 500,
+                                height: 400
                             });
                         },
                         failure: function (response) {
