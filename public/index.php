@@ -42,7 +42,7 @@ if (Input::getPath()->part(1) == "api") {
     });
     Route::add("api/v1/elasticsearch", function () {
         if (Input::getPath()->part(4) == "river") {
-            Session::start();
+            Session::start(); // So we can create a session log from the indexing
         }
         Database::setDb(Input::getPath()->part(5));
     });

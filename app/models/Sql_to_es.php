@@ -17,10 +17,15 @@ class Sql_to_es extends Model
     {
         $res = array();
         foreach ($obj["items"] as $item) {
-            if ($item["index"]["status"] != "201") {
+            if (isset($item["index"])){
+                $key = "index";
+            } else {
+                $key = "create"; // If no key is given Elasticsearch will use this key
+            }
+            if ($item[$key]["status"] != "201") {
                 $res[] = array(
-                    "id" => $item["index"]["_id"],
-                    "error" => $item["index"]["error"],
+                    "id" => $item[$key]["_id"],
+                    "error" => $item[$key]["error"],
                 );
             }
         }
@@ -132,7 +137,9 @@ class Sql_to_es extends Model
 
         }
         curl_close($ch);
-        \app\inc\Session::createLogEs($errors_in);
+        if ($errors){
+            \app\inc\Session::createLogEs($errors_in);
+        }
         $response['success'] = true;
         $response['errors'] = $errors;
         $response['errors_in'] = $errors_in;
