@@ -43,6 +43,7 @@ class Sql
                       operation CHARACTER VARYING(255),
                       created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
                     )";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -81,7 +82,8 @@ class Sql
                         geometry_columns_join.classwizard,
                         geometry_columns_join.extra,
                         geometry_columns_join.skipconflict,
-                        geometry_columns_join.roles
+                        geometry_columns_join.roles,
+                        geometry_columns_join.elasticsearch
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -126,7 +128,8 @@ class Sql
                         geometry_columns_join.classwizard,
                         geometry_columns_join.extra,
                         geometry_columns_join.skipconflict,
-                        geometry_columns_join.roles
+                        geometry_columns_join.roles,
+                        geometry_columns_join.elasticsearch
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -174,7 +177,8 @@ class Sql
                                 geometry_columns_join.classwizard,
                                 geometry_columns_join.extra,
                                 geometry_columns_join.skipconflict,
-                                geometry_columns_join.roles
+                                geometry_columns_join.roles,
+                                geometry_columns_join.elasticsearch
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -221,7 +225,8 @@ class Sql
                                 geometry_columns_join.classwizard,
                                 geometry_columns_join.extra,
                                 geometry_columns_join.skipconflict,
-                                geometry_columns_join.roles
+                                geometry_columns_join.roles,
+                                geometry_columns_join.elasticsearch
                               FROM raster_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON

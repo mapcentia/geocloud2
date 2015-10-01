@@ -26,7 +26,7 @@ geocloud = (function () {
         storeClass,
         extend,
         geoJsonStore,
-	cartoDbStore,
+        cartoDbStore,
         sqlStore,
         tweetStore,
         elasticStore,
@@ -302,27 +302,27 @@ geocloud = (function () {
                 url: 'http://' + this.db + '.cartodb.com' + '/api/v2/sql',
                 type: this.defaults.method,
                 success: function (response) {
-                        if (response.features !== null) {
-                            me.geoJSON = response;
-                            switch (MAPLIB) {
-                                case "ol2":
-                                    me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
-                                    break;
-                                case "ol3":
-                                    me.layer.getSource().addFeatures(new ol.source.GeoJSON(
-                                        {
-                                            object: response.features[0]
-                                        }
-                                    ));
+                    if (response.features !== null) {
+                        me.geoJSON = response;
+                        switch (MAPLIB) {
+                            case "ol2":
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                break;
+                            case "ol3":
+                                me.layer.getSource().addFeatures(new ol.source.GeoJSON(
+                                    {
+                                        object: response.features[0]
+                                    }
+                                ));
 
-                                    break;
-                                case "leaflet":
-                                    me.layer.addData(response);
-                                    break;
-                            }
-                        } else {
-                            me.geoJSON = null;
+                                break;
+                            case "leaflet":
+                                me.layer.addData(response);
+                                break;
                         }
+                    } else {
+                        me.geoJSON = null;
+                    }
                 },
                 error: this.defaults.error,
                 complete: function () {
@@ -333,7 +333,7 @@ geocloud = (function () {
             return this.layer;
         };
     };
-    
+
     tweetStore = function (config) {
         var prop, me = this;
         this.defaults = $.extend({}, STOREDEFAULTS);
@@ -429,7 +429,7 @@ geocloud = (function () {
                     if (typeof response.error !== "undefined") {
                         return false;
                     }
-                    var features = [], geoJson = {};
+                    var features = [], geoJson = {type: "FeatureCollection"};
                     me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
@@ -439,7 +439,11 @@ geocloud = (function () {
                         me.geoJSON = geoJson;
                         switch (MAPLIB) {
                             case "ol2":
-                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(geoJson));
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON({
+                                        internalProjection: new OpenLayers.Projection("EPSG:3857"),
+                                        externalProjection: new OpenLayers.Projection("EPSG:4326")
+                                    }
+                                ).read(geoJson));
                                 break;
                             case "leaflet":
                                 me.layer.addData(geoJson);
@@ -872,9 +876,9 @@ geocloud = (function () {
                 break;
         }
         var _map = this.map;
-	this.addLayer = function(layer, name){
-		 lControl.addOverlay(layer, name);
-	}
+        this.addLayer = function (layer, name) {
+            lControl.addOverlay(layer, name);
+        }
         //ol2, ol3 and leaflet
         this.addMapQuestOSM = function () {
             switch (MAPLIB) {
@@ -1532,7 +1536,7 @@ geocloud = (function () {
                     break;
             }
         };
-        this.addHeatMap = function(store, weight, factor, config){
+        this.addHeatMap = function (store, weight, factor, config) {
             var points = [], features = store.geoJSON.features;
             weight = weight || 1;
             factor = factor || 1;

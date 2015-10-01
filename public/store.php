@@ -148,6 +148,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/store.js?010e4606cdee0f40"></script>
 <script type="text/javascript" src="/js/edittablestructure.js?82d88b8227dd1554"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
+<script type="text/javascript" src="/js/elasticsearchmapping.js?18b434a3917cddf4"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?3f59fd362d675a12"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
 <script type="text/javascript" src="/js/classwizards.js?4086ff021c7449fc"></script>

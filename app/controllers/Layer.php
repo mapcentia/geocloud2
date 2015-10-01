@@ -70,6 +70,18 @@ class Layer extends \app\inc\Controller
         return (!$response['success']) ? $response : $this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
+    public function get_elasticsearch()
+    {
+        $response = $this->auth(Input::getPath()->part(4), array("read" => true, "write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->getElasticsearchMapping(Input::getPath()->part(4));
+    }
+
+    public function put_elasticsearch()
+    {
+        $response = $this->auth(Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->updateElasticsearchMapping(json_decode(Input::get())->data, Input::getPath()->part(5));
+    }
+
     public function getValueFromKey($_key_, $column)
     {
         return $this->table->getValueFromKey($_key_, $column);

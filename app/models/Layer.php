@@ -149,11 +149,33 @@ class Layer extends \app\models\Table
                 curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                $output = curl_exec($ch);
+                curl_exec($ch);
                 $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
                 if ($httpcode == "200") {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
+                    // Get mapping
+                    $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}/_mapping/{$type}/";
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+                    $output = curl_exec($ch);
+                    curl_close($ch);
+                    if ($parse) {
+                        $output = json_decode($output, true);
+                    }
+                    $arr = $this->array_push_assoc($arr, "es_mapping", $output);
+
+                    // Set type name
+                    if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                        $typeName = "a" . $type;
+                    } else {
+                        $typeName = $type;
+                    }
+                    $arr = $this->array_push_assoc($arr, "es_type_name", $typeName);
+
+
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
@@ -205,7 +227,7 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    function getCartoMobileSettings($_key_) // Only geometry tables
+    public function getCartoMobileSettings($_key_) // Only geometry tables
     {
         $response['success'] = true;
         $response['message'] = "Structure loaded";
@@ -231,7 +253,7 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    function updateCartoMobileSettings($data, $_key_)
+    public function updateCartoMobileSettings($data, $_key_)
     {
         $table = new Table("settings.geometry_columns_join");
         $data = $table->makeArray($data);
@@ -252,6 +274,66 @@ class Layer extends \app\models\Table
             $response['success'] = true;
             $response['message'] = "Column renamed";
         } else {
+            $response['success'] = false;
+            $response['message'] = $this->PDOerror[0];
+        }
+        return $response;
+    }
+
+    public function getElasticsearchMapping($_key_) // Only geometry tables
+    {
+        $elasticsearch = new \app\models\Elasticsearch();
+        $response['success'] = true;
+        $response['message'] = "Map loaded";
+        $arr = array();
+        $keySplit = explode(".", $_key_);
+        $table = new Table($keySplit[0] . "." . $keySplit[1], false, true); // Add geometry types
+        $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
+        foreach ($table->metaData as $key => $value) {
+            $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);
+            $arr = $this->array_push_assoc($arr, "id", $key);
+            $arr = $this->array_push_assoc($arr, "column", $key);
+            $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
+            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
+            $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
+            $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
+            $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
+            $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
+            $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
+            $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
+            if ($value['typeObj']['type'] == "decimal") {
+                $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
+            } else {
+                $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
+            }
+            $response['data'][] = $arr;
+
+        }
+        return $response;
+    }
+
+    public function updateElasticsearchMapping($data, $_key_)
+    {
+        $table = new Table("settings.geometry_columns_join");
+        $data = $table->makeArray($data);
+        $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
+        foreach ($data as $value) {
+            $safeColumn = $table->toAscii($value->column, array(), "_");
+            if ($value->id != $value->column && ($value->column) && ($value->id)) {
+                unset($elasticsearchArr[$value->id]);
+            }
+            $elasticsearchArr[$safeColumn] = $value;
+        }
+        $conf['elasticsearch'] = json_encode($elasticsearchArr);
+        $conf['_key_'] = $_key_;
+
+        $table->updateRecord(json_decode(json_encode($conf)), "_key_");
+        //$this->execQuery($sql, "PDO", "transaction");
+        if ((!$this->PDOerror)) {
+            $response['success'] = true;
+            $response['message'] = "Map updated";
+        } else {
+            $response['code'] = 400;
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
         }

@@ -208,7 +208,8 @@ $(window).ready(function () {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
-                }
+                },
+                menuDisabled: true
             },
             columns: [
                 {

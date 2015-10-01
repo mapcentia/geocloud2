@@ -18,7 +18,7 @@ class Table extends Model
     var $versioning;
     var $sysCols;
 
-    function __construct($table, $temp = false)
+    function __construct($table, $temp = false, $addGeomType=false)
     {
         parent::__construct();
 
@@ -45,7 +45,7 @@ class Table extends Model
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
-            $this->metaData = $this->getMetaData($this->table);
+            $this->metaData = $this->getMetaData($this->table, $temp, $addGeomType);
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
@@ -62,6 +62,8 @@ class Table extends Model
     private function setType()
     {
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
+        //die(print_r($this->metaData, true));
+
     }
 
     private function getType($field)
