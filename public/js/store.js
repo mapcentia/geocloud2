@@ -718,6 +718,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
