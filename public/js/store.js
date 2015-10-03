@@ -199,7 +199,7 @@ $(window).ready(function () {
         split: true,
         region: 'north',
         frame: false,
-        border: false,
+        border: true,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: false
         }),
@@ -2092,7 +2092,7 @@ $(window).ready(function () {
         frame: false,
         layout: 'border',
         region: 'center',
-        border: true,
+        border: false,
         split: true,
         items: [grid, {
             id: 'detailPanel',

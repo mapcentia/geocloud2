@@ -73,7 +73,7 @@ classWizards.init = function (record) {
     classGrid = new Ext.grid.EditorGridPanel({
         store: classStore,
         frame: false,
-        border: false,
+        border: true,
         region: "center",
         viewConfig: {
             forceFit: true,

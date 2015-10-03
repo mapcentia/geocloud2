@@ -128,7 +128,7 @@ wmsLayer.init = function (record) {
         modal: false,
         region: 'west',
         frame: false,
-        border: false,
+        border: true,
         style: {
             borderBottom: '1px solid #d0d0d0'
         },

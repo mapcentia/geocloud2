@@ -71,7 +71,7 @@ wmsClasses.init = function (record) {
     wmsClasses.grid = new Ext.grid.GridPanel({
         iconCls: 'silk-grid',
         store: wmsClasses.store,
-        border: false,
+        border: true,
         style: {
             borderBottom: '1px solid #d0d0d0'
         },
@@ -635,7 +635,7 @@ wmsClass.init = function (id) {
         height: 350,
         modal: false,
         region: 'center',
-        border: false,
+        border: true,
         propertyNames: {
             sortid: 'Sort id',
             name: 'Name',
@@ -690,7 +690,7 @@ wmsClass.init = function (id) {
         height: 350,
         modal: false,
         region: 'center',
-        border: false,
+        border: true,
         propertyNames: {
             outlinecolor: 'Style: outline color',
             symbol: 'Style: symbol',
@@ -851,7 +851,7 @@ wmsClass.init = function (id) {
         height: 350,
         modal: false,
         region: 'center',
-        border: false,
+        border: true,
         propertyNames: {
             overlaywidth: 'Style: line width',
             overlayoutlinecolor: 'Style: outline color',
@@ -1050,7 +1050,7 @@ wmsClass.init = function (id) {
         height: 350,
         modal: false,
         region: 'center',
-        border: false,
+        border: true,
         propertyNames: {
             label: 'Label: on',
             label_force: 'Label: force',
@@ -1233,7 +1233,7 @@ wmsClass.init = function (id) {
         height: 350,
         modal: false,
         region: 'center',
-        border: false,
+        border: true,
         propertyNames: {
             label2: 'Label: on',
             label2_force: 'Label: force',

@@ -2,7 +2,7 @@
 include("html_header.php");
 ?>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all.css?9ae21f2038e3c563"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css?49593e1feb591d0b"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-dark.css?49593e1feb591d0b"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <!-- build:css /css/build/styles.min.css -->

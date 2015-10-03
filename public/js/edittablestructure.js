@@ -166,7 +166,7 @@ tableStructure.init = function (record, screenName) {
         viewConfig: {
             forceFit: true
         },
-        border: false,
+        border: true,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: true
         }),
@@ -426,7 +426,7 @@ tableStructure.init = function (record, screenName) {
                             submitEmptyText: false,
                             success: function (response) {
                                 tableStructure.store.load();
-                                form.reset();
+                                form.form.reset();
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({
