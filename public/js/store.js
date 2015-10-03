@@ -1326,6 +1326,7 @@ $(window).ready(function () {
             height: 420,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [new Ext.Panel({
                 frame: false,
                 border: false,
