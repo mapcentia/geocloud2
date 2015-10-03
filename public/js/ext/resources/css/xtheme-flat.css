@@ -221,7 +221,7 @@ ul.x-tab-strip-bottom{
 
 .x-form-text, textarea.x-form-field{
     background-color:#fff;
-    background-image:url(../images/default/form/text-bg.gif);
+    background-image:none;
     border-color:#C1C1C1;
 }
 
@@ -415,8 +415,8 @@ ul.x-tab-strip-bottom{
 }
 .x-toolbar{
 	border-color:#d0d0d0;
-    background-color:#f0f0f0;
-    background-image:url(../images/flat/toolbar/bg.png);
+    background-color:#fff;
+    background-image:none;
 }
 
 .x-toolbar td,.x-toolbar span,.x-toolbar input,.x-toolbar div,.x-toolbar select,.x-toolbar label{
@@ -556,7 +556,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-grid3-hd-row td {
-    border-left-color:#eee;
+    border-left-color:#fff;
     border-right-color:#d0d0d0;
 }
 
@@ -589,8 +589,9 @@ ul.x-tab-strip-bottom{
 }
 
 .x-grid3-header{
-    background-color:#f9f9f9;
-	background-image:url(../images/flat/grid/grid3-hrow2.gif);
+    background-color:#fff;
+	background-image:none;
+    border-bottom: 1px solid #ccc;
 }
 
 .x-grid3-header-pop {
@@ -603,13 +604,13 @@ ul.x-tab-strip-bottom{
 }
 
 td.x-grid3-hd-over, td.sort-desc, td.sort-asc, td.x-grid3-hd-menu-open {
-    border-left-color:#ACACAC;
-    border-right-color:#ACACAC;
+    border-left-color:#cccccc;
+    border-right-color:#cccccc;
 }
 
 td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-asc .x-grid3-hd-inner, td.x-grid3-hd-menu-open .x-grid3-hd-inner {
-    background-color:#f9f9f9;
-    background-image:url(../images/flat/grid/grid3-hrow-over2.gif);
+    background-color:#cccccc;
+    background-image:none;
 
 }
 
@@ -635,7 +636,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-dd-drag-proxy .x-grid3-hd-inner{
     background-color:#f9f9f9;
-	background-image:url(../images/flat/grid/grid3-hrow-over2.gif);
+	background-image:url(../images/flat/grid/grid3-hrow-over2.png);
 	border-color:#ACACAC;
 }
 
@@ -810,7 +811,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 	border-top-color:#B9B9B9;
 }
 .x-pivotgrid .x-grid3-header-offset table td {
-    background: url(../images/flat/grid/grid3-hrow2.gif) repeat-x 50% 100%;
+    background: url(../images/flat/grid/grid3-hrow2.png) repeat-x 50% 100%;
     border-left: 1px solid;
     border-right: 1px solid;
     border-left-color: #D0D0D0;
@@ -1621,8 +1622,8 @@ body.x-body-masked .x-window-plain .x-window-mc {
     color:#5F5F5F;
 }
 .x-list-header{
-    background-color:#f9f9f9;
-	background-image:url(../images/flat/grid/grid3-hrow2.gif);
+    background-color:#EEEEEE;
+	background-image:url(../images/flat/grid/grid3-hrow2.png);
 }
 
 .x-list-header-inner div em {

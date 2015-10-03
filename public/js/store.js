@@ -718,6 +718,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -2092,7 +2093,7 @@ $(window).ready(function () {
         frame: false,
         layout: 'border',
         region: 'center',
-        border: true,
+        border: false,
         split: true,
         items: [grid, {
             id: 'detailPanel',
