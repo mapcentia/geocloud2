@@ -2,7 +2,7 @@
 include("html_header.php");
 ?>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css?49593e1feb591d0b"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-dark.css?49593e1feb591d0b"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css?35ea7a99ab8c2113"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717" />
