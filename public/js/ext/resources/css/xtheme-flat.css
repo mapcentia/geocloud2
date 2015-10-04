@@ -1367,7 +1367,7 @@ a.x-menu-item {
     font-size: 11px;
     font-family: tahoma,arial,verdana,sans-serif;
     border-color:#d0d0d0;
-    background-image: url(../images/flat/panel/white-top-bottom.gif);
+    background-image: none;
 }
 
 .x-panel-body {
@@ -1444,32 +1444,40 @@ a.x-menu-item {
 }
 
 .x-window-tl .x-window-header {
-    color:#555;
-	font:bold 11px tahoma,arial,verdana,sans-serif;
+    color:#fff;
+	font:normal 11px tahoma,arial,verdana,sans-serif;
 }
 
 .x-window-tc {
-	background-image: url(../images/flat/window/top-bottom.png);
+	background-image: none;
 }
 
 .x-window-tl {
-	background-image: url(../images/flat/window/left-corners.png);
+    background-color: #999999;
+	background-image: none;
 }
 
 .x-window-tr {
-	background-image: url(../images/flat/window/right-corners.png);
+    background-color: #999999;
+	background-image: none;
 }
 
 .x-window-bc {
-	background-image: url(../images/flat/window/top-bottom.png);
+    background-color: #999999;
+
+    background-image: none;
 }
 
 .x-window-bl {
-	background-image: url(../images/flat/window/left-corners.png);
+    background-color: #999999;
+
+    background-image: none;
 }
 
 .x-window-br {
-	background-image: url(../images/flat/window/right-corners.png);
+    background-color: #999999;
+
+    background-image: none;
 }
 
 .x-window-mc {
@@ -1479,11 +1487,14 @@ a.x-menu-item {
 }
 
 .x-window-ml {
-	background-image: url(../images/flat/window/left-right.png);
+    background-color: #999999;
+	background-image: none;
 }
 
 .x-window-mr {
-	background-image: url(../images/flat/window/left-right.png);
+    background-color: #999999;
+
+    background-image: none;
 }
 
 .x-window-maximized .x-window-tc {
