@@ -199,7 +199,7 @@ $(window).ready(function () {
         split: true,
         region: 'north',
         frame: false,
-        border: false,
+        border: true,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: false
         }),

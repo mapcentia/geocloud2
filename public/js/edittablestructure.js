@@ -166,7 +166,7 @@ tableStructure.init = function (record, screenName) {
         viewConfig: {
             forceFit: true
         },
-        border: false,
+        border: true,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: true
         }),
