@@ -199,7 +199,7 @@ $(window).ready(function () {
         split: true,
         region: 'north',
         frame: false,
-        border: true,
+        border: false,
         sm: new Ext.grid.RowSelectionModel({
             singleSelect: false
         }),
@@ -649,6 +649,7 @@ $(window).ready(function () {
             }),
             {
                 xtype: 'form',
+                border: false,
                 layout: 'hbox',
                 width: 150,
                 id: 'schemaform',
@@ -862,6 +863,7 @@ $(window).ready(function () {
                 border: false,
                 layout: 'border',
                 items: [new Ext.Panel({
+                    border: false,
                     region: "center"
                 })]
             }),
@@ -904,6 +906,7 @@ $(window).ready(function () {
             width: 700,
             height: 390,
             closeAction: 'close',
+            border: false,
             plain: true,
             items: [p],
             tbar: [
@@ -1525,6 +1528,8 @@ $(window).ready(function () {
                 new Ext.Panel({
                     region: "center",
                     layout: 'border',
+                    border: false,
+
                     items: [
                         new Ext.Panel({
                             border: false,
@@ -1664,7 +1669,7 @@ $(window).ready(function () {
                     border: true,
                     region: "center",
                     layout: 'border',
-
+                    border: false,
                     items: [
                         new Ext.grid.EditorGridPanel({
                             store: privilegesStore,
@@ -2187,6 +2192,7 @@ $(window).ready(function () {
                         layoutConfig: {
                             animate: true
                         },
+                        border: false,
                         items: [
                             {
                                 xtype: "tabpanel",
@@ -2194,6 +2200,7 @@ $(window).ready(function () {
                                 id: "layerStyleTabs",
                                 activeTab: 0,
                                 plain: true,
+                                border: false,
                                 items: [
                                     {
                                         xtype: "panel",
@@ -2308,6 +2315,7 @@ $(window).ready(function () {
                                         defaults: {
                                             border: false
                                         },
+                                        border: false,
                                         items: [
                                             {
                                                 xtype: "panel",
@@ -2601,6 +2609,7 @@ $(window).ready(function () {
                 xtype: "panel",
                 title: __('Log'),
                 layout: 'border',
+                border: false,
                 listeners: {
                     activate: function () {
                         Ext.fly(this.ownerCt.getTabEl(this)).on({
@@ -2628,7 +2637,7 @@ $(window).ready(function () {
                         region: 'center',
                         frame: true,
                         plain: true,
-                        border: true,
+                        border: false,
                         html: "<div id='gc-log'></div>"
                     }
                 ]

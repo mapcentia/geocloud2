@@ -745,6 +745,7 @@ $(document).ready(function () {
                                                 region: "center",
                                                 id: "mappanel",
                                                 xtype: "gx_mappanel",
+                                                border: true,
                                                 map: map,
                                                 zoom: 5,
                                                 split: true,
@@ -767,7 +768,7 @@ $(document).ready(function () {
                                 ]
                             },
                             new Ext.Panel({
-                                border: true,
+                                border: false,
                                 region: "west",
                                 collapsible: true,
                                 width: 350,

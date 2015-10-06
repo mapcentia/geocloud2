@@ -73,7 +73,7 @@ classWizards.init = function (record) {
     classGrid = new Ext.grid.EditorGridPanel({
         store: classStore,
         frame: false,
-        border: false,
+        border: true,
         region: "center",
         viewConfig: {
             forceFit: true,
@@ -554,7 +554,7 @@ classWizards.init = function (record) {
                                         },
                                         items: [
                                             {
-                                                html: '<table>' +
+                                                html: '<table class="map-thumbs-table">' +
                                                 '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
                                                 '</table>'
                                             },
@@ -671,7 +671,7 @@ classWizards.init = function (record) {
                                         },
                                         items: [
                                             {
-                                                html: '<table>' +
+                                                html: '<table class="map-thumbs-table">' +
                                                 '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
                                                 '</table>'
                                             },
@@ -962,7 +962,7 @@ classWizards.init = function (record) {
                                             border: false
                                         },
                                         items: [{
-                                            html: '<table>' +
+                                            html: '<table class="map-thumbs-table">' +
                                             '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
                                             '</table>'
                                         },
@@ -1171,7 +1171,7 @@ classWizards.init = function (record) {
                                             border: false
                                         },
                                         items: [{
-                                            html: '<table>' +
+                                            html: '<table class="map-thumbs-table">' +
                                             '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
                                             '</table>'
                                         },
