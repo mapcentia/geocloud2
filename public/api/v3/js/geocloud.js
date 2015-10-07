@@ -876,8 +876,12 @@ geocloud = (function () {
                 break;
         }
         var _map = this.map;
-        this.addLayer = function (layer, name) {
+        this.addLayer = function (layer, name, baseLayer) {
+            if (baseLayer) {
+            lControl.addBaseLayer(layer, name);
+            } else {
             lControl.addOverlay(layer, name);
+            }
         }
         //ol2, ol3 and leaflet
         this.addMapQuestOSM = function () {
