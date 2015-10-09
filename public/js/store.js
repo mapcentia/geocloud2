@@ -1669,7 +1669,6 @@ $(window).ready(function () {
             items: [
                 new Ext.Panel({
                     height: 500,
-                    border: true,
                     region: "center",
                     layout: 'border',
                     border: false,
@@ -2192,7 +2191,6 @@ $(window).ready(function () {
                         width: 340,
                         frame: false,
                         plain: true,
-                        border: true,
                         layoutConfig: {
                             animate: true
                         },
@@ -2200,7 +2198,6 @@ $(window).ready(function () {
                         items: [
                             {
                                 xtype: "tabpanel",
-                                border: false,
                                 id: "layerStyleTabs",
                                 activeTab: 0,
                                 plain: true,
