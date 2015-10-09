@@ -483,6 +483,7 @@ $(window).ready(function () {
                         height: 120,
                         closeAction: 'close',
                         plain: true,
+                        border: false,
                         items: [
                             {
                                 defaults: {
@@ -979,6 +980,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -1086,6 +1088,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -2165,7 +2168,8 @@ $(window).ready(function () {
         activeTab: 0,
         region: 'center',
         plain: true,
-        items: [
+        resizeTabs: true,
+            items: [
             {
                 xtype: "panel",
                 title: __('Map'),
@@ -2201,7 +2205,8 @@ $(window).ready(function () {
                                 activeTab: 0,
                                 plain: true,
                                 border: false,
-                                items: [
+                                resizeTabs: true,
+                                    items: [
                                     {
                                         xtype: "panel",
                                         title: __('Classes'),
@@ -2222,7 +2227,8 @@ $(window).ready(function () {
                                                 id: "classTabs",
                                                 border: false,
                                                 height: 470,
-                                                defaults: {
+                                                resizeTabs: true,
+                                                    defaults: {
                                                     layout: "fit",
                                                     border: false
                                                 },

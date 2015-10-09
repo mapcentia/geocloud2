@@ -107,13 +107,13 @@ Build date: 2013-04-03 15:07:25
 
 ul.x-tab-strip-top{
     background-color:#dbdbdb;
-	background-image: url(../images/flat/tabs/tab-strip-bg.gif);
+	background-image: none;
 	border-bottom-color:#aaa;
 }
 
 ul.x-tab-strip-bottom{
     background-color:#dbdbdb;
-	background-image: url(../images/flat/tabs/tab-strip-btm-bg.gif);
+	background-image: none;
 	border-top-color:#aaa;
 }
 
@@ -692,7 +692,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-props-grid .x-grid3-td-name .x-grid3-cell-inner{
-	background-image:none;
+	background-image:none !important;
     color:#000 !important;
 }
 
@@ -1529,7 +1529,7 @@ a.x-menu-item {
 }
 
 .x-window-plain .x-window-mc {
-    backgroun/d-color: #E8E8E8;
+    bac/kground-color: #fff;
     border-color: #aaa #EEEEEE #EEEEEE #aaa;
 }
 
@@ -1807,4 +1807,7 @@ Build date: 2013-04-03 15:07:25
 }
 #mappanel .x-toolbar{
     border-top: none;
+}
+td.x-grid3-hd.x-grid3-cell {
+    padding: 0;
 }

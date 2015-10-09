@@ -61,8 +61,8 @@ class Mapfile extends \app\inc\Controller
         "wms_enable_request" "*"
         "wfs_namespace_prefix" "<?php echo $user; ?>"
         "wfs_namespace_uri" "http://mapcentia.com/<?php echo $user; ?>"
-        "wms_encoding" "UTF8"
-        "wfs_encoding" "UTF8"
+        "wms_encoding" "UTF-8"
+        "wfs_encoding" "UTF-8"
         END
         END
         #

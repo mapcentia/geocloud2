@@ -364,8 +364,11 @@ $(document).ready(function () {
         items: [
             new Ext.TabPanel({
                 activeTab: 0,
-                frame: true,
-                id: "queryTabs"
+                frame: false,
+                id: "queryTabs",
+                resizeTabs: true,
+                plain: true,
+                border: false
             })
         ]
     });
