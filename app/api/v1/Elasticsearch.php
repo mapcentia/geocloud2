@@ -189,6 +189,8 @@ class Elasticsearch extends \app\inc\Controller
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
 
+        $priKey = Input::get('tp') ?: $priKey;
+
         $model->close();// Close the PDO connection
 
         $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");

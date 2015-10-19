@@ -620,7 +620,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                     return false;
                 }
                 spinner(true, __("Piping data to Elasticsearch"));
-                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] : "");
+                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2]: "");
                 Ext.Ajax.request(
                     {
                         url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
