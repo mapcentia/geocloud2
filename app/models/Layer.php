@@ -318,7 +318,8 @@ class Layer extends \app\models\Table
         $data = $table->makeArray($data);
         $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
         foreach ($data as $value) {
-            $safeColumn = $table->toAscii($value->column, array(), "_");
+            //$safeColumn = $table->toAscii($value->column, array(), "_");
+            $safeColumn = $value->column;
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
                 unset($elasticsearchArr[$value->id]);
             }

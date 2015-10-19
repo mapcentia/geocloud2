@@ -203,7 +203,7 @@ elasticsearch.init = function (record, screenName) {
                                 ['geo_point', 'geo_point'],
                                 ['geo_shape', 'geo_shape'],
                                 ['binary', 'binary'],
-                                ['ip','ip']
+                                ['ip', 'ip']
                             ]
                         }),
                         displayField: 'action',
