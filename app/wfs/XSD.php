@@ -142,7 +142,8 @@ foreach ($tables as $table) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 } else {
-                    foreach ($properties as $prop) {
+
+                    foreach (json_decode($properties->properties) as $prop) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 }
