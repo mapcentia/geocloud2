@@ -77,6 +77,8 @@ $unserializer_options = array(
 );
 $unserializer = new XML_Unserializer($unserializer_options);
 
+$sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$_SESSION['screen_name']} -->\n<!-- usergroup: {$_SESSION['usergroup']} -->\n";
+
 // Post method is used
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
@@ -788,7 +790,7 @@ function getCartoMobilePictureUrl($table, $fieldName, $cartomobilePictureField, 
 $totalTime = microtime_float() - $startTime;
 Log::write("\nTotal time {$totalTime}\n");
 Log::write("==================\n");
-echo "\n<!-- {$totalTime} -->";
+echo "\n<!-- Time: {$totalTime} -->\n";
 
 function doParse($arr)
 {
@@ -1378,7 +1380,7 @@ function doParse($arr)
 
 function makeExceptionReport($value)
 {
-    global $postgisObject;
+    global $sessionComment;
     ob_get_clean();
     ob_start();
     //$postgisObject->rollback();
@@ -1400,10 +1402,16 @@ function makeExceptionReport($value)
     echo '</ServiceException>
 	</ServiceExceptionReport>';
     $data = ob_get_clean();
+    header("HTTP/1.0 400 " . \app\inc\Util::httpCodeText("400"));
     echo $data;
+    print("\n" . $sessionComment);
     Log::write($data);
     die();
 }
 
 //echo ob_get_clean();
 print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
+print($sessionComment);
+print ("<!--\n");
+include("README");
+print ("\n-->\n");

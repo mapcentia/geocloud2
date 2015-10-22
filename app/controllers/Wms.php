@@ -57,7 +57,12 @@ class Wms extends \app\inc\Controller
         } else {
             header('Content-type: text/xml');
         }
+
         ms_iogetStdoutBufferBytes();
+        print ("<!--\n");
+        include("README");
+        print ("\n-->\n");
         ms_ioresethandlers();
+
     }
 }

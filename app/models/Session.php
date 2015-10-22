@@ -33,7 +33,8 @@ class Session extends Model
 
             $response['success'] = true;
             $response['message'] = "Session started";
-            $response['user'] = $row['screenname'];
+            $response['screen_name'] = $_SESSION['screen_name'];
+            $response['subuser'] = $_SESSION['subuser'];
 
         } else {
             $response['success'] = false;

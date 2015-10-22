@@ -28,10 +28,14 @@ if (!function_exists("makeExceptionReport")) {
     }
 }
 
-if (sizeof($dbSplit) == 2) { //Sub-user
+if (sizeof($dbSplit) == 2 || $_SESSION["subuser"]) { //Sub-user
     $db = $dbSplit[1];
     // We set the SESSION, if request is coming from outside a session
-    $subUser = $_SESSION["subuser"] = $dbSplit[0];
+    if (!$_SESSION["subuser"]) {
+        $subUser = $_SESSION["subuser"] = $dbSplit[0];
+    } else {
+        $subUser = $_SESSION["subuser"];
+    }
 
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
