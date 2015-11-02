@@ -1,4 +1,5 @@
 AddDefaultCharset UTF-8
+AddType text/cache-manifest .appcache
 <ifmodule mod_expires.c>
 <FilesMatch ".(ico|jpg|jpeg|png|gif|js|css|swf)$">
         ExpiresActive on

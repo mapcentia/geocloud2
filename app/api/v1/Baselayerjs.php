@@ -40,6 +40,9 @@ class Baselayerjs extends \app\inc\Controller
         if (\app\conf\App::$param['baseLayers']) {
             echo "window.setBaseLayers = " . json_encode(\app\conf\App::$param['baseLayers']) . ";\n";
         }
+        if (\app\conf\App::$param['baseLayersCollector']) {
+            echo "window.setBaseLayersCollector = " . json_encode(\app\conf\App::$param['baseLayersCollector']) . ";\n";
+        }
         if (\app\conf\App::$param['mapAttribution']) {
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
         }
@@ -69,3 +72,4 @@ class Baselayerjs extends \app\inc\Controller
 
     }
 }
+
