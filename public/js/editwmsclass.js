@@ -1099,6 +1099,11 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
+            'label_angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
             'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -1278,6 +1283,11 @@ wmsClass.init = function (id) {
                 accelerate: true
             }), {}),
             'label2_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'label2_angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
