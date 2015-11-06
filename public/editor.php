@@ -36,6 +36,9 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js?d259f3b931eb8104"></script>
 <script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
+<script type="text/javascript" src="/js/canvasResize/binaryajax.js"></script>
+<script type="text/javascript" src="/js/canvasResize/exif.js"></script>
+<script type="text/javascript" src="/js/canvasResize/canvasResize.js"></script>
 <!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/msg.js?6871687e437cdbb4"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?95f46a542aa59ee0"></script>

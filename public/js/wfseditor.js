@@ -214,10 +214,14 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             singleSelect: true,
             listeners: {
                 rowselect: function (sm, row, rec) {
+                    attributeForm.form.enable();
                     try {
                         attributeForm.form.getForm().loadRecord(rec);
                     } catch (e) {
                     }
+                },
+                rowdeselect: function () {
+                    attributeForm.form.disable();
                 }
             }
         });
@@ -284,7 +288,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         layout: 'fit',
         initCenter: true,
         border: false,
-        width: 420,
+        width: 500,
         height: 350,
         closeAction: 'hide',
         plain: true,
@@ -294,6 +298,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             items: [attributeForm.form]
         })]
     });
+    attributeForm.win.show();
+    attributeForm.win.hide();
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(false);
     Ext.getCmp('editdeletebutton').setDisabled(false);
@@ -477,6 +483,7 @@ $(document).ready(function () {
                                                                 });
                                                                 attributeForm.init(layerTitel, geoField);
                                                                 startWfsEdition(layerTitel, geoField, filter, true);
+                                                                attributeForm.form.disable();
                                                                 Ext.iterate(qstore, function (v) {
                                                                     v.reset();
                                                                 });
@@ -969,6 +976,7 @@ $(document).ready(function () {
 
                     attributeForm.init(id[1], geomField);
                     startWfsEdition(id[1], geomField, filter);
+                    attributeForm.form.disable();
                     wfsTools[0].control.activate();
                     Ext.getCmp('editcreatebutton').toggle(true);
                     Ext.iterate(qstore, function (v) {

@@ -2531,6 +2531,7 @@ $(window).ready(function () {
                                             setTimeout(function () {
                                                 mapFrame.attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
                                                 mapFrame.startWfsEdition(records[0].get("f_table_name"), r.data[0].f_geometry_column, filter, true);
+                                                mapFrame.attributeForm.form.disable();
                                             }, 100);
                                         },
                                         failure: function (response) {

@@ -87,6 +87,7 @@ attributeForm.init = function (layer, geomtype) {
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,
         region: 'center',
+        disabled: true,
         viewConfig: {
             forceFit: true
         },

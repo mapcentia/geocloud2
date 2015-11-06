@@ -2229,41 +2229,40 @@ GeoExt.form.recordToField = function (i, q) {
             buttonCfg: {
                 iconCls: 'upload-icon'
             },
+            cls: "image-textarea",
             listeners: {
-                'afterrender': function(cmp) {
-                    cmp.getEl().next().set({
+                'enable': function (cmp) {
+                    var el = cmp.getEl();
+                    setTimeout(function () {
+                        try {
+                            el.prev().set({"src": atob(el.getValue())});
+                        } catch (e) {
+                            el.prev().set({"src": ""});
+                        }
+                    }, 200);
+                },
+                'afterrender': function (cmp) {
+                    var el = cmp.getEl();
+                    el.next().set({
                         "accept": "image/*"
                     });
+                    el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}));
+                    el.hide();
                 },
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
-                    reader.onload = function (e) {
-                        img.src = e.target.result;
-                        var canvas = document.createElement("canvas"),
-                            ctx = canvas.getContext("2d"),
-                            MAX_WIDTH = 800,
-                            MAX_HEIGHT = 800,
-                            width = img.width,
-                            height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                    canvasResize(file, {
+                        width: 300,
+                        height: 0,
+                        crop: false,
+                        quality: 80,
+                        //rotate: 90,
+                        callback: function (data, width, height) {
+                            $("#" + fb.id).val(btoa(data));
+                            fb.getEl().prev().set({"src": data});
                         }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        $("#" + fb.id).val(btoa(canvas.toDataURL("image/png")));
-                    };
-                    reader.readAsDataURL(file);
+                    });
                 }
             }
         }, h);
