@@ -352,6 +352,7 @@ tableStructure.init = function (record, screenName) {
                 layout: 'hbox',
                 width: 300,
                 id: 'addColumnForm',
+                border: false,
                 items: [
                     {
                         xtype: 'textfield',
@@ -426,7 +427,7 @@ tableStructure.init = function (record, screenName) {
                             submitEmptyText: false,
                             success: function (response) {
                                 tableStructure.store.load();
-                                form.reset();
+                                form.form.reset();
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({
@@ -480,9 +481,7 @@ tableStructure.init = function (record, screenName) {
                         height: 350,
                         initCenter: false,
                         closeAction: 'close',
-                        plain: true,
-                        frame: true,
-                        border: false,
+                        border: true,
                         items: [new Ext.Panel({
                             frame: false,
                             border: false,

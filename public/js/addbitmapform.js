@@ -97,9 +97,7 @@ addBitmap.init = function () {
             }, 200);
         },
         tbar: [
-            {
-                text: 'Epsg:'
-            },
+            'Epsg:',
             {
                 width: 60,
                 xtype: 'textfield',

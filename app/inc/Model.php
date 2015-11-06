@@ -192,7 +192,6 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-
         if ($addGeomType) {
             $sql = "SELECT
                     g.column_name, g.ordinal_position, g.udt_name,
@@ -211,9 +210,7 @@ class Model
                      information_schema.columns AS g
                 WHERE
                     table_schema = :schema AND table_name = :table";
-
         }
-
         $res = $this->prepare($sql);
         try {
             $res->execute(array("schema" => $_schema, "table" => $_table));

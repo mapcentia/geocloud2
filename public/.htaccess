@@ -35,7 +35,7 @@ RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetLegendGraphic($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=GetFeatureInfo($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)REQUEST=DescribeFeatureType($|&) [NC,OR]
 RewriteCond %{QUERY_STRING} (^|&)format_options=(.*) [NC,OR]
-RewriteCond %{THE_REQUEST} POST [NC]
+RewriteCond %{REQUEST_METHOD} POST
 RewriteRule wms/(.*)/tilecache/(.*) wms/$1/$2 [L]
 
 # Rewrite URL so tile requests is going direct to TileCache mod_apache script

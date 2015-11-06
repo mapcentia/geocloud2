@@ -483,6 +483,7 @@ $(window).ready(function () {
                         height: 120,
                         closeAction: 'close',
                         plain: true,
+                        border: false,
                         items: [
                             {
                                 defaults: {
@@ -649,6 +650,7 @@ $(window).ready(function () {
             }),
             {
                 xtype: 'form',
+                border: false,
                 layout: 'hbox',
                 width: 150,
                 id: 'schemaform',
@@ -718,6 +720,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -861,6 +864,7 @@ $(window).ready(function () {
                 border: false,
                 layout: 'border',
                 items: [new Ext.Panel({
+                    border: false,
                     region: "center"
                 })]
             }),
@@ -903,6 +907,7 @@ $(window).ready(function () {
             width: 700,
             height: 390,
             closeAction: 'close',
+            border: false,
             plain: true,
             items: [p],
             tbar: [
@@ -975,6 +980,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -1082,6 +1088,7 @@ $(window).ready(function () {
             height: 80,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [
                 {
                     defaults: {
@@ -1325,6 +1332,7 @@ $(window).ready(function () {
             height: 420,
             closeAction: 'close',
             plain: true,
+            border: false,
             items: [new Ext.Panel({
                 frame: false,
                 border: false,
@@ -1523,6 +1531,8 @@ $(window).ready(function () {
                 new Ext.Panel({
                     region: "center",
                     layout: 'border',
+                    border: false,
+
                     items: [
                         new Ext.Panel({
                             border: false,
@@ -1659,10 +1669,9 @@ $(window).ready(function () {
             items: [
                 new Ext.Panel({
                     height: 500,
-                    border: true,
                     region: "center",
                     layout: 'border',
-
+                    border: false,
                     items: [
                         new Ext.grid.EditorGridPanel({
                             store: privilegesStore,
@@ -2092,7 +2101,7 @@ $(window).ready(function () {
         frame: false,
         layout: 'border',
         region: 'center',
-        border: true,
+        border: false,
         split: true,
         items: [grid, {
             id: 'detailPanel',
@@ -2158,7 +2167,8 @@ $(window).ready(function () {
         activeTab: 0,
         region: 'center',
         plain: true,
-        items: [
+        resizeTabs: true,
+            items: [
             {
                 xtype: "panel",
                 title: __('Map'),
@@ -2181,18 +2191,19 @@ $(window).ready(function () {
                         width: 340,
                         frame: false,
                         plain: true,
-                        border: true,
                         layoutConfig: {
                             animate: true
                         },
+                        border: false,
                         items: [
                             {
                                 xtype: "tabpanel",
-                                border: false,
                                 id: "layerStyleTabs",
                                 activeTab: 0,
                                 plain: true,
-                                items: [
+                                border: false,
+                                resizeTabs: true,
+                                    items: [
                                     {
                                         xtype: "panel",
                                         title: __('Classes'),
@@ -2213,7 +2224,8 @@ $(window).ready(function () {
                                                 id: "classTabs",
                                                 border: false,
                                                 height: 470,
-                                                defaults: {
+                                                resizeTabs: true,
+                                                    defaults: {
                                                     layout: "fit",
                                                     border: false
                                                 },
@@ -2306,6 +2318,7 @@ $(window).ready(function () {
                                         defaults: {
                                             border: false
                                         },
+                                        border: false,
                                         items: [
                                             {
                                                 xtype: "panel",
@@ -2599,6 +2612,7 @@ $(window).ready(function () {
                 xtype: "panel",
                 title: __('Log'),
                 layout: 'border',
+                border: false,
                 listeners: {
                     activate: function () {
                         Ext.fly(this.ownerCt.getTabEl(this)).on({
@@ -2626,7 +2640,7 @@ $(window).ready(function () {
                         region: 'center',
                         frame: true,
                         plain: true,
-                        border: true,
+                        border: false,
                         html: "<div id='gc-log'></div>"
                     }
                 ]

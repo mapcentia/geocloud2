@@ -738,7 +738,7 @@ MapCentia.init = function () {
                 items: [
                     {
                         xtype: 'hr_layertreepanel',
-                        border: true,
+                        border: false,
                         layerIcons: 'bylayertype',
                         contextMenu: [
                             {
@@ -798,7 +798,7 @@ MapCentia.init = function () {
                     {
                         xtype: 'hr_layerlegendpanel',
                         id: 'hr-layerlegend-panel',
-                        border: true,
+                        border: false,
                         defaults: {
                             useScaleParameter: true,
                             baseParams: {
