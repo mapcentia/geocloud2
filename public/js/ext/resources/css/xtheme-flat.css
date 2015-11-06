@@ -143,6 +143,7 @@ ul.x-tab-strip-bottom{
 
 .x-tab-strip-top .x-tab-right, .x-tab-strip-top .x-tab-left, .x-tab-strip-top .x-tab-strip-inner{
 	background-image: none;
+
 }
 
 .x-tab-strip-bottom .x-tab-right {
@@ -1810,4 +1811,9 @@ Build date: 2013-04-03 15:07:25
 }
 td.x-grid3-hd.x-grid3-cell {
     padding: 0;
+}
+
+.x-tab-panel-header-plain .x-tab-strip-top {
+    background: none !important;
+    background-color: #ffffff !important;
 }
