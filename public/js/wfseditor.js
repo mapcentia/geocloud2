@@ -599,29 +599,33 @@ $(document).ready(function () {
                         }
                         catch (e) {
                         }
-                        layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                            singleTile: false,
-                            //isBaseLayer: isBaseLayer,
-                            visibility: false,
-                            wrapDateLine: false,
-                            tileCached: true,
-                            displayInLayerSwitcher: true,
-                            name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
-                        });
+                        if (response.data[u].type) {
+                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                                singleTile: false,
+                                //isBaseLayer: isBaseLayer,
+                                visibility: false,
+                                wrapDateLine: false,
+                                tileCached: true,
+                                displayInLayerSwitcher: true,
+                                name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                            });
+                        }
                     }
                     for (i = 0; i < arr.length; ++i) {
                         var l = [], id;
                         for (u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
                                 id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
-                                l.push({
-                                    text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
-                                    id: id,
-                                    leaf: true,
-                                    checked: false,
-                                    geomField: response.data[u].f_geometry_column,
-                                    geomType: response.data[u].type
-                                });
+                                if (response.data[u].type) {
+                                    l.push({
+                                        text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                        id: id,
+                                        leaf: true,
+                                        checked: false,
+                                        geomField: response.data[u].f_geometry_column,
+                                        geomType: response.data[u].type
+                                    });
+                                }
                             }
                         }
                         treeConfig.push({

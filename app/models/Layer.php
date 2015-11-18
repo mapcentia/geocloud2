@@ -282,12 +282,23 @@ class Layer extends \app\models\Table
 
     public function getElasticsearchMapping($_key_) // Only geometry tables
     {
+        $hasGeom = false;
         $elasticsearch = new \app\models\Elasticsearch();
         $response['success'] = true;
         $response['message'] = "Map loaded";
+
+        $checkForGeom = $this->getMetaData($_key_);
+        foreach ($checkForGeom as $key => $value) {
+            if ($value["type"] == "geometry") {
+                $hasGeom = true;
+                break;
+            } else {
+                $hasGeom = false;
+            }
+        }
         $arr = array();
         $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1], false, true); // Add geometry types
+        $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ? : false); // Add geometry types (or not)
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
             $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);

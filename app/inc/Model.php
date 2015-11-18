@@ -220,6 +220,7 @@ class Model
             $response['code'] = 401;
             return $response;
         }
+
         while ($row = $this->fetchRow($res)) {
             $arr[$row["column_name"]] = array(
                 "num" => $row["ordinal_position"],
@@ -292,11 +293,13 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        $query = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$_table}'' AND geometry_columns.f_table_schema=''{$_schema}''',
+        $query = "SELECT * FROM settings.getColumns('f_table_name=''{$_table}'' AND f_table_schema=''{$_schema}''',
                     'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
+
 
         $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
+
         if (!$row)
             return false;
         elseif ($row)

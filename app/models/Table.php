@@ -140,7 +140,7 @@ class Table extends Model
 
         $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
-            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
         } else {
             $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
 
