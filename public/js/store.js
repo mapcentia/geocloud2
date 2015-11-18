@@ -776,9 +776,11 @@ $(window).ready(function () {
                                                     winTableRename.close();
                                                     resetButtons();
                                                     Ext.getCmp('renamelayer-btn').setDisabled(true);
-                                                    document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
-                                                        [name]
-                                                    ]);
+                                                    try {
+                                                        document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
+                                                            [name]
+                                                        ]);
+                                                    } catch(e){}
                                                     document.getElementById("wfseditor").contentWindow.window.reLoadTree();
                                                     store.reload();
                                                     App.setAlert(App.STATUS_OK, __("layer rename"));
