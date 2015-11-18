@@ -255,7 +255,7 @@ class Mapfile extends \app\inc\Controller
         #
         <?php
 
-        $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
 
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
