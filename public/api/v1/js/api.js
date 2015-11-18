@@ -701,7 +701,7 @@ var mygeocloud_ol = (function () {
             geolocation_layer.removeAllFeatures();
             geolocate.deactivate();
             //$('track').checked = false;
-            geolocate.watch = true;
+            geolocate.watch = false;
             firstGeolocation = true;
             geolocate.activate();
         };
