@@ -431,9 +431,12 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "wfs_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
+                "wfs_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
+                "wfs_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
                 #"wms_extent" "-180 -90 180 90"
                 "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
