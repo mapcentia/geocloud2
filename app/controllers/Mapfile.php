@@ -48,8 +48,8 @@ class Mapfile extends \app\inc\Controller
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
-        "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
-        "wfs_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WFS"
+        "wms_title"    "<?php echo $user; ?>'s awesome WMS"
+        "wfs_title"    "<?php echo $user; ?>'s awesome WFS"
         "wms_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wfs_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wms_name"    "<?php echo $user; ?>"
@@ -59,10 +59,10 @@ class Mapfile extends \app\inc\Controller
         "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
-        "wfs_namespace_prefix" "<?php echo $user; ?>"
-        "wfs_namespace_uri" "http://mapcentia.com/<?php echo $user; ?>"
         "wms_encoding" "UTF-8"
         "wfs_encoding" "UTF-8"
+        "wfs_namespace_prefix" "<?php echo $user; ?>"
+        "wfs_namespace_uri" "<?php echo App::$param['host']; ?>"
         END
         END
         #
