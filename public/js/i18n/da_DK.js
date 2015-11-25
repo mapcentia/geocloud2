@@ -213,6 +213,7 @@ gc2i18n = {
         "Show in mouse-over": "Vis i mouse-over",
         "Searchable": "Søgbar",
 
-        "MapClient Print": "MapClient Print"
+        "MapClient Print": "MapClient Print",
+        "No geometry" : "Ingen geometri"
     }
 };

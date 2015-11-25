@@ -213,6 +213,7 @@ gc2i18n = {
         "Show in mouse-over": "Show in mouse-over",
         "Searchable": "Searchable",
 
-        "MapClient Print": "MapClient Print"
+        "MapClient Print": "MapClient Print",
+        "No geometry" : "No geometry"
     }
 };

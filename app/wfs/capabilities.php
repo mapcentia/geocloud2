@@ -115,7 +115,7 @@ $depth++;
     <!--<Lock/>-->
 </Operations>
 <?php
-$sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
+$sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
 
 $result = $postgisObject->execQuery($sql);
 if ($postgisObject->PDOerror) {
@@ -154,12 +154,9 @@ while ($row = $postgisObject->fetchRow($result)) {
         echo "EPSG:" . $srsTmp;
         writeTag("close", null, "SRS", null, False, True);
 
-
-        if ($row['f_geometry_column']) {
+        if (isset($row['f_geometry_column']) && $row['f_geometry_column'] !="gc2_non_postgis") {
             $sql2 = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TXMin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TXMax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TYMin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TYMax  FROM " . $postgisschema . "." . $TableName;
             $result2 = $postgisObject->execQuery($sql2);
-
-
             if ($postgisObject->PDOerror) { // Can't project the layer to the requested EPSG
                 echo "<!--\n";
                 print_r($postgisObject->PDOerror, true);
@@ -171,9 +168,7 @@ while ($row = $postgisObject->fetchRow($result)) {
                 $row["f_table_abstract"] .= " CAN'T PROJECT LAYER";
                 makeExceptionReport($postgisObject->PDOerror);
             }
-
             $row2 = $postgisObject->fetchRow($result2);
-
             if (isset($row2['txmin'])) {
                 writeTag("open", null, "LatLongBoundingBox", array("minx" => $row2['txmin'], "miny" => $row2['tymin'], "maxx" => $row2['txmax'], "maxy" => $row2['tymax']), True, False);
                 writeTag("close", null, "LatLongBoundingBox", null, False, True);
@@ -182,6 +177,10 @@ while ($row = $postgisObject->fetchRow($result)) {
                 echo "WARNING: Optional LatLongBoundingBox could not be established for this layer.";
                 echo "-->";
             }
+        } else {
+            echo "<!--";
+            echo "WARNING: this layer doesn't have a geometry element.";
+            echo "-->";
         }
         writeTag("open", null, "Abstract", null, True, False);
         echo $row["f_table_abstract"];

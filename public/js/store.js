@@ -230,7 +230,10 @@ $(window).ready(function () {
                     sortable: true,
                     editable: false,
                     tooltip: "This can't be changed",
-                    width: 150
+                    width: 150,
+                    renderer: function (v, p) {
+                        return v || __('No geometry');
+                    }
                 },
                 {
                     header: __("Title"),
