@@ -62,11 +62,25 @@ foreach ($tables as $table) {
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
     $fieldConfRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
     $fieldConf = json_decode($fieldConfRow['fieldconf']);
-    
+    $fieldConfArr = json_decode($fieldConfRow['fieldconf'], true);
+
+    // Start sorting the fields by sort_id
+    $arr = array();
+    foreach ($fieldsArr[$table] as $value) {
+        $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+    }
+    usort($arr, function ($a, $b) {
+        return $a[0] - $b[0];
+    });
+    $fieldsArr[$table] = array();
+    foreach ($arr as $value) {
+        $fieldsArr[$table][] = $value[1];
+    }
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = "true";
         $atts["name"] = $hello;
         $properties = $fieldConf->$atts["name"];
+        $atts["label"] = $properties->alias ?: $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }

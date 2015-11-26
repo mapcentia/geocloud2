@@ -2153,6 +2153,7 @@ GeoExt.form.recordToField = function (i, q) {
     var g = i.get("restriction") || {};
     var c = i.get("nillable") || false;
     var o = i.get("label");
+
     var b = q.labelTpl;
     // HACK. Render combo box if WFS enumeration
     var arrStore = null;
@@ -2182,15 +2183,16 @@ GeoExt.form.recordToField = function (i, q) {
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
             if (e) {
-                n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textfield", fieldLabel: o, allowBlank: c, maxLength: e, minLength: f}, h);
             } else {
-                n = Ext.apply({xtype: "textarea", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textarea", fieldLabel: o, allowBlank: c, maxLength: e, minLength: f}, h);
             }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
+                allowBlank: c,
                 fieldLabel: o, maxLength: e, minLength: f
             }), h)
         }
@@ -2634,7 +2636,7 @@ GeoExt.data.AttributeStoreMixin = function () {
                     disableCaching: false,
                     method: "GET"
                 }) : undefined),
-                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", {
+                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", "label", {
                     name: "nillable",
                     type: "boolean"
                 }])
