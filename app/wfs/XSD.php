@@ -77,7 +77,7 @@ foreach ($tables as $table) {
         $fieldsArr[$table][] = $value[1];
     }
     foreach ($fieldsArr[$table] as $hello) {
-        $atts["nillable"] = "true";
+        $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
         $properties = $fieldConf->$atts["name"];
         $atts["label"] = $properties->alias ?: $atts["name"];

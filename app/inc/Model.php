@@ -194,7 +194,7 @@ class Model
         }
         if ($addGeomType) {
             $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name,
+                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable
                     f.type,
                     f.srid
                 FROM
@@ -205,7 +205,7 @@ class Model
                     table_schema = :schema AND table_name = :table";
         } else {
             $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name
+                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable
                 FROM
                      information_schema.columns AS g
                 WHERE
@@ -224,6 +224,7 @@ class Model
             $arr[$row["column_name"]] = array(
                 "num" => $row["ordinal_position"],
                 "type" => $row["udt_name"],
+                "is_nullable" => $row['is_nullable'] == "YES" ? true: false,
                 "srid" => ($row["udt_name"] == "geometry") ? $row["srid"] : null,
                 "geom_type" => ($row["udt_name"] == "geometry") ? $row["type"] : null,
             );
