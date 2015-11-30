@@ -120,6 +120,15 @@ foreach ($tables as $table) {
         } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
             if (isset($properties->image) && $properties->image == true) {
                 $atts["type"] = "gc2:imageType";
+                if (isset($fieldConf->$atts["name"]->properties)) {
+                 $pJson = json_decode($fieldConf->$atts["name"]->properties, true);
+                    if ($pJson["width"]){
+                        $atts["width"] = $pJson["width"];
+                    }
+                    if ($pJson["quality"]){
+                        $atts["quality"] = $pJson["quality"];
+                    }
+                }
             }
         } else {
             unset($atts["type"]);
