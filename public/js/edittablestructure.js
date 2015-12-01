@@ -492,7 +492,7 @@ tableStructure.init = function (record, screenName) {
                         height: 350,
                         initCenter: false,
                         closeAction: 'close',
-                        border: true,
+                        border: false,
                         items: [new Ext.Panel({
                             frame: false,
                             border: false,
