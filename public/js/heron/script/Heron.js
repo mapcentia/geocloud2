@@ -3320,7 +3320,7 @@ Heron.widgets.search.FeatureInfoPanel = Ext.extend(Ext.Panel, {title: __('Featur
         }
         var panel = new Heron.widgets.search.FeaturePanel({title: featureSet.title, featureType: featureSet.featureType, featureSetKey: featureSetKey, header: false, features: featureSet.features, autoConfig: autoConfig, autoConfigMaxSniff: this.autoConfigMaxSniff, hideColumns: this.hideColumns, columnFixedWidth: this.columnFixedWidth, autoMaxWidth: this.autoMaxWidth, autoMinWidth: this.autoMinWidth, columnCapitalize: this.columnCapitalize, showGeometries: this.showGeometries, featureSelection: this.featureSelection, gridCellRenderers: this.gridCellRenderers, columns: columns, showTopToolbar: this.showTopToolbar, exportFormats: this.exportFormats, displayPanels: this.displayPanels, hropts: {zoomOnRowDoubleClick: true, zoomOnFeatureSelect: false, zoomLevelPointSelect: 8}});
         if (!this.tabPanel) {
-            this.tabPanel = new Ext.TabPanel({border: false, autoDestroy: true, enableTabScroll: true, items: [panel], activeTab: 0});
+            this.tabPanel = new Ext.TabPanel({plain: true,unstyled: true,resizeTabs: true,border: false, autoDestroy: true, enableTabScroll: true, items: [panel], activeTab: 0});
         } else {
             this.tabPanel.add(panel);
             this.tabPanel.setActiveTab(0);
