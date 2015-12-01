@@ -295,6 +295,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         items: [new Ext.Panel({
             frame: false,
             layout: 'border',
+            border: false,
             items: [attributeForm.form]
         })]
     });
@@ -767,6 +768,7 @@ $(document).ready(function () {
                                                 title: "Attribute table",
                                                 split: true,
                                                 frame: false,
+                                                border: false,
                                                 layout: 'fit',
                                                 height: 200,
                                                 collapsible: true,
@@ -781,6 +783,7 @@ $(document).ready(function () {
                                 border: false,
                                 region: "west",
                                 collapsible: true,
+                                split: true,
                                 width: 350,
                                 tbar: [{
                                     text: '<i class="icon-eye-open btn-gc"></i> ' + __('Class wizard'),

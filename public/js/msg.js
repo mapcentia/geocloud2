@@ -143,8 +143,8 @@ Ext.extend(Ext.App, Ext.util.Observable, {
         else if (delay > 9) {
             delay = 3;
         }
-
-        this.msgCt.alignTo(document, 't-t');
+        //delay = 10000;
+        this.msgCt.alignTo(document, 'tr-tr');
         Ext.DomHelper.append(this.msgCt, {html:this.buildMessageBox(status, String.format.apply(String, Array.prototype.slice.call(arguments, 1)))}, true).slideIn('t').pause(delay).ghost("t", {remove:true});
     },
 
