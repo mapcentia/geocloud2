@@ -194,7 +194,7 @@ class Model
         }
         if ($addGeomType) {
             $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable
+                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable,
                     f.type,
                     f.srid
                 FROM
