@@ -31,7 +31,7 @@ include("html_header.php");
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 </script>
-<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7453012a468a8a38"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js?d259f3b931eb8104"></script>

@@ -3492,6 +3492,7 @@ Heron.widgets.Bookmarks = (function () {
 })();
 Heron.widgets.BookmarksPanel = Ext.extend(Heron.widgets.HTMLPanel, {title: __('Bookmarks'), titleDescription: null, titleBookmarkProject: __("Project bookmarks"), titleBookmarkUser: __("Your bookmarks"), showProjectBookmarks: true, showUserBookmarks: true, autoProjectBookmarksTitle: true, autoUserBookmarksTitle: true, appBookmarkSign: null, autoScroll: true, bodyStyle: {overflow: 'auto'}, initComponent: function () {
     this.version = 1;
+    this.border = false;
     this.signature = this.appBookmarkSign;
     Heron.widgets.BookmarksPanel.superclass.initComponent.call(this);
     if (!this.titleDescription) {

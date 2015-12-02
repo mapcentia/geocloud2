@@ -2075,6 +2075,7 @@ $(window).ready(function () {
             items: [
                 {
                     xtype: "panel",
+                    border: false,
                     defaults: {
                         border: false
                     },
