@@ -600,7 +600,7 @@ classWizards.init = function (record) {
                                                                             new Ext.form.ColorField({
                                                                                 name: "color",
                                                                                 allowBlank: false,
-                                                                                value: (customIsSet) ? classWizards.setting.custom.color : null
+                                                                                value: customIsSet ? classWizards.setting.custom.color : null
                                                                             })
                                                                         ]
                                                                     }

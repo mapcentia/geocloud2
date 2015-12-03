@@ -19,7 +19,9 @@ Ext.namespace("Heron.options.zoomrestrict");
 Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
-var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup, enablePrint, queryWin,gridWin, poilayer, polygonControl, click, qstore = [], host = "", dbForConflict, gridPanel, grid, cStore;
+var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
+    enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
+    dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows;
 
 MapCentia.setup = function () {
     "use strict";
@@ -286,6 +288,204 @@ MapCentia.setup = function () {
             });
         }
     }); // Ajax call end
+    conflict = function (wkt) {
+        var isEmpty = true;
+        var srid = "25832";
+        var pkey = "gid";
+        var geoField = "the_geom";
+        var geoType = "POLYGON";
+        var layerTitel = "HEJ";
+        var versioning = false;
+        var layerGroup = "sdsd";
+        var fieldConf = {};
+        var f_geometry_column = "the_geom";
+        var sql;
+        var buffer = Ext.getCmp("bufferCombo").getValue();
+        var table = "clone.lp_f";
+
+
+        var bufferStyle = {
+            fillColor: "#00ffff",
+            fillOpacity: 0.0,
+            strokeColor: "#CD7F32",
+            strokeWidth: 1,
+            strokeOpacity: 1,
+            graphicZIndex: 3,
+            strokeDashstyle: "dash"
+        };
+
+        if (buffer > 0) {
+            bStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
+                host: host,
+                method: "POST",
+                jsonp: false,
+                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + srid + ")," + buffer + ") as geom",
+                name: "Search",
+                styleMap: new OpenLayers.StyleMap({
+                    "default": new OpenLayers.Style(bufferStyle)
+                })
+            });
+            Heron.App.map.addLayer(bStore.layer);
+            bStore.load();
+            sql = "SELECT * FROM " + table + " WHERE ST_DWithin(ST_GeogFromText(ST_astext(ST_Transform(ST_geomfromtext('" + wkt + "',900913),4326))), geography(ST_transform(" + f_geometry_column + ",4326)), " + buffer + ")";
+        } else {
+            sql = "SELECT * FROM " + table + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + srid + ")," + f_geometry_column + ")";
+        }
+        cStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
+            host: host,
+            method: "POST",
+            jsonp: false,
+            sql: sql,
+            name: "Search",
+            styleMap: new OpenLayers.StyleMap({
+                "default": new OpenLayers.Style({
+                        fillColor: "#000000",
+                        fillOpacity: 0.0,
+                        pointRadius: 8,
+                        strokeColor: "#FF0000",
+                        strokeWidth: 3,
+                        strokeOpacity: 0.7,
+                        graphicZIndex: 3
+                    }
+                )
+            }),
+            onLoad: function () {
+                var layerObj = cStore, out = [], source = {}, pkeyValue;
+                if ($.isEmptyObject(cStore.geoJSON)) {
+                    alert(__("No feature found"));
+                    return false;
+                }
+                gridWin.show();
+                grid = new Ext.grid.GridPanel({
+                    viewConfig: {
+                        forceFit: true
+                    },
+                    store: cStore.featureStore, // layer
+                    sm: new GeoExt.grid.FeatureSelectionModel({// Only when there is a map
+                        singleSelect: false,
+                        selectControl: {
+                            onSelect: function (feature) {
+                            },
+                            onUnselect: function () {
+                            }
+                        }
+                    }),
+                    cm: new Ext.grid.ColumnModel({
+                        defaults: {
+                            sortable: true,
+                            editor: {
+                                xtype: "textfield"
+                            }
+                        },
+                        columns: cStore.geoJSON.forGrid
+                    })
+                });
+                gridPanel = Ext.getCmp("gridpanel");
+                gridPanel.add(grid);
+                gridPanel.doLayout();
+            }
+        });
+        gridWin = new Ext.Window({
+            title: "Søgeresultat",
+            modal: false,
+            border: false,
+            layout: 'fit',
+            width: 500,
+            height: 400,
+            x: 200,
+            y: 200,
+            closeAction: 'close',
+            plain: true,
+            id: "gridpanel",
+            listeners: {
+                hide: {
+                    fn: function (el, e) {
+                        cleanUpConflict();
+                    }
+                }
+            },
+            tbar: [
+                "->",
+                {
+                    text: "Download som CSV",
+                    iconCls: 'icon-table-save',
+                    handler: function () {
+                        var config = {
+                            fileExt: ".csv",
+                            formatter: "CSVFormatter",
+                            mimeType: "text/csv",
+                            name: "Comma Separated Values (CSV)"
+                        }
+                        var store = cStore.featureStore;
+                        var featureType = "clone.lp_f";
+                        config.fileName = featureType + config.fileExt;
+                        config.columns = (store.fields && store.fields.items && store.fields.items.length > 3) ? store.fields.items.slice(3) : null;
+                        if (store.layer && store.layer.projection) {
+                            config.assignSrs = store.layer.projection.getCode();
+                        }
+                        config.encoding = 'base64';
+
+                        var data = Heron.data.DataExporter.formatStore(store, config);
+                        Heron.data.DataExporter.download(data, config);
+                    }
+                }
+
+            ]
+        });
+
+        Heron.App.map.addLayer(cStore.layer);
+        cStore.load();
+    };
+    deactivateControllers = function () {
+        try {
+            click.deactivate();
+            Heron.App.map.removeControl(click);
+        }
+        catch (e) {
+        }
+        try {
+            polygonControl.deactivate();
+            Heron.App.map.removeControl(polygonControl);
+        }
+        catch (e) {
+        }
+    }
+    closeWindows = function () {
+        try {
+            gridWin.close();
+        }
+        catch (e) {
+        }
+        try {
+            gridPanel.remove(grid);
+        }
+        catch (e) {
+        }
+        try {
+            queryWin.hide();
+        }
+        catch (e) {
+        }
+    }
+    cleanUpConflict = function () {
+        try {
+            Heron.App.map.removeLayer(poilayer);
+        }
+        catch (e) {
+        }
+        try {
+            Heron.App.map.removeLayer(cStore.layer);
+        }
+        catch (e) {
+        }
+
+        try {
+            Heron.App.map.removeLayer(bStore.layer);
+        }
+        catch (e) {
+        }
+
+    }
 };
 MapCentia.init = function () {
     "use strict";
@@ -418,6 +618,7 @@ MapCentia.init = function () {
         {
             type: "featureinfo",
             options: {
+                toggleGroup: "conflict",
                 popupWindow: {
                     width: 360,
                     height: 200,
@@ -717,22 +918,19 @@ MapCentia.init = function () {
             , hidden: !enablePrint
         }
         },
+        {type: "-"},
         {
             type: "any",
             options: {
                 text: '',
-                tooltip: 'Query raster by click',
-                toggleGroup: "rasterGroup",
+                tooltip: 'Søg med et objekt i et tændt lag. Klik på et objekt og søg med dette.',
+                toggleGroup: "conflict",
                 iconCls: 'icon-getfeatureinfo',
-                id: "infoBtn",
+                id: "featureSearchBtn",
                 handler: function (e) {
-                    try {
-                        click.deactivate();
-                        Heron.App.map.removeControl(click);
-                        Heron.App.map.removeLayer(poilayer);
-                    }
-                    catch (e) {
-                    }
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
                     try {
                         $.each(qstore, function (index, st) {
                             MapCentia.gc2.map.removeLayer(st.layer);
@@ -740,29 +938,24 @@ MapCentia.init = function () {
                     }
                     catch (e) {
                     }
-                    try {
-                        queryWin.hide();
-
-                    }
-                    catch (e) {
-                    }
                     if (e.pressed === false) {
                         return false;
                     }
                     queryWin = new Ext.Window({
-                        title: "Query result",
+                        title: "Fundet objekter",
                         modal: false,
                         border: false,
                         layout: 'fit',
                         width: 400,
                         height: 400,
-                        closeAction: 'hide',
                         x: 100,
                         y: 100,
+                        closeAction: 'hide',
                         plain: true,
                         listeners: {
                             hide: {
                                 fn: function (el, e) {
+                                    cleanUpConflict()
                                     Ext.iterate(qstore, function (v) {
                                         v.reset();
                                     });
@@ -799,6 +992,9 @@ MapCentia.init = function () {
                             }, this.handlerOptions);
                         },
                         trigger: function (e) {
+                            cleanUpConflict();
+                            // Enable click the controller again.
+                            click.activate();
                             queryWin.show();
                             var layers, hit = false, distance,
                                 event = new geocloud.clickEvent(e, MapCentia.gc2),
@@ -822,6 +1018,10 @@ MapCentia.init = function () {
                             Ext.getCmp("queryTabs").removeAll();
                             (function iter() {
                                 var isEmpty = true;
+                                if (typeof metaDataKeys[layers[index].split(".")[1]] === "undefined") {
+                                    queryWin.hide();
+                                    return false;
+                                }
                                 var srid = metaDataKeys[layers[index].split(".")[1]].srid;
                                 var pkey = metaDataKeys[layers[index].split(".")[1]].pkey;
                                 var geoField = metaDataKeys[layers[index].split(".")[1]].f_geometry_column;
@@ -851,6 +1051,9 @@ MapCentia.init = function () {
                                         isEmpty = layerObj.isEmpty();
                                         if ((!isEmpty)) {
                                             queryWin.show();
+                                            var geojson_format = new OpenLayers.Format.GeoJSON(),
+                                                feature = geojson_format.read(layerObj.geoJSON),
+                                                wkt = new OpenLayers.Format.WKT();
                                             $.each(layerObj.geoJSON.features, function (i, feature) {
                                                 $.each(feature.properties, function (name, property) {
                                                     out.push([name, 0, name, property]);
@@ -875,9 +1078,15 @@ MapCentia.init = function () {
                                             });
                                             Ext.getCmp("queryTabs").add(
                                                 {
-                                                    title: layerGroup + " " + layerTitel,
+                                                    title: layerGroup + " - " + layerTitel,
                                                     layout: "fit",
                                                     border: false,
+                                                    tbar: [{
+                                                        text: "Søg med dette objekt",
+                                                        handler: function () {
+                                                            conflict(wkt.write(feature))
+                                                        }
+                                                    }],
                                                     items: [
                                                         {
                                                             xtype: "panel",
@@ -944,7 +1153,6 @@ MapCentia.init = function () {
                     click = new clickController();
                     Heron.App.map.addControl(click);
                     click.activate();
-
                 }
             }
         },
@@ -952,52 +1160,18 @@ MapCentia.init = function () {
             type: "any",
             options: {
                 text: '',
-                tooltip: 'Conflict',
-                iconCls: 'icon-getfeatureinfo',
-                id: "conflictBtn",
+                tooltip: 'Søg ved at tegne en flade.',
+                iconCls: 'icon-pencil',
+                id: "drawSearchBtn",
                 toggleGroup: "conflict",
                 handler: function (e) {
-                    try {
-                        polygonControl.deactivate();
-                        Heron.App.map.removeControl(polygonControl);
-                        Heron.App.map.removeLayer(poilayer);
-                    }
-                    catch (e) {
-                    }
-
-                    try {
-                        gridWin.close();
-
-                    }
-                    catch (e) {
-                    }
-                    try {
-                        Heron.App.map.removeLayer(cStore.layer);
-                    }
-                    catch (e) {
-                    }
-                    try {
-                        gridPanel.remove(grid);
-                    }
-                    catch (e) {
-                    }
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
                     if (e.pressed === false) {
                         return false;
                     }
-                    gridWin = new Ext.Window({
-                        title: "Query resucsdfdlt",
-                        modal: false,
-                        border: false,
-                        layout: 'fit',
-                        width: 400,
-                        height: 400,
-                        closeAction: 'close',
-                        x: 100,
-                        y: 100,
-                        plain: true,
-                        id: "gridpanel"
-                    });
-                    poilayer = new OpenLayers.Layer.Vector("Vector", {
+                    poilayer = new OpenLayers.Layer.Vector("Search", {
                         styleMap: new OpenLayers.StyleMap({
                             "default": new OpenLayers.Style({
                                     fillColor: "#000000",
@@ -1029,86 +1203,48 @@ MapCentia.init = function () {
                     Heron.App.map.addControl(selectControl);
                     Heron.App.map.addControl(polygonControl);
                     polygonControl.activate();
-
                     poilayer.events.register("sketchcomplete", poilayer, function (e) {
-                            polygonControl.deactivate();
-                            modifyControl.activate();
+                        deactivateControllers();
+                        modifyControl.activate();
+                        var wkt = new OpenLayers.Format.WKT().write(e.feature);
+                        Ext.getCmp("drawSearchBtn").toggle();
+                        conflict(wkt);
+                        poilayer.events.register("featuremodified", poilayer, function (e, f) {
+                            //console.log("ddssd")
+                        });
 
-                            var isEmpty = true;
-                            var srid = "25832";
-                            var pkey = "gid";
-                            var geoField = "the_geom";
-                            var geoType = "POLYGON";
-                            var layerTitel = "HEJ";
-                            var versioning = false;
-                            var layerGroup = "sdsd";
-                            var fieldConf = {};
-                            var f_geometry_column = "the_geom";
-                            cStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
-                                host: host,
-                                sql: "SELECT * FROM clone.lp_f WHERE ST_Intersects(ST_Transform(ST_geomfromtext('" + new OpenLayers.Format.WKT().write(e.feature) + "',900913)," + srid + ")," + f_geometry_column + ")",
-                                styleMap: new OpenLayers.StyleMap({
-                                    "default": new OpenLayers.Style({
-                                            fillColor: "#000000",
-                                            fillOpacity: 0.0,
-                                            pointRadius: 8,
-                                            strokeColor: "#FF0000",
-                                            strokeWidth: 3,
-                                            strokeOpacity: 0.7,
-                                            graphicZIndex: 3
-                                        }
-                                    )
-                                }),
-                                onLoad: function () {
-                                    var layerObj = cStore, out = [], source = {}, pkeyValue;
-                                    gridWin.show();
-
-                                    grid = new Ext.grid.GridPanel({
-                                        viewConfig: {
-                                            forceFit: true
-                                        },
-                                        store: cStore.featureStore, // layer
-                                        sm: new GeoExt.grid.FeatureSelectionModel({// Only when there is a map
-                                            singleSelect: false,
-                                            selectControl: {
-                                                onSelect: function (feature) {
-                                                },
-                                                onUnselect: function () {
-                                                }
-                                            }
-                                        }),
-                                        cm: new Ext.grid.ColumnModel({
-                                            defaults: {
-                                                sortable: true,
-                                                editor: {
-                                                    xtype: "textfield"
-                                                }
-                                            },
-                                            columns: cStore.geoJSON.forGrid
-                                        })
-                                    });
-                                    gridPanel = Ext.getCmp("gridpanel");
-                                    gridPanel.add(grid);
-                                    gridPanel.doLayout();
-                                }
-                            });
-                            Heron.App.map.addLayer(cStore.layer);
-                            cStore.load();
-
-                        }
-                    );
-                    poilayer.events.register("featuremodified", poilayer, function (e, f) {
-                        console.log("ddssd")
                     });
-
-
-
                 }
             }
-        }
-    ]
-    ;
+        },
+        {
+            type: "any",
+            options: {
+                xtype: "combo",
+                mode: 'local',
+                triggerAction: 'all',
+                width: 70,
+                id: "bufferCombo",
+                store: new Ext.data.ArrayStore({
+                    fields: [
+                        'v',
+                        'd'
+                    ],
+                    data: [
+                        [10,"10 m"],
+                        [20,"20 m"],
+                        [30,"30 m"],
+                        [40,"40 m"],
+                        [50,"50 m"]
+                    ]
+                }),
+                valueField: 'v',
+                displayField: 'd',
+                emptyText: "Buffer"
 
+            }
+        }
+    ];
     Heron.layout = {
         xtype: 'panel',
         id: 'hr-container-main',
@@ -1208,8 +1344,7 @@ MapCentia.init = function () {
             }
         ]
     };
-}
-;
+};
 MapCentia.setup();
 (function pollForLayers() {
     "use strict";
@@ -1234,3 +1369,4 @@ MapCentia.setup();
         setTimeout(pollForLayers, 300);
     }
 }());
+

@@ -4631,6 +4631,7 @@ Heron.widgets.search.FeaturePanel = Ext.extend(Ext.Panel, {downloadable: true, d
                 downloadMenuItems.push(item);
             }
         }
+        console.log(downloadMenuItems);
         if (downloadMenuItems.length > 0) {
             tbarItems.push({itemId: 'download', text: __('Download'), cls: 'x-btn-text-icon', iconCls: 'icon-table-save', tooltip: __('Choose a Download Format'), menu: new Ext.menu.Menu({style: {overflow: 'visible'}, items: downloadMenuItems})});
         }
@@ -4982,6 +4983,8 @@ Heron.widgets.search.FeaturePanel = Ext.extend(Ext.Panel, {downloadable: true, d
         config.assignSrs = store.layer.projection.getCode();
     }
     config.encoding = 'base64';
+    console.log(featureType)
+
     var data = Heron.data.DataExporter.formatStore(store, config);
     Heron.data.DataExporter.download(data, config);
 }, downloadData: function (downloadFormat, fileExt) {
