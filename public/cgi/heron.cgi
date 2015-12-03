@@ -305,6 +305,9 @@ def download():
     sys.stdout.write(
         HEADERS % (mime, filename, filename, len(data) + data.count('\n'))
     )
+    # If CSV convert to latin1, so it opens in Excel without problems
+    if mime == 'text/csv':
+        data = data.decode('utf-8').encode('latin1')
     sys.stdout.write(data)
 
 # Echo uploaded file back to client as data.

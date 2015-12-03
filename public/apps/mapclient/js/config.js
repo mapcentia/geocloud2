@@ -291,7 +291,6 @@ MapCentia.setup = function () {
     }); // Ajax call end
     conflict = function (wkt) {
         var isEmpty = true;
-        console.log(metaDataKeys)
         var srid = metaDataKeys[searchTable.split(".")[1]].srid;
         var pkey = "gid";
         var geoField = "the_geom";
@@ -304,6 +303,7 @@ MapCentia.setup = function () {
         var sql;
         var buffer = Ext.getCmp("bufferCombo").getValue();
         var table = searchTable;
+        var bufferSrid = "25832"
 
 
         var bufferStyle = {
@@ -321,7 +321,7 @@ MapCentia.setup = function () {
                 host: host,
                 method: "POST",
                 jsonp: false,
-                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + srid + ")," + buffer + ") as geom",
+                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + bufferSrid + ")," + buffer + ") as geom",
                 name: "Search",
                 styleMap: new OpenLayers.StyleMap({
                     "default": new OpenLayers.Style(bufferStyle)
