@@ -21,7 +21,8 @@ Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
 var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
     enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
-    dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows;
+    dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
+    searchTable ="clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
     "use strict";
@@ -290,7 +291,8 @@ MapCentia.setup = function () {
     }); // Ajax call end
     conflict = function (wkt) {
         var isEmpty = true;
-        var srid = "25832";
+        console.log(metaDataKeys)
+        var srid = metaDataKeys[searchTable.split(".")[1]].srid;
         var pkey = "gid";
         var geoField = "the_geom";
         var geoType = "POLYGON";
@@ -301,7 +303,7 @@ MapCentia.setup = function () {
         var f_geometry_column = "the_geom";
         var sql;
         var buffer = Ext.getCmp("bufferCombo").getValue();
-        var table = "clone.lp_f";
+        var table = searchTable;
 
 
         var bufferStyle = {
@@ -417,7 +419,7 @@ MapCentia.setup = function () {
                             name: "Comma Separated Values (CSV)"
                         }
                         var store = cStore.featureStore;
-                        var featureType = "clone.lp_f";
+                        var featureType = searchTable;
                         config.fileName = featureType + config.fileExt;
                         config.columns = (store.fields && store.fields.items && store.fields.items.length > 3) ? store.fields.items.slice(3) : null;
                         if (store.layer && store.layer.projection) {
@@ -1030,6 +1032,13 @@ MapCentia.init = function () {
                                 var versioning = metaDataKeys[layers[index].split(".")[1]].versioning;
                                 var layerGroup = metaDataKeys[layers[index].split(".")[1]].layergroup;
                                 var fieldConf = Ext.decode(metaDataKeys[layers[index].split(".")[1]].fieldconf);
+                                if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                                    var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                                        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                                        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                                        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
+                                    distance = 5 * res[MapCentia.gc2.getZoom()];
+                                }
                                 qstore[index] = new geocloud.sqlStore({
                                     host: host,
                                     db: dbForConflict,
