@@ -98,54 +98,6 @@
 					</HTTP>
 				</DCPType>
 	</GetFeatureWithLock>-->
-<<<<<<< HEAD
-    </Request>
-    <VendorSpecificCapabilities>
-    </VendorSpecificCapabilities>
-</Capability>
-<?php
-$depth = 1;
-writeTag("open", null, "FeatureTypeList", null, True, True);
-$depth++;
-?>
-<Operations>
-    <Query/>
-    <Insert/>
-    <Update/>
-    <Delete/>
-    <!--<Lock/>-->
-</Operations>
-<?php
-$sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
-
-$result = $postgisObject->execQuery($sql);
-if ($postgisObject->PDOerror) {
-    makeExceptionReport($postgisObject->PDOerror);
-}
-while ($row = $postgisObject->fetchRow($result)) {
-    if ($row['type']!="RASTER") {
-
-        if (!$srs) {
-            $srsTmp = $row['srid'];
-        } else {
-            $srsTmp = $srs;
-        }
-        $latLongBoundingBoxSrs = "4326";
-
-        $TableName = $row["f_table_name"];
-
-        writeTag("open", null, "FeatureType", null, True, True);
-        $depth++;
-
-        writeTag("open", null, "Name", null, True, False);
-        if ($gmlNameSpace) echo $gmlNameSpace . ":";
-        echo $TableName;
-        writeTag("close", null, "Name", null, False, True);
-
-        writeTag("open", null, "Title", null, True, False);
-        echo $row["f_table_title"];
-        writeTag("close", null, "Title", null, False, True);
-=======
         </Request>
         <VendorSpecificCapabilities>
         </VendorSpecificCapabilities>
@@ -163,7 +115,7 @@ while ($row = $postgisObject->fetchRow($result)) {
         <!--<Lock/>-->
     </Operations>
     <?php
-    $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
+    $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
 
     $result = $postgisObject->execQuery($sql);
     if ($postgisObject->PDOerror) {
@@ -171,7 +123,6 @@ while ($row = $postgisObject->fetchRow($result)) {
     }
     while ($row = $postgisObject->fetchRow($result)) {
         if ($row['type'] != "RASTER") {
->>>>>>> master
 
             if (!$srs) {
                 $srsTmp = $row['srid'];
@@ -190,35 +141,6 @@ while ($row = $postgisObject->fetchRow($result)) {
             echo $TableName;
             writeTag("close", null, "Name", null, False, True);
 
-<<<<<<< HEAD
-        if (isset($row['f_geometry_column']) && $row['f_geometry_column'] !="gc2_non_postgis") {
-            $sql2 = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TXMin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TXMax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TYMin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$latLongBoundingBoxSrs))) AS TYMax  FROM " . $postgisschema . "." . $TableName;
-            $result2 = $postgisObject->execQuery($sql2);
-            if ($postgisObject->PDOerror) { // Can't project the layer to the requested EPSG
-                echo "<!--\n";
-                print_r($postgisObject->PDOerror, true);
-                echo "-->\n";
-                $postgisObject->PDOerror = NULL;
-                $sql2 = "SELECT ST_Xmin(ST_Extent(" . $row['f_geometry_column'] . ")) AS TXMin,ST_Xmax(ST_Extent(" . $row['f_geometry_column'] . ")) AS TXMax, ST_Ymin(ST_Extent(" . $row['f_geometry_column'] . ")) AS TYMin,ST_Ymax(ST_Extent(" . $row['f_geometry_column'] . ")) AS TYMax  FROM " . $postgisschema . "." . $TableName;
-                $result2 = $postgisObject->execQuery($sql2);
-                //$latLongBoundingBoxSrs = $row['srid'];
-                $row["f_table_abstract"] .= " CAN'T PROJECT LAYER";
-                makeExceptionReport($postgisObject->PDOerror);
-            }
-            $row2 = $postgisObject->fetchRow($result2);
-            if (isset($row2['txmin'])) {
-                writeTag("open", null, "LatLongBoundingBox", array("minx" => $row2['txmin'], "miny" => $row2['tymin'], "maxx" => $row2['txmax'], "maxy" => $row2['tymax']), True, False);
-                writeTag("close", null, "LatLongBoundingBox", null, False, True);
-            } else {
-                echo "<!--";
-                echo "WARNING: Optional LatLongBoundingBox could not be established for this layer.";
-                echo "-->";
-            }
-        } else {
-            echo "<!--";
-            echo "WARNING: this layer doesn't have a geometry element.";
-            echo "-->";
-=======
             writeTag("open", null, "Title", null, True, False);
             echo $row["f_table_title"];
             writeTag("close", null, "Title", null, False, True);
@@ -252,7 +174,6 @@ while ($row = $postgisObject->fetchRow($result)) {
             writeTag("close", null, "Abstract", null, False, True);
             $depth--;
             writeTag("close", null, "FeatureType", null, True, True);
->>>>>>> master
         }
     }
     $depth--;
