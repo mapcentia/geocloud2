@@ -305,7 +305,6 @@ MapCentia.setup = function () {
         var table = searchTable;
         var bufferSrid = "25832"
 
-
         var bufferStyle = {
             fillColor: "#00ffff",
             fillOpacity: 0.0,
@@ -315,7 +314,11 @@ MapCentia.setup = function () {
             graphicZIndex: 3,
             strokeDashstyle: "dash"
         };
-
+        // Remove GEOMETRYCOLLECTION around the WKT string
+        if(wkt.search("GEOMETRYCOLLECTION")!==-1){
+            wkt = wkt.replace("GEOMETRYCOLLECTION(","");
+            wkt = wkt.substring(0, wkt.length - 1)
+        }
         if (buffer > 0) {
             bStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
                 host: host,
@@ -345,7 +348,7 @@ MapCentia.setup = function () {
                         fillOpacity: 0.0,
                         pointRadius: 8,
                         strokeColor: "#FF0000",
-                        strokeWidth: 3,
+                        strokeWidth: 1,
                         strokeOpacity: 0.7,
                         graphicZIndex: 3
                     }
@@ -354,13 +357,13 @@ MapCentia.setup = function () {
             onLoad: function () {
                 var layerObj = cStore, out = [], source = {}, pkeyValue;
                 if ($.isEmptyObject(cStore.geoJSON)) {
-                    alert(__("No feature found"));
+                    alert(__("No features found"));
                     return false;
                 }
                 gridWin.show();
                 grid = new Ext.grid.GridPanel({
                     viewConfig: {
-                        forceFit: true
+                        //forceFit: true
                     },
                     store: cStore.featureStore, // layer
                     sm: new GeoExt.grid.FeatureSelectionModel({// Only when there is a map
@@ -1162,6 +1165,67 @@ MapCentia.init = function () {
                     click = new clickController();
                     Heron.App.map.addControl(click);
                     click.activate();
+                }
+            }
+        },
+        {
+            type: "any",
+            options: {
+                text: '',
+                tooltip: 'Søg ved at tegne et punkt.',
+                iconCls: 'icon-pencil',
+                id: "drawPointSearchBtn",
+                toggleGroup: "conflict",
+                handler: function (e) {
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
+                    if (e.pressed === false) {
+                        return false;
+                    }
+                    poilayer = new OpenLayers.Layer.Vector("Search", {
+                        styleMap: new OpenLayers.StyleMap({
+                            "default": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 5,
+                                    strokeColor: "#000000",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            ),
+                            "select": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 10,
+                                    strokeColor: "#0000FF",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            )
+                        })
+                    });
+                    Heron.App.map.addLayer(poilayer);
+                    polygonControl = new OpenLayers.Control.DrawFeature(poilayer, OpenLayers.Handler.Point);
+                    var modifyControl = new OpenLayers.Control.ModifyFeature(poilayer, {});
+                    var selectControl = new OpenLayers.Control.SelectFeature(poilayer, {});
+                    Heron.App.map.addControl(modifyControl);
+                    Heron.App.map.addControl(selectControl);
+                    Heron.App.map.addControl(polygonControl);
+                    polygonControl.activate();
+                    poilayer.events.register("sketchcomplete", poilayer, function (e) {
+                        deactivateControllers();
+                        modifyControl.activate();
+                        var wkt = new OpenLayers.Format.WKT().write(e.feature);
+                        Ext.getCmp("drawPointSearchBtn").toggle();
+                        conflict(wkt);
+                        poilayer.events.register("featuremodified", poilayer, function (e, f) {
+                            //console.log("ddssd")
+                        });
+
+                    });
                 }
             }
         },

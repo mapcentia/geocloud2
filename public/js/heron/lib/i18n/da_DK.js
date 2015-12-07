@@ -102,6 +102,6 @@ Heron.i18n.dict = {
     'Error from Print server: ': 'Fejl fra udskrivnings server: ',
     'No print provider url property passed in hropts.': 'Ingen udskrivnings server url data i hropts.',
     'Create PDF...': 'Generer PDF...',
-    'Loading print data...': 'Henter udskrivningsdata...'
-
+    'Loading print data...': 'Henter udskrivningsdata...',
+    "No features found": "Ingen objekter fundet"
 };
