@@ -248,7 +248,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         region: "center",
         disabled: false,
         viewConfig: {
-            forceFit: true
+            //forceFit: true
         },
         store: store,
         listeners: {
@@ -259,7 +259,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 }
             }
         },
-
         sm: sm,
         cm: new Ext.grid.ColumnModel({
             defaults: {

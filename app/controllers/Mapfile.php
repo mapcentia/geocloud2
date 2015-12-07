@@ -433,6 +433,7 @@ class Mapfile extends \app\inc\Controller
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wfs_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "wfs_srs"    "EPSG:<?php echo $row['srid']; ?>"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
                 "wfs_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
