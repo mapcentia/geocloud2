@@ -397,6 +397,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
                 $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
+                $arr = $this->array_push_assoc($arr, "is_nullable", $value['is_nullable']);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
@@ -439,6 +440,23 @@ class Table extends Model
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             $safeColumn = $this->toAscii($value->column, array(), "_");
+            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
+                $sql = "ALTER TABLE {$this->table} ALTER {$value->column} " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
+                //die($sql);
+                $res = $this->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 400;
+                    return $response;
+                }
+                $response['success'] = true;
+                return $response;
+
+            }
+
             // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
 
@@ -462,6 +480,7 @@ class Table extends Model
             } else {
                 $response['message'] = "Updated";
             }
+
             $fieldconfArr[$safeColumn] = $value;
         }
         $conf['fieldconf'] = json_encode($fieldconfArr);

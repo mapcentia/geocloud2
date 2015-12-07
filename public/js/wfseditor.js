@@ -248,7 +248,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         region: "center",
         disabled: false,
         viewConfig: {
-            forceFit: true
+            //forceFit: true
         },
         store: store,
         listeners: {
@@ -259,7 +259,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 }
             }
         },
-
         sm: sm,
         cm: new Ext.grid.ColumnModel({
             defaults: {
@@ -295,6 +294,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         items: [new Ext.Panel({
             frame: false,
             layout: 'border',
+            border: false,
             items: [attributeForm.form]
         })]
     });
@@ -771,6 +771,7 @@ $(document).ready(function () {
                                                 title: "Attribute table",
                                                 split: true,
                                                 frame: false,
+                                                border: false,
                                                 layout: 'fit',
                                                 height: 200,
                                                 collapsible: true,
@@ -785,6 +786,7 @@ $(document).ready(function () {
                                 border: false,
                                 region: "west",
                                 collapsible: true,
+                                split: true,
                                 width: 350,
                                 tbar: [{
                                     text: '<i class="icon-eye-open btn-gc"></i> ' + __('Class wizard'),

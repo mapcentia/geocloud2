@@ -275,15 +275,16 @@ class Classification extends \app\inc\Model
         $rows = $this->fetchAll($res);
         $this->reset();
         $type = $fieldObj['type'];
-        if (sizeof($rows) > 100) {
+        if (sizeof($rows) > 1000) {
             $response['success'] = false;
-            $response['message'] = "Too many classes. Stopped after 100.";
+            $response['message'] = "Too many classes. Stopped after 1000.";
             $response['code'] = 405;
             return $response;
         }
         if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
             $colorBrewer = \app\inc\ColorBrewer::getQualitative($data->custom->colorramp);
         }
+        $cArr = array();
         foreach ($rows as $key => $row) {
             if ($type == "number" || $type == "int") {
                 $expression = "[{$field}]={$row['value']}";
@@ -298,18 +299,18 @@ class Classification extends \app\inc\Model
             } else {
                 $c = null;
             }
-            $res = $this->update($key, self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data));
-
-            if (!$res['success']) {
-                $response['success'] = false;
-                $response['message'] = "Error";
-                $response['code'] = 400;
-                return $response;
-            }
+            $cArr[$key] = self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data);
         }
-        $response['success'] = true;
-        $response['message'] = "Updated " . sizeof($rows) . " classes";
-        $this->storeWizard(json_encode($data));
+        if ($this->store(json_encode($cArr))) {
+            $response['success'] = true;
+            $response['success'] = true;
+            $response['message'] = "Updated " . sizeof($rows) . " classes";
+            $this->storeWizard(json_encode($data));
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Error";
+            $response['code'] = 400;
+        }
         return $response;
     }
 

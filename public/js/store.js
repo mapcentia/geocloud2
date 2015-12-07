@@ -918,17 +918,21 @@ $(window).ready(function () {
             tbar: [
                 {
                     text: __('Add vector'),
-                    handler: addVector
+                    handler: addVector,
+                    pressed: true,
+                    toggleGroup: "upload"
                 },
                 '-',
                 {
                     text: __('Add raster'),
-                    handler: addRaster
+                    handler: addRaster,
+                    toggleGroup: "upload"
                 },
                 '-',
                 {
                     text: __('Add imagery'),
-                    handler: addImage
+                    handler: addImage,
+                    toggleGroup: "upload"
                 },
                 '-',
                 {
@@ -939,7 +943,8 @@ $(window).ready(function () {
                         c.remove(0);
                         c.add(addView.form);
                         c.doLayout();
-                    }
+                    },
+                    toggleGroup: "upload"
                 },
                 '-',
                 {
@@ -951,7 +956,8 @@ $(window).ready(function () {
                         c.remove(0);
                         c.add(addOsm.form);
                         c.doLayout();
-                    }
+                    },
+                    toggleGroup: "upload"
                 },
                 '-',
                 {
@@ -962,7 +968,8 @@ $(window).ready(function () {
                         c.remove(0);
                         c.add(addScratch.form);
                         c.doLayout();
-                    }
+                    },
+                    toggleGroup: "upload"
                 }
             ]
         });
@@ -2073,6 +2080,7 @@ $(window).ready(function () {
             items: [
                 {
                     xtype: "panel",
+                    border: false,
                     defaults: {
                         border: false
                     },

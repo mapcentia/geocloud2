@@ -400,7 +400,7 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'] : [],
+                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? Heron.options.exportFormats : [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,

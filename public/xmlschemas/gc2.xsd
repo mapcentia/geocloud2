@@ -2,7 +2,10 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:gc2="http://www.mapcentia.com/gc2" targetNamespace="http://www.mapcentia.com/gc2" elementFormDefault="qualified">
     <complexType name="imageType">
         <simpleContent>
-            <extension base="base64Binary"></extension>
+            <extension base="base64Binary">
+                <attribute name="width" type="int"/>
+                <attribute name="quality" type="int"/>
+            </extension>
         </simpleContent>
     </complexType>
     <element name="image" type="gc2:imageType"/>

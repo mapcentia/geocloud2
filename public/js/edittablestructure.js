@@ -47,6 +47,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: false
         },
         {
+            name: 'is_nullable',
+            allowBlank: false
+        },
+        {
             name: 'querable',
             allowBlank: true
         },
@@ -115,7 +119,7 @@ tableStructure.init = function (record, screenName) {
                             icon: Ext.MessageBox.ERROR
                         });
                     } else {
-                        //tableStructure.store.load();
+                        tableStructure.store.load();
                         Ext.MessageBox.show({
                             title: __("Failure"),
                             msg: __(Ext.decode(response.responseText).message),
@@ -216,6 +220,13 @@ tableStructure.init = function (record, screenName) {
                         valueField: 'type',
                         displayField: 'type'
                     })
+                },
+                {
+                    id: "is_nullable",
+                    xtype: 'checkcolumn',
+                    header: __("Allow null"),
+                    dataIndex: 'is_nullable',
+                    width: 40
                 },
                 {
                     id: "alias",
@@ -481,7 +492,7 @@ tableStructure.init = function (record, screenName) {
                         height: 350,
                         initCenter: false,
                         closeAction: 'close',
-                        border: true,
+                        border: false,
                         items: [new Ext.Panel({
                             frame: false,
                             border: false,
