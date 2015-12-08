@@ -373,7 +373,7 @@ class Table extends Model
         return $response;
     }
 
-    function getTableStructure() // Only geometry tables
+    function getTableStructure($includePriKey = false) // Only geometry tables
     {
 
         $arr = array();
@@ -382,7 +382,7 @@ class Table extends Model
             $response['data'] = array();
         }
         foreach ($this->metaData as $key => $value) {
-            if ($key != $this->primeryKey['attname']) {
+            if ($key != $this->primeryKey['attname'] || $includePriKey == true) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
@@ -941,7 +941,7 @@ class Table extends Model
         $sql = "DELETE FROM " . $this->table . " WHERE \"{$keyName}\" =:key";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array("key"=>$data["data"]));
+            $res->execute(array("key" => $data["data"]));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

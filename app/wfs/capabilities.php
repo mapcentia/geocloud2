@@ -122,7 +122,7 @@
         makeExceptionReport($postgisObject->PDOerror);
     }
     while ($row = $postgisObject->fetchRow($result)) {
-        if ($row['type'] != "RASTER") {
+        if ($row['type'] != "RASTER" && $row['type'] != null) {
 
             if (!$srs) {
                 $srsTmp = $row['srid'];

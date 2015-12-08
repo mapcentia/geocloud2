@@ -60,7 +60,7 @@ class Table extends \app\inc\Controller
     public function get_structure()
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
-        return (!$response['success']) ? $response : $this->table->getTableStructure();
+        return (!$response['success']) ? $response : $this->table->getTableStructure(true);
     }
 
     public function put_versions()
