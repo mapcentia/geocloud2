@@ -2139,7 +2139,6 @@ $(window).ready(function () {
             region: 'center',
             collapsed: false,
             collapsible: false,
-            border: false,
             id: "tablepanel",
             items: [
                 {
