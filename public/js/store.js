@@ -16,7 +16,7 @@ Ext.QuickTips.init();
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename,
     onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
-    dataStore, dataGrid, tableDataLoaded = false,
+    dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
     enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 $(window).ready(function () {
@@ -1217,7 +1217,8 @@ $(window).ready(function () {
 
     function onEdit() {
         var records = grid.getSelectionModel().getSelections(),
-            s = Ext.getCmp("structurepanel"), detailPanel = Ext.getCmp('detailPanel');
+            s = Ext.getCmp("structurepanel"),
+            detailPanel = Ext.getCmp('detailPanel');
         if (records.length === 1) {
             bookTpl.overwrite(detailPanel.body, records[0].data);
             tableStructure.grid = null;
@@ -2148,18 +2149,22 @@ $(window).ready(function () {
                     title: __("Structure"),
                     id: 'structurepanel'
 
-                }, {
+                },
+                {
                     border: false,
                     layout: 'fit',
                     xtype: "panel",
                     title: __("Data"),
-                    id: 'tabledata',
+                    id: 'datapanel',
                     listeners: {
                         activate: function (e) {
-                            if (!tableDataLoaded) {
+                            if (grid.getSelectionModel().getSelections().length > 1) {
+                                Ext.getCmp("datapanel").removeAll();
+                                return false;
+                            }
                                 var r = grid.getSelectionModel().getSelected(),
                                     tableName = r.data.f_table_schema + "." + r.data.f_table_name,
-                                    dataPanel = Ext.getCmp("tabledata");
+                                    dataPanel = Ext.getCmp("datapanel");
                                 try {
                                     dataPanel.remove(dataGrid);
                                 } catch (ex) {
@@ -2279,6 +2284,41 @@ $(window).ready(function () {
                                                 },
                                                 columns: columnsForGrid
                                             }),
+                                            tbar: [
+                                                {
+                                                    text: '<i class="icon-plus btn-gc"></i> ' + __('Add record'),
+                                                    handler: function () {
+                                                        // access the Record constructor through the grid's store
+                                                        var rec = dataGrid.getStore().recordType;
+                                                        var p = new rec({});
+                                                        dataGrid.stopEditing();
+                                                        dataStore.insert(0, p);
+                                                    }
+                                                }, {
+                                                    text: '<i class="icon-trash btn-gc"></i> ' + __('Delete records'),
+                                                    handler: function () {
+                                                        var r = grid.getSelectionModel().getSelected();
+                                                        if (r.data.hasPkey === false) {
+                                                            App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                            return false;
+                                                        }
+                                                        var records = dataGrid.getSelectionModel().getSelections();
+                                                        if (records.length === 0) {
+                                                            App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
+                                                            return false;
+                                                        }
+                                                        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
+                                                            if (btn === "yes") {
+                                                                Ext.each(dataGrid.getSelectionModel().getSelections(), function(i){
+                                                                    dataStore.remove(i);
+                                                                })
+                                                            } else {
+                                                                return false;
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            ],
                                             bbar: [
 
                                                 new Ext.PagingToolbar({
@@ -2295,44 +2335,36 @@ $(window).ready(function () {
                                     }
                                 });
 
-                            }
+
                         }
-                    },
-                    tbar: [
-                        {
-                            text: __('Add record'),
-                            handler: function () {
-                                // access the Record constructor through the grid's store
-                                var rec = dataGrid.getStore().recordType;
-                                var p = new rec({});
-                                dataGrid.stopEditing();
-                                dataStore.insert(0, p);
+                    }
+                },
+                {
+                    border: false,
+                    layout: 'fit',
+                    xtype: "panel",
+                    title: __("Elasticsearch"),
+                    id: 'espanel',
+                    listeners: {
+                        activate: function (e) {
+                            if (grid.getSelectionModel().getSelections().length >1  ) {
+                                Ext.getCmp("espanel").removeAll();
+                                return false;
                             }
-                        }, {
-                            text: __('Delete records'),
-                            handler: function () {
-                                var r = grid.getSelectionModel().getSelected();
-                                if (r.data.hasPkey === false) {
-                                    App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
-                                    return false;
-                                }
-                                var records = dataGrid.getSelectionModel().getSelections();
-                                if (records.length === 0) {
-                                    App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
-                                    return false;
-                                }
-                                Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
-                                    if (btn === "yes") {
-                                        Ext.each(dataGrid.getSelectionModel().getSelections(), function(i){
-                                            dataStore.remove(i);
-                                        })
-                                    } else {
-                                        return false;
-                                    }
-                                });
+                            esPanel = Ext.getCmp("espanel");
+
+                            try {
+                                esPanel.remove(elasticsearch.grid);
+                            } catch (ex) {
+                                console.log(ex.message)
                             }
+                            elasticsearch.grid = null;
+                            elasticsearch.init(grid.getSelectionModel().getSelected(), screenName);
+                            esPanel.add(elasticsearch.grid);
+                            esPanel.doLayout();
                         }
-                    ]
+                    }
+
                 }
             ]
         }

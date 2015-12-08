@@ -28,6 +28,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(
 elasticsearch.init = function (record, screenName) {
     'use strict';
     var analyzers = [];
+
     if (typeof window.gc2Options.es_settings === "object") {
         analyzers.push([]);
         $.each(window.gc2Options.es_settings.settings.analysis.analyzer, function (i, v) {
@@ -114,7 +115,6 @@ elasticsearch.init = function (record, screenName) {
                             icon: Ext.MessageBox.ERROR
                         });
                     } else {
-                        elasticsearch.winCartomobile.close();
                         Ext.MessageBox.show({
                             title: __('Failure'),
                             msg: __(Ext.decode(response.responseText).message),
@@ -127,8 +127,8 @@ elasticsearch.init = function (record, screenName) {
 
                 }
             }
-        });
-
+        }
+    );
     elasticsearch.store = new Ext.data.Store({
         writer: elasticsearch.writer,
         reader: elasticsearch.reader,
@@ -334,7 +334,22 @@ elasticsearch.init = function (record, screenName) {
                     })
                 }
             ]
-        })
+        }),
+        tbar: [{
+            text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
+            id: "index-in-elasticsearch-btn",
+            disabled: (window.gc2Options.esIndexingInGui) ? false : true,
+            handler: function () {
+                tableStructure.onIndexInElasticsearch(record);
+            }
+        },
+            {
+                text: '<i class="icon-search btn-gc"></i> ' + __("Delete from Elasticsearch"),
+                id: "delete-from-elasticsearch-btn",
+                disabled: window.gc2Options.esIndexingInGui ? record.data.indexed_in_es ? false : true : true,
+                handler: function () {
+                    tableStructure.onDeleteFromElasticsearch(record);
+                }
+            }]
     });
-
 };

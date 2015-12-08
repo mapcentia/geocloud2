@@ -145,8 +145,12 @@ tableStructure.init = function (record, screenName) {
                     Ext.getCmp('add-versioning-btn').setDisabled(true);
                     Ext.getCmp('remove-versioning-btn').setDisabled(false);
                 } else {
-                    Ext.getCmp('add-versioning-btn').setDisabled(false);
-                    Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                    try {
+                        Ext.getCmp('add-versioning-btn').setDisabled(false);
+                        Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                    } catch(e){
+
+                    }
                 }
             },
             beforewrite: function (store, d) {
@@ -477,46 +481,6 @@ tableStructure.init = function (record, screenName) {
                 disabled: true,
                 handler: function () {
                     tableStructure.onRemoveVersion(record);
-                }
-            },
-            {
-                text: '<i class="icon-search btn-gc"></i> ' + __('Mapping'),
-                handler: function () {
-                    elasticsearch.grid = null;
-                    elasticsearch.init(record, screenName);
-                    elasticsearch.winElasticsearch = new Ext.Window({
-                        title: __("Mapping settings for the layer") + " '" + record.get("f_table_name") + "'",
-                        modal: true,
-                        layout: 'fit',
-                        width: 900,
-                        height: 350,
-                        initCenter: false,
-                        closeAction: 'close',
-                        border: false,
-                        items: [new Ext.Panel({
-                            frame: false,
-                            border: false,
-                            layout: 'border',
-                            items: [elasticsearch.grid]
-                        })]
-                    }).show(this);
-                },
-                id: 'elasticsearch-btn'
-            },
-            {
-                text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
-                id: "index-in-elasticsearch-btn",
-                disabled: (window.gc2Options.esIndexingInGui) ? false : true,
-                handler: function () {
-                    tableStructure.onIndexInElasticsearch(record);
-                }
-            },
-            {
-                text: '<i class="icon-search btn-gc"></i> ' + __("Delete from Elasticsearch"),
-                id: "delete-from-elasticsearch-btn",
-                disabled: window.gc2Options.esIndexingInGui ? record.data.indexed_in_es ? false : true : true,
-                handler: function () {
-                    tableStructure.onDeleteFromElasticsearch(record);
                 }
             }
         ]
