@@ -2162,7 +2162,7 @@ $(window).ready(function () {
                                     dataPanel = Ext.getCmp("tabledata");
                                 try {
                                     dataPanel.remove(dataGrid);
-                                } catch (e) {
+                                } catch (ex) {
                                 }
                                 $.ajax({
                                     url: '/controllers/table/columns/' + tableName + '?i=1',
@@ -2323,10 +2323,9 @@ $(window).ready(function () {
                                 }
                                 Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
                                     if (btn === "yes") {
-                                        var s = dataGrid.getSelectionModel().getSelections();
-                                        for (var i = 0, r; r = s[i]; i++) {
-                                            dataStore.remove(r);
-                                        }
+                                        Ext.each(dataGrid.getSelectionModel().getSelections(), function(i){
+                                            dataStore.remove(i);
+                                        })
                                     } else {
                                         return false;
                                     }
