@@ -88,6 +88,21 @@ class Model
         }
     }
 
+    function hasPrimeryKey($table) {
+        unset($this->PDOerror);
+        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+        $result = $this->execQuery($query);
+
+        if (isset($this->PDOerror)) {
+            return NULL;
+        }
+        if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     function begin()
     {
         $this->db->beginTransaction();
