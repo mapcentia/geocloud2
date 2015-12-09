@@ -13,7 +13,10 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename, onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings, extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
+var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename,
+    onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
+    extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
+    dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
     enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 $(window).ready(function () {
@@ -230,7 +233,10 @@ $(window).ready(function () {
                     sortable: true,
                     editable: false,
                     tooltip: "This can't be changed",
-                    width: 150
+                    width: 150,
+                    renderer: function (v, p) {
+                        return v || __('No geometry');
+                    }
                 },
                 {
                     header: __("Title"),
@@ -776,9 +782,12 @@ $(window).ready(function () {
                                                     winTableRename.close();
                                                     resetButtons();
                                                     Ext.getCmp('renamelayer-btn').setDisabled(true);
-                                                    document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
-                                                        [name]
-                                                    ]);
+                                                    try {
+                                                        document.getElementById("wfseditor").contentWindow.window.cloud.removeTileLayerByName([
+                                                            [name]
+                                                        ]);
+                                                    } catch (e) {
+                                                    }
                                                     document.getElementById("wfseditor").contentWindow.window.reLoadTree();
                                                     store.reload();
                                                     App.setAlert(App.STATUS_OK, __("layer rename"));
@@ -1208,10 +1217,12 @@ $(window).ready(function () {
 
     function onEdit() {
         var records = grid.getSelectionModel().getSelections(),
-            s = Ext.getCmp("structurePanel"), detailPanel = Ext.getCmp('detailPanel');
+            s = Ext.getCmp("structurepanel"),
+            detailPanel = Ext.getCmp('detailPanel');
         if (records.length === 1) {
             bookTpl.overwrite(detailPanel.body, records[0].data);
             tableStructure.grid = null;
+            Ext.getCmp("tablepanel").activate(0);
             tableStructure.init(records[0], screenName);
             s.removeAll();
             s.add(tableStructure.grid);
@@ -2075,6 +2086,7 @@ $(window).ready(function () {
             items: [
                 {
                     xtype: "panel",
+                    border: false,
                     defaults: {
                         border: false
                     },
@@ -2093,7 +2105,6 @@ $(window).ready(function () {
         classWizards.init(record);
         a7.add(classWizards.quantile);
         a7.doLayout();
-
     };
 
     // define a template to use for the detail view
@@ -2121,13 +2132,243 @@ $(window).ready(function () {
                 padding: '7px'
             }
         }, {
-            id: 'structurePanel',
+            xtype: "tabpanel",
+            activeTab: 0,
+            plain: true,
+            border: false,
+            resizeTabs: true,
             region: 'center',
             collapsed: false,
             collapsible: false,
-            border: false,
-            layout: 'fit'
-        }]
+            id: "tablepanel",
+            items: [
+                {
+                    border: false,
+                    layout: 'fit',
+                    xtype: "panel",
+                    title: __("Structure"),
+                    id: 'structurepanel'
+
+                },
+                {
+                    border: false,
+                    layout: 'fit',
+                    xtype: "panel",
+                    title: __("Data"),
+                    id: 'datapanel',
+                    listeners: {
+                        activate: function (e) {
+                            if (grid.getSelectionModel().getSelections().length > 1) {
+                                Ext.getCmp("datapanel").removeAll();
+                                return false;
+                            }
+                                var r = grid.getSelectionModel().getSelected(),
+                                    tableName = r.data.f_table_schema + "." + r.data.f_table_name,
+                                    dataPanel = Ext.getCmp("datapanel");
+                                try {
+                                    dataPanel.remove(dataGrid);
+                                } catch (ex) {
+                                }
+                                $.ajax({
+                                    url: '/controllers/table/columns/' + tableName + '?i=1',
+                                    async: true,
+                                    dataType: 'json',
+                                    type: 'GET',
+                                    success: function (response, textStatus, http) {
+                                        var validProperties = true,
+                                            fieldsForStore = response.forStore,
+                                            columnsForGrid = response.forGrid;
+
+                                        // We add an editor to the fields
+                                        for (var i in columnsForGrid) {
+                                            if (columnsForGrid[i].typeObj !== undefined) {
+                                                if (columnsForGrid[i].properties) {
+                                                    try {
+                                                        var json = Ext.decode(columnsForGrid[i].properties);
+                                                        columnsForGrid[i].editor = new Ext.form.ComboBox({
+                                                            store: Ext.decode(columnsForGrid[i].properties),
+                                                            editable: true,
+                                                            triggerAction: 'all'
+                                                        });
+                                                        validProperties = false;
+                                                    }
+                                                    catch (e) {
+                                                        alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                                                    }
+                                                } else if (columnsForGrid[i].typeObj.type === "int") {
+                                                    columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                        decimalPrecision: 0,
+                                                        decimalSeparator: '¤'// Some strange char nobody is using
+                                                    });
+                                                } else if (columnsForGrid[i].typeObj.type === "decimal") {
+                                                    columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                        decimalPrecision: columnsForGrid[i].typeObj.scale,
+                                                        decimalSeparator: '.'
+                                                    });
+                                                } else if (columnsForGrid[i].typeObj.type === "string") {
+                                                    columnsForGrid[i].editor = new Ext.form.TextField();
+                                                } else if (columnsForGrid[i].typeObj.type === "text") {
+                                                    columnsForGrid[i].editor = new Ext.form.TextArea();
+                                                }
+                                            }
+                                        }
+                                        var proxy = new Ext.data.HttpProxy({
+                                            restful: true,
+                                            type: 'json',
+                                            api: {
+                                                read: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                                create: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                                update: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_,
+                                                destroy: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_
+                                            },
+                                            listeners: {
+                                                write: function (store, action, result, transaction, rs) {
+                                                    if (transaction.success) {
+                                                        //
+                                                    }
+                                                },
+                                                beforewrite: function(){
+                                                    if (r.data.hasPkey === false) {
+                                                        App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                        dataStore.reload();
+                                                        return false;
+                                                    }
+                                                },
+                                                exception: function (proxy, type, action, options, response, arg) {
+                                                    if (action === "create") { // HACK exception is thrown with successful create
+                                                        dataStore.reload();
+                                                    } else {
+                                                        Ext.MessageBox.show({
+                                                            title: __('Failure'),
+                                                            msg: __(Ext.decode(response.responseText).message),
+                                                            buttons: Ext.MessageBox.OK,
+                                                            width: 300,
+                                                            height: 300
+                                                        });
+                                                    }
+
+                                                }
+                                            }
+                                        });
+                                        dataStore = new Ext.data.Store({
+                                            writer: new Ext.data.JsonWriter({
+                                                writeAllFields: false,
+                                                encode: false
+                                            }),
+                                            reader: new Ext.data.JsonReader({
+                                                successProperty: 'success',
+                                                idProperty: r.data.pkey,
+                                                root: 'data',
+                                                messageProperty: 'message'
+                                            }, fieldsForStore),
+                                            proxy: proxy,
+                                            autoSave: true
+                                        });
+                                        dataGrid = new Ext.grid.EditorGridPanel({
+                                            id: "datagridpanel",
+                                            disabled: false,
+                                            viewConfig: {
+                                                //forceFit: true
+                                            },
+                                            store: dataStore,
+                                            listeners: {},
+                                            sm: new Ext.grid.RowSelectionModel({
+                                                singleSelect: false
+                                            }),
+                                            cm: new Ext.grid.ColumnModel({
+                                                defaults: {
+                                                    sortable: true,
+                                                    editor: {
+                                                        xtype: "textfield"
+                                                    }
+                                                },
+                                                columns: columnsForGrid
+                                            }),
+                                            tbar: [
+                                                {
+                                                    text: '<i class="icon-plus btn-gc"></i> ' + __('Add record'),
+                                                    handler: function () {
+                                                        // access the Record constructor through the grid's store
+                                                        var rec = dataGrid.getStore().recordType;
+                                                        var p = new rec({});
+                                                        dataGrid.stopEditing();
+                                                        dataStore.insert(0, p);
+                                                    }
+                                                }, {
+                                                    text: '<i class="icon-trash btn-gc"></i> ' + __('Delete records'),
+                                                    handler: function () {
+                                                        var r = grid.getSelectionModel().getSelected();
+                                                        if (r.data.hasPkey === false) {
+                                                            App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                            return false;
+                                                        }
+                                                        var records = dataGrid.getSelectionModel().getSelections();
+                                                        if (records.length === 0) {
+                                                            App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
+                                                            return false;
+                                                        }
+                                                        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
+                                                            if (btn === "yes") {
+                                                                Ext.each(dataGrid.getSelectionModel().getSelections(), function(i){
+                                                                    dataStore.remove(i);
+                                                                })
+                                                            } else {
+                                                                return false;
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            ],
+                                            bbar: [
+
+                                                new Ext.PagingToolbar({
+                                                    pageSize: 100,
+                                                    store: dataStore,
+                                                    displayInfo: true,
+                                                    displayMsg: 'Features {0} - {1} of {2}',
+                                                    emptyMsg: "No features"
+                                                })]
+                                        });
+                                        dataPanel.add(dataGrid);
+                                        dataPanel.doLayout();
+                                        dataStore.load();
+                                    }
+                                });
+
+
+                        }
+                    }
+                },
+                {
+                    border: false,
+                    layout: 'fit',
+                    xtype: "panel",
+                    title: __("Elasticsearch"),
+                    id: 'espanel',
+                    listeners: {
+                        activate: function (e) {
+                            if (grid.getSelectionModel().getSelections().length >1  ) {
+                                Ext.getCmp("espanel").removeAll();
+                                return false;
+                            }
+                            esPanel = Ext.getCmp("espanel");
+
+                            try {
+                                esPanel.remove(elasticsearch.grid);
+                            } catch (ex) {
+                                console.log(ex.message)
+                            }
+                            elasticsearch.grid = null;
+                            elasticsearch.init(grid.getSelectionModel().getSelected(), screenName);
+                            esPanel.add(elasticsearch.grid);
+                            esPanel.doLayout();
+                        }
+                    }
+
+                }
+            ]
+        }
+        ]
     });
     grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
         var records = sm.getSelections();
@@ -2175,7 +2416,7 @@ $(window).ready(function () {
         region: 'center',
         plain: true,
         resizeTabs: true,
-            items: [
+        items: [
             {
                 xtype: "panel",
                 title: __('Map'),
@@ -2210,7 +2451,7 @@ $(window).ready(function () {
                                 plain: true,
                                 border: false,
                                 resizeTabs: true,
-                                    items: [
+                                items: [
                                     {
                                         xtype: "panel",
                                         title: __('Classes'),
@@ -2232,7 +2473,7 @@ $(window).ready(function () {
                                                 border: false,
                                                 height: 470,
                                                 resizeTabs: true,
-                                                    defaults: {
+                                                defaults: {
                                                     layout: "fit",
                                                     border: false
                                                 },

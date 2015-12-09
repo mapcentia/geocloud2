@@ -115,14 +115,14 @@
         <!--<Lock/>-->
     </Operations>
     <?php
-    $sql = "SELECT * from settings.getColumns('geometry_columns.f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
+    $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
 
     $result = $postgisObject->execQuery($sql);
     if ($postgisObject->PDOerror) {
         makeExceptionReport($postgisObject->PDOerror);
     }
     while ($row = $postgisObject->fetchRow($result)) {
-        if ($row['type'] != "RASTER") {
+        if ($row['type'] != "RASTER" && $row['type'] != null) {
 
             if (!$srs) {
                 $srsTmp = $row['srid'];

@@ -58,7 +58,7 @@ foreach ($tables as $table) {
     $atts = null;
     $depth++;
 
-    $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}''',
+    $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}''',
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
     $fieldConfRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
     $fieldConf = json_decode($fieldConfRow['fieldconf']);
@@ -87,7 +87,7 @@ foreach ($tables as $table) {
         $atts["maxOccurs"] = "1";
         $selfclose = true;
         if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
-            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}'' AND f_geometry_column=''{$atts["name"]}''',
+            $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}'' AND f_geometry_column=''{$atts["name"]}''',
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);

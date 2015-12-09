@@ -26,7 +26,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN triggertable VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN classwizard TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN extra TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD skipconflict bool default false";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD skipconflict BOOL DEFAULT FALSE";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER wmssource TYPE TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN roles TEXT";
         $sqls[] = "CREATE TABLE settings.workflow
@@ -44,6 +44,38 @@ class Sql
                       created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
+        $sqls[] = "CREATE OR REPLACE VIEW non_postgis_tables AS
+                     SELECT t.table_name::character varying(256) AS f_table_name,
+                        t.table_schema::character varying(256) AS f_table_schema,
+                        'gc2_non_postgis'::character varying(256) AS f_geometry_column,
+                        NULL::integer AS coord_dimension,
+                        NULL::integer AS srid,
+                        NULL::character varying(30) AS type
+                       FROM information_schema.tables t
+                          WHERE
+                                NOT (EXISTS ( SELECT 1
+                                  FROM geometry_columns
+                                      WHERE
+                                            t.table_name::text = geometry_columns.f_table_name::text
+                                      )) AND
+
+                                NOT (EXISTS ( SELECT 1
+                                  FROM raster_columns
+                                      WHERE
+                                            t.table_name::text = raster_columns.r_table_name::text
+                                      ))
+
+                              AND
+                                  NOT t.table_schema::text = 'settings'::text AND
+                                  NOT (t.table_schema::text = 'public'::text AND
+                                  t.table_name::text = 'spatial_ref_sys'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'geometry_columns'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'geography_columns'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_columns'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_overviews'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_tables'::text) AND
+                                  NOT t.table_schema::text = 'pg_catalog'::text AND NOT t.table_schema::text = 'information_schema'::text;
+                    ";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
@@ -87,7 +119,6 @@ class Sql
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
-
                                                          geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column =
                                                          geometry_columns_join._key_
                       UNION ALL
@@ -134,7 +165,55 @@ class Sql
                         LEFT JOIN
                         settings.geometry_columns_join ON
                                                          raster_columns.r_table_schema || '.' || raster_columns.r_table_name || '.' || raster_columns.r_raster_column =
-                                                         geometry_columns_join._key_;
+                                                         geometry_columns_join._key_
+
+                      UNION ALL
+                      select
+                        non_postgis_tables.f_table_schema,
+                        non_postgis_tables.f_table_name,
+                        non_postgis_tables.f_geometry_column,
+                        non_postgis_tables.coord_dimension,
+                        non_postgis_tables.srid,
+                        non_postgis_tables.type,
+
+                        geometry_columns_join._key_,
+                        geometry_columns_join.f_table_abstract,
+                        geometry_columns_join.f_table_title,
+                        geometry_columns_join.tweet,
+                        geometry_columns_join.editable,
+                        geometry_columns_join.created,
+                        geometry_columns_join.lastmodified,
+                        geometry_columns_join.authentication,
+                        geometry_columns_join.fieldconf,
+                        geometry_columns_join.meta_url,
+                        geometry_columns_join.layergroup,
+                        geometry_columns_join.def,
+                        geometry_columns_join.class,
+                        geometry_columns_join.wmssource,
+                        geometry_columns_join.baselayer,
+                        geometry_columns_join.sort_id,
+                        geometry_columns_join.tilecache,
+                        geometry_columns_join.data,
+                        geometry_columns_join.not_querable,
+                        geometry_columns_join.single_tile,
+                        geometry_columns_join.cartomobile,
+                        geometry_columns_join.filter,
+                        geometry_columns_join.bitmapsource,
+                        geometry_columns_join.privileges,
+                        geometry_columns_join.enablesqlfilter,
+                        geometry_columns_join.triggertable,
+                        geometry_columns_join.classwizard,
+                        geometry_columns_join.extra,
+                        geometry_columns_join.skipconflict,
+                        geometry_columns_join.roles,
+                        geometry_columns_join.elasticsearch
+
+                      FROM non_postgis_tables
+                        LEFT JOIN
+                        settings.geometry_columns_join ON
+                                                         non_postgis_tables.f_table_schema || '.' || non_postgis_tables.f_table_name || '.' || non_postgis_tables.f_geometry_column =
+                                                         geometry_columns_join._key_
+
                     ";
         $sqls[] = "
                       CREATE OR REPLACE FUNCTION settings.getColumns(g text, r text) RETURNS SETOF settings.geometry_columns_view AS $$
@@ -233,6 +312,57 @@ class Sql
                                                                  raster_columns.r_table_schema || ''.'' || raster_columns.r_table_name || ''.'' || raster_columns.r_raster_column =
                                                                  geometry_columns_join._key_
                               WHERE ' || $2 || '
+
+                              UNION ALL
+
+                              select
+                                non_postgis_tables.f_table_schema,
+                                non_postgis_tables.f_table_name,
+                                non_postgis_tables.f_geometry_column,
+                                non_postgis_tables.coord_dimension,
+                                non_postgis_tables.srid,
+                                non_postgis_tables.type,
+
+                                geometry_columns_join._key_,
+                                geometry_columns_join.f_table_abstract,
+                                geometry_columns_join.f_table_title,
+                                geometry_columns_join.tweet,
+                                geometry_columns_join.editable,
+                                geometry_columns_join.created,
+                                geometry_columns_join.lastmodified,
+                                geometry_columns_join.authentication,
+                                geometry_columns_join.fieldconf,
+                                geometry_columns_join.meta_url,
+                                geometry_columns_join.layergroup,
+                                geometry_columns_join.def,
+                                geometry_columns_join.class,
+                                geometry_columns_join.wmssource,
+                                geometry_columns_join.baselayer,
+                                geometry_columns_join.sort_id,
+                                geometry_columns_join.tilecache,
+                                geometry_columns_join.data,
+                                geometry_columns_join.not_querable,
+                                geometry_columns_join.single_tile,
+                                geometry_columns_join.cartomobile,
+                                geometry_columns_join.filter,
+                                geometry_columns_join.bitmapsource,
+                                geometry_columns_join.privileges,
+                                geometry_columns_join.enablesqlfilter,
+                                geometry_columns_join.triggertable,
+                                geometry_columns_join.classwizard,
+                                geometry_columns_join.extra,
+                                geometry_columns_join.skipconflict,
+                                geometry_columns_join.roles,
+                                geometry_columns_join.elasticsearch
+
+                              FROM non_postgis_tables
+
+                              LEFT JOIN
+                                settings.geometry_columns_join ON
+                                                                 non_postgis_tables.f_table_schema || ''.'' || non_postgis_tables.f_table_name || ''.'' || non_postgis_tables.f_geometry_column =
+                                                                 geometry_columns_join._key_
+                              WHERE ' || $1 || '
+
                         ';
                       END;
                       $$ LANGUAGE PLPGSQL;

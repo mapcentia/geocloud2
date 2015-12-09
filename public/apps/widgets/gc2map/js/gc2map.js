@@ -46,7 +46,7 @@ if (typeof gc2map === "undefined") {
                         typeof Hogan !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
-                        $.getScript(host + "/api/v3/js/geocloud.js?f144c3252d79dbe2#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js?af2941abf63d3844#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/main.js?abadcae36a513a7e#grunt-cache-bust");
                         $.getScript(host + "/apps/widgets/gc2map/js/templates.js?9751459f2c18d094#grunt-cache-bust");
                         L.Icon.Default.imagePath = host + "/js/leaflet/images";

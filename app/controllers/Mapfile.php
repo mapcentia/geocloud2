@@ -255,7 +255,7 @@ class Mapfile extends \app\inc\Controller
         #
         <?php
 
-        $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
 
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
@@ -433,6 +433,7 @@ class Mapfile extends \app\inc\Controller
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wfs_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "wfs_srs"    "EPSG:<?php echo $row['srid']; ?>"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
                 "wfs_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"

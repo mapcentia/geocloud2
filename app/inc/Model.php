@@ -88,6 +88,21 @@ class Model
         }
     }
 
+    function hasPrimeryKey($table) {
+        unset($this->PDOerror);
+        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+        $result = $this->execQuery($query);
+
+        if (isset($this->PDOerror)) {
+            return NULL;
+        }
+        if (!is_array($row = $this->fetchRow($result))) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     function begin()
     {
         $this->db->beginTransaction();
@@ -194,7 +209,7 @@ class Model
         }
         if ($addGeomType) {
             $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable
+                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable,
                     f.type,
                     f.srid
                 FROM
@@ -220,6 +235,7 @@ class Model
             $response['code'] = 401;
             return $response;
         }
+
         while ($row = $this->fetchRow($res)) {
             $arr[$row["column_name"]] = array(
                 "num" => $row["ordinal_position"],
@@ -293,11 +309,13 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        $query = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$_table}'' AND geometry_columns.f_table_schema=''{$_schema}''',
+        $query = "SELECT * FROM settings.getColumns('f_table_name=''{$_table}'' AND f_table_schema=''{$_schema}''',
                     'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
+
 
         $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
+
         if (!$row)
             return false;
         elseif ($row)

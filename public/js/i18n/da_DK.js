@@ -215,7 +215,7 @@ gc2i18n = {
 
         "MapClient Print": "MapClient Print",
         "Create layer from database view": "Opret et lag fra et database view",
-        "No features found": "Ingen objekter fundet"
-
+        "No features found": "Ingen objekter fundet",
+        "No geometry" : "Ingen geometri"
     }
 };

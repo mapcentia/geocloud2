@@ -215,6 +215,7 @@ gc2i18n = {
 
         "MapClient Print": "MapClient Print",
         "Create layer from database view": "Create layer from database view",
-        "No features found": "No features found"
+        "No features found": "No features found",
+        "No geometry" : "No geometry"
     }
 };
