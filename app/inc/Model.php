@@ -96,7 +96,7 @@ class Model
         if (isset($this->PDOerror)) {
             return NULL;
         }
-        if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
+        if (!is_array($row = $this->fetchRow($result))) {
             return false;
         } else {
             return true;
