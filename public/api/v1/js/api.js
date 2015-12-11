@@ -564,8 +564,9 @@ var mygeocloud_ol = (function () {
             if (!defaults.tileCached) {
                 url = host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             } else {
+                // TODO Setting for either TileCache or MapCache
                 if (1 === 1){
-                    url = host + "/mapcache/" + defaults.db + "/wms?";
+                    url = host + "/tilecache/" + defaults.db + "/wms?";
                 } else {
                     url = host + "/wms/" + defaults.db + "/tilecache?";
                 }

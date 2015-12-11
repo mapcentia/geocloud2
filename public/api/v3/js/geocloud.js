@@ -497,8 +497,9 @@ geocloud = (function () {
             url = defaults.host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
+            // TODO Setting for either TileCache or MapCache
             if (1 === 1) {
-                url = defaults.host + "/mapcache/" + defaults.db + "/wms";
+                url = defaults.host + "/tilecache/" + defaults.db + "/wms";
             } else {
                 url = defaults.host + "/wms/" + defaults.db + "/tilecache";
             }
@@ -545,8 +546,10 @@ geocloud = (function () {
     //ol2 and leaflet
     createTMSLayer = function (layer, defaults) {
         var l, url, urlArray;
+        // TODO Setting for either TileCache or MapCache
+
         if (1 === 1) {
-            url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
+            url = defaults.host + "/tilecache/" + defaults.db + "/tms/";
         } else {
             url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
         }

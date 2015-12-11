@@ -77,7 +77,6 @@ class Tilecache extends \app\inc\Controller
             case "image/png":
                 $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
                 header('Content-type: image/png');
-                header('X-Powered-By: GC2 MapCache');
                 readfile($url);
                 exit();
                 break;

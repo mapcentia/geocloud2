@@ -39,7 +39,9 @@ MapCentia.setup = function () {
         schema = uri[4],
         url;
     if (1 === 1) {
-        url = '/mapcache/' + db + '/wms/';
+        // TODO Setting for either TileCache or MapCache
+
+        url = '/tilecache/' + db + '/wms/';
     } else {
         url = '/wms/' + db + '/tilecache/';
     }

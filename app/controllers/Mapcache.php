@@ -92,6 +92,9 @@ class Mapcache extends \app\inc\Controller
         $type = get_headers($url, 1)["Content-Type"];
         //$type = "image/png";
         //die($type);
+
+        header('X-Powered-By: GC2 MapCache');
+
         switch ($type) {
             case "text/plain":
                 header('Content-type: text/plain');
@@ -115,7 +118,6 @@ class Mapcache extends \app\inc\Controller
             case "image/png":
                 $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
                 header('Content-type: image/png');
-                header('X-Powered-By: GC2 MapCache');
                 readfile($url);
                 exit();
                 break;
