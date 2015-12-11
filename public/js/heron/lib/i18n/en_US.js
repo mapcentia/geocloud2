@@ -232,6 +232,7 @@ Heron.i18n.dict = {
     'Error reading map file, map has not been loaded.': 'Error reading map file, map has not been loaded.',
     'Error on removing layers.': 'Error on removing layers.',
     'Error loading map file.': 'Error loading map file.',
-    'Error reading layer tree.': 'Error reading layer tree.'
+    'Error reading layer tree.': 'Error reading layer tree.',
+    "No features found": "No features found"
 
 };

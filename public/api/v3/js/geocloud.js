@@ -26,6 +26,7 @@ geocloud = (function () {
         storeClass,
         extend,
         geoJsonStore,
+        cartoDbStore,
         sqlStore,
         tweetStore,
         elasticStore,
@@ -262,6 +263,77 @@ geocloud = (function () {
             return this.layer;
         };
     };
+    cartoDbStore = function (config) {
+        var prop, me = this, map, sql;
+        this.defaults = $.extend({}, STOREDEFAULTS);
+        if (config) {
+            for (prop in config) {
+                this.defaults[prop] = config[prop];
+            }
+        }
+        this.init();
+        this.name = this.defaults.name;
+        this.id = this.defaults.id;
+        this.sql = this.defaults.sql;
+        this.db = this.defaults.db;
+        this.onLoad = this.defaults.onLoad;
+        this.dataType = this.defaults.dataType;
+        this.async = this.defaults.async;
+        this.jsonp = this.defaults.jsonp;
+        this.method = this.defaults.method;
+        this.load = function (doNotShowAlertOnError) {
+            try {
+                map = me.map;
+                sql = this.sql;
+                sql = sql.replace("{centerX}", map.getCenter().lat.toString());
+                sql = sql.replace("{centerY}", map.getCenter().lon.toString());
+                sql = sql.replace("{minX}", map.getExtent().left);
+                sql = sql.replace("{maxX}", map.getExtent().right);
+                sql = sql.replace("{minY}", map.getExtent().bottom);
+                sql = sql.replace("{maxY}", map.getExtent().top);
+                sql = sql.replace("{bbox}", map.getExtent().toString());
+            } catch (e) {
+            }
+            $.ajax({
+                dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
+                async: this.defaults.async,
+                data: 'format=geojson&q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
+                jsonp: (this.defaults.jsonp) ? 'callback' : false,
+                url: 'http://' + this.db + '.cartodb.com' + '/api/v2/sql',
+                type: this.defaults.method,
+                success: function (response) {
+                    if (response.features !== null) {
+                        me.geoJSON = response;
+                        switch (MAPLIB) {
+                            case "ol2":
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(response));
+                                break;
+                            case "ol3":
+                                me.layer.getSource().addFeatures(new ol.source.GeoJSON(
+                                    {
+                                        object: response.features[0]
+                                    }
+                                ));
+
+                                break;
+                            case "leaflet":
+                                me.layer.addData(response);
+                                break;
+                        }
+                    } else {
+                        me.geoJSON = null;
+                    }
+                },
+                error: this.defaults.error,
+                complete: function () {
+                    me.onLoad();
+                }
+
+            });
+            return this.layer;
+        };
+    };
+
     tweetStore = function (config) {
         var prop, me = this;
         this.defaults = $.extend({}, STOREDEFAULTS);
@@ -357,7 +429,7 @@ geocloud = (function () {
                     if (typeof response.error !== "undefined") {
                         return false;
                     }
-                    var features = [], geoJson = {};
+                    var features = [], geoJson = {type: "FeatureCollection"};
                     me.total = response.hits.total;
                     $.each(response.hits.hits, function (i, v) {
                         features.push(v._source);
@@ -367,7 +439,11 @@ geocloud = (function () {
                         me.geoJSON = geoJson;
                         switch (MAPLIB) {
                             case "ol2":
-                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON().read(geoJson));
+                                me.layer.addFeatures(new OpenLayers.Format.GeoJSON({
+                                        internalProjection: new OpenLayers.Projection("EPSG:3857"),
+                                        externalProjection: new OpenLayers.Projection("EPSG:4326")
+                                    }
+                                ).read(geoJson));
                                 break;
                             case "leaflet":
                                 me.layer.addData(geoJson);
@@ -387,6 +463,7 @@ geocloud = (function () {
     extend(sqlStore, storeClass);
     extend(tweetStore, storeClass);
     extend(elasticStore, storeClass);
+    extend(cartoDbStore, storeClass);
 
     //ol2, ol3 and leaflet
     tileLayer = function (config) {
@@ -807,6 +884,13 @@ geocloud = (function () {
                 break;
         }
         var _map = this.map;
+        this.addLayer = function (layer, name, baseLayer) {
+            if (baseLayer) {
+            lControl.addBaseLayer(layer, name);
+            } else {
+            lControl.addOverlay(layer, name);
+            }
+        }
         //ol2, ol3 and leaflet
         this.addMapQuestOSM = function () {
             switch (MAPLIB) {
@@ -1785,6 +1869,7 @@ geocloud = (function () {
         tileLayer: tileLayer,
         elasticStore: elasticStore,
         tweetStore: tweetStore,
+        cartoDbStore: cartoDbStore,
         map: map,
         MAPLIB: MAPLIB,
         clickEvent: clickEvent,
@@ -1814,7 +1899,7 @@ geocloud = (function () {
         DTKSKAERMKORTDAEMPET: DTKSKAERMKORTDAEMPET,
         DIGITALGLOBE: DIGITALGLOBE,
         HERENORMALDAYGREY: HERENORMALDAYGREY,
-        HERENORMALNIGHTGREY: HERENORMALNIGHTGREY
+        HERENORMALNIGHTGREY: HERENORMALNIGHTGREY,
     };
 }());
 

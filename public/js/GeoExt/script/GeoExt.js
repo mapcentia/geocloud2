@@ -2153,6 +2153,7 @@ GeoExt.form.recordToField = function (i, q) {
     var g = i.get("restriction") || {};
     var c = i.get("nillable") || false;
     var o = i.get("label");
+
     var b = q.labelTpl;
     // HACK. Render combo box if WFS enumeration
     var arrStore = null;
@@ -2182,15 +2183,16 @@ GeoExt.form.recordToField = function (i, q) {
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
             if (e) {
-                n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textfield", fieldLabel: o, allowBlank: c, maxLength: e, minLength: f}, h);
             } else {
-                n = Ext.apply({xtype: "textarea", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textarea", fieldLabel: o, allowBlank: c, maxLength: e, minLength: f}, h);
             }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
+                allowBlank: c,
                 fieldLabel: o, maxLength: e, minLength: f
             }), h)
         }
@@ -2229,36 +2231,40 @@ GeoExt.form.recordToField = function (i, q) {
             buttonCfg: {
                 iconCls: 'upload-icon'
             },
+            cls: "image-textarea",
             listeners: {
+                'enable': function (cmp) {
+                    var el = cmp.getEl();
+                    setTimeout(function () {
+                        try {
+                            el.prev().set({"src": atob(el.getValue())});
+                        } catch (e) {
+                            el.prev().set({"src": ""});
+                        }
+                    }, 200);
+                },
+                'afterrender': function (cmp) {
+                    var el = cmp.getEl();
+                    el.next().set({
+                        "accept": "image/*"
+                    });
+                    el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}));
+                    el.hide();
+                },
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
-                    reader.onload = function (e) {
-                        img.src = e.target.result;
-                        var canvas = document.createElement("canvas"),
-                            ctx = canvas.getContext("2d"),
-                            MAX_WIDTH = 800,
-                            MAX_HEIGHT = 800,
-                            width = img.width,
-                            height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                    canvasResize(file, {
+                        width: 300,
+                        height: 0,
+                        crop: false,
+                        quality: 80,
+                        //rotate: 90,
+                        callback: function (data, width, height) {
+                            $("#" + fb.id).val(btoa(data));
+                            fb.getEl().prev().set({"src": data});
                         }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        $("#" + fb.id).val(btoa(canvas.toDataURL("image/png")));
-                    };
-                    reader.readAsDataURL(file);
+                    });
                 }
             }
         }, h);
@@ -2275,7 +2281,7 @@ GeoExt.form.recordToField = function (i, q) {
             listeners: {
                 'fileselected': function (fb, v) {
                     var reader = new FileReader()
-                        file = document.querySelector('#' + fb.fileInput.id).files[0];
+                    file = document.querySelector('#' + fb.fileInput.id).files[0];
                     reader.onload = function (e) {
                         $("#" + fb.id).val(btoa(reader.result));
                     };
@@ -2630,7 +2636,7 @@ GeoExt.data.AttributeStoreMixin = function () {
                     disableCaching: false,
                     method: "GET"
                 }) : undefined),
-                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", {
+                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", "label", {
                     name: "nillable",
                     type: "boolean"
                 }])

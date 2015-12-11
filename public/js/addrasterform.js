@@ -99,7 +99,6 @@ addRasterFile.init = function () {
             }, 200);
         },
         tbar: [
-            ' ',
             'Epsg:',
             {
                 width: 60,

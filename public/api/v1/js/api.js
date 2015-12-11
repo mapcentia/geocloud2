@@ -141,7 +141,7 @@ var mygeocloud_ol = (function () {
     };
     map = function (el, db, config) {
         var prop, parentMap, defaults = {
-            numZoomLevels: 20,
+            numZoomLevels: 22,
             projection: "EPSG:900913",
             maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
             restrictedExtent: null,
@@ -705,7 +705,7 @@ var mygeocloud_ol = (function () {
             geolocation_layer.removeAllFeatures();
             geolocate.deactivate();
             //$('track').checked = false;
-            geolocate.watch = true;
+            geolocate.watch = false;
             firstGeolocation = true;
             geolocate.activate();
         };

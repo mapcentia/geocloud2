@@ -48,8 +48,8 @@ class Mapfile extends \app\inc\Controller
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
-        "wms_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WMS"
-        "wfs_title"    "<?php echo Connection::$param['postgisdb']; ?>'s awesome WFS"
+        "wms_title"    "<?php echo $user; ?>'s awesome WMS"
+        "wfs_title"    "<?php echo $user; ?>'s awesome WFS"
         "wms_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wfs_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "wms_name"    "<?php echo $user; ?>"
@@ -59,10 +59,10 @@ class Mapfile extends \app\inc\Controller
         "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
+        "wms_encoding" "UTF-8"
+        "wfs_encoding" "UTF-8"
         "wfs_namespace_prefix" "<?php echo $user; ?>"
-        "wfs_namespace_uri" "http://mapcentia.com/<?php echo $user; ?>"
-        "wms_encoding" "UTF8"
-        "wfs_encoding" "UTF8"
+        "wfs_namespace_uri" "<?php echo App::$param['host']; ?>"
         END
         END
         #
@@ -255,7 +255,7 @@ class Mapfile extends \app\inc\Controller
         #
         <?php
 
-        $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
 
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
@@ -431,9 +431,13 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "wfs_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
                 "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "wfs_srs"    "EPSG:<?php echo $row['srid']; ?>"
                 "wms_name"    "<?php echo $row['f_table_name']; ?>"
+                "wfs_name"    "<?php echo $row['f_table_name']; ?>"
                 "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
+                "wfs_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
                 #"wms_extent" "-180 -90 180 90"
                 "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"

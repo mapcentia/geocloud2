@@ -19,7 +19,10 @@ Ext.namespace("Heron.options.zoomrestrict");
 Ext.namespace("Heron.options.resolutions");
 Ext.namespace("Heron.options.layertree");
 Ext.namespace("Heron.options.map.resolutions");
-var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup, enablePrint;
+var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
+    enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
+    dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
+    searchTable ="clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
     "use strict";
@@ -120,7 +123,7 @@ MapCentia.setup = function () {
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
-                    var groups = [], children = [], text, name, group, type, arr, lArr = [], bArr = [], isBaseLayer, layer, geomField;
+                    var groups = [], children = [], text, name, group, type, arr, lArr = [], bArr = [], isBaseLayer, layer, geomField, custombaseLayers = [];
                     Heron.options.map.layers = [];
                     metaData = response;
                     for (var x = 0; x < metaData.data.length; x++) {
@@ -197,7 +200,7 @@ MapCentia.setup = function () {
                             Heron.options.map.layers.push(layer);
                         } else {
                             bArr.push(layer);
-                            baseLayers.push({
+                            custombaseLayers.push({
                                 nodeType: "gx_layer",
                                 layer: name,
                                 text: text,
@@ -220,7 +223,8 @@ MapCentia.setup = function () {
                             })
                         );
                     });
-                    Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr).concat(Heron.options.map.layers);
+                    baseLayers = baseLayers.concat(custombaseLayers.reverse());
+                    Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr.reverse()).concat(Heron.options.map.layers);
 
                     // Define a blank base layer and add it
                     var blank = new OpenLayers.Layer.Image(
@@ -289,6 +293,208 @@ MapCentia.setup = function () {
             });
         }
     }); // Ajax call end
+    conflict = function (wkt) {
+        var isEmpty = true;
+        var srid = metaDataKeys[searchTable.split(".")[1]].srid;
+        var pkey = "gid";
+        var geoField = "the_geom";
+        var geoType = "POLYGON";
+        var layerTitel = "HEJ";
+        var versioning = false;
+        var layerGroup = "sdsd";
+        var fieldConf = {};
+        var f_geometry_column = "the_geom";
+        var sql;
+        var buffer = Ext.getCmp("bufferCombo").getValue();
+        var table = searchTable;
+        var bufferSrid = "25832"
+
+        var bufferStyle = {
+            fillColor: "#00ffff",
+            fillOpacity: 0.0,
+            strokeColor: "#CD7F32",
+            strokeWidth: 1,
+            strokeOpacity: 1,
+            graphicZIndex: 3,
+            strokeDashstyle: "dash"
+        };
+        // Remove GEOMETRYCOLLECTION around the WKT string
+        if(wkt.search("GEOMETRYCOLLECTION")!==-1){
+            wkt = wkt.replace("GEOMETRYCOLLECTION(","");
+            wkt = wkt.substring(0, wkt.length - 1)
+        }
+        if (buffer > 0) {
+            bStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
+                host: host,
+                method: "POST",
+                jsonp: false,
+                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + bufferSrid + ")," + buffer + ") as geom",
+                name: "Search",
+                styleMap: new OpenLayers.StyleMap({
+                    "default": new OpenLayers.Style(bufferStyle)
+                })
+            });
+            Heron.App.map.addLayer(bStore.layer);
+            bStore.load();
+            sql = "SELECT * FROM " + table + " WHERE ST_DWithin(ST_GeogFromText(ST_astext(ST_Transform(ST_geomfromtext('" + wkt + "',900913),4326))), geography(ST_transform(" + f_geometry_column + ",4326)), " + buffer + ")";
+        } else {
+            sql = "SELECT * FROM " + table + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + srid + ")," + f_geometry_column + ")";
+        }
+        cStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
+            host: host,
+            method: "POST",
+            jsonp: false,
+            sql: sql,
+            name: "Search",
+            styleMap: new OpenLayers.StyleMap({
+                "default": new OpenLayers.Style({
+                        fillColor: "#000000",
+                        fillOpacity: 0.0,
+                        pointRadius: 8,
+                        strokeColor: "#FF0000",
+                        strokeWidth: 1,
+                        strokeOpacity: 0.7,
+                        graphicZIndex: 3
+                    }
+                )
+            }),
+            onLoad: function () {
+                var layerObj = cStore, out = [], source = {}, pkeyValue;
+                if ($.isEmptyObject(cStore.geoJSON)) {
+                    alert(__("No features found"));
+                    return false;
+                }
+                gridWin.show();
+                grid = new Ext.grid.GridPanel({
+                    viewConfig: {
+                        //forceFit: true
+                    },
+                    store: cStore.featureStore, // layer
+                    sm: new GeoExt.grid.FeatureSelectionModel({// Only when there is a map
+                        singleSelect: false,
+                        selectControl: {
+                            onSelect: function (feature) {
+                            },
+                            onUnselect: function () {
+                            }
+                        }
+                    }),
+                    cm: new Ext.grid.ColumnModel({
+                        defaults: {
+                            sortable: true,
+                            editor: {
+                                xtype: "textfield"
+                            }
+                        },
+                        columns: cStore.geoJSON.forGrid
+                    })
+                });
+                gridPanel = Ext.getCmp("gridpanel");
+                gridPanel.add(grid);
+                gridPanel.doLayout();
+            }
+        });
+        gridWin = new Ext.Window({
+            title: "Søgeresultat",
+            modal: false,
+            border: false,
+            layout: 'fit',
+            width: 500,
+            height: 400,
+            x: 200,
+            y: 200,
+            closeAction: 'close',
+            plain: true,
+            id: "gridpanel",
+            listeners: {
+                hide: {
+                    fn: function (el, e) {
+                        cleanUpConflict();
+                    }
+                }
+            },
+            tbar: [
+                "->",
+                {
+                    text: "Download som CSV",
+                    iconCls: 'icon-table-save',
+                    handler: function () {
+                        var config = {
+                            fileExt: ".csv",
+                            formatter: "CSVFormatter",
+                            mimeType: "text/csv",
+                            name: "Comma Separated Values (CSV)"
+                        }
+                        var store = cStore.featureStore;
+                        var featureType = searchTable;
+                        config.fileName = featureType + config.fileExt;
+                        config.columns = (store.fields && store.fields.items && store.fields.items.length > 3) ? store.fields.items.slice(3) : null;
+                        if (store.layer && store.layer.projection) {
+                            config.assignSrs = store.layer.projection.getCode();
+                        }
+                        config.encoding = 'base64';
+
+                        var data = Heron.data.DataExporter.formatStore(store, config);
+                        Heron.data.DataExporter.download(data, config);
+                    }
+                }
+
+            ]
+        });
+
+        Heron.App.map.addLayer(cStore.layer);
+        cStore.load();
+    };
+    deactivateControllers = function () {
+        try {
+            click.deactivate();
+            Heron.App.map.removeControl(click);
+        }
+        catch (e) {
+        }
+        try {
+            polygonControl.deactivate();
+            Heron.App.map.removeControl(polygonControl);
+        }
+        catch (e) {
+        }
+    }
+    closeWindows = function () {
+        try {
+            gridWin.close();
+        }
+        catch (e) {
+        }
+        try {
+            gridPanel.remove(grid);
+        }
+        catch (e) {
+        }
+        try {
+            queryWin.hide();
+        }
+        catch (e) {
+        }
+    }
+    cleanUpConflict = function () {
+        try {
+            Heron.App.map.removeLayer(poilayer);
+        }
+        catch (e) {
+        }
+        try {
+            Heron.App.map.removeLayer(cStore.layer);
+        }
+        catch (e) {
+        }
+
+        try {
+            Heron.App.map.removeLayer(bStore.layer);
+        }
+        catch (e) {
+        }
+
+    }
 };
 MapCentia.init = function () {
     "use strict";
@@ -404,7 +610,7 @@ MapCentia.init = function () {
                     header: false,
                     border: false,
                     autoConfig: true,
-                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? ['XLS', 'GMLv2', 'GeoJSON', 'WellKnownText', 'Shapefile'] : [],
+                    exportFormats: window.gc2Options.showDownloadOtionsInHeron ? Heron.options.exportFormats : [],
                     gridCellRenderers: Heron.options.gridCellRenderers,
                     hropts: {
                         zoomOnRowDoubleClick: true,
@@ -421,6 +627,7 @@ MapCentia.init = function () {
         {
             type: "featureinfo",
             options: {
+                toggleGroup: "conflict",
                 popupWindow: {
                     width: 360,
                     height: 200,
@@ -719,9 +926,402 @@ MapCentia.init = function () {
             // , mapPreviewHeight: 400,
             , hidden: !enablePrint
         }
+        },
+        {type: "-"},
+        {
+            type: "any",
+            options: {
+                text: '',
+                tooltip: 'Søg med et objekt i et tændt lag. Klik på et objekt og søg med dette.',
+                toggleGroup: "conflict",
+                iconCls: 'icon-getfeatureinfo',
+                id: "featureSearchBtn",
+                handler: function (e) {
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
+                    try {
+                        $.each(qstore, function (index, st) {
+                            MapCentia.gc2.map.removeLayer(st.layer);
+                        });
+                    }
+                    catch (e) {
+                    }
+                    if (e.pressed === false) {
+                        return false;
+                    }
+                    queryWin = new Ext.Window({
+                        title: "Fundet objekter",
+                        modal: false,
+                        border: false,
+                        layout: 'fit',
+                        width: 400,
+                        height: 400,
+                        x: 100,
+                        y: 100,
+                        closeAction: 'hide',
+                        plain: true,
+                        listeners: {
+                            hide: {
+                                fn: function (el, e) {
+                                    cleanUpConflict()
+                                    Ext.iterate(qstore, function (v) {
+                                        v.reset();
+                                    });
+                                }
+                            }
+                        },
+                        items: [
+                            new Ext.TabPanel({
+                                enableTabScroll: true,
+                                resizeTabs: true,
+                                border: false,
+                                minTabWidth: 175,
+                                activeTab: 0,
+                                frame: true,
+                                id: "queryTabs",
+                                tbar: []
+                            })
+                        ]
+                    });
+
+                    var clickController = OpenLayers.Class(OpenLayers.Control, {
+                        defaultHandlerOptions: {
+                            'single': true,
+                            'double': false,
+                            'pixelTolerance': 0,
+                            'stopSingle': false,
+                            'stopDouble': false
+                        },
+                        initialize: function (options) {
+                            this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
+                            OpenLayers.Control.prototype.initialize.apply(this, arguments);
+                            this.handler = new OpenLayers.Handler.Click(this, {
+                                'click': this.trigger
+                            }, this.handlerOptions);
+                        },
+                        trigger: function (e) {
+                            cleanUpConflict();
+                            // Enable click the controller again.
+                            click.activate();
+                            queryWin.show();
+                            var layers, hit = false, distance,
+                                event = new geocloud.clickEvent(e, MapCentia.gc2),
+                                coords = event.getCoordinate(), numOfRasters = 0, index = 0;
+                            $.each(qstore, function (index, st) {
+                                try {
+                                    st.reset();
+                                    MapCentia.gc2.removeGeoJsonStore(st);
+                                }
+                                catch (e) {
+
+                                }
+                            });
+                            layers = MapCentia.gc2.getVisibleLayers().split(";");
+                            // Count raster layers
+                            $.each(layers, function (index, value) {
+                                // if (metaDataKeys[value.split(".")[1]].type === "RASTER") {
+                                numOfRasters++;
+                                // }
+                            });
+                            Ext.getCmp("queryTabs").removeAll();
+                            (function iter() {
+                                var isEmpty = true;
+                                if (typeof metaDataKeys[layers[index].split(".")[1]] === "undefined") {
+                                    queryWin.hide();
+                                    return false;
+                                }
+                                var srid = metaDataKeys[layers[index].split(".")[1]].srid;
+                                var pkey = metaDataKeys[layers[index].split(".")[1]].pkey;
+                                var geoField = metaDataKeys[layers[index].split(".")[1]].f_geometry_column;
+                                var geoType = metaDataKeys[layers[index].split(".")[1]].type;
+                                var layerTitel = metaDataKeys[layers[index].split(".")[1]].f_table_title || metaDataKeys[layers[index].split(".")[1]].f_table_name;
+                                var versioning = metaDataKeys[layers[index].split(".")[1]].versioning;
+                                var layerGroup = metaDataKeys[layers[index].split(".")[1]].layergroup;
+                                var fieldConf = Ext.decode(metaDataKeys[layers[index].split(".")[1]].fieldconf);
+                                if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                                    var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+                                        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+                                        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+                                        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
+                                    distance = 5 * res[MapCentia.gc2.getZoom()];
+                                }
+                                qstore[index] = new geocloud.sqlStore({
+                                    host: host,
+                                    db: dbForConflict,
+                                    id: index,
+                                    styleMap: new OpenLayers.StyleMap({
+                                        "default": new OpenLayers.Style({
+                                                fillColor: "#000000",
+                                                fillOpacity: 0.0,
+                                                pointRadius: 8,
+                                                strokeColor: "#FF0000",
+                                                strokeWidth: 3,
+                                                strokeOpacity: 0.7,
+                                                graphicZIndex: 3
+                                            }
+                                        )
+                                    }),
+                                    onLoad: function () {
+                                        var layerObj = qstore[this.id], out = [], source = {}, pkeyValue;
+                                        isEmpty = layerObj.isEmpty();
+                                        if ((!isEmpty)) {
+                                            queryWin.show();
+                                            var geojson_format = new OpenLayers.Format.GeoJSON(),
+                                                feature = geojson_format.read(layerObj.geoJSON),
+                                                wkt = new OpenLayers.Format.WKT();
+                                            $.each(layerObj.geoJSON.features, function (i, feature) {
+                                                $.each(feature.properties, function (name, property) {
+                                                    out.push([name, 0, name, property]);
+                                                });
+                                                out.sort(function (a, b) {
+                                                    return a[1] - b[1];
+                                                });
+                                                $.each(out, function (name, property) {
+                                                    var name;
+                                                    if (property[2] === pkey) {
+                                                        pkeyValue = property[3];
+                                                    }
+                                                    if (typeof fieldConf[property[2]] !== "undefined" && typeof fieldConf[property[2]].alias !== "undefined" && fieldConf[property[2]].alias !== "" && fieldConf[property[2]].alias !== null) {
+                                                        name = fieldConf[property[2]].alias;
+                                                    }
+                                                    else {
+                                                        name = property[2];
+                                                    }
+                                                    source[name] = property[3];
+                                                });
+                                                out = [];
+                                            });
+                                            Ext.getCmp("queryTabs").add(
+                                                {
+                                                    title: layerGroup + " - " + layerTitel,
+                                                    layout: "fit",
+                                                    border: false,
+                                                    tbar: [{
+                                                        text: "Søg med dette objekt",
+                                                        handler: function () {
+                                                            conflict(wkt.write(feature))
+                                                        }
+                                                    }],
+                                                    items: [
+                                                        {
+                                                            xtype: "panel",
+                                                            layout: "fit",
+                                                            id: layerTitel,
+                                                            border: false,
+                                                            items: [
+                                                                new Ext.grid.PropertyGrid({
+                                                                    autoHeight: false,
+                                                                    border: false,
+                                                                    startEditing: Ext.emptyFn,
+                                                                    source: source
+                                                                })
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            );
+                                            hit = true;
+                                        }
+                                        if (!hit) {
+                                            try {
+                                                queryWin.hide();
+                                            }
+                                            catch (e) {
+                                            }
+                                        }
+                                        index++;
+                                        if (numOfRasters === index) {
+                                            Ext.getCmp("queryTabs").activate(0);
+                                            return;
+
+                                        } else {
+                                            iter();
+                                        }
+                                    }
+                                });
+                                MapCentia.gc2.addGeoJsonStore(qstore[index]);
+                                var sql, f_geometry_column = metaDataKeys[layers[index].split(".")[1]].f_geometry_column;
+                                if (geoType === "RASTER") {
+                                    sql = "SELECT foo.the_geom,ST_Value(rast, foo.the_geom) As band1, ST_Value(rast, 2, foo.the_geom) As band2, ST_Value(rast, 3, foo.the_geom) As band3 " +
+                                    "FROM " + layers[index] + " CROSS JOIN (SELECT ST_transform(ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)," + srid + ") As the_geom) As foo " +
+                                    "WHERE ST_Intersects(rast,the_geom) ";
+                                } else {
+                                    if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
+                                        sql = "SELECT * FROM " + layers[index] + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
+                                        if (versioning) {
+                                            sql = sql + " AND gc2_version_end_date IS NULL";
+                                        }
+                                        sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
+                                    } else {
+                                        sql = "SELECT * FROM " + layers[index] + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                                        if (versioning) {
+                                            sql = sql + " AND gc2_version_end_date IS NULL";
+                                        }
+                                    }
+                                }
+                                sql = sql + " LIMIT 1";
+                                qstore[index].sql = sql;
+                                qstore[index].load();
+                            })();
+                        }
+                    });
+                    click = new clickController();
+                    Heron.App.map.addControl(click);
+                    click.activate();
+                }
+            }
+        },
+        {
+            type: "any",
+            options: {
+                text: '',
+                tooltip: 'Søg ved at tegne et punkt.',
+                iconCls: 'icon-pencil',
+                id: "drawPointSearchBtn",
+                toggleGroup: "conflict",
+                handler: function (e) {
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
+                    if (e.pressed === false) {
+                        return false;
+                    }
+                    poilayer = new OpenLayers.Layer.Vector("Search", {
+                        styleMap: new OpenLayers.StyleMap({
+                            "default": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 5,
+                                    strokeColor: "#000000",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            ),
+                            "select": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 10,
+                                    strokeColor: "#0000FF",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            )
+                        })
+                    });
+                    Heron.App.map.addLayer(poilayer);
+                    polygonControl = new OpenLayers.Control.DrawFeature(poilayer, OpenLayers.Handler.Point);
+                    var modifyControl = new OpenLayers.Control.ModifyFeature(poilayer, {});
+                    var selectControl = new OpenLayers.Control.SelectFeature(poilayer, {});
+                    Heron.App.map.addControl(modifyControl);
+                    Heron.App.map.addControl(selectControl);
+                    Heron.App.map.addControl(polygonControl);
+                    polygonControl.activate();
+                    poilayer.events.register("sketchcomplete", poilayer, function (e) {
+                        deactivateControllers();
+                        modifyControl.activate();
+                        var wkt = new OpenLayers.Format.WKT().write(e.feature);
+                        Ext.getCmp("drawPointSearchBtn").toggle();
+                        conflict(wkt);
+                        poilayer.events.register("featuremodified", poilayer, function (e, f) {
+                            //console.log("ddssd")
+                        });
+
+                    });
+                }
+            }
+        },
+        {
+            type: "any",
+            options: {
+                text: '',
+                tooltip: 'Søg ved at tegne en flade.',
+                iconCls: 'icon-pencil',
+                id: "drawSearchBtn",
+                toggleGroup: "conflict",
+                handler: function (e) {
+                    cleanUpConflict();
+                    deactivateControllers();
+                    closeWindows();
+                    if (e.pressed === false) {
+                        return false;
+                    }
+                    poilayer = new OpenLayers.Layer.Vector("Search", {
+                        styleMap: new OpenLayers.StyleMap({
+                            "default": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 5,
+                                    strokeColor: "#000000",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            ),
+                            "select": new OpenLayers.Style({
+                                    fillColor: "#000000",
+                                    fillOpacity: 0.0,
+                                    pointRadius: 10,
+                                    strokeColor: "#0000FF",
+                                    strokeWidth: 3,
+                                    strokeOpacity: 0.7,
+                                    graphicZIndex: 3
+                                }
+                            )
+                        })
+                    });
+                    Heron.App.map.addLayer(poilayer);
+                    polygonControl = new OpenLayers.Control.DrawFeature(poilayer, OpenLayers.Handler.Polygon);
+                    var modifyControl = new OpenLayers.Control.ModifyFeature(poilayer, {});
+                    var selectControl = new OpenLayers.Control.SelectFeature(poilayer, {});
+                    Heron.App.map.addControl(modifyControl);
+                    Heron.App.map.addControl(selectControl);
+                    Heron.App.map.addControl(polygonControl);
+                    polygonControl.activate();
+                    poilayer.events.register("sketchcomplete", poilayer, function (e) {
+                        deactivateControllers();
+                        modifyControl.activate();
+                        var wkt = new OpenLayers.Format.WKT().write(e.feature);
+                        Ext.getCmp("drawSearchBtn").toggle();
+                        conflict(wkt);
+                        poilayer.events.register("featuremodified", poilayer, function (e, f) {
+                            //console.log("ddssd")
+                        });
+
+                    });
+                }
+            }
+        },
+        {
+            type: "any",
+            options: {
+                xtype: "combo",
+                mode: 'local',
+                triggerAction: 'all',
+                width: 70,
+                id: "bufferCombo",
+                store: new Ext.data.ArrayStore({
+                    fields: [
+                        'v',
+                        'd'
+                    ],
+                    data: [
+                        [10,"10 m"],
+                        [20,"20 m"],
+                        [30,"30 m"],
+                        [40,"40 m"],
+                        [50,"50 m"]
+                    ]
+                }),
+                valueField: 'v',
+                displayField: 'd',
+                emptyText: "Buffer"
+
+            }
         }
     ];
-
     Heron.layout = {
         xtype: 'panel',
         id: 'hr-container-main',
@@ -742,7 +1342,7 @@ MapCentia.init = function () {
                 items: [
                     {
                         xtype: 'hr_layertreepanel',
-                        border: true,
+                        border: false,
                         layerIcons: 'bylayertype',
                         contextMenu: [
                             {
@@ -802,7 +1402,7 @@ MapCentia.init = function () {
                     {
                         xtype: 'hr_layerlegendpanel',
                         id: 'hr-layerlegend-panel',
-                        border: true,
+                        border: false,
                         defaults: {
                             useScaleParameter: true,
                             baseParams: {
@@ -846,3 +1446,4 @@ MapCentia.setup();
         setTimeout(pollForLayers, 300);
     }
 }());
+

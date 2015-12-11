@@ -18,7 +18,7 @@ class Table extends Model
     var $versioning;
     var $sysCols;
 
-    function __construct($table, $temp = false)
+    function __construct($table, $temp = false, $addGeomType = false)
     {
         parent::__construct();
 
@@ -45,7 +45,7 @@ class Table extends Model
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
-            $this->metaData = $this->getMetaData($this->table);
+            $this->metaData = $this->getMetaData($this->table, $temp, $addGeomType);
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
@@ -62,6 +62,8 @@ class Table extends Model
     private function setType()
     {
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
+        //die(print_r($this->metaData, true));
+
     }
 
     private function getType($field)
@@ -138,7 +140,7 @@ class Table extends Model
 
         $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
-            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
         } else {
             $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
 
@@ -183,6 +185,7 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "_key_", "{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}");
                     $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
+                    $arr = $this->array_push_assoc($arr, "hasPkey", $this->hasPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}"));
                 }
                 if (isset($views[$row['f_table_name']])) {
                     $arr = $this->array_push_assoc($arr, "isview", true);
@@ -194,7 +197,7 @@ class Table extends Model
 
                 }
                 // Is indexed?
-                if (1==1) {
+                if (1 == 1) {
                     $type = $row['f_table_name'];
                     if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
@@ -281,7 +284,7 @@ class Table extends Model
         return $response;
     }
 
-    function updateRecord($data, $keyName) // All tables
+    public function updateRecord($data, $keyName) // All tables
     {
         $data = $this->makeArray($data);
         foreach ($data as $row) {
@@ -329,7 +332,7 @@ class Table extends Model
         return $response;
     }
 
-    function getColumnsForExtGridAndStore($createKeyFrom = NULL) // All tables
+    function getColumnsForExtGridAndStore($createKeyFrom = NULL, $includePriKey = false) // All tables
     {
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($fieldconfArr as $key => $value) {
@@ -352,15 +355,16 @@ class Table extends Model
             $multi = false;
         }
         foreach ($this->metaData as $key => $value) {
-            if ($value['type'] != "geometry" && $key != $this->primeryKey['attname']) {
+            if ($value['type'] != "geometry" && ($key != $this->primeryKey['attname'] || $includePriKey)) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null, "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
             }
 
         }
         if ($createKeyFrom) {
             $fieldsForStore[] = array("name" => "_key_", "type" => "string");
             $fieldsForStore[] = array("name" => "pkey", "type" => "string");
+            $fieldsForStore[] = array("name" => "hasPkey", "type" => "bool");
         }
         $response["forStore"] = $fieldsForStore;
         $response["forGrid"] = $columnsForGrid;
@@ -369,19 +373,16 @@ class Table extends Model
         return $response;
     }
 
-    function getTableStructure() // Only geometry tables
+    function getTableStructure($includePriKey = false) // Only geometry tables
     {
 
         $arr = array();
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         if (!$this->metaData) {
-            $response['success'] = false;
-            $response['code'] = 500;
-            $response['message'] = "Could not load table structure";
-            return $response;
+            $response['data'] = array();
         }
         foreach ($this->metaData as $key => $value) {
-            if ($key != $this->primeryKey['attname']) {
+            if ($key != $this->primeryKey['attname'] || $includePriKey == true) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
@@ -395,6 +396,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
                 $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
+                $arr = $this->array_push_assoc($arr, "is_nullable", $value['is_nullable']);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
@@ -437,6 +439,23 @@ class Table extends Model
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
             $safeColumn = $this->toAscii($value->column, array(), "_");
+            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
+                $sql = "ALTER TABLE {$this->table} ALTER {$value->column} " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
+                //die($sql);
+                $res = $this->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 400;
+                    return $response;
+                }
+                $response['success'] = true;
+                return $response;
+
+            }
+
             // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
 
@@ -460,6 +479,7 @@ class Table extends Model
             } else {
                 $response['message'] = "Updated";
             }
+
             $fieldconfArr[$safeColumn] = $value;
         }
         $conf['fieldconf'] = json_encode($fieldconfArr);
@@ -831,5 +851,106 @@ class Table extends Model
         return $res;
     }
 
+    function getData($table, $offset, $limit) //
+    {
+        $arrayWithFields = $this->getMetaData($table);
+        foreach ($arrayWithFields as $key => $arr) {
+            if ($arr['type'] == "geometry") {
+                //pass
+
+            } elseif ($arr['type'] == "bytea") {
+                $fieldsArr[] = "'binary' AS \"{$key}\"";
+
+            } else {
+                $fieldsArr[] = "\"{$key}\"";
+            }
+        }
+        if (isset($fieldsArr)) {
+            $sql = implode(",", $fieldsArr);
+        } else {
+            $sql = "*";
+        }
+        $sql = "SELECT {$sql} FROM {$table} LIMIT {$limit} OFFSET {$offset}";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $arr = array();
+            foreach ($row as $key => $value) {
+                $arr = $this->array_push_assoc($arr, $key, $value);
+            }
+            $response['data'][] = $arr;
+
+        }
+        if (!isset($response['data'])) {
+            $response['data'] = array();
+        }
+        // Get the total count
+        $sql = "SELECT count(*) AS count FROM {$table}";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res, "assoc");
+
+        $response['success'] = true;
+        $response['message'] = "Data fetched";
+        $response['total'] = $row["count"];
+        return $response;
+    }
+
+    public function insertRecord()
+    {
+        $sql = "INSERT INTO " . $this->table . " DEFAULT VALUES";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = "Record inserted";
+        return $response;
+    }
+
+    public function deleteRecord($data, $keyName) // All tables
+    {
+        if (!$this->hasPrimeryKey($this->table)) {
+            $response['success'] = false;
+            $response['message'] = "You can't edit a relation without a primary key";
+            $response['code'] = 401;
+            return $response;
+        }
+        $data = $this->makeArray($data);
+
+        $sql = "DELETE FROM " . $this->table . " WHERE \"{$keyName}\" =:key";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(array("key" => $data["data"]));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = "Record deleted";
+        return $response;
+    }
 }
 

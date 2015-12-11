@@ -32,7 +32,9 @@
         'Editor/Control/SplitFeature.js',
         'Editor/Control/UndoRedo.js',
         'Editor/Control/CADTools.js',
-        'Editor/Control/ParallelDrawing.js'
+        'Editor/Control/ParallelDrawing.js',
+        'Editor/Control/Gc2Save.js',
+        'Editor/Control/Gc2Load.js'
     ];
 
     // Load translations if HTML page defines a language

@@ -2,15 +2,14 @@
 include("html_header.php");
 ?>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-gray.css?49593e1feb591d0b"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-flat.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/Spinner.css?35ea7a99ab8c2113"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717" />
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f" />
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <!-- build:css /css/build/styles.min.css -->
-<link rel="stylesheet" type="text/css" href="/css/styles.css?e9e3088e0c10f5ca"/>
+<link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>
 <!-- /build -->
 </head>
 <body>
@@ -130,7 +129,7 @@ include("html_header.php");
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 </script>
-<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7453012a468a8a38"></script>
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
@@ -144,16 +143,17 @@ include("html_header.php");
 
 <!-- build:js /js/build/store/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
-<script type="text/javascript" src="/js/msg.js?6871687e437cdbb4"></script>
-<script type="text/javascript" src="/js/store.js?010e4606cdee0f40"></script>
-<script type="text/javascript" src="/js/edittablestructure.js?82d88b8227dd1554"></script>
+<script type="text/javascript" src="/js/msg.js?eee550936a4b4231"></script>
+<script type="text/javascript" src="/js/store.js?f70703cd9c4737fa"></script>
+<script type="text/javascript" src="/js/edittablestructure.js?16bbb4ace3bc3977"></script>
 <script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
-<script type="text/javascript" src="/js/editwmsclass.js?3f59fd362d675a12"></script>
+<script type="text/javascript" src="/js/elasticsearchmapping.js?9d7efee6c8406f63"></script>
+<script type="text/javascript" src="/js/editwmsclass.js?78db6f79d8ee26a1"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
-<script type="text/javascript" src="/js/classwizards.js?4086ff021c7449fc"></script>
-<script type="text/javascript" src="/js/addshapeform.js?b101181cffcb21dc"></script>
-<script type="text/javascript" src="/js/addbitmapform.js?53b6dfd2a63ab812"></script>
-<script type="text/javascript" src="/js/addrasterform.js?af3d3b37eda75007"></script>
+<script type="text/javascript" src="/js/classwizards.js?b8da68ac7ecfbe3b"></script>
+<script type="text/javascript" src="/js/addshapeform.js?a1a04d59aa4b5edb"></script>
+<script type="text/javascript" src="/js/addbitmapform.js?38dde20cbaec7c80"></script>
+<script type="text/javascript" src="/js/addrasterform.js?e9f707ad6e5100ff"></script>
 <script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
 <script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>
 <script type="text/javascript" src="/js/addosmform.js?6fa514ebc5d91d01"></script>

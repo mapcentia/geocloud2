@@ -73,7 +73,7 @@ classWizards.init = function (record) {
     classGrid = new Ext.grid.EditorGridPanel({
         store: classStore,
         frame: false,
-        border: false,
+        border: true,
         region: "center",
         viewConfig: {
             forceFit: true,
@@ -514,11 +514,15 @@ classWizards.init = function (record) {
                 region: 'center',
                 border: false,
                 layout: "border",
+                defaults: {
+                    border: false
+                },
                 items: [
                     new Ext.Panel({
                         region: "center",
                         items: [
                             new Ext.TabPanel({
+                                resizeTabs: true,
                                 activeTab: (function () {
                                     var i, pre;
                                     if (customIsSet) {
@@ -540,7 +544,7 @@ classWizards.init = function (record) {
                                     } else {
                                         return 0;
                                     }
-                                })(),
+                                }()),
                                 border: false,
                                 defaults: {
                                     border: false
@@ -554,7 +558,7 @@ classWizards.init = function (record) {
                                         },
                                         items: [
                                             {
-                                                html: '<table>' +
+                                                html: '<table class="map-thumbs-table">' +
                                                 '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
                                                 '</table>'
                                             },
@@ -600,7 +604,7 @@ classWizards.init = function (record) {
                                                                             new Ext.form.ColorField({
                                                                                 name: "color",
                                                                                 allowBlank: false,
-                                                                                value: (customIsSet) ? classWizards.setting.custom.color : null
+                                                                                value: customIsSet ? classWizards.setting.custom.color : null
                                                                             })
                                                                         ]
                                                                     }
@@ -671,7 +675,7 @@ classWizards.init = function (record) {
                                         },
                                         items: [
                                             {
-                                                html: '<table>' +
+                                                html: '<table class="map-thumbs-table">' +
                                                 '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
                                                 '</table>'
                                             },
@@ -962,7 +966,7 @@ classWizards.init = function (record) {
                                             border: false
                                         },
                                         items: [{
-                                            html: '<table>' +
+                                            html: '<table class="map-thumbs-table">' +
                                             '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
                                             '</table>'
                                         },
@@ -1171,7 +1175,7 @@ classWizards.init = function (record) {
                                             border: false
                                         },
                                         items: [{
-                                            html: '<table>' +
+                                            html: '<table class="map-thumbs-table">' +
                                             '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
                                             '</table>'
                                         },

@@ -47,6 +47,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: false
         },
         {
+            name: 'is_nullable',
+            allowBlank: false
+        },
+        {
             name: 'querable',
             allowBlank: true
         },
@@ -115,7 +119,7 @@ tableStructure.init = function (record, screenName) {
                             icon: Ext.MessageBox.ERROR
                         });
                     } else {
-                        //tableStructure.store.load();
+                        tableStructure.store.load();
                         Ext.MessageBox.show({
                             title: __("Failure"),
                             msg: __(Ext.decode(response.responseText).message),
@@ -141,8 +145,12 @@ tableStructure.init = function (record, screenName) {
                     Ext.getCmp('add-versioning-btn').setDisabled(true);
                     Ext.getCmp('remove-versioning-btn').setDisabled(false);
                 } else {
-                    Ext.getCmp('add-versioning-btn').setDisabled(false);
-                    Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                    try {
+                        Ext.getCmp('add-versioning-btn').setDisabled(false);
+                        Ext.getCmp('remove-versioning-btn').setDisabled(true);
+                    } catch(e){
+
+                    }
                 }
             },
             beforewrite: function (store, d) {
@@ -175,7 +183,8 @@ tableStructure.init = function (record, screenName) {
                 sortable: true,
                 editor: {
                     xtype: "textfield"
-                }
+                },
+                menuDisabled: true
             },
             columns: [
                 {
@@ -215,6 +224,13 @@ tableStructure.init = function (record, screenName) {
                         valueField: 'type',
                         displayField: 'type'
                     })
+                },
+                {
+                    id: "is_nullable",
+                    xtype: 'checkcolumn',
+                    header: __("Allow null"),
+                    dataIndex: 'is_nullable',
+                    width: 40
                 },
                 {
                     id: "alias",
@@ -351,6 +367,7 @@ tableStructure.init = function (record, screenName) {
                 layout: 'hbox',
                 width: 300,
                 id: 'addColumnForm',
+                border: false,
                 items: [
                     {
                         xtype: 'textfield',
@@ -425,7 +442,7 @@ tableStructure.init = function (record, screenName) {
                             submitEmptyText: false,
                             success: function (response) {
                                 tableStructure.store.load();
-                                form.reset();
+                                form.form.reset();
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({
@@ -464,22 +481,6 @@ tableStructure.init = function (record, screenName) {
                 disabled: true,
                 handler: function () {
                     tableStructure.onRemoveVersion(record);
-                }
-            },
-            {
-                text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
-                id: "index-in-elasticsearch-btn",
-                disabled: (window.gc2Options.esIndexingInGui) ? false : true,
-                handler: function () {
-                    tableStructure.onIndexInElasticsearch(record);
-                }
-            },
-            {
-                text: '<i class="icon-search btn-gc"></i> ' + __("Delete from Elasticsearch"),
-                id: "delete-from-elasticsearch-btn",
-                disabled: window.gc2Options.esIndexingInGui ? record.data.indexed_in_es ? false : true : true,
-                handler: function () {
-                    tableStructure.onDeleteFromElasticsearch(record);
                 }
             }
         ]
@@ -593,7 +594,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                     return false;
                 }
                 spinner(true, __("Piping data to Elasticsearch"));
-                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] : "");
+                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2]: "");
                 Ext.Ajax.request(
                     {
                         url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
@@ -609,11 +610,10 @@ tableStructure.onIndexInElasticsearch = function (record) {
                             Ext.getCmp('delete-from-elasticsearch-btn').setDisabled(false);
                             Ext.MessageBox.show({
                                 title: __("Info"),
-                                msg: "<b>" + __(Ext.decode(response.responseText).message + "</b>, with errors:<b> " + Ext.decode(response.responseText).errors + "</b><br>Index:<b> " + Ext.decode(response.responseText)._index + "</b><br>Type:<b> " + Ext.decode(response.responseText)._type + "</b><br>Relation type:<b> " + Ext.decode(response.responseText).relation + "</b><br>Trigger installed in:<b> " + Ext.decode(response.responseText).trigger_installed_in) + "</b>",
+                                msg: "<p>" + __("Result of the indexing") + "</p><br/><textarea rows=7' cols='74'>" + __(Ext.decode(response.responseText).message + "\nErrors: " + Ext.decode(response.responseText).errors + (Ext.decode(response.responseText).errors ? " (See log)" : "") + "\nIndex: " + Ext.decode(response.responseText)._index + "\nType: " + Ext.decode(response.responseText)._type + "\nRelation type: " + Ext.decode(response.responseText).relation + "\nTrigger installed in: " + Ext.decode(response.responseText).trigger_installed_in) + "</textarea>",
                                 buttons: Ext.MessageBox.OK,
-                                width: 400,
-                                height: 300,
-                                icon: Ext.MessageBox.OK
+                                width: 500,
+                                height: 400
                             });
                         },
                         failure: function (response) {

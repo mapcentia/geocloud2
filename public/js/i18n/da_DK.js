@@ -213,6 +213,9 @@ gc2i18n = {
         "Show in mouse-over": "Vis i mouse-over",
         "Searchable": "Søgbar",
 
-        "MapClient Print": "MapClient Print"
+        "MapClient Print": "MapClient Print",
+        "Create layer from database view": "Opret et lag fra et database view",
+        "No features found": "Ingen objekter fundet",
+        "No geometry" : "Ingen geometri"
     }
 };

@@ -3320,7 +3320,7 @@ Heron.widgets.search.FeatureInfoPanel = Ext.extend(Ext.Panel, {title: __('Featur
         }
         var panel = new Heron.widgets.search.FeaturePanel({title: featureSet.title, featureType: featureSet.featureType, featureSetKey: featureSetKey, header: false, features: featureSet.features, autoConfig: autoConfig, autoConfigMaxSniff: this.autoConfigMaxSniff, hideColumns: this.hideColumns, columnFixedWidth: this.columnFixedWidth, autoMaxWidth: this.autoMaxWidth, autoMinWidth: this.autoMinWidth, columnCapitalize: this.columnCapitalize, showGeometries: this.showGeometries, featureSelection: this.featureSelection, gridCellRenderers: this.gridCellRenderers, columns: columns, showTopToolbar: this.showTopToolbar, exportFormats: this.exportFormats, displayPanels: this.displayPanels, hropts: {zoomOnRowDoubleClick: true, zoomOnFeatureSelect: false, zoomLevelPointSelect: 8}});
         if (!this.tabPanel) {
-            this.tabPanel = new Ext.TabPanel({border: false, autoDestroy: true, enableTabScroll: true, items: [panel], activeTab: 0});
+            this.tabPanel = new Ext.TabPanel({plain: true,unstyled: true,resizeTabs: true,border: false, autoDestroy: true, enableTabScroll: true, items: [panel], activeTab: 0});
         } else {
             this.tabPanel.add(panel);
             this.tabPanel.setActiveTab(0);
@@ -3492,6 +3492,7 @@ Heron.widgets.Bookmarks = (function () {
 })();
 Heron.widgets.BookmarksPanel = Ext.extend(Heron.widgets.HTMLPanel, {title: __('Bookmarks'), titleDescription: null, titleBookmarkProject: __("Project bookmarks"), titleBookmarkUser: __("Your bookmarks"), showProjectBookmarks: true, showUserBookmarks: true, autoProjectBookmarksTitle: true, autoUserBookmarksTitle: true, appBookmarkSign: null, autoScroll: true, bodyStyle: {overflow: 'auto'}, initComponent: function () {
     this.version = 1;
+    this.border = false;
     this.signature = this.appBookmarkSign;
     Heron.widgets.BookmarksPanel.superclass.initComponent.call(this);
     if (!this.titleDescription) {
@@ -4631,6 +4632,7 @@ Heron.widgets.search.FeaturePanel = Ext.extend(Ext.Panel, {downloadable: true, d
                 downloadMenuItems.push(item);
             }
         }
+        console.log(downloadMenuItems);
         if (downloadMenuItems.length > 0) {
             tbarItems.push({itemId: 'download', text: __('Download'), cls: 'x-btn-text-icon', iconCls: 'icon-table-save', tooltip: __('Choose a Download Format'), menu: new Ext.menu.Menu({style: {overflow: 'visible'}, items: downloadMenuItems})});
         }
@@ -4982,6 +4984,8 @@ Heron.widgets.search.FeaturePanel = Ext.extend(Ext.Panel, {downloadable: true, d
         config.assignSrs = store.layer.projection.getCode();
     }
     config.encoding = 'base64';
+    console.log(featureType)
+
     var data = Heron.data.DataExporter.formatStore(store, config);
     Heron.data.DataExporter.download(data, config);
 }, downloadData: function (downloadFormat, fileExt) {

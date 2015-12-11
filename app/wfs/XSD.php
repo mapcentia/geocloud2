@@ -58,23 +58,36 @@ foreach ($tables as $table) {
     $atts = null;
     $depth++;
 
-
-    $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}''',
+    $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}''',
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
     $fieldConfRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
     $fieldConf = json_decode($fieldConfRow['fieldconf']);
+    $fieldConfArr = json_decode($fieldConfRow['fieldconf'], true);
 
+    // Start sorting the fields by sort_id
+    $arr = array();
+    foreach ($fieldsArr[$table] as $value) {
+        $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+    }
+    usort($arr, function ($a, $b) {
+        return $a[0] - $b[0];
+    });
+    $fieldsArr[$table] = array();
+    foreach ($arr as $value) {
+        $fieldsArr[$table][] = $value[1];
+    }
     foreach ($fieldsArr[$table] as $hello) {
-        $atts["nillable"] = "true";
+        $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
-        $properties = json_decode($fieldConf->$atts["name"]->properties);
+        $properties = $fieldConf->$atts["name"];
+        $atts["label"] = $properties->alias ?: $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }
         $atts["maxOccurs"] = "1";
         $selfclose = true;
         if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
-            $sql = "SELECT * FROM settings.getColumns('geometry_columns.f_table_name=''{$table}'' AND geometry_columns.f_table_schema=''{$postgisschema}'' AND f_geometry_column=''{$atts["name"]}''',
+            $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}'' AND f_geometry_column=''{$atts["name"]}''',
                     'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
             $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
             $def = json_decode($typeRow['def']);
@@ -105,8 +118,17 @@ foreach ($tables as $table) {
                     break;
             }
         } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
-            if (isset($properties->type) && $properties->type == "image") {
+            if (isset($properties->image) && $properties->image == true) {
                 $atts["type"] = "gc2:imageType";
+                if (isset($fieldConf->$atts["name"]->properties)) {
+                 $pJson = json_decode($fieldConf->$atts["name"]->properties, true);
+                    if ($pJson["width"]){
+                        $atts["width"] = $pJson["width"];
+                    }
+                    if ($pJson["quality"]){
+                        $atts["quality"] = $pJson["quality"];
+                    }
+                }
             }
         } else {
             unset($atts["type"]);
@@ -143,7 +165,8 @@ foreach ($tables as $table) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 } else {
-                    foreach ($properties as $prop) {
+
+                    foreach (json_decode($properties->properties) as $prop) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 }

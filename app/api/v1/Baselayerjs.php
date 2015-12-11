@@ -26,7 +26,10 @@ class Baselayerjs extends \app\inc\Controller
         echo "extraLayerPropertyName: " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
         echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         echo "enableWorkflow: " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
-        echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']);
+        echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']).",\n";
+        if ($settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+            echo "es_settings: ". $settings;
+        }
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";
@@ -36,6 +39,9 @@ class Baselayerjs extends \app\inc\Controller
         }
         if (\app\conf\App::$param['baseLayers']) {
             echo "window.setBaseLayers = " . json_encode(\app\conf\App::$param['baseLayers']) . ";\n";
+        }
+        if (\app\conf\App::$param['baseLayersCollector']) {
+            echo "window.setBaseLayersCollector = " . json_encode(\app\conf\App::$param['baseLayersCollector']) . ";\n";
         }
         if (\app\conf\App::$param['mapAttribution']) {
             echo "window.mapAttribution = '" . \app\conf\App::$param['mapAttribution'] . "';\n";
@@ -66,3 +72,4 @@ class Baselayerjs extends \app\inc\Controller
 
     }
 }
+

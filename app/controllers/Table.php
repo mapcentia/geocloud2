@@ -31,7 +31,7 @@ class Table extends \app\inc\Controller
 
     public function get_columns()
     {
-        return $this->table->getColumnsForExtGridAndStore();
+        return $this->table->getColumnsForExtGridAndStore(null, Input::get("i"));
     }
 
     public function get_columnswithkey()
@@ -60,7 +60,7 @@ class Table extends \app\inc\Controller
     public function get_structure()
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
-        return (!$response['success']) ? $response : $this->table->getTableStructure();
+        return (!$response['success']) ? $response : $this->table->getTableStructure(true);
     }
 
     public function put_versions()
@@ -91,4 +91,38 @@ class Table extends \app\inc\Controller
         return $this->table->checkcolumn(Input::getPath()->part(5));
     }
 
+    public function get_data()
+    {
+        $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->getData(Input::getPath()->part(4),
+            Input::get("start") ?: 0,
+            Input::get("limit") ?: 100
+        );
+    }
+
+    public function put_data()
+    {
+
+        $data = (array)json_decode(urldecode(Input::get(null, true)));
+        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $key = Input::getPath()->part(5);
+        $response = $this->auth(Input::getPath()->part(6), array("write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->updateRecord($data, $key);
+    }
+
+    public function post_data()
+    {
+        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $response = $this->auth(Input::getPath()->part(5), array("write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->insertRecord();
+    }
+
+    public function delete_data()
+    {
+        $data = (array)json_decode(urldecode(Input::get(null, true)));
+        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $key = Input::getPath()->part(5);
+        $response = $this->auth(Input::getPath()->part(6), array("write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->deleteRecord($data, $key);
+    }
 }

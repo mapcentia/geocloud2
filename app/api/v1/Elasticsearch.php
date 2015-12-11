@@ -39,7 +39,6 @@ class Elasticsearch extends \app\inc\Controller
 
     public function get_bulk()
     {
-        ini_set('max_execution_time', 300);
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
             return $response;
         }
@@ -188,6 +187,8 @@ class Elasticsearch extends \app\inc\Controller
         $relationType = $model->isTableOrView($fullTable);
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
+
+        $priKey = Input::get('tp') ?: $priKey;
 
         $model->close();// Close the PDO connection
 

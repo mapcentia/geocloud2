@@ -213,6 +213,9 @@ gc2i18n = {
         "Show in mouse-over": "Show in mouse-over",
         "Searchable": "Searchable",
 
-        "MapClient Print": "MapClient Print"
+        "MapClient Print": "MapClient Print",
+        "Create layer from database view": "Create layer from database view",
+        "No features found": "No features found",
+        "No geometry" : "No geometry"
     }
 };

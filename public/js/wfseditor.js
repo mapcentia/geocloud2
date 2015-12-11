@@ -214,10 +214,14 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             singleSelect: true,
             listeners: {
                 rowselect: function (sm, row, rec) {
+                    attributeForm.form.enable();
                     try {
                         attributeForm.form.getForm().loadRecord(rec);
                     } catch (e) {
                     }
+                },
+                rowdeselect: function () {
+                    attributeForm.form.disable();
                 }
             }
         });
@@ -244,7 +248,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         region: "center",
         disabled: false,
         viewConfig: {
-            forceFit: true
+            //forceFit: true
         },
         store: store,
         listeners: {
@@ -255,7 +259,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 }
             }
         },
-
         sm: sm,
         cm: new Ext.grid.ColumnModel({
             defaults: {
@@ -284,16 +287,19 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         layout: 'fit',
         initCenter: true,
         border: false,
-        width: 420,
+        width: 500,
         height: 350,
         closeAction: 'hide',
         plain: true,
         items: [new Ext.Panel({
             frame: false,
             layout: 'border',
+            border: false,
             items: [attributeForm.form]
         })]
     });
+    attributeForm.win.show();
+    attributeForm.win.hide();
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(false);
     Ext.getCmp('editdeletebutton').setDisabled(false);
@@ -364,8 +370,11 @@ $(document).ready(function () {
         items: [
             new Ext.TabPanel({
                 activeTab: 0,
-                frame: true,
-                id: "queryTabs"
+                frame: false,
+                id: "queryTabs",
+                resizeTabs: true,
+                plain: true,
+                border: false
             })
         ]
     });
@@ -474,6 +483,7 @@ $(document).ready(function () {
                                                                 });
                                                                 attributeForm.init(layerTitel, geoField);
                                                                 startWfsEdition(layerTitel, geoField, filter, true);
+                                                                attributeForm.form.disable();
                                                                 Ext.iterate(qstore, function (v) {
                                                                     v.reset();
                                                                 });
@@ -589,29 +599,33 @@ $(document).ready(function () {
                         }
                         catch (e) {
                         }
-                        layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                            singleTile: false,
-                            //isBaseLayer: isBaseLayer,
-                            visibility: false,
-                            wrapDateLine: false,
-                            tileCached: true,
-                            displayInLayerSwitcher: true,
-                            name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
-                        });
+                        if (response.data[u].type) {
+                            layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                                singleTile: false,
+                                //isBaseLayer: isBaseLayer,
+                                visibility: false,
+                                wrapDateLine: false,
+                                tileCached: true,
+                                displayInLayerSwitcher: true,
+                                name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                            });
+                        }
                     }
                     for (i = 0; i < arr.length; ++i) {
                         var l = [], id;
                         for (u = 0; u < response.data.length; ++u) {
                             if (response.data[u].layergroup === arr[i]) {
                                 id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
-                                l.push({
-                                    text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
-                                    id: id,
-                                    leaf: true,
-                                    checked: false,
-                                    geomField: response.data[u].f_geometry_column,
-                                    geomType: response.data[u].type
-                                });
+                                if (response.data[u].type) {
+                                    l.push({
+                                        text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                        id: id,
+                                        leaf: true,
+                                        checked: false,
+                                        geomField: response.data[u].f_geometry_column,
+                                        geomType: response.data[u].type
+                                    });
+                                }
                             }
                         }
                         treeConfig.push({
@@ -745,6 +759,7 @@ $(document).ready(function () {
                                                 region: "center",
                                                 id: "mappanel",
                                                 xtype: "gx_mappanel",
+                                                border: true,
                                                 map: map,
                                                 zoom: 5,
                                                 split: true,
@@ -756,6 +771,7 @@ $(document).ready(function () {
                                                 title: "Attribute table",
                                                 split: true,
                                                 frame: false,
+                                                border: false,
                                                 layout: 'fit',
                                                 height: 200,
                                                 collapsible: true,
@@ -767,9 +783,10 @@ $(document).ready(function () {
                                 ]
                             },
                             new Ext.Panel({
-                                border: true,
+                                border: false,
                                 region: "west",
                                 collapsible: true,
+                                split: true,
                                 width: 350,
                                 tbar: [{
                                     text: '<i class="icon-eye-open btn-gc"></i> ' + __('Class wizard'),
@@ -965,6 +982,7 @@ $(document).ready(function () {
 
                     attributeForm.init(id[1], geomField);
                     startWfsEdition(id[1], geomField, filter);
+                    attributeForm.form.disable();
                     wfsTools[0].control.activate();
                     Ext.getCmp('editcreatebutton').toggle(true);
                     Ext.iterate(qstore, function (v) {

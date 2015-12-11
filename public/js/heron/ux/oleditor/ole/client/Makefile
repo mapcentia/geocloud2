@@ -2,7 +2,7 @@ DISTRIBUTION_NAME = ole-1.0
 
 # Minifies OLE using Closure Compiler
 minified:
-	java -jar closurecompiler.jar \
+	java -jar compiler.jar \
 	--charset 'UTF-8' \
 	--jscomp_error=checkDebuggerStatement \
 	--jscomp_warning=checkVars \
@@ -31,6 +31,8 @@ minified:
 	--js 'lib/Editor/Control/MergeFeature.js' \
 	--js 'lib/Editor/Control/TransformFeature.js' \
 	--js 'lib/Editor/Control/FixedAngleDrawing.js' \
+	--js 'lib/Editor/Control/Gc2Load.js' \
+	--js 'lib/Editor/Control/Gc2Save.js' \
 	--js 'lib/Editor/Layer.js' \
 	--js 'lib/Editor/Layer/Snapping.js' \
 	--js 'lib/Editor/Control/SnappingSettings.js' \

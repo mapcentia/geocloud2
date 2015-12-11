@@ -26,6 +26,7 @@ attributeForm.init = function (layer, geomtype) {
                         id: "uploadpanel",
                         frame: false,
                         region: "center",
+                        border: false,
                         bodyStyle: {
                             background: '#ffffff',
                             padding: '7px'
@@ -76,6 +77,7 @@ attributeForm.init = function (layer, geomtype) {
                         plain: true,
                         items: [new Ext.Panel({
                             frame: false,
+                            border: false,
                             layout: 'border',
                             items: [filter.queryPanel]
                         })]
@@ -87,6 +89,7 @@ attributeForm.init = function (layer, geomtype) {
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,
         region: 'center',
+        disabled: true,
         viewConfig: {
             forceFit: true
         },

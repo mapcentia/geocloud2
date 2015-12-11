@@ -1,6 +1,7 @@
 <?php
 ini_set("display_errors", "Off");
 ini_set('memory_limit', '256M');
+ini_set('max_execution_time', 0);
 error_reporting(3);
 
 use \app\inc\Input;
@@ -23,7 +24,8 @@ App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host']
 $http_origin = $_SERVER['HTTP_ORIGIN'];
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
-    header("Access-Control-Allow-Headers: Content-Type");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Credentials: true");
 }
 
 
@@ -41,6 +43,9 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb($db);
     });
     Route::add("api/v1/elasticsearch", function () {
+        if (Input::getPath()->part(4) == "river") {
+            Session::start(); // So we can create a session log from the indexing
+        }
         Database::setDb(Input::getPath()->part(5));
     });
     Route::add("api/v1/meta", function () {
@@ -60,6 +65,10 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/staticmap");
     Route::add("api/v1/getheader");
     Route::add("api/v1/collector");
+    Route::add("api/v1/session", function () {
+        Session::start();
+        Database::setDb("mapcentia");
+    });
 } elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");
@@ -99,6 +108,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/processbitmap");
     Route::add("controllers/upload/processraster");
     Route::add("controllers/logstash");
+    Route::add("controllers/drawing");
     Route::add("controllers/job", function () {
         Database::setDb("gc2scheduler");
     });
