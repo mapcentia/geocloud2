@@ -10,6 +10,7 @@ class Sql extends \app\inc\Controller
     private $apiKey;
     private $data;
     private $subUser;
+    private $usedRelations;
 
     public function get_index()
     {
@@ -68,6 +69,43 @@ class Sql extends \app\inc\Controller
         return $this->get_index();
     }
 
+    private function recursiveFind(array $array, $needle)
+    {
+        $iterator = new \RecursiveArrayIterator($array);
+        $recursive = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
+        $aHitList = array();
+        foreach ($recursive as $key => $value) {
+            if ($key === $needle) {
+                array_push($aHitList, $value);
+            }
+        }
+        return $aHitList;
+    }
+
+    private function parseSelect($fromArr)
+    {
+        foreach ($fromArr as $table) {
+            if ($table["expr_type"] == "subquery") {
+                // Recursive call
+                $this->parseSelect($table["sub_tree"]["FROM"]);
+            }
+            $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
+            if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                $table["no_quotes"] == "geometry_columns"
+            ) {
+                $this->response['success'] = false;
+                $this->response['message'] = "Can't complete the query";
+                $this->response['code'] = 406;
+                return serialize($this->response);
+            }
+            if ($table["no_quotes"]) {
+                $this->usedRelations[] = $table["no_quotes"];
+            }
+            $this->usedRelations = array_unique($this->usedRelations);
+        }
+    }
+
     private function transaction($sql, $clientEncoding = null)
     {
         if (strpos($sql, ';') !== false) {
@@ -85,31 +123,27 @@ class Sql extends \app\inc\Controller
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
         $parser = new \PHPSQLParser($sql, true);
         $parsedSQL = $parser->parsed;
+        $this->usedRelations = array();
 
         //print_r($parsedSQL);
 
-        // Check SQL SELECT
-        if (isset($parsedSQL['SELECT']) && isset($parsedSQL['FROM'])) {
-            foreach ($parsedSQL['FROM'] as $table) {
-                $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
-                if (explode(".", $table["no_quotes"])[0] == "settings" ||
-                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                    $table["no_quotes"] == "geometry_columns"
-                ) {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Can't complete the query";
-                    $this->response['code'] = 406;
-                    return serialize($this->response);
-                }
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, false, Input::get('key'));
-                if (!$response["success"]) {
-                    return serialize($response);
-                }
-            }
+        // First recursive go through the SQL to find FROM in select, update and delete
+        foreach ($this->recursiveFind($parsedSQL, "FROM") as $x) {
+            $this->parseSelect($x);
+        }
 
-            // Check SQL UPDATE
-        } elseif (isset($parsedSQL['UPDATE'])) {
+        // Check auth on relations
+        foreach ($this->usedRelations as $rel) {
+            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $this->usedRelations);
+            if (!$response["success"]) {
+                return serialize($response);
+            }
+        }
+
+        // Check SQL UPDATE
+        if (isset($parsedSQL['UPDATE'])) {
             foreach ($parsedSQL['UPDATE'] as $table) {
+                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -119,15 +153,16 @@ class Sql extends \app\inc\Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
                 if (!$response["success"]) {
                     return serialize($response);
                 }
             }
 
             // Check SQL DELETE
-        } elseif (isset($parsedSQL['DELETE']) && isset($parsedSQL['FROM'])) {
+        } elseif (isset($parsedSQL['DELETE'])) {
             foreach ($parsedSQL['FROM'] as $table) {
+                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -137,7 +172,7 @@ class Sql extends \app\inc\Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
                 if (!$response["success"]) {
                     return serialize($response);
                 }
@@ -146,6 +181,7 @@ class Sql extends \app\inc\Controller
             // Check SQL INSERT
         } elseif (isset($parsedSQL['INSERT'])) {
             foreach ($parsedSQL['INSERT'] as $table) {
+                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -155,7 +191,7 @@ class Sql extends \app\inc\Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'));
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
                 if (!$response["success"]) {
                     return serialize($response);
                 }
@@ -200,6 +236,8 @@ class Sql extends \app\inc\Controller
                 $srs = Input::get('srs') ?: "900913";
                 $api = new \app\models\Sql($srs);
                 $this->response = $api->sql($this->q, $clientEncoding);
+                $this->response["rels"] = $this->usedRelations;
+
                 echo serialize($this->response);
                 // Cache script
                 $this->data = ob_get_contents();

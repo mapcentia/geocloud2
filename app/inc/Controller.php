@@ -74,7 +74,7 @@ class Controller
         }
     }
 
-    public function ApiKeyAuthLayer($layer, $subUser, $transaction, $inputApiKey)
+    public function ApiKeyAuthLayer($layer, $subUser, $transaction, $inputApiKey, $rels)
     {
         $postgisObject = new \app\inc\Model();
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
@@ -86,7 +86,6 @@ class Controller
             } else {
                 $userGroup = null;
             }
-            //print_r($response);
             if ($subUser) {
                 $apiKey = $response['data']['api_key_subuser']->$subUser;
             } else {
@@ -111,6 +110,8 @@ class Controller
                         $response = array();
                         $response['auth_level'] = $auth;
                         $response['privileges'] = $privileges[$subUser];
+                        $response['relations'] = $rels;
+
                         switch ($transaction) {
                             case false:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
@@ -134,7 +135,6 @@ class Controller
                                 break;
                         }
                         return $response;
-
                     } else {
                         $response = array();
                         $response['auth_level'] = $auth;
@@ -148,7 +148,7 @@ class Controller
                             return $response;
                         } else {
                             $response['success'] = true;
-                            $response['code'] = 403;
+                            $response['code'] = 200;
                             return $response;
                         }
                     }
@@ -175,6 +175,10 @@ class Controller
                 }
             }
             //}
+        }
+        else {
+            $response3["success"] = true;
+            return $response3;
         }
     }
 }

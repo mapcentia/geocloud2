@@ -77,6 +77,12 @@ class FromProcessor extends AbstractProcessor {
             $parseInfo['ref_expr'] = $processor->process($unparsed);
         }
 
+        // PostGreSQL ONLY
+        if ($parseInfo['table'] == "ONLY") {
+            $parseInfo['table'] = $parseInfo['alias']['no_quotes'];
+            unset($parseInfo['alias']);
+        }
+
         // there is an expression, we have to parse it
         if (substr(trim($parseInfo['table']), 0, 1) == '(') {
             $parseInfo['expression'] = $this->removeParenthesisFromStart($parseInfo['table']);
