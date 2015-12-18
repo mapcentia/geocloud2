@@ -117,6 +117,7 @@ class Staticmap extends \app\inc\Controller
         <style>
         body {margin: 0px; padding: 0px;}
         .leaflet-control-zoom{display: none}
+        .leaflet-control-layers{display: none}
         .leaflet-control-attribution{white-space: nowrap;}
         </style>
         <script>
