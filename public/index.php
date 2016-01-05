@@ -12,9 +12,6 @@ use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
 
-// Force IE in Edge mode
-header('X-UA-Compatible: IE=edge');
-
 include_once("../app/conf/App.php");
 new \app\conf\App();
 
