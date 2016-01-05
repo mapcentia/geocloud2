@@ -12,6 +12,9 @@ use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
 
+// Force IE in Edge mode
+header('X-UA-Compatible: IE=edge');
+
 include_once("../app/conf/App.php");
 new \app\conf\App();
 
@@ -27,7 +30,6 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     header("Access-Control-Allow-Credentials: true");
 }
-
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
