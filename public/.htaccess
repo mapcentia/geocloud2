@@ -1,7 +1,7 @@
 AddDefaultCharset UTF-8
 AddType text/cache-manifest .appcache
 
-// Force IE in Edge mode
+# Force IE in Edge mode
 Header add X-UA-Compatible "IE=edge"
 
 <ifmodule mod_expires.c>
