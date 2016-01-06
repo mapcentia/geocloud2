@@ -136,7 +136,7 @@ def main ():
     
     parser.add_option("-b","--bbox",action="store", type="string", dest="bbox", default = None,
                       help="restrict to specified bounding box")
-    parser.add_option("-c", "--config", action="store", type="string", dest="tilecacheconfig", 
+        parser.add_option("-c", "--config", action="store", type="string", dest="tilecacheconfig",
         default=None, help="path to configuration file")                 
     parser.add_option("-d","--delay",action="store", type="int", dest="delay", default = 0,
         help="Delay time between requests.")

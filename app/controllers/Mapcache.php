@@ -52,6 +52,7 @@ class Mapcache extends \app\inc\Controller
                     $layer = $get["LAYER"];
                 } else {
                     $layer = explode("@", $parts[5])[0];
+                    die($layer);
                 }
                 break;
             case "wms";
