@@ -63,7 +63,7 @@ class Tilecache extends \app\inc\Controller
                 break;
         }
         //die(print_r($layer, true));
-        die($url);
+        //die($url);
         $type = get_headers($url, 1)["Content-Type"];
         //die($type);
         header('X-Powered-By: GC2 TileCache');
