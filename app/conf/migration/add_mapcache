@@ -1,0 +1,13 @@
+#!/usr/bin/php
+<?php
+
+header("Content-type: text/plain");
+$files = scandir("../../wms/mapcache");
+foreach ($files as $file) {
+    $bits = explode(".", $file);
+    if ($bits[1] == "xml") {
+        echo $file . " ";
+        $res = file_get_contents("http://127.0.0.1:1337/add?db=" . $bits[0]);
+        echo $res . "\n";
+    }
+}

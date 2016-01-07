@@ -1,5 +1,7 @@
 #!/usr/bin/php
 <?php
+ini_set("display_errors", "On");
+
 use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Model;
@@ -11,11 +13,14 @@ $database = new \app\models\Database();
 $arr = $database->listAllDbs();
 $cfgfile = new \app\controllers\Cfgfile();
 $mapfile = new \app\controllers\Mapfile();
+$mapcachefile = new \app\controllers\Mapcachefile();
 foreach ($arr['data'] as $db) {
     Connection::$param['postgisdb'] = $db;
 
     if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
         $res = $cfgfile->get_index();
+        echo $res["ch"]."\n";
+        $res = $mapcachefile->get_index();
         echo $res["ch"]."\n";
         $database2 = new \app\models\Database();
         $schemas = $database2->listAllSchemas();

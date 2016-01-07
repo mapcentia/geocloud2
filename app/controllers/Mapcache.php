@@ -124,4 +124,13 @@ class Mapcache extends \app\inc\Controller
                 break;
         }
     }
+    public function get_add(){
+        echo file_get_contents("http://127.0.0.1:1337/add?db=" . \app\inc\Input::getPath()->part(4));
+        exit();
+    }
+
+    public function get_reload(){
+        echo file_get_contents("http://127.0.0.1:1337/reload");
+        exit();
+    }
 }

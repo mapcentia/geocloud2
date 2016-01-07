@@ -99,6 +99,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/table/");
     Route::add("controllers/tile/");
     Route::add("controllers/tilecache/");
+    Route::add("controllers/mapcache/");
     Route::add("controllers/session/");
     Route::add("controllers/osm/");
     Route::add("controllers/upload/vector");

@@ -291,6 +291,21 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
 
                         }
                     });
+                    $.ajax({
+                        dataType: 'jsonp',
+                        jsonp: 'jsonp_callback',
+                        url: hostName + '/controllers/mapcachefile',
+                        success: function (response) {
+                            $.ajax({
+                                dataType: 'jsonp',
+                                jsonp: 'jsonp_callback',
+                                url: hostName + '/controllers/mapcache/add/' + db ,
+                                success: function (response) {
+
+                                }
+                            });
+                        }
+                    });
                 }
                 else {
                     $("#db_exists_not").show();

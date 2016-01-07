@@ -12,6 +12,8 @@ if (!$_SESSION['screen_name']) {
     $name = Model::toAscii($_SESSION['screen_name'], NULL, "_");
     $db = new \app\models\Database;
     $dbObj = $db->createdb($name, App::$param['databaseTemplate'], "UTF8");
+    $res = file_get_contents("http://127.0.0.1:1337/add?db=" . $name);
+
     // databaseTemplate is set in conf/main.php
     if ($dbObj) {
         header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
