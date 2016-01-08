@@ -64,14 +64,16 @@ class Tilecache extends \app\inc\Controller
         }
         //die(print_r($layer, true));
         //die($url);
-        $type = get_headers($url, 1)["Content-Type"];
-        //die($type);
+        $headers = get_headers($url, 1);
+        $context = stream_context_create(array(
+            'http' => array('ignore_errors' => true),
+        ));
         header('X-Powered-By: GC2 TileCache');
-
-        switch ($type) {
+        header("Expires: {$headers["Expires"]}");
+        switch ($headers["Content-Type"]) {
             case "text/xml":
                 header('Content-type: text/xml');
-                echo file_get_contents($url);
+                echo file_get_contents($url, false, $context);
                 exit();
                 break;
             case "image/png":

@@ -57,7 +57,7 @@ class Mapcache extends \app\inc\Controller
                 break;
             case "wms";
                 $get = array_change_key_case($_GET, CASE_UPPER);
-                if (strtolower($get["REQUEST"]) == "getcapabilities" ||
+                if (
                     strtolower($get["REQUEST"]) == "getlegendgraphic" ||
                     strtolower($get["REQUEST"]) == "getfeatureinfo" ||
                     strtolower($get["REQUEST"]) == "describefeaturetype" ||
@@ -68,7 +68,6 @@ class Mapcache extends \app\inc\Controller
                 } else {
                     $layer = $get["LAYERS"];
                 }
-                break;
                 break;
             case "xyz";
                 die("xyz");
@@ -87,38 +86,44 @@ class Mapcache extends \app\inc\Controller
                 break;
         }
         //die(print_r($layer, true));
-
         $url = $url ?: $this->host . $uri;
         //die($url);
-        $type = get_headers($url, 1)["Content-Type"];
-        //$type = "image/png";
-        //die($type);
-
-        header('X-Powered-By: GC2 MapCache');
-
-        switch ($type) {
+        $headers = get_headers($url, 1);
+        $context = stream_context_create(array(
+            'http' => array('ignore_errors' => true),
+        ));
+        header("X-Powered-By: GC2 MapCache");
+        header("Expires: {$headers["Expires"]}");
+        switch ($headers["Content-Type"]) {
             case "text/plain":
                 header('Content-type: text/plain');
-                $response['success'] = false;
-                $response['message'] = "Could create tile";
-                $response['code'] = 406;
-                header("HTTP/1.0 {$response['code']} " . \app\inc\Util::httpCodeText($response['code']));
-                echo \app\inc\Response::toJson($response);
+                echo file_get_contents($url, false, $context);
                 exit();
                 break;
             case "application/xml":
                 header('Content-type: application/xml');
-                echo file_get_contents($url);
+                echo file_get_contents($url, false, $context);
+                exit();
+                break;
+            case "application/vnd.ogc.se_xml":
+                header('Content-type: application/xml');
+                echo file_get_contents($url, false, $context);
                 exit();
                 break;
             case "text/xml":
                 header('Content-type: text/xml');
-                echo file_get_contents($url);
+                echo file_get_contents($url, false, $context);
                 exit();
                 break;
             case "image/png":
                 $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
                 header('Content-type: image/png');
+                readfile($url);
+                exit();
+                break;
+            case "image/jpeg":
+                $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
+                header('Content-type: image/jpeg');
                 readfile($url);
                 exit();
                 break;
@@ -129,8 +134,8 @@ class Mapcache extends \app\inc\Controller
         exit();
     }
 
-    public function get_reload(){
-        echo file_get_contents("http://127.0.0.1:1337/reload");
-        exit();
+    public static function reload(){
+        $res = file_get_contents("http://127.0.0.1:1337/reload");
+        return $res;
     }
 }

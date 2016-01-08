@@ -71,7 +71,7 @@ class Cfgfile extends \app\inc\Controller
             }
         }
         $data = ob_get_clean();
-        $path = App::$param['path'] . "app/wms/cfgfiles/";
+        $path = App::$param['path'] . "/app/wms/cfgfiles/";
         $name = Connection::$param['postgisdb'] . ".tilecache.cfg";
         @unlink($path . $name);
         $fh = fopen($path . $name, 'w');

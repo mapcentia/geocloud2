@@ -549,7 +549,7 @@ geocloud = (function () {
         // TODO Setting for either TileCache or MapCache
 
         if (1 === 1) {
-            url = defaults.host + "/tilecache/" + defaults.db + "/tms/";
+            url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
         } else {
             url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
         }
@@ -574,9 +574,10 @@ geocloud = (function () {
 
                 break;
             case "leaflet":
-                l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
+                l = new L.TileLayer(url + "1.0.0/" + layer + "@g1024" + "/{z}/{x}/{y}.png", {
                     tms: true,
-                    maxZoom: 20
+                    maxZoom: 20,
+                    tileSize: 1024
                 });
                 l.id = layer;
                 break;
