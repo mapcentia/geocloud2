@@ -28,7 +28,6 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Credentials: true");
 }
 
-
 // Start routing
 if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default

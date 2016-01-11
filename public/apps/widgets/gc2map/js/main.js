@@ -429,6 +429,7 @@ MapCentia = function (globalId) {
                             layerTitel = (metaDataKeys[value.split(".")[1]].f_table_title !== null && metaDataKeys[value.split(".")[1]].f_table_title !== "") ? metaDataKeys[value.split(".")[1]].f_table_title : metaDataKeys[value.split(".")[1]].f_table_name,
                             not_querable = metaDataKeys[value.split(".")[1]].not_querable,
                             versioning = metaDataKeys[value.split(".")[1]].versioning,
+                            data = metaDataKeys[value.split(".")[1]].data || "SELECT * FROM \"" + metaDataKeys[value.split(".")[1]].f_table_schema + "\".\"" + metaDataKeys[value.split(".")[1]].f_table_name + "\"",
                             res;
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
@@ -493,13 +494,13 @@ MapCentia = function (globalId) {
                         });
                         cloud.addGeoJsonStore(qstore[index]);
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
-                            sql = "SELECT * FROM " + value + " WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
+                            sql = "SELECT * FROM (" + data + ") AS foo WHERE round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857))) < " + distance;
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL";
                             }
                             sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                         } else {
-                            sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
+                            sql = "SELECT * FROM (" + data + ") AS foo WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + ")," + f_geometry_column + ")";
                             if (versioning) {
                                 sql = sql + " AND gc2_version_end_date IS NULL";
                             }

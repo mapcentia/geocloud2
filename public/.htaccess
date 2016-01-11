@@ -1,5 +1,9 @@
 AddDefaultCharset UTF-8
 AddType text/cache-manifest .appcache
+
+# Force IE in Edge mode
+Header add X-UA-Compatible "IE=edge"
+
 <ifmodule mod_expires.c>
 <FilesMatch ".(ico|jpg|jpeg|png|gif|js|css|swf)$">
         ExpiresActive on

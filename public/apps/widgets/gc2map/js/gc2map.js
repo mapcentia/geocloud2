@@ -179,7 +179,7 @@ if (typeof gc2map === "undefined") {
                             }
                         } else {
                             i = i + 1;
-                            if (i > 100) {
+                            if (i > 1000) {
                                 alert("Seems that i18n file " + (defaults.locale || window.gc2Al) + ".js is not loading. Please check your locale setting.");
                             } else {
                                 setTimeout(pollForDict, 10);

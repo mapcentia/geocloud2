@@ -2280,6 +2280,7 @@ $(window).ready(function () {
                                             viewConfig: {
                                                 //forceFit: true
                                             },
+                                            border: false,
                                             store: dataStore,
                                             listeners: {},
                                             sm: new Ext.grid.RowSelectionModel({
