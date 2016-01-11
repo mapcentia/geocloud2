@@ -1291,7 +1291,8 @@ $(window).ready(function () {
             '</table>'
         ];
         var activeTab = Ext.getCmp("layerStyleTabs").getActiveTab();
-        Ext.getCmp("layerStyleTabs").activate(2);
+
+        Ext.getCmp("layerStyleTabs").activate(3);
 
         Ext.getCmp("layerStyleTabs").activate(1);
         var template = new Ext.Template(markup);
@@ -1307,6 +1308,15 @@ $(window).ready(function () {
         a4.add(wmsLayer.sqlForm);
         a1.doLayout();
         a4.doLayout();
+
+        Ext.getCmp("layerStyleTabs").activate(2);
+        var a12 = Ext.getCmp("a12");
+        a12.remove(tileLayer.grid);
+        tileLayer.grid = null;
+        tileLayer.init(record);
+        a12.add(tileLayer.grid);
+        a12.doLayout();
+
 
         Ext.getCmp("layerStyleTabs").activate(0);
         var a2 = Ext.getCmp("a2");
@@ -2496,9 +2506,6 @@ $(window).ready(function () {
                                                             };
                                                             param = Ext.util.JSON.encode(param);
 
-                                                            // Encode the json because it can contain "="
-                                                            //param = encodeURIComponent(param);
-
                                                             Ext.Ajax.request({
                                                                 url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
                                                                 method: 'put',
@@ -2585,6 +2592,22 @@ $(window).ready(function () {
                                                     background: '#ffffff',
                                                     padding: '10px'
                                                 }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        xtype: "panel",
+                                        title: __('Tile cache'),
+                                        height: 700,
+                                        defaults: {
+                                            border: false
+                                        },
+                                        border: false,
+                                        items: [
+                                            {
+                                                xtype: "panel",
+                                                id: "a12",
+                                                layout: "fit"
                                             }
                                         ]
                                     },

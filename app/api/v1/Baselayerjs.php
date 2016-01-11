@@ -28,8 +28,12 @@ class Baselayerjs extends \app\inc\Controller
         echo "enableWorkflow: " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']).",\n";
         if ($settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
-            echo "es_settings: ". $settings;
+            echo "es_settings: ". $settings.",\n";
         }
+        foreach (\app\controllers\Mapcache::getGrids() as $k => $v) {
+            $gridNames[] = $k;
+        }
+        echo "grids: " . (json_encode($gridNames) ? : "null")  ."\n";
         echo "};\n";
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";

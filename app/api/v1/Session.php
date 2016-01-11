@@ -3,7 +3,6 @@ namespace app\api\v1;
 
 use \app\inc\Input;
 
-
 class Session extends \app\inc\Controller
 {
     private $session;

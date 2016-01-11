@@ -49,9 +49,11 @@ class Session extends Model
             $response['success'] = true;
             $response['message'] = "Session started";
             $response['screen_name'] = $_SESSION['screen_name'];
+            $response['session_id'] = session_id() ;
             $response['subuser'] = $_SESSION['subuser'];
 
         } else {
+            session_unset();
             $response['success'] = false;
             $response['message'] = "Session not started";
             $response['code'] = "401";

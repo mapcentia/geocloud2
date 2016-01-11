@@ -150,6 +150,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/elasticsearchmapping.js?9d7efee6c8406f63"></script>
 <script type="text/javascript" src="/js/editwmsclass.js?78db6f79d8ee26a1"></script>
 <script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
+<script type="text/javascript" src="/js/edittilelayer.js?6cd3fec277824e02"></script>
 <script type="text/javascript" src="/js/classwizards.js?b8da68ac7ecfbe3b"></script>
 <script type="text/javascript" src="/js/addshapeform.js?a1a04d59aa4b5edb"></script>
 <script type="text/javascript" src="/js/addbitmapform.js?38dde20cbaec7c80"></script>

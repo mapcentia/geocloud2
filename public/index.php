@@ -124,9 +124,14 @@ if (Input::getPath()->part(1) == "api") {
     $tileCache->fetch();
 
 } elseif (Input::getPath()->part(1) == "mapcache") {
+    // Use TileCache instead if there is no MapCache settings
     Session::start();
-    $mapCache = new \app\controllers\mapcache();
-    $mapCache->fetch();
+    if (isset(App::$param["mapCache"])) {
+        $cache = new \app\controllers\mapcache();
+    } else {
+        $cache = new \app\controllers\tilecache();
+    }
+    $cache->fetch();
 
 } elseif (Input::getPath()->part(1) == "wfs") {
     Session::start();

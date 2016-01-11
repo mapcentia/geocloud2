@@ -22,7 +22,7 @@ class Tile extends \app\inc\Controller
     public function put_index()
     {
         $response = $this->auth(Input::getPath()->part(4));
-        return (!$response['success']) ? $response : $this->wmslayer->update(Input::get('data'));
+        return (!$response['success']) ? $response : $this->wmslayer->update(json_decode(Input::get(null, true))->data);
     }
 
     public function get_fields()

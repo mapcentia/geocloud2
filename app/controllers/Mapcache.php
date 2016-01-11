@@ -1,6 +1,8 @@
 <?php
 namespace app\controllers;
 
+use \app\conf\App;
+
 class Mapcache extends \app\inc\Controller
 {
     private $db;
@@ -30,11 +32,6 @@ class Mapcache extends \app\inc\Controller
                 $b = explode("@", $parts[$i]);
                 if (sizeof($b) > 1) {
                     $parts[$i] = $b[1];
-                }
-            }
-            if ($i == 3) {
-                if ($parts[$i] == "xyz") {
-                    $parts[$i] = "gmaps";
                 }
             }
             $uriParts[] = $parts[$i];
@@ -69,8 +66,8 @@ class Mapcache extends \app\inc\Controller
                     $layer = $get["LAYERS"];
                 }
                 break;
-            case "xyz";
-                die("xyz");
+            case "gmaps";
+                die("gmaps");
                 break;
             case "kml";
                 die("kml");
@@ -137,5 +134,22 @@ class Mapcache extends \app\inc\Controller
     public static function reload(){
         $res = file_get_contents("http://127.0.0.1:1337/reload");
         return $res;
+    }
+
+    public static function getGrids() {
+        $gridNames = array();
+        $pathToGrids = App::$param['path'] . "app/conf/grids/";
+        $grids = scandir($pathToGrids);
+        foreach ($grids as $grid) {
+            $bits = explode(".", $grid);
+            if ($bits[1] == "xml") {
+                $str = file_get_contents($pathToGrids . $grid);
+                $xml = simplexml_load_string($str);
+                if ($xml) {
+                    $gridNames[(string)$xml->attributes()->name] = $str;
+                }
+            }
+        }
+        return $gridNames;
     }
 }

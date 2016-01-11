@@ -22,7 +22,7 @@ Ext.namespace("Heron.options.map.resolutions");
 var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
     enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
     dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
-    searchTable ="clone.adresser2ejendom2ejer";
+    searchTable = "clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
     "use strict";
@@ -37,14 +37,7 @@ MapCentia.setup = function () {
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url;
-    if (1 === 1) {
-        // TODO Setting for either TileCache or MapCache
-
         url = '/mapcache/' + db + '/wms/';
-    } else {
-        url = '/wms/' + db + '/tilecache/';
-    }
     //wfsUrl = '/wfs/' + db + '/' + schema;
     enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
     $.ajax({
@@ -321,8 +314,8 @@ MapCentia.setup = function () {
             strokeDashstyle: "dash"
         };
         // Remove GEOMETRYCOLLECTION around the WKT string
-        if(wkt.search("GEOMETRYCOLLECTION")!==-1){
-            wkt = wkt.replace("GEOMETRYCOLLECTION(","");
+        if (wkt.search("GEOMETRYCOLLECTION") !== -1) {
+            wkt = wkt.replace("GEOMETRYCOLLECTION(", "");
             wkt = wkt.substring(0, wkt.length - 1)
         }
         if (buffer > 0) {
@@ -1310,11 +1303,11 @@ MapCentia.init = function () {
                         'd'
                     ],
                     data: [
-                        [10,"10 m"],
-                        [20,"20 m"],
-                        [30,"30 m"],
-                        [40,"40 m"],
-                        [50,"50 m"]
+                        [10, "10 m"],
+                        [20, "20 m"],
+                        [30, "30 m"],
+                        [40, "40 m"],
+                        [50, "50 m"]
                     ]
                 }),
                 valueField: 'v',

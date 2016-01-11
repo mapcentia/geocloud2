@@ -36,22 +36,31 @@ class Mapcachefile extends \app\inc\Controller
                 <quality>60</quality>
                 <photometric>ycbcr</photometric>
             </format>
-
+            <format name="jpeg_medium" type="JPEG">
+                <quality>75</quality>
+                <photometric>ycbcr</photometric>
+            </format>
+            <format name="jpeg_high" type="JPEG">
+                <quality>95</quality>
+                <photometric>ycbcr</photometric>
+            </format>
+            <grid name="g20">
+                <metadata>
+                    <title>GoogleMapsCompatible</title>
+                    <WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
+                </metadata>
+                <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
+                <srs>EPSG:900913</srs>
+                <srsalias>EPSG:3857</srsalias>
+                <units>m</units>
+                <size>256 256</size>
+                <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739 0.149291</resolutions>
+            </grid>
             <?php
-            $gridNames = array();
-            $pathToGrids = App::$param['path'] . "app/conf/grids/";
-            $grids = scandir($pathToGrids);
+            $grids = \app\controllers\Mapcache::getGrids();
             foreach ($grids as $grid) {
-                $bits = explode(".", $grid);
-                if ($bits[1] == "xml") {
-                    array_push($gridNames, $bits[0]);
-                    $res = file_get_contents($pathToGrids . $grid);
-                    echo $res . "\n";
-                }
+                echo $grid . "\n";
             }
-            ?>
-
-            <?php
             $arr = array();
             $table = null;
             $sql = "SELECT * FROM settings.geometry_columns_view ORDER BY sort_id";
@@ -69,7 +78,9 @@ class Mapcachefile extends \app\inc\Controller
                         $meta_size = $def->meta_size ?: "1";
                         $meta_size = $def->meta_tiles ? $meta_size : "1";
                         $meta_buffer = $def->meta_buffer ?: 0;
-                        $expire = ($def->ttl < 30) ?  30 : $def->ttl;
+                        $expire = ($def->ttl < 30) ? 30 : $def->ttl;
+                        $auto_expire = $def->auto_expire ?: null;
+                        $format = $def->format ?: "PNG";
                         ?>
 
             <!-- <?php echo $table ?> -->
@@ -98,17 +109,19 @@ class Mapcachefile extends \app\inc\Controller
             <tileset name="<?php echo $table ?>">
                 <source><?php echo $table ?></source>
                 <cache>disk</cache>
+                <grid>g20</grid>
                 <grid>g</grid>
                 <grid>WGS84</grid>
                 <?php
-                        foreach ($gridNames as $gridName) {
-                            echo "<grid>{$gridName}</grid>\n";
+                        foreach ($grids as $k => $v) {
+                            echo "<grid>{$k}</grid>\n";
                         }
                         ?>
-                <format>PNG</format>
+                <format><?php echo $format ?></format>
                 <metatile><?php echo $meta_size ?> <?php echo $meta_size ?></metatile>
                 <metabuffer><?php echo $meta_buffer ?></metabuffer>
                 <expires><?php echo $expire ?></expires>
+                <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
                 <metadata>
                     <title><?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?></title>
                      <abstract><?php echo $row['f_table_abstract']; ?></abstract>
@@ -125,14 +138,13 @@ class Mapcachefile extends \app\inc\Controller
                 <resample_mode>bilinear</resample_mode>
                 <format allow_client_override="true">PNG</format>
                 <maxsize>4096</maxsize>
+
             </service>
             <service type="wmts" enabled="true"/>
             <service type="tms" enabled="true"/>
             <service type="kml" enabled="true"/>
             <service type="gmaps" enabled="true"/>
             <service type="ve" enabled="true"/>
-            <service type="mapguide" enabled="true"/>
-            <service type="demo" enabled="true"/>
             <errors>report</errors>
             <lock_dir>/tmp</lock_dir>
         </mapcache>

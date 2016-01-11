@@ -497,12 +497,7 @@ geocloud = (function () {
             url = defaults.host + "/wms/" + defaults.db + "/" + parts[0] + "?";
             urlArray = [url];
         } else {
-            // TODO Setting for either TileCache or MapCache
-            if (1 === 1) {
-                url = defaults.host + "/tilecache/" + defaults.db + "/wms";
-            } else {
-                url = defaults.host + "/wms/" + defaults.db + "/tilecache";
-            }
+            url = defaults.host + "/mapcache/" + defaults.db + "/wms";
             var url1 = url;
             var url2 = url;
             var url3 = url;
@@ -547,12 +542,7 @@ geocloud = (function () {
     createTMSLayer = function (layer, defaults) {
         var l, url, urlArray;
         // TODO Setting for either TileCache or MapCache
-
-        if (1 === 1) {
-            url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
-        } else {
-            url = defaults.host + "/wms/" + defaults.db + "/tilecache/";
-        }
+        url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
         var url1 = url;
         var url2 = url;
         var url3 = url;
@@ -574,10 +564,10 @@ geocloud = (function () {
 
                 break;
             case "leaflet":
-                l = new L.TileLayer(url + "1.0.0/" + layer + "@g1024" + "/{z}/{x}/{y}.png", {
+                l = new L.TileLayer(url + "1.0.0/" + layer + "" + "/{z}/{x}/{y}.png", {
                     tms: true,
                     maxZoom: 20,
-                    tileSize: 1024
+                    tileSize: 256
                 });
                 l.id = layer;
                 break;
@@ -890,9 +880,9 @@ geocloud = (function () {
         var _map = this.map;
         this.addLayer = function (layer, name, baseLayer) {
             if (baseLayer) {
-            lControl.addBaseLayer(layer, name);
+                lControl.addBaseLayer(layer, name);
             } else {
-            lControl.addOverlay(layer, name);
+                lControl.addOverlay(layer, name);
             }
         }
         //ol2, ol3 and leaflet
