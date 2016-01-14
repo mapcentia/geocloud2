@@ -129,7 +129,7 @@ include("html_header.php");
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 </script>
-<script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7eec3ebfb294b86f"></script>
+<script type="text/javascript" src="/js/ext/adapter/ext/ext-base-debug.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
