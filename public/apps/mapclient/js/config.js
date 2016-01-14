@@ -47,9 +47,6 @@ MapCentia.setup = function () {
         1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
 
     MapCentia.gc2 = new geocloud.map({
-        numZoomLevels: 20,
-        projection: projection,
-
 
     });
 
@@ -102,7 +99,7 @@ MapCentia.setup = function () {
                 center: Heron.options.center || [0, 0],
                 numZoomLevels: 8,
                 resolutions: Heron.options.resolutions,
-                //maxResolution: Heron.options.resolutions,
+                maxResolution: Heron.options.resolutions,
                 xy_precision: 5,
                 zoom: Heron.options.zoom, // Why?
                 theme: null,
