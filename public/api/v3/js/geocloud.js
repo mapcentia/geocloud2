@@ -584,8 +584,8 @@ geocloud = (function () {
                 fadeAnimation: true,
                 zoomAnimation: true,
                 showLayerSwitcher: false,
-                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34'
-
+                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+                resolutions: resolutions
             };
         if (config) {
             for (prop in config) {
@@ -858,9 +858,8 @@ geocloud = (function () {
                     //theme: null,
                     controls: olControls,
                     numZoomLevels: defaults.numZoomLevels,
+                    resolutions: defaults.resolutions,
                     projection: defaults.projection,
-                    maxResolution: defaults.maxResolution,
-                    minResolution: defaults.minResolution,
                     maxExtent: defaults.maxExtent,
                     eventListeners: defaults.eventListeners
                 });
@@ -1454,7 +1453,7 @@ geocloud = (function () {
                 displayInLayerSwitcher: true,
                 name: null,
                 names: [],
-                resolutions: resolutions,
+                resolutions: this.map.resolutions,
                 type: "wms"
             };
             if (config) {

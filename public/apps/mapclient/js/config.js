@@ -47,9 +47,10 @@ MapCentia.setup = function () {
         1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
 
     MapCentia.gc2 = new geocloud.map({
-
+        projection: Heron.options.projection,
+        maxExtent: OpenLayers.Bounds.fromString(Heron.options.maxExtent),
+        resolutions: Heron.options.resolutions
     });
-
 
     //wfsUrl = '/wfs/' + db + '/' + schema;
     enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
@@ -59,7 +60,6 @@ MapCentia.setup = function () {
         jsonp: 'jsonp_callback',
         success: function (response) {
             var firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
-            console.log(Heron.options.projection);
             if (typeof response.data.extents === "object") {
                 if (typeof response.data.zoom !== "undefined" && typeof response.data.zoom[firstSchema] !== "undefined") {
                     Heron.options.zoom = response.data.zoom[firstSchema];
@@ -74,9 +74,7 @@ MapCentia.setup = function () {
                 } else {
                     Heron.options.center = null;
                 }
-                console.log(Heron.options.center)
                 if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[firstSchema] !== "undefined" && response.data.extentrestricts[firstSchema] !== null) {
-                    console.log(response.data.extentrestricts[firstSchema])
                     var restrictedExtent = response.data.extentrestricts[firstSchema];
                     var p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", Heron.options.projection);
                     var p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", Heron.options.projection);
@@ -97,7 +95,6 @@ MapCentia.setup = function () {
                 maxExtent: Heron.options.maxExtent,
                 restrictedExtent: Heron.options.extentrestrict,
                 center: Heron.options.center || [0, 0],
-                numZoomLevels: 8,
                 resolutions: Heron.options.resolutions,
                 maxResolution: Heron.options.resolutions,
                 xy_precision: 5,
@@ -124,10 +121,10 @@ MapCentia.setup = function () {
                         altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
                         lName = window.setBaseLayers[i].name;
                     }
-                    bl = MapCentia.gc2.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+                    bl = MapCentia.gc2.addBaseLayer(window.setBaseLayers[i].id + Heron.options.grid, window.setBaseLayers[i].db, altId, lName);
                     baseLayers.push({
                         nodeType: "gx_layer",
-                        layer: window.setBaseLayers[i].id,
+                        layer: window.setBaseLayers[i].id + Heron.options.grid,
                         text: window.setBaseLayers[i].name
                     });
                 }
@@ -240,7 +237,9 @@ MapCentia.setup = function () {
                         );
                     });
                     baseLayers = baseLayers.concat(custombaseLayers.reverse());
+
                     Heron.options.map.layers = MapCentia.gc2.getBaseLayers(true).concat(bArr.reverse()).concat(Heron.options.map.layers);
+
 
                     // Define a blank base layer and add it
                     var blank = new OpenLayers.Layer.Image(
