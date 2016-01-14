@@ -22,6 +22,7 @@ Ext.namespace("Heron.options.map.resolutions");
 var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
     enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
     dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
+    projection,
     searchTable = "clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
@@ -29,15 +30,30 @@ MapCentia.setup = function () {
     Heron.globals.metaReady = false;
     Heron.globals.serviceUrl = '/cgi/heron.cgi';
     Ext.BLANK_IMAGE_URL = '/js/ext/resources/images/default/s.gif';
-    Heron.options.resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
-        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
-        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-        1.19432856696, 0.597164283478, 0.298582141739, 0.1492910708695, 0.07464553543475];
-    MapCentia.gc2 = new geocloud.map({});
+
     var uri = window.location.pathname.split("/"),
         db = uri[3],
         schema = uri[4],
-        url = '/mapcache/' + db + '/wms/';
+        url = '/mapcache/' + db + '/';
+
+    var hasClientConfig = (window.gc2Options.clientConfig !== null && typeof window.gc2Options.clientConfig[db] !== "undefined") ? true : false;
+
+    Heron.options.projection = hasClientConfig ? window.gc2Options.clientConfig[db].projection : "EPSG:900913";
+    Heron.options.grid = hasClientConfig ? "@" + window.gc2Options.clientConfig[db].grid : "";
+    Heron.options.maxExtent = hasClientConfig ? window.gc2Options.clientConfig[db].maxExtent : "-20037508.34, -20037508.34, 20037508.34, 20037508.34";
+    Heron.options.resolutions = hasClientConfig ? window.gc2Options.clientConfig[db].resolutions : [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
+        4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
+        76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
+        1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
+
+    MapCentia.gc2 = new geocloud.map({
+        numZoomLevels: 20,
+        projection: projection,
+
+
+    });
+
+
     //wfsUrl = '/wfs/' + db + '/' + schema;
     enablePrint = (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint[db] !== "undefined" && window.gc2Options.enablePrint[db] === true) || (window.gc2Options.enablePrint !== null && typeof window.gc2Options.enablePrint["*"] !== "undefined" && window.gc2Options.enablePrint["*"] === true);
     $.ajax({
@@ -46,6 +62,7 @@ MapCentia.setup = function () {
         jsonp: 'jsonp_callback',
         success: function (response) {
             var firstSchema = schema.split(",").length > 1 ? schema.split(",")[0] : schema;
+            console.log(Heron.options.projection);
             if (typeof response.data.extents === "object") {
                 if (typeof response.data.zoom !== "undefined" && typeof response.data.zoom[firstSchema] !== "undefined") {
                     Heron.options.zoom = response.data.zoom[firstSchema];
@@ -54,13 +71,19 @@ MapCentia.setup = function () {
                 }
 
                 if (typeof response.data.center !== "undefined" && typeof response.data.center[firstSchema] !== "undefined") {
-                    Heron.options.center = response.data.center[firstSchema];
+                    var center = response.data.center[firstSchema];
+                    var pCenter = geocloud.transformPoint(center[0], center[1], "EPSG:900913", Heron.options.projection);
+                    Heron.options.center = [pCenter.x, pCenter.y];
                 } else {
                     Heron.options.center = null;
                 }
-
-                if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[firstSchema] !== "undefined") {
-                    Heron.options.extentrestrict = response.data.extentrestricts[firstSchema];
+                console.log(Heron.options.center)
+                if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[firstSchema] !== "undefined" && response.data.extentrestricts[firstSchema] !== null) {
+                    console.log(response.data.extentrestricts[firstSchema])
+                    var restrictedExtent = response.data.extentrestricts[firstSchema];
+                    var p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", Heron.options.projection);
+                    var p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", Heron.options.projection);
+                    Heron.options.extentrestrict = [p1.x, p1.y, p2.x, p2.y];
                 } else {
                     Heron.options.extentrestrict = null;
                 }
@@ -71,16 +94,17 @@ MapCentia.setup = function () {
                 }
             }
             Heron.options.map.settings = {
-                projection: 'EPSG:900913',
+                projection: Heron.options.projection,
                 displayProjection: new OpenLayers.Projection("EPSG:4326"),
                 units: 'm',
-                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+                maxExtent: Heron.options.maxExtent,
                 restrictedExtent: Heron.options.extentrestrict,
                 center: Heron.options.center || [0, 0],
-                numZoomLevels: 22,
-                maxResolution: Heron.options.resolutions,
+                numZoomLevels: 8,
+                resolutions: Heron.options.resolutions,
+                //maxResolution: Heron.options.resolutions,
                 xy_precision: 5,
-                zoom: Heron.options.zoom + 1 || 1, // Why?
+                zoom: Heron.options.zoom, // Why?
                 theme: null,
                 permalinks: {
                     /** The prefix to be used for parameters, e.g. map_x, default is 'map' */
@@ -143,9 +167,9 @@ MapCentia.setup = function () {
                             layer = [
                                 "OpenLayers.Layer.TMS",
                                 name,
-                                url,
+                                url + "tms/",
                                 {
-                                    layername: name,
+                                    layername: name + Heron.options.grid,
                                     type: 'png',
                                     resolutions: Heron.options.resolutions,
                                     isBaseLayer: isBaseLayer,
@@ -159,7 +183,7 @@ MapCentia.setup = function () {
                             layer = [
                                 "OpenLayers.Layer.WMS",
                                 name,
-                                url + name.split(".")[0],
+                                url + "wms/" + name.split(".")[0],
                                 {
                                     layers: name,
                                     format: 'image/png',
@@ -225,7 +249,7 @@ MapCentia.setup = function () {
                     var blank = new OpenLayers.Layer.Image(
                         "None",
                         Ext.BLANK_IMAGE_URL,
-                        OpenLayers.Bounds.fromString(Heron.options.map.settings.maxExtent),
+                        OpenLayers.Bounds.fromString(Heron.options.maxExtent),
                         new OpenLayers.Size(10, 10),
                         {
                             resolutions: Heron.options.resolutions,

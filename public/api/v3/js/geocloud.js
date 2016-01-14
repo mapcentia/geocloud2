@@ -583,7 +583,9 @@ geocloud = (function () {
                 projection: "EPSG:900913",
                 fadeAnimation: true,
                 zoomAnimation: true,
-                showLayerSwitcher: false
+                showLayerSwitcher: false,
+                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34'
+
             };
         if (config) {
             for (prop in config) {
@@ -1423,7 +1425,7 @@ geocloud = (function () {
                     o = this.addHere("hereNormalNightGrey");
                     break;
                 default : // Try to add as tile layer
-                    this.addTileLayers({
+                    o =this.addTileLayers({
                         layers: [l],
                         db: db,
                         isBaseLayer: true,
