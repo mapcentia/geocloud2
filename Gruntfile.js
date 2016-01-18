@@ -80,6 +80,7 @@ module.exports = function (grunt) {
                         'public/js/elasticsearchmapping.js',
                         'public/js/editwmsclass.js',
                         'public/js/editwmslayer.js',
+                        'public/js/edittilelayer.js',
                         'public/js/classwizards.js',
                         'public/js/addshapeform.js',
                         'public/js/addbitmapform.js',
