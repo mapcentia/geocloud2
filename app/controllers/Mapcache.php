@@ -127,12 +127,12 @@ class Mapcache extends \app\inc\Controller
         }
     }
     public function get_add(){
-        echo file_get_contents("http://127.0.0.1:1337/add?db=" . \app\inc\Input::getPath()->part(4));
+        echo file_get_contents(App::$param["mapCache"]["mapCacheApi"] ."/add?db=" . \app\inc\Input::getPath()->part(4));
         exit();
     }
 
     public static function reload(){
-        $res = file_get_contents("http://127.0.0.1:1337/reload");
+        $res = file_get_contents(App::$param["mapCache"]["mapCacheApi"] . "/reload");
         return $res;
     }
 
