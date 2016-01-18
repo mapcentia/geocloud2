@@ -119,16 +119,16 @@ if (Input::getPath()->part(1) == "api") {
 
 } elseif (Input::getPath()->part(1) == "tilecache") {
     Session::start();
-    $tileCache = new \app\controllers\tilecache();
+    $tileCache = new \app\controllers\Tilecache();
     $tileCache->fetch();
 
 } elseif (Input::getPath()->part(1) == "mapcache") {
     // Use TileCache instead if there is no MapCache settings
     Session::start();
     if (isset(App::$param["mapCache"])) {
-        $cache = new \app\controllers\mapcache();
+        $cache = new \app\controllers\Mapcache();
     } else {
-        $cache = new \app\controllers\tilecache();
+        $cache = new \app\controllers\Tilecache();
     }
     $cache->fetch();
 
