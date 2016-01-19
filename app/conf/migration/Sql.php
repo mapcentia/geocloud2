@@ -44,6 +44,8 @@ class Sql
                       created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+
         $sqls[] = "CREATE OR REPLACE VIEW non_postgis_tables AS
                      SELECT t.table_name::character varying(256) AS f_table_name,
                         t.table_schema::character varying(256) AS f_table_schema,
@@ -76,7 +78,6 @@ class Sql
                                   NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_tables'::text) AND
                                   NOT t.table_schema::text = 'pg_catalog'::text AND NOT t.table_schema::text = 'information_schema'::text;
                     ";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
         $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                       SELECT
                         geometry_columns.f_table_schema,
