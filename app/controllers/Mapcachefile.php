@@ -92,7 +92,7 @@ class Mapcachefile extends \app\inc\Controller
                          </params>
                   </getmap>
                   <http>
-                        <url><?php echo App::$param["mapCache"]["MapCacheWmsHost"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
                   </http>
                   <getfeatureinfo>
                             <!-- info_formats: comma separated list of wms info_formats supported by the source WMS.

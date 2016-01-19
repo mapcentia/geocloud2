@@ -12,7 +12,7 @@ class Mapcache extends \app\inc\Controller
     function __construct()
     {
         $this->db = \app\inc\Input::getPath()->part(2);
-        $this->host = \app\conf\App::$param["mapCache"]["mapcacheHost"];
+        $this->host = \app\conf\App::$param["mapCache"]["host"];
 
         $dbSplit = explode("@", $this->db);
         if (sizeof($dbSplit) == 2) {
@@ -127,12 +127,12 @@ class Mapcache extends \app\inc\Controller
         }
     }
     public function get_add(){
-        echo file_get_contents(App::$param["mapCache"]["mapCacheApi"] ."/add?db=" . \app\inc\Input::getPath()->part(4));
+        echo file_get_contents(App::$param["mapCache"]["api"] ."/add?db=" . \app\inc\Input::getPath()->part(4));
         exit();
     }
 
     public static function reload(){
-        $res = file_get_contents(App::$param["mapCache"]["mapCacheApi"] . "/reload");
+        $res = file_get_contents(App::$param["mapCache"]["api"] . "/reload");
         return $res;
     }
 
