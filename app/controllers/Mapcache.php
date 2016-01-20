@@ -8,6 +8,7 @@ class Mapcache extends \app\inc\Controller
     private $db;
     private $host;
     private $subUser;
+    private $type;
 
     function __construct()
     {
@@ -60,7 +61,7 @@ class Mapcache extends \app\inc\Controller
                     strtolower($get["REQUEST"]) == "describefeaturetype" ||
                     isset($get["FORMAT_OPTIONS"]) == true
                 ) {
-                    $url = "http://127.0.0.1" . "/wms/" . $this->db . "/" . $parts[4] . "?" . explode("?", explode("?",$uri)[1])[1];
+                    $url = "http://127.0.0.1" . "/wms/" . $this->db . "/" . $parts[4] . "?" . explode("?", explode("?", $uri)[1])[1];
 
                 } else {
                     $layer = $get["LAYERS"];
@@ -84,59 +85,53 @@ class Mapcache extends \app\inc\Controller
         }
         //die(print_r($layer, true));
         $url = $url ?: $this->host . $uri;
-        //die($url);
-        $headers = get_headers($url, 1);
-        $context = stream_context_create(array(
-            'http' => array('ignore_errors' => true),
-        ));
+
         header("X-Powered-By: GC2 MapCache");
-        header("Expires: {$headers["Expires"]}");
-        switch ($headers["Content-Type"]) {
-            case "text/plain":
-                header('Content-type: text/plain');
-                echo file_get_contents($url, false, $context);
-                exit();
-                break;
-            case "application/xml":
-                header('Content-type: application/xml');
-                echo file_get_contents($url, false, $context);
-                exit();
-                break;
-            case "application/vnd.ogc.se_xml":
-                header('Content-type: application/xml');
-                echo file_get_contents($url, false, $context);
-                exit();
-                break;
-            case "text/xml":
-                header('Content-type: text/xml');
-                echo file_get_contents($url, false, $context);
-                exit();
-                break;
-            case "image/png":
-                $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
-                header('Content-type: image/png');
-                readfile($url);
-                exit();
-                break;
-            case "image/jpeg":
-                $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
-                header('Content-type: image/jpeg');
-                readfile($url);
-                exit();
-                break;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
+            $bits = explode(":", $header_line);
+            if ($bits[0] == "Content-Type") {
+                $this->type = trim($bits[1]);
+            }
+            // Send text/xml instead of application/vnd.ogc.se_xml
+            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml"){
+                header("Content-Type: text/xml");
+            } else {
+                header($header_line);
+            }
+            return strlen($header_line);
+        });
+        $content = curl_exec($ch);
+        curl_close($ch);
+
+        // Check authentication level if image
+        if (explode("/", $this->type)[0] == "image") {
+            $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
         }
-    }
-    public function get_add(){
-        echo file_get_contents(App::$param["mapCache"]["api"] ."/add?db=" . \app\inc\Input::getPath()->part(4));
+
+        // Return content
+        echo $content;
         exit();
     }
 
-    public static function reload(){
+    public function get_add()
+    {
+        echo file_get_contents(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
+        exit();
+    }
+
+    public static function reload()
+    {
         $res = file_get_contents(App::$param["mapCache"]["api"] . "/reload");
         return $res;
     }
 
-    public static function getGrids() {
+    public static function getGrids()
+    {
         $gridNames = array();
         $pathToGrids = App::$param['path'] . "app/conf/grids/";
         $grids = scandir($pathToGrids);

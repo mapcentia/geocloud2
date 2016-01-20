@@ -87,7 +87,7 @@ class Processvector extends \app\inc\Controller
 
         switch ($_REQUEST['type']) {
             case "Point":
-                $type = "point";
+                $type = "multipoint";
                 break;
             case "Polygon":
                 $type = "multipolygon";

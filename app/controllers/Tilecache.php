@@ -11,6 +11,7 @@ class Tilecache extends \app\inc\Controller
     private $db;
     private $host;
     private $subUser;
+    private $type;
 
     function __construct()
     {
@@ -63,26 +64,38 @@ class Tilecache extends \app\inc\Controller
                 break;
         }
         //die(print_r($layer, true));
-        //die($url);
-        $headers = get_headers($url, 1);
-        $context = stream_context_create(array(
-            'http' => array('ignore_errors' => true),
-        ));
-        header('X-Powered-By: GC2 TileCache');
-        header("Expires: {$headers["Expires"]}");
-        switch ($headers["Content-Type"]) {
-            case "text/xml":
-                header('Content-type: text/xml');
-                echo file_get_contents($url, false, $context);
-                exit();
-                break;
-            case "image/png":
-                $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
-                header('Content-type: image/png');
-                readfile($url);
-                exit();
-                break;
+        $url = $url ?: $this->host . $uri;
+
+        header("X-Powered-By: GC2 TileCache");
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
+            $bits = explode(":", $header_line);
+            if ($bits[0] == "Content-Type") {
+                $this->type = trim($bits[1]);
+            }
+            // Send text/xml instead of application/vnd.ogc.se_xml
+            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml"){
+                header("Content-Type: text/xml");
+            } else {
+                header($header_line);
+            }
+            return strlen($header_line);
+        });
+        $content = curl_exec($ch);
+        curl_close($ch);
+
+        // Check authentication level if image
+        if (explode("/", $this->type)[0] == "image") {
+            $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
         }
+
+        // Return content
+        echo $content;
+        exit();
     }
 
     public function delete_index()
