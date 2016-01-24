@@ -269,13 +269,13 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             },
             columns: columnsForGrid
         })/*,
-        bbar: [new Ext.PagingToolbar({
-            pageSize: 2,
-            store: store,
-            displayInfo: true,
-            displayMsg: 'Features {0} - {1} of {2}',
-            emptyMsg: "No features"
-        })]*/
+         bbar: [new Ext.PagingToolbar({
+         pageSize: 2,
+         store: store,
+         displayInfo: true,
+         displayMsg: 'Features {0} - {1} of {2}',
+         emptyMsg: "No features"
+         })]*/
     });
 
     south.add(grid);
@@ -570,7 +570,8 @@ $(document).ready(function () {
         var treeConfig = [
             {
                 id: "baselayers",
-                nodeType: "gx_baselayercontainer"
+                nodeType: "gx_baselayercontainer",
+                singleClickExpand: true
             }
         ];
         $.ajax({
@@ -631,6 +632,7 @@ $(document).ready(function () {
                         treeConfig.push({
                             text: arr[i],
                             isLeaf: false,
+                            singleClickExpand: true,
                             expanded: false,
                             children: l.reverse()
                         });
@@ -1179,7 +1181,7 @@ $(document).ready(function () {
         '-',
         {
             text: "<i class='icon-screenshot btn-gc'></i> " + __("Locate me"),
-                handler: function () {
+            handler: function () {
                 cloud.locate();
             }
         }];

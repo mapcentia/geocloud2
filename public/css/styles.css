@@ -22,8 +22,8 @@
 }
 
 .x-box-item {
-    font-family: arial, tahoma, helvetica, sans-serif;
-    font-size: 11px;
+    font-family: 'Open Sans';
+    font-size: 10px;
     font-style: normal;
     font-variant: normal;
     font-weight: 400;
@@ -101,14 +101,45 @@ q:after, q:before {
 }
 
 .x-tree-node-collapsed .x-tree-node-icon, .x-tree-node-expanded .x-tree-node-icon {
-    background-image: url(/js/bootstrap/img/glyphicons-halflings.png) !important;
-    display: inline-block;
     width: 14px;
     height: 14px;
     line-height: 10px;
     vertical-align: text-top;
     background-repeat: no-repeat;
     margin-top: -1px
+}
+.x-tree-node-collapsed, .x-tree-node-expanded{
+    padding: 5px;
+}
+
+.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col {
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.x-tree-node-collapsed:before {
+    content: "\f196";
+}
+
+.x-tree-node-expanded:before {
+    content: "\f147";
+}
+
+.x-grid3-check-col-on, .x-grid3-check-col{
+    background-image: none !important;
+    text-align: center;
+    line-height: 19px;
+
+}
+.x-grid3-check-col-on:before {
+    content: "\f046"
+}
+
+.x-grid3-check-col:before {
+    content: "\f096"
 }
 
 .x-tree-node-expanded .x-tree-node-icon {
@@ -120,14 +151,17 @@ q:after, q:before {
 }
 
 .x-tree-no-lines .x-tree-elbow-end-minus, .x-tree-no-lines .x-tree-elbow-end-plus, .x-tree-no-lines .x-tree-elbow-minus, .x-tree-no-lines .x-tree-elbow-plus {
-    background-image: url(/js/bootstrap/img/glyphicons-halflings.png) !important;
     display: inline-block;
-    width: 14px;
+    width: 2px;
     height: 14px;
     line-height: 10px;
     vertical-align: text-top;
     background-repeat: no-repeat;
     margin-top: -1px
+}
+
+.x-tree-elbow, .x-tree-elbow-end{
+    width: 0px !important;
 }
 
 .x-tree-no-lines .x-tree-elbow-end-plus, .x-tree-no-lines .x-tree-elbow-plus {
@@ -140,10 +174,6 @@ q:after, q:before {
 
 .x-tree-node-icon {
     display: none
-}
-
-.btn-gc {
-    margin-top: -1px !important
 }
 
 #upload a {
@@ -162,14 +192,14 @@ q:after, q:before {
 }
 
 #upload div {
-    left: 10px;
+    left: 11px;
     position: relative;
-    font-family: verdana, arial, sans-serif;
+    font-family: 'Open Sans';
     font-size: 7.5pt
 }
 
 .layer-desc {
-    font-family: verdana, arial, sans-serif;
+    font-family: 'Open Sans';
     font-size: 7.5pt;
     padding: 10px;
     color: #fff;
@@ -279,5 +309,6 @@ q:after, q:before {
 .plupload_scroll .plupload_filelist {
     height: 195px;
 }
+
 
 

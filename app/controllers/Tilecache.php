@@ -80,7 +80,7 @@ class Tilecache extends \app\inc\Controller
             // Send text/xml instead of application/vnd.ogc.se_xml
             if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml"){
                 header("Content-Type: text/xml");
-            } else {
+            } elseif ($bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);

@@ -33,7 +33,7 @@ Build date: 2013-04-03 15:07:25
     background-color: #eee;
     border-color: #848482/*Battleship Gray*/;
     color: #222;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-mask-loading div {
@@ -127,7 +127,7 @@ ul.x-tab-strip-bottom {
 }
 
 .x-tab-strip span.x-tab-strip-text {
-    font: normal 11px tahoma, arial, helvetica;
+    font: normal 11px 'Open Sans', arial, helvetica;
     color: #333;
 }
 
@@ -221,7 +221,7 @@ ul.x-tab-strip-bottom {
 }
 
 .x-form-field {
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-form-text, textarea.x-form-field {
@@ -294,16 +294,16 @@ ul.x-tab-strip-bottom {
 }
 
 .x-form-grow-sizer {
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-form-item {
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-form-invalid-msg {
     color: #c0272b;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
     background-image: url(../images/default/shared/warning.gif);
 }
 
@@ -312,11 +312,11 @@ ul.x-tab-strip-bottom {
 }
 
 .x-small-editor .x-form-field {
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .ext-webkit .x-small-editor .x-form-field {
-    font: normal 12px arial, tahoma, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-form-invalid-icon {
@@ -328,17 +328,18 @@ ul.x-tab-strip-bottom {
 }
 
 .x-fieldset legend {
-    font: bold 11px tahoma, arial, helvetica, sans-serif;
+    font: bold 11px 'Open Sans', arial, helvetica, sans-serif;
     color: #777777;
 }
 
 .x-btn {
-    font: normal 11px tahoma, verdana, helvetica;
+    font: normal 11px 'Open Sans', verdana, helvetica;
 }
 
 .x-btn button {
-    font: normal 11px arial, tahoma, verdana, helvetica;
+    font: normal 11px 'Open Sans', verdana, helvetica;
     color: #ffffff;
+    line-height: 12px;
 }
 
 .x-toolbar .x-btn button {
@@ -453,7 +454,7 @@ ul.x-tab-strip-bottom {
 }
 
 .x-toolbar td, .x-toolbar span, .x-toolbar input, .x-toolbar div, .x-toolbar select, .x-toolbar label {
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-toolbar .x-item-disabled {
@@ -585,11 +586,11 @@ ul.x-tab-strip-bottom {
 }
 
 .x-grid3-row td, .x-grid3-summary-row td {
-    font: normal 11px/13px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px/13px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-grid3-hd-row td {
-    font: normal 11px/15px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px/15px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-grid3-hd-row td {
@@ -721,7 +722,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-grid3-topbar, .x-grid3-bottombar {
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-grid3-bottombar .x-toolbar {
@@ -812,7 +813,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 .x-grid-group-hd div.x-grid-group-title {
     background-image: url(../images/flat/grid/group-collapse.gif);
     color: #5F5F5F;
-    font: bold 11px tahoma, arial, helvetica, sans-serif;
+    font: bold 11px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-grid-group-collapsed .x-grid-group-hd div.x-grid-group-title {
@@ -833,7 +834,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-grid-empty {
     color: gray;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-grid-with-col-lines .x-grid3-row td.x-grid3-cell {
@@ -987,7 +988,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-tree-node {
     color: #000;
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-tree-node a, .x-dd-drag-ghost a {
@@ -1055,7 +1056,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 .x-date-middle, .x-date-left, .x-date-right {
     background-image: url(../images/flat/shared/hd-sprite.gif);
     color: #fff;
-    font: bold 11px "sans serif", tahoma, verdana, helvetica;
+    font: bold 11px "sans serif", 'Open Sans', verdana, helvetica;
 }
 
 .x-date-middle .x-btn .x-btn-text {
@@ -1078,7 +1079,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
     background-color: #D8D8D8;
     background-image: url(../images/flat/panel/white-top-bottom.gif);
     border-bottom-color: #AFAFAF;
-    font: normal 10px arial, helvetica, tahoma, sans-serif;
+    font: normal 10px arial, helvetica, 'Open Sans', sans-serif;
     color: #595959;
 }
 
@@ -1087,7 +1088,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-date-inner a {
-    font: normal 11px arial, helvetica, tahoma, sans-serif;
+    font: normal 11px arial, helvetica, 'Open Sans', sans-serif;
     color: #000;
 }
 
@@ -1143,14 +1144,14 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 }
 
 .x-date-mp td {
-    font: normal 11px arial, helvetica, tahoma, sans-serif;
+    font: normal 11px arial, helvetica, 'Open Sans', sans-serif;
 }
 
 .x-date-mp-btns button {
     background-color: #4E565F;
     color: #fff;
     border-color: #C0C0C0 #434343 #434343 #C0C0C0;
-    font: normal 11px arial, helvetica, tahoma, sans-serif;
+    font: normal 11px arial, helvetica, 'Open Sans', sans-serif;
 }
 
 .x-date-mp-btns {
@@ -1194,7 +1195,7 @@ td.x-date-mp-sep {
 }
 
 .x-tip .x-tip-mc {
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-tip .x-tip-ml {
@@ -1202,12 +1203,12 @@ td.x-date-mp-sep {
 }
 
 .x-tip .x-tip-header-text {
-    font: bold 11px tahoma, arial, helvetica, sans-serif;
+    font: bold 11px 'Open Sans', arial, helvetica, sans-serif;
     color: #444;
 }
 
 .x-tip .x-tip-body {
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
     color: #444;
 }
 
@@ -1238,7 +1239,7 @@ td.x-date-mp-sep {
 }
 
 .x-menu-list-item {
-    font: normal 11px arial, tahoma, sans-serif;
+    font: normal 11px 'Open Sans', sans-serif;
 }
 
 .x-menu-item-arrow {
@@ -1339,7 +1340,7 @@ a.x-menu-item {
 .x-box-mc {
     background-color: #848482/*Battleship Gray*/;
     background-image: none;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
     color: #fff;
 }
 
@@ -1395,7 +1396,7 @@ a.x-menu-item {
 .x-combo-list {
     border-color: #ccc;
     background-color: #ddd;
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-combo-list-inner {
@@ -1403,7 +1404,7 @@ a.x-menu-item {
 }
 
 .x-combo-list-hd {
-    font: bold 11px tahoma, arial, helvetica, sans-serif;
+    font: bold 11px 'Open Sans', arial, helvetica, sans-serif;
     color: #333;
     background-image: url(../images/default/layout/panel-title-light-bg.gif);
     border-bottom-color: #BCBCBC;
@@ -1427,7 +1428,7 @@ a.x-menu-item {
 }
 
 .x-combo-list-small {
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-panel {
@@ -1438,7 +1439,7 @@ a.x-menu-item {
     color: #333;
     font-weight: bold;
     font-size: 11px;
-    font-family: tahoma, arial, verdana, sans-serif;
+    font-family: 'Open Sans', arial, verdana, sans-serif;
     border-color: #B6B6B4/*Gray Cloud*/;
     background-image: none;
 }
@@ -1462,7 +1463,7 @@ a.x-menu-item {
 
 .x-panel-tl .x-panel-header {
     color: #333;
-    font: bold 11px tahoma, arial, verdana, sans-serif;
+    font: bold 11px 'Open Sans', arial, verdana, sans-serif;
 }
 
 .x-panel-tc {
@@ -1479,7 +1480,7 @@ a.x-menu-item {
 }
 
 .x-panel-mc {
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
     background-color: #f1f1f1;
 }
 
@@ -1509,7 +1510,7 @@ a.x-menu-item {
 }
 
 .x-panel-fbar td, .x-panel-fbar span, .x-panel-fbar input, .x-panel-fbar div, .x-panel-fbar select, .x-panel-fbar label {
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-window-proxy {
@@ -1519,7 +1520,7 @@ a.x-menu-item {
 
 .x-window-tl .x-window-header {
     color: #fff;
-    font: normal 11px tahoma, arial, verdana, sans-serif;
+    font: normal 11px 'Open Sans', arial, verdana, sans-serif;
 }
 
 .x-window-tc {
@@ -1556,7 +1557,7 @@ a.x-menu-item {
 
 .x-window-mc {
     border-color: #848482/*Battleship Gray*/;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', arial, helvetica, sans-serif;
     ba / ckground-color : #e8e8e8;
 }
 
@@ -1722,11 +1723,11 @@ body.x-body-masked .x-window-plain .x-window-mc {
 
 .x-list-header-inner div em {
     border-left-color: #ddd;
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-list-body dt em {
-    font: normal 11px arial, tahoma, helvetica, sans-serif;
+    font: normal 11px 'Open Sans', helvetica, sans-serif;
 }
 
 .x-list-over {
@@ -1769,7 +1770,7 @@ body.x-body-masked .x-window-plain .x-window-mc {
 }
 
 .x-window-dlg .ext-mb-textarea {
-    font: normal 12px tahoma, arial, helvetica, sans-serif;
+    font: normal 12px 'Open Sans', arial, helvetica, sans-serif;
 }
 
 .x-window-dlg .x-msg-box-wait {

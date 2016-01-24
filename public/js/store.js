@@ -371,38 +371,32 @@ $(window).ready(function () {
         }),
         tbar: [
             {
-                text: '<i class="icon-user btn-gc"></i> ' + __('Privileges'),
+                text: '<i class="fa fa-user"></i> ' + __('Privileges'),
                 id: 'privileges-btn',
                 handler: onPrivileges,
                 disabled: true
 
             },
             {
-                text: '<i class="icon-user btn-gc"></i> ' + __('Workflow'),
+                text: '<i class="fa fa-users"></i> ' + __('Workflow'),
                 id: 'workflow-btn',
                 handler: onWorkflow,
                 disabled: true,
                 hidden: !enableWorkflow
             },
             {
-                text: '<i class="icon-camera btn-gc"></i> ' + __('CartoMobile'),
-                handler: onEditCartomobile,
-                id: 'cartomobile-btn',
-                disabled: true
-            },
-            {
-                text: '<i class="icon-cog btn-gc"></i> ' + __('Advanced'),
+                text: '<i class="fa fa-cogs"></i> ' + __('Advanced'),
                 handler: onEditMoreSettings,
                 id: 'advanced-btn',
                 disabled: true
             },
             {
-                text: '<i class="icon-lock btn-gc"></i> ' + __('Services'),
+                text: '<i class="fa fa-lock"></i> ' + __('Services'),
                 handler: onGlobalSettings
 
             },
             {
-                text: '<i class="icon-remove btn-gc"></i> ' + __('Clear tile cache'),
+                text: '<i class="fa fa-remove"></i> ' + __('Clear tile cache'),
                 disabled: (subUser === schema || subUser === false) ? false : true,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
@@ -436,7 +430,7 @@ $(window).ready(function () {
             },
             '->',
             {
-                text: '<i class="icon-plus btn-gc"></i> ' + __('New layer'),
+                text: '<i class="fa fa-cloud-upload"></i> ' + __('New layer'),
                 disabled: (subUser === schema || subUser === false) ? false : true,
                 handler: function () {
                     onAdd();
@@ -444,7 +438,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-arrow-right btn-gc"></i> ' + __('Move layers'),
+                text: '<i class="fa fa-arrow-right"></i> ' +  __('Move layers'),
                 disabled: true,
                 id: 'movelayer-btn',
                 handler: function () {
@@ -453,7 +447,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-retweet btn-gc"></i> ' + __('Rename layer'),
+                text: '<i class="fa fa-pencil"></i> ' + __('Rename layer'),
                 disabled: true,
                 id: 'renamelayer-btn',
                 handler: function () {
@@ -462,7 +456,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="icon-trash btn-gc"></i> ' + __('Delete layers'),
+                text: '<i class="fa fa-cut"></i> ' +  __('Delete layers'),
                 disabled: true,
                 id: 'deletelayer-btn',
                 handler: function () {
@@ -471,7 +465,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: __('Copy properties'),
+                text: '<i class="fa fa-copy"></i> ' + __('Copy properties'),
                 id: 'copy-properties-btn',
                 tooltip: __("Copy all properties from another layer"),
                 disabled: true,
@@ -624,7 +618,7 @@ $(window).ready(function () {
 
             '-',
             {
-                text: '<i class="icon-th btn-gc"></i> ' + __('Schema'),
+                text: '<i class="fa fa-th"></i> ' + __('Schema'),
                 disabled: subUser ? true : false,
                 menu: new Ext.menu.Menu({
                     items: [
@@ -672,7 +666,7 @@ $(window).ready(function () {
                 ]
             },
             {
-                text: '<i class="icon-plus btn-gc"></i>',
+                text: '<i class="fa fa-plus"></i>',
                 tooltip: __('New schema'),
                 disabled: subUser ? true : false,
                 handler: function () {
@@ -2125,7 +2119,7 @@ $(window).ready(function () {
     '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
-        title: __('Database'),
+        title: '<i class="fa fa-database"></i> ' + __('Database'),
         frame: false,
         layout: 'border',
         region: 'center',
@@ -2384,7 +2378,6 @@ $(window).ready(function () {
     grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
         var records = sm.getSelections();
         if (records.length === 1) {
-            Ext.getCmp('cartomobile-btn').setDisabled(false);
             Ext.getCmp('advanced-btn').setDisabled(false);
             if (subUser === false || subUser === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
@@ -2394,7 +2387,6 @@ $(window).ready(function () {
             }
         }
         else {
-            Ext.getCmp('cartomobile-btn').setDisabled(true);
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('workflow-btn').setDisabled(true);
@@ -2411,7 +2403,6 @@ $(window).ready(function () {
     });
 
     resetButtons = function () {
-        Ext.getCmp('cartomobile-btn').setDisabled(true);
         Ext.getCmp('advanced-btn').setDisabled(true);
         Ext.getCmp('privileges-btn').setDisabled(true);
         Ext.getCmp('workflow-btn').setDisabled(true);
@@ -2430,7 +2421,7 @@ $(window).ready(function () {
         items: [
             {
                 xtype: "panel",
-                title: __('Map'),
+                title: '<i class="fa fa-map"></i> ' + __('Map'),
                 layout: 'border',
                 items: [
                     {
@@ -2637,7 +2628,7 @@ $(window).ready(function () {
             ct,
             {
                 xtype: "panel",
-                title: __('Workflow'),
+                title: '<i class="fa fa-users"></i> ' + __('Workflow'),
                 layout: 'border',
                 id: "workflowPanel",
                 listeners: {
@@ -2869,7 +2860,7 @@ $(window).ready(function () {
             },
             {
                 xtype: "panel",
-                title: __('Scheduler'),
+                title: '<i class="fa fa-clock-o"></i> ' + __('Scheduler'),
                 layout: 'border',
                 id: "schedulerPanel",
                 items: [
@@ -2883,7 +2874,7 @@ $(window).ready(function () {
             },
             {
                 xtype: "panel",
-                title: __('Log'),
+                title: '<i class="fa fa-list"></i> ' + __('Log'),
                 layout: 'border',
                 border: false,
                 listeners: {
