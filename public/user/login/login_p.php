@@ -244,7 +244,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                                     template = $('#widgetTemplate'),
                                     host = '/controllers/logstash';
 
-                                $('#widget1').logstashWidget(host, template, 'Tile downloads', db + ' ' + schema + '.*' + ' tilecache');
+                                $('#widget1').logstashWidget(host, template, 'Tile downloads', db + ' ' + schema + '.*' + ' mapcache');
                                 $('#widget2').logstashWidget(host, template, 'Elasticsearch queries', db + ' ' + schema + ' api elasticsearch');
                                 $('#widget3').logstashWidget(host, template, 'OWS request', db + ' ' + schema + ' ows');
                                 $('#logstash-modal').modal();

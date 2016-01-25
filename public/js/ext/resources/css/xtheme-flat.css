@@ -317,6 +317,8 @@ ul.x-tab-strip-bottom {
 
 .ext-webkit .x-small-editor .x-form-field {
     font: normal 12px 'Open Sans', helvetica, sans-serif;
+    padding-top: 1px!important;
+    padding-bottom: 3px!important;
 }
 
 .x-form-invalid-icon {
