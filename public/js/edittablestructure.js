@@ -433,7 +433,7 @@ tableStructure.init = function (record, screenName) {
                 ]
             },
             {
-                text: '<i class="icon-plus btn-gc"></i> ' + __("Add new column"),
+                text: '<i class="fa fa-plus"></i> ' + __("Add new column"),
                 handler: function () {
                     var form = Ext.getCmp("addColumnForm");
                     if (form.form.isValid()) {
@@ -464,11 +464,11 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-trash btn-gc"></i> ' + __("Delete column"),
+                text: '<i class="fa fa-cut"></i> ' + __("Delete column"),
                 handler: tableStructure.onDelete
             },
             {
-                text: '<i class="icon-plus-sign btn-gc"></i> ' + __("Start track changes"),
+                text: '<i class="fa fa-history"></i> ' + __("Start track changes"),
                 id: "add-versioning-btn",
                 disabled: true,
                 handler: function () {
@@ -476,7 +476,7 @@ tableStructure.init = function (record, screenName) {
                 }
             },
             {
-                text: '<i class="icon-minus-sign btn-gc"></i> ' + __("Stop track changes"),
+                text: '<i class="fa fa-stop-circle"></i> ' + __("Stop track changes"),
                 id: "remove-versioning-btn",
                 disabled: true,
                 handler: function () {

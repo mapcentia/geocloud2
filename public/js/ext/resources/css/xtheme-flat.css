@@ -1595,7 +1595,6 @@ a.x-menu-item {
 }
 
 .x-window-plain .x-window-mc {
-    bac / kground-color : #fff;
     border-color: #848482/*Battleship Gray*/ #EEEEEE #EEEEEE #848482/*Battleship Gray*/;
 }
 
@@ -1913,4 +1912,5 @@ td.x-grid3-hd.x-grid3-cell {
     background: none !important;
     background-color: #ffffff !important;
 }
+
 

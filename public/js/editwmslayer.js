@@ -191,7 +191,7 @@ wmsLayer.init = function (record) {
         },
         tbar: [
             {
-                text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
+                text: '<i class="fa fa-check"></i> ' + __('Update'),
                 //iconCls : 'silk-accept',
                 handler: function () {
                     var grid = Ext.getCmp("propGridLayer");
@@ -259,7 +259,7 @@ wmsLayer.init = function (record) {
         ],
         buttons: [
             {
-                text: '<i class="icon-ok btn-gc"></i> ' + __('Update SQL'),
+                text: '<i class="fa fa-check"></i> ' + __('Update SQL'),
                 handler: function () {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {

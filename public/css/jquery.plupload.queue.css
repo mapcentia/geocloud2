@@ -5,7 +5,7 @@
 .plupload_button {
 	display: -moz-inline-box; /* FF < 3*/
 	display: inline-block;
-	font: normal 12px sans-serif;
+	font: normal 12px 'Open Sans';
 	text-decoration: none;
     color: #42454a;
     border: 1px solid #bababa;
@@ -39,7 +39,7 @@
 }
 
 .plupload_wrapper {
-	font: normal 11px Verdana,sans-serif;
+	font: normal 11px 'Open Sans';
 	width: 100%;
 }
 
@@ -68,7 +68,7 @@
     display: none;
 }
 .plupload_header_text {
-	font: normal 12px sans-serif;
+	font: normal 12px 'Open Sans'
 }
 
 .plupload_filelist {

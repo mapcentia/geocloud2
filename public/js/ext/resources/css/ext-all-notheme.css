@@ -4657,7 +4657,7 @@ body.ext-ie6.x-body-masked .x-window select {
 
 .x-window-plain .x-window-body {
     border: 1px solid;
-    background:transparent !important;
+    background:transparent;
 }.x-html-editor-wrap {
     border:1px solid;
 }

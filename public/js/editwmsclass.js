@@ -111,16 +111,17 @@ wmsClasses.init = function (record) {
         }),
         tbar: [
             {
-                text: '<i class="icon-plus btn-gc"></i> ' + __("Add"),
+                text: '<i class="fa fa-plus"></i> ' + __("Add"),
                 handler: wmsClasses.onAdd
             },
+            '-',
             {
-                text: '<i class="icon-trash btn-gc"></i> ' + __("Delete"),
+                text: '<i class="fa fa-cut"></i> ' + __("Delete"),
                 handler: wmsClasses.onDelete
             },
             '-',
             {
-                text: __("Copy from"),
+                text: '<i class="fa fa-copy"></i> ' + __("Copy from"),
                 tooltip: __("Select a layer from which you want to copy the classes"),
                 handler: function () {
                     var layer = Ext.getCmp("copylayerbox").value;

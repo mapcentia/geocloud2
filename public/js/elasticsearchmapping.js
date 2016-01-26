@@ -336,7 +336,7 @@ elasticsearch.init = function (record, screenName) {
             ]
         }),
         tbar: [{
-            text: '<i class="icon-search btn-gc"></i> ' + __("(Re)index in Elasticsearch"),
+            text: '<i class="fa fa-search-plus"></i> ' + __("(Re)index in Elasticsearch"),
             id: "index-in-elasticsearch-btn",
             disabled: (window.gc2Options.esIndexingInGui) ? false : true,
             handler: function () {
@@ -344,7 +344,7 @@ elasticsearch.init = function (record, screenName) {
             }
         },
             {
-                text: '<i class="icon-search btn-gc"></i> ' + __("Delete from Elasticsearch"),
+                text: '<i class="fa fa-search-minus"></i> ' + __("Delete from Elasticsearch"),
                 id: "delete-from-elasticsearch-btn",
                 disabled: window.gc2Options.esIndexingInGui ? record.data.indexed_in_es ? false : true : true,
                 handler: function () {

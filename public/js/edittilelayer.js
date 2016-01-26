@@ -205,7 +205,7 @@ tileLayer.init = function (record) {
         },
         tbar: [
             {
-                text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
+                text: '<i class="fa fa-check"></i> ' + __('Update'),
                 //iconCls : 'silk-accept',
                 handler: function () {
                     var grid = Ext.getCmp("propGridTiles");

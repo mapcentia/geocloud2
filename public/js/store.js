@@ -489,6 +489,7 @@ $(window).ready(function () {
                                 defaults: {
                                     border: false
                                 },
+                                border: false,
                                 items: [
                                     {
                                         xtype: "form",
@@ -727,6 +728,7 @@ $(window).ready(function () {
                         border: false
                     },
                     layout: 'hbox',
+                    border: false,
                     items: [
                         {
                             xtype: "form",
@@ -736,6 +738,7 @@ $(window).ready(function () {
                             items: [
                                 {
                                     xtype: 'container',
+                                    border: false,
                                     items: [
                                         {
                                             xtype: "textfield",
@@ -997,6 +1000,7 @@ $(window).ready(function () {
                         border: false
                     },
                     layout: 'hbox',
+                    border: false,
                     items: [
                         {
                             xtype: "form",
@@ -1006,6 +1010,7 @@ $(window).ready(function () {
                             items: [
                                 {
                                     xtype: 'container',
+                                    border: false,
                                     items: [
                                         {
                                             xtype: "combo",
@@ -1025,6 +1030,7 @@ $(window).ready(function () {
                         {
                             layout: 'form',
                             bodyStyle: 'padding: 10px',
+                            border: false,
                             items: [
                                 {
                                     xtype: 'button',
@@ -1105,6 +1111,7 @@ $(window).ready(function () {
                         border: false
                     },
                     layout: 'hbox',
+                    border: false,
                     items: [
                         {
                             xtype: "form",
@@ -1921,7 +1928,7 @@ $(window).ready(function () {
                                                     height: 200,
                                                     region: 'center',
                                                     frame: false,
-                                                    border: true,
+                                                    border: false,
                                                     sm: new Ext.grid.RowSelectionModel({
                                                         singleSelect: true
                                                     }),
@@ -2291,7 +2298,7 @@ $(window).ready(function () {
                                             }),
                                             tbar: [
                                                 {
-                                                    text: '<i class="icon-plus btn-gc"></i> ' + __('Add record'),
+                                                    text: '<i class="fa fa-plus"></i> ' + __('Add record'),
                                                     handler: function () {
                                                         // access the Record constructor through the grid's store
                                                         var rec = dataGrid.getStore().recordType;
@@ -2300,7 +2307,7 @@ $(window).ready(function () {
                                                         dataStore.insert(0, p);
                                                     }
                                                 }, {
-                                                    text: '<i class="icon-trash btn-gc"></i> ' + __('Delete records'),
+                                                    text: '<i class="fa fa-cut"></i> ' + __('Delete records'),
                                                     handler: function () {
                                                         var r = grid.getSelectionModel().getSelected();
                                                         if (r.data.hasPkey === false) {
@@ -2481,7 +2488,7 @@ $(window).ready(function () {
                                                 },
                                                 tbar: [
                                                     {
-                                                        text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
+                                                        text: '<i class="fa fa-check"></i> ' + __('Update'),
                                                         handler: function () {
                                                             var grid = Ext.getCmp("propGrid");
                                                             var grid2 = Ext.getCmp("propGrid2");
@@ -2744,7 +2751,7 @@ $(window).ready(function () {
                         }),
                         tbar: [
                             {
-                                text: '<i class="icon-refresh btn-gc"></i> ' + __('Reload'),
+                                text: '<i class="fa fa-refresh"></i> ' + __('Reload'),
                                 tooltip: __("Reload the list"),
                                 handler: function () {
                                     if (Ext.getCmp('workflowShowAllBtn').pressed) {
@@ -2755,7 +2762,7 @@ $(window).ready(function () {
                                 }
                             },
                             {
-                                text: '<i class="icon-tasks btn-gc"></i> ' + __('Show all'),
+                                text: '<i class="fa fa-list"></i> ' + __('Show all'),
                                 enableToggle: true,
                                 id: "workflowShowAllBtn",
                                 disabled: (subUser === false) ? true : false,
@@ -2769,7 +2776,7 @@ $(window).ready(function () {
                                 }
                             },
                             {
-                                text: '<i class="icon-pencil btn-gc"></i> ' + __('See/edit feature'),
+                                text: '<i class="fa fa-edit"></i> ' + __('See/edit feature'),
                                 tooltip: __("Switch to Map view with the feature loaded."),
                                 handler: function () {
                                     var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
@@ -2811,7 +2818,7 @@ $(window).ready(function () {
                                 }
                             },
                             {
-                                text: '<i class="icon-ok btn-gc"></i> ' + __('Check feafure'),
+                                text: '<i class="fa fa-check"></i> ' + __('Check feature'),
                                 tooltip: __("This will update the feature with your role in the workflow."),
                                 handler: function () {
                                     var records = Ext.getCmp("workflowGrid").getSelectionModel().getSelections();
