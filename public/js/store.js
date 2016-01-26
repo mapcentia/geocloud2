@@ -438,7 +438,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="fa fa-arrow-right"></i> ' +  __('Move layers'),
+                text: '<i class="fa fa-arrow-right"></i> ' + __('Move layers'),
                 disabled: true,
                 id: 'movelayer-btn',
                 handler: function () {
@@ -456,7 +456,7 @@ $(window).ready(function () {
             },
             '-',
             {
-                text: '<i class="fa fa-cut"></i> ' +  __('Delete layers'),
+                text: '<i class="fa fa-cut"></i> ' + __('Delete layers'),
                 disabled: true,
                 id: 'deletelayer-btn',
                 handler: function () {
@@ -2173,179 +2173,177 @@ $(window).ready(function () {
                                 Ext.getCmp("datapanel").removeAll();
                                 return false;
                             }
-                                var r = grid.getSelectionModel().getSelected(),
-                                    tableName = r.data.f_table_schema + "." + r.data.f_table_name,
-                                    dataPanel = Ext.getCmp("datapanel");
-                                try {
-                                    dataPanel.remove(dataGrid);
-                                } catch (ex) {
-                                }
-                                $.ajax({
-                                    url: '/controllers/table/columns/' + tableName + '?i=1',
-                                    async: true,
-                                    dataType: 'json',
-                                    type: 'GET',
-                                    success: function (response, textStatus, http) {
-                                        var validProperties = true,
-                                            fieldsForStore = response.forStore,
-                                            columnsForGrid = response.forGrid;
+                            var r = grid.getSelectionModel().getSelected(),
+                                tableName = r.data.f_table_schema + "." + r.data.f_table_name,
+                                dataPanel = Ext.getCmp("datapanel");
+                            try {
+                                dataPanel.remove(dataGrid);
+                            } catch (ex) {
+                            }
+                            $.ajax({
+                                url: '/controllers/table/columns/' + tableName + '?i=1',
+                                async: true,
+                                dataType: 'json',
+                                type: 'GET',
+                                success: function (response, textStatus, http) {
+                                    var validProperties = true,
+                                        fieldsForStore = response.forStore,
+                                        columnsForGrid = response.forGrid;
 
-                                        // We add an editor to the fields
-                                        for (var i in columnsForGrid) {
-                                            if (columnsForGrid[i].typeObj !== undefined) {
-                                                if (columnsForGrid[i].properties) {
-                                                    try {
-                                                        var json = Ext.decode(columnsForGrid[i].properties);
-                                                        columnsForGrid[i].editor = new Ext.form.ComboBox({
-                                                            store: Ext.decode(columnsForGrid[i].properties),
-                                                            editable: true,
-                                                            triggerAction: 'all'
-                                                        });
-                                                        validProperties = false;
-                                                    }
-                                                    catch (e) {
-                                                        alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
-                                                    }
-                                                } else if (columnsForGrid[i].typeObj.type === "int") {
-                                                    columnsForGrid[i].editor = new Ext.form.NumberField({
-                                                        decimalPrecision: 0,
-                                                        decimalSeparator: '¤'// Some strange char nobody is using
+                                    // We add an editor to the fields
+                                    for (var i in columnsForGrid) {
+                                        if (columnsForGrid[i].typeObj !== undefined) {
+                                            if (columnsForGrid[i].properties) {
+                                                try {
+                                                    var json = Ext.decode(columnsForGrid[i].properties);
+                                                    columnsForGrid[i].editor = new Ext.form.ComboBox({
+                                                        store: Ext.decode(columnsForGrid[i].properties),
+                                                        editable: true,
+                                                        triggerAction: 'all'
                                                     });
-                                                } else if (columnsForGrid[i].typeObj.type === "decimal") {
-                                                    columnsForGrid[i].editor = new Ext.form.NumberField({
-                                                        decimalPrecision: columnsForGrid[i].typeObj.scale,
-                                                        decimalSeparator: '.'
-                                                    });
-                                                } else if (columnsForGrid[i].typeObj.type === "string") {
-                                                    columnsForGrid[i].editor = new Ext.form.TextField();
-                                                } else if (columnsForGrid[i].typeObj.type === "text") {
-                                                    columnsForGrid[i].editor = new Ext.form.TextArea();
+                                                    validProperties = false;
                                                 }
+                                                catch (e) {
+                                                    alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                                                }
+                                            } else if (columnsForGrid[i].typeObj.type === "int") {
+                                                columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                    decimalPrecision: 0,
+                                                    decimalSeparator: '¤'// Some strange char nobody is using
+                                                });
+                                            } else if (columnsForGrid[i].typeObj.type === "decimal") {
+                                                columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                    decimalPrecision: columnsForGrid[i].typeObj.scale,
+                                                    decimalSeparator: '.'
+                                                });
+                                            } else if (columnsForGrid[i].typeObj.type === "string") {
+                                                columnsForGrid[i].editor = new Ext.form.TextField();
+                                            } else if (columnsForGrid[i].typeObj.type === "text") {
+                                                columnsForGrid[i].editor = new Ext.form.TextArea();
                                             }
                                         }
-                                        var proxy = new Ext.data.HttpProxy({
-                                            restful: true,
-                                            type: 'json',
-                                            api: {
-                                                read: '/controllers/table/data/' + tableName + '/' + r.data._key_,
-                                                create: '/controllers/table/data/' + tableName + '/' + r.data._key_,
-                                                update: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_,
-                                                destroy: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_
+                                    }
+                                    var proxy = new Ext.data.HttpProxy({
+                                        restful: true,
+                                        type: 'json',
+                                        api: {
+                                            read: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                            create: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                            update: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_,
+                                            destroy: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_
+                                        },
+                                        listeners: {
+                                            write: function (store, action, result, transaction, rs) {
+                                                if (transaction.success) {
+                                                    //
+                                                }
                                             },
-                                            listeners: {
-                                                write: function (store, action, result, transaction, rs) {
-                                                    if (transaction.success) {
-                                                        //
-                                                    }
-                                                },
-                                                beforewrite: function(){
+                                            beforewrite: function () {
+                                                if (r.data.hasPkey === false) {
+                                                    App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                    dataStore.reload();
+                                                    return false;
+                                                }
+                                            },
+                                            exception: function (proxy, type, action, options, response, arg) {
+                                                if (action === "create") { // HACK exception is thrown with successful create
+                                                    dataStore.reload();
+                                                } else {
+                                                    Ext.MessageBox.show({
+                                                        title: __('Failure'),
+                                                        msg: __(Ext.decode(response.responseText).message),
+                                                        buttons: Ext.MessageBox.OK,
+                                                        width: 300,
+                                                        height: 300
+                                                    });
+                                                }
+
+                                            }
+                                        }
+                                    });
+                                    dataStore = new Ext.data.Store({
+                                        writer: new Ext.data.JsonWriter({
+                                            writeAllFields: false,
+                                            encode: false
+                                        }),
+                                        reader: new Ext.data.JsonReader({
+                                            successProperty: 'success',
+                                            idProperty: r.data.pkey,
+                                            root: 'data',
+                                            messageProperty: 'message'
+                                        }, fieldsForStore),
+                                        proxy: proxy,
+                                        autoSave: true
+                                    });
+                                    dataGrid = new Ext.grid.EditorGridPanel({
+                                        id: "datagridpanel",
+                                        disabled: false,
+                                        viewConfig: {
+                                            //forceFit: true
+                                        },
+                                        border: false,
+                                        store: dataStore,
+                                        listeners: {},
+                                        sm: new Ext.grid.RowSelectionModel({
+                                            singleSelect: false
+                                        }),
+                                        cm: new Ext.grid.ColumnModel({
+                                            defaults: {
+                                                sortable: true,
+                                                editor: {
+                                                    xtype: "textfield"
+                                                }
+                                            },
+                                            columns: columnsForGrid
+                                        }),
+                                        tbar: [
+                                            {
+                                                text: '<i class="fa fa-plus"></i> ' + __('Add record'),
+                                                handler: function () {
+                                                    // access the Record constructor through the grid's store
+                                                    var rec = dataGrid.getStore().recordType;
+                                                    var p = new rec({});
+                                                    dataGrid.stopEditing();
+                                                    dataStore.insert(0, p);
+                                                }
+                                            }, {
+                                                text: '<i class="fa fa-cut"></i> ' + __('Delete records'),
+                                                handler: function () {
+                                                    var r = grid.getSelectionModel().getSelected();
                                                     if (r.data.hasPkey === false) {
                                                         App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
-                                                        dataStore.reload();
                                                         return false;
                                                     }
-                                                },
-                                                exception: function (proxy, type, action, options, response, arg) {
-                                                    if (action === "create") { // HACK exception is thrown with successful create
-                                                        dataStore.reload();
-                                                    } else {
-                                                        Ext.MessageBox.show({
-                                                            title: __('Failure'),
-                                                            msg: __(Ext.decode(response.responseText).message),
-                                                            buttons: Ext.MessageBox.OK,
-                                                            width: 300,
-                                                            height: 300
-                                                        });
+                                                    var records = dataGrid.getSelectionModel().getSelections();
+                                                    if (records.length === 0) {
+                                                        App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
+                                                        return false;
                                                     }
-
+                                                    Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
+                                                        if (btn === "yes") {
+                                                            Ext.each(dataGrid.getSelectionModel().getSelections(), function (i) {
+                                                                dataStore.remove(i);
+                                                            })
+                                                        } else {
+                                                            return false;
+                                                        }
+                                                    });
                                                 }
                                             }
-                                        });
-                                        dataStore = new Ext.data.Store({
-                                            writer: new Ext.data.JsonWriter({
-                                                writeAllFields: false,
-                                                encode: false
-                                            }),
-                                            reader: new Ext.data.JsonReader({
-                                                successProperty: 'success',
-                                                idProperty: r.data.pkey,
-                                                root: 'data',
-                                                messageProperty: 'message'
-                                            }, fieldsForStore),
-                                            proxy: proxy,
-                                            autoSave: true
-                                        });
-                                        dataGrid = new Ext.grid.EditorGridPanel({
-                                            id: "datagridpanel",
-                                            disabled: false,
-                                            viewConfig: {
-                                                //forceFit: true
-                                            },
-                                            border: false,
+                                        ],
+                                        bbar: new Ext.PagingToolbar({
+                                            pageSize: 100,
                                             store: dataStore,
-                                            listeners: {},
-                                            sm: new Ext.grid.RowSelectionModel({
-                                                singleSelect: false
-                                            }),
-                                            cm: new Ext.grid.ColumnModel({
-                                                defaults: {
-                                                    sortable: true,
-                                                    editor: {
-                                                        xtype: "textfield"
-                                                    }
-                                                },
-                                                columns: columnsForGrid
-                                            }),
-                                            tbar: [
-                                                {
-                                                    text: '<i class="fa fa-plus"></i> ' + __('Add record'),
-                                                    handler: function () {
-                                                        // access the Record constructor through the grid's store
-                                                        var rec = dataGrid.getStore().recordType;
-                                                        var p = new rec({});
-                                                        dataGrid.stopEditing();
-                                                        dataStore.insert(0, p);
-                                                    }
-                                                }, {
-                                                    text: '<i class="fa fa-cut"></i> ' + __('Delete records'),
-                                                    handler: function () {
-                                                        var r = grid.getSelectionModel().getSelected();
-                                                        if (r.data.hasPkey === false) {
-                                                            App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
-                                                            return false;
-                                                        }
-                                                        var records = dataGrid.getSelectionModel().getSelections();
-                                                        if (records.length === 0) {
-                                                            App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
-                                                            return false;
-                                                        }
-                                                        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
-                                                            if (btn === "yes") {
-                                                                Ext.each(dataGrid.getSelectionModel().getSelections(), function(i){
-                                                                    dataStore.remove(i);
-                                                                })
-                                                            } else {
-                                                                return false;
-                                                            }
-                                                        });
-                                                    }
-                                                }
-                                            ],
-                                            bbar: [
-
-                                                new Ext.PagingToolbar({
-                                                    pageSize: 100,
-                                                    store: dataStore,
-                                                    displayInfo: true,
-                                                    displayMsg: 'Features {0} - {1} of {2}',
-                                                    emptyMsg: "No features"
-                                                })]
-                                        });
-                                        dataPanel.add(dataGrid);
-                                        dataPanel.doLayout();
-                                        dataStore.load();
-                                    }
-                                });
+                                            displayInfo: true,
+                                            displayMsg: 'Features {0} - {1} of {2}',
+                                            emptyMsg: __("No features")
+                                        })
+                                    });
+                                    dataPanel.add(dataGrid);
+                                    dataPanel.doLayout();
+                                    dataStore.load();
+                                }
+                            });
 
 
                         }
@@ -2359,7 +2357,7 @@ $(window).ready(function () {
                     id: 'espanel',
                     listeners: {
                         activate: function (e) {
-                            if (grid.getSelectionModel().getSelections().length >1  ) {
+                            if (grid.getSelectionModel().getSelections().length > 1) {
                                 Ext.getCmp("espanel").removeAll();
                                 return false;
                             }

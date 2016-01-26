@@ -50,6 +50,7 @@ class Tile extends Model
             "auto_expire",
             "maxscaledenom",
             "minscaledenom",
+            "symbolscaledenom",
             "geotype",
             "offsite",
             "format"

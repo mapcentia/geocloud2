@@ -393,7 +393,10 @@ q:after, q:before {
 .plupload_scroll .plupload_filelist {
     height: 195px;
 }
-
+#gx-map-panel{
+    border-left: 1px solid  #B6B6B4/*Gray Cloud*/;;
+    border-right: 1px solid  #B6B6B4/*Gray Cloud*/;;
+}
 
 
 

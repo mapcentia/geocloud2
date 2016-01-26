@@ -63,6 +63,9 @@ wmsLayer.init = function (record) {
                 name: 'minscaledenom'
             },
             {
+                name: 'symbolscaledenom'
+            },
+            {
                 name: 'geotype'
             },
             {
@@ -123,11 +126,12 @@ wmsLayer.init = function (record) {
             label_column: __('Label item'),
             theme_column: 'Class item',
             opacity: 'Opacity',
-            label_max_scale: 'Label max scale',
-            label_min_scale: 'Label min scale',
+            label_max_scale: 'Label min scale', //LABELMAXSCALEDENOM
+            label_min_scale: 'Label max scale', //LABELMINSCALEDENOM
             cluster: 'Clustering distance',
-            maxscaledenom: 'Max scale',
-            minscaledenom: 'Min scale',
+            maxscaledenom: __('Min scale') + __('Minimum scale at which this layer is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
+            minscaledenom: __('Max scale') + __('Maximum scale at which this layer is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
+            symbolscaledenom: 'Symbole scale' + __("The scale at which symbols and/or text appear full size. This allows for dynamic scaling of objects based on the scale of the map. If not set then this layer will always appear at the same size. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             geotype: 'Geom type',
             offsite: 'Offsite'
         },

@@ -227,7 +227,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
     createToolBar: function () {
         var bar = [
             {
-                text: "<i class='icon-plus-sign btn-gc'></i> Add condition",
+                text: "<i class='fa fa-plus-circle'></i> Add condition",
                 //iconCls: "silk-add",
                 handler: function () {
                     this.addCondition();
@@ -625,7 +625,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                     style: "padding-left: 2px",
                     items: {
                         xtype: "button",
-                        text: "<i class='icon-minus-sign btn-gc'></i>",
+                        text: "<i class='fa fa-minus-circle'></i>",
                         tooltip: "remove condition",
                         //iconCls: "silk-delete",
                         handler: function (btn) {

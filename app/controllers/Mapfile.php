@@ -409,6 +409,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMINSCALEDENOM
                 <?php if ($layerArr['data'][0]['label_min_scale']) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
 
+
                 #OPACITY
                 <?php if ($layerArr['data'][0]['opacity']) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
 
@@ -417,6 +418,9 @@ class Mapfile extends \app\inc\Controller
 
                 #MINSCALEDENOM
                 <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
+
+                #SYMBOLSCALEDENOM
+                <?php if ($layerArr['data'][0]['symbolscaledenom']) echo "SYMBOLSCALEDENOM " . $layerArr['data'][0]['symbolscaledenom'] . "\n"; ?>
 
                 #MINSCALEDENOM
                 <?php if ($layerArr['data'][0]['cluster']) {
@@ -600,7 +604,7 @@ class Mapfile extends \app\inc\Controller
                             POSITION <?php echo ($class['label_position']) ?: "auto";
                             echo "\n"; ?>
                             PARTIALS false
-                            MINSIZE 6
+                            MINSIZE 1
                             <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
                             <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                             <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>

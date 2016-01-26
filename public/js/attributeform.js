@@ -33,7 +33,7 @@ attributeForm.init = function (layer, geomtype) {
                         },
                         tbar: ["->",
                             {
-                                text: "<i class='icon-filter btn-gc'></i> " + __("Load"),
+                                text: "<i class='fa fa-download'></i> " + __("Load"),
                                 //iconCls: "icon-find",
                                 disabled: false,
                                 handler: function () {
