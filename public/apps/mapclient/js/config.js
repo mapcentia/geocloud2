@@ -262,6 +262,7 @@ MapCentia.setup = function () {
                         g = {
                             text: m,
                             nodeType: 'hr_cascader',
+                            singleClickExpand: true,
                             children: []
                         };
                         $.each(lArr, function (i, v) {
@@ -300,6 +301,7 @@ MapCentia.setup = function () {
                     });
                     Heron.options.layertree.tree = [{
                         text: 'BaseLayers',
+                        singleClickExpand: true,
                         expanded: false,
                         children: baseLayers
                     }].concat(children);
