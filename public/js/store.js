@@ -13,6 +13,12 @@
 
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
+Ext.MessageBox.buttonText = {
+    ok: "<i class='fa fa-check'></i> " + __("Ok"),
+    cancel: "<i class='fa fa-remove'></i> " + __("Cancel"),
+    yes: "<i class='fa fa-check'></i> " + __("Yes"),
+    no: "<i class='fa fa-remove'></i> " + __("No")
+}
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, onMove, onSchemaRename,
     onSchemaDelete, resetButtons, initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
@@ -1354,7 +1360,7 @@ $(window).ready(function () {
         }
         var r = record;
         winMoreSettings = new Ext.Window({
-            title: __("Advanced settings on") + " '" + record.get("f_table_name") + "'",
+            title: '<i class="fa fa-cogs"></i> ' + __("Advanced settings on") + " '" + record.get("f_table_name") + "'",
             modal: true,
             layout: 'fit',
             width: 450,
@@ -1374,25 +1380,27 @@ $(window).ready(function () {
                     frame: false,
                     border: false,
                     region: 'center',
+                    viewConfig: {
+                        forceFit: true
+                    },
                     id: "detailform",
                     bodyStyle: 'padding: 10px 10px 0 10px;',
+                    defaults: {
+                        anchor: '100%'
+                    },
                     items: [
                         {
                             name: '_key_',
                             xtype: 'hidden',
                             value: r.data._key_
-
                         },
                         {
-                            width: 300,
                             xtype: 'textfield',
                             fieldLabel: __('Meta data URL'),
                             name: 'meta_url',
                             value: r.data.meta_url
-
                         },
                         {
-                            width: 300,
                             xtype: 'textfield',
                             fieldLabel: __('WMS source'),
                             name: 'wmssource',
@@ -1437,14 +1445,12 @@ $(window).ready(function () {
                             value: r.data.baselayer
                         },
                         {
-                            width: 300,
                             xtype: 'textfield',
                             fieldLabel: __('SQL where clause'),
                             name: 'filter',
                             value: r.data.filter
                         },
                         {
-                            width: 300,
                             xtype: 'textfield',
                             fieldLabel: __('File source'),
                             name: 'bitmapsource',
@@ -1470,14 +1476,12 @@ $(window).ready(function () {
                             value: r.data.enablesqlfilter
                         },
                         {
-                            width: 300,
                             xtype: 'textfield',
                             fieldLabel: __('ES trigger table'),
                             name: 'triggertable',
                             value: r.data.triggertable
                         },
                         {
-                            width: 300,
                             xtype: 'textarea',
                             height: 100,
                             fieldLabel: __('View definition'),
@@ -1488,7 +1492,7 @@ $(window).ready(function () {
                     ],
                     buttons: [
                         {
-                            text: '<i class="icon-ok btn-gc"></i> ' + __('Update'),
+                            text: '<i class="fa fa-check"></i> ' + __('Update'),
                             handler: function () {
                                 var f = Ext.getCmp('detailform');
                                 if (f.form.isValid()) {
@@ -1888,10 +1892,8 @@ $(window).ready(function () {
                 if (!r.exists) {
                     Ext.MessageBox.show({
                         title: 'Failure',
-                        msg: __("The table must be versioned"),
+                        msg: __("The table must be versioned."),
                         buttons: Ext.MessageBox.OK,
-                        width: 400,
-                        height: 300,
                         icon: Ext.MessageBox.ERROR
                     });
                     return false;

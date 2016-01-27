@@ -113,7 +113,7 @@ q:after, q:before {
     padding: 5px;
 }
 
-.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south, .x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question, .x-tool {
+.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south, .x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool {
     font: normal normal normal 14px/1 FontAwesome;
     font-size: inherit;
     text-rendering: auto;
@@ -150,6 +150,16 @@ q:after, q:before {
 
 .x-window-dlg .ext-mb-question:before {
     content: "\f059";
+}
+
+.x-window-dlg .ext-mb-error {
+    background: none !important;
+    color: #ffffff;
+    font-size: 34px;
+}
+
+.x-window-dlg .ext-mb-error:before {
+    content: "\f071";
 }
 
 .x-tree-node-collapsed:before {
@@ -396,6 +406,10 @@ q:after, q:before {
 #gx-map-panel{
     border-left: 1px solid  #B6B6B4/*Gray Cloud*/;;
     border-right: 1px solid  #B6B6B4/*Gray Cloud*/;;
+}
+
+.service-url {
+    font-family: 'Open Sans';
 }
 
 

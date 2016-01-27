@@ -29,14 +29,14 @@ include("html_header.php");
         <b><span id='apikeyholder'></span></b>
     </div>
     <div id="wfs-dialog">
-        <table border="0" class="pretty-tables">
+        <table border="0">
             <tbody>
             <tr>
                 <td>For WFS-T (editable WFS). This service supports workflow management and track changes.</td>
             </tr>
             <tr>
                 <td>
-                    <input type="text" readonly="readonly"
+                    <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo (\app\conf\App::$param["epsg"]) ?: "4326" ?>"
                            />
                 </td>
@@ -52,7 +52,7 @@ include("html_header.php");
             </tr>
             <tr>
                 <td>
-                    <input type="text" readonly="readonly"
+                    <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>/"/>
                 </td>
             </tr>
@@ -63,17 +63,14 @@ include("html_header.php");
         <table border="0">
             <tbody>
             <tr>
-                <td>Tile Map Service (TMS, Google style).</td>
+                <td>Tile Map Service (WMTS, TMS and Google xyz).</td>
             </tr>
             <tr>
                 <td>
-                    <input type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/{layer}"
+                    <input class="service-url" type="text" readonly="readonly"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/[wms|wmts|gmaps|tms]"
                            />
                 </td>
-            </tr>
-            <tr>
-                <td>Eg. <?php echo $_SERVER['HTTP_HOST']; ?>/wms/mydb/tilecache/1.0.0/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>.mylayer</td>
             </tr>
             </tbody>
         </table>
@@ -86,7 +83,7 @@ include("html_header.php");
             </tr>
             <tr>
                 <td>
-                    <input type="text" readonly="readonly"
+                    <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
                            />
                 </td>
@@ -102,7 +99,7 @@ include("html_header.php");
             </tr>
             <tr>
                 <td>
-                    <input type="text" readonly="readonly"
+                    <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
                            />
                 </td>
