@@ -11,6 +11,7 @@ class Sql extends \app\inc\Controller
     private $data;
     private $subUser;
     private $usedRelations;
+    const USEDRELSKEY = "checked_relations";
 
     public function get_index()
     {
@@ -41,6 +42,7 @@ class Sql extends \app\inc\Controller
         if (!$this->data) {
             $this->data = $this->response;
         }
+
         return unserialize($this->data);
     }
 
@@ -121,7 +123,14 @@ class Sql extends \app\inc\Controller
             return serialize($this->response);
         }
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
-        $parser = new \PHPSQLParser($sql, true);
+        try {
+            $parser = new \PHPSQLParser($sql, false);
+        } catch(\UnableToCalculatePositionException $e){
+            $this->response['success'] = false;
+            $this->response['code'] = 403;
+            $this->response['message'] = $e->getMessage();
+            return serialize($this->response);
+        }
         $parsedSQL = $parser->parsed;
         $this->usedRelations = array();
 
@@ -143,7 +152,6 @@ class Sql extends \app\inc\Controller
         // Check SQL UPDATE
         if (isset($parsedSQL['UPDATE'])) {
             foreach ($parsedSQL['UPDATE'] as $table) {
-                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -162,7 +170,6 @@ class Sql extends \app\inc\Controller
             // Check SQL DELETE
         } elseif (isset($parsedSQL['DELETE'])) {
             foreach ($parsedSQL['FROM'] as $table) {
-                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -181,7 +188,6 @@ class Sql extends \app\inc\Controller
             // Check SQL INSERT
         } elseif (isset($parsedSQL['INSERT'])) {
             foreach ($parsedSQL['INSERT'] as $table) {
-                $this->usedRelations[] = $table["no_quotes"];
                 if (explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
@@ -207,10 +213,11 @@ class Sql extends \app\inc\Controller
             $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
         } elseif ($parsedSQL['CREATE']) {
-            if (strpos(strtolower($parsedSQL['CREATE']), 'create view') !== false) {
+            if (isset($parsedSQL['CREATE']) && isset($parsedSQL['VIEW'])) {
                 if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                     $api = new \app\models\Sql();
                     $this->response = $api->transaction($this->q);
+                    $this->addAttr($response);
                 } else {
                     $this->response['success'] = false;
                     $this->response['message'] = "Not the right key!";
@@ -224,6 +231,7 @@ class Sql extends \app\inc\Controller
         } elseif ($parsedSQL['UPDATE'] || $parsedSQL['INSERT'] || $parsedSQL['DELETE']) {
             $api = new \app\models\Sql();
             $this->response = $api->transaction($this->q);
+            $this->addAttr($response);
         } elseif ($parsedSQL['SELECT']) {
             $lifetime = (Input::get('lifetime')) ?: 0;
             $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
@@ -236,7 +244,7 @@ class Sql extends \app\inc\Controller
                 $srs = Input::get('srs') ?: "900913";
                 $api = new \app\models\Sql($srs);
                 $this->response = $api->sql($this->q, $clientEncoding);
-                $this->response["rels"] = $this->usedRelations;
+                $this->addAttr($response);
 
                 echo serialize($this->response);
                 // Cache script
@@ -250,5 +258,13 @@ class Sql extends \app\inc\Controller
             $this->response['code'] = 400;
         }
         return serialize($this->response);
+    }
+    private function addAttr($arr){
+        foreach($arr as $key=>$value){
+            if ($key != "code") {
+                $this->response["auth_check"][$key] = $value;
+            }
+        }
+
     }
 }

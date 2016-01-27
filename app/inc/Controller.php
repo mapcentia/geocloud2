@@ -110,7 +110,7 @@ class Controller
                         $response = array();
                         $response['auth_level'] = $auth;
                         $response['privileges'] = $privileges[$subUser];
-                        $response['relations'] = $rels;
+                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
 
                         switch ($transaction) {
                             case false:
@@ -138,6 +138,7 @@ class Controller
                     } else {
                         $response = array();
                         $response['auth_level'] = $auth;
+                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
                         $response['privileges'] = $privileges[$subUser];
                         $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
 
@@ -155,6 +156,7 @@ class Controller
                 } else {
                     $response = array();
                     $response['auth_level'] = $auth;
+                    $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
                     $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
                     if ($auth == "Read/write" || ($transaction)) {
                         if (($apiKey == Input::get('key') && $apiKey != false) || $_SESSION["auth"]) {
@@ -178,6 +180,8 @@ class Controller
         }
         else {
             $response3["success"] = true;
+            $response3['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
+            $response3['auth_level'] = $auth;
             return $response3;
         }
     }
