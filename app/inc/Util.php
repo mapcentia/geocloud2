@@ -200,4 +200,14 @@ class Util
             $ipAddress = 'UNKNOWN';
         return $ipAddress;
     }
+
+    static function wget($url)
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        $buffer = curl_exec($ch);
+        curl_close($ch);
+        return $buffer;
+    }
 }

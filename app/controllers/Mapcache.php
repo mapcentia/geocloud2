@@ -120,13 +120,13 @@ class Mapcache extends \app\inc\Controller
 
     public function get_add()
     {
-        echo file_get_contents(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
+        echo \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
         exit();
     }
 
     public static function reload()
     {
-        $res = file_get_contents(App::$param["mapCache"]["api"] . "/reload");
+        $res = \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/reload");
         return $res;
     }
 
