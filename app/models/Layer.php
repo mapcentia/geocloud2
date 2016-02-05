@@ -298,7 +298,7 @@ class Layer extends \app\models\Table
         }
         $arr = array();
         $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ? : false); // Add geometry types (or not)
+        $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ?: false); // Add geometry types (or not)
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
             $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);
@@ -668,5 +668,23 @@ class Layer extends \app\models\Table
         }
         $response['success'] = true;
         return $response;
+    }
+
+    public function getCkanObj($key)
+    {
+        $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
+        $res = $this->prepare($sql);
+        try {
+
+            $res->execute(array("key" => $key));
+
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res, "assoc");
+        return $row;
     }
 }

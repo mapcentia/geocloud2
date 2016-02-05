@@ -71,6 +71,10 @@ class Mapcachefile extends \app\inc\Controller
             }
             while ($row = $postgisObject->fetchRow($result)) {
                 if ($row['f_table_schema'] != "sqlapi") {
+                    $layerArr[$row['f_table_schema']][] = $row['f_table_schema'] . "." . $row['f_table_name'];
+                    $groups[$row['f_table_schema']][] = $row['layergroup'];
+                    $groupArr[$row['f_table_schema']][$row['f_table_schema'] . "." . $row['f_table_name']] = $row['layergroup'];
+
                     $table = $row["f_table_schema"] . "." . $row["f_table_name"];
                     if (!in_array($table, $arr)) {
                         array_push($arr, $table);
@@ -92,7 +96,7 @@ class Mapcachefile extends \app\inc\Controller
                          </params>
                   </getmap>
                   <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/ows/<?php echo $_SESSION["screen_name"] ?>/<?php echo $row["f_table_schema"] ?>/</url>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $row["f_table_schema"] ?>.map&</url>
                   </http>
                   <getfeatureinfo>
                             <!-- info_formats: comma separated list of wms info_formats supported by the source WMS.
@@ -126,11 +130,103 @@ class Mapcachefile extends \app\inc\Controller
                     <title><?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?></title>
                      <abstract><?php echo $row['f_table_abstract']; ?></abstract>
                 </metadata>
-                </tileset>
+            </tileset>
             <?php
                     }
                 }
-            }?>
+            }
+
+            foreach ($layerArr as $k => $v) {
+                if (sizeof($v) > 0) {
+                    ?>
+            <!-- <?php echo $k ?> -->
+            <source name="<?php echo $k ?>" type="wms">
+                  <getmap>
+                         <params>
+                                <FORMAT>image/png</FORMAT>
+                                <LAYERS><?php echo implode(",", $v) ?></LAYERS>
+                         </params>
+                  </getmap>
+                  <http>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $k ?>.map&</url>
+                  </http>
+            </source>
+            <tileset name="<?php echo $k ?>">
+                <source><?php echo $k ?></source>
+                <cache>disk</cache>
+                <grid>g20</grid>
+                <grid>g</grid>
+                <grid>WGS84</grid>
+                <?php
+                    foreach ($grids as $k2 => $v2) {
+                        echo "<grid>{$k2}</grid>\n";
+                    }
+                    ?>
+                <format>PNG</format>
+                <metatile>1 1</metatile>
+                <metabuffer>0</metabuffer>
+                <expires>60</expires>
+                <metadata>
+                    <title><?php echo $k; ?></title>
+                     <abstract></abstract>
+                </metadata>
+            </tileset>
+                    <?php
+                }
+            }
+
+            foreach ($groupArr as $k => $v) {
+                $unique = array_unique($groups[$k]);
+                foreach ($unique as $v2) {
+                    $layers = array();
+                    $tileSetName =  "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
+
+
+                    foreach ($groupArr[$k] as $h => $j) {
+                        if ($j == $v2) {
+                            $layers[] = $h;
+                        }
+                    }
+                    $layersStr = implode(",", $layers);
+                    ?>
+            <!-- <?php echo $tileSetName ?> -->
+            <source name="<?php echo $tileSetName ?>" type="wms">
+                  <getmap>
+                         <params>
+                                <FORMAT>image/png</FORMAT>
+                                <LAYERS><?php echo $layersStr ?></LAYERS>
+                         </params>
+                  </getmap>
+                  <http>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $k ?>.map&</url>
+                  </http>
+            </source>
+            <tileset name="<?php echo $tileSetName ?>">
+                <source><?php echo $tileSetName ?></source>
+                <cache>disk</cache>
+                <grid>g20</grid>
+                <grid>g</grid>
+                <grid>WGS84</grid>
+                <?php
+                    foreach ($grids as $k2 => $v2) {
+                        echo "<grid>{$k2}</grid>\n";
+                    }
+                    ?>
+                <format>PNG</format>
+                <metatile>1 1</metatile>
+                <metabuffer>0</metabuffer>
+                <expires>60</expires>
+                <metadata>
+                    <title><?php echo $tileSetName; ?></title>
+                     <abstract></abstract>
+                </metadata>
+            </tileset>
+                    <?php
+
+                }
+            }
+
+            ?>
             <default_format>PNG</default_format>
 
             <service type="wms" enabled="true">
