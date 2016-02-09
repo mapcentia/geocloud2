@@ -703,7 +703,7 @@ class Layer extends \app\models\Table
         curl_close($ch);
 
         // Create the CKAN package object
-        $widgetUrl = App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+        $widgetUrl = App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
         $response = array();
         $response["id"] = $id;
         $response["name"] = $id;
