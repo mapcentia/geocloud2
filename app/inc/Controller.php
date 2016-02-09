@@ -13,6 +13,11 @@ class Controller
         //Pass
     }
 
+    public function head_index()
+    {
+        //Pass
+    }
+
     public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
     {
         if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
