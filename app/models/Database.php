@@ -197,6 +197,11 @@ class Database extends \app\inc\Model
         \app\conf\Connection::$param["postgisdb"] = $db;
     }
 
+    static function getDb()
+    {
+        return \app\conf\Connection::$param["postgisdb"];
+    }
+
     public function renameSchema($schema, $name)
     {
         if ($schema == "public") {

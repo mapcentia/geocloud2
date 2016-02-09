@@ -13,7 +13,6 @@ class Ckan extends \app\inc\Controller
     public function get_index()
     {
 
-
-        return $this->layers->getCkanObj(Input::get("key"));
+        return $this->layers->updateCkan(Input::get("key"));
     }
 }

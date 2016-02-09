@@ -2,6 +2,8 @@
 namespace app\models;
 
 use \app\conf\App;
+use \app\models\Database;
+
 
 class Layer extends \app\models\Table
 {
@@ -670,8 +672,10 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function getCkanObj($key)
+    public function updateCkan($key)
     {
+        $ckanApiUrl = App::$param["ckan"]["host"];
+
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
         $res = $this->prepare($sql);
         try {
@@ -685,6 +689,153 @@ class Layer extends \app\models\Table
             return $response;
         }
         $row = $this->fetchRow($res, "assoc");
-        return $row;
+
+        $id = Database::getDb() . "-" . str_replace(".", "-", $row["_key_"]);
+
+        // Check if dataset already exists
+        $ch = curl_init($ckanApiUrl . "/api/3/action/package_show?id=" . $id);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $datasetExists = ($info["http_code"] == 200) ? true : false;
+        curl_close($ch);
+
+        // Create the CKAN package object
+        $widgetUrl = App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+        $response = array();
+        $response["id"] = $id;
+        $response["name"] = $id;
+        $response["title"] = $row["f_table_title"];
+        $response["notes"] = $row["f_table_abstract"];
+        $response["owner_org"] = App::$param["ckan"]["orgId"];
+        $response["resources"] = array(
+            array(
+                "id" => $id . "-html",
+                "name" => "Web widget",
+                "description" => "Html side til indlejring eller link",
+                "format" => "html",
+                "url" => $widgetUrl,
+            ),
+            array(
+                "id" => $id . "-geojson",
+                "name" => "GeoJSON",
+                "description" => "JSON format",
+                "format" => "geojson",
+                "url" => App::$param["host"] . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 300"
+            ),
+            array(
+                "id" => $id . "-wms",
+                "name" => "WMS",
+                "description" => "OGC WMS op til version 1.3.0",
+                "format" => "wms",
+                "url" => App::$param["host"] . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"
+            ),
+            array(
+                "id" => $id . "-wfs",
+                "name" => "WFS",
+                "description" => "OGC WFS op til version 2.0.0",
+                "format" => "wfs",
+                "url" => App::$param["host"] . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WFS&VERSION=2.0&REQUEST=GetCapabilities"
+            ),
+            array(
+                "id" => $id . "_wmts",
+                "name" => "WMTS",
+                "description" => "OGC WMTS version 1.0",
+                "format" => "wmts",
+                "url" => App::$param["host"] . "/mapcache/" . Database::getDb() . "/wmts?SERVICE=WMTS&REQUEST=GetCapabilities"
+            ),
+            array(
+                "id" => $id . "-xyz",
+                "name" => "XYZ",
+                "description" => "Google XYZ service",
+                "format" => "xyz",
+                "url" => App::$param["host"] . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
+            )
+        );
+        $requestJson = json_encode($response);
+        $ch = curl_init($ckanApiUrl . "/api/3/action/package_" . ($datasetExists ? "update" : "create"));
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($requestJson),
+                'Authorization: ' . App::$param["ckan"]["apiKey"]
+            )
+        );
+        $buffer = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        if ($info["http_code"] != 200) {
+            $response['json'] = $buffer;
+            return $response;
+        } else {
+            // Get list of resource views, so we can see if the views already exists
+            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            $viewArr = json_decode(curl_exec($ch), true);
+            curl_close($ch);
+
+            // Set flags
+            $webViewId1 = (isset($viewArr["result"][0]["id"])) ? $viewArr["result"][0]["id"] : null;
+            $textViewId1 = (isset($viewArr["result"][0]["id"])) ? $viewArr["result"][1]["id"] : null;
+
+            // Webpage view for widget
+            $response = array();
+            if ($webViewId1) {
+                $response["id"] = $webViewId1;
+            }
+            $response["resource_id"] = $id . "-html";
+            $response["title"] = $row["f_table_title"] ?: $row["f_table_name"];
+            $response["description"] = $row["f_table_abstract"];
+            $response["view_type"] = "webpage_view";
+            $response["page_url"] = \app\conf\App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+
+            $requestJson = json_encode($response);
+            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_" . ($webViewId1 ? "update" : "create"));
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($requestJson),
+                    'Authorization: ' . App::$param["ckan"]["apiKey"]
+                )
+            );
+            $buffer = curl_exec($ch);
+            curl_close($ch);
+
+            // Text view
+            /*$response = array();
+            if ($textViewId1) {
+                $response["id"] = $textViewId1;
+            }
+            $response["resource_id"] = $id . "-xyz";
+            $response["title"] = $row["f_table_title"] ?: $row["f_table_name"];
+            $response["description"] = $row["f_table_abstract"];
+            $response["view_type"] = "text_view";
+            //$response["text"] = \app\conf\App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+
+            $requestJson = json_encode($response);
+            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_" . ($textViewId1 ? "update" : "create"));
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($requestJson),
+                    'Authorization: ' . App::$param["ckan"]["apiKey"]
+                )
+            );
+            $buffer = curl_exec($ch);
+            curl_close($ch);*/
+
+
+            $response['json'] = $buffer;
+            return $response;
+        }
     }
 }
