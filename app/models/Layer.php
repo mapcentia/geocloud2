@@ -792,8 +792,7 @@ class Layer extends \app\models\Table
             $response["title"] = $row["f_table_title"] ?: $row["f_table_name"];
             $response["description"] = $row["f_table_abstract"];
             $response["view_type"] = "webpage_view";
-            $response["page_url"] = \app\conf\App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
-
+            $response["page_url"] = $widgetUrl;
             $requestJson = json_encode($response);
             $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_" . ($webViewId1 ? "update" : "create"));
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
