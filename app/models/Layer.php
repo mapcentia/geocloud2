@@ -755,7 +755,7 @@ class Layer extends \app\models\Table
             )
         );
         $requestJson = json_encode($response);
-        $ch = curl_init($ckanApiUrl . "/api/3/action/package_" . ($datasetExists ? "update" : "create"));
+        $ch = curl_init($ckanApiUrl . "/api/3/action/package_" . ($datasetExists ? "patch" : "create"));
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
