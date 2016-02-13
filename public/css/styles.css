@@ -416,3 +416,17 @@ q:after, q:before {
 
 
 
+.bottom-info-bar-pipe {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+.bottom-info-bar-param {
+    font: normal 11px/13px 'Open Sans' !important;
+    font-weight: 700;
+}
+
+
+
+
+

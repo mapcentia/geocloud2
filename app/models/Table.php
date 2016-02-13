@@ -286,48 +286,52 @@ class Table extends Model
 
     public function updateRecord($data, $keyName) // All tables
     {
+        $response = null;
         $data = $this->makeArray($data);
-        foreach ($data as $row) {
-            if (is_array($row)) { // Two or more records are send by client
-                $response['success'] = false;
-                $response['message'] = "An previous edit was not saved. This may be caused by a connection problem. Try refresh your browser.";
-                return $response;
-            }
-            foreach ($row as $key => $value) {
-                if ($value === false) {
-                    $value = null;
+        foreach ($data as $set) {
+            $set = $this->makeArray($set);
+            foreach ($set as $row) {
+                foreach ($row as $key => $value) {
+                    if ($value === false) {
+                        $value = null;
+                    }
+                    if ($key == "editable" || $key == "skipconflict") {
+                        $value = $value ?: "0";
+                    }
+                    $value = $this->db->quote($value);
+                    if ($key != $keyName) {
+                        $pairArr[] = "{$key}={$value}";
+                        $keyArr[] = $key;
+                        $valueArr[] = $value;
+                    } else {
+                        $where = "{$key}={$value}";
+                        $keyValue = $value;
+                    }
                 }
-                $value = $this->db->quote($value);
-                if ($key != $keyName) {
-                    $pairArr[] = "{$key}={$value}";
-                    $keyArr[] = $key;
-                    $valueArr[] = $value;
-                } else {
-                    $where = "{$key}={$value}";
-                    $keyValue = $value;
-                }
-            }
-            $sql = "UPDATE {$this->table} SET ";
-            $sql .= implode(",", $pairArr);
-            $sql .= " WHERE {$where}";
-            $result = $this->execQuery($sql, "PDO", "transaction");
-            // If row does not exits, insert instead. Move to an insert method
-            if ((!$result) && (!$this->PDOerror)) {
-                $sql = "INSERT INTO {$this->table} ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
+                $sql = "UPDATE {$this->table} SET ";
+                $sql .= implode(",", $pairArr);
+                $sql .= " WHERE {$where}";
                 $result = $this->execQuery($sql, "PDO", "transaction");
-                $response['operation'] = "Row inserted";
+                // If row does not exits, insert instead. Move to an insert method
+                if ((!$result) && (!$this->PDOerror)) {
+                    $sql = "INSERT INTO {$this->table} ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
+                    $result = $this->execQuery($sql, "PDO", "transaction");
+                    $response['operation'] = "Row inserted";
+                }
+                if (!$this->PDOerror) {
+                    $response['success'] = true;
+                    $response['message'] = "Row updated";
+                } else {
+                    $response['success'] = false;
+                    $response['message'] = $this->PDOerror;
+                    $response['code'] = 406;
+                    return $response;
+                }
+                unset($pairArr);
+                unset($keyArr);
+                unset($valueArr);
             }
-            if (!$this->PDOerror) {
-                $response['success'] = true;
-                $response['message'] = "Row updated";
-            } else {
-                $response['success'] = false;
-                $response['message'] = $this->PDOerror;
-                $response['code'] = 406;
-            }
-            unset($pairArr);
-            unset($keyArr);
-            unset($valueArr);
+
         }
         return $response;
     }
@@ -453,12 +457,9 @@ class Table extends Model
                 }
                 $response['success'] = true;
                 return $response;
-
             }
-
             // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
-
                 if ($safeColumn == "state") {
                     $safeColumn = "_state";
                 }

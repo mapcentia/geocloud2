@@ -615,14 +615,13 @@ $(window).ready(function () {
             {
                 text: '<i class="fa fa-tags"></i> ' + __('Tags'),
                 handler: function (btn, ev) {
-                    var record = grid.getSelectionModel().getSelected();
-                    if (!record) {
+                    var records = grid.getSelectionModel().getSelections();
+                    if (records.length === 0) {
                         App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
                         return false;
                     }
-                    var r = record;
                     var win = new Ext.Window({
-                        title: '<i class="fa fa-tags"></i> ' + __("Add tags on") + " '" + record.get("f_table_name") + "'",
+                        title: '<i class="fa fa-tags"></i> ' + __("Add tags on") + ' ' + records.length + ' ' + __('table(s)'),
                         modal: true,
                         layout: 'fit',
                         width: 450,
@@ -652,11 +651,6 @@ $(window).ready(function () {
                                     },
                                     labelWidth: 1,
                                     items: [
-                                        {
-                                            name: '_key_',
-                                            xtype: 'hidden',
-                                            value: r.data._key_
-                                        },
                                         new Ext.ux.form.SuperBoxSelect({
                                             allowBlank: true,
                                             msgTarget: 'under',
@@ -668,7 +662,7 @@ $(window).ready(function () {
                                             displayField: 'tag',
                                             valueField: 'tag',
                                             mode: 'local',
-                                            value: (r.data.tags !== null) ? r.data.tags.split(",") : [],
+                                            value: (records.length === 1 ) ? ((records[0].data.tags !== null) ? records[0].data.tags.split(",") : []) : [],
                                             listeners: {
                                                 newitem: function (bs, v, f) {
                                                     bs.addNewItem({
@@ -682,16 +676,21 @@ $(window).ready(function () {
                                         {
                                             text: '<i class="fa fa-check"></i> ' + __('Update'),
                                             handler: function () {
+
                                                 var f = Ext.getCmp('tagsform');
                                                 if (f.form.isValid()) {
                                                     var values = f.form.getValues();
-                                                    for (var key in values) {
-                                                        if (values.hasOwnProperty(key)) {
-                                                            values[key] = encodeURIComponent(values[key]);
-                                                        }
-                                                    }
+                                                    var data = [];
+                                                    Ext.iterate(records, function (v) {
+                                                        data.push(
+                                                            {
+                                                                _key_: v.get("_key_"),
+                                                                tags: encodeURIComponent(values["tags"])
+                                                            }
+                                                        );
+                                                    });
                                                     var param = {
-                                                        data: values
+                                                        data: data
                                                     };
                                                     param = Ext.util.JSON.encode(param);
                                                     Ext.Ajax.request({
@@ -2258,9 +2257,8 @@ $(window).ready(function () {
 
     // define a template to use for the detail view
     var bookTplMarkup = ['<table>' +
-    '<tr class="x-grid3-row"><td width="70"><b>Srid</b></td><td width="130">{srid}</td><td width="90"><b>' + __('Created') + '</b></td><td>{created}</td></tr>' +
-    '<tr class="x-grid3-row"><td><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td><b>' + __('Last modified') + '</b></td><td>{lastmodified}</td>' +
-    '</tr>' +
+    '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td >{tags}</td></tr>' +
+    '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Created') + '</b></td><td>{created}</td><td ></td><td></td></tr>' +
     '</table>'];
     var bookTpl = new Ext.Template(bookTplMarkup);
     var ct = new Ext.Panel({
