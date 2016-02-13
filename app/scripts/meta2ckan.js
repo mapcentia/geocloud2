@@ -8,7 +8,7 @@ nconf.argv();
 var db = (nconf.get()._[0]);
 var host = nconf.get("host") || "127.0.0.1";
 var ckanHost = nconf.get("ckan-host") || "127.0.0.1";
-var ckanDns = nconf.get("ckan-dns") || "127.0.0.1";
+var gc2Host = nconf.get("gc2-host") || "127.0.0.1";
 var user = nconf.get("user") || "postgres";
 var key = nconf.get("key") || null;
 var pgConString = "postgres://" + user + "@" + host + "/" + db;
@@ -20,7 +20,7 @@ if (nconf.get("help") || !db) {
     console.log("  --host       PostGreSQL host. Default 127.0.0.1");
     console.log("  --user       PostGreSQL user. Default postgres");
     console.log("  --ckan-host    Ckan host. Default 127.0.0.1");
-    console.log("  --ckan-dns    Ckan dns. Default 127.0.0.1");
+    console.log("  --gc2-host    GC2 host. Default 127.0.0.1");
     console.log("  --key    GC2 api key");
     process.exit(1);
 }
@@ -34,7 +34,7 @@ pg.connect(pgConString, function (err, client) {
     client.on('notification', function (msg) {
         var split = msg.payload.split(","), url;
 
-        url = "http://" + ckanHost + "/api/v1/ckan/" + db + "?id=" + split[2] + "&host=" + ckanDns;
+        url = "http://" + ckanHost + "/api/v1/ckan/" + db + "?id=" + split[2] + "&host=" + gc2Host;
         if (key) {
             url = url + "&key=" + key;
         }
