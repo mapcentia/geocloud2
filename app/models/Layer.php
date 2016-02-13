@@ -672,8 +672,9 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function updateCkan($key)
+    public function updateCkan($key, $gc2Host)
     {
+        $gc2Host = $gc2Host ?: \app\conf\App::$param["host"];
         $ckanApiUrl = App::$param["ckan"]["host"];
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
@@ -703,12 +704,21 @@ class Layer extends \app\models\Table
         curl_close($ch);
 
         // Create the CKAN package object
-        $widgetUrl = App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+        $arr = array();
+
+        if ($row["tags"]) {
+            foreach (explode(",", $row["tags"]) as $v) {
+                $arr[] = array("name" => $v);
+            }
+        }
+
+        $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
         $response = array();
         $response["id"] = $id;
         $response["name"] = $id;
         $response["title"] = $row["f_table_title"];
         $response["notes"] = $row["f_table_abstract"];
+        if (sizeof($arr) > 0) $response["tags"] = $arr;
         $response["owner_org"] = App::$param["ckan"]["orgId"];
         $response["resources"] = array(
             array(
@@ -723,35 +733,35 @@ class Layer extends \app\models\Table
                 "name" => "GeoJSON",
                 "description" => "JSON format",
                 "format" => "geojson",
-                "url" => App::$param["host"] . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326"
             ),
             array(
                 "id" => $id . "-wms",
                 "name" => "WMS",
                 "description" => "OGC WMS op til version 1.3.0",
                 "format" => "wms",
-                "url" => App::$param["host"] . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"
+                "url" => $gc2Host . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"
             ),
             array(
                 "id" => $id . "-wfs",
                 "name" => "WFS",
                 "description" => "OGC WFS op til version 2.0.0",
                 "format" => "wfs",
-                "url" => App::$param["host"] . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WFS&VERSION=2.0&REQUEST=GetCapabilities"
+                "url" => $gc2Host . "/ows/" . Database::getDb() . "/" . $row["f_table_schema"] . "?SERVICE=WFS&VERSION=2.0&REQUEST=GetCapabilities"
             ),
             array(
                 "id" => $id . "_wmts",
                 "name" => "WMTS",
                 "description" => "OGC WMTS version 1.0",
                 "format" => "wmts",
-                "url" => App::$param["host"] . "/mapcache/" . Database::getDb() . "/wmts?SERVICE=WMTS&REQUEST=GetCapabilities"
+                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/wmts?SERVICE=WMTS&REQUEST=GetCapabilities"
             ),
             array(
                 "id" => $id . "-xyz",
                 "name" => "XYZ",
                 "description" => "Google XYZ service",
                 "format" => "xyz",
-                "url" => App::$param["host"] . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
+                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
             )
         );
         $requestJson = json_encode($response);
@@ -765,15 +775,15 @@ class Layer extends \app\models\Table
                 'Authorization: ' . App::$param["ckan"]["apiKey"]
             )
         );
-        $buffer = curl_exec($ch);
+        $packageBuffer = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
         if ($info["http_code"] != 200) {
-            $response['json'] = $buffer;
+            $response['json'] = $packageBuffer;
             return $response;
         } else {
             // Get list of resource views, so we can see if the views already exists
-            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
+            /*$ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
             $viewArr = json_decode(curl_exec($ch), true);
@@ -805,7 +815,7 @@ class Layer extends \app\models\Table
                 )
             );
             $buffer = curl_exec($ch);
-            curl_close($ch);
+            curl_close($ch);*/
 
             // Text view
             /*$response = array();
@@ -816,7 +826,7 @@ class Layer extends \app\models\Table
             $response["title"] = $row["f_table_title"] ?: $row["f_table_name"];
             $response["description"] = $row["f_table_abstract"];
             $response["view_type"] = "text_view";
-            //$response["text"] = \app\conf\App::$param["host"] . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+            //$response["text"] = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
 
             $requestJson = json_encode($response);
             $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_" . ($textViewId1 ? "update" : "create"));
@@ -833,8 +843,38 @@ class Layer extends \app\models\Table
             curl_close($ch);*/
 
 
-            $response['json'] = $buffer;
+            $response['json'] = $packageBuffer;
             return $response;
         }
+    }
+
+    public function getTags()
+    {
+
+        $sql = "SELECT tags FROM settings.geometry_columns_view";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $arr = array();
+        while ($row = $this->fetchRow($res, "assoc")) {
+            if ($row["tags"]) {
+                $arr[] = $row["tags"];
+            }
+        }
+        $arr = array_unique(explode(",", implode(",", $arr)));
+        $res = array();
+        foreach ($arr as $v) {
+            $res[]["tag"] = $v;
+        }
+
+        $response["data"] = $res;
+        $response["success"] = true;
+        return $response;
     }
 }

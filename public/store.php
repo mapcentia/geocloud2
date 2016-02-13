@@ -1,6 +1,8 @@
 <?php
 include("html_header.php");
 ?>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f" />
+
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-flat.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
@@ -137,6 +139,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?7ba8b5b8eb4a6981"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/RangeMenu.js?77e3a4d93b747edc"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/ListMenu.js?606a1414d8824c81"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/superboxselect/SuperBoxSelect.js"></script>
 
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/GridFilters.js?e2cd680acbd6d211"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js?91c56cbc41e461f1"></script>

@@ -113,7 +113,8 @@ q:after, q:before {
     padding: 5px;
 }
 
-.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south, .x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool {
+.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south,
+.x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool {
     font: normal normal normal 14px/1 FontAwesome;
     font-size: inherit;
     text-rendering: auto;
@@ -125,6 +126,7 @@ q:after, q:before {
     background: #ffffff !important;
     color: #848482;
 }
+
 
 .x-tool-close-over {
     background: red !important;
