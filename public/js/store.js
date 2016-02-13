@@ -685,7 +685,7 @@ $(window).ready(function () {
                                                         data.push(
                                                             {
                                                                 _key_: v.get("_key_"),
-                                                                tags: encodeURIComponent(values["tags"])
+                                                                tags: encodeURIComponent(values.tags)
                                                             }
                                                         );
                                                     });
