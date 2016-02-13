@@ -10,7 +10,7 @@ var host = nconf.get("host") || "127.0.0.1";
 var ckanHost = nconf.get("ckan-host") || "127.0.0.1";
 var user = nconf.get("user") || "postgres";
 var key = nconf.get("key") || null;
-var pgConString = "postgres://" + user + ":1234@" + host + "/" + db;
+var pgConString = "postgres://" + user + "@" + host + "/" + db;
 
 if (nconf.get("help") || !db) {
     console.log("usage:");
