@@ -732,8 +732,7 @@ $(window).ready(function () {
                                 }]
                         })]
                     }).show(this);
-                },
-
+                }
             },
             {
                 text: '<i class="fa fa-remove"></i> ' + __('Clear tile cache'),
