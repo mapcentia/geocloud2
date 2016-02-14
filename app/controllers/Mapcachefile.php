@@ -96,7 +96,7 @@ class Mapcachefile extends \app\inc\Controller
                          </params>
                   </getmap>
                   <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $row["f_table_schema"] ?>.map&</url>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $row["f_table_schema"] ?>.map&</url>
                   </http>
                   <getfeatureinfo>
                             <!-- info_formats: comma separated list of wms info_formats supported by the source WMS.
@@ -148,7 +148,7 @@ class Mapcachefile extends \app\inc\Controller
                          </params>
                   </getmap>
                   <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $k ?>.map&</url>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $k ?>.map&</url>
                   </http>
             </source>
             <tileset name="<?php echo $k ?>">
@@ -198,7 +198,7 @@ class Mapcachefile extends \app\inc\Controller
                          </params>
                   </getmap>
                   <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo $_SESSION["screen_name"] ?>_<?php echo $k ?>.map&</url>
+                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $k ?>.map&</url>
                   </http>
             </source>
             <tileset name="<?php echo $tileSetName ?>">
