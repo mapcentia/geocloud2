@@ -1165,7 +1165,7 @@ $(window).ready(function () {
             if (btn === "yes") {
                 var tables = [];
                 Ext.iterate(records, function (v) {
-                    tables.push(v.data.f_table_schema + "." + v.get("f_table_name"));
+                    tables.push(v.get("_key_"));
                 });
                 var param = {
                     data: tables

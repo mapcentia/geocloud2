@@ -486,6 +486,7 @@ class Layer extends \app\models\Table
             }
             $type = $check["data"];
             $query = "DROP {$type} \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
+
             $res = $this->prepare($query);
             try {
                 $res->execute();
@@ -495,6 +496,11 @@ class Layer extends \app\models\Table
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
                 return $response;
+            }
+            // Delete package from CKAN
+            if (isset(App::$param["ckan"])) {
+                $ckanRes = $this->deleteCkan(\app\conf\Connection::$param["postgisdb"] . "-" . implode("-", $bits));
+                $response['ckan_delete'] = $ckanRes["success"];
             }
         }
         $this->commit();
@@ -846,6 +852,26 @@ class Layer extends \app\models\Table
             $response['json'] = $packageBuffer;
             return $response;
         }
+    }
+
+
+    private function deleteCkan($key)
+    {
+        $ckanApiUrl = App::$param["ckan"]["host"];
+        $requestJson = json_encode(array("id" => $key));
+        $ch = curl_init($ckanApiUrl . "/api/3/action/package_delete");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($requestJson),
+                'Authorization: ' . App::$param["ckan"]["apiKey"]
+            )
+        );
+        $buffer = curl_exec($ch);
+        curl_close($ch);
+        return json_decode($buffer,true);
     }
 
     public function getTags()

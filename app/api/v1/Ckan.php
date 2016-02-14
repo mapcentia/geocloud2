@@ -12,7 +12,6 @@ class Ckan extends \app\inc\Controller
 
     public function get_index()
     {
-
         return ($this->authApiKey(Input::getPath()->part(4), Input::get("key"))) ? $this->layers->updateCkan(Input::get("id"), Input::get("host")) : false;
     }
 }
