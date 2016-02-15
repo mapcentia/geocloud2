@@ -49,6 +49,7 @@ geocloud = (function () {
         BINGROAD = "bingRoad",
         BINGAERIAL = "bingAerial",
         BINGAERIALWITHLABELS = "bingAerialWithLabels",
+        DTKSKAERMKORT_25832 = "dtkSkaermkort@25832",
         DTKSKAERMKORT = "dtkSkaermkort",
         DTKSKAERMKORTDAEMPET = "dtkSkaermkortDaempet",
         DIGITALGLOBE = "DigitalGlobe:Imagery",
@@ -584,7 +585,7 @@ geocloud = (function () {
                 fadeAnimation: true,
                 zoomAnimation: true,
                 showLayerSwitcher: false,
-               // maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+                // maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
                 resolutions: resolutions
             };
         if (config) {
@@ -1255,6 +1256,54 @@ geocloud = (function () {
             l.id = name;
             return (l);
         };
+        //ol2 and leaflet
+        this.addDtkSkaermkortUtm = function (name, layer) {
+            var l;
+            var uriLayerName = (layer === "dtk_skaermkort") ? "topo_skaermkort" : "topo_skaermkort_daempet";
+            switch (MAPLIB) {
+                case "ol2":
+                    l = new OpenLayers.Layer.WMTS({
+                        name: name,
+                        url: ["http://a.services.kortforsyningen.dk/" + uriLayerName, "http://b.services.kortforsyningen.dk/" + uriLayerName, "http://c.services.kortforsyningen.dk/" + uriLayerName],
+                        style: "default",
+                        layer: layer,
+                        matrixSet: "View1",
+                        format: "image/jpeg",
+                        attribution: "&copy; Geodatastyrelsen",
+                        params: {
+                            login: "mh1",
+                            password: "sajas"
+                        },
+                        matrixIds: [
+                            {identifier: "L00", scaleDenominator: 1638.4 / 0.00028},
+                            {identifier: "L01", scaleDenominator: 819.2 / 0.00028},
+                            {identifier: "L02", scaleDenominator: 409.6 / 0.00028},
+                            {identifier: "L03", scaleDenominator: 204.8 / 0.00028},
+                            {identifier: "L04", scaleDenominator: 102.4 / 0.00028},
+                            {identifier: "L05", scaleDenominator: 51.2 / 0.00028},
+                            {identifier: "L06", scaleDenominator: 25.6 / 0.00028},
+                            {identifier: "L07", scaleDenominator: 12.8 / 0.00028},
+                            {identifier: "L08", scaleDenominator: 6.4 / 0.00028},
+                            {identifier: "L09", scaleDenominator: 3.2 / 0.00028},
+                            {identifier: "L10", scaleDenominator: 1.6 / 0.00028},
+                            {identifier: "L11", scaleDenominator: 0.8 / 0.00028},
+                            {identifier: "L12", scaleDenominator: 0.4 / 0.00028},
+                            {identifier: "L13", scaleDenominator: 0.2 / 0.00028}
+                        ],
+                        isBaseLayer: true,
+                        displayInLayerSwitcher: true,
+                        transitionEffect: 'resize'
+                    });
+                    this.map.addLayer(l);
+                    l.setVisibility(false);
+                    break;
+                case "leaflet":
+                    break;
+            }
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
+        };
         this.addYandex = function (type) {
             var name, prettyName;
             switch (type) {
@@ -1414,6 +1463,12 @@ geocloud = (function () {
                 case "dtkSkaermkortDaempet":
                     o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "dtk_skaermkort_daempet");
                     break;
+                case "dtkSkaermkort@25832":
+                    o = this.addDtkSkaermkortUtm("dtkSkaermkort@25832", "dtk_skaermkort");
+                    break;
+                case "dtkSkaermkortDaempet@25832":
+                    o = this.addDtkSkaermkortUtm("dtkSkaermkortDaempet@25832", "dtk_skaermkort_daempet");
+                    break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");
                     break;
@@ -1424,7 +1479,7 @@ geocloud = (function () {
                     o = this.addHere("hereNormalNightGrey");
                     break;
                 default : // Try to add as tile layer
-                    o =this.addTileLayers({
+                    o = this.addTileLayers({
                         layers: [l],
                         db: db,
                         isBaseLayer: true,
@@ -1891,6 +1946,7 @@ geocloud = (function () {
         BINGAERIAL: BINGAERIAL,
         BINGAERIALWITHLABELS: BINGAERIALWITHLABELS,
         DTKSKAERMKORT: DTKSKAERMKORT,
+        DTKSKAERMKORT_25832: DTKSKAERMKORT_25832,
         DTKSKAERMKORTDAEMPET: DTKSKAERMKORTDAEMPET,
         DIGITALGLOBE: DIGITALGLOBE,
         HERENORMALDAYGREY: HERENORMALDAYGREY,
