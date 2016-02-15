@@ -584,7 +584,7 @@ geocloud = (function () {
                 fadeAnimation: true,
                 zoomAnimation: true,
                 showLayerSwitcher: false,
-                maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
+               // maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
                 resolutions: resolutions
             };
         if (config) {
