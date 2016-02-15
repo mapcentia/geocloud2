@@ -1258,8 +1258,9 @@ geocloud = (function () {
         };
         //ol2 and leaflet
         this.addDtkSkaermkortUtm = function (name, layer) {
-            var l;
-            var uriLayerName = (layer === "dtk_skaermkort") ? "topo_skaermkort" : "topo_skaermkort_daempet";
+            var l,
+                uriLayerName = (layer === "dtk_skaermkort") ? "topo_skaermkort" : "topo_skaermkort_daempet",
+                topLeftCorner = new OpenLayers.LonLat(120000, 6500000);
             switch (MAPLIB) {
                 case "ol2":
                     l = new OpenLayers.Layer.WMTS({
@@ -1275,20 +1276,20 @@ geocloud = (function () {
                             password: "sajas"
                         },
                         matrixIds: [
-                            {identifier: "L00", scaleDenominator: 1638.4 / 0.00028},
-                            {identifier: "L01", scaleDenominator: 819.2 / 0.00028},
-                            {identifier: "L02", scaleDenominator: 409.6 / 0.00028},
-                            {identifier: "L03", scaleDenominator: 204.8 / 0.00028},
-                            {identifier: "L04", scaleDenominator: 102.4 / 0.00028},
-                            {identifier: "L05", scaleDenominator: 51.2 / 0.00028},
-                            {identifier: "L06", scaleDenominator: 25.6 / 0.00028},
-                            {identifier: "L07", scaleDenominator: 12.8 / 0.00028},
-                            {identifier: "L08", scaleDenominator: 6.4 / 0.00028},
-                            {identifier: "L09", scaleDenominator: 3.2 / 0.00028},
-                            {identifier: "L10", scaleDenominator: 1.6 / 0.00028},
-                            {identifier: "L11", scaleDenominator: 0.8 / 0.00028},
-                            {identifier: "L12", scaleDenominator: 0.4 / 0.00028},
-                            {identifier: "L13", scaleDenominator: 0.2 / 0.00028}
+                            {identifier: "L00", scaleDenominator: 1638.4 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L01", scaleDenominator: 819.2 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L02", scaleDenominator: 409.6 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L03", scaleDenominator: 204.8 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L04", scaleDenominator: 102.4 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L05", scaleDenominator: 51.2 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L06", scaleDenominator: 25.6 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L07", scaleDenominator: 12.8 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L08", scaleDenominator: 6.4 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L09", scaleDenominator: 3.2 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L10", scaleDenominator: 1.6 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L11", scaleDenominator: 0.8 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L12", scaleDenominator: 0.4 / 0.00028, topLeftCorner: topLeftCorner},
+                            {identifier: "L13", scaleDenominator: 0.2 / 0.00028, topLeftCorner: topLeftCorner}
                         ],
                         isBaseLayer: true,
                         displayInLayerSwitcher: true,
