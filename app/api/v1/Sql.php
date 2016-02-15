@@ -234,7 +234,7 @@ class Sql extends \app\inc\Controller
             $api = new \app\models\Sql();
             $this->response = $api->transaction($this->q);
             $this->addAttr($response);
-        } elseif ($parsedSQL['SELECT']) {
+        } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
             $lifetime = (Input::get('lifetime')) ?: 0;
             $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
             $Cache_Lite = new \Cache_Lite($options);
