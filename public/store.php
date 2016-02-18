@@ -2,7 +2,6 @@
 include("html_header.php");
 ?>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f" />
-
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-flat.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>

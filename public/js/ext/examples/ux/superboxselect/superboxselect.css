@@ -46,7 +46,6 @@
     margin-top: 4px;
 }
 
-
 .x-superboxselect-btn-over {
     background-position: left -16px
 }
@@ -86,6 +85,11 @@ body.ext-ie .x-superboxselect-input input {
     padding: 1px 15px 1px 5px !important;
 }
 
+.x-superboxselect-item:hover {
+    background: #BBCEF1;
+    border: 1px solid #6D95E0;
+}
+
 body.ext-ie7 .x-superboxselect-item {
     margin: 2px 1px 2px 1px;
     line-height: 1.2em;
@@ -98,10 +102,10 @@ body.ext-ie6 .x-superboxselect-item {
     padding: 2px 19px 4px 5px !important;
 }
 
-.x-superboxselect-item-hover {
+/*.x-superboxselect-item-hover {
     background: #BBCEF1;
     border: 1px solid #6D95E0;
-}
+}*/
 
 .x-superboxselect-item-focus {
     border-color: #598BEC;
@@ -122,7 +126,7 @@ body.ext-ie6 .x-superboxselect-item {
     text-decoration: none;
 }
 
-.x-tool-close:before,.x-tool-close-over:before,.x-superboxselect-item-close:before {
+.x-tool-close:before, .x-tool-close-over:before, .x-superboxselect-item-close:before {
     content: "\f00d";
 }
 
@@ -145,6 +149,7 @@ body.ext-ie6 .x-superboxselect-item {
 .x-superboxselect-item-close:before, .x-superboxselect-btn-clear:before {
     content: "\f00d";
 }
+
 .x-superboxselect-btn-expand:before {
     content: "\f0dd";
 }

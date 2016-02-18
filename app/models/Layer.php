@@ -681,6 +681,7 @@ class Layer extends \app\models\Table
     public function updateCkan($key, $gc2Host)
     {
         $gc2Host = $gc2Host ?: \app\conf\App::$param["host"];
+        $metaConfig = \app\conf\App::$param["metaConfig"];
         $ckanApiUrl = App::$param["ckan"]["host"];
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
@@ -713,10 +714,41 @@ class Layer extends \app\models\Table
         $arr = array();
 
         if ($row["tags"]) {
-            foreach (explode(",", $row["tags"]) as $v) {
+            foreach (json_decode($row["tags"]) as $v) {
                 $arr[] = array("name" => $v);
             }
         }
+
+        // Get the default "ckan_org_id" value
+        $ckanOrgIdDefault = null;
+        foreach ($metaConfig as $value) {
+            if ($value["name"] == "ckan_org_id") {
+                $ckanOrgIdDefault = $value["default"];
+            }
+        }
+
+        // Get the default "update" flag
+        $updateDefault = null;
+        foreach ($metaConfig as $value) {
+            if ($value["name"] == "ckan_update") {
+                $updateDefault = $value["default"];
+            }
+        }
+
+        if (isset(json_decode($row["meta"], true)["ckan_update"])) {
+            $update = json_decode($row["meta"], true)["ckan_update"];
+        } else {
+            $update = $updateDefault;
+        }
+
+        if (!$update) {
+            $response['success'] = false;
+            $response['message'] = "Dataset not flagged for CKAN";
+            $response['code'] = 401;
+            return $response;
+        }
+
+        $ownerOrg = (json_decode($row["meta"], true)["ckan_org_id"]) ?: $ckanOrgIdDefault;
 
         $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
         $response = array();
@@ -725,7 +757,7 @@ class Layer extends \app\models\Table
         $response["title"] = $row["f_table_title"];
         $response["notes"] = $row["f_table_abstract"];
         if (sizeof($arr) > 0) $response["tags"] = $arr;
-        $response["owner_org"] = App::$param["ckan"]["orgId"];
+        $response["owner_org"] = $ownerOrg;
         $response["resources"] = array(
             array(
                 "id" => $id . "-html",
@@ -871,7 +903,7 @@ class Layer extends \app\models\Table
         );
         $buffer = curl_exec($ch);
         curl_close($ch);
-        return json_decode($buffer,true);
+        return json_decode($buffer, true);
     }
 
     public function getTags()
@@ -890,7 +922,7 @@ class Layer extends \app\models\Table
         $arr = array();
         while ($row = $this->fetchRow($res, "assoc")) {
             if ($row["tags"]) {
-                $arr[] = $row["tags"];
+                $arr[] = implode(",", json_decode($row["tags"]));
             }
         }
         $arr = array_unique(explode(",", implode(",", $arr)));
@@ -898,7 +930,6 @@ class Layer extends \app\models\Table
         foreach ($arr as $v) {
             $res[]["tag"] = $v;
         }
-
         $response["data"] = $res;
         $response["success"] = true;
         return $response;

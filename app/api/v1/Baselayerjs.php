@@ -25,6 +25,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "showExtraLayerProperty: " . (json_encode(\app\conf\App::$param['showExtraLayerProperty']) ? : "null")  .",\n";
         echo "extraLayerPropertyName: " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
         echo "clientConfig: " . (json_encode(\app\conf\App::$param['clientConfig']) ? : "null")  .",\n";
+        echo "metaConfig: " . (json_encode(\app\conf\App::$param['metaConfig']) ? : "null")  .",\n";
         echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         echo "enableWorkflow: " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']).",\n";

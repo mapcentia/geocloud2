@@ -298,6 +298,9 @@ class Table extends Model
                     if ($key == "editable" || $key == "skipconflict") {
                         $value = $value ?: "0";
                     }
+                    if ($key == "tags" || $key == "meta") {
+                        $value = json_encode($value);
+                    }
                     $value = $this->db->quote($value);
                     if ($key != $keyName) {
                         $pairArr[] = "{$key}={$value}";

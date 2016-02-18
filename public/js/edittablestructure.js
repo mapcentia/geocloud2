@@ -119,7 +119,7 @@ tableStructure.init = function (record, screenName) {
                             icon: Ext.MessageBox.ERROR
                         });
                     } else {
-                        tableStructure.store.load();
+                        //tableStructure.store.load();
                         Ext.MessageBox.show({
                             title: __("Failure"),
                             msg: __(Ext.decode(response.responseText).message),

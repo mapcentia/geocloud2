@@ -45,7 +45,8 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tags TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tags JSON";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
 
         $sqls[] = "CREATE OR REPLACE VIEW non_postgis_tables AS
                      SELECT t.table_name::character varying(256) AS f_table_name,
@@ -120,7 +121,8 @@ class Sql
                         geometry_columns_join.roles,
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
-                        geometry_columns_join.tags
+                        geometry_columns_join.tags,
+                        geometry_columns_join.meta
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -167,7 +169,8 @@ class Sql
                         geometry_columns_join.roles,
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
-                        geometry_columns_join.tags
+                        geometry_columns_join.tags,
+                        geometry_columns_join.meta
 
                       FROM raster_columns
                         LEFT JOIN
@@ -216,7 +219,8 @@ class Sql
                         geometry_columns_join.roles,
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
-                        geometry_columns_join.tags
+                        geometry_columns_join.tags,
+                        geometry_columns_join.meta
 
                       FROM non_postgis_tables
                         LEFT JOIN
@@ -269,7 +273,8 @@ class Sql
                                 geometry_columns_join.roles,
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
-                                geometry_columns_join.tags
+                                geometry_columns_join.tags,
+                                geometry_columns_join.meta
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -319,7 +324,8 @@ class Sql
                                 geometry_columns_join.roles,
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
-                                geometry_columns_join.tags
+                                geometry_columns_join.tags,
+                                 geometry_columns_join.meta
 
                               FROM raster_columns
                                 LEFT JOIN
@@ -370,7 +376,8 @@ class Sql
                                 geometry_columns_join.roles,
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
-                                geometry_columns_join.tags
+                                geometry_columns_join.tags,
+                                geometry_columns_join.meta
 
                               FROM non_postgis_tables
 

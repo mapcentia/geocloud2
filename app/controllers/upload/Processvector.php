@@ -131,7 +131,7 @@ class Processvector extends \app\inc\Controller
             ($append ? "-append " : " ") .
             (($overwrite == true && $append == false) ? "-overwrite " : " ") .
             "-dim 2 " .
-            "--config DXF_ENCODING WIN1252 " .
+            /*"--config DXF_ENCODING WIN1252 " .*/
             ($append ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
             ($append ? "" : "-lco 'FID=gid' ") .
             ($append ? "" : "-lco 'PRECISION=NO' ") .
