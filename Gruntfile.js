@@ -38,7 +38,6 @@ module.exports = function (grunt) {
                 notypeof: false,
                 eqeqeq: false,
                 loopfunc: true,
-                es3: true,
                 devel: false,
                 eqnull: true
             },
