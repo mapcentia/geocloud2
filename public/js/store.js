@@ -1242,7 +1242,7 @@ $(window).ready(function () {
                                                                     xtype: 'textfield',
                                                                     fieldLabel: v.title,
                                                                     name: v.name,
-                                                                    value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                    value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v["default"]) : null
                                                                 }
                                                             )
                                                             break;
@@ -1252,7 +1252,7 @@ $(window).ready(function () {
                                                                     xtype: 'checkbox',
                                                                     fieldLabel: v.title,
                                                                     name: v.name,
-                                                                    checked: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v.default) : false
+                                                                    checked: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v["default"]) : false
                                                                 }
                                                             )
                                                             break;
@@ -1270,7 +1270,7 @@ $(window).ready(function () {
                                                                     triggerAction: 'all',
                                                                     name: v.name,
                                                                     fieldLabel: v.title,
-                                                                    value: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name]) || v.default) : null
+                                                                    value: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name]) || v["default"]) : null
                                                                 }
                                                             )
                                                             break;
