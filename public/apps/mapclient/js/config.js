@@ -897,7 +897,7 @@ MapCentia.init = function () {
                         };
                         var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", Heron.options.projection);
                         var point = new OpenLayers.LonLat(p.x, p.y);
-                        MapCentia.gc2.map.setCenter(point, 17);
+                        MapCentia.gc2.map.setCenter(point, 17 + Heron.options.zoomCorrection);
                         try {
                             placeMarkers.destroy();
                         } catch (e) {
