@@ -698,7 +698,8 @@ class Layer extends \app\models\Table
         }
         $row = $this->fetchRow($res, "assoc");
 
-        $id = Database::getDb() . "-" . str_replace(".", "-", $row["_key_"]);
+        //$id = Database::getDb() . "-" . str_replace(".", "-", $row["_key_"]);
+        $id = $row["uuid"];
 
         // Check if dataset already exists
         $ch = curl_init($ckanApiUrl . "/api/3/action/package_show?id=" . $id);
@@ -821,7 +822,7 @@ class Layer extends \app\models\Table
             return $response;
         } else {
             // Get list of resource views, so we can see if the views already exists
-            /*$ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
+            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
             $viewArr = json_decode(curl_exec($ch), true);
@@ -853,32 +854,7 @@ class Layer extends \app\models\Table
                 )
             );
             $buffer = curl_exec($ch);
-            curl_close($ch);*/
-
-            // Text view
-            /*$response = array();
-            if ($textViewId1) {
-                $response["id"] = $textViewId1;
-            }
-            $response["resource_id"] = $id . "-xyz";
-            $response["title"] = $row["f_table_title"] ?: $row["f_table_name"];
-            $response["description"] = $row["f_table_abstract"];
-            $response["view_type"] = "text_view";
-            //$response["text"] = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/#osm/11/10.1915/55.954/" . $row["f_table_schema"] . "." . $row["f_table_name"];
-
-            $requestJson = json_encode($response);
-            $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_" . ($textViewId1 ? "update" : "create"));
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $requestJson);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                    'Content-Type: application/json',
-                    'Content-Length: ' . strlen($requestJson),
-                    'Authorization: ' . App::$param["ckan"]["apiKey"]
-                )
-            );
-            $buffer = curl_exec($ch);
-            curl_close($ch);*/
+            curl_close($ch);
 
 
             $response['json'] = $packageBuffer;

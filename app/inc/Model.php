@@ -29,7 +29,7 @@ class Model
     function fetchRow($result, $result_type = "assoc")
     {
         if (isset($this->PDOerror)) {
-            //throw new \Exception($this->PDOerror[0]);
+            throw new \Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :

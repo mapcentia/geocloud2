@@ -180,8 +180,6 @@ class Mapcachefile extends \app\inc\Controller
                 foreach ($unique as $v2) {
                     $layers = array();
                     $tileSetName =  "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
-
-
                     foreach ($groupArr[$k] as $h => $j) {
                         if ($j == $v2) {
                             $layers[] = $h;

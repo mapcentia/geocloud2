@@ -15,7 +15,7 @@ function parseFilter($filter, $table, $operator = "=")
     $serializer_options = array(
         'indent' => '  ',
     );
-    $Serializer = & new XML_Serializer($serializer_options);
+    $Serializer = &new XML_Serializer($serializer_options);
     if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) OR isset($filter['Or']) OR isset($filter['Not']))) {
         $filter = array(0 => $filter);
     }
@@ -106,10 +106,15 @@ function parseFilter($filter, $table, $operator = "=")
             if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
             if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
 
-            $where[] = "ST_Intersects"
-                . "(public.ST_Transform(public.ST_GeometryFromText('" . $wktArr[0][0] . "',"
+            $g = "public.ST_Transform(public.ST_GeometryFromText('" . $wktArr[0][0] . "',"
                 . $sridOfFilter
-                . "),$sridOfTable),"
+                . "),$sridOfTable)";
+
+            $where[] =
+                "({$g} && {$value['PropertyName']}) AND "
+
+                . "ST_Intersects"
+                . "({$g},"
                 . $value['PropertyName'] . ")";
 
             unset($gmlCon);
@@ -149,13 +154,13 @@ function parseFilter($filter, $table, $operator = "=")
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
-                    . "\"" . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
+                    . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
-                    . "\"" . (($arr['BBOX']['PropertyName']) ? : $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
+                    . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             }
             /*$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
                 .$sridOfFilter
