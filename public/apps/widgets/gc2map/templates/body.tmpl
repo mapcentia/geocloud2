@@ -8,7 +8,7 @@
     <div class="navbar navbar-default" role="navigation">
         <div class="navbar-header">
         </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <div class="collapse navbar-collapse" id="navbar">
             <ul class="nav navbar-nav">
                 <li>
                     <button id="locate-btn-{{id}}" type="button" class="btn btn-default navbar-btn locate-btn" data-toggle="tooltip"
@@ -41,6 +41,9 @@
                     </ul>
                 </li>
             </ul>
+            <form style="display: none" id="custom-search-form" class="navbar-form navbar-right" role="search">
+                <input id="custom-search" class="typeahead" type="text" placeholder="{{Search}}">
+            </form>
         </div>
     </div>
     <!-- layers -->

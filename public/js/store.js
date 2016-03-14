@@ -10,7 +10,6 @@
 /*global gc2i18n:false */
 /*global subUser:false */
 /*global __:false */
-
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
 Ext.MessageBox.buttonText = {
@@ -219,7 +218,7 @@ $(window).ready(function () {
                 return record.json.isview ? 'isview' : null;
             }
         },
-        height: 300,
+        height: (Ext.getBody().getViewSize().height / 2),
         split: true,
         region: 'north',
         frame: false,
