@@ -607,6 +607,47 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    public function getEstExtent($_key_, $srs = "4326")
+    {
+        $split = explode(".", $_key_);
+        $sql = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $srs . ")," . $srs . ")) as geom) ";
+        $sql .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
+        $result = $this->prepare($sql);
+        try {
+            $result->execute();
+            $row = $this->fetchRow($result);
+            $extent = array("minx" => $row['txmin'], "miny" => $row['tymin'], "maxx" => $row['txmax'], "maxy" => $row['tymax']);
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e;
+            $response['code'] = 403;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['extent'] = $extent;
+        return $response;
+    }
+
+    public function getCount($_key_)
+    {
+        $split = explode(".", $_key_);
+        $sql = "SELECT count(*) AS count FROM " . $split[0] . "." . $split[1];
+        $result = $this->prepare($sql);
+        try {
+            $result->execute();
+            $row = $this->fetchRow($result);
+            $count = $row['count'];
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e;
+            $response['code'] = 403;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['count'] = $count;
+        return $response;
+    }
+
     public function copyMeta($to, $from)
     {
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
@@ -803,6 +844,36 @@ class Layer extends \app\models\Table
                 "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
             )
         );
+
+        // Get extent
+        $extent = $this->getEstExtent($key);
+        $extentStr = "";
+        if ($extent["success"]) {
+            $extentStr = "minx: " . $extent["extent"]["minx"] . ", miny: " . $extent["extent"]["miny"] . ", maxx: " . $extent["extent"]["maxx"] . ", maxy: " . $extent["extent"]["maxy"];
+        }
+
+        // Get count
+        $count = $this->getCount($key);
+        $countStr = "";
+        if ($count["success"]) {
+            $countStr = $count["count"];
+        }
+
+        $response["extras"] = array(
+            array(
+                "key" => "Extent",
+                "value" => $extentStr
+            ),
+            array(
+                "key" => "Antal objekter",
+                "value" => $countStr
+            ),
+            array(
+                "key" => "Data oprettet",
+                "value" => $row["created"]
+            ),
+        );
+
         $requestJson = json_encode($response);
         $ch = curl_init($ckanApiUrl . "/api/3/action/package_" . ($datasetExists ? "patch" : "create"));
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -830,7 +901,6 @@ class Layer extends \app\models\Table
 
             // Set flags
             $webViewId1 = (isset($viewArr["result"][0]["id"])) ? $viewArr["result"][0]["id"] : null;
-            $textViewId1 = (isset($viewArr["result"][0]["id"])) ? $viewArr["result"][1]["id"] : null;
 
             // Webpage view for widget
             $response = array();
