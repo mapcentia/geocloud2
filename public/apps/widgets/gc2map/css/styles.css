@@ -417,3 +417,16 @@ input[type="radio"], input[type="checkbox"] {
     margin-bottom: 1px;
 }
 
+.glyphicon {
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-list-alt:before {
+    content: "\f022"
+}
+
+
