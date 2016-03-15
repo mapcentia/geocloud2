@@ -488,6 +488,13 @@ class Layer extends \app\models\Table
             $query = "DROP {$type} \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
 
             $res = $this->prepare($query);
+
+            // Delete package from CKAN
+            if (isset(App::$param["ckan"])) {
+                $uuid = $this->getUuid($table);
+                $ckanRes = $this->deleteCkan($uuid["uuid"]);
+                $response['ckan_delete'] = $ckanRes["success"];
+            }
             try {
                 $res->execute();
             } catch (\PDOException $e) {
@@ -497,11 +504,7 @@ class Layer extends \app\models\Table
                 $response['code'] = 401;
                 return $response;
             }
-            // Delete package from CKAN
-            if (isset(App::$param["ckan"])) {
-                $ckanRes = $this->deleteCkan(\app\conf\Connection::$param["postgisdb"] . "-" . implode("-", $bits));
-                $response['ckan_delete'] = $ckanRes["success"];
-            }
+
         }
         $this->commit();
         $response['success'] = true;
@@ -933,7 +936,7 @@ class Layer extends \app\models\Table
     }
 
 
-    private function deleteCkan($key)
+    public function deleteCkan($key)
     {
         $ckanApiUrl = App::$param["ckan"]["host"];
         $requestJson = json_encode(array("id" => $key));
