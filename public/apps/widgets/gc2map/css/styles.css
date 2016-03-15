@@ -428,5 +428,8 @@ input[type="radio"], input[type="checkbox"] {
 .icon-list-alt:before {
     content: "\f022"
 }
+.icon-th:before {
+    content: "\f046"
+}
 
 
