@@ -4,7 +4,7 @@ header("Content-type: text/plain");
 include_once("../App.php");
 new \app\conf\App();
 $database = new \app\models\Database();
-$targetDir = \app\conf\App::$param["path"] . "app/tmp/backup";
+$targetDir = "/backup";
 if ($handle = opendir($targetDir)) {
     while (false !== ($entry = readdir($handle))) {
         if ($entry !== "." && $entry !== "..") {
@@ -13,13 +13,16 @@ if ($handle = opendir($targetDir)) {
             $cmd = "createdb {$db} -U postgres  -T template0 -l en_US.UTF-8";
             echo $cmd."\n";
             exec($cmd);
-            $cmd = "psql -d {$db} -c \"CREATE EXTENSION postgis;\" -U postgres";
+            $cmd = "psql -d {$db} -c \"CREATE EXTENSION postgis;\" -U gc2";
             echo $cmd."\n";
             exec($cmd);
-            $cmd = "psql -d {$db} -c \"CREATE EXTENSION pgcrypto;\" -U postgres";
+            $cmd = "psql -d {$db} -c \"CREATE EXTENSION pgcrypto;\" -U gc2";
             echo $cmd."\n";
             exec($cmd);
-            $cmd = "/usr/share/postgresql/9.3/contrib/postgis-2.1/postgis_restore.pl {$targetDir}/{$entry} | psql {$db} -U postgres";
+            $cmd = "psql -d {$db} -c \"CREATE EXTENSION hstore;\" -U gc2";
+            echo $cmd."\n";
+            exec($cmd);
+            $cmd = "/usr/share/postgresql/9.5/contrib/postgis-2.2/postgis_restore.pl {$targetDir}/{$entry} | psql {$db} -U gc2";
             echo $cmd."\n";
             exec($cmd);
             echo "**************\n";

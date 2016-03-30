@@ -14,6 +14,8 @@ class Mapcachefile extends \app\inc\Controller
 
     public function get_index()
     {
+        //$cache = "disk";
+        $cache = "sqlite";
         $postgisObject = new Model(App::$param['path'] . "app/tmp/" . Connection::$param['postgisdb'] . ".sqlite3");
         ob_start();?>
 
@@ -54,7 +56,7 @@ class Mapcachefile extends \app\inc\Controller
                 <srsalias>EPSG:3857</srsalias>
                 <units>m</units>
                 <size>256 256</size>
-                <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739 0.149291070869</resolutions>
+                <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739 0.149291070869 0.074645535435</resolutions>
             </grid>
             <?php
             $grids = \app\controllers\Mapcache::getGrids();
@@ -112,7 +114,7 @@ class Mapcachefile extends \app\inc\Controller
             </source>
             <tileset name="<?php echo $table ?>">
                 <source><?php echo $table ?></source>
-                <cache>disk</cache>
+                <cache><?php echo $cache ?></cache>
                 <grid>g20</grid>
                 <grid>g</grid>
                 <grid>WGS84</grid>
@@ -153,7 +155,7 @@ class Mapcachefile extends \app\inc\Controller
             </source>
             <tileset name="<?php echo $k ?>">
                 <source><?php echo $k ?></source>
-                <cache>disk</cache>
+                <cache><?php echo $cache ?></cache>
                 <grid>g20</grid>
                 <grid>g</grid>
                 <grid>WGS84</grid>
@@ -162,8 +164,8 @@ class Mapcachefile extends \app\inc\Controller
                         echo "<grid>{$k2}</grid>\n";
                     }
                     ?>
-                <format>PNG</format>
-                <metatile>1 1</metatile>
+                <format>jpeg_low</format>
+                <metatile>3 3</metatile>
                 <metabuffer>0</metabuffer>
                 <expires>60</expires>
                 <metadata>
@@ -201,7 +203,7 @@ class Mapcachefile extends \app\inc\Controller
             </source>
             <tileset name="<?php echo $tileSetName ?>">
                 <source><?php echo $tileSetName ?></source>
-                <cache>disk</cache>
+                <cache><?php echo $cache ?></cache>
                 <grid>g20</grid>
                 <grid>g</grid>
                 <grid>WGS84</grid>

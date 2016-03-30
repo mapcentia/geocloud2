@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Widget with a vector overlay</title>
+
+    <link href="http://192.168.33.11/js/bootstrap-table/bootstrap-table.css" rel="stylesheet">
+
+    <script src="http://192.168.33.11/js/jquery/1.10.0/jquery.min.js"></script>
+    <script src="http://192.168.33.11/apps/widgets/gc2map/js/gc2map.js"></script>
+    <script src="http://192.168.33.11/js/typeahead.js-0.10.5/dist/typeahead.bundle.js"></script>
+    <script src="http://192.168.33.11/apps/widgets/gc2map/js/bundle.js"></script>
+    <script src="http://192.168.33.11/js/bootstrap-table/bootstrap-table.js"></script>
+    <script src="http://192.168.33.11/js/underscore/underscore-min.js"></script>
+    <script src="http://backbonejs.org/backbone.js"></script>
+
+</head>
+<body>
+<div style="width: 600px">
+    <div style="position:relative" id="map"></div>
+    <div>
+        <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"></table>
+    </div>
+</div>
+
+</body>
+<script>
+    (function () {
+        gc2map.init({
+            key: "map",
+            db: 'mydb',
+            layers: [],
+            zoom: [0, 0, 1],
+            setBaseLayer: 'osm',
+            width: '100%',
+            height: '200px',
+
+            callBack: function (m, w) {
+                var callBack = function (map, store) {
+                    var resultLayer = new L.FeatureGroup();
+                    map.map.addLayer(resultLayer);
+                    resultLayer.addLayer(store.layer);
+                    map.zoomToExtentOfgeoJsonStore(store);
+                };
+                gc2map.createSearch(m, callBack);
+
+                m.map.setView([0, 0], 3);
+
+                $("#custom-search-form").show();
+
+                var object = {};
+                _.extend(object, Backbone.Events);
+                object.on("selected", function (id) {
+                    $('#table tr').removeClass("selected");
+                    $.each(store.layer._layers, function (i, v) {
+                        store.layer.resetStyle(v)
+
+                    });
+                    var row = $('*[data-uniqueid="' + id + '"]');
+
+                    row.addClass("selected");
+                    m.map._layers[id].setStyle({
+                        weight: 5,
+                        color: '#666',
+                        dashArray: '',
+                        fillOpacity: 0.7
+                    });
+                });
+                // Create a GeoJSON store with a SELECT query
+                var getColor = function (d) {
+                    return d === 11 ? '#c66100' :
+                            d === 21 ? '#ff615a' :
+                                    d === 31 ? '#6bffff' :
+                                            d === 41 ? '#ff69ff' :
+                                                    d === 51 ? '#39ff39' :
+                                                            d === 61 ? '#ffefad' :
+                                                                    d === 71 ? '#efef00' :
+                                                                            d === 81 ? '#9c9e9c' :
+                                                                                    d === 91 ? '#9c9e9c' :
+                                                                                            d === 96 ? '#C0C0C0' :
+                                                                                                    '#FFEDA0';
+                }
+                var store = new geocloud.sqlStore({
+                    db: "mydb",
+                    sql: "SELECT * FROM public.lp_v WHERE komnr=851 LIMIT 100",
+                    styleMap: function (feature) {
+                        return {
+                            fillColor: getColor(feature.properties.anvgen),
+                            weight: 2,
+                            opacity: 1,
+                            color: getColor(feature.properties.anvgen),
+                            fillOpacity: 0.5
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        layer.on({
+                            /*mouseover: function(e) {
+                             e.target.setStyle({
+                             weight: 5,
+                             color: '#666',
+                             dashArray: '',
+                             fillOpacity: 0.7
+                             });
+
+                             if (!L.Browser.ie && !L.Browser.opera) {
+                             e.target.bringToFront();
+                             }
+                             },
+                             mouseout: function (e) {
+                             store.layer.resetStyle(e.target);
+                             },*/
+                            click: function (e) {
+                                var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
+                                $('#table').bootstrapTable('scrollTo', row.index() * row.height());
+                                object.trigger("selected", e.target._leaflet_id);
+                            }
+                        });
+                    }
+                });
+
+                // Add the store as a vector overlay
+                m.addGeoJsonStore(store);
+
+                var forGrid =
+                        [
+                            {
+                                header: "Planid",
+                                dataIndex: "planid"
+                            },
+                            {
+                                header: "Kommunenr",
+                                dataIndex: "komnr"
+                            },
+                            {
+                                header: "Plannavn",
+                                dataIndex: "plannavn",
+                                sortable: true
+                            }
+                        ];
+
+                // Define a callback for when the SQL returns
+                store.onLoad = function () {
+                    var data = [];
+                    m.zoomToExtentOfgeoJsonStore(this);
+                    $('#table').append("<thead><tr></tr></thead>");
+                    $.each(forGrid, function (i, v) {
+                        $('#table thead tr').append("<th data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false'>" + v.header + "</th>")
+                    });
+                    $.each(this.layer._layers, function (i, v) {
+                        v.feature.properties._id = i;
+                        data.push(v.feature.properties);
+                    });
+                    var bindEvent = function () {
+                        setTimeout(function () {
+                            $('#table tr').on("click", function (e) {
+                                object.trigger("selected", $(this).data('uniqueid'));
+                                var layer = m.map._layers[$(this).data('uniqueid')];
+                                try {
+                                    m.map.fitBounds(layer.getBounds());
+                                } catch (e) {
+                                }
+                            })
+                        }, 100);
+
+                    }
+                    $('#table').bootstrapTable({
+                        data: data,
+                        uniqueId: "_id",
+                        height: 300,
+                        onToggle: bindEvent,
+                        onSort: bindEvent,
+                        onColumnSwitch: bindEvent
+                    });
+                    bindEvent();
+                };
+
+                store.load();
+            }
+        });
+    }())
+</script>
+</html>
