@@ -25,7 +25,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT -180 -90 180 90
+        EXTENT <?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
         SIZE 2000 1500
         MAXSIZE 4096
         #SYMBOLSET "../etc/symbols.sym"
