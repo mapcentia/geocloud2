@@ -92,14 +92,17 @@ class Sql extends \app\inc\Controller
                 $this->parseSelect($table["sub_tree"]["FROM"]);
             }
             $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
-            if (explode(".", $table["no_quotes"])[0] == "settings" ||
+            if (
+                explode(".", $table["no_quotes"])[0] == "settings" ||
+                explode(".", $table["no_quotes"])[0] == "information_schema" ||
+                explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                 explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                 $table["no_quotes"] == "geometry_columns"
             ) {
                 $this->response['success'] = false;
                 $this->response['message'] = "Can't complete the query";
-                $this->response['code'] = 406;
-                return serialize($this->response);
+                $this->response['code'] = 403;
+                die(\app\inc\Response::toJson($this->response));
             }
             if ($table["no_quotes"]) {
                 $this->usedRelations[] = $table["no_quotes"];
@@ -152,7 +155,10 @@ class Sql extends \app\inc\Controller
         // Check SQL UPDATE
         if (isset($parsedSQL['UPDATE'])) {
             foreach ($parsedSQL['UPDATE'] as $table) {
-                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                if (
+                    explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
+                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
                 ) {
@@ -171,7 +177,10 @@ class Sql extends \app\inc\Controller
             // Check SQL DELETE
         } elseif (isset($parsedSQL['DELETE'])) {
             foreach ($parsedSQL['FROM'] as $table) {
-                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                if (
+                    explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
+                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
                 ) {
@@ -189,7 +198,10 @@ class Sql extends \app\inc\Controller
             // Check SQL INSERT
         } elseif (isset($parsedSQL['INSERT'])) {
             foreach ($parsedSQL['INSERT'] as $table) {
-                if (explode(".", $table["no_quotes"])[0] == "settings" ||
+                if (
+                    explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
+                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
                     $table["no_quotes"] == "geometry_columns"
                 ) {

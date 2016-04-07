@@ -13,7 +13,7 @@
     <link href="/css/banner-ie.css" rel="stylesheet">
     <![endif]-->
 
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="/js/jquery/1.10.0/jquery.min.js"></script>
 
 
     <!-- Elasticsearch -->
