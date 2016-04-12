@@ -42,25 +42,21 @@ class Mapfile extends \app\inc\Controller
         TRANSPARENT ON
         FORMATOPTION "GAMMA=0.75"
         END
-        #CONFIG "MS_ERRORFILE" "/srv/www/sites/betamygeocloud/wms/mapfiles/ms_error.txt"
-        #DEBUG 5
+        CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
+        DEBUG 5
         WEB
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
-        "wms_title"    "<?php echo $user; ?>'s awesome WMS"
-        "wfs_title"    "<?php echo $user; ?>'s awesome WFS"
-        "wms_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
-        "wfs_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
-        "wms_name"    "<?php echo $user; ?>"
-        "wfs_name"    "<?php echo $user; ?>"
+        "ows_title"    "<?php echo $user; ?>'s awesome WMS"
+        "ows_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
+        "ows_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
         "wms_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "wfs_onlineresource"    "<?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "wms_enable_request" "*"
-        "wms_encoding" "UTF-8"
-        "wfs_encoding" "UTF-8"
+        "ows_encoding" "UTF-8"
         "wfs_namespace_prefix" "<?php echo $user; ?>"
         "wfs_namespace_uri" "<?php echo App::$param['host']; ?>"
         END
@@ -305,7 +301,8 @@ class Mapfile extends \app\inc\Controller
                 unset($arrNew);
                 ?>
                 LAYER
-                NAME "<?php echo $row['f_table_schema']; ?>.<?php echo $row['f_table_name']; ?>"
+                <?php $layerName = $row['f_table_schema'].".".$row['f_table_name']; ?>
+                NAME "<?php echo $layerName; ?>"
                 STATUS off
 
 
@@ -434,14 +431,10 @@ class Mapfile extends \app\inc\Controller
 
                 #LABELMAXSCALE
                 METADATA
-                "wms_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "wfs_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "wms_srs"    "EPSG:<?php echo $row['srid']; ?>"
-                "wfs_srs"    "EPSG:<?php echo $row['srid']; ?>"
-                "wms_name"    "<?php echo $row['f_table_name']; ?>"
-                "wfs_name"    "<?php echo $row['f_table_name']; ?>"
-                "wms_abstract"    "<?php echo $row['f_table_abstract']; ?>"
-                "wfs_abstract"    "<?php echo $row['f_table_abstract']; ?>"
+                "ows_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "ows_srs"    "EPSG:<?php echo $row['srid']; ?> EPSG:3857 EPSG:900913 EPSG:4326 EPSG:25832"
+                "ows_name"    "<?php echo $layerName; ?>"
+                "ows_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
                 #"wms_extent" "-180 -90 180 90"
                 "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
@@ -464,7 +457,7 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data'])) {
+                if (is_array($classArr['data']) AND (!$row['wmssource'])) {
                     foreach ($classArr['data'] as $class) {
                         ?>
                         CLASS

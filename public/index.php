@@ -107,15 +107,19 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/vector");
     Route::add("controllers/upload/bitmap");
     Route::add("controllers/upload/raster");
+    Route::add("controllers/upload/qgis");
     Route::add("controllers/upload/processvector");
     Route::add("controllers/upload/processbitmap");
     Route::add("controllers/upload/processraster");
+    Route::add("controllers/upload/processqgis");
     Route::add("controllers/logstash");
     Route::add("controllers/drawing");
     Route::add("controllers/job", function () {
         Database::setDb("gc2scheduler");
     });
     Route::add("controllers/workflow");
+    Route::add("controllers/qgis/");
+
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
     new \app\controllers\Wms();

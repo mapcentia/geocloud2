@@ -34,6 +34,7 @@ include("html_header.php");
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 </script>
+
 <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
@@ -54,6 +55,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/comparisoncomboBox.js?8542bc57943e21ff"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
 <!-- /build -->
+<script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
 </body>
 </html>
 

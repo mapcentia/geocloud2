@@ -13,18 +13,23 @@
     <script src="http://192.168.33.11/js/bootstrap-table/bootstrap-table.js"></script>
     <script src="http://192.168.33.11/js/underscore/underscore-min.js"></script>
     <script src="http://backbonejs.org/backbone.js"></script>
+    <script src="http://issues.wenzhixin.net.cn/bootstrap-table/assets/bootstrap-table/src/extensions/filter-control/bootstrap-table-filter-control.js"></script>
 
 </head>
 <body>
+<button onclick="test()">Remove</button>
 <div style="width: 600px">
     <div style="position:relative" id="map"></div>
     <div>
-        <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"></table>
+        <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"
+               data-filter-control="true"></table>
     </div>
 </div>
 
 </body>
 <script>
+    var test;
+
     (function () {
         gc2map.init({
             key: "map",
@@ -79,7 +84,7 @@
                                                                                     d === 91 ? '#9c9e9c' :
                                                                                             d === 96 ? '#C0C0C0' :
                                                                                                     '#FFEDA0';
-                }
+                };
                 var store = new geocloud.sqlStore({
                     db: "mydb",
                     sql: "SELECT * FROM public.lp_v WHERE komnr=851 LIMIT 100",
@@ -128,51 +133,73 @@
                                 dataIndex: "planid"
                             },
                             {
+                                header: "Anvendelse",
+                                dataIndex: "anvendelsegenerel",
+                                filterControl: "select"
+
+                            },
+                            {
                                 header: "Kommunenr",
                                 dataIndex: "komnr"
                             },
                             {
                                 header: "Plannavn",
                                 dataIndex: "plannavn",
-                                sortable: true
+                                sortable: true,
+                                //filterControl: "input"
                             }
                         ];
+
+                $('#table').append("<thead><tr></tr></thead>");
+                $.each(forGrid, function (i, v) {
+                    $('#table thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false'>" + v.header + "</th>")
+                });
+
+                test = function () {
+                    store.reset();
+                    store.load();
+                }
+
+                var bindEvent = function () {
+                    setTimeout(function () {
+                        $('#table tr').on("click", function (e) {
+                            object.trigger("selected", $(this).data('uniqueid'));
+                            var layer = m.map._layers[$(this).data('uniqueid')];
+                            try {
+                                m.map.fitBounds(layer.getBounds());
+                            } catch (e) {
+                            }
+                        })
+                    }, 100);
+
+                }
+
+                $('#table').bootstrapTable({
+                    uniqueId: "_id",
+                    height: 300,
+                    onToggle: bindEvent,
+                    onSort: bindEvent,
+                    onColumnSwitch: bindEvent,
+                    onColumnSearch: bindEvent
+                });
+
 
                 // Define a callback for when the SQL returns
                 store.onLoad = function () {
                     var data = [];
                     m.zoomToExtentOfgeoJsonStore(this);
-                    $('#table').append("<thead><tr></tr></thead>");
-                    $.each(forGrid, function (i, v) {
-                        $('#table thead tr').append("<th data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false'>" + v.header + "</th>")
-                    });
+
                     $.each(this.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
                         data.push(v.feature.properties);
                     });
-                    var bindEvent = function () {
-                        setTimeout(function () {
-                            $('#table tr').on("click", function (e) {
-                                object.trigger("selected", $(this).data('uniqueid'));
-                                var layer = m.map._layers[$(this).data('uniqueid')];
-                                try {
-                                    m.map.fitBounds(layer.getBounds());
-                                } catch (e) {
-                                }
-                            })
-                        }, 100);
 
-                    }
-                    $('#table').bootstrapTable({
-                        data: data,
-                        uniqueId: "_id",
-                        height: 300,
-                        onToggle: bindEvent,
-                        onSort: bindEvent,
-                        onColumnSwitch: bindEvent
-                    });
+                    $('#table').bootstrapTable('load', data);
                     bindEvent();
+
+                    console.log(data);
                 };
+
 
                 store.load();
             }

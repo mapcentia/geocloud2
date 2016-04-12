@@ -6,6 +6,7 @@ app/conf/elasticsearch_settings.json
 app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles
+app/wms/mapcache
 app/wms/qgsfiles
 node_modules
 public/backups

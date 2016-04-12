@@ -161,6 +161,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
 <script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>
 <script type="text/javascript" src="/js/addosmform.js?6fa514ebc5d91d01"></script>
+<script type="text/javascript" src="/js/addqgisform.js?6fa514ebc5d91d01"></script>
 <script type="text/javascript" src="/js/colorfield.js?4c80541098c1f93d"></script>
 <script type="text/javascript" src="/js/httpauthform.js?2acab5ae23de010f"></script>
 <script type="text/javascript" src="/js/apikeyform.js?9485c6f6a26fab43"></script>

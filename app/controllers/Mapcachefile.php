@@ -14,8 +14,8 @@ class Mapcachefile extends \app\inc\Controller
 
     public function get_index()
     {
-        //$cache = "disk";
-        $cache = "sqlite";
+        $cache = "disk";
+        //$cache = "sqlite";
         $postgisObject = new Model(App::$param['path'] . "app/tmp/" . Connection::$param['postgisdb'] . ".sqlite3");
         ob_start();?>
 
@@ -52,7 +52,7 @@ class Mapcachefile extends \app\inc\Controller
                     <WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
                 </metadata>
                 <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
-                <srs>EPSG:900913</srs>
+                <srs>EPSG:3857</srs>
                 <srsalias>EPSG:3857</srsalias>
                 <units>m</units>
                 <size>256 256</size>
@@ -81,8 +81,7 @@ class Mapcachefile extends \app\inc\Controller
                     if (!in_array($table, $arr)) {
                         array_push($arr, $table);
                         $def = json_decode($row['def']);
-                        $meta_size = $def->meta_size ?: "1";
-                        $meta_size = $def->meta_tiles ? $meta_size : "1";
+                        $meta_size = $def->meta_size ?: "3";
                         $meta_buffer = $def->meta_buffer ?: 0;
                         $expire = ($def->ttl < 30) ? 30 : $def->ttl;
                         $auto_expire = $def->auto_expire ?: null;

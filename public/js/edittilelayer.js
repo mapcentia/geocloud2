@@ -39,10 +39,6 @@ tileLayer.init = function (record) {
         root: 'data',
         fields: [
             {
-                name: 'meta_tiles',
-                type: 'boolean'
-            },
-            {
                 name: 'meta_size'
             },
             {
@@ -108,8 +104,7 @@ tileLayer.init = function (record) {
             borderBottom: '1px solid #d0d0d0'
         },
         propertyNames: {
-            meta_tiles: 'Use meta tiles' + __('Number of columns and rows to use for metatiling. The most significant advantage of metatiling is to avoid duplicating the labeling of features that span more than one tile. Road labeling is an example of this, but any line or polygon can exist at the edge of a tile boundary, and thus be labeled once on each tile.', true),
-            meta_size: 'Meta tile size' + __('Number of columns and rows to use for metatiling.', true),
+            meta_size: 'Meta tile size' + __('Number of columns and rows to use for metatiling. Defaults to 3.', true),
             meta_buffer: 'Meta buffer size (px)' + __('Area around the tile or metatile that will be cut off to prevent some edge artifacts.', true),
             ttl: 'Time to live (TTL)' + __('This is expressed as number of seconds after creation date of the tile. This is the value that will be set in the HTTP Expires and Cache-Control headers, and has no effect on the actual expiration of tiles in the caches.', true),
             auto_expire: 'Auto expire' + __('Tiles older (in seconds) than this value will be re-requested and updated in the cache. Note that this will only delete tiles from the cache when they are accessed: You cannot use this configuration to limit the size of the created cache. Note that, if set, this value overrides the value given by "Time to live".', true),

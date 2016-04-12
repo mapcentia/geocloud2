@@ -48,7 +48,7 @@ var mygeocloud_ol = (function () {
             onLoad: function () {
             },
             styleMap: null,
-            projection: "900913",
+            projection: "3857",
             strategies: null,
             visibility: true,
             rendererOptions: {
@@ -142,7 +142,7 @@ var mygeocloud_ol = (function () {
     map = function (el, db, config) {
         var prop, parentMap, defaults = {
             numZoomLevels: 22,
-            projection: "EPSG:900913",
+            projection: "EPSG:3857",
             maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34),
             restrictedExtent: null,
             controls: [

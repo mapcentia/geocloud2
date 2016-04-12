@@ -2093,6 +2093,16 @@ $(window).ready(function () {
                     c.doLayout();
                 } catch (e) {
                 }
+            },
+            addQgs = function () {
+                addQgis.init();
+                var c = p.getComponent(0);
+                c.remove(0);
+                c.add(addQgis.form);
+                try {
+                    c.doLayout();
+                } catch (e) {
+                }
             };
         winAdd = new Ext.Window({
             title: __('New layer'),
@@ -2137,7 +2147,7 @@ $(window).ready(function () {
                 },
                 '-',
                 {
-                    text: __('OSM view'),
+                    text: __('OSM'),
                     disabled: (window.gc2Options.osmConfig === null) ? true : false,
                     handler: function () {
                         addOsm.init();
@@ -2156,6 +2166,18 @@ $(window).ready(function () {
                         var c = p.getComponent(0);
                         c.remove(0);
                         c.add(addScratch.form);
+                        c.doLayout();
+                    },
+                    toggleGroup: "upload"
+                },
+                '-',
+                {
+                    text: __('QGIS'),
+                    handler: function () {
+                        addQgis.init();
+                        var c = p.getComponent(0);
+                        c.remove(0);
+                        c.add(addQgis.form);
                         c.doLayout();
                     },
                     toggleGroup: "upload"

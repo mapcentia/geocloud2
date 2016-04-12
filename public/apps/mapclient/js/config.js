@@ -38,7 +38,7 @@ MapCentia.setup = function () {
 
     var hasClientConfig = (window.gc2Options.clientConfig !== null && typeof window.gc2Options.clientConfig[db] !== "undefined") ? true : false;
 
-    Heron.options.projection = hasClientConfig ? window.gc2Options.clientConfig[db].projection : "EPSG:900913";
+    Heron.options.projection = hasClientConfig ? window.gc2Options.clientConfig[db].projection : "EPSG:3857";
     Heron.options.grid = hasClientConfig ? "@" + window.gc2Options.clientConfig[db].grid : "";
     Heron.options.maxExtent = hasClientConfig ? window.gc2Options.clientConfig[db].maxExtent : "-20037508.34, -20037508.34, 20037508.34, 20037508.34";
     Heron.options.baseLayers = hasClientConfig ? window.gc2Options.clientConfig[db].baseLayers : window.setBaseLayers;
@@ -74,15 +74,15 @@ MapCentia.setup = function () {
 
                 if (typeof response.data.center !== "undefined" && typeof response.data.center[firstSchema] !== "undefined") {
                     var center = response.data.center[firstSchema];
-                    var pCenter = geocloud.transformPoint(center[0], center[1], "EPSG:900913", Heron.options.projection);
+                    var pCenter = geocloud.transformPoint(center[0], center[1], "EPSG:3857", Heron.options.projection);
                     Heron.options.center = [pCenter.x, pCenter.y];
                 } else {
                     Heron.options.center = null;
                 }
                 if (typeof response.data.extentrestricts !== "undefined" && typeof response.data.extentrestricts[firstSchema] !== "undefined" && response.data.extentrestricts[firstSchema] !== null) {
                     var restrictedExtent = response.data.extentrestricts[firstSchema];
-                    var p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:900913", Heron.options.projection);
-                    var p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:900913", Heron.options.projection);
+                    var p1 = geocloud.transformPoint(restrictedExtent[0], restrictedExtent[1], "EPSG:3857", Heron.options.projection);
+                    var p2 = geocloud.transformPoint(restrictedExtent[2], restrictedExtent[3], "EPSG:3857", Heron.options.projection);
                     Heron.options.extentrestrict = [p1.x, p1.y, p2.x, p2.y];
                 } else {
                     Heron.options.extentrestrict = null;
@@ -350,7 +350,7 @@ MapCentia.setup = function () {
                 host: host,
                 method: "POST",
                 jsonp: false,
-                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + bufferSrid + ")," + buffer + ") as geom",
+                sql: "SELECT ST_buffer(ST_Transform(ST_geomfromtext('" + wkt + "',3857)," + bufferSrid + ")," + buffer + ") as geom",
                 name: "Search",
                 styleMap: new OpenLayers.StyleMap({
                     "default": new OpenLayers.Style(bufferStyle)
@@ -358,9 +358,9 @@ MapCentia.setup = function () {
             });
             Heron.App.map.addLayer(bStore.layer);
             bStore.load();
-            sql = "SELECT * FROM " + table + " WHERE ST_DWithin(ST_GeogFromText(ST_astext(ST_Transform(ST_geomfromtext('" + wkt + "',900913),4326))), geography(ST_transform(" + f_geometry_column + ",4326)), " + buffer + ")";
+            sql = "SELECT * FROM " + table + " WHERE ST_DWithin(ST_GeogFromText(ST_astext(ST_Transform(ST_geomfromtext('" + wkt + "',3857),4326))), geography(ST_transform(" + f_geometry_column + ",4326)), " + buffer + ")";
         } else {
-            sql = "SELECT * FROM " + table + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('" + wkt + "',900913)," + srid + ")," + f_geometry_column + ")";
+            sql = "SELECT * FROM " + table + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('" + wkt + "',3857)," + srid + ")," + f_geometry_column + ")";
         }
         cStore = new mygeocloud_ol.geoJsonStore(dbForConflict, {
             host: host,
@@ -746,7 +746,7 @@ MapCentia.init = function () {
                                 mimeType: 'application/zip',
                                 formatter: 'OpenLayers.Format.GeoJSON',
                                 targetFormat: 'ESRI Shapefile',
-                                fileProjection: new OpenLayers.Projection('EPSG:900913')
+                                fileProjection: new OpenLayers.Projection('EPSG:3857')
                             },
                             {
                                 name: 'ESRI Shapefile (zipped, WGS84)',
@@ -809,7 +809,7 @@ MapCentia.init = function () {
                                 fileExt: '.zip',
                                 mimeType: 'text/plain',
                                 formatter: 'OpenLayers.Format.GeoJSON',
-                                fileProjection: new OpenLayers.Projection('EPSG:900913')
+                                fileProjection: new OpenLayers.Projection('EPSG:3857')
                             },
                             {
                                 name: 'ESRI Shapefile (zipped, WGS84)',
@@ -818,7 +818,7 @@ MapCentia.init = function () {
                                 formatter: 'OpenLayers.Format.GeoJSON',
                                 fileProjection: new OpenLayers.Projection('EPSG:4326')
                             }
-                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:900913')},
+                            //{name: 'OGC GeoPackage (Google projection)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:3857')},
                             //{name: 'OGC GeoPackage (1 layer, WGS84)', fileExt: '.gpkg', mimeType: 'text/plain', formatter: 'OpenLayers.Format.GeoJSON', fileProjection: new OpenLayers.Projection('EPSG:4326')}
 
                         ],

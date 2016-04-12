@@ -49,8 +49,8 @@ class Staticmap extends \app\inc\Controller
             ob_start();
             $fileName = md5(time() . rand(10000, 99999) . microtime());
             $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
-            $cmd = "wkhtmltoimage " .
-                "--height {$sizeArr[1]} --disable-smart-width --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
+            $cmd = "xvfb-run -- wkhtmltoimage " .
+                "--height {$sizeArr[1]} --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
                 "\"" . "http://127.0.0.1" . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}&sql={$sql}\" " .
                 $file;
             //die($cmd);
@@ -63,7 +63,6 @@ class Staticmap extends \app\inc\Controller
                     $res = imagecreatefromjpeg($file);
                     break;
             }
-
             if (!$res) {
                 $response['success'] = false;
                 $response['message'] = "Could not create image";
