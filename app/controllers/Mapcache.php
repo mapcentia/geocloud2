@@ -62,6 +62,7 @@ class Mapcache extends \app\inc\Controller
                     isset($get["FORMAT_OPTIONS"]) == true
                 ) {
                     $url = "http://127.0.0.1" . "/wms/" . $this->db . "/" . $parts[4] . "?" . explode("?", explode("?", $uri)[1])[1];
+                    $url = rtrim($url, '?');
 
                 } else {
                     $layer = $get["LAYERS"];
