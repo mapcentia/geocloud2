@@ -101,7 +101,7 @@ class Processqgis extends \app\inc\Controller
         for ($i = 0; $i < sizeof($arrT); $i++) {
             $layer = $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "." . $arrG[$i][1][0];
             $layers[] = $layer;
-            $url = "http://qgis-server/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "&transparent=true&";
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "&transparent=true&";
             $urls[] = $url;
 
             $data = new \StdClass;
