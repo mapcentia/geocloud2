@@ -56,7 +56,7 @@ class Tilecache extends \app\inc\Controller
                     isset($get["FORMAT_OPTIONS"]) == true
                 ) {
                     $url = $this->host . "/ows/" . $this->db . "/" . $parts[4] . "?" . explode("?", $uri)[1];
-
+                    $url = rtrim($url, '?');
                 } else {
                     $layer = $get["LAYERS"];
                     $url = $this->host . "/cgi/tilecache.py" . "?" . explode("?", $uri)[1] . "&cfg=" . $this->db;
