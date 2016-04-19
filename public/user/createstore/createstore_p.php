@@ -16,7 +16,8 @@ if (!$_SESSION['screen_name']) {
 
     // databaseTemplate is set in conf/main.php
     if ($dbObj) {
-        header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");
+        header("location: " . \app\conf\App::$param['userHostName'] . "/user/login");
+        echo "<div><a href='" . \app\conf\App::$param['userHostName'] . "/user/login'>Hmmm... Redirect didn't work. Use this link</a></div>";
     } else {
         echo "<h2>Sorry, something went wrong. Try again</h2>";
         echo "<div><a href='" . \app\conf\App::$param['userHostName'] . "/user/signup' class='btn btn-danger'>Go back</a></div>";

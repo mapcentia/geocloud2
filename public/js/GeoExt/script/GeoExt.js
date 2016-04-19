@@ -2248,11 +2248,20 @@ GeoExt.form.recordToField = function (i, q) {
                     el.next().set({
                         "accept": "image/*"
                     });
-                    el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}));
+                    var resetBtn = el.insertSibling(new Ext.Element(document.createElement('button')).set({"style": "clear:both"})).update("Reset");
+                    var createImg = function(){
+                        el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}))
+                    }
+                    createImg();
+                    resetBtn.dom.onclick = function(){
+                        el.dom.value = "";
+                        resetBtn.next().remove();
+                        createImg();
+                    }
                     el.hide();
                 },
                 'fileselected': function (fb, v) {
-                    var reader = new FileReader(), img = document.createElement("img"),
+                    var reader = new FileReader(),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
                     canvasResize(file, {
                         width: 300,
@@ -2280,7 +2289,7 @@ GeoExt.form.recordToField = function (i, q) {
             },
             listeners: {
                 'fileselected': function (fb, v) {
-                    var reader = new FileReader()
+                    var reader = new FileReader();
                     file = document.querySelector('#' + fb.fileInput.id).files[0];
                     reader.onload = function (e) {
                         $("#" + fb.id).val(btoa(reader.result));
@@ -2292,7 +2301,7 @@ GeoExt.form.recordToField = function (i, q) {
     }
     return n
 }
-;
+
 GeoExt.form.recordToField.REGEXES = {
     text: new RegExp("^(text|string)$", "i"),
     number: new RegExp("^(number|float|decimal|double|int|long|integer|short)$", "i"),
