@@ -67,6 +67,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/staticmap");
     Route::add("api/v1/getheader");
     Route::add("api/v1/collector");
+    Route::add("api/v1/decodeimg");
     Route::add("api/v1/session", function () {
         Session::start();
         Database::setDb("mapcentia");

@@ -17,6 +17,7 @@ class Table extends Model
     var $exits;
     var $versioning;
     var $sysCols;
+    var $primeryKey;
 
     function __construct($table, $temp = false, $addGeomType = false)
     {
@@ -283,7 +284,9 @@ class Table extends Model
         $response['success'] = true;
         return $response;
     }
-    public function getUuid($key) {
+
+    public function getUuid($key)
+    {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_=:key";
         $res = $this->prepare($sql);
         try {
@@ -308,7 +311,7 @@ class Table extends Model
             $set = $this->makeArray($set);
             foreach ($set as $row) {
                 // Delete package from CKAN if "Update" is set to false
-                if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false){
+                if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false) {
                     $uuid = $this->getUuid($row->_key_);
                     if (isset(App::$param["ckan"])) {
                         $ckanRes = \app\models\Layer::deleteCkan($uuid["uuid"]);
@@ -977,6 +980,44 @@ class Table extends Model
         }
         $response['success'] = true;
         $response['message'] = "Record deleted";
+        return $response;
+    }
+
+    public function getRecordByPri($pkey) // All tables
+    {
+        foreach ($this->metaData as $key => $value) {
+                $fieldsArr[] = $key;
+        }
+
+        // We add "" around field names in sql, so sql keywords don't mess things up
+        foreach ($fieldsArr as $key => $value) {
+            $fieldsArr[$key] = "\"{$value}\"";
+        }
+        $sql = "SELECT " . implode(",", $fieldsArr);
+        foreach ($this->metaData as $key => $arr) {
+            if ($arr['type'] == "geometry") {
+
+               // $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
+
+            }
+            if ($arr['type'] == "bytea") {
+                $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+            }
+        }
+        $sql.= " FROM " . $this->table . " WHERE " . $this->primeryKey['attname'] . "=:pkey";
+        //die($sql);
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(array("pkey" => $pkey));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            die($e->getMessage());
+        }
+        $row = $this->fetchRow($res, "assoc");
+        $response['success'] = true;
+        $response['data'] = $row;
         return $response;
     }
 }
