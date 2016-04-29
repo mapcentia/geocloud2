@@ -10,7 +10,7 @@ class Decodeimg extends \app\inc\Controller
 
     function __construct()
     {
-        $this->table = new \app\models\table(Input::getPath()->part(5));
+        $this->table = new \app\models\Table(Input::getPath()->part(5));
 
     }
 
