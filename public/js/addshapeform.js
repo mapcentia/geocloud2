@@ -19,7 +19,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf"], geoType, encoding, ignoreErrors, overwrite, append, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5, flash',
                 url: '/controllers/upload/vector',
@@ -61,7 +61,7 @@ addShape.init = function () {
                                 flag = true;
                                 $.ajax({
                                     url: '/controllers/upload/processvector',
-                                    data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding + "&ignoreerrors=" + ignoreErrors + "&overwrite=" + overwrite + "&append=" + append,
+                                    data: "srid=" + srs + "&file=" + e + "&name=" + e.split(".")[0] + "&type=" + geoType + "&encoding=" + encoding + "&ignoreerrors=" + ignoreErrors + "&overwrite=" + overwrite + "&append=" + append + "&delete=" + _delete,
                                     dataType: 'json',
                                     type: 'GET',
                                     success: function (response) {
@@ -99,6 +99,7 @@ addShape.init = function () {
                         ignoreErrors = Ext.getCmp('ignoreErrors').getValue();
                         overwrite = Ext.getCmp('overwrite').getValue();
                         append = Ext.getCmp('append').getValue();
+                        _delete = Ext.getCmp('delete').getValue();
                         srs = Ext.getCmp('srs').getValue();
                         up.settings.multipart_params = {
                             name: file.name
@@ -238,10 +239,16 @@ addShape.init = function () {
                 id: 'overwrite'
             },
             ' ',
-            __('Delete/append'),
+            __('Append'),
             {
                 xtype: 'checkbox',
                 id: 'append'
+            },
+            ' ',
+            __('Delete/append'),
+            {
+                xtype: 'checkbox',
+                id: 'delete'
             }
         ]
     });

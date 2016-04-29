@@ -2108,7 +2108,7 @@ $(window).ready(function () {
             title: __('New layer'),
             layout: 'fit',
             modal: true,
-            width: 700,
+            width: 750,
             height: 390,
             closeAction: 'close',
             border: false,
