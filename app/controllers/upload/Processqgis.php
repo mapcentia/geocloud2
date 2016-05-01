@@ -55,9 +55,6 @@ class Processqgis extends \app\inc\Controller
 
                     $parsed = parse_url($dataSource);
 
-
-                    //print_r($parsed);
-
                     $db = explode("/", $parsed["path"])[2];
                     $schema = explode("/", $parsed["path"])[3];
 
@@ -65,7 +62,6 @@ class Processqgis extends \app\inc\Controller
                     $table = explode(":", $TYPENAME)[1];
 
                     $fullTable = $schema . "." . $table;
-
 
                     $rec = $this->layer->getAll(null, $fullTable, true);
                     $pkey = $rec["data"][0]["pkey"];
@@ -81,7 +77,7 @@ class Processqgis extends \app\inc\Controller
                     $arrT[] = array(1 => array($schema, $table));
                     $arrG[] = array(1 => array($f_geometry_column));
 
-                    $PGDataSource = "dbname='{$db}' host=" . Connection::$param["postgishost"] . " port=5432 user='gc2' password='1234' sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
+                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
 
                     $maplayer->srs->spatialrefsys = "";
                     $maplayer->srs->spatialrefsys->proj4 = $proj4text;
