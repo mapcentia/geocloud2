@@ -36,7 +36,7 @@ class Processqgis extends \app\inc\Controller
                     $dataSource = (string)$maplayer->datasource;
                     $layerName = (string)$maplayer->layername;
 
-                    $newDataSource = preg_replace("/host=\S*/", "host=postgis", $dataSource, 1);
+                    $newDataSource = preg_replace("/host=\S*/", "host=" . Connection::$param["postgishost"], $dataSource, 1);
                     preg_match("/table=\S*/", $dataSource, $matches);
                     $maplayer->datasource = $newDataSource;
                     preg_match_all("/\"(.*?)\"/", $matches[0], $t);
@@ -81,7 +81,7 @@ class Processqgis extends \app\inc\Controller
                     $arrT[] = array(1 => array($schema, $table));
                     $arrG[] = array(1 => array($f_geometry_column));
 
-                    $PGDataSource = "dbname='{$db}' host=postgis port=5432 user='gc2' password='1234' sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
+                    $PGDataSource = "dbname='{$db}' host=" . Connection::$param["postgishost"] . " port=5432 user='gc2' password='1234' sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
 
                     $maplayer->srs->spatialrefsys = "";
                     $maplayer->srs->spatialrefsys->proj4 = $proj4text;
