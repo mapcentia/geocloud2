@@ -87,6 +87,7 @@ module.exports = function (grunt) {
                         'public/js/addfromscratch.js',
                         'public/js/addviewform.js',
                         'public/js/addosmform.js',
+                        'public/js/addqgisform.js',
                         'public/js/colorfield.js',
                         'public/js/httpauthform.js',
                         'public/js/apikeyform.js',
