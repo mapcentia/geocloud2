@@ -22,7 +22,12 @@ class Senti extends Model
                 $res->execute($arr);
                 $successes[] = array("id"=>$r["id"], "status"=>1);
             } catch (\PDOException $e) {
-                $successes[] = array("id"=>$r["id"], "status"=>0, "message"=>$e->getMessage());
+                if ($e->getCode() == 23505) {
+                    $successes[] = array("id"=>$r["id"], "status"=>2, "code"=>$e->getCode());
+
+                } else {
+                    $successes[] = array("id"=>$r["id"], "status"=>0, "code"=>$e->getCode());
+                }
             }
         }
         $response["json"] = json_encode($successes);
