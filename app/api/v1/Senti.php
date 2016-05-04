@@ -17,6 +17,6 @@ class Senti extends \app\inc\Controller
     {
         $data = json_decode(Input::get(), true);
         $senti = new \app\models\Senti();
-        return $senti->insert($data);
+        return $senti->insert($data,Input::getPath()->part(5));
     }
 }

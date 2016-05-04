@@ -10,11 +10,11 @@ class Senti extends Model
         parent::__construct();
     }
 
-    public function insert($data)
+    public function insert($data,$table)
     {
         $response = array();
         $successes = array();
-        $sql = "INSERT INTO senti(id, type, signature, data, registered) VALUES (:id, :type, :signature, :data, :registered) RETURNING *";
+        $sql = "INSERT INTO {$table}(id, type, signature, data, registered) VALUES (:id, :type, :signature, :data, :registered) RETURNING *";
         $res = $this->prepare($sql);
         foreach($data["records"] as $r) {
             $arr = array("id"=>$r["id"], "type"=>$r["type"], "signature"=>$r["signature"], "data"=>$r["data"], "registered"=>$r["registered"]);
