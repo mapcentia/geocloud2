@@ -117,6 +117,12 @@ class Table extends Model
         } elseif (preg_match("/bytea/", $field['type'])) {
             $field['typeObj'] = array("type" => "bytea");
             $field['type'] = "bytea";
+        } elseif (preg_match("/json/", $field['type'])) {
+            $field['typeObj'] = array("type" => "json");
+            $field['type'] = "json";
+        } elseif (preg_match("/timestamp/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timestamp");
+            $field['type'] = "timestamp";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";
@@ -986,7 +992,7 @@ class Table extends Model
     public function getRecordByPri($pkey) // All tables
     {
         foreach ($this->metaData as $key => $value) {
-                $fieldsArr[] = $key;
+            $fieldsArr[] = $key;
         }
 
         // We add "" around field names in sql, so sql keywords don't mess things up
@@ -997,14 +1003,14 @@ class Table extends Model
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "geometry") {
 
-               // $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
+                // $sql = str_replace("\"{$key}\"", "ST_AsGml(public.ST_Transform(\"" . $key . "\"," . $srs . ")) as " . $key, $sql);
 
             }
             if ($arr['type'] == "bytea") {
                 $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
             }
         }
-        $sql.= " FROM " . $this->table . " WHERE " . $this->primeryKey['attname'] . "=:pkey";
+        $sql .= " FROM " . $this->table . " WHERE " . $this->primeryKey['attname'] . "=:pkey";
         //die($sql);
         $res = $this->prepare($sql);
         try {

@@ -42,7 +42,6 @@ class Sql extends \app\inc\Controller
         if (!$this->data) {
             $this->data = $this->response;
         }
-
         return unserialize($this->data);
     }
 
