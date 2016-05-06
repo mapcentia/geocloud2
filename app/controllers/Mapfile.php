@@ -432,7 +432,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "ows_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "ows_srs"    "EPSG:<?php echo $row['srid']; ?>"
+                "ows_srs"    "EPSG:<?php echo $row['srid']; ?> EPSG:3857 EPSG:900913 EPSG:4326 EPSG:25832"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
