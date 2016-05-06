@@ -103,6 +103,7 @@ class Processqgis extends \app\inc\Controller
             $data = new \StdClass;
             $data->_key_ = $layer;
             $data->wmssource = $url;
+            $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
 
             $data = array("data" => $data);
             $res = $this->table->updateRecord($data, "_key_");

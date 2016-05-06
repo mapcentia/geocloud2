@@ -47,6 +47,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tags JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
 
         $sqls[] = "CREATE OR REPLACE VIEW non_postgis_tables AS
                      SELECT t.table_name::character varying(256) AS f_table_name,
@@ -122,7 +123,8 @@ class Sql
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
                         geometry_columns_join.tags,
-                        geometry_columns_join.meta
+                        geometry_columns_join.meta,
+                        geometry_columns_join.wmsclientepsgs
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -170,7 +172,8 @@ class Sql
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
                         geometry_columns_join.tags,
-                        geometry_columns_join.meta
+                        geometry_columns_join.meta,
+                        geometry_columns_join.wmsclientepsgs
 
                       FROM raster_columns
                         LEFT JOIN
@@ -220,7 +223,8 @@ class Sql
                         geometry_columns_join.elasticsearch,
                         geometry_columns_join.uuid,
                         geometry_columns_join.tags,
-                        geometry_columns_join.meta
+                        geometry_columns_join.meta,
+                        geometry_columns_join.wmsclientepsgs
 
                       FROM non_postgis_tables
                         LEFT JOIN
@@ -274,7 +278,8 @@ class Sql
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
                                 geometry_columns_join.tags,
-                                geometry_columns_join.meta
+                                geometry_columns_join.meta,
+                                geometry_columns_join.wmsclientepsgs
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -325,7 +330,8 @@ class Sql
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
                                 geometry_columns_join.tags,
-                                 geometry_columns_join.meta
+                                geometry_columns_join.meta,
+                                geometry_columns_join.wmsclientepsgs
 
                               FROM raster_columns
                                 LEFT JOIN
@@ -377,7 +383,8 @@ class Sql
                                 geometry_columns_join.elasticsearch,
                                 geometry_columns_join.uuid,
                                 geometry_columns_join.tags,
-                                geometry_columns_join.meta
+                                geometry_columns_join.meta,
+                                geometry_columns_join.wmsclientepsgs
 
                               FROM non_postgis_tables
 
