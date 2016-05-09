@@ -184,6 +184,19 @@ class Mapfile extends \app\inc\Controller
         ANCHORPOINT 0 0.5
         END # SYMBOL
 
+        SYMBOL
+        NAME "arrow2"
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.8
+        1 0.4
+        0 0
+        0 0.8
+        END # POINTS
+        ANCHORPOINT 0 0.5
+        END # SYMBOL
+
         # ============================================================================
         # Vector Line Types
         # ============================================================================
@@ -260,10 +273,10 @@ class Mapfile extends \app\inc\Controller
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
-                $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}","gc2_version_gid");
+                $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
 
-                $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}","gc2_status");
+                $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_status");
                 $workflow = $workflow["exists"];
 
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
@@ -301,7 +314,7 @@ class Mapfile extends \app\inc\Controller
                 unset($arrNew);
                 ?>
                 LAYER
-                <?php $layerName = $row['f_table_schema'].".".$row['f_table_name']; ?>
+                <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
 
@@ -347,14 +360,14 @@ class Mapfile extends \app\inc\Controller
                     CONNECTION "<?php echo $row['wmssource']; ?>"
                     PROCESSING "RESAMPLE=AVERAGE"
 
-                <?php
+                    <?php
                 } elseif ($row['bitmapsource']) {
                     ?>
                     TYPE RASTER
                     DATA "<?php echo App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
                     #PROCESSING "LOAD_WHOLE_IMAGE=YES"
                     PROCESSING "RESAMPLE=AVERAGE"
-                <?php
+                    <?php
                 } else {
                     if ($type != "RASTER") {
                         if (!$row['data']) {
@@ -378,8 +391,8 @@ class Mapfile extends \app\inc\Controller
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
-                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?> <?php if (!Connection::$param['pgbouncer']) echo "options='-c client_encoding=UTF8'" ?>"
-                    <?php
+                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . Connection::$param['postgishost']; ?><?php if (Connection::$param['postgisport']) echo " port=" . Connection::$param['postgisport']; ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                        <?php
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
                         echo " port=" . (Connection::$param['mapserverport'] ?: (Connection::$param['postgisport']) ?: "5432");
@@ -432,7 +445,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "ows_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
-                "ows_srs"    "EPSG:<?php echo $row['srid']; ?> <?php echo $row['wmsclientepsgs']; ?>"
+                "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo $row['f_table_abstract']; ?>"
                 "wms_format"    "image/png"
@@ -513,10 +526,18 @@ class Mapfile extends \app\inc\Controller
                         #ANGLE
                         <?php
                         if ($class['angle']) {
-                            if (is_numeric($class['angle']))
+                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto")
                                 echo "ANGLE " . $class['angle'];
                             else
                                 echo "ANGLE [{$class['angle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GEOMTRANSFORM
+                        <?php
+                        if ($class['geomtransform']) {
+
+                            echo "GEOMTRANSFORM '{$class['geomtransform']}'";
                         }
                         echo "\n";
                         ?>
@@ -557,10 +578,17 @@ class Mapfile extends \app\inc\Controller
                         #ANGLE
                         <?php
                         if ($class['overlayangle']) {
-                            if (is_numeric($class['overlayangle']))
+                            if (is_numeric($class['overlayangle']) || strtolower($class['overlayangle']) == "auto")
                                 echo "ANGLE " . $class['overlayangle'];
                             else
                                 echo "ANGLE [{$class['overlayangle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GEOMTRANSFORM
+                        <?php
+                        if ($class['overlaygeomtransform']) {
+                            echo "GEOMTRANSFORM '{$class['overlaygeomtransform']}'";
                         }
                         echo "\n";
                         ?>
@@ -574,7 +602,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT <?php echo ($class['label_font'] ?: "arial") . ($class['label_fontweight'] ?: "normal") ?>
+                            FONT <?php echo ($class['label_font'] ?: "arial") . ($class['label_fontweight'] ?: "normal") . "\n" ?>
                             SIZE <?php
                             if ($class['label_size']) {
                                 if (is_numeric($class['label_size']))
@@ -620,7 +648,7 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
-                            OFFSET <?php echo ($class['label_offsetx']) ?: "0"; ?> <?php echo ($class['label_offsety']) ?: "0"; ?>
+                            OFFSET <?php echo ($class['label_offsetx'] ?: "0") . " " . ($class['label_offsety'] ?: "0") . "\n" ?>
                             STYLE
                             <?php if ($class['label_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
@@ -642,7 +670,7 @@ class Mapfile extends \app\inc\Controller
                             LABEL
                             <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
-                            FONT <?php echo ($class['label2_font'] ?: "arial") . ($class['label2_fontweight'] ?: "normal") ?>
+                            FONT <?php echo ($class['label2_font'] ?: "arial") . ($class['label2_fontweight'] ?: "normal") . "\n" ?>
                             SIZE <?php
                             if ($class['label2_size']) {
                                 if (is_numeric($class['label2_size']))
@@ -688,7 +716,7 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
-                            OFFSET <?php echo ($class['label2_offsetx']) ?: "0"; ?> <?php echo ($class['label2_offsety']) ?: "0"; ?>
+                            OFFSET <?php echo ($class['label2_offsetx'] ?: "0") . " " . ($class['label2_offsety'] ?: "0") . "\n" ?>
                             STYLE
                             <?php if ($class['label2_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
@@ -721,12 +749,12 @@ class Mapfile extends \app\inc\Controller
                             END
                         <?php } ?>
                         END # Class
-                    <?php
+                        <?php
                     }
                 }
                 ?>
                 END #Layer
-            <?php
+                <?php
             }
         } ?>
         END #MapFile

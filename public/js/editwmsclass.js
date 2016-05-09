@@ -336,6 +336,9 @@ wmsClass.init = function (id) {
             {
                 name: "linecap"
             },
+            {
+                name: "geomtransform"
+            },
             // Label start
             {
                 name: 'label',
@@ -499,6 +502,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: "overlaylinecap"
+            },
+            {
+                name: "overlaygeomtransform"
             }
         ],
         listeners: {
@@ -543,7 +549,8 @@ wmsClass.init = function (id) {
                             'size',
                             'width',
                             'angle',
-                            'style_opacity'
+                            'style_opacity',
+                            'geomtransform'
                         ];
                         Ext.each(arr2, function (i, v) {
                             obj2[i] = store.getAt(0).data[i];
@@ -562,7 +569,8 @@ wmsClass.init = function (id) {
                             'overlaysize',
                             'overlaywidth',
                             'overlayangle',
-                            'overlaystyle_opacity'
+                            'overlaystyle_opacity',
+                            'overlaygeomtransform'
                         ];
                         Ext.each(arr3, function (i, v) {
                             obj3[i] = store.getAt(0).data[i];
@@ -701,7 +709,8 @@ wmsClass.init = function (id) {
             angle: 'Style: symbol angle',
             style_opacity: 'Style: opacity',
             linecap: 'Style: line cap',
-            pattern: 'Style: pattern'
+            pattern: 'Style: pattern',
+            geomtransform: 'Style: geomtransform'
         },
         customRenderers: {
             color: cc,
@@ -719,7 +728,12 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'geomtransform': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: ['', 'bbox','centroid','end','labelpnt','labelpoly','start','vertices'],
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -808,10 +822,11 @@ wmsClass.init = function (id) {
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
                 editable: true,
                 triggerAction: 'all'
             }), {}),
+
             'overlaysize': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
@@ -862,7 +877,8 @@ wmsClass.init = function (id) {
             overlayangle: 'Style: symbol angle',
             overlaystyle_opacity: 'Style: opacity',
             overlaylinecap: 'Style: line cap',
-            overlaypattern: 'Style: pattern'
+            overlaypattern: 'Style: pattern',
+            overlaygeomtransform: 'Style: geomtransform'
         },
         customRenderers: {
             overlaycolor: cc,
@@ -880,7 +896,7 @@ wmsClass.init = function (id) {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
@@ -1007,7 +1023,12 @@ wmsClass.init = function (id) {
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
+                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'overlaygeomtransform': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: ['', 'bbox','centroid','end','labelpnt','labelpoly','start','vertices'],
                 editable: true,
                 triggerAction: 'all'
             }), {}),
