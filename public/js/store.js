@@ -798,7 +798,7 @@ $(window).ready(function () {
                         modal: true,
                         layout: 'fit',
                         width: 450,
-                        height: 460,
+                        height: 500,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -842,6 +842,12 @@ $(window).ready(function () {
                                                 fieldLabel: __('WMS source'),
                                                 name: 'wmssource',
                                                 value: r.data.wmssource
+                                            },
+                                            {
+                                                xtype: 'textfield',
+                                                fieldLabel: __('WMS EPSGs'),
+                                                name: 'wmsclientepsgs',
+                                                value: r.data.wmsclientepsgs
                                             },
                                             {
                                                 xtype: 'combo',
