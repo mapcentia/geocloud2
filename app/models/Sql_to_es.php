@@ -94,9 +94,10 @@ class Sql_to_es extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {
-
                 if ($arrayWithFields[$key]['type'] == "geometry") {
                     $geometries[] = json_decode($row[$key]);
+                } elseif ($arrayWithFields[$key]['type'] == "json") {
+                    $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                 } else {
                     $arr = $this->array_push_assoc($arr, $key, $value);
                 }
