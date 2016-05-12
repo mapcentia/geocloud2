@@ -33,8 +33,7 @@ class Input
                 break;
         }
         if (!reset($query) && $key == null)
-            return key($query);
-
+            return str_replace("__gc2_plus__", "+", key($query));
         else {
             if ($key != null)
                 return $query[$key];
@@ -45,6 +44,7 @@ class Input
 
     static function parseQueryString($str, $raw)
     {
+        $str = str_replace("+", "__gc2_plus__", $str);
         if ($raw) {
             return array($str => false);
         }
