@@ -81,9 +81,18 @@ class Controller
 
     public function ApiKeyAuthLayer($layer, $subUser, $transaction, $inputApiKey, $rels)
     {
+        // Check if layer has schema prefix and add 'public' if no.
+        $bits = explode(".", $layer);
+        if (sizeof($bits) == 1) {
+            $schema = "public";
+            $layer = $schema . "." . $layer;
+        } else {
+            $schema = $bits[0];
+        }
+        
         $postgisObject = new \app\inc\Model();
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if ($auth == "Read/write" || $auth == "Write") {
+        if (($auth == "Read/write" || $auth == "Write") && ($subUser && $subUser != $schema)) {
             $settings_viewer = new \app\models\Setting();
             $response = $settings_viewer->get();
             if (isset($response["data"]["userGroups"]->$subUser)) {
@@ -121,7 +130,7 @@ class Controller
                             case false:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
                                     $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges.";
+                                    $response['message'] = "You don't have privileges to see '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
                                 } else {
                                     $response['success'] = true;
@@ -131,7 +140,7 @@ class Controller
                             case true:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") {
                                     $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges.";
+                                    $response['message'] = "You don't have privileges to edit '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
                                 } else {
                                     $response['success'] = true;
@@ -182,8 +191,7 @@ class Controller
                 }
             }
             //}
-        }
-        else {
+        } else {
             $response3["success"] = true;
             $response3['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
             $response3['auth_level'] = $auth;
