@@ -1,6 +1,5 @@
-gc2map.createSearch = function (me, callBack) {
-    var type1, type2, gids = [], searchString,
-        komKode = "727";
+gc2map.createSearch = function (me, komKode) {
+    var type1, type2, gids = [], searchString;
     var placeStore = new geocloud.geoJsonStore({
         host: "http://eu1.mapcentia.com",
         db: "dk",
