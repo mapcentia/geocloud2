@@ -13,7 +13,7 @@ gc2i18n = {
         "Close": "Luk",
         "Back": "Tilbage",
         "Share the map": "Del kortet",
-        "Search": "Søg",
+        "Search": "S&oslash;g",
         "URL to this map": "URL til dette kort",
         "Iframe with this map to embed on web page": "Iframe med dette kort til indlejring på web side",
         "URL to a static PNG image of this map": "URL til et statisk PNG billede af dette kort",
