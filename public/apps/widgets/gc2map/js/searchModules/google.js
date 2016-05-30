@@ -1,4 +1,5 @@
 gc2map.createSearch = function (me) {
+    $("#custom-search-form").show();
     var autocomplete = new google.maps.places.Autocomplete(document.getElementById('custom-search'));
     google.maps.event.addListener(autocomplete, 'place_changed', function () {
         var place = autocomplete.getPlace(),

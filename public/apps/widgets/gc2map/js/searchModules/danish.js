@@ -14,6 +14,7 @@ gc2map.createSearch = function (me, callBack) {
 
         }
     });
+    $("#custom-search-form").show();
     $('#custom-search').typeahead({
         highlight: false
     }, {
