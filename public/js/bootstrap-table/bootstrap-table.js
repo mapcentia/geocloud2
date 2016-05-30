@@ -122,7 +122,6 @@
 
     var calculateObjectValue = function (self, name, args, defaultValue) {
         var func = name;
-
         if (typeof name === 'string') {
             // support obj.func1.func2
             var names = name.split('.');
@@ -140,6 +139,7 @@
             return func;
         }
         if (typeof func === 'function') {
+
             return func.apply(self, args);
         }
         if (!func && typeof name === 'string' && sprintf.apply(this, [name].concat(args))) {
@@ -970,7 +970,7 @@
         }
 
         if (this.options.showToggle) {
-            html.push(sprintf('<button class="btn btn-default' +
+            html.push(sprintf('<button class="btn btn-default btn-raised' +
                     sprintf(' btn-%s', this.options.iconSize) +
                     '" type="button" name="toggle" title="%s">',
                     this.options.formatToggle()),
@@ -983,7 +983,7 @@
                     this.options.formatColumns()),
                 '<button type="button" class="btn btn-default' +
                 sprintf(' btn-%s', this.options.iconSize) +
-                ' dropdown-toggle" data-toggle="dropdown">',
+                ' dropdown-toggle btn-raised" data-toggle="dropdown">',
                 sprintf('<i class="%s %s"></i>', this.options.iconsPrefix, this.options.icons.columns),
                 ' <span class="caret"></span>',
                 '</button>',

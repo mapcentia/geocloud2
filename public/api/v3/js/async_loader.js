@@ -29,14 +29,16 @@ if (typeof gc2apiLoader === "undefined") {
                     $.getScript(host + "/js/leaflet/leaflet-all.js");
                 }
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
-                $.getScript(host + "/api/v1/baselayerjs");
+                if (typeof window.gc2Options === "undefined") {
+                    $.getScript(host + "/api/v1/baselayerjs");
+                }
                 (function pollForDependencies() {
                     if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
                         typeof Proj4js !== "undefined" &&
                         typeof window.setBaseLayers !== "undefined"
                     ) {
                         // Load Dependants
-                        $.getScript(host + "/api/v3/js/geocloud.js?af2941abf63d3844#grunt-cache-bust");
+                        $.getScript(host + "/api/v3/js/geocloud.js#grunt-cache-bust");
                         (function pollForDependants() {
                             if (typeof geocloud !== "undefined") {
                                 if (window.geocloud_maplib === "leaflet") {

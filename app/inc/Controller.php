@@ -89,7 +89,7 @@ class Controller
         } else {
             $schema = $bits[0];
         }
-        
+
         $postgisObject = new \app\inc\Model();
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if (($auth == "Read/write" || $auth == "Write") && ($subUser && $subUser != $schema)) {

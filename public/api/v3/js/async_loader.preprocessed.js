@@ -29,7 +29,9 @@ if (typeof gc2apiLoader === "undefined") {
                     $.getScript(host + "/js/leaflet/leaflet-all.js");
                 }
                 $.getScript(host + "/js/openlayers/proj4js-combined.js");
-                $.getScript(host + "/api/v1/baselayerjs");
+                if (typeof window.gc2Options === "undefined") {
+                    $.getScript(host + "/api/v1/baselayerjs");
+                }
                 (function pollForDependencies() {
                     if ((typeof L !== "undefined" || typeof OpenLayers !== "undefined") &&
                         typeof Proj4js !== "undefined" &&

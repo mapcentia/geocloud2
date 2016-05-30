@@ -7,7 +7,11 @@ gc2map.createSearch = function (me, callBack) {
         sql: null,
         pointToLayer: null,
         onLoad: function () {
-            callBack(me, this);
+            var resultLayer = new L.FeatureGroup();
+            me.map.addLayer(resultLayer);
+            resultLayer.addLayer(this.layer);
+            me.zoomToExtentOfgeoJsonStore(this);
+
         }
     });
     $('#custom-search').typeahead({

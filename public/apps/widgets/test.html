@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Widget with a vector overlay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/apps/widgets/gc2map/js/gc2map.js"></script>
+    <script src="/apps/widgets/gc2table/js/gc2table.js"></script>
+    <script src="/apps/widgets/gc2map/js/searchModules/danish.js"></script>
+
+
+    <style>
+        #legend-popover-li-map, #open-win-li-map {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div style="position:relative" id="map"></div>
+    <div>
+        <table id="dtable" data-show-toggle="true" data-show-export="true" data-show-columns="true"
+               data-filter-control="true"></table>
+    </div>
+</div>
+
+</body>
+<script>
+    function operateFormatter(value, row, index) {
+        return "<a target='_blank' href='" + value + "'>Link</a>";
+    }
+
+    gc2map.init({
+        key: "map",
+        db: 'mydb',
+        layers: [],
+        zoom: [0, 0, 1],
+        baseLayers: [{"id": "osm", "name": "OSM"}, {id: "googleStreets", "name": "Google Streets"}],
+        setBaseLayer: 'osm',
+        width: '100%',
+        height: '300px',
+        callBack: function (m, w) {
+            m.map.setView([56, 9], 3);
+            var store = new geocloud.sqlStore({
+                db: "mydb",
+                sql: "SELECT * FROM public.cafes WHERE ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) LIMIT 2",
+                styleMap: function (feature) {
+                    return {
+                        fillColor: (function (d) {
+                            return d === "Afløbssystemet" ? '#fbb4ae' :
+                                    d === "Badevand" ? '#b3cde3' :
+                                            d === "Skybrudssikring" ? '#ccebc5' : "#ff0000"
+
+                        }(feature.properties.hovedtype)),
+                        weight: 1,
+                        opacity: 1,
+                        color: "#000",
+                        fillOpacity: 0.5
+                    }
+                },
+                onLoad: function () {
+                    // m.zoomToExtentOfgeoJsonStore(store);
+                }
+            });
+
+            var cm = [
+                {
+                    "header": "license",
+                    "dataIndex": "license",
+                    "type": "varchar",
+                },
+                {
+                    "header": "name",
+                    "dataIndex": "name",
+                    filterControl: "select"
+                },
+                {
+                    "header": "phone",
+                    "dataIndex": "phone",
+                    formatter: "operateFormatter"
+                }
+            ];
+
+            gc2table.init({
+                "el": "#dtable",
+                "geocloud2": m,
+                "store": store,
+                "cm": cm,
+                "autoUpdate": true
+            });
+        }
+    });
+</script>
+</html>

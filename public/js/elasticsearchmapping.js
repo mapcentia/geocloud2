@@ -227,6 +227,7 @@ elasticsearch.init = function (record, screenName) {
                         store: new Ext.data.ArrayStore({
                             fields: ['abbr', 'action'],
                             data: [
+                                ["",""],
                                 ["analyzed", "analyzed"],
                                 ["not_analyzed", "not_analyzed"],
                                 ["no", "no"]
