@@ -189,7 +189,7 @@ geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, me = this, map, sql;
+        var prop, me = this, map, sql, xhr;
         this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
@@ -220,7 +220,7 @@ geocloud = (function () {
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
             }
-            $.ajax({
+            xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
@@ -263,6 +263,9 @@ geocloud = (function () {
             });
             return this.layer;
         };
+        this.abort = function(){
+            xhr.abort();
+        }
     };
     cartoDbStore = function (config) {
         var prop, me = this, map, sql;
