@@ -94,7 +94,7 @@ elasticsearch.init = function (record, screenName) {
         {
             restful: true,
             api: {
-                read: '/controllers/layer/elasticsearch/' + record.get("_key_"),
+                read: '/controllers/layer/elasticsearch/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
                 update: '/controllers/layer/elasticsearch/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_")
             },
             listeners: {
@@ -267,26 +267,6 @@ elasticsearch.init = function (record, screenName) {
                     dataIndex: 'search_analyzer',
                     width: 50,
                     tooltip: __("The analyzer used to analyze the text contents when analyzed during indexing."),
-                    editor: {
-                        xtype: 'combo',
-                        store: new Ext.data.ArrayStore({
-                            fields: ['abbr', 'action'],
-                            data: analyzers
-                        }),
-                        displayField: 'action',
-                        valueField: 'abbr',
-                        mode: 'local',
-                        typeAhead: false,
-                        editable: false,
-                        triggerAction: 'all'
-                    }
-                },
-                {
-                    id: "indexanalyzer",
-                    header: __("Index analyzer"),
-                    dataIndex: 'index_analyzer',
-                    width: 50,
-                    tooltip: __("The analyzer used to analyze the field when part of a query string. Can be updated on an existing field."),
                     editor: {
                         xtype: 'combo',
                         store: new Ext.data.ArrayStore({

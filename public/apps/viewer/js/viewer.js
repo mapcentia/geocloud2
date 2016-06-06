@@ -1015,7 +1015,7 @@ Viewer = function () {
                         sFilter = {
                             "geo_distance": {
                                 "distance": distance + "m",
-                                "coordinates": {
+                                "geometry.coordinates": {
                                     "lat": e.latlng.lat,
                                     "lon": e.latlng.lng
                                 }
@@ -1029,7 +1029,7 @@ Viewer = function () {
                                         "geometry": {
                                             "shape": {
                                                 "type": "circle",
-                                                "coordinates": [e.latlng.lng, e.latlng.lat],
+                                                "geometry.coordinates": [e.latlng.lng, e.latlng.lat],
                                                 "radius": distance + "m"
                                             }
                                         }
@@ -1154,7 +1154,7 @@ Viewer = function () {
                     if (isPoint) {
                         sFilter = {
                             "geo_bounding_box": {
-                                "coordinates": {
+                                "geometry.coordinates": {
                                     "top_left": {
                                         "lat": cloud.getExtent().top,
                                         "lon": cloud.getExtent().left
@@ -1172,7 +1172,7 @@ Viewer = function () {
                                 "geometry": {
                                     "shape": {
                                         "type": "envelope",
-                                        "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
+                                        "geometry.coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
                                     }
                                 }
                             }
@@ -1195,7 +1195,7 @@ Viewer = function () {
                         }
                         $.each(fields, function (i, v) {
                             if ((fieldConf[v].type === "int" && type === "int") || (fieldConf[v].type === "decimal (3 10)" && (type === "float" || type === "int")) || fieldConf[v].type === "string") {
-                                var a = v, b = {};
+                                var a = "properties." + v, b = {};
                                 b[a] = n;
                                 terms.push({
                                     "term": b
