@@ -80,6 +80,7 @@ var gc2table = (function () {
             setSelectedStyle: true,
             openPopUp: false,
             setViewOnSelect: true,
+            responsive: true,
             styleSelected: {
                 weight: 5,
                 color: '#666',
@@ -102,7 +103,8 @@ var gc2table = (function () {
             el = defaults.el, click, loadDataInTable,
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
-            openPopUp = defaults.openPopUp;
+            openPopUp = defaults.openPopUp,
+	    responsive = defaults.responsive;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -238,6 +240,7 @@ var gc2table = (function () {
                         exit: 100000
                     }
                 ]);
+if (responsive){
                 jRes.addFunc({
                     breakpoint: ['handheld'],
                     enter: function () {
@@ -254,6 +257,7 @@ var gc2table = (function () {
                     exit: function () {
                     }
                 });
+}
             } else {
                 setTimeout(poll, 20);
             }

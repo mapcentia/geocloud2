@@ -41,9 +41,11 @@
         height: '300px',
         callBack: function (m, w) {
             m.map.setView([56, 9], 3);
+            gc2map.createSearch(m, "101");
+            $("#custom-search-form").show();
             var store = new geocloud.sqlStore({
                 db: "mydb",
-                sql: "SELECT * FROM public.cafes WHERE ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) LIMIT 2",
+                sql: "SELECT * FROM public.cafes WHERE ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) LIMIT 20",
                 styleMap: function (feature) {
                     return {
                         fillColor: (function (d) {
@@ -59,9 +61,13 @@
                     }
                 },
                 onLoad: function () {
-                    // m.zoomToExtentOfgeoJsonStore(store);
+
+                    //m.zoomToExtentOfgeoJsonStore(store);
                 }
             });
+            // Add the store as a vector overlay
+            m.addGeoJsonStore(store);
+            store.load();
 
             var cm = [
                 {
@@ -82,11 +88,14 @@
             ];
 
             gc2table.init({
-                "el": "#dtable",
-                "geocloud2": m,
-                "store": store,
-                "cm": cm,
-                "autoUpdate": true
+                el: "#dtable",
+                geocloud2: m,
+                store: store,
+                cm: cm,
+                autoUpdate: true,
+                setViewOnSelect: true,
+                openPopUp: true,
+                setSelectedStyle: true
             });
         }
     });
