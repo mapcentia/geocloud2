@@ -48,7 +48,7 @@
             if (!$export.length) {
                 $export = $([
                     '<div class="export btn-group">',
-                        '<button class="btn btn-default' +
+                        '<button class="btn btn-default btn-raised' +
                             sprintf(' btn-%s', this.options.iconSize) +
                             ' dropdown-toggle" ' +
                             'data-toggle="dropdown" type="button">',

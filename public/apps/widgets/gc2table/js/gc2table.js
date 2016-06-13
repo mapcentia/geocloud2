@@ -25,16 +25,19 @@ var gc2table = (function () {
     }
     (function pollForjQuery() {
         if (typeof jQuery !== "undefined") {
-            if (typeof jQuery().typeahead === "undefined" ||
-                typeof jQuery().bootstrapTable === "undefined" ||
-                typeof _ === 'undefined' ||
-                typeof jRespond === "undefined" ||
-                typeof Backbone === "undefined"
-            ) {
+            if (typeof jQuery().typeahead === "undefined") {
                 $.getScript(host + "/js/typeahead.js-0.10.5/dist/typeahead.bundle.js");
+            }
+            if (typeof jQuery().bootstrapTable === "undefined") {
                 $.getScript(host + "/js/bootstrap-table/bootstrap-table.js");
+            }
+            if (typeof _ === 'undefined') {
                 $.getScript(host + "/js/underscore/underscore-min.js");
+            }
+            if (typeof jRespond === "undefined") {
                 $.getScript(host + "/js/div/jRespond.js");
+            }
+            if (typeof Backbone === "undefined") {
                 $.getScript("http://backbonejs.org/backbone.js");
             }
             (function pollForDependencies() {
@@ -104,11 +107,11 @@ var gc2table = (function () {
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
             openPopUp = defaults.openPopUp,
-	    responsive = defaults.responsive;
+            responsive = defaults.responsive;
 
         (function poll() {
             if (scriptsLoaded) {
-                var object = {},originalLayers, filters;
+                var object = {}, originalLayers, filters;
                 _.extend(object, Backbone.Events);
                 object.on("selected", function (id) {
                     $(el + ' tr').removeClass("selected");
@@ -240,24 +243,24 @@ var gc2table = (function () {
                         exit: 100000
                     }
                 ]);
-if (responsive){
-                jRes.addFunc({
-                    breakpoint: ['handheld'],
-                    enter: function () {
-                        $(el).bootstrapTable('toggleView');
-                    },
-                    exit: function () {
-                        $(el).bootstrapTable('toggleView');
-                    }
-                });
-                jRes.addFunc({
-                    breakpoint: ['desktop'],
-                    enter: function () {
-                    },
-                    exit: function () {
-                    }
-                });
-}
+                if (responsive) {
+                    jRes.addFunc({
+                        breakpoint: ['handheld'],
+                        enter: function () {
+                            $(el).bootstrapTable('toggleView');
+                        },
+                        exit: function () {
+                            $(el).bootstrapTable('toggleView');
+                        }
+                    });
+                    jRes.addFunc({
+                        breakpoint: ['desktop'],
+                        enter: function () {
+                        },
+                        exit: function () {
+                        }
+                    });
+                }
             } else {
                 setTimeout(poll, 20);
             }
