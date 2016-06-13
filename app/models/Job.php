@@ -109,7 +109,6 @@ class Job extends \app\inc\Model
     {
         $cmd = null;
         $jobs = $this->getAll($db);
-        exec("crontab -r");
         foreach ($jobs["data"] as $job) {
             if ($id == $job["id"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
@@ -137,8 +136,6 @@ class Job extends \app\inc\Model
                 return $out . " ({$job["id"]})";
             }
         }
-        //$cmd = "crontab -l | { cat; echo '*/1 * * * * echo \"Hello world\" > ".__DIR__."/../../public/logs/test.log\n'; } | crontab - 2>&1";
-        //$out = exec($cmd);
         return true;
     }
 }
