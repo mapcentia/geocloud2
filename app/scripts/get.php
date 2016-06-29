@@ -5,6 +5,7 @@ new \app\conf\App();
 use \app\conf\App;
 use \app\conf\Connection;
 
+echo date(DATE_RFC822) . "\n\n";
 
 $db = $argv[1];
 $schema = $argv[2];

@@ -93,6 +93,7 @@ geocloud = (function () {
         visibility: true,
         lifetime: 0,
         host: host,
+	uri: "/api/v1/sql",
         db: null,
         sql: null,
         q: null,
@@ -207,6 +208,7 @@ geocloud = (function () {
         this.async = this.defaults.async;
         this.jsonp = this.defaults.jsonp;
         this.method = this.defaults.method;
+	this.uri = this.defaults.uri;
         this.load = function (doNotShowAlertOnError) {
             try {
                 map = me.map;
@@ -223,9 +225,9 @@ geocloud = (function () {
             xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
-                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
+                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
-                url: this.host + '/api/v1/sql/' + this.db,
+                url: this.host + this.uri + '/' + this.db,
                 type: this.defaults.method,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {
@@ -589,7 +591,8 @@ geocloud = (function () {
                 zoomAnimation: true,
                 showLayerSwitcher: false,
                 // maxExtent: '-20037508.34, -20037508.34, 20037508.34, 20037508.34',
-                resolutions: resolutions
+                resolutions: resolutions,
+                editable: true
             };
         if (config) {
             for (prop in config) {
