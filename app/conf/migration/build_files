@@ -2,9 +2,7 @@
 <?php
 ini_set("display_errors", "On");
 
-use \app\conf\App;
 use \app\conf\Connection;
-use \app\inc\Model;
 
 header("Content-type: text/plain");
 include_once("../App.php");
