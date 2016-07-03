@@ -216,6 +216,9 @@ module.exports = function (grunt) {
             },
             move_bitmaps: {
                 command: 'cd /var/www/geocloud2/app/conf/migration/ && ./move_bitmaps'
+            },
+            chown: {
+                command: 'chown www-data:www-data -R /var/www/geocloud2/app/files'
             }
         }
     });
@@ -232,7 +235,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-npm-install');
 
     grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'jshint', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown']);
     grunt.registerTask('migration', ['shell:migration']);
 };
 
