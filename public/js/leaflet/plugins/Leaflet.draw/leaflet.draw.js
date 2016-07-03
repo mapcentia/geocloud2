@@ -1806,7 +1806,7 @@
 
         _resize: function (latlng) {
             var bounds;
-if (this._shape.options.aspectRatio !== undefined) {
+	    if (this._shape.options.aspectRatio !== undefined) {
 			bounds = this._shape.getBounds();
 
 			var opposite = this._map.project(this._oppositeCorner).round(),
