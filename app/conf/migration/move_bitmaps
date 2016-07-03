@@ -5,7 +5,7 @@ header("Content-type: text/plain");
 
 $dir = "/var/www/geocloud2/app";
 
-if ($dir . "/files") {
+if (file_exists($dir . "/files")) {
     die("Seems that bitmaps are moved. Doing nothing.\n");
 }
 
@@ -15,6 +15,7 @@ if ($handle = opendir($dir . "/tmp")) {
             $bitmapDir = $dir . "/tmp/" . $entry . "/__bitmaps";
 
             if (file_exists($bitmapDir)) {
+                @mkdir($dir . "/files");
                 mkdir($dir . "/files/{$entry}");
                 rename($bitmapDir, $dir . "/files/{$entry}/__bitmaps");
             }
