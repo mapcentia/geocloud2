@@ -51,23 +51,23 @@ MapCentia = function (globalId) {
             layersStr = arr.join(",");
         }
         javascript = "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>\n" +
-        "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
-        "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
-        "<div id='map' style='width: 100%; height: 500px'></div>\n" +
-        "<script>\n" +
-        "(function () {\n" +
-        "      var map = new geocloud.map({\n" +
-        "      el: 'map'\n" +
-        "   });\n" +
-        "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-        "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
-        "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
-        "   map.addTileLayers({\n" +
-        "      db: '" + db + "',\n" +
-        "      layers: [" + layersStr + "],\n" +
-        "   });\n" +
-        "}())\n" +
-        "</script>";
+            "<script src='" + hostname + "/js/leaflet/leaflet.js'></script>\n" +
+            "<script src='" + hostname + "/api/v3/js/geocloud.js'></script>\n" +
+            "<div id='map' style='width: 100%; height: 500px'></div>\n" +
+            "<script>\n" +
+            "(function () {\n" +
+            "      var map = new geocloud.map({\n" +
+            "      el: 'map'\n" +
+            "   });\n" +
+            "   map.addBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+            "   map.setBaseLayer(geocloud." + cloud.getBaseLayerName().toUpperCase() + ");\n" +
+            "   map.setView([" + cloud.getCenter().lat.toString() + "," + cloud.getCenter().lon.toString() + "]," + Math.round(cloud.getZoom()).toString() + ");\n" +
+            "   map.addTileLayers({\n" +
+            "      db: '" + db + "',\n" +
+            "      layers: [" + layersStr + "],\n" +
+            "   });\n" +
+            "}())\n" +
+            "</script>";
         $("#share-javascript-" + id).val(javascript);
     };
     shareTwitter = function () {
@@ -375,15 +375,19 @@ MapCentia = function (globalId) {
             }
         }
 
-        (function poll(){
+        (function poll() {
             if (ready) {
-                if (defaults.setBaseLayer) {
-                    setBaseLayer(defaults.setBaseLayer);
-                } else {
-                    setBaseLayer(defaults.baseLayers[0].id);
-                }
+                // wait a bit
+                setTimeout(function () {
+                    if (defaults.setBaseLayer) {
+                        setBaseLayer(defaults.setBaseLayer);
+                    } else {
+                        setBaseLayer(defaults.baseLayers[0].id);
+                    }
+                }, 200);
+
             } else {
-                setTimeout(function(){
+                setTimeout(function () {
                     poll();
                 }, 20);
             }
