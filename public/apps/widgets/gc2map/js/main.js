@@ -20,7 +20,7 @@ var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
 
-    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles,
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles, ready = false,
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -258,6 +258,7 @@ MapCentia = function (globalId) {
                             );
                         }
                         addLegend();
+                        ready = true;
                     }
                 }
             }
@@ -373,11 +374,21 @@ MapCentia = function (globalId) {
                 );
             }
         }
-        if (defaults.setBaseLayer) {
-            setBaseLayer(defaults.setBaseLayer);
-        } else {
-            setBaseLayer(defaults.baseLayers[0].id);
-        }
+
+        (function poll(){
+            if (ready) {
+                if (defaults.setBaseLayer) {
+                    setBaseLayer(defaults.setBaseLayer);
+                } else {
+                    setBaseLayer(defaults.baseLayers[0].id);
+                }
+            } else {
+                setTimeout(function(){
+                    poll();
+                }, 20);
+            }
+        }())
+
 
         arr = defaults.layers;
 
