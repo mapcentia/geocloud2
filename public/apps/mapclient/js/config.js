@@ -22,7 +22,7 @@ Ext.namespace("Heron.options.map.resolutions");
 var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
     enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
     dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
-    projection, customSearchWin,
+    projection, customSearchWin, placeStore,
     searchTable = "clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
@@ -850,13 +850,12 @@ MapCentia.init = function () {
             type: "any",
             options: {
                 text: "",
-                iconCls: "icon-draw-text",
+                iconCls: 'icon-map-magnify',
                 tooltip: "Søg på adresse eller matrikelnr.",
                 id: "customSearch",
                 toggleGroup: "conflict",
                 handler: function (objRef) {
-                    cleanUpConflict();
-                    customSearchWin = new Ext.Window({
+                    var type, customSearchWin = new Ext.Window({
                         title: "Find",
                         layout: 'fit',
                         width: 300,
@@ -883,21 +882,47 @@ MapCentia.init = function () {
                     }
                     (function (me) {
                         var type1, type2, gids = [], searchString,
-                            komKode = "727",
-                            placeStore = new geocloud.geoJsonStore({
-                                host: "http://eu1.mapcentia.com",
-                                db: "dk",
-                                sql: null,
-                                pointToLayer: null,
-                                onLoad: function () {
-                                    setTimeout(function () {
-                                        MapCentia.gc2.zoomToExtentOfgeoJsonStore(placeStore);
-                                    }, 300);
-                                    deactivateControllers();
-                                    var wkt = new OpenLayers.Format.WKT().write(placeStore.layer.features[0]);
-                                    conflict(wkt);
+                            komKode = "727";
+
+                                              placeStore = new geocloud.geoJsonStore({
+                            host: "http://eu1.mapcentia.com",
+                            db: "dk",
+                            sql: null,
+                            projection: "25832",
+                            pointToLayer: null,
+                            onLoad: function () {
+                                var place = placeStore.layer.features[0];
+
+                                if (type === "adresse") {
+                                    var point = new OpenLayers.LonLat(place.geometry.x, place.geometry.y);
+
+                                    MapCentia.gc2.map.setCenter(point, 17 + Heron.options.zoomCorrection);
+                                    try {
+                                        placeMarkers.destroy();
+                                    } catch (e) {
+                                    }
+
+                                    try {
+                                        placePopup.destroy();
+                                    } catch (e) {
+                                    }
+
+                                    placeMarkers = new OpenLayers.Layer.Markers("Markers");
+                                    MapCentia.gc2.map.addLayer(placeMarkers);
+                                    placeMarkers.addMarker(new OpenLayers.Marker(point));
+                                    placePopup = new OpenLayers.Popup.FramedCloud("place", point, null, "<div id='placeResult' style='z-index:1000;width:200px;height:50px;overflow:auto'>" + $("#custom-search").val() + "</div>", null, true, function () {
+                                        placePopup.destroy();
+                                        placeMarkers.destroy();
+                                    });
+                                    MapCentia.gc2.map.addPopup(placePopup);
+                                } else if (type === "matrikel") {
+                                    placeStore
+                                    MapCentia.gc2.addGeoJsonStore(placeStore);
+                                    MapCentia.gc2.zoomToExtentOfgeoJsonStore(placeStore);
+                                    MapCentia.gc2.map.zoomOut();
                                 }
-                            });
+                            }
+                        });
                         $('#custom-search').typeahead({
                             highlight: false
                         }, {
@@ -981,8 +1006,8 @@ MapCentia.init = function () {
                             }
                         });
                         $('#custom-search').bind('typeahead:selected', function (obj, datum, name) {
+                            type = name;
                             if ((type1 === "adresse" && name === "adresse") || (type2 === "jordstykke" && name === "matrikel")) {
-                                cleanUpConflict();
                                 try {
                                     gridWin.close();
                                 }
@@ -1013,7 +1038,7 @@ MapCentia.init = function () {
 
                 }
             }
-        },
+        }/*,
         {
             type: "any",
             options: {
@@ -1090,7 +1115,7 @@ MapCentia.init = function () {
 
                 }
             }
-        },
+        }*/,
         enablePrint ? {type: "-"} : {},
         {
             type: "printdialog", options: {
