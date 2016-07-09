@@ -881,6 +881,8 @@ MapCentia.init = function () {
                     //console.log(autocomplete.getBounds());
                     google.maps.event.addListener(autocomplete, 'place_changed', function () {
                         var place = autocomplete.getPlace();
+
+                        console.log(place)
                         var transformPoint = function (lat, lon, s, d) {
                             var p = [];
                             if (typeof Proj4js === "object") {
