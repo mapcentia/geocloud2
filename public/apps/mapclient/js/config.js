@@ -22,7 +22,7 @@ Ext.namespace("Heron.options.map.resolutions");
 var metaData, metaDataKeys = [], metaDataKeysTitle = [], searchWin, placeMarkers, placePopup,
     enablePrint, queryWin, gridWin, poilayer, polygonControl, click, qstore = [], host = "",
     dbForConflict, gridPanel, grid, cStore, bStore, conflict, cleanUpConflict, deactivateControllers, closeWindows,
-    projection,
+    projection, customSearchWin,
     searchTable = "clone.adresser2ejendom2ejer";
 
 MapCentia.setup = function () {
