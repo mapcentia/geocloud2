@@ -20,7 +20,7 @@ var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
 
-    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles, ready = false,
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles, ready = [],
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -258,7 +258,7 @@ MapCentia = function (globalId) {
                             );
                         }
                         addLegend();
-                        ready = true;
+                        ready.push(layer);
                     }
                 }
             }
@@ -376,23 +376,18 @@ MapCentia = function (globalId) {
         }
 
         (function poll() {
-            if (ready) {
-                // wait a bit
-                setTimeout(function () {
-                    if (defaults.setBaseLayer) {
-                        setBaseLayer(defaults.setBaseLayer);
-                    } else {
-                        setBaseLayer(defaults.baseLayers[0].id);
-                    }
-                }, 200);
-
+            if (ready.length === defaults.layers.length) {
+                if (defaults.setBaseLayer) {
+                    setBaseLayer(defaults.setBaseLayer);
+                } else {
+                    setBaseLayer(defaults.baseLayers[0].id);
+                }
             } else {
                 setTimeout(function () {
                     poll();
                 }, 20);
             }
         }())
-
 
         arr = defaults.layers;
 
