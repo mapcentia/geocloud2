@@ -894,28 +894,24 @@ geocloud = (function () {
             }
         }
         //ol2, ol3 and leaflet
+        // MapQuest OSM doesn't work anymore. Switching to OSM.
         this.addMapQuestOSM = function () {
             switch (MAPLIB) {
                 case "ol2":
-                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM", [
-                        "http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-                        "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-                        "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg",
-                        "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"
-                    ]);
+                    this.mapQuestOSM = new OpenLayers.Layer.OSM("mapQuestOSM");
                     this.mapQuestOSM.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestOSM);
                     this.mapQuestOSM.setVisibility(false);
                     break;
                 case "ol3":
                     this.mapQuestOSM = new ol.layer.TileLayer({
-                        source: new ol.source.MapQuestOSM(),
+                        source: new ol.source.OSM(),
                         visible: false
                     });
                     this.map.addLayer(this.mapQuestOSM);
                     break;
                 case "leaflet":
-                    this.mapQuestOSM = new L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.jpg', {
+                    this.mapQuestOSM = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 20,
                         maxNativeZoom: 18

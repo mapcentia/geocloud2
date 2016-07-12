@@ -277,20 +277,21 @@ var mygeocloud_ol = (function () {
             displayInLayerSwitcher: false
         });
         this.map.addLayers([vectors]);
+
+        // MapQuest OSM doesn't work anymore. Switching to OSM
         this.addMapQuestOSM = function () {
-            this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg", "http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.jpg"], {
-                numZoomLevels: 19
-            });
-            //this.mapQuestOSM.wrapDateLine = false;
+            this.mapQuestOSM = new OpenLayers.Layer.OSM("MapQuest-OSM");
+            this.mapQuestOSM.wrapDateLine = true;
             this.map.addLayer(this.mapQuestOSM);
             return (this.mapQuestOSM);
         };
         this.addMapQuestAerial = function () {
-            this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
+            this.mapQuestAerial = new OpenLayers.Layer.OSM("MapQuest Open Aerial Tiles");
             this.mapQuestAerial.wrapDateLine = true;
             this.map.addLayer(this.mapQuestAerial);
             return (this.mapQuestAerial);
         };
+
         this.addOSM = function () {
             this.osm = new OpenLayers.Layer.OSM("OSM");
             this.osm.wrapDateLine = true;
