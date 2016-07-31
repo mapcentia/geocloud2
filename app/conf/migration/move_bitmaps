@@ -15,7 +15,7 @@ if ($handle = opendir($dir . "/tmp")) {
             $bitmapDir = $dir . "/tmp/" . $entry . "/__bitmaps";
 
             if (file_exists($bitmapDir)) {
-                @mkdir($dir . "/files");
+                mkdir($dir . "/files");
                 mkdir($dir . "/files/{$entry}");
                 rcopy($bitmapDir, $dir . "/files/{$entry}/__bitmaps");
             }
