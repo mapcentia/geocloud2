@@ -83,7 +83,6 @@ class Elasticsearch extends Model
                 "format" => $value["format"],
                 "index" => $value["index"],
                 "analyzer" => $value["analyzer"],
-                "index_analyzer" => $value["index_analyzer"],
                 "search_analyzer" => $value["search_analyzer"],
                 "type" => $value["type"],
                 "boost" => $value["boost"],
@@ -98,7 +97,6 @@ class Elasticsearch extends Model
             if (isset($arr[$key]["index"]) && ($arr[$key]["index"])) $mapArr["index"] = $arr[$key]["index"];
             if (isset($arr[$key]["analyzer"]) && ($arr[$key]["analyzer"])) $mapArr["analyzer"] = $arr[$key]["analyzer"];
             if (isset($arr[$key]["search_analyzer"]) && ($arr[$key]["search_analyzer"])) $mapArr["search_analyzer"] = $arr[$key]["search_analyzer"];
-            if (isset($arr[$key]["index_analyzer"]) && ($arr[$key]["index_analyzer"])) $mapArr["index_analyzer"] = $arr[$key]["index_analyzer"];
             if (isset($arr[$key]["boost"]) && ($arr[$key]["boost"])) $mapArr["boost"] = $arr[$key]["boost"];
             if (isset($arr[$key]["null_value"]) && ($arr[$key]["null_value"])) $mapArr["null_value"] = $arr[$key]["null_value"];
             if ($pgType == "geometry") {
@@ -126,9 +124,7 @@ class Elasticsearch extends Model
             }
         } elseif ($pgType == "string" || $pgType == "text") {
             $esType = array(
-                "type" => "string",
-                "search_analyzer" => "str_search_analyzer",
-                "index_analyzer" => "str_index_analyzer"
+                "type" => "string"
             );
         } elseif ($pgType == "timestamptz") {
             $esType = array(
