@@ -5,7 +5,7 @@ ini_set("display_errors", "On");
 use \app\conf\Connection;
 
 header("Content-type: text/plain");
-include_once("../App.php");
+include_once("/var/www/geocloud2/app/conf/App.php");
 new \app\conf\App();
 $database = new \app\models\Database();
 $arr = $database->listAllDbs();
