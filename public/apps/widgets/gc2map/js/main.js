@@ -258,8 +258,8 @@ MapCentia = function (globalId) {
                             );
                         }
                         addLegend();
-                        ready.push(layer);
                     }
+                    ready.push(layer);
                 }
             }
         );
