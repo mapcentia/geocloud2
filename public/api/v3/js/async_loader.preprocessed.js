@@ -94,7 +94,7 @@ if (typeof gc2apiLoader === "undefined") {
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
-                    href: 'https://netdna.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'
+                    href: 'http://netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'
                 }).appendTo('head');
             } else {
                 setTimeout(pollForjQuery, 3);
