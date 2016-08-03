@@ -10,7 +10,7 @@ new \app\conf\App();
 App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
 App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
 
-echo "window.geocloud_host = \"" . \app\conf\App::$param['host'] . "\";\n";
+echo "window.geocloud_host = window.geocloud_host || \"" . \app\conf\App::$param['host'] . "\";\n";
 echo "window.geocloud_maplib = \"" . ((isset($_GET["maplib"])) ? $_GET["maplib"] : "leaflet") . "\";\n";
 echo "window.geocloud_i18n = " . (isset($_GET["i18n"]) && $_GET["i18n"] == "false" ? "false"  : "true") .";\n";
 echo "window.geocloud_loadcss = " . (isset($_GET["loadcss"]) && $_GET["loadcss"] == "false" ? "false"  : "true") .";\n";
