@@ -84,6 +84,9 @@ geocloud = (function () {
             document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
         }
     }
+    var setHost = function(str){
+	host = str;
+}
     // Helper for extending classes
     extend = function (ChildClass, ParentClass) {
         ChildClass.prototype = new ParentClass();
@@ -2055,6 +2058,7 @@ geocloud = (function () {
         DIGITALGLOBE: DIGITALGLOBE,
         HERENORMALDAYGREY: HERENORMALDAYGREY,
         HERENORMALNIGHTGREY: HERENORMALNIGHTGREY,
+        setHost: setHost
     };
 }());
 
