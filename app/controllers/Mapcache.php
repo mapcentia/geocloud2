@@ -148,4 +148,40 @@ class Mapcache extends \app\inc\Controller
         }
         return $gridNames;
     }
+    public static function getSources()
+    {
+        $arr = array();
+        $pathToSources = App::$param['path'] . "app/conf/mapcache/sources/";
+        $sources = scandir($pathToSources);
+        foreach ($sources as $source) {
+            $bits = explode(".", $source);
+            if ($bits[1] == "xml") {
+                $str = file_get_contents($pathToSources . $source);
+                $xml = simplexml_load_string($str);
+                if ($xml) {
+                    $arr[] = $str;
+                }
+            }
+        }
+
+        return $arr;
+    }
+
+    public static function getTileSets()
+    {
+        $arr = array();
+        $pathToTilesets = App::$param['path'] . "app/conf/mapcache/tilesets/";
+        $tilesets = scandir($pathToTilesets);
+        foreach ($tilesets as $tileset) {
+            $bits = explode(".", $tileset);
+            if ($bits[1] == "xml") {
+                $str = file_get_contents($pathToTilesets . $tileset);
+                $xml = simplexml_load_string($str);
+                if ($xml) {
+                    $arr[] = $str;
+                }
+            }
+        }
+        return $arr;
+    }
 }

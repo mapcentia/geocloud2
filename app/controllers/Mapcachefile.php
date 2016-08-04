@@ -17,7 +17,7 @@ class Mapcachefile extends \app\inc\Controller
         $cache = "disk";
         //$cache = "sqlite";
         $postgisObject = new Model(App::$param['path'] . "app/tmp/" . Connection::$param['postgisdb'] . ".sqlite3");
-        ob_start();?>
+        ob_start(); ?>
 
         <mapcache>
             <metadata>
@@ -88,18 +88,26 @@ class Mapcachefile extends \app\inc\Controller
                         $format = $def->format ?: "PNG";
                         ?>
 
-            <!-- <?php echo $table ?> -->
-            <source name="<?php echo $table ?>" type="wms">
-                  <getmap>
-                         <params>
+                        <!-- <?php echo $table ?> -->
+                        <source name="<?php echo $table ?>" type="wms">
+                        <getmap>
+                            <params>
                                 <FORMAT>image/png</FORMAT>
                                 <LAYERS><?php echo $table ?></LAYERS>
-                         </params>
-                  </getmap>
-                  <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $row["f_table_schema"] ?>.map&</url>
-                  </http>
-                  <getfeatureinfo>
+                            </params>
+                        </getmap>
+                        <http>
+                            <url><?php
+
+                                if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
+                                    echo explode("&", $row["wmssource"])[0] . "&transparent=true&";
+                                } else {
+                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . ".map&";
+                                }
+
+                                ?></url>
+                        </http>
+                        <getfeatureinfo>
                             <!-- info_formats: comma separated list of wms info_formats supported by the source WMS.
                             you can get this list by studying the source WMS capabilities document.
                             -->
@@ -109,79 +117,91 @@ class Mapcachefile extends \app\inc\Controller
                             <params>
                                 <QUERY_LAYERS><?php echo $table ?></QUERY_LAYERS>
                             </params>
-                  </getfeatureinfo>
-            </source>
-            <tileset name="<?php echo $table ?>">
-                <source><?php echo $table ?></source>
-                <cache><?php echo $cache ?></cache>
-                <grid>g20</grid>
-                <grid>g</grid>
-                <grid>WGS84</grid>
-                <?php
-                        foreach ($grids as $k => $v) {
-                            echo "<grid>{$k}</grid>\n";
-                        }
-                        ?>
-                <format><?php echo $format ?></format>
-                <metatile><?php echo $meta_size ?> <?php echo $meta_size ?></metatile>
-                <metabuffer><?php echo $meta_buffer ?></metabuffer>
-                <expires><?php echo $expire ?></expires>
-                <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
-                <metadata>
-                    <title><?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?></title>
-                     <abstract><?php echo $row['f_table_abstract']; ?></abstract>
-                    <wgs84boundingbox><?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
-                </metadata>
-            </tileset>
-            <?php
+                        </getfeatureinfo>
+                        </source>
+                        <tileset name="<?php echo $table ?>">
+                            <source><?php echo $table ?></source>
+                            <cache><?php echo $cache ?></cache>
+                            <grid>g20</grid>
+                            <grid>g</grid>
+                            <grid>WGS84</grid>
+                            <?php
+                            foreach ($grids as $k => $v) {
+                                echo "<grid>{$k}</grid>\n";
+                            }
+                            ?>
+                            <format><?php echo $format ?></format>
+                            <metatile><?php echo $meta_size ?> <?php echo $meta_size ?></metatile>
+                            <metabuffer><?php echo $meta_buffer ?></metabuffer>
+                            <expires><?php echo $expire ?></expires>
+                            <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
+                            <metadata>
+                                <title><?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?></title>
+                                <abstract><?php echo $row['f_table_abstract']; ?></abstract>
+                                <wgs84boundingbox><?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
+                            </metadata>
+                        </tileset>
+                        <?php
                     }
                 }
             }
 
+            // Schema start
+
             foreach ($layerArr as $k => $v) {
                 if (sizeof($v) > 0) {
                     ?>
-            <!-- <?php echo $k ?> -->
-            <source name="<?php echo $k ?>" type="wms">
-                  <getmap>
-                         <params>
-                                <FORMAT>image/png</FORMAT>
-                                <LAYERS><?php echo implode(",", $v) ?></LAYERS>
-                         </params>
-                  </getmap>
-                  <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $k ?>.map&</url>
-                  </http>
-            </source>
-            <tileset name="<?php echo $k ?>">
-                <source><?php echo $k ?></source>
-                <cache><?php echo $cache ?></cache>
-                <grid>g20</grid>
-                <grid>g</grid>
-                <grid>WGS84</grid>
-                <?php
-                    foreach ($grids as $k2 => $v2) {
-                        echo "<grid>{$k2}</grid>\n";
-                    }
-                    ?>
-                <format>jpeg_low</format>
-                <metatile>3 3</metatile>
-                <metabuffer>0</metabuffer>
-                <expires>60</expires>
-                <metadata>
-                    <title><?php echo $k; ?></title>
-                     <abstract></abstract>
-                </metadata>
-            </tileset>
+                    <!-- <?php echo $k ?> -->
+                    <source name="<?php echo $k ?>" type="wms">
+                    <getmap>
+                        <params>
+                            <FORMAT>image/png</FORMAT>
+                            <LAYERS><?php echo implode(",", $v) ?></LAYERS>
+                        </params>
+                    </getmap>
+                    <http>
+                        <url><?php
+
+                            if (!App::$param["useQgisForMergedLayers"][$k]) {
+                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . ".map&";
+                            } else {
+                                echo "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2//app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
+                            }
+                            ?></url>
+
+                    </http>
+                    </source>
+                    <tileset name="<?php echo $k ?>">
+                        <source><?php echo $k ?></source>
+                        <cache><?php echo $cache ?></cache>
+                        <grid>g20</grid>
+                        <grid>g</grid>
+                        <grid>WGS84</grid>
+                        <?php
+                        foreach ($grids as $k2 => $v2) {
+                            echo "<grid>{$k2}</grid>\n";
+                        }
+                        ?>
+                        <format>jpeg_low</format>
+                        <metatile>3 3</metatile>
+                        <metabuffer>0</metabuffer>
+                        <expires>60</expires>
+                        <metadata>
+                            <title><?php echo $k; ?></title>
+                            <abstract></abstract>
+                        </metadata>
+                    </tileset>
                     <?php
                 }
             }
+
+            // Group start
 
             foreach ($groupArr as $k => $v) {
                 $unique = array_unique($groups[$k]);
                 foreach ($unique as $v2) {
                     $layers = array();
-                    $tileSetName =  "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
+                    $tileSetName = "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
                     foreach ($groupArr[$k] as $h => $j) {
                         if ($j == $v2) {
                             $layers[] = $h;
@@ -189,38 +209,45 @@ class Mapcachefile extends \app\inc\Controller
                     }
                     $layersStr = implode(",", $layers);
                     ?>
-            <!-- <?php echo $tileSetName ?> -->
-            <source name="<?php echo $tileSetName ?>" type="wms">
-                  <getmap>
-                         <params>
-                                <FORMAT>image/png</FORMAT>
-                                <LAYERS><?php echo $layersStr ?></LAYERS>
-                         </params>
-                  </getmap>
-                  <http>
-                        <url><?php echo App::$param["mapCache"]["wmsHost"] ?>/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/<?php echo Connection::$param['postgisdb'] ?>_<?php echo $k ?>.map&</url>
-                  </http>
-            </source>
-            <tileset name="<?php echo $tileSetName ?>">
-                <source><?php echo $tileSetName ?></source>
-                <cache><?php echo $cache ?></cache>
-                <grid>g20</grid>
-                <grid>g</grid>
-                <grid>WGS84</grid>
-                <?php
-                    foreach ($grids as $k2 => $v2) {
-                        echo "<grid>{$k2}</grid>\n";
-                    }
-                    ?>
-                <format>PNG</format>
-                <metatile>1 1</metatile>
-                <metabuffer>0</metabuffer>
-                <expires>60</expires>
-                <metadata>
-                    <title><?php echo $tileSetName; ?></title>
-                     <abstract></abstract>
-                </metadata>
-            </tileset>
+                    <!-- <?php echo $tileSetName ?> -->
+                    <source name="<?php echo $tileSetName ?>" type="wms">
+                    <getmap>
+                        <params>
+                            <FORMAT>image/png</FORMAT>
+                            <LAYERS><?php echo $layersStr ?></LAYERS>
+                        </params>
+                    </getmap>
+                    <http>
+                        <url><?php
+
+                            if (!App::$param["useQgisForMergedLayers"][$tileSetName]) {
+                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . ".map&";
+                            } else {
+                                echo "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2//app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$tileSetName] . "&transparent=true";
+                            }
+                            ?></url>
+                    </http>
+                    </source>
+                    <tileset name="<?php echo $tileSetName ?>">
+                        <source><?php echo $tileSetName ?></source>
+                        <cache><?php echo $cache ?></cache>
+                        <grid>g20</grid>
+                        <grid>g</grid>
+                        <grid>WGS84</grid>
+                        <?php
+                        foreach ($grids as $k2 => $v2) {
+                            echo "<grid>{$k2}</grid>\n";
+                        }
+                        ?>
+                        <format>PNG</format>
+                        <metatile>3 3</metatile>
+                        <metabuffer>0</metabuffer>
+                        <expires>60</expires>
+                        <metadata>
+                            <title><?php echo $tileSetName; ?></title>
+                            <abstract></abstract>
+                        </metadata>
+                    </tileset>
                     <?php
 
                 }
@@ -243,6 +270,23 @@ class Mapcachefile extends \app\inc\Controller
             <service type="ve" enabled="true"/>
             <errors>report</errors>
             <lock_dir>/tmp</lock_dir>
+
+            <!-- start extra -->
+
+            <?php
+            $sources = \app\controllers\Mapcache::getSources();
+            foreach ($sources as $source) {
+                echo $source . "\n";
+            }
+
+            $tileSets = \app\controllers\Mapcache::getTileSets();
+            foreach ($tileSets as $tileSet) {
+                echo $tileSet . "\n";
+            }
+            ?>
+
+            <!-- end extra -->
+
         </mapcache>
         <?php
         $data = ob_get_clean();
