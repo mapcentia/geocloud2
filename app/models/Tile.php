@@ -53,7 +53,8 @@ class Tile extends Model
             "symbolscaledenom",
             "geotype",
             "offsite",
-            "format"
+            "format",
+            "lock"
         );
         $oldData = $this->get();
         $newData = array();

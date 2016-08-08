@@ -14,9 +14,9 @@ class Mapcachefile extends \app\inc\Controller
 
     public function get_index()
     {
-        $cache = "disk";
-        //$cache = "sqlite";
-        $postgisObject = new Model(App::$param['path'] . "app/tmp/" . Connection::$param['postgisdb'] . ".sqlite3");
+        //$cache = "disk";
+        $cache = "sqlite";
+        $postgisObject = new Model();
         ob_start(); ?>
 
         <mapcache>
@@ -26,7 +26,7 @@ class Mapcachefile extends \app\inc\Controller
                 <url><?php echo App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
             </metadata>
             <cache name="sqlite" type="sqlite3">
-                <dbfile><?php echo App::$param['path'] . "app/tmp/" . Connection::$param['postgisdb'] . ".sqlite3"; ?></dbfile>
+                <dbfile><?php echo App::$param['path'] . "app/wms/sqlite/" . Connection::$param['postgisdb'] . ".sqlite3"; ?></dbfile>
                 <symlink_blank/>
             </cache>
 

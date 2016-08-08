@@ -52,6 +52,10 @@ tileLayer.init = function (record) {
             },
             {
                 name: 'format'
+            },
+            {
+                name: 'lock',
+                type: 'boolean'
             }
         ],
         listeners: {
@@ -108,7 +112,8 @@ tileLayer.init = function (record) {
             meta_buffer: 'Meta buffer size (px)' + __('Area around the tile or metatile that will be cut off to prevent some edge artifacts.', true),
             ttl: 'Time to live (TTL)' + __('This is expressed as number of seconds after creation date of the tile. This is the value that will be set in the HTTP Expires and Cache-Control headers, and has no effect on the actual expiration of tiles in the caches.', true),
             auto_expire: 'Auto expire' + __('Tiles older (in seconds) than this value will be re-requested and updated in the cache. Note that this will only delete tiles from the cache when they are accessed: You cannot use this configuration to limit the size of the created cache. Note that, if set, this value overrides the value given by "Time to live".', true),
-            format: 'Format' + __('Image format that will be used to return tile data to clients. Defaults to PNG.', true)
+            format: 'Format' + __('Image format that will be used to return tile data to clients. Defaults to PNG.', true),
+            lock: 'Lock' + __("Lock the tile cache, so it can not be busted.", true)
         },
 
         customEditors: {

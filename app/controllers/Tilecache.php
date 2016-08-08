@@ -78,7 +78,7 @@ class Tilecache extends \app\inc\Controller
                 $this->type = trim($bits[1]);
             }
             // Send text/xml instead of application/vnd.ogc.se_xml
-            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml"){
+            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
             } elseif ($bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
@@ -105,50 +105,80 @@ class Tilecache extends \app\inc\Controller
             if (!$response['success']) {
                 return $response;
             }
-            $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/" . Input::getPath()->part(5) . ".*";
+            $searchStr = Input::getPath()->part(5) . ".%";
         } else {
             $parts = explode(".", Input::getPath()->part(4));
-            $layer = $parts[0] . "." . $parts[1];
+            $searchStr = $parts[0] . "." . $parts[1];
             $response = $this->auth(Input::getPath()->part(4), array("all" => true, "write" => true));
 
             if (!$response['success']) {
                 return $response;
             }
-            $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/" . $layer;
         }
-        $dir = str_replace("..", "", $dir);
-        //$dirReal = realpath($dir); // Do not work on *
-        if ($dir) {
-            exec("rm -R {$dir}");
-            if (strpos($dir, ".*") !== false) {
-                $dir = str_replace(".*", "", $dir);
-                exec("rm -R {$dir}");
+        if ($searchStr) {
+            $res = self::deleteFromTileset($searchStr, Connection::$param["postgisdb"]);
+            if (!$res["success"]) {
+                $response['success'] = false;
+                $response['message'] = $res["message"];
+                $response['code'] = '403';
+                return $response;
             }
-            $respons['success'] = true;
-            $respons['message'] = "Tile cache deleted";
+            $response['success'] = true;
+            $response['message'] = "Tile cache deleted";
         } else {
-            $respons['success'] = false;
-            $respons['message'] = "No tile cache to delete.";
+            $response['success'] = false;
+            $response['message'] = "No tile cache to delete.";
         }
-        return Response::json($respons);
+        return Response::json($response);
     }
 
     static function bust($layer)
     {
-        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/" . $layer;
-        $dir = str_replace("..", "", $dir);
-        if ($dir) {
-            exec("rm -R {$dir}");
-            if (strpos($dir, ".*") !== false) {
-                $dir = str_replace(".*", "", $dir);
-                exec("rm -R {$dir}");
-            }
-            $respons['success'] = true;
-            $respons['message'] = "Tile cache deleted";
-        } else {
-            $respons['success'] = false;
-            $respons['message'] = "No tile cache to delete.";
+        $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
+        if (!$res["success"]) {
+            $response['success'] = false;
+            $response['message'] = $res["message"];
+            $response['code'] = '406';
+            return $response;
         }
-        return $respons;
+        $response['success'] = true;
+        $response['message'] = "Tile cache deleted";
+        return $response;
+    }
+
+    private function deleteFromTileset($searchStr, $dbName)
+    {
+        $layer = new \app\models\Layer();
+        $meta = $layer->getAll(false, $searchStr, true, false, true, false);
+        if ($meta["data"][0]["def"]->lock) {
+            $response['success'] = false;
+            $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
+            $response['code'] = '406';
+            return $response;
+        }
+
+        try {
+            $db = new \SQLite3(App::$param['path'] . "app/wms/sqlite/" . $dbName . ".sqlite3");
+        } catch (\Exception $exception) {
+            // sqlite3 throws an exception when it is unable to connect
+            $response['success'] = false;
+            $response['message'] = $exception->getMessage();
+            $response['code'] = '406';
+
+            return $response;
+        }
+        $oper = (strpos($searchStr, "%")) ? "LIKE" : "=";
+
+        $result = $db->query("DELETE FROM tiles WHERE tileset {$oper} '{$searchStr}'");
+        if (!$result) {
+            $response['success'] = false;
+            $response['message'] = $db->lastErrorMsg();
+            $response['code'] = '406';
+
+            return $response;
+        }
+        //$db->query("VACUUM");
+        $response['success'] = true;
+        return $response;
     }
 }
