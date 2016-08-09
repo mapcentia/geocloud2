@@ -5,7 +5,7 @@ header("Content-type: text/plain");
 
 $dir = "/var/www/geocloud2/app";
 
-if (file_exists($dir . "/files")) {
+if (file_exists($dir . "/tmp/_gc2_bitmaps_moved")) {
     die("Seems that bitmaps are moved. Doing nothing.\n");
 }
 
@@ -15,15 +15,16 @@ if ($handle = opendir($dir . "/tmp")) {
             $bitmapDir = $dir . "/tmp/" . $entry . "/__bitmaps";
 
             if (file_exists($bitmapDir)) {
-                mkdir($dir . "/files");
-                mkdir($dir . "/files/{$entry}");
-                rcopy($bitmapDir, $dir . "/files/{$entry}/__bitmaps");
+                mkdir($dir . "/wms/files/{$entry}");
+                rcopy($bitmapDir, $dir . "/wms/files/{$entry}/__bitmaps");
             }
 
         }
     }
     closedir($handle);
 }
+
+touch ($dir . "/tmp/_gc2_bitmaps_moved");
 
 // Function to Copy folders and files
 function rcopy($src, $dst) {

@@ -23,6 +23,7 @@ public/scheduler/sass
 !app/wms/mapcache/.gitignore
 !app/wms/qgsfiles/.gitignore
 !app/wms/sqlitefiles/.gitignore
+!app/wms/files/.gitignore
 !app/conf/mapcache/sources
 !app/conf/mapcache/sources/.gitignore
 !app/conf/mapcache/tilesets

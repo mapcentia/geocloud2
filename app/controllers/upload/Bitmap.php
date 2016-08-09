@@ -14,7 +14,7 @@ class Bitmap extends \app\inc\Controller
     function post_index()
     {
         @set_time_limit(5 * 60);
-        $mainDir = App::$param['path'] . "/app/files/" . Connection::$param["postgisdb"];
+        $mainDir = App::$param['path'] . "/app/wms/files/" . Connection::$param["postgisdb"];
         $targetDir = $mainDir ."/__bitmaps";
 
         $cleanupTargetDir = true;

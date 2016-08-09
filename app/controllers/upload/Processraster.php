@@ -11,7 +11,7 @@ class Processraster extends \app\inc\Controller
 {
     public function get_index()
     {
-        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__bitmaps";
+        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__raster";
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
 
         if (is_numeric($safeName[0])) {
@@ -64,12 +64,12 @@ class Processraster extends \app\inc\Controller
                 $class->insert();
                 $class->update("0", \app\models\Classification::createClass("POLYGON"));
             }
-            if ($_REQUEST['displayfile']) {
+           /* if ($_REQUEST['displayfile']) {
                 $join = new Table("settings.geometry_columns_join");
                 $json = '{"data":{"bitmapsource":"' . $_REQUEST['file'] . '","_key_":"' . $key . '"}}';
                 $data = (array)json_decode(urldecode($json));
                 $join->updateRecord($data, "_key_");
-            }
+            }*/
 
         } else {
             $response['success'] = false;
