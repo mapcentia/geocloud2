@@ -158,7 +158,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/sqlite/" . $dbName . ".sqlite3");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/sqlitefiles/" . $dbName . ".sqlite3");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
