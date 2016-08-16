@@ -130,7 +130,7 @@ class Job extends \app\inc\Model
         exec("crontab -r");
         foreach ($jobs["data"] as $job) {
             if (!$job["delete_append"]) $job["delete_append"] = "0";
-            $cmd = "crontab -l | { cat; echo '{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . base64_encode($job["extra"]) . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n'; } | crontab - 2>&1";
+            $cmd = "crontab -l | { cat; echo \"{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"\\\"\"" . urldecode($job["url"]) ."\"\\\"\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . base64_encode($job["extra"]) . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n\"; } | crontab - 2>&1";
             $out = exec($cmd);
             if ($out) {
                 return $out . " ({$job["id"]})";
