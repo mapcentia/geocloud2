@@ -220,7 +220,7 @@ module.exports = function (grunt) {
                 command: 'cd /var/www/geocloud2/app/conf/migration/ && ./move_bitmaps'
             },
             chown: {
-                command: 'chown www-data:www-data -R /var/www/geocloud2/app/files'
+                command: 'chown www-data:www-data -R /var/www/geocloud2/app/wms/files'
             }
         }
     });
