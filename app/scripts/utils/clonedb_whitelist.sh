@@ -94,12 +94,12 @@ pg_restore dump.bak --no-owner --dbname=$targetdb
 # Disconnect all from the old db
 psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
-WHERE pg_stat_activity.datname = 'ballerup'
+WHERE pg_stat_activity.datname = '$sourcedb'
   AND pid <> pg_backend_pid();"
 
 # Rename target to old
-psql postgres -c "drop database ballerup"
-psql postgres -c "alter database $targetdb rename to ballerup"
+psql postgres -c "drop database $sourcedb"
+psql postgres -c "alter database $targetdb rename to $sourcedb"
 
 #Clean up
 rm dump.bak
