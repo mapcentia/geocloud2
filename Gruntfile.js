@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             publish: {
                 files: {
                     'public/js/leaflet/leaflet-all.js': [
-                        'public/js/leaflet/leaflet.js',
+                        'public/js/leaflet/leaflet-0.7.7-src.js',
                         'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
                         'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js',
                         'public/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',

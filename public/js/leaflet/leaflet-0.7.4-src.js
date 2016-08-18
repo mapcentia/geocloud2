@@ -7,7 +7,7 @@
     var oldL = window.L,
         L = {};
 
-    L.version = '0.7.7';
+    L.version = '0.7.4';
 
 // define Leaflet for Node module pattern loaders, including Browserify
     if (typeof module === 'object' && typeof module.exports === 'object') {
@@ -520,7 +520,7 @@
 
             mobile = typeof orientation !== undefined + '',
             msPointer = !window.PointerEvent && window.MSPointerEvent,
-            pointer = (window.PointerEvent && window.navigator.pointerEnabled) ||
+            pointer = (window.PointerEvent && window.navigator.pointerEnabled && window.navigator.maxTouchPoints) ||
                 msPointer,
             retina = ('devicePixelRatio' in window && window.devicePixelRatio > 1) ||
                 ('matchMedia' in window && window.matchMedia('(min-resolution:144dpi)') &&
@@ -3537,8 +3537,12 @@
 
         update: function () {
             if (this._icon) {
-                this._setPos(this._map.latLngToLayerPoint(this._latlng).round());
+                var pos = this._map.latLngToLayerPoint(this._latlng).round();
+                L.Util.requestAnimFrame(function () {
+                    this._setPos(pos);
+                }, this);
             }
+
             return this;
         },
 
@@ -4389,9 +4393,7 @@
                 layer = this._layers[layer];
             }
 
-            if ('off' in layer) {
-                layer.off(L.FeatureGroup.EVENTS, this._propagateEvent, this);
-            }
+            layer.off(L.FeatureGroup.EVENTS, this._propagateEvent, this);
 
             L.LayerGroup.prototype.removeLayer.call(this, layer);
 
@@ -4711,7 +4713,7 @@
         },
 
         _fireMouseEvent: function (e) {
-            if (!this._map || !this.hasEventListeners(e.type)) { return; }
+            if (!this.hasEventListeners(e.type)) { return; }
 
             var map = this._map,
                 containerPoint = map.mouseEventToContainerPoint(e),
@@ -7160,7 +7162,7 @@
                 case 'touchmove':
                     return this.addPointerListenerMove(obj, type, handler, id);
                 default:
-                   // throw 'Unknown touch event type';
+                    //throw 'Unknown touch event type';
             }
         },
 
@@ -7169,9 +7171,8 @@
                 pointers = this._pointers;
 
             var cb = function (e) {
-                if (e.pointerType !== 'mouse' && e.pointerType !== e.MSPOINTER_TYPE_MOUSE) {
-                    L.DomEvent.preventDefault(e);
-                }
+
+                L.DomEvent.preventDefault(e);
 
                 var alreadyInArray = false;
                 for (var i = 0; i < pointers.length; i++) {
@@ -8942,13 +8943,11 @@
 
             L.DomUtil.removeClass(this._mapPane, 'leaflet-zoom-anim');
 
-            L.Util.requestAnimFrame(function () {
-                this._resetView(this._animateToCenter, this._animateToZoom, true, true);
+            this._resetView(this._animateToCenter, this._animateToZoom, true, true);
 
-                if (L.Draggable) {
-                    L.Draggable._disabled = false;
-                }
-            }, this);
+            if (L.Draggable) {
+                L.Draggable._disabled = false;
+            }
         }
     });
 
