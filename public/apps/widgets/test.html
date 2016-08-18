@@ -2,98 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Widget with a vector overlay</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="/apps/widgets/gc2map/js/gc2map.js"></script>
-    <script src="/apps/widgets/gc2table/js/gc2table.js"></script>
-    <script src="/apps/widgets/gc2map/js/searchModules/danish.js"></script>
-
-
+    <title>Map with custom Awesome Markers and pop-up</title>
+    <script src="/api/v3/js/geocloud.php"></script>
 </head>
 <body>
-<div>
-    <div style="position:relative" id="map"></div>
-    <!--<div>
-        <table id="dtable" data-show-toggle="true" data-show-export="true" data-show-columns="true"
-               data-filter-control="true"></table>
-    </div>-->
-</div>
-
+<div style="width: 500px;height: 500px; position: relative" id="map"></div>
 </body>
 <script>
-    function operateFormatter(value, row, index) {
-        return "<a target='_blank' href='" + value + "'>Link</a>";
-    }
-
-    gc2map.init({
-        //key: "map",
-        db: 'mydb',
-        layers: ["public.ne_10m_populated_places","public.airbnb"],
-        //zoom: [0, 0, 1],
-        extent: [9.638452,55.67564,10.645074,56.260507],
-        baseLayers: [{"id": "osm", "name": "OSM"}, {id: "googleStreets", "name": "Google Streets"},{id: "public.ne_50m_admin_0_countries_lakes", name: "test"}],
-        setBaseLayer: 'osm',
-        width: '100%',
-        height: '300px',
-        //callBack: function (m, w) {
-         /*   m.map.setView([56, 9], 3);
-            gc2map.createSearch(m, "101");
-            $("#custom-search-form").show();
-            var store = new geocloud.sqlStore({
-                db: "mydb",
-                sql: "SELECT * FROM public.cafes WHERE ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) LIMIT 20",
-                styleMap: function (feature) {
-                    return {
-                        fillColor: (function (d) {
-                            return d === "Afløbssystemet" ? '#fbb4ae' :
-                                    d === "Badevand" ? '#b3cde3' :
-                                            d === "Skybrudssikring" ? '#ccebc5' : "#ff0000"
-
-                        }(feature.properties.hovedtype)),
-                        weight: 1,
-                        opacity: 1,
-                        color: "#000",
-                        fillOpacity: 0.5
-                    }
-                },
-                onLoad: function () {
-
-                    //m.zoomToExtentOfgeoJsonStore(store);
-                }
-            });
-            // Add the store as a vector overlay
-            m.addGeoJsonStore(store);
-            store.load();
-
-            var cm = [
-                {
-                    "header": "license",
-                    "dataIndex": "license",
-                    "type": "varchar",
-                },
-                {
-                    "header": "name",
-                    "dataIndex": "name",
-                    filterControl: "select"
-                },
-                {
-                    "header": "phone",
-                    "dataIndex": "phone",
-                    formatter: "operateFormatter"
-                }
-            ];
-
-            gc2table.init({
-                el: "#dtable",
-                geocloud2: m,
-                store: store,
-                cm: cm,
-                autoUpdate: true,
-                setViewOnSelect: true,
-                openPopUp: true,
-                setSelectedStyle: true
-            });*/
-        //}
+    // Initiate a geocloud object
+    var gc2 = new geocloud.map({
+        el: "map"
     });
+
+    // Add a base layer
+    gc2.addBaseLayer("osm");
+
+    // Set a base layer active
+    gc2.setBaseLayer("osm");
+
+    // Create a GeoJSON store with a SELECT query
+    var store = new geocloud.geoJsonStore({
+        db: "mydb",
+        sql: "SELECT * FROM public.airbnb limit 10",
+
+        // Cache the SELECT query on the server for an hour
+        lifetime: 3600,
+
+        // Bind a popup to each point
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup("Hello world");
+        },
+
+        // Make Awesome Markers instead of simple vector point features
+        pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+                icon: L.AwesomeMarkers.icon({
+                            icon: 'star',
+                            markerColor: 'blue',
+                            prefix: 'fa'
+                        }
+                )
+            });
+        }
+    });
+
+    // Add the store as a vector overlay
+    gc2.addGeoJsonStore(store);
+
+    // Define a callback for when the SQL returns
+    store.onLoad = function () {
+
+        // Zoom to vector layer
+        gc2.zoomToExtentOfgeoJsonStore(this);
+    };
+
+    // Run the SQL and load the data
+    store.load();
 </script>
 </html>

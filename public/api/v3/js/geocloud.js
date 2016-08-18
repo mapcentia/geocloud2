@@ -608,7 +608,7 @@ geocloud = (function () {
             $('<link/>').attr({
                 rel: 'stylesheet',
                 type: 'text/css',
-                href: host + '/js/leaflet/leaflet.css'
+                href: host + '/js/leaflet/leaflet-0.7.7.css'
             }).appendTo('head');
         }
         this.bingApiKey = null;
