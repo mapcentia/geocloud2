@@ -156,6 +156,8 @@ class Table extends Model
             $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         }
         $result = $this->execQuery($sql);
+
+        // Check if VIEW
         $sql = "SELECT table_schema,table_name,view_definition FROM information_schema.views WHERE table_schema = :sSchema";
         $resView = $this->prepare($sql);
         try {
@@ -170,6 +172,22 @@ class Table extends Model
             $views[$row["table_name"]] = true;
             $viewDefinitions[$row["table_name"]] = $row["view_definition"];
         }
+
+        // Check if FOREIGN TABLE
+        $sql = "SELECT foreign_table_schema,foreign_table_name,foreign_server_name FROM information_schema.foreign_tables WHERE foreign_table_schema = :sSchema";
+        $resView = $this->prepare($sql);
+        try {
+            $resView->execute(array("sSchema" => $whereClause));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($resView, "assoc")) {
+            $foreignTables[$row["foreign_table_name"]] = true;
+        }
+
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
@@ -194,13 +212,20 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                     $arr = $this->array_push_assoc($arr, "hasPkey", $this->hasPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}"));
                 }
+
                 if (isset($views[$row['f_table_name']])) {
                     $arr = $this->array_push_assoc($arr, "isview", true);
                     $arr = $this->array_push_assoc($arr, "viewdefinition", $viewDefinitions[$row['f_table_name']]);
-
                 } else {
                     $arr = $this->array_push_assoc($arr, "isview", false);
                     $arr = $this->array_push_assoc($arr, "viewdefinition", null);
+
+                }
+
+                if (isset($foreignTables[$row['f_table_name']])) {
+                    $arr = $this->array_push_assoc($arr, "isforeign", true);
+                } else {
+                    $arr = $this->array_push_assoc($arr, "isforeign", false);
 
                 }
                 // Is indexed?

@@ -215,7 +215,13 @@ $(window).ready(function () {
             forceFit: true,
             stripeRows: true,
             getRowClass: function (record) {
-                return record.json.isview ? 'isview' : null;
+                if (record.json.isview) {
+                    return 'isview';
+                }
+                if (record.json.isforeign) {
+                    return 'isforeign';
+
+                }
             }
         },
         height: (Ext.getBody().getViewSize().height / 2),

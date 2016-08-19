@@ -346,6 +346,10 @@ q:after, q:before {
     background-color: #d0e7ff;
 }
 
+.isforeign {
+    background-color: #ffe7d0;
+}
+
 #spinner {
     position: absolute;
     top: 3px;
