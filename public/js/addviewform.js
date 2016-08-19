@@ -36,6 +36,18 @@ addView.init = function () {
                 xtype: 'textarea',
                 name: 'select',
                 emptyText: __('SELECT ...')
+            },
+            {
+                xtype: 'container',
+                html: __('Materialize')
+            },
+            {
+                xtype: 'checkbox',
+                name: 'matview'
+            },
+            {
+                xtype: 'container',
+                height: 20
             }
         ],
 
@@ -50,7 +62,7 @@ addView.init = function () {
                         if (Ext.isNumber(safeName.charAt(0))) {
                             safeName = "_" + safeName;
                         }
-                        var param = "q=CREATE VIEW " + schema + "." + safeName + " AS " + encodeURIComponent(values.select) + "&key=" + settings.api_key;
+                        var param = "q=CREATE " + (values.matview === "on" ? "MATERIALIZED" : "") + " VIEW " + schema + "." + safeName + " AS " + encodeURIComponent(values.select) + "&key=" + settings.api_key;
                         Ext.Ajax.request({
                             url: '/api/v1/sql/' + screenName,
                             method: 'post',

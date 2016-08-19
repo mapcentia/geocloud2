@@ -35,6 +35,7 @@ $(window).ready(function () {
         success: function (data) {
             fieldsForStore = data.forStore;
             fieldsForStore.push({name: "indexed_in_es", type: "bool"});
+            fieldsForStore.push({name: "reltype", type: "text"});
         }
     });
     $.ajax({
@@ -215,13 +216,14 @@ $(window).ready(function () {
             forceFit: true,
             stripeRows: true,
             getRowClass: function (record) {
-                if (record.json.isview) {
-                    return 'isview';
-                }
-                if (record.json.isforeign) {
-                    return 'isforeign';
+                /*if (record.json.isview) {
+                 return 'isview';
+                 } else if (record.json.ismatview) {
+                 return 'ismatview';
+                 } else if (record.json.isforeign) {
+                 return 'isforeign';
 
-                }
+                 }*/
             }
         },
         height: (Ext.getBody().getViewSize().height / 2),
@@ -241,6 +243,23 @@ $(window).ready(function () {
                 menuDisabled: true
             },
             columns: [
+                {
+                    header: __("Relation"),
+                    dataIndex: "reltype",
+                    tooltip: "T) Table<br>V) View<br>MV) Materialized view <br>FT) Foreign table",
+                    sortable: true,
+                    editable: false,
+                    width: 50,
+                    flex: 1,
+                    renderer: function (v, p) {
+                        var c;
+                        c = v === "v" ? "#a6cee3" :
+                            v === "mv" ? "#b2df8a" :
+                                v === "ft" ? "#fb9a99" : "#fdbf6f";
+                        console.log(c)
+                        return "<i style='color: " + c + "' class='fa fa-circle' aria-hidden='true'></i> " + v.toUpperCase() + "";
+                    }
+                },
                 {
                     header: __("Name"),
                     dataIndex: "f_table_name",
@@ -935,7 +954,7 @@ $(window).ready(function () {
                                                 height: 100,
                                                 fieldLabel: __('View definition'),
                                                 name: 'viewdefinition',
-                                                value: r.json.viewdefinition,
+                                                value: r.json.viewdefinition || r.json.matviewdefinition,
                                                 disabled: true
                                             }]
                                     }

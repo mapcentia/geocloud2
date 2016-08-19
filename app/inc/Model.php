@@ -88,7 +88,8 @@ class Model
         }
     }
 
-    function hasPrimeryKey($table) {
+    function hasPrimeryKey($table)
+    {
         unset($this->PDOerror);
         $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
         $result = $this->execQuery($query);
@@ -207,43 +208,40 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        if ($addGeomType) {
-            $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable,
-                    f.type,
-                    f.srid
-                FROM
-                     information_schema.columns AS g JOIN
-                     geometry_columns AS f
-                         ON (g.table_schema = f.f_table_schema AND g.table_name = f.f_table_name )
-                WHERE
-                    table_schema = :schema AND table_name = :table";
-        } else {
-            $sql = "SELECT
-                    g.column_name, g.ordinal_position, g.udt_name, g.is_nullable
-                FROM
-                     information_schema.columns AS g
-                WHERE
-                    table_schema = :schema AND table_name = :table";
-        }
+        $sql = "SELECT
+                  attname                          AS column_name,
+                  attnum                           AS ordinal_position,
+                  atttypid :: REGTYPE              AS udt_name,
+                  attnotnull                       AS is_nullable,
+                  format_type(atttypid, atttypmod) AS full_type
+                FROM pg_attribute
+                WHERE attrelid = :table :: REGCLASS
+                        AND attnum > 0
+                        AND NOT attisdropped";
+
         $res = $this->prepare($sql);
         try {
-            $res->execute(array("schema" => $_schema, "table" => $_table));
+            $res->execute(array("table" => $_schema . "." . $_table));
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
             return $response;
         }
-
         while ($row = $this->fetchRow($res)) {
             $arr[$row["column_name"]] = array(
                 "num" => $row["ordinal_position"],
                 "type" => $row["udt_name"],
-                "is_nullable" => $row['is_nullable'] == "YES" ? true: false,
-                "srid" => ($row["udt_name"] == "geometry") ? $row["srid"] : null,
-                "geom_type" => ($row["udt_name"] == "geometry") ? $row["type"] : null,
+                "full_type" => $row['full_type'],
+                "is_nullable" => $row['is_nullable'] ? false : true,
             );
+            // Get type and srid of geometry
+            if ($row["udt_name"] == "geometry") {
+                preg_match("/[A-Z]\w+/", $row["full_type"], $matches);
+                $arr[$row["column_name"]]["geom_type"] = $matches[0];
+                preg_match("/[0-9]+/", $row["full_type"], $matches);
+                $arr[$row["column_name"]]["srid"] = $matches[0];
+            }
         }
         return ($arr);
     }
@@ -395,6 +393,8 @@ class Model
     public function isTableOrView($table)
     {
         $bits = explode(".", $table);
+
+        // Check if table
         $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '{$bits[0]}' AND tablename='{$bits[1]}'";
         $res = $this->prepare($sql);
         try {
@@ -408,10 +408,12 @@ class Model
         }
         $row = $this->fetchRow($res);
         if ($row["count"] > 0) {
-            $response['data'] = "table";
+            $response['data'] = "TABLE";
             $response['success'] = true;
             return $response;
         }
+
+        // Check if view
         $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '{$bits[0]}' AND viewname='{$bits[1]}'";
         $res = $this->prepare($sql);
         try {
@@ -425,10 +427,48 @@ class Model
         }
         $row = $this->fetchRow($res);
         if ($row["count"] > 0) {
-            $response['data'] = "view";
+            $response['data'] = "VIEW";
             $response['success'] = true;
             return $response;
         }
+
+        // Check if materialized view
+        $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '{$bits[0]}' AND matviewname='{$bits[1]}'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $this->rollback();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        if ($row["count"] > 0) {
+            $response['data'] = "MATERIALIZED VIEW";
+            $response['success'] = true;
+            return $response;
+        }
+
+        // Check if FOREIGN TABLE
+        $sql = "SELECT count(*) FROM information_schema.foreign_tables WHERE foreign_table_schema='{$bits[0]}' AND  foreign_table_name='{$bits[1]}'";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        if ($row["count"] > 0) {
+            $response['data'] = "FOREIGN TABLE";
+            $response['success'] = true;
+            return $response;
+        }
+
         $response['success'] = false;
         $response['message'] = "Relation doesn't exists";
         $response['code'] = 406;
