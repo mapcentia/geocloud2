@@ -4,6 +4,7 @@ namespace app\controllers\upload;
 use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Input;
+use \app\inc\Model;
 
 class Processqgis extends \app\inc\Controller
 {
@@ -99,7 +100,8 @@ class Processqgis extends \app\inc\Controller
 
         }
         $path = App::$param['path'] . "/app/wms/qgsfiles/";
-        $name = "parsed_" . $file;
+        $firstName = explode(".", $file)[0];
+        $name = "parsed_" . Model::toAscii($firstName) . ".qgs";
         for ($i = 0; $i < sizeof($arrT); $i++) {
             $layer = $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "." . $arrG[$i][1][0];
             $layers[] = $layer;
