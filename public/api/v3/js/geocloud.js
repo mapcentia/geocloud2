@@ -344,7 +344,6 @@ geocloud = (function () {
         this.abort = function () {
             xhr.abort();
         }
-
     };
 
     tweetStore = function (config) {
