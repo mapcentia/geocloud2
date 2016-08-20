@@ -3334,6 +3334,3 @@ $(window).ready(function () {
         }
     };
 });
-
-
-

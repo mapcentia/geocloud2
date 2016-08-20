@@ -326,7 +326,7 @@ $(document).ready(function () {
     gc2.map = map;
     getMetaData = function () {
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema,
+            url: '/controllers/layer/records',
             async: true,
             dataType: 'json',
             type: 'GET',
@@ -355,8 +355,8 @@ $(document).ready(function () {
         width: 400,
         height: 400,
         closeAction: 'hide',
-        x: 100,
-        y: 100,
+        x: 400,
+        y: 150,
         plain: true,
         listeners: {
             hide: {
@@ -575,7 +575,7 @@ $(document).ready(function () {
             }
         ];
         $.ajax({
-            url: '/api/v1/meta/' + screenName + '/' + schema,
+            url: '/controllers/layer/records',
             dataType: 'json',
             type: 'GET',
             success: function (response) {
@@ -618,8 +618,15 @@ $(document).ready(function () {
                             if (response.data[u].layergroup === arr[i]) {
                                 id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
                                 if (response.data[u].type) {
+                                    var t, c, v = response.data[u].reltype;
+                                    c = v === "v" ? "#a6cee3" :
+                                        v === "mv" ? "#b2df8a" :
+                                            v === "ft" ? "#fb9a99" : "#fdbf6f";
+                                    t = v === "v" ? "VIEW" :
+                                        v === "mv" ? "MATERIALIZED VIEW" :
+                                            v === "ft" ? "FOREIGN TABLE" : "TABLE";
                                     l.push({
-                                        text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                        text: "<i style='color: " + c + "' class='fa fa-circle' aria-hidden='true'></i> <span ext:qtip='" + t + "<br>" + response.data[u]._key_ + "'>" + ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + "</span><span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
                                         id: id,
                                         leaf: true,
                                         checked: false,
@@ -630,7 +637,7 @@ $(document).ready(function () {
                             }
                         }
                         treeConfig.push({
-                            text: arr[i],
+                            text: arr[i] || "<font color='red'>Ungrouped</font>",
                             isLeaf: false,
                             singleClickExpand: true,
                             expanded: false,
@@ -1032,7 +1039,7 @@ $(document).ready(function () {
                         border: false,
                         closeAction: 'hide',
                         html: '<div style="padding: 5px" id="searchContent"><input style="width: 270px" type="text" id="gAddress" name="gAddress" value="" /></div>',
-                        x: 250,
+                        x: 450,
                         y: 35
                     });
                 }
@@ -1270,7 +1277,7 @@ $(document).ready(function () {
                 border: false,
                 closeAction: 'hide',
                 html: '<div style="padding: 5px"><div id="output" style="height: 20px; margin-bottom: 10px"></div><div>' + __("Close this window to disable measure tool") + '</div></div>',
-                x: 250,
+                x: 450,
                 y: 35,
                 listeners: {
                     hide: {
