@@ -44,31 +44,24 @@ class Layer extends \app\models\Table
     // Secure. Using prepared statements.
     public function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
     {
-        // TODO use the function settings.getColumns() instead
         $where = ($auth) ?
-            "(authentication<>'foo' OR authentication is NULL)" :
-            "(authentication='Write' OR authentication='None')";
+            "(authentication<>''foo'' OR authentication is NULL)" :
+            "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
         if ($schema) {
             $ids = explode(",", $schema);
-            $qMarks = str_repeat('?,', count($ids) - 1) . '?';
-            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema in ($qMarks) ORDER BY sort";
+            $schemaStr = "''" . implode("'',''" , $ids) . "''";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY sort";
         } elseif ($layer) {
-            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} AND f_table_schema = :sSchema AND f_table_name = :sName ORDER BY sort";
+            $split = explode(".", $layer);
+            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY sort";
         } else {
-            $sql = "SELECT *, ({$case}) as sort FROM settings.geometry_columns_view WHERE {$where} ORDER BY sort";
+            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort";
         }
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $res = $this->prepare($sql);
         try {
-            if ($schema) {
-                $res->execute($ids);
-            } elseif ($layer) {
-                $split = explode(".", $layer);
-                $res->execute(array("sSchema" => $split[0], "sName" => $split[1]));
-            } else {
                 $res->execute();
-            }
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -80,9 +73,7 @@ class Layer extends \app\models\Table
             $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
             $resVersioning = $this->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
             $versioning = $resVersioning["exists"];
-
             if ($row['type'] != "RASTER" && $includeExtent == true) {
-
                 $srsTmp = "900913";
                 $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
                 $resExtent = $this->prepare($sql);
@@ -182,7 +173,7 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
             }
-            // Session is sub-user we always check privileges
+            // If session is sub-user we always check privileges
             if (isset($_SESSION) && $_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {

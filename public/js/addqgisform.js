@@ -21,7 +21,7 @@ addQgis.init = function () {
         afterRender: function () {
             var arr = [], ext = ["qgs"], flag = false;
             $("#shape_uploader").pluploadQueue({
-                runtimes: 'html5, flash',
+                runtimes: 'html5',
                 url: '/controllers/upload/qgis',
                 max_file_size: '2000mb',
                 chunk_size: '1mb',

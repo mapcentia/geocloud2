@@ -47,6 +47,7 @@ class Table extends Model
             $this->exits = false;
         } else {
             $this->metaData = $this->getMetaData($this->table, $temp, $addGeomType);
+            //die(print_r($this->metaData, true));
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
@@ -103,7 +104,6 @@ class Table extends Model
         } elseif (preg_match("/timestamptz/", $field['type'])) {
             $field['typeObj'] = array("type" => "timestamptz");
             $field['type'] = "timestamptz";
-
         } elseif (preg_match("/date/", $field['type'])) {
             $field['typeObj'] = array("type" => "date");
             $field['type'] = "date";
@@ -143,7 +143,9 @@ class Table extends Model
         $response['message'] = "Layers loaded";
         $response['data'] = array();
         $views = array();
+        $matViews = array();
         $viewDefinitions = array();
+        $matViewDefinitions = array();
 
         $whereClause = Connection::$param["postgisschema"];
         if ($whereClause) {
@@ -156,7 +158,9 @@ class Table extends Model
             $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         }
         $result = $this->execQuery($sql);
-        $sql = "SELECT table_schema,table_name,view_definition FROM information_schema.views WHERE table_schema = :sSchema";
+
+        // Check if VIEW
+        $sql = "SELECT schemaname,viewname,definition FROM pg_views WHERE schemaname = :sSchema";
         $resView = $this->prepare($sql);
         try {
             $resView->execute(array("sSchema" => $whereClause));
@@ -167,13 +171,46 @@ class Table extends Model
             return $response;
         }
         while ($row = $this->fetchRow($resView, "assoc")) {
-            $views[$row["table_name"]] = true;
-            $viewDefinitions[$row["table_name"]] = $row["view_definition"];
+            $views[$row["viewname"]] = true;
+            $viewDefinitions[$row["viewname"]] = $row["view_definition"];
         }
+
+        // Check if FOREIGN TABLE
+        $sql = "SELECT foreign_table_schema,foreign_table_name,foreign_server_name FROM information_schema.foreign_tables WHERE foreign_table_schema = :sSchema";
+        $resView = $this->prepare($sql);
+        try {
+            $resView->execute(array("sSchema" => $whereClause));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($resView, "assoc")) {
+            $foreignTables[$row["foreign_table_name"]] = true;
+        }
+
+        // Check if materialized view
+        $sql = "SELECT schemaname,matviewname,definition FROM pg_matviews WHERE schemaname = :sSchema";
+        $resView = $this->prepare($sql);
+        try {
+            $resView->execute(array("sSchema" => $whereClause));
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        while ($row = $this->fetchRow($resView, "assoc")) {
+            $matViews[$row["matviewname"]] = true;
+            $matViewDefinitions[$row["matviewname"]] = $row["definition"];
+        }
+
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
             if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
+                $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
                         $def = json_decode($row['def']);
@@ -194,15 +231,36 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
                     $arr = $this->array_push_assoc($arr, "hasPkey", $this->hasPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}"));
                 }
+
+                // IS VIEW
                 if (isset($views[$row['f_table_name']])) {
                     $arr = $this->array_push_assoc($arr, "isview", true);
                     $arr = $this->array_push_assoc($arr, "viewdefinition", $viewDefinitions[$row['f_table_name']]);
-
+                    $relType = "v";
                 } else {
                     $arr = $this->array_push_assoc($arr, "isview", false);
                     $arr = $this->array_push_assoc($arr, "viewdefinition", null);
-
                 }
+
+                // IS MATVIEW
+                if (isset($matViews[$row['f_table_name']])) {
+                    $arr = $this->array_push_assoc($arr, "ismatview", true);
+                    $arr = $this->array_push_assoc($arr, "matviewdefinition", $matViewDefinitions[$row['f_table_name']]);
+                    $relType = "mv";
+                } else {
+                    $arr = $this->array_push_assoc($arr, "ismatview", false);
+                    $arr = $this->array_push_assoc($arr, "matviewdefinition", null);
+                }
+
+                // IS FOREIGN
+                if (isset($foreignTables[$row['f_table_name']])) {
+                    $arr = $this->array_push_assoc($arr, "isforeign", true);
+                    $relType = "ft";
+                } else {
+                    $arr = $this->array_push_assoc($arr, "isforeign", false);
+                }
+                $arr = $this->array_push_assoc($arr, "reltype", $relType);
+
                 // Is indexed?
                 if (1 == 1) {
                     $type = $row['f_table_name'];
@@ -405,6 +463,7 @@ class Table extends Model
             $fieldsForStore[] = array("name" => "pkey", "type" => "string");
             $fieldsForStore[] = array("name" => "hasPkey", "type" => "bool");
         }
+
         $response["forStore"] = $fieldsForStore;
         $response["forGrid"] = $columnsForGrid;
         $response["type"] = $type;

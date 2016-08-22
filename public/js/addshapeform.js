@@ -21,7 +21,7 @@ addShape.init = function () {
         afterRender: function () {
             var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
-                runtimes: 'html5, flash',
+                runtimes: 'html5',
                 url: '/controllers/upload/vector',
                 max_file_size: '2000mb',
                 chunk_size: '1mb',

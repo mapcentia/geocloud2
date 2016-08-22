@@ -47,8 +47,7 @@ module.exports = function (grunt) {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             publish: {
                 files: {
-                    'public/js/leaflet/leaflet-all.js': [
-                        'public/js/leaflet/leaflet.js',
+                    'public/js/leaflet/leaflet-plugins-all.js': [
                         'public/js/leaflet/plugins/markercluster/leaflet.markercluster-src.js',
                         'public/js/leaflet/plugins/Leaflet.heat/leaflet-heat.js',
                         'public/js/leaflet/plugins/Leaflet.draw/leaflet.draw.js',
@@ -58,6 +57,14 @@ module.exports = function (grunt) {
                         'public/js/leaflet/plugins/Leaflet.GraphicScale/Leaflet.GraphicScale.min.js',
                         'public/js/leaflet/plugins/Leaflet.Locate/Leaflet.Locate.js',
                         'public/js/leaflet/plugins/Leaflet.Toolbar/leaflet.toolbar-src.js'
+                    ],
+                    'public/js/leaflet/cartodb-all.js': [
+                        'public/js/cartodb.js/cartodb.js',
+                        'public/js/leaflet/leaflet-plugins-all.js'
+                    ],
+                    'public/js/leaflet/leaflet-all.js': [
+                        'public/js/leaflet/leaflet-0.7.7-src.js',
+                        'public/js/leaflet/leaflet-plugins-all.js'
                     ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],

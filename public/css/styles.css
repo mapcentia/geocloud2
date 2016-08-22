@@ -345,6 +345,13 @@ q:after, q:before {
 .isview {
     background-color: #d0e7ff;
 }
+.ismatview {
+    background-color: #00e7ff;
+}
+
+.isforeign {
+    background-color: #ffe7d0;
+}
 
 #spinner {
     position: absolute;

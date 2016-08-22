@@ -22,7 +22,7 @@ addRasterFile.init = function () {
         afterRender: function () {
             var arr = [], ext = ["asc", "tif", "tiff", "gen", "php", "ecw"], srs, flag = false, displayFile;
             $("#shape_uploader").pluploadQueue({
-                runtimes: 'html5, flash',
+                runtimes: 'html5',
                 url: '/controllers/upload/raster',
                 max_file_size: '1000mb',
                 chunk_size: '1mb',

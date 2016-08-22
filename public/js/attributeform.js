@@ -113,7 +113,7 @@ attributeForm.init = function (layer, geomtype) {
         buttons: [
             {
                 //iconCls: 'silk-add',
-                text: "<i class='icon-ok btn-gc'></i> " + __("Update table"),
+                text: "<i class='fa fa-check'></i> " + __("Update table"),
                 handler: function () {
                     if (attributeForm.form.form.isValid()) {
                         var record = grid.getSelectionModel().getSelected();

@@ -21,7 +21,7 @@ addBitmap.init = function () {
         afterRender: function () {
             var arr = [], ext = ["tif", "tiff", "ecw"], srs, flag = false;
             $("#shape_uploader").pluploadQueue({
-                runtimes: 'html5, flash',
+                runtimes: 'html5',
                 url: '/controllers/upload/bitmap',
                 max_file_size: '4000mb',
                 chunk_size: '1mb',

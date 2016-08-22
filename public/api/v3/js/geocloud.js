@@ -84,9 +84,9 @@ geocloud = (function () {
             document.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'><\/script>");
         }
     }
-    var setHost = function(str){
-	host = str;
-}
+    var setHost = function (str) {
+        host = str;
+    }
     // Helper for extending classes
     extend = function (ChildClass, ParentClass) {
         ChildClass.prototype = new ParentClass();
@@ -96,7 +96,7 @@ geocloud = (function () {
         visibility: true,
         lifetime: 0,
         host: host,
-	uri: "/api/v1/sql",
+        uri: "/api/v1/sql",
         db: null,
         sql: null,
         q: null,
@@ -211,7 +211,7 @@ geocloud = (function () {
         this.async = this.defaults.async;
         this.jsonp = this.defaults.jsonp;
         this.method = this.defaults.method;
-	this.uri = this.defaults.uri;
+        this.uri = this.defaults.uri;
         this.load = function (doNotShowAlertOnError) {
             try {
                 map = me.map;
@@ -268,12 +268,12 @@ geocloud = (function () {
             });
             return this.layer;
         };
-        this.abort = function(){
+        this.abort = function () {
             xhr.abort();
         }
     };
     cartoDbStore = function (config) {
-        var prop, me = this, map, sql;
+        var prop, me = this, map, sql, xhr;
         this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
@@ -303,7 +303,7 @@ geocloud = (function () {
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
             }
-            $.ajax({
+            xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
                 data: 'format=geojson&q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
@@ -341,6 +341,9 @@ geocloud = (function () {
             });
             return this.layer;
         };
+        this.abort = function () {
+            xhr.abort();
+        }
     };
 
     tweetStore = function (config) {
@@ -608,7 +611,7 @@ geocloud = (function () {
             $('<link/>').attr({
                 rel: 'stylesheet',
                 type: 'text/css',
-                href: host + '/js/leaflet/leaflet.css'
+                href: host + '/js/leaflet/leaflet-0.7.7.css'
             }).appendTo('head');
         }
         this.bingApiKey = null;
