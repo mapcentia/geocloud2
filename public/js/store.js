@@ -256,7 +256,6 @@ $(window).ready(function () {
                         c = v === "v" ? "#a6cee3" :
                             v === "mv" ? "#b2df8a" :
                                 v === "ft" ? "#fb9a99" : "#fdbf6f";
-                        console.log(c)
                         return "<i style='color: " + c + "' class='fa fa-circle' aria-hidden='true'></i> " + v.toUpperCase() + "";
                     }
                 },

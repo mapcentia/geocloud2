@@ -18,6 +18,7 @@ class Table extends Model
     var $versioning;
     var $sysCols;
     var $primeryKey;
+    var $specialChars;
 
     function __construct($table, $temp = false, $addGeomType = false)
     {
@@ -59,6 +60,7 @@ class Table extends Model
             $this->workflow = $res["exists"];
         }
         $this->sysCols = array("gc2_version_gid", "gc2_version_start_date", "gc2_version_end_date", "gc2_version_uuid", "gc2_version_user");
+        $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
     }
 
     private function setType()
@@ -453,8 +455,10 @@ class Table extends Model
         }
         foreach ($this->metaData as $key => $value) {
             if ($value['type'] != "geometry" && ($key != $this->primeryKey['attname'] || $includePriKey)) {
-                $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null, "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
+                if (!preg_match($this->specialChars, $key)) {
+                    $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
+                    $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null, "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
+                }
             }
 
         }
@@ -979,7 +983,9 @@ class Table extends Model
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {
-                $arr = $this->array_push_assoc($arr, $key, $value);
+                if (!preg_match($this->specialChars, $key)) {
+                    $arr = $this->array_push_assoc($arr, $key, $value);
+                }
             }
             $response['data'][] = $arr;
 

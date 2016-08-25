@@ -79,6 +79,8 @@ $unserializer = new XML_Unserializer($unserializer_options);
 
 $sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$_SESSION['screen_name']} -->\n<!-- usergroup: {$_SESSION['usergroup']} -->\n";
 
+$specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
+
 // Post method is used
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
@@ -355,6 +357,7 @@ function doQuery($queryType)
     global $dbSplit;
     global $fieldConfArr;
     global $geometryColumnsObj;
+    global $specialChars;
 
     if (!$srs) {
         makeExceptionReport("You need to specify a srid in the URL.");
@@ -377,7 +380,9 @@ function doQuery($queryType)
                     } else {
                         foreach ($postgisObject->getMetaData($table) as $key => $value) {
                             if ($key != $primeryKey['attname']) {
-                                $fieldsArr[$table][] = $key;
+                                if (!preg_match($specialChars, $key)) {
+                                    $fieldsArr[$table][] = $key;
+                                }
                             }
                         }
                     }
