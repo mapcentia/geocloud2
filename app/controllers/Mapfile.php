@@ -444,7 +444,7 @@ class Mapfile extends \app\inc\Controller
 
                 #LABELMAXSCALE
                 METADATA
-                "ows_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "ows_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo $row['f_table_abstract']; ?>"
@@ -475,7 +475,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         CLASS
                         #NAME
-                        <?php if ($class['name']) echo "NAME '" . $class['name'] . "'\n"; ?>
+                        <?php if ($class['name']) echo "NAME '" . addslashes($class['name']) . "'\n"; ?>
 
                         #EXPRESSION
                         <?php if ($class['expression']) {
