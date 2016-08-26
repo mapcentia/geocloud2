@@ -166,14 +166,6 @@ input[type="radio"], input[type="checkbox"] {
     padding: 0 !important;
 }
 
-.gc2map .table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
-    padding: 4px !important;
-    font-size: 12px !important;
-    line-height: 1.428571429 !important;
-    vertical-align: top !important;
-    font-family: 'Open Sans Condensed', sans-serif, sans-serif !important;
-    border-bottom: 1px solid #EEEEEE !important;
-}
 
 .btn-share {
     width: 50px;
