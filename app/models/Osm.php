@@ -121,6 +121,7 @@ class Osm extends \app\inc\Model
             p.z_order            ,
             p.way_area           ,
             p.way                ,
+            p.tags               ,
             p.gid
         FROM dblink('%s'::text, 'SELECT
             osm_id             ,
