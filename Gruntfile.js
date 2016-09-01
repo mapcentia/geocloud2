@@ -59,7 +59,7 @@ module.exports = function (grunt) {
                         'public/js/leaflet/plugins/Leaflet.Toolbar/leaflet.toolbar-src.js'
                     ],
                     'public/js/leaflet/cartodb-all.js': [
-                        'public/js/cartodb.js/cartodb.js',
+                        'public/js/cartodbjs/cartodb.uncompressed.js',
                         'public/js/leaflet/leaflet-plugins-all.js'
                     ],
                     'public/js/leaflet/leaflet-all.js': [

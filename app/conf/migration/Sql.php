@@ -115,6 +115,7 @@ class Sql
                                   NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_columns'::text) AND
                                   NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_overviews'::text) AND
                                   NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_tables'::text) AND
+                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_matviews'::text) AND
                                   NOT t.table_schema::text = 'pg_catalog'::text AND NOT t.table_schema::text = 'information_schema'::text;
                     ";
 

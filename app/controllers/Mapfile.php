@@ -42,7 +42,7 @@ class Mapfile extends \app\inc\Controller
         TRANSPARENT ON
         FORMATOPTION "GAMMA=0.75"
         END
-        CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
+        #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         DEBUG 5
         WEB
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
@@ -444,13 +444,13 @@ class Mapfile extends \app\inc\Controller
 
                 #LABELMAXSCALE
                 METADATA
-                "ows_title"    "<?php if ($row['f_table_title']) echo $row['f_table_title']; else echo $row['f_table_name'] ?>"
+                "ows_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
-                "ows_abstract"    "<?php echo $row['f_table_abstract']; ?>"
+                "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
                 "wms_format"    "image/png"
                 #"wms_extent" "-180 -90 180 90"
-                "appformap_group"  "<?php if ($row['layergroup']) echo $row['layergroup']; else echo "Default group" ?>"
+                "appformap_group"  "<?php if ($row['layergroup']) echo addslashes($row['layergroup']); else echo "Default group" ?>"
                 "appformap_queryable"    "true"
                 "appformap_loader"    "true"
                 "wms_enable_request"    "*"
@@ -475,7 +475,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         CLASS
                         #NAME
-                        <?php if ($class['name']) echo "NAME '" . $class['name'] . "'\n"; ?>
+                        <?php if ($class['name']) echo "NAME '" . addslashes($class['name']) . "'\n"; ?>
 
                         #EXPRESSION
                         <?php if ($class['expression']) {
