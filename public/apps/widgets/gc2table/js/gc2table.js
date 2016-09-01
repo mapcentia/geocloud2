@@ -74,7 +74,7 @@ var gc2table = (function () {
     var isLoaded = function () {
         return scriptsLoaded;
     }
-
+    var object = {};
     var init = function (conf) {
         var defaults = {
             el: "#table",
@@ -84,6 +84,7 @@ var gc2table = (function () {
             openPopUp: false,
             setViewOnSelect: true,
             responsive: true,
+            autoPan: false,
             styleSelected: {
                 weight: 5,
                 color: '#666',
@@ -107,11 +108,12 @@ var gc2table = (function () {
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
             openPopUp = defaults.openPopUp,
+            autoPan = defaults.autoPan,
             responsive = defaults.responsive;
 
         (function poll() {
             if (scriptsLoaded) {
-                var object = {}, originalLayers, filters;
+                var originalLayers, filters;
                 _.extend(object, Backbone.Events);
                 object.on("selected", function (id) {
                     $(el + ' tr').removeClass("selected");
@@ -134,7 +136,7 @@ var gc2table = (function () {
                         str = str + "</table>";
                         m.map._layers[id].bindPopup(str, {
                             className: "custom-popup",
-                            autoPan: false,
+                            autoPan: autoPan,
                             closeButton: true
                         }).openPopup();
                     }
@@ -213,6 +215,14 @@ var gc2table = (function () {
                     //customOnLoad();
                     $.each(store.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
+                        $.each(v.feature.properties, function (n, m) {
+                            $.each(cm, function (j, k) {
+                                if (k.dataIndex === n && k.link === true) {
+                                    v.feature.properties[n] = "<a target='_blank' rel='noopener' href='" + v.feature.properties[n] + "'>" + "Link" + "</a>";
+                                }
+
+                            });
+                        });
                         data.push(v.feature.properties);
                         v.on({
                             click: click
@@ -264,10 +274,11 @@ var gc2table = (function () {
             } else {
                 setTimeout(poll, 20);
             }
-        }())
+        }());
         return {
-            loadDataInTable: loadDataInTable
-        }
+            loadDataInTable: loadDataInTable,
+            object: object
+        };
     };
     return {
         init: init,

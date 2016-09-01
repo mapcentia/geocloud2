@@ -42,7 +42,7 @@ class Mapfile extends \app\inc\Controller
         TRANSPARENT ON
         FORMATOPTION "GAMMA=0.75"
         END
-        CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
+        #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         DEBUG 5
         WEB
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
