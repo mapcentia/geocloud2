@@ -100,41 +100,84 @@ class Tilecache extends \app\inc\Controller
 
     public function delete_index()
     {
-        if (Input::getPath()->part(4) === "schema") {
-            $response = $this->auth(null, array());
-            if (!$response['success']) {
-                return $response;
-            }
-            $searchStr = Input::getPath()->part(5) . ".%";
-        } else {
-            $parts = explode(".", Input::getPath()->part(4));
-            $searchStr = $parts[0] . "." . $parts[1];
-            $response = $this->auth(Input::getPath()->part(4), array("all" => true, "write" => true));
+        $cache = App::$param["cacheType"] ?: "sqlite";
+        $response = [];
+        switch ($cache) {
+            case "sqlite":
+                if (Input::getPath()->part(4) === "schema") {
+                    $response = $this->auth(null, array());
+                    if (!$response['success']) {
+                        return $response;
+                    }
+                    $searchStr = Input::getPath()->part(5) . ".%";
+                } else {
+                    $parts = explode(".", Input::getPath()->part(4));
+                    $searchStr = $parts[0] . "." . $parts[1];
+                    $response = $this->auth(Input::getPath()->part(4), array("all" => true, "write" => true));
 
-            if (!$response['success']) {
-                return $response;
-            }
-        }
-        if ($searchStr) {
-            $res = self::deleteFromTileset($searchStr, Connection::$param["postgisdb"]);
-            if (!$res["success"]) {
-                $response['success'] = false;
-                $response['message'] = $res["message"];
-                $response['code'] = '403';
-                return $response;
-            }
-            $response['success'] = true;
-            $response['message'] = "Tile cache deleted";
-        } else {
-            $response['success'] = false;
-            $response['message'] = "No tile cache to delete.";
+                    if (!$response['success']) {
+                        return $response;
+                    }
+                }
+                if ($searchStr) {
+                    $res = self::deleteFromTileset($searchStr, Connection::$param["postgisdb"]);
+                    if (!$res["success"]) {
+                        $response['success'] = false;
+                        $response['message'] = $res["message"];
+                        $response['code'] = '403';
+                        return $response;
+                    }
+                    $response['success'] = true;
+                    $response['message'] = "Tile cache deleted";
+                } else {
+                    $response['success'] = false;
+                    $response['message'] = "No tile cache to delete.";
+                }
+                break;
+
+            case "disk":
+                if (Input::getPath()->part(4) === "schema") {
+                    $response = $this->auth(null, array());
+                    if (!$response['success']) {
+                        return $response;
+                    }
+                    $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . Input::getPath()->part(5) . ".*";
+                } else {
+                    $parts = explode(".", Input::getPath()->part(4));
+                    $layer = $parts[0] . "." . $parts[1];
+                    $response = $this->auth(Input::getPath()->part(4), array("all" => true, "write" => true));
+                    $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
+
+                }
+                $res = self::unlinkTiles($dir, Connection::$param["postgisdb"]);
+                if (!$res["success"]) {
+                    $response['success'] = false;
+                    $response['message'] = $res["message"];
+                    $response['code'] = '403';
+                    return $response;
+                }
+                $response['success'] = true;
+                $response['message'] = "Tile cache deleted";
+                break;
         }
         return Response::json($response);
     }
 
     static function bust($layer)
     {
-        $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
+        $cache = App::$param["cacheType"] ?: "sqlite";
+        $response = [];
+        $res = null;
+        switch ($cache) {
+            case "sqlite":
+                $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
+                break;
+            case
+            "disk":
+                $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
+                $res = self::unlinkTiles($dir);
+                break;
+        }
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];
@@ -158,7 +201,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/sqlitefiles/" . $dbName . ".sqlite3");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . $dbName . ".sqlite3");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
@@ -174,11 +217,26 @@ class Tilecache extends \app\inc\Controller
             $response['success'] = false;
             $response['message'] = $db->lastErrorMsg();
             $response['code'] = '406';
-
             return $response;
         }
         //$db->query("VACUUM");
         $response['success'] = true;
         return $response;
     }
+     private function unlinkTiles($dir){
+         if ($dir) {
+             exec("rm -R {$dir}");
+             if (strpos($dir, ".*") !== false) {
+                 $dir = str_replace(".*", "", $dir);
+                 exec("rm -R {$dir}");
+             }
+             $response['success'] = true;
+         } else {
+             $response['success'] = false;
+         }
+         return $response;
+     }
+
 }
+
+
