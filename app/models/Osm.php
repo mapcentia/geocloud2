@@ -121,6 +121,7 @@ class Osm extends \app\inc\Model
             p.z_order            ,
             p.way_area           ,
             p.way                ,
+            p.tags               ,
             p.gid
         FROM dblink('%s'::text, 'SELECT
             osm_id             ,
@@ -192,6 +193,7 @@ class Osm extends \app\inc\Model
             z_order            ,
             way_area           ,
             way                ,
+            tags               ,
             gid
         FROM {$conf->data->region}.{$table} where %s'::text)
         p(
@@ -264,6 +266,7 @@ class Osm extends \app\inc\Model
             z_order            integer	,
             way_area           real  ,
             way                geometry({$type},900913),
+            tags               hstore,
             gid                integer
         )";
         $safeName = $this->toAscii($conf->data->name, array(), "_");

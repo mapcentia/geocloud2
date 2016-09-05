@@ -2,7 +2,7 @@
 <?php
 
 header("Content-type: text/plain");
-$files = scandir("../../wms/mapcache");
+$files = scandir("/var/www/geocloud2/app/wms/mapcache");
 foreach ($files as $file) {
     $bits = explode(".", $file);
     if ($bits[1] == "xml") {
