@@ -100,7 +100,7 @@ class Tilecache extends \app\inc\Controller
 
     public function delete_index()
     {
-        $cache = App::$param["cacheType"] ?: "sqlite";
+        $cache = App::$param["mapCache"]["type"] ?: "disk";
         $response = [];
         switch ($cache) {
             case "sqlite":
@@ -165,7 +165,7 @@ class Tilecache extends \app\inc\Controller
 
     static function bust($layer)
     {
-        $cache = App::$param["cacheType"] ?: "sqlite";
+        $cache = App::$param["mapCache"]["type"] ?: "disk";
         $response = [];
         $res = null;
         switch ($cache) {

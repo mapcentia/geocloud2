@@ -59,8 +59,6 @@ export PGHOST=$sourcehost
 export PGDATABASE=$sourcedb
 export PGPASSWORD=$sourcepw
 
-file="/var/www/geocloud2/public/backups/${sourcehost}/latest/${sourcedb}.bak"
-
 for SCHEMA in "${ARRAY[@]}"
     do
         c="$c --schema=$SCHEMA"
@@ -89,7 +87,7 @@ psql -c "CREATE EXTENSION \"uuid-ossp\";"
 psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
-pg_restore dump.bak --no-owner --dbname=$targetdb
+pg_restore dump.bak --no-owner --no-privileges --jobs=2 --dbname=$targetdb
 
 # Disconnect all from the old db
 psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)

@@ -1,14 +1,20 @@
+/*global $:false */
+/*global jQuery:false */
+/*global Backbone:false */
+/*global jRespond:false */
+/*global _:false */
 var gc2table = (function () {
-    var host;
-    var scriptsLoaded = false;
-    var scriptSource = (function (scripts) {
-        scripts = document.getElementsByTagName('script');
-        var script = scripts[scripts.length - 1];
-        if (script.getAttribute.length !== undefined) {
-            return script.src;
-        }
-        return script.getAttribute('src', -1);
-    }());
+    "use strict";
+    var host, js, isLoaded, object, init,
+        scriptsLoaded = false,
+        scriptSource = (function (scripts) {
+            scripts = document.getElementsByTagName('script');
+            var script = scripts[scripts.length - 1];
+            if (script.getAttribute.length !== undefined) {
+                return script.src;
+            }
+            return script.getAttribute('src', -1);
+        }());
 
     // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
@@ -45,8 +51,7 @@ var gc2table = (function () {
                     typeof jQuery().bootstrapTable !== "undefined" &&
                     typeof _ !== 'undefined' &&
                     typeof jRespond !== "undefined" &&
-                    typeof Backbone !== "undefined"
-                ) {
+                    typeof Backbone !== "undefined") {
                     if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
                         $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
                     }
@@ -71,11 +76,11 @@ var gc2table = (function () {
         }
     }());
 
-    var isLoaded = function () {
+    isLoaded = function () {
         return scriptsLoaded;
-    }
-    var object = {};
-    var init = function (conf) {
+    };
+    object = {};
+    init = function (conf) {
         var defaults = {
             el: "#table",
             autoUpdate: false,
@@ -91,7 +96,11 @@ var gc2table = (function () {
                 dashArray: '',
                 fillOpacity: 0.7
             }
-        };
+        }, prop,
+ 	uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        	var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        	return v.toString(16);
+    	});
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -115,7 +124,7 @@ var gc2table = (function () {
             if (scriptsLoaded) {
                 var originalLayers, filters;
                 _.extend(object, Backbone.Events);
-                object.on("selected", function (id) {
+                object.on("selected" + "_" + uid, function (id) {
                     $(el + ' tr').removeClass("selected");
                     $.each(store.layer._layers, function (i, v) {
                         try {
@@ -132,7 +141,7 @@ var gc2table = (function () {
                         var str = "<table>";
                         $.each(cm, function (i, v) {
                             str = str + "<tr><td>" + v.header + "</td><td>" + m.map._layers[id].feature.properties[v.dataIndex] + "</td></tr>";
-                        })
+                        });
                         str = str + "</table>";
                         m.map._layers[id].bindPopup(str, {
                             className: "custom-popup",
@@ -146,8 +155,8 @@ var gc2table = (function () {
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
                     $(el).bootstrapTable('scrollTo', row.index() * row.height());
-                    object.trigger("selected", e.target._leaflet_id);
-                }
+                    object.trigger("selected" + "_" + uid, e.target._leaflet_id);
+                };
                 $.each(store.layer._layers, function (i, layer) {
                     layer.on({
                         click: click
@@ -156,7 +165,7 @@ var gc2table = (function () {
 
                 $(el).append("<thead><tr></tr></thead>");
                 $.each(cm, function (i, v) {
-                    $(el + ' thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false' data-formatter='" + (v.formatter || "") + "'>" + v.header + "</th>")
+                    $(el + ' thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false' data-formatter='" + (v.formatter || "") + "'>" + v.header + "</th>");
                 });
 
                 var filterMap = function () {
@@ -174,28 +183,28 @@ var gc2table = (function () {
                     });
                     $.each(store.layer._layers, function (i, v) {
                         $.each(v.feature.properties, function (u, n) {
-                            if (typeof filters[u] !== "undefined" && filters[u] !== null && filters[u] != n && filters[u] !== "") {
+                            if (typeof filters[u] !== "undefined" && filters[u] !== null && filters[u] !== n && filters[u] !== "") {
                                 m.map.removeLayer(v);
                             }
 
-                        })
+                        });
                     });
                     bindEvent();
-                }
+                };
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
                         $(el + ' tr').on("click", function (e) {
-                            object.trigger("selected", $(this).data('uniqueid'));
+                            object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
                             var layer = m.map._layers[$(this).data('uniqueid')];
                             setTimeout(function () {
                                 if (setViewOnSelect) {
                                     m.map.fitBounds(layer.getBounds());
                                 }
                             }, 100);
-                        })
+                        });
                     }, 100);
-                }
+                };
                 $(el).bootstrapTable({
                     uniqueId: "_id",
                     height: height,
@@ -232,14 +241,14 @@ var gc2table = (function () {
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
                     $(el).bootstrapTable('load', data);
                     filterMap();
-                }
+                };
                 loadDataInTable();
                 if (autoUpdate) {
                     m.on("moveend", _.debounce(function () {
                             store.reset();
                             store.load();
                         }, 200)
-                    )
+                    );
                 }
                 var jRes = jRespond([
                     {
@@ -277,7 +286,8 @@ var gc2table = (function () {
         }());
         return {
             loadDataInTable: loadDataInTable,
-            object: object
+            object: object,
+	    uid: uid
         };
     };
     return {
