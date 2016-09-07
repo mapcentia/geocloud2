@@ -1232,7 +1232,7 @@ $(window).ready(function () {
                         modal: true,
                         layout: 'fit',
                         width: 450,
-                        height: 220,
+                        height: 500,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -1270,6 +1270,17 @@ $(window).ready(function () {
                                                                 {
                                                                     xtype: 'textfield',
                                                                     fieldLabel: v.title,
+                                                                    name: v.name,
+                                                                    value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                }
+                                                            )
+                                                            break;
+                                                        case "textarea":
+                                                            fields.push(
+                                                                {
+                                                                    xtype: 'textarea',
+                                                                    fieldLabel: v.title,
+                                                                    height: 300,
                                                                     name: v.name,
                                                                     value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
                                                                 }
