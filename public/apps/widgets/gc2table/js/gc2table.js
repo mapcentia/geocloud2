@@ -90,6 +90,7 @@ var gc2table = (function () {
             setViewOnSelect: true,
             responsive: true,
             autoPan: false,
+	    locale: 'en-US',
             styleSelected: {
                 weight: 5,
                 color: '#666',
@@ -118,7 +119,8 @@ var gc2table = (function () {
             setViewOnSelect = defaults.setViewOnSelect,
             openPopUp = defaults.openPopUp,
             autoPan = defaults.autoPan,
-            responsive = defaults.responsive;
+            responsive = defaults.responsive,
+	    locale = defaults.locale;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -208,6 +210,7 @@ var gc2table = (function () {
                 $(el).bootstrapTable({
                     uniqueId: "_id",
                     height: height,
+		    locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
                     onColumnSwitch: bindEvent,
