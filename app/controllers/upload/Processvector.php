@@ -136,11 +136,10 @@ class Processvector extends \app\inc\Controller
             (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
             (($delete || $append) ? "" : "-lco 'FID=gid' ") .
             (($delete || $append) ? "" : "-lco 'PRECISION=NO' ") .
-            (($delete || $append) ? "" : "-lco 'PG_USE_COPY=YES' ") .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . " active_schema=" . Connection::$param["postgisschema"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
-            "-nln {$safeName} " .
+            "-nln " . Connection::$param["postgisschema"] . ".{$safeName} " .
             "-nlt {$type}";
         exec($cmd . ' 2>&1', $out, $err);
 
