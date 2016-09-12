@@ -224,7 +224,7 @@ var gc2table = (function () {
                 };
                 loadDataInTable = function () {
                     data = [];
-                    //customOnLoad();
+                    customOnLoad();
                     $.each(store.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
                         $.each(v.feature.properties, function (n, m) {
