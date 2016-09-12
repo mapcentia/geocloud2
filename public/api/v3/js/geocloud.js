@@ -542,7 +542,7 @@ geocloud = (function () {
                     format: 'image/png',
                     transparent: true,
                     subdomains: ["cdn1", "cdn2", "cdn3"],
-                    maxZoom: 20
+                    maxZoom: defaults.maxZoom
                 });
                 l.id = layer;
                 break;
@@ -578,7 +578,7 @@ geocloud = (function () {
             case "leaflet":
                 l = new L.TileLayer(url + "1.0.0/" + layer + "" + "/{z}/{x}/{y}.png", {
                     tms: true,
-                    maxZoom: 20,
+                    maxZoom: defaults.maxZoom,
                     tileSize: 256
                 });
                 l.id = layer;
@@ -1619,7 +1619,8 @@ geocloud = (function () {
                 name: null,
                 names: [],
                 resolutions: this.map.resolutions,
-                type: "wms"
+                type: "wms",
+                maxZoom: 21
             };
             if (config) {
                 for (prop in config) {
@@ -2090,7 +2091,7 @@ geocloud = (function () {
             };
         },
         PROVIDERS = {
-            "toner": MAKE_PROVIDER("toner", "png", 0, 21),
+            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
             "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
@@ -2150,6 +2151,7 @@ geocloud = (function () {
                 L.TileLayer.prototype.initialize.call(this, url, {
                     "minZoom": provider.minZoom,
                     "maxZoom": provider.maxZoom,
+                    "maxNativeZoom": 20,
                     "subdomains": provider.subdomains,
                     "scheme": "xyz",
                     "attribution": provider.attribution
