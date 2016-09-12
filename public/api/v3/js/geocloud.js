@@ -977,7 +977,7 @@ geocloud = (function () {
                 case "leaflet":
                     this.osm = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                         attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
-                        maxZoom: 20,
+                        maxZoom: 21,
                         maxNativeZoom: 18
                     });
                     lControl.addBaseLayer(this.osm, "OSM");
@@ -1151,7 +1151,7 @@ geocloud = (function () {
                 case "leaflet":
                     l = new L.BingLayer(this.bingApiKey || window.bingApiKey, {
                         type: type,
-                        maxZoom: 20,
+                        maxZoom: 21,
                         maxNativeZoom: 18
                     });
                     l.baseLayer = true;
@@ -1183,7 +1183,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     l = new L.TileLayer("https://services.digitalglobe.com/earthservice/wmtsaccess?CONNECTID=" + key + "&Service=WMTS&REQUEST=GetTile&Version=1.0.0&Format=image/png&Layer=" + name + "&TileMatrixSet=EPSG:3857&TileMatrix=EPSG:3857:{z}&TileRow={y}&TileCol={x}", {
-                        maxZoom: 20
+                        maxZoom: 21
                     });
                     lControl.addBaseLayer(l, prettyName);
                     break;
@@ -1221,7 +1221,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     l = new L.TileLayer("https://{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
-                        maxZoom: 20,
+                        maxZoom: 21,
                         subdomains: ["1", "2", "3", "4"],
                         attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='https://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
                     });
@@ -1255,7 +1255,9 @@ geocloud = (function () {
                         tms: true,
                         subdomains: ["cdn1", "cdn2", "cdn3"],
                         attribution: "&copy; Geodatastyrelsen",
-                        maxZoom: 20
+                        maxZoom: 21,
+                        maxNativeZoom: 19
+
                     });
                     lControl.addBaseLayer(l);
                     break;
@@ -2091,7 +2093,7 @@ geocloud = (function () {
             };
         },
         PROVIDERS = {
-            "toner": MAKE_PROVIDER("toner", "png", 0, 20),
+            "toner": MAKE_PROVIDER("toner", "png", 0, 21),
             "terrain": MAKE_PROVIDER("terrain", "jpg", 4, 18),
             "watercolor": MAKE_PROVIDER("watercolor", "jpg", 1, 18)
         };
@@ -2151,7 +2153,7 @@ geocloud = (function () {
                 L.TileLayer.prototype.initialize.call(this, url, {
                     "minZoom": provider.minZoom,
                     "maxZoom": provider.maxZoom,
-                    "maxNativeZoom": 20,
+                    "maxNativeZoom": 18,
                     "subdomains": provider.subdomains,
                     "scheme": "xyz",
                     "attribution": provider.attribution

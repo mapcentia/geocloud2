@@ -82,26 +82,26 @@ var gc2table = (function () {
     object = {};
     init = function (conf) {
         var defaults = {
-            el: "#table",
-            autoUpdate: false,
-            height: 300,
-            setSelectedStyle: true,
-            openPopUp: false,
-            setViewOnSelect: true,
-            responsive: true,
-            autoPan: false,
-	    locale: 'en-US',
-            styleSelected: {
-                weight: 5,
-                color: '#666',
-                dashArray: '',
-                fillOpacity: 0.7
-            }
-        }, prop,
- 	uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        	var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        	return v.toString(16);
-    	});
+                el: "#table",
+                autoUpdate: false,
+                height: 300,
+                setSelectedStyle: true,
+                openPopUp: false,
+                setViewOnSelect: true,
+                responsive: true,
+                autoPan: false,
+                locale: 'en-US',
+                styleSelected: {
+                    weight: 5,
+                    color: '#666',
+                    dashArray: '',
+                    fillOpacity: 0.7
+                }
+            }, prop,
+            uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
         if (conf) {
             for (prop in conf) {
                 defaults[prop] = conf[prop];
@@ -120,7 +120,7 @@ var gc2table = (function () {
             openPopUp = defaults.openPopUp,
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
-	    locale = defaults.locale;
+            locale = defaults.locale;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -185,7 +185,7 @@ var gc2table = (function () {
                     });
                     $.each(store.layer._layers, function (i, v) {
                         $.each(v.feature.properties, function (u, n) {
-                            if (typeof filters[u] !== "undefined" && filters[u] !== null && filters[u] !== n && filters[u] !== "") {
+                            if (typeof filters[u] !== "undefined" && filters[u] !== null && (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1) && filters[u] !== "") {
                                 m.map.removeLayer(v);
                             }
 
@@ -210,7 +210,7 @@ var gc2table = (function () {
                 $(el).bootstrapTable({
                     uniqueId: "_id",
                     height: height,
-		    locale: locale,
+                    locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
                     onColumnSwitch: bindEvent,
@@ -290,7 +290,7 @@ var gc2table = (function () {
         return {
             loadDataInTable: loadDataInTable,
             object: object,
-	    uid: uid
+            uid: uid
         };
     };
     return {
