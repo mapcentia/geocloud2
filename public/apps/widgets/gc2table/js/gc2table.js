@@ -214,7 +214,9 @@ var gc2table = (function () {
                     onToggle: bindEvent,
                     onSort: bindEvent,
                     onColumnSwitch: bindEvent,
-                    onColumnSearch: filterMap
+                    onColumnSearch: filterMap,
+                    onPostBody: function () {
+                    }
                 });
 
                 // Define a callback for when the SQL returns
@@ -224,7 +226,6 @@ var gc2table = (function () {
                 };
                 loadDataInTable = function () {
                     data = [];
-                    customOnLoad();
                     $.each(store.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
                         $.each(v.feature.properties, function (n, m) {
@@ -244,8 +245,8 @@ var gc2table = (function () {
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
                     $(el).bootstrapTable('load', data);
                     filterMap();
+                    customOnLoad();
                 };
-                loadDataInTable();
                 if (autoUpdate) {
                     m.on("moveend", _.debounce(function () {
                             store.reset();
