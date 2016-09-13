@@ -76,6 +76,7 @@ var gc2table = (function () {
                 type: 'text/css',
                 href: host + '/js/bootstrap-table/bootstrap-table.min.css'
             }).appendTo('head');
+
         } else {
             setTimeout(pollForjQuery, 10);
         }
@@ -129,7 +130,7 @@ var gc2table = (function () {
 
         (function poll() {
             if (scriptsLoaded) {
-                var originalLayers, filters;
+                var originalLayers, filters, filterControls;
                 _.extend(object, Backbone.Events);
                 object.on("selected" + "_" + uid, function (id) {
                     $(el + ' tr').removeClass("selected");
@@ -184,15 +185,30 @@ var gc2table = (function () {
                             m.map.addLayer(v);
                         });
                         filters = {};
+                        filterControls = {};
                         $.each(cm, function (i, v) {
+                            //console.log(v)
                             if (v.filterControl) {
                                 filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
+                                filterControls[v.dataIndex] = v.filterControl;
                             }
                         });
                         $.each(store.layer._layers, function (i, v) {
                             $.each(v.feature.properties, function (u, n) {
-                                if (typeof filters[u] !== "undefined" && filters[u] !== null && (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1) && filters[u] !== "") {
-                                    m.map.removeLayer(v);
+                                if (typeof filterControls[u] !== "undefined") {
+                                    if (filterControls[u] === "input") {
+                                        if (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1 && filters[u] !== "") {
+
+                                            console.log("Remove input")
+                                            m.map.removeLayer(v);
+                                        }
+                                    } else {
+
+                                        if (n !== filters[u] && filters[u] !== "") {
+                                            console.log("Remove select")
+                                            m.map.removeLayer(v);
+                                        }
+                                    }
                                 }
                             });
                         });
@@ -201,7 +217,7 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
-                        $(el + ' tr').on("click", function (e) {
+                        $('tbody > tr').on("click", function (e) {
                             object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
                             var layer = m.map._layers[$(this).data('uniqueid')];
                             setTimeout(function () {
@@ -214,7 +230,7 @@ var gc2table = (function () {
                 };
                 $(el).bootstrapTable({
                     uniqueId: "_id",
-                    height: height,
+                    //height: height,
                     locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
@@ -248,6 +264,7 @@ var gc2table = (function () {
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
                     $(el).bootstrapTable('load', data);
                     customOnLoad();
+                    bindEvent();
                 };
                 if (autoUpdate) {
                     m.on("moveend", _.debounce(function () {
