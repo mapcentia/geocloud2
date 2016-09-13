@@ -46,8 +46,12 @@ var gc2table = (function () {
             (function pollForDependencies() {
                 if (typeof jQuery().typeahead !== "undefined" &&
                     typeof jQuery().bootstrapTable !== "undefined" &&
+                    typeof jQuery().bootstrapTable.locales !== "undefined" &&
                     typeof _ !== 'undefined' &&
                     typeof jRespond !== "undefined") {
+                    if (typeof jQuery().bootstrapTable.locales['da-DK'] === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/bootstrap-table-locale-all.js");
+                    }
                     if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
                         $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
                     }
@@ -56,6 +60,7 @@ var gc2table = (function () {
                     }
                     (function pollForDependants() {
                         if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                            typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
                             typeof Backbone !== "undefined") {
                             scriptsLoaded = true;
                         } else {
