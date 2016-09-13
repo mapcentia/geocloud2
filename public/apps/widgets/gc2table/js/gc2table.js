@@ -198,7 +198,7 @@ var gc2table = (function () {
                             });
                         });
                         bindEvent();
-                    }, 350);
+                    }, 500);
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
