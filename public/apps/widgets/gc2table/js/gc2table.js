@@ -180,7 +180,7 @@ var gc2table = (function () {
                     filters = {};
                     $.each(cm, function (i, v) {
                         if (v.filterControl) {
-                            filters[v.dataIndex] = $("." + v.dataIndex).val();
+                            filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
                         }
                     });
                     $.each(store.layer._layers, function (i, v) {
