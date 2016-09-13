@@ -189,7 +189,6 @@ var gc2table = (function () {
                                 filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
                             }
                         });
-                        console.log(filters)
                         $.each(store.layer._layers, function (i, v) {
                             $.each(v.feature.properties, function (u, n) {
                                 if (typeof filters[u] !== "undefined" && filters[u] !== null && (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1) && filters[u] !== "") {
@@ -197,7 +196,7 @@ var gc2table = (function () {
                                 }
                             });
                         });
-                        bindEvent();
+                        //bindEvent();
                     }, 500);
 
                 var bindEvent = function (e) {
