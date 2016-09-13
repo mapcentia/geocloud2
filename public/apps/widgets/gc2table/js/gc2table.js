@@ -175,29 +175,30 @@ var gc2table = (function () {
                     $(el + ' thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false' data-formatter='" + (v.formatter || "") + "'>" + v.header + "</th>");
                 });
 
-                var filterMap = function () {
-                    $.each(store.layer._layers, function (i, v) {
-                        m.map.removeLayer(v);
-                    });
-                    $.each(originalLayers, function (i, v) {
-                        m.map.addLayer(v);
-                    });
-                    filters = {};
-                    $.each(cm, function (i, v) {
-                        if (v.filterControl) {
-                            filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
-                        }
-                    });
-                    $.each(store.layer._layers, function (i, v) {
-                        $.each(v.feature.properties, function (u, n) {
-                            if (typeof filters[u] !== "undefined" && filters[u] !== null && (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1) && filters[u] !== "") {
-                                m.map.removeLayer(v);
-                            }
-
+                var filterMap =
+                    _.debounce(function () {
+                        $.each(store.layer._layers, function (i, v) {
+                            m.map.removeLayer(v);
                         });
-                    });
-                    bindEvent();
-                };
+                        $.each(originalLayers, function (i, v) {
+                            m.map.addLayer(v);
+                        });
+                        filters = {};
+                        $.each(cm, function (i, v) {
+                            if (v.filterControl) {
+                                filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
+                            }
+                        });
+                        console.log(filters)
+                        $.each(store.layer._layers, function (i, v) {
+                            $.each(v.feature.properties, function (u, n) {
+                                if (typeof filters[u] !== "undefined" && filters[u] !== null && (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1) && filters[u] !== "") {
+                                    m.map.removeLayer(v);
+                                }
+                            });
+                        });
+                        bindEvent();
+                    }, 350);
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
@@ -247,7 +248,6 @@ var gc2table = (function () {
                     });
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
                     $(el).bootstrapTable('load', data);
-                    filterMap();
                     customOnLoad();
                 };
                 if (autoUpdate) {
