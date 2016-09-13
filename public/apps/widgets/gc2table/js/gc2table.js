@@ -214,7 +214,7 @@ var gc2table = (function () {
                     onToggle: bindEvent,
                     onSort: bindEvent,
                     onColumnSwitch: bindEvent,
-                    //onColumnSearch: filterMap
+                    onColumnSearch: filterMap
                 });
 
                 // Define a callback for when the SQL returns
