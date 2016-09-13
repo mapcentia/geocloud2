@@ -4,60 +4,121 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Map with custom Awesome Markers and pop-up</title>
-    <script src="/api/v3/js/geocloud.php"></script>
-</head>
+    <script src="/apps/widgets/gc2map/js/gc2map.js"></script>
+    <script src="/apps/widgets/gc2table/js/gc2table.js"></script>
+    <script src="/apps/widgets/gc2map/js/searchModules/danish.js"></script>
+    </head>
 <body>
 <div style="width: 500px;height: 500px; position: relative" id="map"></div>
+<div>
+    <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"
+           data-filter-control="true"></table>
+</div>
 </body>
 <script>
-    // Initiate a geocloud object
-    var gc2 = new geocloud.map({
-        el: "map"
-    });
+    // Lav en widget på normal vis
+    gc2map.init({
+        key: "map",
+        db: 'mydb',
+        zoom: [9.5354, 55.7042, 9],
+        layers: [],
+        baseLayers: [{"id": "osm", "name": "OSM"}],
+        setBaseLayer: 'osm',
+        width: '100%',
+        height: '400px',
+        callBack: function (m, w) {
 
-    // Add a base layer
-    gc2.addBaseLayer("osm");
+            // Aktiver søgning med kommune nr.
+            gc2map.createSearch(m, "630");
 
-    // Set a base layer active
-    gc2.setBaseLayer("osm");
+            // Lav et SQL store på normal vis
+            var store = new geocloud.sqlStore({
+                db: "mydb",
+                sql: "SELECT * FROM public.lp_f limit 20",
 
-    // Create a GeoJSON store with a SELECT query
-    var store = new geocloud.geoJsonStore({
-        db: "mydb",
-        sql: "SELECT * FROM public.airbnb limit 10",
+                // StyleMap laves som en funktion
+                styleMap: function (feature) {
+                    return {
+                        fillColor: (function (d) {
+                            return d === "11" ? '#c66100' :
+                                    d === "21" ? '#ff615a' :
+                                            d === "31" ? '#6bffff' :
+                                                    d === "41" ? '#ff69ff' :
+                                                            d === "51" ? '#39ff39' :
+                                                                    d === "61" ? '#ffefad' :
+                                                                            d === "71" ? '#efef00' :
+                                                                                    d === "81" ? '#9c9e9c' :
+                                                                                            d === "91" ? '#9c9e9c' :
+                                                                                                    d === "96" ? '#C0C0C0' :
+                                                                                                            '#FFEDA0'
 
-        // Cache the SELECT query on the server for an hour
-        lifetime: 3600,
 
-        // Bind a popup to each point
-        onEachFeature: function (feature, layer) {
-            layer.bindPopup("Hello world");
-        },
+                        }(feature.properties.anvgen)),
+                        weight: 1,
+                        opacity: 1,
+                        color: "#000",
+                        fillOpacity: 0.5
+                    }
+                },
+                onLoad: function () {
+                    // Brug IKKE denne funktion sammen med autoUpdate
+                    m.zoomToExtentOfgeoJsonStore(store);
+                }
+            });
 
-        // Make Awesome Markers instead of simple vector point features
-        pointToLayer: function (feature, latlng) {
-            return L.marker(latlng, {
-                icon: L.AwesomeMarkers.icon({
-                            icon: 'star',
-                            markerColor: 'blue',
-                            prefix: 'fa'
-                        }
-                )
+            // Tilføj store til kort og load
+            m.addGeoJsonStore(store);
+            store.load();
+
+            // Indtil nu er det normal widget. Nu begynder tabel
+
+            // Definer en column model
+            var cm = [
+                {
+                    "header": "Plannr",
+                    "dataIndex": "plannr",
+                    "type": "varchar",
+                    filterControl: "input",
+                    sortable: true
+                },
+                {
+                    "header": "Plannavn",
+                    "dataIndex": "plannavn",
+                    "type": "varchar",
+                    filterControl: "input",
+                    sortable: true
+
+                },
+                {
+                    "header": "Anvendelse",
+                    "dataIndex": "anv",
+                    filterControl: "select"
+                }, {
+                    "header": "Status",
+                    "dataIndex": "status",
+                    filterControl: "select"
+                },
+                {
+                    "header": "Se ramme",
+                    "dataIndex": "html",
+                    "formatter": "operateFormatter"
+                }
+            ];
+
+            // Start tabel widget
+
+            gc2table.init({
+                el: "#table", // Element som tabellen skal lave i
+                geocloud2: m, // geocloud object
+                store: store, // store object
+                cm: cm, // Column model
+                autoUpdate: false, // Skal kortet opdateres ved zoom?
+                height: '400',
+                setViewOnSelect: true, // Zoom når det vælges i tabellen
+                openPopUp: false, // Vis pop up på valgte features
+                setSelectedStyle: true // Skal valgte features have en Selected style?
             });
         }
     });
-
-    // Add the store as a vector overlay
-    gc2.addGeoJsonStore(store);
-
-    // Define a callback for when the SQL returns
-    store.onLoad = function () {
-
-        // Zoom to vector layer
-        gc2.zoomToExtentOfgeoJsonStore(this);
-    };
-
-    // Run the SQL and load the data
-    store.load();
 </script>
 </html>

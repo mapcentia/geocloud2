@@ -43,20 +43,21 @@ var gc2table = (function () {
             if (typeof jRespond === "undefined") {
                 $.getScript(host + "/js/div/jRespond.js");
             }
-            if (typeof Backbone === "undefined") {
-                $.getScript("http://backbonejs.org/backbone.js");
-            }
+
             (function pollForDependencies() {
                 if (typeof jQuery().typeahead !== "undefined" &&
                     typeof jQuery().bootstrapTable !== "undefined" &&
                     typeof _ !== 'undefined' &&
-                    typeof jRespond !== "undefined" &&
-                    typeof Backbone !== "undefined") {
+                    typeof jRespond !== "undefined") {
                     if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
                         $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
                     }
+                    if (typeof Backbone === "undefined") {
+                        $.getScript("http://backbonejs.org/backbone.js");
+                    }
                     (function pollForDependants() {
-                        if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined") {
+                        if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                            typeof Backbone !== "undefined") {
                             scriptsLoaded = true;
                         } else {
                             setTimeout(pollForDependants, 10);
