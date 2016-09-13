@@ -43,7 +43,6 @@ var gc2table = (function () {
             if (typeof jRespond === "undefined") {
                 $.getScript(host + "/js/div/jRespond.js");
             }
-
             (function pollForDependencies() {
                 if (typeof jQuery().typeahead !== "undefined" &&
                     typeof jQuery().bootstrapTable !== "undefined" &&
@@ -215,9 +214,7 @@ var gc2table = (function () {
                     onToggle: bindEvent,
                     onSort: bindEvent,
                     onColumnSwitch: bindEvent,
-                    onColumnSearch: filterMap,
-                    onPostBody: function () {
-                    }
+                    //onColumnSearch: filterMap
                 });
 
                 // Define a callback for when the SQL returns
