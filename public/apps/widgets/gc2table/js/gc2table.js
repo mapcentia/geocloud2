@@ -119,6 +119,7 @@ var gc2table = (function () {
             cm = defaults.cm,
             autoUpdate = defaults.autoUpdate,
             height = defaults.height,
+            tableBodyHeight = defaults.tableBodyHeight,
             styleSelected = defaults.styleSelected,
             el = defaults.el, click, loadDataInTable,
             setSelectedStyle = defaults.setSelectedStyle,
@@ -230,7 +231,7 @@ var gc2table = (function () {
                 };
                 $(el).bootstrapTable({
                     uniqueId: "_id",
-                    //height: height,
+                    height: height,
                     locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
@@ -265,6 +266,10 @@ var gc2table = (function () {
                     $(el).bootstrapTable('load', data);
                     customOnLoad();
                     bindEvent();
+
+                    $(".fixed-table-body").css("overflow", "auto");
+                    $(".fixed-table-body").css("max-height", tableBodyHeight + "px");
+                    $(".fixed-table-body").css("height", tableBodyHeight + "px");
                 };
                 if (autoUpdate) {
                     m.on("moveend", _.debounce(function () {
