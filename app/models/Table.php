@@ -174,7 +174,7 @@ class Table extends Model
         }
         while ($row = $this->fetchRow($resView, "assoc")) {
             $views[$row["viewname"]] = true;
-            $viewDefinitions[$row["viewname"]] = $row["view_definition"];
+            $viewDefinitions[$row["viewname"]] = $row["definition"];
         }
 
         // Check if FOREIGN TABLE
