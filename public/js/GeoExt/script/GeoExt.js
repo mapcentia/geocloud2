@@ -3091,11 +3091,7 @@ GeoExt.tree.LayerNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
         }
         this.enforceOneVisible()
     }, onClick: function (a) {
-        if (a.getTarget(".x-tree-node-cb", 1)) {
-            this.toggleCheck(this.isChecked())
-        } else {
-            GeoExt.tree.LayerNodeUI.superclass.onClick.apply(this, arguments)
-        }
+        this.toggleCheck(!this.isChecked())
     }, toggleCheck: function (a) {
         a = (a === undefined ? !this.isChecked() : a);
         GeoExt.tree.LayerNodeUI.superclass.toggleCheck.call(this, a);
