@@ -1172,7 +1172,7 @@ $(window).ready(function () {
                                                         data.push(
                                                             {
                                                                 _key_: v.get("_key_"),
-                                                                tags: values.tags
+                                                                tags: typeof values.tags === "string" ? values.tags === "" ? null : [values.tags] :  values.tags
                                                             }
                                                         );
                                                     });
@@ -1271,7 +1271,7 @@ $(window).ready(function () {
                                                                     xtype: 'textfield',
                                                                     fieldLabel: v.title,
                                                                     name: v.name,
-                                                                    value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
                                                                 }
                                                             )
                                                             break;
@@ -1282,7 +1282,7 @@ $(window).ready(function () {
                                                                     fieldLabel: v.title,
                                                                     height: 300,
                                                                     name: v.name,
-                                                                    value: (records.length === 1 ) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
                                                                 }
                                                             )
                                                             break;
@@ -1292,7 +1292,7 @@ $(window).ready(function () {
                                                                     xtype: 'checkbox',
                                                                     fieldLabel: v.title,
                                                                     name: v.name,
-                                                                    checked: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v.default) : false
+                                                                    checked: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v.default) : false
                                                                 }
                                                             )
                                                             break;
@@ -1310,7 +1310,7 @@ $(window).ready(function () {
                                                                     triggerAction: 'all',
                                                                     name: v.name,
                                                                     fieldLabel: v.title,
-                                                                    value: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name]) || v.default) : null
+                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name]) || v.default) : null
                                                                 }
                                                             )
                                                             break;
@@ -1330,7 +1330,7 @@ $(window).ready(function () {
                                                                     displayField: 'tag',
                                                                     valueField: 'tag',
                                                                     mode: 'local',
-                                                                    value: (records.length === 1 ) ? ((Ext.decode(records[0].data.meta)[v.name] !== null) ? Ext.decode(records[0].data.meta)[v.name] : []) : [],
+                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== null) ? Ext.decode(records[0].data.meta)[v.name] : []) : [],
                                                                     listeners: {
                                                                         newitem: function (bs, v, f) {
                                                                             bs.addNewItem({
