@@ -97,6 +97,7 @@ var gc2table = (function () {
                 responsive: true,
                 autoPan: false,
                 locale: 'en-US',
+		callCustomOnload: true,
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -127,6 +128,7 @@ var gc2table = (function () {
             openPopUp = defaults.openPopUp,
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
+            callCustomOnload = defaults.callCustomOnload,
             locale = defaults.locale;
 
         (function poll() {
@@ -264,7 +266,9 @@ var gc2table = (function () {
                     });
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
                     $(el).bootstrapTable('load', data);
-                    customOnLoad();
+		    if (callCustomOnload) {
+			    customOnLoad();
+		    } 
                     bindEvent();
 
                     $(".fixed-table-body").css("overflow", "auto");
