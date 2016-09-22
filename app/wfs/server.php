@@ -920,6 +920,19 @@ function doParse($arr)
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
+                /**
+                 * Load pre-processors
+                 */
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/pre/*.php") as $filename)
+                {
+                    $class = "app\\conf\\wfsprocessors\\pre\\" .explode(".", array_reverse(explode("/", $filename))[0])[0];
+                    $preProcessor = new $class();
+                    $preRes = $preProcessor->process($hey);
+                    if (!$preRes["success"]) {
+                        makeExceptionReport($preRes["message"]);
+                    }
+                    $hey = $preRes["arr"];
+                }
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
@@ -1377,8 +1390,6 @@ function doParse($arr)
             makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
         }
     }
-    //makeExceptionReport(print_r($sqls, true));
-
     $postgisObject->commit();
     $postgisObject->free($result);
 }
