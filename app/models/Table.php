@@ -264,7 +264,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "reltype", $relType);
 
                 // Is indexed?
-                if (1 == 1) {
+                if (2 == 1) {
                     $type = $row['f_table_name'];
                     if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
