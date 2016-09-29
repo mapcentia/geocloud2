@@ -89,6 +89,12 @@ psql -c "CREATE EXTENSION hstore;"
 
 pg_restore dump.bak --no-owner --no-privileges --jobs=2 --dbname=$targetdb
 
+# Make sure all MATERIALIZED VIEWs are refreshed
+for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM pg_matviews"`
+        do
+                psql -c "REFRESH MATERIALIZED VIEW $MATVIEW"
+        done
+
 # Disconnect all from the old db
 psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
