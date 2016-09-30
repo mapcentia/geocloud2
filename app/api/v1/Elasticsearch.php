@@ -64,16 +64,16 @@ class Elasticsearch extends \app\inc\Controller
         if (mb_substr($type, 0, 1, 'utf-8') == "_") {
             $type = "a" . $type;
         }
-        $q = urldecode($get['q']);
-        $size = ($get['size'] != false && $get['size'] !== NULL) ? "&size={$get['size']}" : "";
-        $from = ($get['from'] != false && $get['from'] !== NULL) ? "&from={$get['from']}" : "";
-        $pretty = (($get['pretty']) || $get['pretty'] == "true") ? $get['pretty'] : "false";
+        $q = isset($get['q']) ? urldecode($get['q']) : "";
+        $size = isset($get['size']) ? "&size={$get['size']}" : "";
+        $from = isset($get['from']) ? "&from={$get['from']}" : "";
+        $pretty = isset($get['pretty']) ? $get['pretty'] : "false";
         $arr = array();
 
         $indices = explode(",", Input::getPath()->part(6));
         $db = Input::getPath()->part(5);
         foreach ($indices as $v) {
-            $arr[] = $db . "_" . $v;
+            $arr[] = $db . ($v ? "_" . $v : "") . ($type ? "_" . $type : "_*");
         }
         $index = implode(",", $arr);
         $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
@@ -82,6 +82,9 @@ class Elasticsearch extends \app\inc\Controller
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
@@ -119,7 +122,7 @@ class Elasticsearch extends \app\inc\Controller
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
             return $response;
         }
-        $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
+        $index = Input::getPath()->part(5) . (Input::getPath()->part(6) ? "_" . Input::getPath()->part(6) : "");
         $es = new \app\models\Elasticsearch();
         $res = $es->delete($index, $type, Input::getPath()->part(8));
         $obj = json_decode($res["json"], true);
@@ -157,8 +160,9 @@ class Elasticsearch extends \app\inc\Controller
         $index = $schema;
         $type = $table;
         $db = Input::getPath()->part(5);
-        $fullIndex = $db . "_" . $index;
         $fullTable = $schema . "." . $table;
+        $fullIndex = $db . "_" . $schema . "_" . $table;
+
         $insert = Input::get('insert') ?: "t";
         $triggerSchema = Input::get('ts') ?: $schema;
         $triggerTable = Input::get('tt') ?: $table;
@@ -209,7 +213,8 @@ class Elasticsearch extends \app\inc\Controller
         // Define default settings for the new index
         $defaultSettings = array(
             "settings" => array(
-                "number_of_shards" => 1,
+                "number_of_shards" => 5,
+                "number_of_replicas" => 0,
                 "analysis" => array
                 (
                     "analyzer" => array
@@ -259,8 +264,8 @@ class Elasticsearch extends \app\inc\Controller
         }
         $es = new \app\models\Elasticsearch();
 
-        // Delete the type
-        $res = $es->delete($fullIndex, $type);
+        // Delete the index
+        $res = $es->delete($fullIndex);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             // If type not already exists we just ignore the error.
@@ -342,7 +347,7 @@ class Elasticsearch extends \app\inc\Controller
         $type = $table;
         $db = Input::getPath()->part(5);
         $fullTable = $schema . "." . $table;
-        $fullIndex = $db . "_" . $index;
+        $fullIndex = $db . "_" . $schema . "_" . $table;
 
         if (mb_substr($type, 0, 1, 'utf-8') == "_") {
             $type = "a" . $type;

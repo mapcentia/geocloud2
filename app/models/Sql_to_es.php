@@ -37,7 +37,7 @@ class Sql_to_es extends Model
         // We create a unique index name
         $errors = false;
         $errors_in = array();
-        $index = $db . "_" . $index;
+        $index = $db . "_" . $index . "_" . $type;
         $name = "_" . rand(1, 999999999) . microtime();
         $name = $this->toAscii($name, null, "_");
         $view = "sqlapi.{$name}";
@@ -91,6 +91,9 @@ class Sql_to_es extends Model
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
         while ($row = $this->fetchRow($result, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {

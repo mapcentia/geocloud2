@@ -18,6 +18,9 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
@@ -30,6 +33,9 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;
@@ -39,14 +45,17 @@ class Elasticsearch extends Model
     public function delete($index, $type = null, $id = null)
     {
         if ($id) {
-            $ch = curl_init($this->host . ":9200/{$index}/{$type}/{$id}");
+            $ch = curl_init($this->host . ":9200/{$index}_{$type}/{$type}/{$id}");
         } elseif ($type) {
-            $ch = curl_init($this->host . ":9200/{$index}/{$type}");
+            $ch = curl_init($this->host . ":9200/{$index}_{$type}");
         } else {
-            $ch = curl_init($this->host . ":9200/{$index}");
+            $ch = curl_init($this->host . ":9200/{$index}_*");
         }
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
         $buffer = curl_exec($ch);
         curl_close($ch);
         $response['json'] = $buffer;

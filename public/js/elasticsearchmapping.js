@@ -193,6 +193,7 @@ elasticsearch.init = function (record, screenName) {
                             fields: ['abbr', 'action'],
                             data: [
                                 ['string', 'string'],
+                                ['text', 'text'],
                                 ['integer', 'integer'],
                                 ['float', 'float'],
                                 ['double', 'double'],

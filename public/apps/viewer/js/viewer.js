@@ -602,7 +602,7 @@ Viewer = function () {
             async: false,
             jsonp: 'jsonp_callback',
             success: function (response) {
-                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "", i, u, l, baseLayersLi=[];
+                var base64name, authIcon, isBaseLayer, arr, groups, metaUrl = "", i, u, l, baseLayersLi = [];
                 groups = [];
                 metaData = response;
                 for (i = 0; i < metaData.data.length; i = i + 1) {
@@ -657,7 +657,7 @@ Viewer = function () {
                                 var text = (response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title;
                                 var cat = '<div class="checkbox"><label><input type="checkbox" id="' + response.data[u].f_table_name + '" data-gc2-id="' + response.data[u].f_table_schema + "." + response.data[u].f_table_name + '"onchange="MapCentia.switchLayer($(this).data(\'gc2-id\'),this.checked)" value="">' + text + authIcon + metaUrl + '</label></div>';
                                 if (response.data[u].baselayer) {
-                                        baseLayersLi.push("<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>");
+                                    baseLayersLi.push("<li><a href=\"javascript:void(0)\" onclick=\"MapCentia.setBaseLayer('" + response.data[u].f_table_schema + "." + response.data[u].f_table_name + "')\">" + text + "</a></li>");
 
                                 } else {
                                     l.push(
@@ -873,7 +873,8 @@ Viewer = function () {
                         var data = metaDataKeys[value.split(".")[1]].data || "SELECT * FROM \"" + metaDataKeys[value.split(".")[1]].f_table_schema + "\".\"" + metaDataKeys[value.split(".")[1]].f_table_name + "\"";
                         if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                             distance = 5 * res[cloud.getZoom()];
-                        };
+                        }
+                        ;
                         var orderBy;
                         qstore[index] = new geocloud.sqlStore({
                             db: db,
@@ -941,7 +942,7 @@ Viewer = function () {
                                     }
                                 }
                             },
-                            error: function(res){
+                            error: function (res) {
                                 alert(res.responseJSON.message);
                             }
                         });
@@ -1006,7 +1007,7 @@ Viewer = function () {
                 if (visLayers.indexOf(v) !== -1) {
                     metaKeys = metaDataKeys[v.split(".")[1]];
                     mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping);
-                    if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
+                    if (typeof mapping[db + "_" + metaKeys.f_table_schema + "_" + metaKeys.es_type_name].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
                         isPoint = true;
                     } else {
                         isPoint = false;
@@ -1117,7 +1118,7 @@ Viewer = function () {
             (function iter() {
                 var v = layerArr[num], metaKeys = metaDataKeys[v.split(".")[1]], fieldConf = $.parseJSON(metaKeys.fieldconf), fields = [], names = [], q, terms = [], sFilter, queryStr, urlQ = encodeURIComponent(query), qFields = [],
                     mapping = $.parseJSON(metaDataKeys[v.split(".")[1]].es_mapping), isPoint;
-                if (typeof mapping[db + "_" + metaKeys.f_table_schema].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
+                if (typeof mapping[db + "_" + metaKeys.f_table_schema + "_" + metaKeys.es_type_name].mappings[metaKeys.es_type_name].properties.geometry.type === "undefined") {
                     isPoint = true;
                 } else {
                     isPoint = false;
@@ -1141,11 +1142,16 @@ Viewer = function () {
                     });
                     var qJson = {
                         "query": {
-                            "filtered": {
-                                "query": {},
+                            "bool": {
+                                "must": {},
+                                "must_not": {
+                                    "exists": {
+                                        "field": "gc2_version_end_date"
+                                    }
+                                },
                                 "filter": {
                                     "bool": {
-                                        "must": [{"missing": {"field": "gc2_version_end_date"}}]
+                                        "must": []
                                     }
                                 }
                             }
@@ -1172,7 +1178,7 @@ Viewer = function () {
                                 "geometry": {
                                     "shape": {
                                         "type": "envelope",
-                                        "geometry.coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
+                                        "coordinates": [[cloud.getExtent().left, cloud.getExtent().top], [cloud.getExtent().right, cloud.getExtent().bottom]]
                                     }
                                 }
                             }
@@ -1180,7 +1186,7 @@ Viewer = function () {
                     }
 
                     // Create terms and fields
-                    var med = {"bool": {"must": []}};
+                    var med = [];
                     $.each(query.split(" "), function (x, n) {
                         var type;
                         if (!isNaN(num) && Number(n) && n % 1 === 0) {
@@ -1204,7 +1210,7 @@ Viewer = function () {
                             }
 
                         });
-                        med.bool.must.push({"bool": {"should": terms}});
+                        med.push({"bool": {"should": terms}});
                         terms = []
                     });
 
@@ -1216,20 +1222,20 @@ Viewer = function () {
                     };
 
                     if (1 === 1) { // Using terms
-                        qJson.query.filtered.query = {"bool": {"should": med}};
+                        qJson.query.bool.must = med;
                     } else {
                         qJson.query.filtered.query = {"query_string": queryStr};
                     }
 
                     if ($("#inside-view-input").is(":checked")) {
-                        qJson.query.filtered.filter.bool.must.push(sFilter);
+                        qJson.query.bool.filter.bool.must.push(sFilter);
                     }
                     q = JSON.stringify(qJson);
 
                     searchLayers[v].addLayer(new geocloud.elasticStore({
                         db: db,
                         index: schema + "/" + v.split(".")[1],
-                        size: med.bool.must[0].bool.should.length === 0 ? 0 : 100,
+                        size: med[0].bool.should.length === 0 ? 0 : 100,
                         clickable: false,
                         styleMap: searchStyle,
                         jsonp: false,
