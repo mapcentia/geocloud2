@@ -104,6 +104,9 @@ class Processvector extends \app\inc\Controller
                 break;
         }
 
+        $type = "linestring";
+
+
         $model = new \app\inc\Model();
         $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
         $tableExist = $tableExist["success"];
