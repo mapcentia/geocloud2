@@ -3,6 +3,7 @@ app/conf/Connection.php
 app/conf/secret.key
 app/conf/public.key
 app/conf/elasticsearch_settings.json
+app/conf/wfsprocessors/classes
 app/tmp/
 app/wms/cfgfiles
 app/wms/mapfiles
