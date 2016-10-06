@@ -104,6 +104,9 @@ class Processvector extends \app\inc\Controller
                 break;
         }
 
+        $type = "linestring";
+
+
         $model = new \app\inc\Model();
         $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
         $tableExist = $tableExist["success"];
@@ -131,7 +134,7 @@ class Processvector extends \app\inc\Controller
             ($skipFailures ? "-skipfailures " : " ") .
             (($delete || $append) ? "-append " : " ") .
             (($overwrite == true && $delete == false) ? "-overwrite " : " ") .
-            "-dim 2 " .
+            "-dim XYZ " .
             /*"--config DXF_ENCODING WIN1252 " .*/
             (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
             (($delete || $append) ? "" : "-lco 'FID=gid' ") .

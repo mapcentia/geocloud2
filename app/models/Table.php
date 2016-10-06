@@ -454,13 +454,30 @@ class Table extends Model
             $multi = false;
         }
         foreach ($this->metaData as $key => $value) {
+            if ($key != $this->primeryKey['attname']) {
+                $fieldsArr[] = $key;
+            }
+        }
+        // Start sorting the fields by sort_id
+        $arr = array();
+        foreach ($fieldsArr as $value) {
+            $arr[] = array($fieldconfArr[$value]->sort_id, $value);
+        }
+        usort($arr, function ($a, $b) {
+            return $a[0] - $b[0];
+        });
+        $fieldsArr = array();
+        foreach ($arr as $value) {
+            $fieldsArr[] = $value[1];
+        }
+        foreach ($fieldsArr as $key) {
+            $value = $this->metaData[$key];
             if ($value['type'] != "geometry" && ($key != $this->primeryKey['attname'] || $includePriKey)) {
                 if (!preg_match($this->specialChars, $key)) {
                     $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
                     $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null, "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
                 }
             }
-
         }
         if ($createKeyFrom) {
             $fieldsForStore[] = array("name" => "_key_", "type" => "string");

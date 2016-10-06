@@ -818,13 +818,16 @@ function doParse($arr)
     $Serializer = new XML_Serializer($serializer_options);
     $workflowData = array();
     foreach ($arr as $key => $featureMember) {
+
+        /**
+         * INSERT
+         */
         if ($key == "Insert") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
             foreach ($featureMember as $hey) {
                 foreach ($hey as $typeName => $feature) {
-
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
                         // Remove ns from properties
@@ -835,7 +838,23 @@ function doParse($arr)
                                 unset($feature[$field]);
                             }
                         }
-                        // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
+
+                        /**
+                         * Load pre-processors
+                         */
+                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
+                            $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                            $preProcessor = new $class($postgisObject);
+                            $preRes = $preProcessor->processInsert($feature, $typeName);
+                            if (!$preRes["success"]) {
+                                makeExceptionReport($preRes["message"]);
+                            }
+                            $feature = $preRes["arr"];
+                        }
+
+                        /**
+                         * Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
+                         */
                         $tableObj = new table($postgisschema . "." . $typeName);
                         if (!array_key_exists("gc2_version_user", $feature) && $tableObj->versioning) $feature["gc2_version_user"] = null;
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
@@ -914,16 +933,36 @@ function doParse($arr)
                 }
             }
         }
+
+        /**
+         * UPDATE
+         */
         if ($key == "Update") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
+
+
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
                 }
+
+                /**
+                 * Load pre-processors
+                 */
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                    $preProcessor = new $class($postgisObject);
+                    $preRes = $preProcessor->processUpdate($hey, $hey["typeName"]);
+                    if (!$preRes["success"]) {
+                        makeExceptionReport($preRes["message"]);
+                    }
+                    $hey = $preRes["arr"];
+                }
+
                 // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
                 foreach ($hey["Property"] as $v) {
@@ -979,12 +1018,30 @@ function doParse($arr)
             $values = array();
             $fields = array();
         }
+
+        /**
+         * DELETE
+         */
         if ($key == "Delete") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
+
+                /**
+                 * Load pre-processors
+                 */
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                    $preProcessor = new $class($postgisObject);
+                    $preRes = $preProcessor->processDelete($hey, $hey['typeName']);
+                    if (!$preRes["success"]) {
+                        makeExceptionReport($preRes["message"]);
+                    }
+                    $hey = $preRes["arr"];
+                }
+
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
@@ -1377,8 +1434,18 @@ function doParse($arr)
             makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
         }
     }
-    //makeExceptionReport(print_r($sqls, true));
 
+    /**
+     * Load post-processors
+     */
+    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/post/*.php") as $filename) {
+        $class = "app\\conf\\wfsprocessors\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+        $postProcessor = new $class($postgisObject);
+        $postRes = $postProcessor->process();
+        if (!$postRes["success"]) {
+            makeExceptionReport($postRes["message"]);
+        }
+    }
     $postgisObject->commit();
     $postgisObject->free($result);
 }
