@@ -16,9 +16,10 @@ header("Content-type: text/plain");
 include_once(__DIR__ . "/../../conf/App.php");
 
 $db = "mydb";
-$inputRel = "geodanmark.kommuner";
-$outputTable = "geodanmark.grid";
-$grid = "geodanmark.grid2";
+$schema = "geodanmark";
+$inputRel = "kommuner";
+$outputTable = "grid";
+$grid = "grid2";
 $typeName = "BYGNING";
 $importTable = "bygning";
 $useGfs = false;
@@ -33,40 +34,40 @@ $database = new Model();
 print_r(\app\conf\Connection::$param);
 
 $sql = "DROP TABLE {$outputTable}";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "DROP TABLE {$grid}";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "CREATE TABLE {$outputTable} AS SELECT st_fishnet('{$inputRel}','the_geom',{$size}, 25832)";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "ALTER TABLE {$outputTable} ALTER st_fishnet TYPE geometry('Polygon', 25832)";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "ALTER TABLE {$outputTable} ADD gid SERIAL";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "ALTER TABLE {$outputTable} ADD gid SERIAL";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "CREATE TABLE {$grid} AS SELECT grid.*
             FROM
-              geodanmark.grid AS grid LEFT JOIN
-              geodanmark.kommuner AS kommuner ON
+              {$schema}.{$outputTable} AS grid LEFT JOIN
+              {$schema}.kommuner AS kommuner ON
               st_intersects(grid.st_fishnet,kommuner.the_geom)
             WHERE kommuner.gid IS NOT NULL";
-echo $sql . "\n";
+//echo $sql . "\n";
 $database->execQuery($sql);
 
 $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid}";
-echo $sql . "\n";
+//echo $sql . "\n";
 $res = $database->execQuery($sql);
 
 while ($row = $database->fetchRow($res)) {
@@ -78,7 +79,7 @@ while ($row = $database->fetchRow($res)) {
 
     file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml", Util::wget($wfsUrl . $bbox));
     if ($useGfs) {
-        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents("{$importTable}.gfs"));
+        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents("/var/www/geocloud2/app/conf/{$importTable}.gfs"));
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
@@ -91,7 +92,7 @@ while ($row = $database->fetchRow($res)) {
         "-a_srs 'EPSG:25832' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
         "/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml " .
-        "-nln geodanmark.{$importTable} " .
+        "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
     exec($cmd, $out, $err);
     print_r($out);
