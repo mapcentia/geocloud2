@@ -5,10 +5,11 @@ app/conf/public.key
 app/conf/elasticsearch_settings.json
 app/conf/wfsprocessors/classes
 app/tmp/
-app/wms/cfgfiles
 app/wms/mapfiles
 app/wms/mapcache
 app/wms/qgsfiles
+app/vendor
+app/libs/vendor
 node_modules
 public/backups
 public/logs
