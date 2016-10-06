@@ -13,9 +13,21 @@ class ComposerStaticInitdac40795a2971f9981d1c054a8a485cd
     );
 
     public static $prefixLengthsPsr4 = array (
+        'Z' => 
+        array (
+            'Zend\\Stdlib\\' => 12,
+            'Zend\\EventManager\\' => 18,
+            'Zend\\Di\\' => 8,
+            'Zend\\Config\\' => 12,
+            'Zend\\Code\\' => 10,
+        ),
         'P' => 
         array (
             'Psr\\Http\\Message\\' => 17,
+        ),
+        'I' => 
+        array (
+            'Interop\\Container\\' => 18,
         ),
         'G' => 
         array (
@@ -26,9 +38,33 @@ class ComposerStaticInitdac40795a2971f9981d1c054a8a485cd
     );
 
     public static $prefixDirsPsr4 = array (
+        'Zend\\Stdlib\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/zendframework/zend-stdlib/src',
+        ),
+        'Zend\\EventManager\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/zendframework/zend-eventmanager/src',
+        ),
+        'Zend\\Di\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/zendframework/zend-di/src',
+        ),
+        'Zend\\Config\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/zendframework/zend-config/src',
+        ),
+        'Zend\\Code\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/zendframework/zend-code/src',
+        ),
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Interop\\Container\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/container-interop/container-interop/src/Interop/Container',
         ),
         'GuzzleHttp\\Psr7\\' => 
         array (
@@ -50,6 +86,13 @@ class ComposerStaticInitdac40795a2971f9981d1c054a8a485cd
             'Postmark\\' => 
             array (
                 0 => __DIR__ . '/..' . '/wildbit/postmark-php/src',
+            ),
+        ),
+        'O' => 
+        array (
+            'Odesk\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/odesk/phystrix/library',
             ),
         ),
     );

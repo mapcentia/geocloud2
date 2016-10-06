@@ -51,6 +51,15 @@ then
     exit 1
 fi
 
+##################
+function if_error
+##################
+{
+    if [[ $? -ne 0 ]]; then # check return code passed to function
+        print "$1 TIME:$TIME"
+        exit $?
+    fi
+}
 
 IFS=$'\r\n' GLOBIGNORE='*' :; ARRAY=($(cat ./whitelist.txt))
 
@@ -65,6 +74,7 @@ for SCHEMA in "${ARRAY[@]}"
     done
 echo $c
 pg_dump --format=c --file dump.bak $c
+if_error "Could not dump database."
 
 # Load in target
 export PGUSER=$targetuser
@@ -88,6 +98,7 @@ psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
 pg_restore dump.bak --no-owner --no-privileges --jobs=2 --dbname=$targetdb
+if_error "Could not restore database."
 
 # Make sure all MATERIALIZED VIEWs are refreshed
 for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM pg_matviews"`

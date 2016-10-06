@@ -4,10 +4,11 @@ app/conf/secret.key
 app/conf/public.key
 app/conf/elasticsearch_settings.json
 app/tmp/
-app/wms/cfgfiles
 app/wms/mapfiles
 app/wms/mapcache
 app/wms/qgsfiles
+app/libs/vendor
+app/vendor
 node_modules
 public/backups
 public/logs
@@ -17,8 +18,6 @@ public/scheduler/sass
 
 !app/tmp/.gitignore
 !public/logs/.gitignore
-!app/wms/cfgfiles/.gitignore
-!app/wms/cfgfiles/_gc2test.tilecache.cfg
 !app/wms/mapfiles/.gitignore
 !app/wms/mapcache/.gitignore
 !app/wms/qgsfiles/.gitignore
