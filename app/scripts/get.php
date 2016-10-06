@@ -47,16 +47,16 @@ fclose($fp);
 function getCmd($dryRun = false, $o)
 {
     global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName;
-    $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+    $cmd = "PGCLIENTENCODING={$encoding} /usr/bin/ogr2ogr " .
         $o . " " .
         "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . " active_schema=" . $schema . "' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $dir . "/" . $tempFile . "' " .
-        "-nln " . ($dryRun ? $randTableName : $safeName) . " " .
+        "-nln " . ($dryRun ? $schema . "." . $randTableName : $schema . "." . $safeName) . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
     return $cmd;
