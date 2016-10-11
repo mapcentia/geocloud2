@@ -5,6 +5,10 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Util;
 
+/**
+ * Class Mapfile
+ * @package app\controllers
+ */
 class Mapfile extends \app\inc\Controller
 {
     private $fonts;
