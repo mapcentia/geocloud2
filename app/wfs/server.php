@@ -1453,6 +1453,7 @@ function doParse($arr)
 function makeExceptionReport($value)
 {
     global $sessionComment;
+    global $postgisObject;
     ob_get_clean();
     ob_start();
     //$postgisObject->rollback();
