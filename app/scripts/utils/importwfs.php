@@ -20,10 +20,10 @@ $schema = "geodanmark";
 $inputRel = "kommuner";
 $outputTable = "grid";
 $grid = "grid2";
-$typeName = "BYGNING";
-$importTable = "bygning";
-$useGfs = false;
-$geomType = "Polygon";
+$typeName = "VANDLOEBSMIDTE";
+$importTable = "vandloebsmidte";
+$useGfs = true;
+$geomType = "Linestring";
 $size = 2000;
 
 new \app\conf\App();
