@@ -339,6 +339,9 @@ wmsClass.init = function (id) {
             {
                 name: "geomtransform"
             },
+            {
+                name: "maxsize"
+            },
             // Label start
             {
                 name: 'label',
@@ -398,6 +401,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: "label_expression"
+            },
+            {
+                name: "label_maxsize"
             },
 
             // label22 start
@@ -460,6 +466,9 @@ wmsClass.init = function (id) {
             {
                 name: "label2_expression"
             },
+            {
+                name: "label2_maxsize"
+            },
 
             // Leader start
             {
@@ -505,7 +514,10 @@ wmsClass.init = function (id) {
             },
             {
                 name: "overlaygeomtransform"
-            }
+            },
+            {
+                name: "overlaymaxsize"
+            },
         ],
         listeners: {
             load: {
@@ -550,7 +562,8 @@ wmsClass.init = function (id) {
                             'width',
                             'angle',
                             'style_opacity',
-                            'geomtransform'
+                            'geomtransform',
+                            'maxsize'
                         ];
                         Ext.each(arr2, function (i, v) {
                             obj2[i] = store.getAt(0).data[i];
@@ -570,7 +583,8 @@ wmsClass.init = function (id) {
                             'overlaywidth',
                             'overlayangle',
                             'overlaystyle_opacity',
-                            'overlaygeomtransform'
+                            'overlaygeomtransform',
+                            'overlaymaxsize'
                         ];
                         Ext.each(arr3, function (i, v) {
                             obj3[i] = store.getAt(0).data[i];
@@ -599,7 +613,8 @@ wmsClass.init = function (id) {
                             'label_backgroundpadding',
                             'label_offsetx',
                             'label_offsety',
-                            'label_expression'
+                            'label_expression',
+                            'label_maxsize'
                         ];
                         Ext.each(arr4, function (i, v) {
                             obj4[i] = store.getAt(0).data[i];
@@ -628,7 +643,8 @@ wmsClass.init = function (id) {
                             'label2_backgroundpadding',
                             'label2_offsetx',
                             'label2_offsety',
-                            'label2_expression'
+                            'label2_expression',
+                            'label2_maxsize'
                         ];
                         Ext.each(arr5, function (i, v) {
                             obj5[i] = store.getAt(0).data[i];
@@ -649,8 +665,8 @@ wmsClass.init = function (id) {
             sortid: 'Sort id',
             name: 'Name',
             expression: 'Expression',
-            class_minscaledenom: 'Max scale',
-            class_maxscaledenom: 'Min scale',
+            class_minscaledenom: __('Min scale denominator') + __("Maximum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            class_maxscaledenom: __('Max scale denominator') + __("Minimum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',
             leader_maxdistance: 'Leader: maxdistance',
@@ -710,7 +726,8 @@ wmsClass.init = function (id) {
             style_opacity: 'Style: opacity',
             linecap: 'Style: line cap',
             pattern: 'Style: pattern',
-            geomtransform: 'Style: geomtransform'
+            geomtransform: 'Style: geomtransform',
+            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true)
         },
         customRenderers: {
             color: cc,
@@ -856,6 +873,11 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
+            }), {}),
+            'maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
             }), {})
         },
         viewConfig: {
@@ -878,7 +900,9 @@ wmsClass.init = function (id) {
             overlaystyle_opacity: 'Style: opacity',
             overlaylinecap: 'Style: line cap',
             overlaypattern: 'Style: pattern',
-            overlaygeomtransform: 'Style: geomtransform'
+            overlaygeomtransform: 'Style: geomtransform',
+            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true)
+
         },
         customRenderers: {
             overlaycolor: cc,
@@ -1061,6 +1085,11 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
+            }), {}),
+            'overlaymaxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
             }), {})
         },
         viewConfig: {
@@ -1076,8 +1105,8 @@ wmsClass.init = function (id) {
         propertyNames: {
             label: 'Label: on',
             label_force: 'Label: force',
-            label_minscaledenom: 'Label: max scale',
-            label_maxscaledenom: 'Label: min scale',
+            label_minscaledenom: __('Label: min scale denominator') + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            label_maxscaledenom: __('Label: max scale denominator') + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             label_position: 'Label: position',
             label_color: 'Label: color',
             label_outlinecolor: 'Label: outline color',
@@ -1092,7 +1121,8 @@ wmsClass.init = function (id) {
             label_offsety: 'Label: offset Y',
             label_font: 'Label: font',
             label_fontweight: 'Label: font weight',
-            label_expression: 'Label: expression'
+            label_expression: 'Label: expression',
+            label_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true)
         },
         customRenderers: {
             label_color: cc,
@@ -1249,6 +1279,11 @@ wmsClass.init = function (id) {
                 store: wmsLayer.fieldsForStoreBrackets,
                 editable: true,
                 triggerAction: 'all'
+            }), {}),
+            'label_maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
             }), {})
         },
         viewConfig: {
@@ -1264,8 +1299,8 @@ wmsClass.init = function (id) {
         propertyNames: {
             label2: 'Label: on',
             label2_force: 'Label: force',
-            label2_minscaledenom: 'Label: max scale',
-            label2_maxscaledenom: 'Label: min scale',
+            label2_minscaledenom: __('Label: min scale denominator') + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            label2_maxscaledenom: __('Label: max scale denominator') + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             label2_position: 'Label: position',
             label2_color: 'Label: color',
             label2_outlinecolor: 'Label: outline color',
@@ -1280,7 +1315,8 @@ wmsClass.init = function (id) {
             label2_offsety: 'Label: offset Y',
             label2_font: 'Label: font',
             label2_fontweight: 'Label: font weight',
-            label2_expression: 'Label: expression'
+            label2_expression: 'Label: expression',
+            label2_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true)
         },
         customRenderers: {
             label2_color: cc,
@@ -1438,6 +1474,11 @@ wmsClass.init = function (id) {
                 store: wmsLayer.fieldsForStoreBrackets,
                 editable: true,
                 triggerAction: 'all'
+            }), {}),
+            'label2_maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
             }), {})
         },
         viewConfig: {
