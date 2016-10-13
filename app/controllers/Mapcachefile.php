@@ -5,13 +5,24 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Model;
 
+/**
+ * Class Mapcachefile
+ * @package app\controllers
+ */
 class Mapcachefile extends \app\inc\Controller
 {
+    /**
+     * @param $file string
+     * @return bool|null|string
+     */
     private function checkSum($file)
     {
         return md5_file($file);
     }
 
+    /**
+     * @return array
+     */
     public function get_index()
     {
         $cache = App::$param["mapCache"]["type"] ?: "disk";
@@ -145,8 +156,9 @@ class Mapcachefile extends \app\inc\Controller
                 }
             }
 
-            // Schema start
-
+            /**
+             * Schema start
+             */
             foreach ($layerArr as $k => $v) {
                 if (sizeof($v) > 0) {
                     ?>
@@ -181,7 +193,7 @@ class Mapcachefile extends \app\inc\Controller
                             echo "<grid>{$k2}</grid>\n";
                         }
                         ?>
-                        <format>jpeg_low</format>
+                        <format>PNG</format>
                         <metatile>3 3</metatile>
                         <metabuffer>0</metabuffer>
                         <expires>60</expires>
@@ -194,8 +206,9 @@ class Mapcachefile extends \app\inc\Controller
                 }
             }
 
-            // Group start
-
+            /**
+             * Group start
+             */
             foreach ($groupArr as $k => $v) {
                 $unique = array_unique($groups[$k]);
                 foreach ($unique as $v2) {
