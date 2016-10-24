@@ -6384,7 +6384,7 @@
                 return this.addPointerListener(obj, type, handler, id);
             }
             if (L.Browser.touch && (type === 'dblclick') && this.addDoubleTapListener) {
-                this.addDoubleTapListener(obj, handler, id);
+                //this.addDoubleTapListener(obj, handler, id);
             }
 
             if ('addEventListener' in obj) {
