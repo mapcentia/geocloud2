@@ -2,6 +2,8 @@
 /*global jQuery:false */
 /*global Backbone:false */
 /*global jRespond:false */
+/*global window:false */
+/*global console:false */
 /*global _:false */
 var gc2table = (function () {
     "use strict";
@@ -164,18 +166,11 @@ var gc2table = (function () {
                     }
 
                 });
-
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
                     $(el).bootstrapTable('scrollTo', row.index() * row.height());
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
-                $.each(store.layer._layers, function (i, layer) {
-                    layer.on({
-                        click: click
-                    });
-                });
-
                 $(el).append("<thead><tr></tr></thead>");
                 $.each(cm, function (i, v) {
                     $(el + ' thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false' data-formatter='" + (v.formatter || "") + "'>" + v.header + "</th>");
@@ -219,7 +214,7 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
-                        $('tbody > tr').on("click", function (e) {
+                        $('#' + el + ' > tbody > tr').on("click", function (e) {
                             object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
                             var layer = m.map._layers[$(this).data('uniqueid')];
                             setTimeout(function () {
