@@ -214,7 +214,7 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
-                        $('#' + el + ' > tbody > tr').on("click", function (e) {
+                        $(el + ' > tbody > tr').on("click", function (e) {
                             object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
                             var layer = m.map._layers[$(this).data('uniqueid')];
                             setTimeout(function () {
