@@ -1,9 +1,15 @@
 <?php
 namespace app\inc;
 
+use Exception;
 use PDO;
+use PDOStatement;
 use app\conf\Connection;
 
+/**
+ * Class Model
+ * @package app\inc
+ */
 class Model
 {
     var $postgishost;
@@ -26,10 +32,17 @@ class Model
         $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
     }
 
-    function fetchRow($result, $result_type = "assoc")
+    /**
+     * @param PDOStatement $result
+     * @param string $result_type
+     * @return array
+     * @throws Exception
+     */
+    public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
+        $row = [];
         if (isset($this->PDOerror)) {
-            //throw new \Exception($this->PDOerror[0]);
+            throw new Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :
@@ -41,10 +54,17 @@ class Model
         return ($row);
     }
 
-    function fetchAll($result, $result_type = "both")
+    /**
+     * @param PDOStatement $result
+     * @param string $result_type
+     * @return mixed
+     * @throws Exception
+     */
+    public function fetchAll(PDOStatement $result, $result_type = "both")
     {
+        $rows = [];
         if ($this->PDOerror) {
-            throw new \Exception($this->PDOerror[0]);
+            throw new Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :
@@ -54,25 +74,32 @@ class Model
                 $rows = $result->fetchAll();
                 break;
         }
-
         return ($rows);
     }
 
-    function numRows($result)
+    /**
+     * @param PDOStatement $result
+     * @return int
+     */
+    public function numRows(PDOStatement $result)
     {
-        //$num=pg_numrows($result);
         $num = sizeof($result);
         return ($num);
     }
 
-    function free($result)
+    /**
+     * @param PDOStatement $result
+     */
+    public function free(PDOStatement $result)
     {
-        //$test=pg_free_result($result);
         $result = NULL;
-        //PDO
     }
 
-    function getPrimeryKey($table)
+    /**
+     * @param string $table
+     * @return array|null
+     */
+    public function getPrimeryKey($table)
     {
         unset($this->PDOerror);
         $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
@@ -88,7 +115,11 @@ class Model
         }
     }
 
-    function hasPrimeryKey($table)
+    /**
+     * @param string $table
+     * @return bool|null
+     */
+    public function hasPrimeryKey($table)
     {
         unset($this->PDOerror);
         $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
@@ -104,24 +135,38 @@ class Model
         }
     }
 
-    function begin()
+    /**
+     *
+     */
+    public function begin()
     {
         $this->db->beginTransaction();
     }
 
-    function commit()
+    /**
+     *
+     */
+    public function commit()
     {
         $this->db->commit();
         $this->db = NULL;
     }
 
-    function rollback()
+    /**
+     *
+     */
+    public function rollback()
     {
         $this->db->rollback();
         $this->db = NULL;
     }
 
-    function prepare($sql)
+    /**
+     * @param $sql
+     * @return mixed
+     * @throws Exception
+     */
+    public function prepare($sql)
     {
         if (!$this->db) {
             $this->connect("PDO");
@@ -131,11 +176,18 @@ class Model
             $stmt = $this->db->prepare($sql);
         } catch (\PDOException $e) {
             $this->PDOerror[] = $e->getMessage();
+            throw new Exception($e->getMessage());
         }
         return $stmt;
     }
 
-    function execQuery($query, $conn = "PDO", $queryType = "select")
+    /**
+     * @param string $query
+     * @param string $conn
+     * @param string $queryType
+     * @return bool|integer|PDOStatement
+     */
+    public function execQuery($query, $conn = "PDO", $queryType = "select")
     {
         $result = null;
         switch ($conn) {
@@ -172,8 +224,14 @@ class Model
         }
     }
 
-    function sql($q)
+    /**
+     * @param string $q
+     * @return array
+     */
+    public function sql($q)
     {
+        $response = [];
+        $firstRow = false;
         $result = $this->execQuery($q);
         while ($row = $this->fetchRow($result, "assoc")) {
             if (!$firstRow) {
@@ -194,7 +252,7 @@ class Model
         return $response;
     }
 
-    function getMetaData($table, $temp = false, $addGeomType = false)
+    public function getMetaData($table, $temp = false, $addGeomType = false)
     {
         $arr = array();
         preg_match("/^[\w'-]*\./", $table, $matches);
@@ -475,14 +533,17 @@ class Model
         return $response;
     }
 
+    /**
+     * @return array
+     */
     public function postgisVersion()
     {
+        $response = [];
         $sql = "SELECT PostGIS_Lib_Version()";
         $res = $this->prepare($sql);
         try {
             $res->execute();
         } catch (\PDOException $e) {
-            $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -494,8 +555,14 @@ class Model
         return $response;
     }
 
+    /**
+     * @param string $t
+     * @param string $c
+     * @return array
+     */
     public function doesColumnExist($t, $c)
     {
+        $response = [];
         $bits = explode(".", $t);
         $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$bits[0]}' AND table_name='{$bits[1]}' and column_name='{$c}'";
         $res = $this->prepare($sql);

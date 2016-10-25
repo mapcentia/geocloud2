@@ -16,6 +16,11 @@ class Elasticsearch extends \app\inc\Controller
         $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
     }
 
+    /**
+     * @param string $db
+     * @param string $key
+     * @return mixed
+     */
     private function checkAuth($db, $key)
     {
         //die($this->clientIp);

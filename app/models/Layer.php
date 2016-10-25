@@ -359,12 +359,12 @@ class Layer extends \app\models\Table
 
     /**
      * Helper method
-     * @param $array
-     * @param $key
-     * @param $value
+     * @param $array array
+     * @param $key string
+     * @param $value mixed
      * @return array
      */
-    private function array_push_assoc($array, $key, $value)
+    private function array_push_assoc(array $array, $key, $value)
     {
         $array[$key] = $value;
         return $array;

@@ -4,6 +4,10 @@ namespace app\models;
 
 use app\inc\Util;
 
+/**
+ * Class Classification
+ * @package app\models
+ */
 class Classification extends \app\inc\Model
 {
     private $layer;
@@ -12,6 +16,10 @@ class Classification extends \app\inc\Model
     private $geometryType;
     private $tile;
 
+    /**
+     * Classification constructor.
+     * @param string $table
+     */
     function __construct($table)
     {
         parent::__construct();

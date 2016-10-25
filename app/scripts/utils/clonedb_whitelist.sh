@@ -111,15 +111,20 @@ for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM 
 psql -c "SELECT * FROM settings.geometry_columns_view" >/dev/null;
 if_error "The Settings schema is missing";
 
-# Disconnect all from the old db
-psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
-FROM pg_stat_activity
-WHERE pg_stat_activity.datname = '$sourcedb'
-  AND pid <> pg_backend_pid();"
+# Make sure all are disconnected from the target db before rename
+tmpdb="$sourcedb`date +%Y_%m_%d_%H_%M_%S`"
+echo $tmpdb
+psql postgres -c "
+BEGIN;
+SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$sourcedb' AND pid <> pg_backend_pid();
+alter database $sourcedb rename to $tmpdb;
+SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$targetdb' AND pid <> pg_backend_pid();
+alter database $targetdb rename to $sourcedb;
+COMMIT;
+"
+if_error "Could not rename database."
 
-# Rename target to old
-psql postgres -c "drop database $sourcedb"
-psql postgres -c "alter database $targetdb rename to $sourcedb"
+psql postgres -c "drop database $tmpdb"
 
 #Clean up
 rm dump.bak

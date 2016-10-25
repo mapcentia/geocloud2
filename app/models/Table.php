@@ -22,7 +22,7 @@ class Table extends Model
 
     /**
      * Table constructor.
-     * @param $table
+     * @param string $table
      * @param bool $temp
      * @param bool $addGeomType
      */
@@ -54,7 +54,6 @@ class Table extends Model
             $this->exits = false;
         } else {
             $this->metaData = $this->getMetaData($this->table, $temp, $addGeomType);
-            //die(print_r($this->metaData, true));
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
@@ -77,7 +76,11 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
-    private function getType($field)
+    /**
+     * @param array $field
+     * @return array
+     */
+    private function getType(array $field)
     {
         if (preg_match("/smallint/", $field['type']) ||
             preg_match("/integer/", $field['type']) ||
@@ -141,25 +144,23 @@ class Table extends Model
 
     /**
      * Helper method
-     * @param $array
-     * @param $key
-     * @param $value
+     * @param array $array
+     * @param string $key
+     * @param string $value
      * @return array
      */
-    private function array_push_assoc($array, $key, $value)
+    private function array_push_assoc(array $array, $key, $value)
     {
         $array[$key] = $value;
         return $array;
     }
 
-    // TODO Move to layer model. This may belong the Layer class
+    // TODO Move to layer model. This may belong to the Layer class
     /**
      * @param null $createKeyFrom
-     * @param string $fields
-     * @param null $whereClause
      * @return mixed
      */
-    public function getRecords($createKeyFrom = NULL, $fields = "*", $whereClause = NULL) //
+    public function getRecords($createKeyFrom = NULL) //
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
@@ -227,7 +228,6 @@ class Table extends Model
             $matViews[$row["matviewname"]] = true;
             $matViewDefinitions[$row["matviewname"]] = $row["definition"];
         }
-
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = (array)json_decode($row["privileges"]);
             $arr = array();
@@ -295,7 +295,7 @@ class Table extends Model
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                    $output = curl_exec($ch);
+                    curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
                     if ($httpcode == "200") {
@@ -312,11 +312,12 @@ class Table extends Model
 
     /**
      * SQL Group
-     * @param $field
+     * @param string $field
      * @return array
      */
     function getGroupBy($field)
     {
+        $arr = [];
         $sql = "SELECT {$field} AS {$field} FROM {$this->table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
@@ -334,11 +335,12 @@ class Table extends Model
 
     /**
      * What is the difference to the above?
-     * @param $field
+     * @param string $field
      * @return array
      */
     public function getGroupByAsArray($field)
     {
+        $arr = [];
         $sql = "SELECT DISTINCT({$field}) as distinct FROM {$this->table} ORDER BY {$field}";
         $res = $this->prepare($sql);
         try {
@@ -359,10 +361,11 @@ class Table extends Model
 
     /**
      * Is it used?
-     * @return mixed
+     * @return array
      */
     public function destroy()
     {
+        $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
         try {
@@ -452,10 +455,10 @@ class Table extends Model
                 $sql .= implode(",", $pairArr);
                 $sql .= " WHERE {$where}";
                 $result = $this->execQuery($sql, "PDO", "transaction");
-                // If row does not exits, insert instead. Move to an insert method
+                // If row does not exits, insert instead.
                 if ((!$result) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO {$this->table} ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
-                    $result = $this->execQuery($sql, "PDO", "transaction");
+                    $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }
                 if (!$this->PDOerror) {
@@ -471,7 +474,6 @@ class Table extends Model
                 unset($keyArr);
                 unset($valueArr);
             }
-
         }
         return $response;
     }
@@ -485,6 +487,10 @@ class Table extends Model
     public function getColumnsForExtGridAndStore($createKeyFrom = NULL, $includePriKey = false)
     {
         $response = [];
+        $fieldsArr = [];
+        $fieldsForStore = [];
+        $columnsForGrid = [];
+        $type = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($fieldconfArr as $key => $value) {
             if ($value->properties == "*") {
@@ -518,7 +524,7 @@ class Table extends Model
         usort($arr, function ($a, $b) {
             return $a[0] - $b[0];
         });
-        $fieldsArr = array();
+        $fieldsArr = []; // Reset
         foreach ($arr as $value) {
             $fieldsArr[] = $value[1];
         }
@@ -536,7 +542,6 @@ class Table extends Model
             $fieldsForStore[] = array("name" => "pkey", "type" => "string");
             $fieldsForStore[] = array("name" => "hasPkey", "type" => "bool");
         }
-
         $response["forStore"] = $fieldsForStore;
         $response["forGrid"] = $columnsForGrid;
         $response["type"] = $type;
@@ -584,12 +589,12 @@ class Table extends Model
         $response['success'] = true;
         $response['message'] = "Structure loaded";
         $response['versioned'] = $this->versioning;
-        $response['flowflow'] = $this->workflow;
+        $response['flowflow'] = $this->workflow; //TODO ?
         return $response;
     }
 
     /**
-     * @param $_key_
+     * @param string $_key_
      * @return array
      */
     private function purgeFieldConf($_key_)
@@ -611,14 +616,14 @@ class Table extends Model
     }
 
     /**
-     * @param $data
-     * @param $key
+     * @param mixed $data
+     * @param string $key
      * @return array
      */
     public function updateColumn($data, $key) // Only geometry tables
     {
         $response = [];
-        $res = $this->purgeFieldConf($key); // TODO What?
+        $this->purgeFieldConf($key); // TODO What?
         $data = $this->makeArray($data);
         $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
@@ -626,7 +631,6 @@ class Table extends Model
             $safeColumn = $this->toAscii($value->column, array(), "_");
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
                 $sql = "ALTER TABLE {$this->table} ALTER {$value->column} " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
-                //die($sql);
                 $res = $this->prepare($sql);
                 try {
                     $res->execute();
@@ -686,7 +690,7 @@ class Table extends Model
     }
 
     /**
-     * @param $data
+     * @param mixed $data
      * @param null $whereClause
      * @param $_key_
      * @return array
@@ -719,16 +723,16 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
         }
-        $res = $this->purgeFieldConf($_key_);
+        $this->purgeFieldConf($_key_);
         return $response;
     }
 
     /**
      * Add a column. Works on all tables
-     * @param $data
+     * @param array $data
      * @return array
      */
-    public function addColumn($data)
+    public function addColumn(array $data)
     {
         $response = [];
         $safeColumn = $this->toAscii($data['column'], array(), "_");
@@ -773,6 +777,9 @@ class Table extends Model
                 break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
+                break;
+            default:
+                $type = "varchar(255)";
                 break;
         }
         $sql .= "ALTER TABLE {$this->table} ADD COLUMN {$safeColumn} {$type};";
@@ -987,8 +994,8 @@ class Table extends Model
 
     /**
      * Creates a geometry table
-     * @param $table string
-     * @param $type string
+     * @param string $table
+     * @param string $type
      * @param int $srid
      * @return array
      */
@@ -1048,7 +1055,7 @@ class Table extends Model
     }
 
     /**
-     * @param $notArray mixed
+     * @param mixed $notArray
      * @return array
      */
     public function makeArray($notArray)
@@ -1071,7 +1078,7 @@ class Table extends Model
     }
 
     /**
-     * @param $field
+     * @param string $field
      * @return array
      */
     public function checkcolumn($field)
@@ -1087,9 +1094,9 @@ class Table extends Model
     }
 
     /**
-     * @param $table
-     * @param $offset
-     * @param $limit
+     * @param string $table
+     * @param string $offset
+     * @param string $limit
      * @return array
      */
     public function getData($table, $offset, $limit) //
@@ -1122,7 +1129,6 @@ class Table extends Model
             $response['code'] = 401;
             return $response;
         }
-
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
             foreach ($row as $key => $value) {
@@ -1177,8 +1183,8 @@ class Table extends Model
     }
 
     /**
-     * @param $data
-     * @param $keyName
+     * @param mixed $data
+     * @param string $keyName
      * @return array
      */
     public function deleteRecord($data, $keyName) // All tables
@@ -1209,7 +1215,7 @@ class Table extends Model
 
     /**
      * Works on all tables
-     * @param $pkey
+     * @param string $pkey
      * @return array
      */
     public function getRecordByPri($pkey)

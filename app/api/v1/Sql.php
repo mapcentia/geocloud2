@@ -136,8 +136,6 @@ class Sql extends \app\inc\Controller
         $parsedSQL = $parser->parsed;
         $this->usedRelations = array();
 
-        //print_r($parsedSQL);
-
         // First recursive go through the SQL to find FROM in select, update and delete
         foreach ($this->recursiveFind($parsedSQL, "FROM") as $x) {
             $this->parseSelect($x);
