@@ -102,7 +102,6 @@ class Table extends \app\inc\Controller
 
     public function put_data()
     {
-
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         $this->table = new \app\models\table(Input::getPath()->part(4));
         $key = Input::getPath()->part(5);

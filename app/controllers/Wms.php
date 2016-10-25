@@ -1,11 +1,19 @@
 <?php
 namespace app\controllers;
 
+
 use \app\conf\App;
 use \app\inc\Util;
 
+/**
+ * Class Wms
+ * @package app\controllers
+ */
 class Wms extends \app\inc\Controller
 {
+    /**
+     * Wms constructor.
+     */
     function __construct()
     {
         if (\app\inc\Input::getPath()->part(3) == "tilecache") {
@@ -67,6 +75,10 @@ class Wms extends \app\inc\Controller
         ms_ioresethandlers();*/
     }
 
+    /**
+     * @param $db string
+     * @param $postgisschema string
+     */
     public function fetch($db, $postgisschema)
     {
 

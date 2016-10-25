@@ -7,19 +7,31 @@ class Controller
 {
     public $response;
 
-    // Implement OPTIONS method for all action controllers. Used in CORS.
+    /**
+     * Implement OPTIONS method for all action controllers.
+     */
     public function options_index()
     {
         //Pass
     }
 
+    /**
+     * Implement HEAD method for all action controllers.
+     */
     public function head_index()
     {
         //Pass
     }
 
+    /**
+     * @param null $key
+     * @param array $level
+     * @param bool $neverAllowSubUser
+     * @return array
+     */
     public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
     {
+        $response = [];
         if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
             $response['success'] = true;
         } elseif ($_SESSION['subuser']) {
@@ -47,6 +59,11 @@ class Controller
         return $response;
     }
 
+    /**
+     * @param $user
+     * @param $key
+     * @return bool
+     */
     public function authApiKey($user, $key)
     {
         global $postgisdb;
@@ -61,6 +78,11 @@ class Controller
         }
     }
 
+    /**
+     * @param $layer
+     * @param $db
+     * @param $subUser
+     */
     public function basicHttpAuthLayer($layer, $db, $subUser)
     {
         $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
@@ -79,6 +101,14 @@ class Controller
         }
     }
 
+    /**
+     * @param $layer
+     * @param $subUser
+     * @param $transaction
+     * @param $inputApiKey
+     * @param $rels
+     * @return array
+     */
     public function ApiKeyAuthLayer($layer, $subUser, $transaction, $inputApiKey, $rels)
     {
         // Check if layer has schema prefix and add 'public' if no.

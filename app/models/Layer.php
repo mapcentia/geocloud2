@@ -13,11 +13,11 @@ class Layer extends \app\models\Table
     }
 
     /**
+     * Secure. Using now user input.
      * @param string $_key_
      * @param string $column
      * @return mixed
      */
-    // Secure. Using nu user input.
     public function getValueFromKey($_key_, $column)
     {
         $rows = $this->getRecords();
@@ -33,17 +33,18 @@ class Layer extends \app\models\Table
     }
 
     /**
+     * Secure. Using prepared statements.
      * @param bool $schema
      * @param bool $layer
      * @param bool $auth
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
-     * @return mixed
+     * @return array
      */
-    // Secure. Using prepared statements.
     public function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
     {
+        $response = [];
         $where = ($auth) ?
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
@@ -206,9 +207,9 @@ class Layer extends \app\models\Table
     }
 
     /**
+     * Secure. Using now user input.
      * @return array
      */
-    // Secure. Using nu user input.
     public function getSchemas() // All tables
     {
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
@@ -226,6 +227,11 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * CartoMobile is deprecated
+     * @param $_key_
+     * @return mixed
+     */
     public function getCartoMobileSettings($_key_) // Only geometry tables
     {
         $response['success'] = true;
@@ -252,6 +258,12 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * CartoMobile is deprecated
+     * @param $data
+     * @param $_key_
+     * @return mixed
+     */
     public function updateCartoMobileSettings($data, $_key_)
     {
         $table = new Table("settings.geometry_columns_join");
@@ -351,7 +363,14 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    private function array_push_assoc($array, $key, $value)
+    /**
+     * Helper method
+     * @param $array array
+     * @param $key string
+     * @param $value mixed
+     * @return array
+     */
+    private function array_push_assoc(array $array, $key, $value)
     {
         $array[$key] = $value;
         return $array;
@@ -931,7 +950,6 @@ class Layer extends \app\models\Table
             return $response;
         }
     }
-
 
     public function deleteCkan($key)
     {

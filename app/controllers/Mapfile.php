@@ -5,6 +5,10 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Util;
 
+/**
+ * Class Mapfile
+ * @package app\controllers
+ */
 class Mapfile extends \app\inc\Controller
 {
     private $fonts;
@@ -542,6 +546,15 @@ class Mapfile extends \app\inc\Controller
                         echo "\n";
                         ?>
 
+                        #MAXSIZE
+                        <?php
+                        if ($class['maxsize']) {
+
+                            echo "MAXSIZE {$class['maxsize']}";
+                        }
+                        echo "\n";
+                        ?>
+
                         END # style
 
                         STYLE
@@ -626,6 +639,15 @@ class Mapfile extends \app\inc\Controller
                             echo "\n"; ?>
                             PARTIALS false
                             MINSIZE 1
+
+                            #MAXSIZE
+                            <?php
+                            if ($class['label_maxsize']) {
+
+                                echo "MAXSIZE {$class['label_maxsize']}";
+                            }
+                            echo "\n";
+                            ?>
                             <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
                             <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                             <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
@@ -693,7 +715,15 @@ class Mapfile extends \app\inc\Controller
                             POSITION <?php echo ($class['label2_position']) ?: "auto";
                             echo "\n"; ?>
                             PARTIALS false
-                            MINSIZE 6
+                            MINSIZE 1
+                            #MAXSIZE
+                            <?php
+                            if ($class['label2_maxsize']) {
+
+                                echo "MAXSIZE {$class['label2_maxsize']}";
+                            }
+                            echo "\n";
+                            ?>
                             <?php if ($class['label2_maxscaledenom']) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
                             <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
                             <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>

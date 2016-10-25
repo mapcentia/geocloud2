@@ -51,6 +51,15 @@ then
     exit 1
 fi
 
+##################
+function if_error
+##################
+{
+    if [[ $? -ne 0 ]]; then # check return code passed to function
+        print "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+        exit $?
+    fi
+}
 
 IFS=$'\r\n' GLOBIGNORE='*' :; ARRAY=($(cat ./whitelist.txt))
 
@@ -65,6 +74,7 @@ for SCHEMA in "${ARRAY[@]}"
     done
 echo $c
 pg_dump --format=c --file dump.bak $c
+if_error "Could not dump database."
 
 # Load in target
 export PGUSER=$targetuser
@@ -87,7 +97,9 @@ psql -c "CREATE EXTENSION \"uuid-ossp\";"
 psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
+# pg_restore will ignore errors (some errors are harmless). In such case it will exit with status 1. Therefore can't we check.
 pg_restore dump.bak --no-owner --no-privileges --jobs=2 --dbname=$targetdb
+#if_error "Could not restore database."
 
 # Make sure all MATERIALIZED VIEWs are refreshed
 for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM pg_matviews"`
@@ -95,15 +107,24 @@ for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM 
                 psql -c "REFRESH MATERIALIZED VIEW $MATVIEW"
         done
 
-# Disconnect all from the old db
-psql postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
-FROM pg_stat_activity
-WHERE pg_stat_activity.datname = '$sourcedb'
-  AND pid <> pg_backend_pid();"
+# Check if settings schema is available in target.
+psql -c "SELECT * FROM settings.geometry_columns_view" >/dev/null;
+if_error "The Settings schema is missing";
 
-# Rename target to old
-psql postgres -c "drop database $sourcedb"
-psql postgres -c "alter database $targetdb rename to $sourcedb"
+# Make sure all are disconnected from the target db before rename
+tmpdb="$sourcedb`date +%Y_%m_%d_%H_%M_%S`"
+echo $tmpdb
+psql postgres -c "
+BEGIN;
+SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$sourcedb' AND pid <> pg_backend_pid();
+alter database $sourcedb rename to $tmpdb;
+SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$targetdb' AND pid <> pg_backend_pid();
+alter database $targetdb rename to $sourcedb;
+COMMIT;
+"
+if_error "Could not rename database."
+
+psql postgres -c "drop database $tmpdb"
 
 #Clean up
 rm dump.bak

@@ -51,7 +51,9 @@ textarea {
 
 .gc2map td,
 .gc2map th {
-    padding: 0 !important;
+    padding-right: 10px;
+    vertical-align: top;
+    padding-bottom: 3px;
     background-color: transparent;
     border-top: none !important;
     border-left: none !important;

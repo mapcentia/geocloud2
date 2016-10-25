@@ -4,6 +4,10 @@ namespace app\models;
 
 use app\inc\Model;
 
+/**
+ * Class Database
+ * @package app\models
+ */
 class Database extends \app\inc\Model
 {
     private function createUser($name)
@@ -62,7 +66,6 @@ class Database extends \app\inc\Model
             print_r($this->PDOerror);
             return false;
         }
-        return $response;
     }
 
     public function doesDbExist($name)
@@ -96,7 +99,7 @@ class Database extends \app\inc\Model
 
     public function listAllSchemas()
     {
-        $arr = array();
+        $arr = [];
         $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns GROUP BY f_table_schema";
         $res = $this->prepare($sql);
         try {

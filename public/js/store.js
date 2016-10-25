@@ -10,6 +10,13 @@
 /*global gc2i18n:false */
 /*global subUser:false */
 /*global __:false */
+
+"use strict";
+
+/**
+ *
+ * Configure Ext
+ */
 Ext.Ajax.disableCaching = false;
 Ext.QuickTips.init();
 Ext.MessageBox.buttonText = {
@@ -18,16 +25,27 @@ Ext.MessageBox.buttonText = {
     yes: "<i class='fa fa-check'></i> " + __("Yes"),
     no: "<i class='fa fa-remove'></i> " + __("No")
 }
+
+/**
+ * Set vars in global scope
+ */
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, resetButtons,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
     dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
     enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
+/**
+ * Init the app on ready state
+ */
 $(window).ready(function () {
-    "use strict";
-    Ext.Container.prototype.bufferResize = false;
+    Ext.Container.prototype.bufferResize = false; // TODO Move up?
     var winAdd, winMoreSettings, fieldsForStore = {}, groups, groupsStore, tagStore, subUsers;
+
+    /**
+     * Make sync calls
+     * TODO Make them async and poll
+     */
     $.ajax({
         url: '/controllers/layer/columnswithkey',
         async: false,
@@ -61,22 +79,45 @@ $(window).ready(function () {
         }
     });
 
+    /**
+     *
+     * @type {Ext.data.JsonReader}
+     */
     var writer = new Ext.data.JsonWriter({
         writeAllFields: false,
         encode: false
     });
+
+    /**
+     *
+     * @type {Ext.data.JsonReader}
+     */
     var reader = new Ext.data.JsonReader({
         successProperty: 'success',
         idProperty: '_key_',
         root: 'data',
         messageProperty: 'message'
     }, fieldsForStore);
+
+    /**
+     *
+     * @param store
+     * @param action
+     * @param result
+     * @param transaction
+     * @param rs
+     */
     var onWrite = function (store, action, result, transaction, rs) {
         if (transaction.success) {
             groupsStore.load();
             writeFiles();
         }
     };
+
+    /**
+     *
+     * @type {Ext.data.HttpProxy}
+     */
     var proxy = new Ext.data.HttpProxy({
         restful: true,
         type: 'json',
@@ -110,14 +151,22 @@ $(window).ready(function () {
             }
         }
     });
+
+    /**
+     *
+     * @type {Ext.data.Store}
+     */
     store = new Ext.data.Store({
         writer: writer,
         reader: reader,
         proxy: proxy,
         autoSave: true
     });
-    store.load();
 
+    /**
+     *
+     * @type {Ext.data.JsonStore}
+     */
     workflowStore = new Ext.data.JsonStore({
         url: '/controllers/workflow',
         autoDestroy: true,
@@ -167,8 +216,11 @@ $(window).ready(function () {
             }
         }
     });
-    //workflowStore.load();
 
+    /**
+     *
+     * @type {Ext.data.Store}
+     */
     groupsStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
             successProperty: 'success',
@@ -180,8 +232,11 @@ $(window).ready(function () {
         ]),
         url: '/controllers/layer/groups'
     });
-    groupsStore.load();
 
+    /**
+     *
+     * @type {Ext.data.Store}
+     */
     tagStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
             successProperty: 'success',
@@ -193,8 +248,11 @@ $(window).ready(function () {
         ]),
         url: '/controllers/layer/tags'
     });
-    tagStore.load();
 
+    /**
+     *
+     * @type {Ext.data.Store}
+     */
     var schemasStore = new Ext.data.Store({
         reader: new Ext.data.JsonReader({
             successProperty: 'success',
@@ -206,9 +264,11 @@ $(window).ready(function () {
         ]),
         url: '/controllers/database/schemas'
     });
-    schemasStore.load();
 
-    //var editor = new Ext.ux.grid.RowEditor();
+    /**
+     * Main layer grid in Database tabe
+     * @type {Ext.grid.EditorGridPanel}
+     */
     var grid = new Ext.grid.EditorGridPanel({
         //plugins: [editor],
         store: store,
@@ -1172,7 +1232,7 @@ $(window).ready(function () {
                                                         data.push(
                                                             {
                                                                 _key_: v.get("_key_"),
-                                                                tags: typeof values.tags === "string" ? values.tags === "" ? null : [values.tags] :  values.tags
+                                                                tags: typeof values.tags === "string" ? values.tags === "" ? null : [values.tags] : values.tags
                                                             }
                                                         );
                                                     });
@@ -2087,10 +2147,12 @@ $(window).ready(function () {
             }
         }
     });
-    Ext.getCmp("schemabox").on('select', function (e) {
-        window.location = "/store/" + screenName + "/" + e.value;
-    });
 
+    /**
+     *
+     * @param btn
+     * @param ev
+     */
     onAdd = function (btn, ev) {
         addShape.init();
         var p = new Ext.Panel({
@@ -2230,12 +2292,20 @@ $(window).ready(function () {
         addVector();
     };
 
+    // TODO Set func as var?
+    /**
+     *
+     */
     function onEdit() {
         var records = grid.getSelectionModel().getSelections(),
             s = Ext.getCmp("structurepanel"),
-            detailPanel = Ext.getCmp('detailPanel');
+            detailPanel = Ext.getCmp('detailPanel'),
+            detailPanelTemplate = new Ext.Template(['<table border="0">' +
+            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td>{tags}</td></tr>' +
+            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Created') + '</b></td><td>{created}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
+            '</table>']);
         if (records.length === 1) {
-            bookTpl.overwrite(detailPanel.body, records[0].data);
+            detailPanelTemplate.overwrite(detailPanel.body, records[0].data);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
             tableStructure.init(records[0], screenName);
@@ -2248,10 +2318,19 @@ $(window).ready(function () {
         }
     }
 
-    function onSave() {
+    // TODO Is it used?
+    /**
+     *
+     */
+    /*function onSave() {
         store.save();
-    }
+    }*/
 
+    /**
+     *
+     * @param e
+     * @returns {boolean}
+     */
     onEditWMSClasses = function (e) {
         var record = null, markup;
         grid.getStore().each(function (rec) {  // for each row
@@ -2330,6 +2409,12 @@ $(window).ready(function () {
         updateLegend();
     };
 
+    /**
+     *
+     * @param subuser
+     * @param key
+     * @param privileges
+     */
     updatePrivileges = function (subuser, key, privileges) {
         var param = {
             data: {
@@ -2359,6 +2444,12 @@ $(window).ready(function () {
         });
     };
 
+    /**
+     *
+     * @param subuser
+     * @param key
+     * @param roles
+     */
     updateWorkflow = function (subuser, key, roles) {
         var param = {
             data: {
@@ -2388,6 +2479,11 @@ $(window).ready(function () {
         });
     };
 
+    /**
+     *
+     * @param e
+     * @returns {boolean}
+     */
     styleWizardWin = function (e) {
         var record = null;
         grid.getStore().each(function (rec) {  // for each row
@@ -2437,13 +2533,12 @@ $(window).ready(function () {
         a7.doLayout();
     };
 
-    // define a template to use for the detail view
-    var bookTplMarkup = ['<table border="0">' +
-    '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td>{tags}</td></tr>' +
-    '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Created') + '</b></td><td>{created}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
-    '</table>'];
-    var bookTpl = new Ext.Template(bookTplMarkup);
-    var ct = new Ext.Panel({
+
+    // TODO remove?
+    /**
+     * @type {Ext.Panel}
+     */
+    /*var ct = new Ext.Panel({
         title: '<i class="fa fa-database"></i> ' + __('Database'),
         frame: false,
         layout: 'border',
@@ -2697,34 +2792,11 @@ $(window).ready(function () {
             ]
         }
         ]
-    });
-    grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
-        var records = sm.getSelections();
-        if (records.length === 1) {
-            Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false || subUser === schema) {
-                Ext.getCmp('privileges-btn').setDisabled(false);
-                Ext.getCmp('workflow-btn').setDisabled(false);
-                Ext.getCmp('renamelayer-btn').setDisabled(false);
-                Ext.getCmp('copy-properties-btn').setDisabled(false);
-            }
-        }
-        else {
-            Ext.getCmp('advanced-btn').setDisabled(true);
-            Ext.getCmp('privileges-btn').setDisabled(true);
-            Ext.getCmp('workflow-btn').setDisabled(true);
-            Ext.getCmp('renamelayer-btn').setDisabled(true);
-            Ext.getCmp('copy-properties-btn').setDisabled(true);
-        }
-        if (records.length > 0 && subUser === false) {
-            Ext.getCmp('movelayer-btn').setDisabled(false);
-        }
-        if (records.length > 0 && (subUser === false || subUser === schema)) {
-            Ext.getCmp('deletelayer-btn').setDisabled(false);
-        }
-        onEdit();
-    });
+    });*/
 
+    /**
+     *
+     */
     resetButtons = function () {
         Ext.getCmp('advanced-btn').setDisabled(true);
         Ext.getCmp('privileges-btn').setDisabled(true);
@@ -2735,6 +2807,9 @@ $(window).ready(function () {
         Ext.getCmp('movelayer-btn').setDisabled(true);
     };
 
+    /**
+     * Define the main tabs
+     */
     var tabs = new Ext.TabPanel({
         id: "mainTabs",
         activeTab: 0,
@@ -2796,7 +2871,7 @@ $(window).ready(function () {
                                                 plain: true,
                                                 id: "classTabs",
                                                 border: false,
-                                                height: 470,
+                                                height: 570,
                                                 resizeTabs: true,
                                                 defaults: {
                                                     layout: "fit",
@@ -2948,7 +3023,261 @@ $(window).ready(function () {
                     }
                 ]
             },
-            ct,
+            new Ext.Panel({
+                title: '<i class="fa fa-database"></i> ' + __('Database'),
+                frame: false,
+                layout: 'border',
+                region: 'center',
+                border: false,
+                split: true,
+                items: [grid, {
+                    id: 'detailPanel',
+                    region: 'south',
+                    border: false,
+                    height: 70,
+                    bodyStyle: {
+                        background: '#777',
+                        color: '#fff',
+                        padding: '7px'
+                    }
+                }, {
+                    xtype: "tabpanel",
+                    activeTab: 0,
+                    plain: true,
+                    border: false,
+                    resizeTabs: true,
+                    region: 'center',
+                    collapsed: false,
+                    collapsible: false,
+                    id: "tablepanel",
+                    items: [
+                        {
+                            border: false,
+                            layout: 'fit',
+                            xtype: "panel",
+                            title: __("Structure"),
+                            id: 'structurepanel'
+
+                        },
+                        {
+                            border: false,
+                            layout: 'fit',
+                            xtype: "panel",
+                            title: __("Data"),
+                            id: 'datapanel',
+                            listeners: {
+                                activate: function (e) {
+                                    if (grid.getSelectionModel().getSelections().length > 1) {
+                                        Ext.getCmp("datapanel").removeAll();
+                                        return false;
+                                    }
+                                    var r = grid.getSelectionModel().getSelected(),
+                                        tableName = r.data.f_table_schema + "." + r.data.f_table_name,
+                                        dataPanel = Ext.getCmp("datapanel");
+                                    try {
+                                        dataPanel.remove(dataGrid);
+                                    } catch (ex) {
+                                    }
+                                    $.ajax({
+                                        url: '/controllers/table/columns/' + tableName + '?i=1',
+                                        async: true,
+                                        dataType: 'json',
+                                        type: 'GET',
+                                        success: function (response, textStatus, http) {
+                                            var validProperties = true,
+                                                fieldsForStore = response.forStore,
+                                                columnsForGrid = response.forGrid;
+
+                                            // We add an editor to the fields
+                                            for (var i in columnsForGrid) {
+                                                if (columnsForGrid[i].typeObj !== undefined) {
+                                                    if (columnsForGrid[i].properties) {
+                                                        try {
+                                                            var json = Ext.decode(columnsForGrid[i].properties);
+                                                            columnsForGrid[i].editor = new Ext.form.ComboBox({
+                                                                store: Ext.decode(columnsForGrid[i].properties),
+                                                                editable: true,
+                                                                triggerAction: 'all'
+                                                            });
+                                                            validProperties = false;
+                                                        }
+                                                        catch (e) {
+                                                            alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                                                        }
+                                                    } else if (columnsForGrid[i].typeObj.type === "int") {
+                                                        columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                            decimalPrecision: 0,
+                                                            decimalSeparator: '¤'// Some strange char nobody is using
+                                                        });
+                                                    } else if (columnsForGrid[i].typeObj.type === "decimal") {
+                                                        columnsForGrid[i].editor = new Ext.form.NumberField({
+                                                            decimalPrecision: columnsForGrid[i].typeObj.scale,
+                                                            decimalSeparator: '.'
+                                                        });
+                                                    } else if (columnsForGrid[i].typeObj.type === "string") {
+                                                        columnsForGrid[i].editor = new Ext.form.TextField();
+                                                    } else if (columnsForGrid[i].typeObj.type === "text") {
+                                                        columnsForGrid[i].editor = new Ext.form.TextArea();
+                                                    }
+                                                }
+                                            }
+                                            var proxy = new Ext.data.HttpProxy({
+                                                restful: true,
+                                                type: 'json',
+                                                api: {
+                                                    read: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                                    create: '/controllers/table/data/' + tableName + '/' + r.data._key_,
+                                                    update: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_,
+                                                    destroy: '/controllers/table/data/' + tableName + '/' + r.data.pkey + '/' + r.data._key_
+                                                },
+                                                listeners: {
+                                                    write: function (store, action, result, transaction, rs) {
+                                                        if (transaction.success) {
+                                                            //
+                                                        }
+                                                    },
+                                                    beforewrite: function () {
+                                                        if (r.data.hasPkey === false) {
+                                                            App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                            dataStore.reload();
+                                                            return false;
+                                                        }
+                                                    },
+                                                    exception: function (proxy, type, action, options, response, arg) {
+                                                        if (action === "create") { // HACK exception is thrown with successful create
+                                                            dataStore.reload();
+                                                        } else {
+                                                            Ext.MessageBox.show({
+                                                                title: __('Failure'),
+                                                                msg: __(Ext.decode(response.responseText).message),
+                                                                buttons: Ext.MessageBox.OK,
+                                                                width: 300,
+                                                                height: 300
+                                                            });
+                                                        }
+
+                                                    }
+                                                }
+                                            });
+                                            dataStore = new Ext.data.Store({
+                                                writer: new Ext.data.JsonWriter({
+                                                    writeAllFields: false,
+                                                    encode: false
+                                                }),
+                                                reader: new Ext.data.JsonReader({
+                                                    successProperty: 'success',
+                                                    idProperty: r.data.pkey,
+                                                    root: 'data',
+                                                    messageProperty: 'message'
+                                                }, fieldsForStore),
+                                                proxy: proxy,
+                                                autoSave: true
+                                            });
+                                            dataGrid = new Ext.grid.EditorGridPanel({
+                                                id: "datagridpanel",
+                                                disabled: false,
+                                                viewConfig: {
+                                                    //forceFit: true
+                                                },
+                                                border: false,
+                                                store: dataStore,
+                                                listeners: {},
+                                                sm: new Ext.grid.RowSelectionModel({
+                                                    singleSelect: false
+                                                }),
+                                                cm: new Ext.grid.ColumnModel({
+                                                    defaults: {
+                                                        sortable: true,
+                                                        editor: {
+                                                            xtype: "textfield"
+                                                        }
+                                                    },
+                                                    columns: columnsForGrid
+                                                }),
+                                                tbar: [
+                                                    {
+                                                        text: '<i class="fa fa-plus"></i> ' + __('Add record'),
+                                                        handler: function () {
+                                                            // access the Record constructor through the grid's store
+                                                            var rec = dataGrid.getStore().recordType;
+                                                            var p = new rec({});
+                                                            dataGrid.stopEditing();
+                                                            dataStore.insert(0, p);
+                                                        }
+                                                    }, {
+                                                        text: '<i class="fa fa-cut"></i> ' + __('Delete records'),
+                                                        handler: function () {
+                                                            var r = grid.getSelectionModel().getSelected();
+                                                            if (r.data.hasPkey === false) {
+                                                                App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
+                                                                return false;
+                                                            }
+                                                            var records = dataGrid.getSelectionModel().getSelections();
+                                                            if (records.length === 0) {
+                                                                App.setAlert(App.STATUS_NOTICE, __("You've to select one or more records"));
+                                                                return false;
+                                                            }
+                                                            Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('records(s)') + '?', function (btn) {
+                                                                if (btn === "yes") {
+                                                                    Ext.each(dataGrid.getSelectionModel().getSelections(), function (i) {
+                                                                        dataStore.remove(i);
+                                                                    })
+                                                                } else {
+                                                                    return false;
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                ],
+                                                bbar: new Ext.PagingToolbar({
+                                                    pageSize: 100,
+                                                    store: dataStore,
+                                                    displayInfo: true,
+                                                    displayMsg: 'Features {0} - {1} of {2}',
+                                                    emptyMsg: __("No features")
+                                                })
+                                            });
+                                            dataPanel.add(dataGrid);
+                                            dataPanel.doLayout();
+                                            dataStore.load();
+                                        }
+                                    });
+
+
+                                }
+                            }
+                        },
+                        {
+                            border: false,
+                            layout: 'fit',
+                            xtype: "panel",
+                            title: __("Elasticsearch"),
+                            id: 'espanel',
+                            listeners: {
+                                activate: function (e) {
+                                    if (grid.getSelectionModel().getSelections().length > 1) {
+                                        Ext.getCmp("espanel").removeAll();
+                                        return false;
+                                    }
+                                    esPanel = Ext.getCmp("espanel");
+
+                                    try {
+                                        esPanel.remove(elasticsearch.grid);
+                                    } catch (ex) {
+                                        console.log(ex.message)
+                                    }
+                                    elasticsearch.grid = null;
+                                    elasticsearch.init(grid.getSelectionModel().getSelected(), screenName);
+                                    esPanel.add(elasticsearch.grid);
+                                    esPanel.doLayout();
+                                }
+                            }
+
+                        }
+                    ]
+                }
+                ]
+            }),
             {
                 xtype: "panel",
                 title: '<i class="fa fa-users"></i> ' + __('Workflow'),
@@ -3234,25 +3563,20 @@ $(window).ready(function () {
             }
         ]
     });
+
+    /**
+     * Create the view port
+     */
     var viewPort = new Ext.Viewport({
         layout: 'border',
         items: [tabs]
     });
 
-    // Hide tab if scheduler is not available for the db
-    if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
-            tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
-        }
-    } else {
-        tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
-    }
-
-    // Hide tab if workflow is not available for the db
-    if (!enableWorkflow) {
-        tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
-    }
-
+    /**
+     *
+     * @param clearCachedLayer
+     * @param map
+     */
     writeFiles = function (clearCachedLayer, map) {
         $.ajax({
             url: '/controllers/mapfile',
@@ -3280,6 +3604,12 @@ $(window).ready(function () {
             }
         });
     };
+
+    /**
+     *
+     * @param layer
+     * @param map
+     */
     clearTileCache = function (layer, map) {
         var key = layer.split(".")[0] + "." + layer.split(".")[1];
         $.ajax({
@@ -3313,6 +3643,10 @@ $(window).ready(function () {
             }
         });
     };
+
+    /**
+     *
+     */
     updateLegend = function () {
         var a = Ext.getCmp("a6");
         var b = Ext.getCmp("wizardLegend");
@@ -3334,6 +3668,12 @@ $(window).ready(function () {
             });
         }
     };
+
+    /**
+     *
+     * @param show
+     * @param text
+     */
     spinner = function (show, text) {
         if (show) {
             $("#spinner").show();
@@ -3343,4 +3683,67 @@ $(window).ready(function () {
             $("#spinner span").empty();
         }
     };
+
+    /**
+     * Load stores
+     */
+    store.load(); // TODO chain?
+    groupsStore.load(); // TODO chain?
+    tagStore.load();// TODO chain?
+    schemasStore.load(); // TODO chain?
+
+    /**
+     * Add listener on schema select box
+     */
+    Ext.getCmp("schemabox").on('select', function (e) {
+        window.location = "/store/" + screenName + "/" + e.value;
+    });
+
+    /**
+     * Add listener on layer grid
+     */
+    grid.getSelectionModel().on('rowselect', function (sm, rowIdx, r) {
+        var records = sm.getSelections();
+        if (records.length === 1) {
+            Ext.getCmp('advanced-btn').setDisabled(false);
+            if (subUser === false || subUser === schema) {
+                Ext.getCmp('privileges-btn').setDisabled(false);
+                Ext.getCmp('workflow-btn').setDisabled(false);
+                Ext.getCmp('renamelayer-btn').setDisabled(false);
+                Ext.getCmp('copy-properties-btn').setDisabled(false);
+            }
+        }
+        else {
+            Ext.getCmp('advanced-btn').setDisabled(true);
+            Ext.getCmp('privileges-btn').setDisabled(true);
+            Ext.getCmp('workflow-btn').setDisabled(true);
+            Ext.getCmp('renamelayer-btn').setDisabled(true);
+            Ext.getCmp('copy-properties-btn').setDisabled(true);
+        }
+        if (records.length > 0 && subUser === false) {
+            Ext.getCmp('movelayer-btn').setDisabled(false);
+        }
+        if (records.length > 0 && (subUser === false || subUser === schema)) {
+            Ext.getCmp('deletelayer-btn').setDisabled(false);
+        }
+        onEdit();
+    });
+
+    /**
+     * Hide tab if scheduler is not available for the db
+     */
+    if (window.gc2Options.gc2scheduler !== null) {
+        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
+            tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+        }
+    } else {
+        tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
+    }
+
+    /**
+     * Hide tab if workflow is not available for the db
+     */
+    if (!enableWorkflow) {
+        tabs.hideTabStripItem(Ext.getCmp('workflowPanel'));
+    }
 });

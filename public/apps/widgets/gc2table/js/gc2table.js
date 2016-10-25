@@ -2,6 +2,8 @@
 /*global jQuery:false */
 /*global Backbone:false */
 /*global jRespond:false */
+/*global window:false */
+/*global console:false */
 /*global _:false */
 var gc2table = (function () {
     "use strict";
@@ -37,7 +39,7 @@ var gc2table = (function () {
             if (typeof jQuery().bootstrapTable === "undefined") {
                 $.getScript(host + "/js/bootstrap-table/bootstrap-table.js");
             }
-            if (typeof _ === 'undefined') {
+            if (typeof _ === "undefined") {
                 $.getScript(host + "/js/underscore/underscore-min.js");
             }
             if (typeof jRespond === "undefined") {
@@ -97,7 +99,7 @@ var gc2table = (function () {
                 responsive: true,
                 autoPan: false,
                 locale: 'en-US',
-		callCustomOnload: true,
+                callCustomOnload: true,
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -151,7 +153,9 @@ var gc2table = (function () {
                     if (openPopUp) {
                         var str = "<table>";
                         $.each(cm, function (i, v) {
-                            str = str + "<tr><td>" + v.header + "</td><td>" + m.map._layers[id].feature.properties[v.dataIndex] + "</td></tr>";
+                            if (typeof v.showInPopup === "undefined" || (typeof v.showInPopup === "boolean" && v.showInPopup === true)) {
+                                str = str + "<tr><td>" + v.header + "</td><td>" + m.map._layers[id].feature.properties[v.dataIndex] + "</td></tr>";
+                            }
                         });
                         str = str + "</table>";
                         m.map._layers[id].bindPopup(str, {
@@ -162,18 +166,11 @@ var gc2table = (function () {
                     }
 
                 });
-
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
                     $(el).bootstrapTable('scrollTo', row.index() * row.height());
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
-                $.each(store.layer._layers, function (i, layer) {
-                    layer.on({
-                        click: click
-                    });
-                });
-
                 $(el).append("<thead><tr></tr></thead>");
                 $.each(cm, function (i, v) {
                     $(el + ' thead tr').append("<th data-filter-control=" + (v.filterControl || "false") + " data-field='" + v.dataIndex + "' data-sortable='" + (v.sortable || "false") + "' data-editable='false' data-formatter='" + (v.formatter || "") + "'>" + v.header + "</th>");
@@ -201,14 +198,11 @@ var gc2table = (function () {
                                 if (typeof filterControls[u] !== "undefined") {
                                     if (filterControls[u] === "input") {
                                         if (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1 && filters[u] !== "") {
-
-                                            console.log("Remove input")
                                             m.map.removeLayer(v);
                                         }
                                     } else {
 
                                         if (n !== filters[u] && filters[u] !== "") {
-                                            console.log("Remove select")
                                             m.map.removeLayer(v);
                                         }
                                     }
@@ -220,7 +214,7 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
-                        $('tbody > tr').on("click", function (e) {
+                        $(el + ' > tbody > tr').on("click", function (e) {
                             object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
                             var layer = m.map._layers[$(this).data('uniqueid')];
                             setTimeout(function () {
@@ -252,8 +246,8 @@ var gc2table = (function () {
                         v.feature.properties._id = i;
                         $.each(v.feature.properties, function (n, m) {
                             $.each(cm, function (j, k) {
-                                if (k.dataIndex === n && k.link === true) {
-                                    v.feature.properties[n] = "<a target='_blank' rel='noopener' href='" + v.feature.properties[n] + "'>" + "Link" + "</a>";
+                                if (k.dataIndex === n && ((typeof k.link === "boolean" && k.link === true) || (typeof k.link === "string"))) {
+                                    v.feature.properties[n] = "<a target='_blank' rel='noopener' href='" + v.feature.properties[n] + "'>" + (typeof k.link === "string" ? k.link : "Link") + "</a>";
                                 }
 
                             });
@@ -265,10 +259,10 @@ var gc2table = (function () {
 
                     });
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
-                    $(el).bootstrapTable('load', data);
-		    if (callCustomOnload) {
-			    customOnLoad();
-		    } 
+                    $(el).bootstrapTable("load", data);
+                    if (callCustomOnload) {
+                        customOnLoad();
+                    }
                     bindEvent();
 
                     $(".fixed-table-body").css("overflow", "auto");

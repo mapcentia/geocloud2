@@ -4,6 +4,10 @@ namespace app\controllers;
 use \app\inc\Input;
 use \app\conf\Connection;
 
+/**
+ * Class Layer
+ * @package app\controllers
+ */
 class Layer extends \app\inc\Controller
 {
     private $table;

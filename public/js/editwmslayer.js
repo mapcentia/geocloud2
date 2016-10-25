@@ -126,12 +126,12 @@ wmsLayer.init = function (record) {
             label_column: __('Label item'),
             theme_column: 'Class item',
             opacity: 'Opacity',
-            label_max_scale: 'Label min scale', //LABELMAXSCALEDENOM
-            label_min_scale: 'Label max scale', //LABELMINSCALEDENOM
+            label_max_scale: __('Label max scale denominator') + __('Minimum scale at which this LAYER is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true), //LABELMAXSCALEDENOM
+            label_min_scale: __('Label min scale denominator') +__('Maximum scale at which this LAYER is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true), //LABELMINSCALEDENOM
             cluster: 'Clustering distance',
-            maxscaledenom: __('Min scale') + __('Minimum scale at which this layer is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
-            minscaledenom: __('Max scale') + __('Maximum scale at which this layer is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
-            symbolscaledenom: 'Symbole scale' + __("The scale at which symbols and/or text appear full size. This allows for dynamic scaling of objects based on the scale of the map. If not set then this layer will always appear at the same size. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            maxscaledenom: __('Max scale denominator') + __('Minimum scale at which this LAYER is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
+            minscaledenom: __('Min scale denominator') + __('Maximum scale at which this LAYER is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
+            symbolscaledenom: 'Symbol scale denominator' + __("The scale at which symbols and/or text appear full size. This allows for dynamic scaling of objects based on the scale of the map. If not set then this layer will always appear at the same size. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             geotype: 'Geom type',
             offsite: 'Offsite'
         },

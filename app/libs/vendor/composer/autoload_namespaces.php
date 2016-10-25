@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Postmark\\' => array($vendorDir . '/wildbit/postmark-php/src'),
+    'Odesk\\' => array($vendorDir . '/odesk/phystrix/library'),
 );
