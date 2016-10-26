@@ -353,7 +353,7 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
 
-        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"=" . $id;
+        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"='{$id}'";
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $res = $api->sql($sql, $index, $type, $priKey, $db);
