@@ -7,9 +7,19 @@ use \app\conf\App;
 
 class Elasticsearch extends \app\inc\Controller
 {
-    protected $guest;
+    /**
+     * @var string
+     */
     protected $host;
 
+    /**
+     * @var string
+     */
+    protected $clientIp;
+
+    /**
+     * Elasticsearch constructor.
+     */
     function __construct()
     {
         $this->clientIp = Util::clientIp();
@@ -23,7 +33,6 @@ class Elasticsearch extends \app\inc\Controller
      */
     private function checkAuth($db, $key)
     {
-        //die($this->clientIp);
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
             if (Util::ipInRange($this->clientIp, $address)) {
@@ -42,6 +51,9 @@ class Elasticsearch extends \app\inc\Controller
         return false; //Auth passed
     }
 
+    /**
+     * @return array|mixed
+     */
     public function get_bulk()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
@@ -57,8 +69,12 @@ class Elasticsearch extends \app\inc\Controller
         return $api->sql(rawurldecode(Input::get('q')), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
     }
 
+    /**
+     * @return array|mixed
+     */
     public function get_search()
     {
+        $response = [];
         $get = Input::get();
         if (\app\conf\App::$param["useKeyForSearch"] == true) {
             if ($response = ($this->checkAuth(Input::getPath()->part(5), $get['key']))) {
@@ -82,7 +98,6 @@ class Elasticsearch extends \app\inc\Controller
         }
         $index = implode(",", $arr);
         $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
-        //die($searchUrl);
         $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
@@ -96,6 +111,9 @@ class Elasticsearch extends \app\inc\Controller
         return $response;
     }
 
+    /**
+     * @return array|mixed
+     */
     public function put_map()
     {
         $put = Input::get();
@@ -118,6 +136,9 @@ class Elasticsearch extends \app\inc\Controller
         return $es->createIndex($index, $post["map"]);
     }
 
+    /**
+     * @return mixed
+     */
     public function delete_delete()
     {
         $type = Input::getPath()->part(7);
@@ -142,6 +163,9 @@ class Elasticsearch extends \app\inc\Controller
         return $response;
     }
 
+    /**
+     * @return array|mixed
+     */
     public function get_map()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
@@ -154,6 +178,9 @@ class Elasticsearch extends \app\inc\Controller
         return $es->createMapFromTable($fullTable);
     }
 
+    /**
+     * @return array|mixed
+     */
     public function post_river()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
@@ -213,7 +240,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Drop the trigger
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
-        $result = $model->execQuery($pl, "PG");
+        $model->execQuery($pl, "PG");
 
         // Define default settings for the new index
         $defaultSettings = array(
@@ -320,8 +347,10 @@ class Elasticsearch extends \app\inc\Controller
 
         // Create the trigger
         $triggerInstalledIn = null;
-        if ($relationType["data"] == "table" || ($installTrigger)) {
+
+        if ($relationType["data"] == "TABLE" || ($installTrigger)) {
             $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
+
             $result = $model->execQuery($pl, "PG");
             if (!$result) {
                 $response['success'] = false;
@@ -338,6 +367,9 @@ class Elasticsearch extends \app\inc\Controller
         return $res;
     }
 
+    /**
+     * @return array|mixed
+     */
     public function put_upsert()
     {
         $put = Input::get();
@@ -358,11 +390,10 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
 
-        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"=" . $id;
+        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"='{$id}'";
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $res = $api->sql($sql, $index, $type, $priKey, $db);
-
         if (!$res["success"]) {
             return $res;
         }

@@ -1,19 +1,37 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
 
+/**
+ * Class Elasticsearch
+ * @package app\models
+ */
 class Elasticsearch extends Model
 {
+    /**
+     * @var string
+     */
     protected $host;
 
+    /**
+     * Elasticsearch constructor.
+     */
     function __construct()
     {
         $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
     }
 
+    /**
+     * @param $index
+     * @param $type
+     * @param $map
+     * @return array
+     */
     public function map($index, $type, $map)
     {
+        $response = [];
         $ch = curl_init($this->host . ":9200/{$index}/_mapping/{$type}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
@@ -27,8 +45,14 @@ class Elasticsearch extends Model
         return $response;
     }
 
+    /**
+     * @param $index
+     * @param $map
+     * @return array
+     */
     public function createIndex($index, $map)
     {
+        $response = [];
         $ch = curl_init($this->host . ":9200/{$index}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
@@ -42,8 +66,15 @@ class Elasticsearch extends Model
         return $response;
     }
 
+    /**
+     * @param $index
+     * @param null $type
+     * @param null $id
+     * @return array
+     */
     public function delete($index, $type = null, $id = null)
     {
+        $response = [];
         if ($id) {
             $ch = curl_init($this->host . ":9200/{$index}_{$type}/{$type}/{$id}");
         } elseif ($type) {
@@ -62,6 +93,10 @@ class Elasticsearch extends Model
         return $response;
     }
 
+    /**
+     * @param $table
+     * @return array
+     */
     public function createMapFromTable($table)
     {
         $split = explode(".", $table);
@@ -122,9 +157,13 @@ class Elasticsearch extends Model
         return $response["map"]["mappings"];
     }
 
+    /**
+     * @param $pgType
+     * @param bool $point
+     * @return array
+     */
     public function mapPg2EsType($pgType, $point = false)
     {
-        $esType = null;
         if ($pgType == "geometry") {
             if ($point) {
                 $esType = array("type" => "geo_point");

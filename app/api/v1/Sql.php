@@ -3,6 +3,10 @@ namespace app\api\v1;
 
 use \app\inc\Input;
 
+/**
+ * Class Sql
+ * @package app\api\v1
+ */
 class Sql extends \app\inc\Controller
 {
     public $response;
@@ -13,6 +17,9 @@ class Sql extends \app\inc\Controller
     private $usedRelations;
     const USEDRELSKEY = "checked_relations";
 
+    /**
+     * @return mixed
+     */
     public function get_index()
     {
         include_once 'Cache_Lite/Lite.php';
@@ -45,6 +52,9 @@ class Sql extends \app\inc\Controller
         return unserialize($this->data);
     }
 
+    /**
+     * TODO is it used?
+     */
     public function post_select()
     {
         $input = json_decode(Input::get());
@@ -70,6 +80,11 @@ class Sql extends \app\inc\Controller
         return $this->get_index();
     }
 
+    /**
+     * @param array $array
+     * @param string $needle
+     * @return array
+     */
     private function recursiveFind(array $array, $needle)
     {
         $iterator = new \RecursiveArrayIterator($array);
@@ -83,7 +98,10 @@ class Sql extends \app\inc\Controller
         return $aHitList;
     }
 
-    private function parseSelect($fromArr)
+    /**
+     * @param array $fromArr
+     */
+    private function parseSelect(array $fromArr)
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {
@@ -110,8 +128,14 @@ class Sql extends \app\inc\Controller
         }
     }
 
+    /**
+     * @param string $sql
+     * @param null|string $clientEncoding
+     * @return string
+     */
     private function transaction($sql, $clientEncoding = null)
     {
+        $response = [];
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
@@ -270,7 +294,11 @@ class Sql extends \app\inc\Controller
         }
         return serialize($this->response);
     }
-    private function addAttr($arr){
+
+    /**
+     * @param $arr
+     */
+    private function addAttr(array $arr){
         foreach($arr as $key=>$value){
             if ($key != "code") {
                 $this->response["auth_check"][$key] = $value;

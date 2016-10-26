@@ -279,7 +279,11 @@ class Model
 
         $res = $this->prepare($sql);
         try {
-            $res->execute(array("table" => $_schema . "." . $_table));
+            if ($temp) {
+                $res->execute(array("table" => $table));
+            } else {
+                $res->execute(array("table" => $_schema . "." . $_table));
+            }
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

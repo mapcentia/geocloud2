@@ -2,35 +2,47 @@
 
 namespace app\models;
 
+/**
+ * Class Sql
+ * @package app\models
+ */
 class Sql extends \app\inc\Model
 {
-    var $srs;
+    /**
+     * @var string
+     */
+    private $srs;
 
+    /**
+     * Sql constructor.
+     * @param string $srs
+     */
     function __construct($srs = "900913")
     {
         parent::__construct();
         $this->srs = $srs;
     }
 
-    function sql($q, $clientEncoding = null)
+    /**
+     * @param string $q
+     * @param null $clientEncoding
+     * @return mixed
+     */
+    public function sql($q, $clientEncoding = null)
     {
         $name = "_" . rand(1, 999999999) . microtime();
-        $name = $this->toAscii($name, null, "_");
-        $view = "sqlapi.{$name}";
-        $sqlView = "CREATE VIEW {$view} as {$q}";
-        $result = $this->execQuery($sqlView);
-        $arrayWithFields = $this->getMetaData($view);
-
-        // First check. Is the SQL valid
-        if ($this->PDOerror) {
+        $view = $this->toAscii($name, null, "_");
+        $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
+        $res = $this->prepare($sqlView);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+            $response['message'] = $e->getMessage();
             $response['code'] = 400;
-            $sql = "DROP VIEW {$view}";
-            $result = $this->execQuery($sql);
-            $this->free($result);
             return $response;
         }
+        $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
         if ((int)$bits[1] > 0) {
@@ -39,6 +51,7 @@ class Sql extends \app\inc\Model
             $ST_Force2D = "ST_Force_2D";
         }
 
+        $fieldsArr = [];
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
                 $fieldsArr[] = "ST_asGeoJson(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
@@ -51,39 +64,47 @@ class Sql extends \app\inc\Model
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
-        $result = $this->execQuery($sql);
-
-        // Second check. Catched eg. transform errors
-        if ($this->PDOerror) {
+        $result = $this->prepare($sql);
+        try {
+            $result->execute();
+        } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-            $sql = "DROP VIEW {$view}";
-            $result = $this->execQuery($sql);
-            $this->free($result);
+            $response['message'] = $e->getMessage();
+            $response['code'] = 410;
             return $response;
         }
-        while ($row = $this->fetchRow($result, "assoc")) {
-            $arr = array();
-            foreach ($row as $key => $value) {
-                if ($arrayWithFields[$key]['type'] == "geometry") {
-                    $geometries[] = json_decode($row[$key]);
-                } elseif ($arrayWithFields[$key]['type'] == "json") {
-                    $arr = $this->array_push_assoc($arr, $key, json_decode($value));
-                } else {
-                    $arr = $this->array_push_assoc($arr, $key, $value);
+        $geometries = [];
+        $fieldsForStore = [];
+        $columnsForGrid = [];
+        $features = [];
+        try {
+            while ($row = $this->fetchRow($result, "assoc")) {
+                $arr = array();
+                foreach ($row as $key => $value) {
+                    if ($arrayWithFields[$key]['type'] == "geometry") {
+                        $geometries[] = json_decode($row[$key]);
+                    } elseif ($arrayWithFields[$key]['type'] == "json") {
+                        $arr = $this->array_push_assoc($arr, $key, json_decode($value));
+                    } else {
+                        $arr = $this->array_push_assoc($arr, $key, $value);
+                    }
                 }
+                if (sizeof($geometries) > 1) {
+                    $features[] = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
+                }
+                if (sizeof($geometries) == 1) {
+                    $features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
+                }
+                if (sizeof($geometries) == 0) {
+                    $features[] = array("type" => "Feature", "properties" => $arr);
+                }
+                unset($geometries);
             }
-            if (sizeof($geometries) > 1) {
-                $features[] = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
-            }
-            if (sizeof($geometries) == 1) {
-                $features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
-            }
-            if (sizeof($geometries) == 0) {
-                $features[] = array("type" => "Feature", "properties" => $arr);
-            }
-            unset($geometries);
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 410;
+            return $response;
         }
         foreach ($arrayWithFields as $key => $value) {
             $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
@@ -101,6 +122,10 @@ class Sql extends \app\inc\Model
         return $response;
     }
 
+    /**
+     * @param $q
+     * @return mixed
+     */
     public function transaction($q)
     {
         $result = $this->execQuery($q, "PDO", "transaction");
