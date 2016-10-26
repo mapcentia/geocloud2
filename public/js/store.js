@@ -14,7 +14,6 @@
 "use strict";
 
 /**
- *
  * Configure Ext
  */
 Ext.Ajax.disableCaching = false;

@@ -240,7 +240,13 @@ class Elasticsearch extends \app\inc\Controller
 
         // Drop the trigger
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
-        $model->execQuery($pl, "PG");
+        $result = $model->execQuery($pl, "PG");
+        if (!$result) {
+            $response['success'] = false;
+            $response['code'] = "400";
+            $response['message'] = "Could not drop trigger";
+            return $response;
+        }
 
         // Define default settings for the new index
         $defaultSettings = array(
@@ -296,28 +302,38 @@ class Elasticsearch extends \app\inc\Controller
         }
         $es = new \app\models\Elasticsearch();
 
-        // Delete the index
-        $res = $es->delete($fullIndex);
-        $obj = json_decode($res["json"], true);
-        if (isset($obj["error"]) && $obj["error"] != false) {
-            // If type not already exists we just ignore the error.
-            // TODO check if type exist before deleting it.
-            /*$response['success'] = false;
-            $response['message'] = $obj["error"];
-            $response['code'] = $obj["status"];
-            return $response;*/
+        // Delete the index if exist
+        $url = $this->host . ":9200/{$fullIndex}";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode == "200") {
+            $res = $es->delete($fullIndex);
+            $obj = json_decode($res["json"], true);
+            if (isset($obj["error"]) && $obj["error"] != false) {
+                $response['success'] = false;
+                $response['message'] = $obj["error"];
+                $response['code'] = $obj["status"];
+                return $response;
+            }
         }
 
         // Create the index with settings
         $res = $es->createIndex($fullIndex, $settings);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
-            // If index already exists we just ignore it.
-            // TODO check if index already exists before creating it.
-            /*$response['success'] = false;
+            $response['success'] = false;
             $response['message'] = $obj["error"];
             $response['code'] = $obj["status"];
-            return $response;*/
+            return $response;
         }
 
         // Mappings from the table
@@ -347,13 +363,13 @@ class Elasticsearch extends \app\inc\Controller
 
         // Create the trigger
         $triggerInstalledIn = null;
-
         if ($relationType["data"] == "TABLE" || ($installTrigger)) {
             $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
-
             $result = $model->execQuery($pl, "PG");
             if (!$result) {
                 $response['success'] = false;
+                $response['code'] = "400";
+                $response['message'] = "Could not create trigger";
                 return $response;
             }
             $triggerInstalled = true;

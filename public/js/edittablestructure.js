@@ -1,10 +1,14 @@
+"use strict";
+
+/**
+ * Create namespaces
+ */
 Ext.namespace('tableStructure');
 Ext.namespace('Ext.ux.grid');
 Ext.ux.grid.CheckColumn = Ext.extend(
     Ext.grid.Column,
     {
         processEvent: function (name, e, grid, rowIndex, colIndex) {
-            "use strict";
             if (name === 'click'/* 'mousedown' */) {
                 var record = grid.store.getAt(rowIndex);
                 record.set(this.dataIndex,
@@ -25,8 +29,13 @@ Ext.ux.grid.CheckColumn = Ext.extend(
         init: Ext.emptyFn
     }
 );
+
+/**
+ *
+ * @param record
+ * @param screenName
+ */
 tableStructure.init = function (record, screenName) {
-    "use strict";
     tableStructure.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -92,10 +101,18 @@ tableStructure.init = function (record, screenName) {
         }
     ]);
 
+    /**
+     *
+     */
     tableStructure.writer = new Ext.data.JsonWriter({
         writeAllFields: true,
         encode: false
     });
+
+    /**
+     *
+     * @type {Ext.data.HttpProxy}
+     */
     tableStructure.proxy = new Ext.data.HttpProxy(
         {
             restful: true,
@@ -134,6 +151,10 @@ tableStructure.init = function (record, screenName) {
         }
     );
 
+    /**
+     *
+     * @type {Ext.data.Store}
+     */
     tableStructure.store = new Ext.data.Store({
         writer: tableStructure.writer,
         reader: tableStructure.reader,
@@ -148,7 +169,7 @@ tableStructure.init = function (record, screenName) {
                     try {
                         Ext.getCmp('add-versioning-btn').setDisabled(false);
                         Ext.getCmp('remove-versioning-btn').setDisabled(true);
-                    } catch(e){
+                    } catch (e) {
 
                     }
                 }
@@ -166,6 +187,9 @@ tableStructure.init = function (record, screenName) {
     tableStructure.store.setDefaultSort('sort_id', 'asc');
     tableStructure.store.load();
 
+    /**
+     *
+     */
     tableStructure.grid = new Ext.grid.EditorGridPanel({
         iconCls: 'silk-grid',
         store: tableStructure.store,
@@ -487,8 +511,12 @@ tableStructure.init = function (record, screenName) {
     });
 
 };
+
+/**
+ *
+ * @returns {boolean}
+ */
 tableStructure.onDelete = function () {
-    "use strict";
     var record = tableStructure.grid.getSelectionModel().getSelected();
     if (!record) {
         return false;
@@ -502,8 +530,13 @@ tableStructure.onDelete = function () {
             }
         });
 };
+
+/**
+ *
+ * @param btn
+ * @param ev
+ */
 tableStructure.onAdd = function (btn, ev) {
-    "use strict";
     var field = tableStructure.grid.getStore().recordType,
         u = new field(
             {
@@ -513,8 +546,12 @@ tableStructure.onAdd = function (btn, ev) {
         );
     tableStructure.grid.store.insert(0, u);
 };
+
+/**
+ *
+ * @param record
+ */
 tableStructure.onVersion = function (record) {
-    "use strict";
     Ext.MessageBox.confirm(__('Confirm'), __('This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?'),
         function (btn) {
             if (btn === "yes") {
@@ -545,8 +582,12 @@ tableStructure.onVersion = function (record) {
             }
         });
 };
+
+/**
+ *
+ * @param record
+ */
 tableStructure.onRemoveVersion = function (record) {
-    "use strict";
     Ext.MessageBox.confirm(__('Confirm'), __("This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
@@ -577,8 +618,12 @@ tableStructure.onRemoveVersion = function (record) {
             }
         });
 };
+
+/**
+ *
+ * @param record
+ */
 tableStructure.onIndexInElasticsearch = function (record) {
-    "use strict";
     Ext.MessageBox.confirm(__('Confirm'), __("This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
@@ -594,7 +639,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                     return false;
                 }
                 spinner(true, __("Piping data to Elasticsearch"));
-                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2]: "");
+                var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2] : "");
                 Ext.Ajax.request(
                     {
                         url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
@@ -620,7 +665,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                             spinner(false);
                             Ext.MessageBox.show({
                                 title: __("Failure"),
-                                msg: __(Ext.decode(response.responseText).message),
+                                msg: (typeof Ext.decode(response.responseText).message === "object") ? __(response.responseText): Ext.decode(response.responseText).message,
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,
@@ -634,8 +679,12 @@ tableStructure.onIndexInElasticsearch = function (record) {
             }
         });
 };
+
+/**
+ *
+ * @param record
+ */
 tableStructure.onDeleteFromElasticsearch = function (record) {
-    "use strict";
     Ext.MessageBox.confirm(__('Confirm'), __("This will delete the type from Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
@@ -671,12 +720,23 @@ tableStructure.onDeleteFromElasticsearch = function (record) {
             }
         });
 };
+
+/**
+ *
+ */
 tableStructure.onSave = function () {
-    "use strict";
     tableStructure.store.save();
 };
+
+/**
+ *
+ * @param store
+ * @param action
+ * @param result
+ * @param transaction
+ * @param rs
+ */
 tableStructure.onWrite = function (store, action, result, transaction, rs) {
-    "use strict";
     if (transaction.message === "Renamed") {
         tableStructure.store.load();
     }

@@ -80,7 +80,7 @@ class Elasticsearch extends Model
         } elseif ($type) {
             $ch = curl_init($this->host . ":9200/{$index}_{$type}");
         } else {
-            $ch = curl_init($this->host . ":9200/{$index}_*");
+            $ch = curl_init($this->host . ":9200/{$index}");
         }
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
