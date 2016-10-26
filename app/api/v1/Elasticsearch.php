@@ -18,12 +18,67 @@ class Elasticsearch extends \app\inc\Controller
     protected $clientIp;
 
     /**
+     * @var array
+     */
+    protected $settings;
+
+    /**
      * Elasticsearch constructor.
      */
     function __construct()
     {
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
+        $defaultSettings = array(
+            "settings" => array(
+                "number_of_shards" => 5,
+                "number_of_replicas" => 0,
+                "analysis" => array
+                (
+                    "analyzer" => array
+                    (
+                        "str_search_analyzer" => array
+                        (
+                            "type" => "custom",
+                            "tokenizer" => "whitespace",
+                            "filter" => array
+                            (
+                                "0" => "lowercase"
+                            )
+
+                        ),
+                        "str_index_analyzer" => array
+                        (
+                            "type" => "custom",
+                            "tokenizer" => "whitespace",
+                            "filter" => array
+                            (
+                                "0" => "lowercase",
+                                "1" => "substring"
+                            )
+
+                        )
+
+                    ),
+                    "filter" => array
+                    (
+                        "substring" => array
+                        (
+                            "type" => "edgeNGram",
+                            "min_gram" => 1,
+                            "max_gram" => 255
+                        )
+
+                    )
+
+                )
+
+            )
+        );
+        // Check if there are custom settings
+        if (!$this->settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+            $this->settings = json_encode($defaultSettings);
+        }
     }
 
     /**
@@ -215,7 +270,7 @@ class Elasticsearch extends \app\inc\Controller
                 "code" => "406"
             );
         } else {
-            if ($relationCheck["data"] == "table") {
+            if ($relationCheck["data"] == "TABLE") {
                 $installTrigger = true;
             }
         }
@@ -248,58 +303,7 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
 
-        // Define default settings for the new index
-        $defaultSettings = array(
-            "settings" => array(
-                "number_of_shards" => 5,
-                "number_of_replicas" => 0,
-                "analysis" => array
-                (
-                    "analyzer" => array
-                    (
-                        "str_search_analyzer" => array
-                        (
-                            "type" => "custom",
-                            "tokenizer" => "whitespace",
-                            "filter" => array
-                            (
-                                "0" => "lowercase"
-                            )
 
-                        ),
-                        "str_index_analyzer" => array
-                        (
-                            "type" => "custom",
-                            "tokenizer" => "whitespace",
-                            "filter" => array
-                            (
-                                "0" => "lowercase",
-                                "1" => "substring"
-                            )
-
-                        )
-
-                    ),
-                    "filter" => array
-                    (
-                        "substring" => array
-                        (
-                            "type" => "edgeNGram",
-                            "min_gram" => 1,
-                            "max_gram" => 255
-                        )
-
-                    )
-
-                )
-
-            )
-        );
-
-        // Check if there are custom settings
-        if (!$settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
-            $settings = json_encode($defaultSettings);
-        }
         $es = new \app\models\Elasticsearch();
 
         // Delete the index if exist
@@ -327,7 +331,7 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Create the index with settings
-        $res = $es->createIndex($fullIndex, $settings);
+        $res = $es->createIndex($fullIndex, $this->settings);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;

@@ -137,7 +137,6 @@ class Sql extends \app\inc\Model
             $response['message'] = $this->PDOerror;
             $response['code'] = 400;
         }
-        $this->free($result);
         return $response;
     }
 
