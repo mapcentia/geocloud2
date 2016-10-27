@@ -180,6 +180,9 @@ class Elasticsearch extends \app\inc\Controller
         return $es->map($index, Input::getPath()->part(7), $put["map"]);
     }
 
+    /**
+     * @return array|mixed
+     */
     public function post_create()
     {
         $post = Input::get();
@@ -188,7 +191,7 @@ class Elasticsearch extends \app\inc\Controller
         }
         $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
         $es = new \app\models\Elasticsearch();
-        return $es->createIndex($index, $post["map"]);
+        return $es->createIndex($index, $post["map"]); // TODO rename "map" to "settings"
     }
 
     /**
