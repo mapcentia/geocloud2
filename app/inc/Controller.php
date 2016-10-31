@@ -122,7 +122,7 @@ class Controller
 
         $postgisObject = new \app\inc\Model();
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if (($auth == "Read/write" || $auth == "Write") && ($subUser && $subUser != $schema)) {
+        if ($auth == "Read/write" || $auth == "Write") {
             $settings_viewer = new \app\models\Setting();
             $response = $settings_viewer->get();
             if (isset($response["data"]["userGroups"]->$subUser)) {
