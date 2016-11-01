@@ -1447,7 +1447,6 @@ function doParse($arr)
         }
     }
     $postgisObject->commit();
-    $postgisObject->free($result);
 }
 
 function makeExceptionReport($value)
