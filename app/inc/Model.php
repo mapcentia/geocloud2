@@ -78,19 +78,19 @@ class Model
     }
 
     /**
-     * @param PDOStatement $result
+     *
      * @return int
      */
-    public function numRows(PDOStatement $result)
+    public function numRows($result)
     {
         $num = sizeof($result);
         return ($num);
     }
 
     /**
-     * @param PDOStatement $result
+     *
      */
-    public function free(PDOStatement $result)
+    public function free($result)
     {
         $result = NULL;
     }
