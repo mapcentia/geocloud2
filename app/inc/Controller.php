@@ -122,7 +122,7 @@ class Controller
 
         $postgisObject = new \app\inc\Model();
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if (($auth == "Read/write" || $auth == "Write")) {
+        if ($auth == "Read/write" || $auth == "Write") {
             $settings_viewer = new \app\models\Setting();
             $response = $settings_viewer->get();
             if (isset($response["data"]["userGroups"]->$subUser)) {
@@ -135,7 +135,6 @@ class Controller
             } else {
                 $apiKey = $response['data']['api_key'];
             }
-            //if ($dbSplit[0] != $postgisschema) {
             $sql = "SELECT * FROM settings.geometry_columns_join WHERE _key_ LIKE :schema";
             $res = $postgisObject->prepare($sql);
             try {
@@ -220,7 +219,6 @@ class Controller
                     }
                 }
             }
-            //}
         } else {
             $response3["success"] = true;
             $response3['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];

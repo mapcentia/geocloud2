@@ -41,13 +41,12 @@ if (sizeof($dbSplit) == 2 || $_SESSION["subuser"]) { //Sub-user
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
     $userGroup = $response["data"]["userGroups"]->$subUser;
-
     if ($dbSplit[0] != $postgisschema) {
+
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
         $res = $postgisObject->prepare($sql);
         try {
             $res->execute(array("schema" => $postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
-
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
