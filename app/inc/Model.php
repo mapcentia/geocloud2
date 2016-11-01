@@ -78,7 +78,7 @@ class Model
     }
 
     /**
-     *
+     * TODO is it used?
      * @return int
      */
     public function numRows($result)
