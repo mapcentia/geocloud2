@@ -177,9 +177,7 @@ class Table extends Model
             $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
 
         }
-        if (strpos(strtolower($whereClause), strtolower("order by")) !== false) {
-            $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        }
+        $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $result = $this->execQuery($sql);
 
         // Check if VIEW
@@ -556,7 +554,7 @@ class Table extends Model
      */
     public function getTableStructure($includePriKey = false)
     {
-        $response =[];
+        $response = [];
         $arr = array();
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         if (!$this->metaData) {
