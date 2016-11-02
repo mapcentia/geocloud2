@@ -5,9 +5,17 @@
 /*global writeFiles:false */
 /*global store:false */
 /*global addShape:false */
+/*global spinner:false */
+/*global window:false */
+
+"use strict";
+
 Ext.namespace('addShape');
+
+/**
+ *
+ */
 addShape.init = function () {
-    "use strict";
     Ext.QuickTips.init();
     var me = this;
     me.form = new Ext.Panel({
@@ -19,7 +27,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf", "csv"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5',
                 url: '/controllers/upload/vector',
@@ -262,3 +270,4 @@ addShape.init = function () {
         }
     };
 };
+

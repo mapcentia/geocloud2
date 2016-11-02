@@ -125,7 +125,7 @@ class Staticmap extends \app\inc\Controller
                     el: 'map'
                 });
                 map.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "'
-                map.addBaseLayer({$baseLayer});
+                map.addBaseLayer({$baseLayer}, '{$db}');
                 map.setBaseLayer({$baseLayer});";
         if (!$sql) {
             if ($bbox) {
