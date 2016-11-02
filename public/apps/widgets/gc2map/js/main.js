@@ -360,7 +360,7 @@ MapCentia = function (globalId) {
                     cloud.addTileLayers({
                         host: defaults.host,
                         layers: [defaults.baseLayers[i].id],
-                        db: db,
+                        db: (typeof defaults.baseLayers[i].db !== "undefined") ? defaults.baseLayers[i].db : db,
                         wrapDateLine: false,
                         isBaseLayer: true,
                         displayInLayerSwitcher: true,

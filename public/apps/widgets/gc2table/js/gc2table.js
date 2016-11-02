@@ -178,6 +178,7 @@ var gc2table = (function () {
 
                 var filterMap =
                     _.debounce(function () {
+                        var visibleRows = [];
                         $.each(store.layer._layers, function (i, v) {
                             m.map.removeLayer(v);
                         });
@@ -187,27 +188,18 @@ var gc2table = (function () {
                         filters = {};
                         filterControls = {};
                         $.each(cm, function (i, v) {
-                            //console.log(v)
                             if (v.filterControl) {
                                 filters[v.dataIndex] = $(".bootstrap-table-filter-control-" + v.dataIndex).val();
                                 filterControls[v.dataIndex] = v.filterControl;
                             }
                         });
+                        $.each($(el + " tbody").children(), function(x, y){
+                            visibleRows.push($(y).attr("data-uniqueid"));
+                        })
                         $.each(store.layer._layers, function (i, v) {
-                            $.each(v.feature.properties, function (u, n) {
-                                if (typeof filterControls[u] !== "undefined") {
-                                    if (filterControls[u] === "input") {
-                                        if (n.toLowerCase().indexOf(filters[u].toLowerCase()) === -1 && filters[u] !== "") {
-                                            m.map.removeLayer(v);
-                                        }
-                                    } else {
-
-                                        if (n !== filters[u] && filters[u] !== "") {
-                                            m.map.removeLayer(v);
-                                        }
-                                    }
-                                }
-                            });
+                            if (visibleRows.indexOf(v._leaflet_id + "") === -1) {
+                                m.map.removeLayer(v);
+                            }
                         });
                         bindEvent();
                     }, 500);

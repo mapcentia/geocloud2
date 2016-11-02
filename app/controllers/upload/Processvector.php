@@ -6,10 +6,18 @@ use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
 
+/**
+ * Class Processvector
+ * @package app\controllers\upload
+ */
 class Processvector extends \app\inc\Controller
 {
+    /**
+     * @return array
+     */
     public function get_index()
     {
+        $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
         $skipFailures = ($_REQUEST["ignoreerrors"] == "true") ? true : false;
@@ -20,20 +28,17 @@ class Processvector extends \app\inc\Controller
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
         }
-
         //Check if file is .zip
         $zipCheck1 = explode(".", $_REQUEST['file']);
         $zipCheck2 = array_reverse($zipCheck1);
-
         if (strtolower($zipCheck2[0]) == "zip" || strtolower($zipCheck2[0]) == "rar") {
-            $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb");
+            $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
             $folderArr = array();
             $safeNameArr = array();
             for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                 $folderArr[] = $zipCheck1[$i];
             }
             $folder = implode(".", $folderArr);
-
             if (strtolower($zipCheck2[0]) == "zip") {
                 // ZIP start
                 $zip = new \ZipArchive;
@@ -47,7 +52,6 @@ class Processvector extends \app\inc\Controller
                 $zip->close();
                 // ZIP end
             }
-
             if (strtolower($zipCheck2[0]) == "rar") {
                 // RAR start
                 $rar_file = rar_open($dir . "/" . $_REQUEST['file']);
@@ -83,6 +87,7 @@ class Processvector extends \app\inc\Controller
                 }
             }
         }
+        $fileType = strtolower($zipCheck2[0]);
         $srid = ($_REQUEST['srid']) ?: "4326";
         $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
 
@@ -103,10 +108,7 @@ class Processvector extends \app\inc\Controller
                 $type = "PROMOTE_TO_MULTI";
                 break;
         }
-
         //$type = "linestring";
-
-
         $model = new \app\inc\Model();
         $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
         $tableExist = $tableExist["success"];
@@ -136,6 +138,7 @@ class Processvector extends \app\inc\Controller
             (($overwrite == true && $delete == false) ? "-overwrite " : " ") .
             /*"-dim XY " . */
             /*"--config DXF_ENCODING WIN1252 " .*/
+            (($fileType == "csv") ? "-oo AUTODETECT_TYPE=YES " : "") .
             (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
             (($delete || $append) ? "" : "-lco 'FID=gid' ") .
             (($delete || $append) ? "" : "-lco 'PRECISION=NO' ") .
