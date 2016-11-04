@@ -81,12 +81,8 @@ class Wms extends \app\inc\Controller
      */
     public function fetch($db, $postgisschema)
     {
-
         $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$db}_{$postgisschema}.map&" . $_SERVER["QUERY_STRING"];
-
-
         header("X-Powered-By: GC2 WMS");
-
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
@@ -106,8 +102,6 @@ class Wms extends \app\inc\Controller
         });
         $content = curl_exec($ch);
         curl_close($ch);
-
-        // Return content
         echo $content;
         exit();
     }

@@ -135,22 +135,30 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                 </div>
 
                 <div style="float: right">
-                    <a data-toggle="tooltip" data-placement="top"
-                       title="Open '<%= this . schema %>' in the response Map Viewer"
-                       class="btn btn-xs btn-default" target="_blank"
-                       href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span>Viewer</span>
-                    </a>
-                    <a data-toggle="tooltip" data-placement="top"
-                       title="Open '<%= this . schema %>' in the advanced Map Client"
-                       class="btn btn-xs btn-default" target="_blank"
-                       href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
-                    </a>
+                    <?php if (!App::$param['vidiUrl']) { ?>
+                        <a data-toggle="tooltip" data-placement="top"
+                           title="Open '<%= this . schema %>' in the responsive Map Viewer"
+                           class="btn btn-xs btn-default" target="_blank"
+                           href="<?php echo $cdnHost . "/apps/viewer/" ?><%= db %>/<%= this . schema %>"><span>Viewer</span>
+                        </a>
+                        <a data-toggle="tooltip" data-placement="top"
+                           title="Open '<%= this . schema %>' in the advanced Map Client"
+                           class="btn btn-xs btn-default" target="_blank"
+                           href="<?php echo $cdnHost . "/apps/mapclient/" ?><%= db %>/<%= this . schema %>"><span>Map client</span>
+                        </a>
+                    <?php } else { ?>
+                        <a data-toggle="tooltip" data-placement="top"
+                           title="Open '<%= this . schema %>' in the Vidi viewer"
+                           class="btn btn-xs btn-default" target="_blank"
+                           href="<?php echo App::$param['vidiUrl'] ?>/app/<%= db %>/<%= this . schema %>"><span>Vidi</span>
+                        </a>
+                    <?php } ?>
                     <?php if (App::$param['logstashHost']) { ?>
-                    <a data-toggle="tooltip" data-placement="top" data-schema="<%= this . schema %>"
-                       title="See statistics for '<%= this . schema %>'"
-                       class="btn btn-xs btn-default fixed-width logstash"><span
-                            class="glyphicon glyphicon-stats"></span>
-                    </a>
+                        <a data-toggle="tooltip" data-placement="top" data-schema="<%= this . schema %>"
+                           title="See statistics for '<%= this . schema %>'"
+                           class="btn btn-xs btn-default fixed-width logstash"><span
+                                class="glyphicon glyphicon-stats"></span>
+                        </a>
                     <?php } ?>
                     <a data-toggle="tooltip" data-placement="top"
                        title="Open GC2 administration for '<%= this . schema %>'"
@@ -196,15 +204,14 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
     var db = "<?php echo $_SESSION['screen_name'];?>";
     var hostName = "<?php echo $host ?>";
     <?php
-       if (!$_SESSION['subuser']){
-       echo "var subUsers = ".json_encode($_SESSION['subusers']).";\n";
-       echo "var subUserEmails = ".json_encode($_SESSION['subuserEmails']).";\n";
-       }
-       else {
-       echo "var subUsers = null;\n";
-       echo "var subUserEmails = null;\n";
-       }
-   ?>
+    if (!$_SESSION['subuser']) {
+        echo "var subUsers = " . json_encode($_SESSION['subusers']) . ";\n";
+        echo "var subUserEmails = " . json_encode($_SESSION['subuserEmails']) . ";\n";
+    } else {
+        echo "var subUsers = null;\n";
+        echo "var subUserEmails = null;\n";
+    }
+    ?>
     $(window).ready(function () {
         $("#schema-filter").keyup(function () {
             $('#schema-list > div[id*="' + $("#schema-filter").val() + '"]').css("display", "inline");
@@ -299,7 +306,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                             $.ajax({
                                 dataType: 'jsonp',
                                 jsonp: 'jsonp_callback',
-                                url: hostName + '/controllers/mapcache/add/' + db ,
+                                url: hostName + '/controllers/mapcache/add/' + db,
                                 success: function (response) {
 
                                 }

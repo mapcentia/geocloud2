@@ -514,18 +514,22 @@ class Table extends Model
             $multi = false;
         }
         foreach ($this->metaData as $key => $value) {
-            if ($key != $this->primeryKey['attname']) {
                 $fieldsArr[] = $key;
-            }
         }
         // Start sorting the fields by sort_id
-        $arr = array();
+        $isSorted = false;
+        $arr = [];
         foreach ($fieldsArr as $value) {
+            if (!$isSorted) {
+                $isSorted = ($fieldconfArr[$value]->sort_id) ? true : false;
+            }
             $arr[] = array($fieldconfArr[$value]->sort_id, $value);
         }
-        usort($arr, function ($a, $b) {
-            return $a[0] - $b[0];
-        });
+        if ($isSorted) {
+            usort($arr, function ($a, $b) {
+                return $a[0] - $b[0];
+            });
+        }
         $fieldsArr = []; // Reset
         foreach ($arr as $value) {
             $fieldsArr[] = $value[1];
@@ -535,7 +539,12 @@ class Table extends Model
             if ($value['type'] != "geometry" && ($key != $this->primeryKey['attname'] || $includePriKey)) {
                 if (!preg_match($this->specialChars, $key)) {
                     $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                    $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj'], "properties" => $fieldconfArr[$key]->properties ?: null, "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
+                    $columnsForGrid[] = array("header" => $key,
+                        "dataIndex" => $key,
+                        "type" => $value['type'],
+                        "typeObj" => $value['typeObj'],
+                        "properties" => $fieldconfArr[$key]->properties ?: null,
+                        "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
                 }
             }
         }
