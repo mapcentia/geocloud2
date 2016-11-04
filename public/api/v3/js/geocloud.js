@@ -308,7 +308,7 @@ geocloud = (function () {
                 async: this.defaults.async,
                 data: 'format=geojson&q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding,
                 jsonp: (this.defaults.jsonp) ? 'callback' : false,
-                url: 'http://' + this.db + '.cartodb.com' + '/api/v2/sql',
+                url: '//' + this.db + '.cartodb.com' + '/api/v2/sql',
                 type: this.defaults.method,
                 success: function (response) {
                     if (response.features !== null) {
@@ -611,7 +611,7 @@ geocloud = (function () {
             $('<link/>').attr({
                 rel: 'stylesheet',
                 type: 'text/css',
-                href: host + '/js/leaflet/leaflet-0.7.7.css'
+                href: window.geocloud_host + '/js/leaflet/leaflet-0.7.7.css'
             }).appendTo('head');
         }
         this.bingApiKey = null;
