@@ -1,12 +1,12 @@
 <?php
 include("html_header.php");
 ?>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f" />
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-flat.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717" />
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f" />
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link href='//fonts.googleapis.com/css?family=Open+Sans:700,300' rel='stylesheet' type='text/css'>
@@ -18,6 +18,25 @@ include("html_header.php");
 <!-- /build -->
 </head>
 <body>
+<div id="loadscreen">
+    <div class="center text">
+        <div id="loadscreentext"></div>
+    </div>
+    <div class="center bounce">
+        <div class="bouncywrap">
+            <div class="dotcon dc1">
+                <div class="dot"></div>
+            </div>
+            <div class="dotcon dc2">
+                <div class="dot"></div>
+            </div>
+            <div class="dotcon dc3">
+                <div class="dot"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
 <div style="display:none">
     <div id="map-settings"></div>
     <div id="authentication">
@@ -39,7 +58,7 @@ include("html_header.php");
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo (\app\conf\App::$param["epsg"]) ?: "4326" ?>"
-                           />
+                    />
                 </td>
             </tr>
             </tbody>
@@ -54,7 +73,7 @@ include("html_header.php");
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? : "public"; ?>/"/>
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
                 </td>
             </tr>
             </tbody>
@@ -70,7 +89,7 @@ include("html_header.php");
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/[wms|wmts|gmaps|tms]"
-                           />
+                    />
                 </td>
             </tr>
             </tbody>
@@ -86,7 +105,7 @@ include("html_header.php");
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
-                           />
+                    />
                 </td>
             </tr>
             </tbody>
@@ -102,7 +121,7 @@ include("html_header.php");
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
-                           />
+                    />
                 </td>
             </tr>
             <tr>
@@ -114,7 +133,8 @@ include("html_header.php");
 </div>
 <div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif?5c2beec3d6a058e0'/></div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
-<script>window.__ = function (string, toolTip) {
+<script>
+    window.__ = function (string, toolTip) {
         'use strict';
         var str;
         if (typeof gc2i18n !== 'undefined') {
@@ -130,6 +150,9 @@ include("html_header.php");
         return str;
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
+</script>
+<script>
+    document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base-debug.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>

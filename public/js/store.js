@@ -38,9 +38,8 @@ var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWM
 /**
  * Init the app on ready state
  */
-$(window).ready(function () {
+$(window).load(function () {
     var winAdd, winMoreSettings, fieldsForStore = {}, groups, groupsStore, tagStore, subUsers;
-
     /**
      * Make sync calls
      * TODO Make them async and poll

@@ -1,129 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map with custom Awesome Markers and pop-up</title>
-    <link rel="stylesheet" href="/js/bootstrap3/css/bootstrap.min.css">
-    <script src="/apps/widgets/gc2map/js/gc2map.js"></script>
-    <script src="/apps/widgets/gc2table/js/gc2table.js"></script>
-    <script src="/apps/widgets/gc2map/js/searchModules/danish.js"></script>
-</head>
-<body>
-<div style="width: 500px;height: 500px; position: relative" id="map"></div>
-<div>
-    <table id="table"
-           data-show-toggle="true"
-           data-show-export="true"
-           data-show-columns="true"
-           data-filter-control="true"
-           data-filter-show-clear="true"></table>
-</div>
-</body>
+<script src='http://staticmap.mapcentia.com//js/leaflet/leaflet.js'></script>
+<script src='http://staticmap.mapcentia.com//js/openlayers/proj4js-combined.js'></script>
+<script src='http://cowi.mapcentia.com/api/v3/js/geocloud.js'></script>
+<div id='map' style='width: 700px; height: 400px'></div>
+<style>
+    body {
+        margin: 0px;
+        padding: 0px;
+    }
+
+    .leaflet-control-zoom {
+        display: none
+    }
+</style>
 <script>
-    // Lav en widget på normal vis
-    gc2map.init({
-        key: "map",
-        db: 'mydb',
-        zoom: [9.5354, 55.7042, 9],
-        layers: [],
-        baseLayers: [{"id": "osm", "name": "OSM"}],
-        setBaseLayer: 'osm',
-        width: '100%',
-        height: '400px',
-        callBack: function (m, w) {
+    (function () {
+        var map = new geocloud.map({
+            el: 'map'
+        });
+        map.bingApiKey = 'your_bing_map_key'
+        map.addBaseLayer('kommuneplan17.baggrundskort_wms', 'randers');
+        map.setBaseLayer('kommuneplan17.baggrundskort_wms');
+        var store = new geocloud.sqlStore({
+            db: 'randers',
+            sql: 'SELECT%20%2A%20FROM%20kommuneplan17.kpplandk2_view%20WHERE%20planid%3D%273156534%27',
+            async: false,
+            onLoad: function () {
+                map.zoomToExtentOfgeoJsonStore(store);
+            }
+        });
+        map.addGeoJsonStore(store);
+        store.load();
 
-            // Aktiver søgning med kommune nr.
-            gc2map.createSearch(m, "630");
-
-            // Lav et SQL store på normal vis
-            var store = new geocloud.sqlStore({
-                db: "mydb",
-                sql: "SELECT * FROM public.lp_f limit 20",
-
-                // StyleMap laves som en funktion
-                styleMap: function (feature) {
-                    return {
-                        fillColor: (function (d) {
-                            return d === "11" ? '#c66100' :
-                                    d === "21" ? '#ff615a' :
-                                            d === "31" ? '#6bffff' :
-                                                    d === "41" ? '#ff69ff' :
-                                                            d === "51" ? '#39ff39' :
-                                                                    d === "61" ? '#ffefad' :
-                                                                            d === "71" ? '#efef00' :
-                                                                                    d === "81" ? '#9c9e9c' :
-                                                                                            d === "91" ? '#9c9e9c' :
-                                                                                                    d === "96" ? '#C0C0C0' :
-                                                                                                            '#FFEDA0'
-
-
-                        }(feature.properties.anvgen)),
-                        weight: 1,
-                        opacity: 1,
-                        color: "#000",
-                        fillOpacity: 0.5
-                    }
-                },
-                onLoad: function () {
-                    // Brug IKKE denne funktion sammen med autoUpdate
-                    m.zoomToExtentOfgeoJsonStore(store);
-                }
-            });
-
-            // Tilføj store til kort og load
-            m.addGeoJsonStore(store);
-            store.load();
-
-            // Indtil nu er det normal widget. Nu begynder tabel
-
-            // Definer en column model
-            var cm = [
-                {
-                    "header": "Plannr",
-                    "dataIndex": "plannr",
-                    "type": "varchar",
-                    filterControl: "input",
-                    sortable: true
-                },
-                {
-                    "header": "Plannavn",
-                    "dataIndex": "plannavn",
-                    "type": "varchar",
-                    filterControl: "input",
-                    sortable: true
-
-                },
-                {
-                    "header": "Anvendelse",
-                    "dataIndex": "anv",
-                    filterControl: "select"
-                }, {
-                    "header": "Status",
-                    "dataIndex": "status",
-                    filterControl: "select"
-                },
-                {
-                    "header": "Se ramme",
-                    "dataIndex": "html",
-                    "formatter": "operateFormatter"
-                }
-            ];
-
-            // Start tabel widget
-
-            gc2table.init({
-                el: "#table", // Element som tabellen skal lave i
-                geocloud2: m, // geocloud object
-                store: store, // store object
-                cm: cm, // Column model
-                autoUpdate: false, // Skal kortet opdateres ved zoom?
-                height: '400',
-                setViewOnSelect: true, // Zoom når det vælges i tabellen
-                openPopUp: false, // Vis pop up på valgte features
-                setSelectedStyle: true // Skal valgte features have en Selected style?
-            });
-        }
-    });
-</script>
-</html>
+    }())</script>

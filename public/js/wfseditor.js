@@ -910,9 +910,10 @@ $(document).ready(function () {
                     extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
                 }
                 map.addLayers([extentRestrictLayer]);
+                // Remove the loading screen
+                window.parent.$("#loadscreen").hide();
             }
-        })
-        ;
+        });
     };
     wfsTools = [
         new GeoExt.Action({
@@ -1458,5 +1459,7 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
+
+
 
 
