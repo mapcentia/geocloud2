@@ -815,7 +815,7 @@ class Layer extends \app\models\Table
         $response["id"] = $id;
         $response["name"] = $id;
         $response["title"] = $row["f_table_title"];
-        $response["notes"] = $row["f_table_abstract"];
+        $response["notes"] = (isset(json_decode($row["meta"])->meta_desc) && trim(json_decode($row["meta"])->meta_desc) != "") ? json_decode($row["meta"])->meta_desc : $row["f_table_abstract"];
         if (sizeof($arr) > 0) $response["tags"] = $arr;
         $response["owner_org"] = $ownerOrg;
         $response["resources"] = array(
