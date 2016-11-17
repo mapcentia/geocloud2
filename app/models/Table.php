@@ -433,7 +433,7 @@ class Table extends Model
                         $uuid = $this->getUuid($row->_key_);
                         \app\models\Layer::deleteCkan($uuid["uuid"]);
                     } else {
-                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . "http://172.17.0.5";
+                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . App::$param['host'];
                         Util::asyncRequest($url);
                     }
                 }
