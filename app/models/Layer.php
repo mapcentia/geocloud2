@@ -758,7 +758,6 @@ class Layer extends \app\models\Table
         }
         $row = $this->fetchRow($res, "assoc");
 
-        //$id = Database::getDb() . "-" . str_replace(".", "-", $row["_key_"]);
         $id = $row["uuid"];
 
         // Check if dataset already exists
@@ -892,7 +891,6 @@ class Layer extends \app\models\Table
                 "value" => $row["created"]
             ),
         );
-
         $requestJson = json_encode($response);
         $ch = curl_init($ckanApiUrl . "/api/3/action/package_" . ($datasetExists ? "patch" : "create"));
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -942,9 +940,8 @@ class Layer extends \app\models\Table
                     'Authorization: ' . App::$param["ckan"]["apiKey"]
                 )
             );
-            $buffer = curl_exec($ch);
+            curl_exec($ch);
             curl_close($ch);
-
 
             $response['json'] = $packageBuffer;
             return $response;

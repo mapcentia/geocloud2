@@ -2,8 +2,9 @@
 namespace app\models;
 
 use app\inc\Model;
-use \app\conf\Connection;
-use \app\conf\App;
+use app\conf\Connection;
+use app\conf\App;
+use app\inc\Util;
 
 class Table extends Model
 {
@@ -426,11 +427,14 @@ class Table extends Model
         foreach ($data as $set) {
             $set = $this->makeArray($set);
             foreach ($set as $row) {
-                // Delete package from CKAN if "Update" is set to false
-                if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false) {
-                    $uuid = $this->getUuid($row->_key_);
-                    if (isset(App::$param["ckan"])) {
-                        $ckanRes = \app\models\Layer::deleteCkan($uuid["uuid"]);
+                if (isset(App::$param["ckan"])) {
+                    // Delete package from CKAN if "Update" is set to false
+                    if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false) {
+                        $uuid = $this->getUuid($row->_key_);
+                        \app\models\Layer::deleteCkan($uuid["uuid"]);
+                    } else {
+                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . "http://172.17.0.5";
+                        Util::asyncRequest($url);
                     }
                 }
                 foreach ($row as $key => $value) {

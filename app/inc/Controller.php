@@ -1,7 +1,7 @@
 <?php
 namespace app\inc;
 
-use \app\inc\Response;
+use app\conf\App;
 
 /**
  * Class Controller
@@ -47,7 +47,6 @@ class Controller
             } else {
                 $layer = new \app\models\Layer();
                 $privileges = (array)json_decode($layer->getValueFromKey($key, "privileges"));
-                //print_r($_SESSION);
                 $subuserLevel = $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']];
                 if (!isset($level[$subuserLevel])) {
                     $response['success'] = false;
@@ -70,6 +69,11 @@ class Controller
      */
     public function authApiKey($user, $key)
     {
+        foreach (App::$param["trustedAddresses"] as $address) {
+            if (Util::ipInRange(Util::clientIp(), $address)) {
+                return true;
+            }
+        }
         global $postgisdb;
         $postgisdb = $user;
         $settings_viewer = new \app\models\Setting();

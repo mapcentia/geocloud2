@@ -11,7 +11,6 @@ var ckanHost = nconf.get("ckan-host") || "127.0.0.1";
 var gc2Host = nconf.get("gc2-host") || "127.0.0.1";
 var user = nconf.get("user") || "postgres";
 var key = nconf.get("key") || null;
-var pgConString = "postgres://" + user + "@" + host + "/" + db;
 
 if (nconf.get("help") || !db) {
     console.log("usage:");
@@ -25,25 +24,33 @@ if (nconf.get("help") || !db) {
     process.exit(1);
 }
 
-console.log("Listen on database: " + db + " @ " + host + " with user " + user);
+/**
+ * @type {{user: (any), database: *, host: (any), port: number, max: number, idleTimeoutMillis: number}}
+ */
+var config = {
+    user: user,
+    database: db,
+    host: host,
+    port: 5432,
+    max: 1, // ONLY ONE CLIENT IN THE POOL
+    idleTimeoutMillis: 3000 // how long a client is allowed to remain idle before being closed
+};
 
-pg.connect(pgConString, function (err, client) {
-    if (err) {
-        console.log(err);
-    }
+/**
+ * @param client
+ */
+var start = function (client) {
+    console.log("Listen on database: " + db + "@" + host + " with user " + user);
     client.on('notification', function (msg) {
         var split = msg.payload.split(","), url;
-
         url = "http://" + ckanHost + "/api/v1/ckan/" + db + "?id=" + split[2] + "&host=" + gc2Host;
         if (key) {
             url = url + "&key=" + key;
         }
         console.log(url);
-
         request.get(url, function (err, res, body) {
             if (!err) {
                 var resultsObj = JSON.parse(body);
-                //console.log(resultsObj);
                 winston.log('info', resultsObj.success);
             } else {
                 winston.log('error', err);
@@ -52,5 +59,27 @@ pg.connect(pgConString, function (err, client) {
         });
 
     });
-    var query = client.query("LISTEN _gc2_notify_meta");
+    client.query("LISTEN _gc2_notify_meta");
+};
+
+/**
+ * @type {pg.Pool}
+ */
+var pool = new pg.Pool(config);
+
+pool.connect(function (err, client, done) {
+    if (err) {
+        console.log(err);
+    } else {
+        start(client);
+    }
+});
+
+pool.on('error', function (err, client) {
+    console.error(err.message);
+    pool.connect(function (err, client, done) {
+        if (!err) {
+            start(client);
+        }
+    });
 });

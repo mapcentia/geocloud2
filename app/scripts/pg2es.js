@@ -4,7 +4,6 @@ var request = require("request");
 var winston = require('winston');
 winston.add(winston.transports.File, {filename: '/var/www/geocloud2/public/logs/pg2es.log'});
 
-
 nconf.argv();
 var db = (nconf.get()._[0]);
 var host = nconf.get("host") || "127.0.0.1";

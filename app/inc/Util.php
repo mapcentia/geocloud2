@@ -210,4 +210,14 @@ class Util
         curl_close($ch);
         return $buffer;
     }
+
+    static function asyncRequest($url, $payload = "")
+    {
+
+        $cmd = "curl -XGET -H 'Content-Type: application/json'";
+        $cmd .= " -d '" . $payload . "' " . "'" . $url . "'";
+        $cmd .= " > /dev/null 2>&1 &";
+        exec($cmd, $output, $exit);
+        return $exit == 0;
+    }
 }
