@@ -306,7 +306,6 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
 
-
         $es = new \app\models\Elasticsearch();
 
         // Delete the index if exist
