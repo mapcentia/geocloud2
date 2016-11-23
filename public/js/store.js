@@ -880,7 +880,7 @@ $(window).load(function () {
                         modal: true,
                         layout: 'fit',
                         width: 450,
-                        height: 500,
+                        height: 520,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -1005,6 +1005,12 @@ $(window).load(function () {
                                                 fieldLabel: __('ES trigger table'),
                                                 name: 'triggertable',
                                                 value: r.data.triggertable
+                                            },
+                                            {
+                                                xtype: 'textfield',
+                                                fieldLabel: __('Feature id'),
+                                                name: 'featureid',
+                                                value: r.data.featureid
                                             },
                                             {
                                                 xtype: 'textarea',
