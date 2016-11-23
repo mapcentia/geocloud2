@@ -85,7 +85,7 @@ function parseFilter($filter, $table, $operator = "=")
         }
         if (is_array($arr['FeatureId'])) foreach ($arr['FeatureId'] as $value) {
             $value['fid'] = preg_replace("/{$table}\./", "", $value['fid']); // remove table name
-            $where[] = "{$primeryKey['attname']}=" . $value['fid'];
+            $where[] = "{$primeryKey['attname']}='" . $value['fid'] . "'";
         }
         // GmlObjectId
         $arr['GmlObjectId'] = addDiminsionOnArray($arr['GmlObjectId']);
