@@ -132,7 +132,7 @@ class Mapcachefile extends \app\inc\Controller
                         <tileset name="<?php echo $table ?>">
                             <source><?php echo $table ?></source>
                             <cache><?php echo $cache ?></cache>
-                            <grid>g</grid>
+                            <grid>g20</grid>
                             <?php
                             foreach ($grids as $k => $v) {
                                 echo "<grid>{$k}</grid>\n";
@@ -183,7 +183,7 @@ class Mapcachefile extends \app\inc\Controller
                     <tileset name="<?php echo $k ?>">
                         <source><?php echo $k ?></source>
                         <cache><?php echo $cache ?></cache>
-                        <grid>g</grid>
+                        <grid>g20</grid>
                         <?php
                         foreach ($grids as $k2 => $v2) {
                             echo "<grid>{$k2}</grid>\n";
@@ -239,7 +239,7 @@ class Mapcachefile extends \app\inc\Controller
                     <tileset name="<?php echo $tileSetName ?>">
                         <source><?php echo $tileSetName ?></source>
                         <cache><?php echo $cache ?></cache>
-                        <grid>g</grid>
+                        <grid>g20</grid>
                         <?php
                         foreach ($grids as $k2 => $v2) {
                             echo "<grid>{$k2}</grid>\n";
