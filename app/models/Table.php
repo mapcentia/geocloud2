@@ -433,7 +433,8 @@ class Table extends Model
                         $uuid = $this->getUuid($row->_key_);
                         \app\models\Layer::deleteCkan($uuid["uuid"]);
                     } else {
-                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . App::$param['host'];
+                        $gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
+                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
                         Util::asyncRequest($url);
                     }
                 }
@@ -518,7 +519,7 @@ class Table extends Model
             $multi = false;
         }
         foreach ($this->metaData as $key => $value) {
-                $fieldsArr[] = $key;
+            $fieldsArr[] = $key;
         }
         // Start sorting the fields by sort_id
         $isSorted = false;
