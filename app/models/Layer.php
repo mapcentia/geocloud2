@@ -812,7 +812,9 @@ class Layer extends \app\models\Table
 
         $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
         $response = array();
-        $response["id"] = $id;
+        if ($datasetExists) {
+            $response["id"] = $id;
+        }
         $response["name"] = $id;
         $response["title"] = $row["f_table_title"];
         $response["notes"] = (isset(json_decode($row["meta"])->meta_desc) && trim(json_decode($row["meta"])->meta_desc) != "") ? json_decode($row["meta"])->meta_desc : $row["f_table_abstract"];
