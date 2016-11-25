@@ -852,7 +852,7 @@ class Layer extends \app\models\Table
                 "name" => "WMTS",
                 "description" => "OGC WMTS version 1.0",
                 "format" => "wmts",
-                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/wmts?SERVICE=WMTS&REQUEST=GetCapabilities"
+                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/wmts/1.0.0/WMTSCapabilities.xml"
             ),
             array(
                 "id" => $id . "-xyz",
