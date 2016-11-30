@@ -238,7 +238,7 @@ var gc2table = (function () {
                         v.feature.properties._id = i;
                         $.each(v.feature.properties, function (n, m) {
                             $.each(cm, function (j, k) {
-                                if (k.dataIndex === n && ((typeof k.link === "boolean" && k.link === true) || (typeof k.link === "string" && k.link === true))) {
+                                if (k.dataIndex === n && ((typeof k.link === "boolean" && k.link === true) || (typeof k.link === "string"))) {
                                     v.feature.properties[n] = "<a target='_blank' rel='noopener' href='" + v.feature.properties[n] + "'>" + (typeof k.link === "string" ? k.link : "Link") + "</a>";
                                 }
 
