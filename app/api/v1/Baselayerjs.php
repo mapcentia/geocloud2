@@ -29,6 +29,7 @@ class Baselayerjs extends \app\inc\Controller
         echo "enablePrint: " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         echo "enableWorkflow: " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
         echo "hereApp: " . json_encode(\app\conf\App::$param['hereApp']).",\n";
+        echo "subDomainsForTiles: " . (json_encode(\app\conf\App::$param['subDomainsForTiles']) ? : "null").",\n";
         if ($settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             echo "es_settings: ". $settings.",\n";
         }

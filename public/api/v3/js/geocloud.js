@@ -550,18 +550,30 @@ geocloud = (function () {
         return l;
     };
 
-    //ol2 and leaflet
+    /**
+     * ol2 and leaflet
+     * @param layer
+     * @param defaults
+     * @param subDomains
+     * @returns {*}
+     */
     createTMSLayer = function (layer, defaults) {
-        var l, url, urlArray;
-        // TODO Setting for either TileCache or MapCache
+        var l, url, urlArray, url1, url2, url3, config, usingSubDomains = false;
         url = defaults.host + "/mapcache/" + defaults.db + "/tms/";
-        var url1 = url;
-        var url2 = url;
-        var url3 = url;
-        // For ol2
-        urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
-        // For leaflet
-        url = url.replace("cdn.", "{s}.");
+        url1 = url;
+        url2 = url;
+        url3 = url;
+        //If host has cdn. as subdomain, when create use cdn1, cdn2, cdn3
+        if (typeof defaults.subdomains === "undefined" || defaults.subdomains === null) {
+            // For ol2
+            urlArray = [url1.replace("cdn.", "cdn1."), url2.replace("cdn.", "cdn2."), url3.replace("cdn.", "cdn3.")];
+            // For leaflet
+            url = url.replace("cdn.", "{s}.");
+        } else {
+            usingSubDomains = true;
+            // Only Leaflet
+            url = url.replace("//", "//{s}.");
+        }
         switch (MAPLIB) {
             case "ol2":
                 l = new OpenLayers.Layer.TMS(defaults.name, urlArray, {
@@ -576,6 +588,14 @@ geocloud = (function () {
 
                 break;
             case "leaflet":
+                config = {
+                    tms: true,
+                    maxZoom: defaults.maxZoom,
+                    tileSize: 256
+                };
+                if (usingSubDomains) {
+                    config.subdomains = defaults.subdomains;
+                }
                 l = new L.TileLayer(url + "1.0.0/" + layer + "" + "/{z}/{x}/{y}.png", {
                     tms: true,
                     maxZoom: defaults.maxZoom,
