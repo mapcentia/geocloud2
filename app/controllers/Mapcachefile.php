@@ -246,8 +246,8 @@ class Mapcachefile extends \app\inc\Controller
                         }
                         ?>
                         <format>PNG</format>
-                        <metatile>3 3</metatile>
-                        <metabuffer>0</metabuffer>
+                        <metatile>5 5</metatile>
+                        <metabuffer>20</metabuffer>
                         <expires>60</expires>
                         <metadata>
                             <title><?php echo $tileSetName; ?></title>
