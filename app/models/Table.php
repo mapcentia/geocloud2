@@ -30,13 +30,8 @@ class Table extends Model
     function __construct($table, $temp = false, $addGeomType = false)
     {
         parent::__construct();
-
-        preg_match("/^[\w'-]*\./", $table, $matches);
-        $_schema = $matches[0];
-
-        preg_match("/[\w'-]*$/", $table, $matches);
-        $_table = $matches[0];
-
+        $_schema = $this->explodeTableName($table)["schema"];
+        $_table = $this->explodeTableName($table)["table"];
         if (!$_schema) {
             // If temp, then don't prefix with schema. Used when table/view is temporary
             if (!$temp) {
@@ -54,7 +49,7 @@ class Table extends Model
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
-            $this->metaData = $this->getMetaData($this->table, $temp, $addGeomType);
+            $this->metaData = $this->getMetaData($this->table, $temp);
             $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
             $this->geomType = $this->getGeometryColumns($this->table, "type");
             $this->primeryKey = $this->getPrimeryKey($this->table);
@@ -289,7 +284,6 @@ class Table extends Model
                         $type = "a" . $type;
                     }
                     $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
-                    //print($url);
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body

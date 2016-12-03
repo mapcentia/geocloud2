@@ -84,9 +84,7 @@ addRasterFile.init = function () {
                             name: file.name
                         };
                     }
-                },
-                // Flash settings
-                flash_swf_url: '/js/plupload/js/Moxie.swf'
+                }
             });
             window.setTimeout(function () {
                 var e = $(".plupload_droptext");

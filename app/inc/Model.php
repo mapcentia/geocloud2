@@ -103,7 +103,7 @@ class Model
     public function getPrimeryKey($table)
     {
         unset($this->PDOerror);
-        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '" . $this->doubleQuoteQualifiedName($table) . "'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
         $result = $this->execQuery($query);
 
         if (isset($this->PDOerror)) {
@@ -127,7 +127,7 @@ class Model
     public function hasPrimeryKey($table)
     {
         unset($this->PDOerror);
-        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '{$table}'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '" . $this->doubleQuoteQualifiedName($table) . "'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
         $result = $this->execQuery($query);
 
         if (isset($this->PDOerror)) {
@@ -257,7 +257,7 @@ class Model
         return $response;
     }
 
-    public function getMetaData($table, $temp = false, $addGeomType = false)
+    public function getMetaData($table, $temp = false)
     {
         $arr = array();
         preg_match("/^[\w'-]*\./", $table, $matches);
@@ -425,7 +425,7 @@ class Model
         }
     }
 
-    function toAscii($str, $replace = array(), $delimiter = '-')
+    public function toAscii($str, $replace = array(), $delimiter = '-')
     {
         if (!empty($replace)) {
             $str = str_replace((array)$replace, ' ', $str);
@@ -439,19 +439,29 @@ class Model
         return $clean;
     }
 
-    function explodeTableName($table)
+    /**
+     * Does NOT work with period in schema name.
+     * @param $table
+     * @return array
+     */
+    public function explodeTableName($table)
     {
-        preg_match("/^[\w'-]*\./", $table, $matches);
+        preg_match("/[^.]*/", $table, $matches);
         $_schema = $matches[0];
-
-        preg_match("/[\w'-]*$/", $table, $matches);
+        preg_match("/(?<=\.).*/", $table, $matches);
         $_table = $matches[0];
-
-        if ($_schema) {
-            $_schema = str_replace(".", "", $_schema);
-        }
         return array("schema" => $_schema, "table" => $_table);
+    }
 
+    /**
+     * Returns a qualified name with double quotes like "schema"."table"
+     * @param $name
+     * @return string
+     */
+    public function doubleQuoteQualifiedName($name)
+    {
+        $split = $this->explodeTableName($name);
+        return "\"" . $split["schema"] . "\".\"" . $split["table"] . "\"";
     }
 
     private function array_push_assoc($array, $key, $value)
