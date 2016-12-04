@@ -19,16 +19,18 @@ class Legend extends \app\inc\Controller
             // Check if schema is given as param and get the layer names
             foreach ($temp as $layerName) {
                 $splitName = explode(".", $layerName);
-                if (sizeof($splitName) < 2) {
-                    $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
-                    if (file_exists($path . $mapFile)) {
-                        $map = ms_newMapobj($path . $mapFile);
-                        $arr = $map->getAllLayerNames();
+                if ($splitName[0] !== "gc2_group") {
+                    if (sizeof($splitName) < 2) {
+                        $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
+                        if (file_exists($path . $mapFile)) {
+                            $map = ms_newMapobj($path . $mapFile);
+                            $arr = $map->getAllLayerNames();
+                        }
+                    } else {
+                        $newLayerNames[] = $layerName;
                     }
-                } else {
-                    $newLayerNames[] = $layerName;
+                    $newLayerNames = array_merge($newLayerNames, $arr);
                 }
-                $newLayerNames = array_merge($newLayerNames, $arr);
             }
             $i = 0;
             foreach ($newLayerNames as $layerName) {
