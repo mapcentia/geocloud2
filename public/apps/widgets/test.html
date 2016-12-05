@@ -1,34 +1,144 @@
-<script src='http://staticmap.mapcentia.com//js/leaflet/leaflet.js'></script>
-<script src='http://staticmap.mapcentia.com//js/openlayers/proj4js-combined.js'></script>
-<script src='http://cowi.mapcentia.com/api/v3/js/geocloud.js'></script>
-<div id='map' style='width: 700px; height: 400px'></div>
+<script src="http://gc2.mapcentia.com/apps/widgets/gc2map/js/gc2map.js"></script>
+<script src="http://127.0.0.1:8080/apps/widgets/gc2table/js/gc2table.js"></script>
+<script src="http://gc2.mapcentia.com/apps/widgets/gc2map/js/searchModules/danish.js"></script>
 <style>
-    body {
-        margin: 0px;
-        padding: 0px;
+    #legend-popover-li-map, #open-win-li-map {
+        display: none;
     }
 
-    .leaflet-control-zoom {
-        display: none
+    .table > thead > tr > th > div,
+    .table > tbody > tr > td {
+        font-size: 12px !important;
+        line-height: 2 !important;
+        vertical-align: top !important;
+
     }
+
 </style>
-<script>
-    (function () {
-        var map = new geocloud.map({
-            el: 'map'
-        });
-        map.bingApiKey = 'your_bing_map_key'
-        map.addBaseLayer('kommuneplan17.baggrundskort_wms', 'randers');
-        map.setBaseLayer('kommuneplan17.baggrundskort_wms');
-        var store = new geocloud.sqlStore({
-            db: 'randers',
-            sql: 'SELECT%20%2A%20FROM%20kommuneplan17.kpplandk2_view%20WHERE%20planid%3D%273156534%27',
-            async: false,
-            onLoad: function () {
-                map.zoomToExtentOfgeoJsonStore(store);
-            }
-        });
-        map.addGeoJsonStore(store);
-        store.load();
+<div>
+    <div style="position:relative" id="map"></div>
+    <div>
+        <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"
+               data-filter-control="true"></table>
+    </div>
+</div>
 
-    }())</script>
+<script>
+    // En formatter funktion (her til link felt) skal defineres i global scope.
+    function operateFormatter(value, row, index) {
+        return '<a target="_blank" href="' + value + '">Se ramme</a>';
+    }
+
+    // Lav en widget på normal vis
+    gc2map.init({
+        key: "map",
+        db: 'jammerbugt',
+        zoom: [9.2067, 57.3207, 9],
+        layers: [],
+        baseLayers: [{id: 'dtkSkaermkortDaempet', name: 'Skærmkort'}],
+        setBaseLayer: 'dtkSkaermkortDaempet',
+        width: '100%',
+        height: '400px',
+        callBack: function (m, w) {
+
+            // Aktiver søgning med kommune nr.
+            gc2map.createSearch(m, "630");
+
+            // Lav et SQL store på normal vis
+            var store = new geocloud.sqlStore({
+                db: "jammerbugt",
+                sql: "SELECT anvgen,plannr,plannavn,html,textvalue as anv,(case when status = 'vedtaget' then 'Vedtaget' else 'Forslag' END) as status,the_geom FROM kommuneplan.kpplandk2_view,ANVGEN_PLANDK2 WHERE  (status = 'forslag' OR status = 'vedtaget') AND langid=1 AND ANVGEN_PLANDK2.fieldkey=kommuneplan.kpplandk2_view.anvgen AND distrikt = 'Tranum' AND ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) order by plannr",
+
+                // StyleMap laves som en funktion
+                styleMap: function (feature) {
+                    return {
+                        fillColor: (function (d) {
+                            return d === "11" ? '#c66100' :
+                                    d === "21" ? '#ff615a' :
+                                            d === "31" ? '#6bffff' :
+                                                    d === "41" ? '#ff69ff' :
+                                                            d === "51" ? '#39ff39' :
+                                                                    d === "61" ? '#ffefad' :
+                                                                            d === "71" ? '#efef00' :
+                                                                                    d === "81" ? '#9c9e9c' :
+                                                                                            d === "91" ? '#9c9e9c' :
+                                                                                                    d === "96" ? '#C0C0C0' :
+                                                                                                            '#FFEDA0'
+
+
+                        }(feature.properties.anvgen)),
+                        weight: 1,
+                        opacity: 1,
+                        color: "#000",
+                        fillOpacity: 0.5
+                    }
+                },
+                onLoad: function () {
+                    // Brug IKKE denne funktion sammen med autoUpdate
+                    m.zoomToExtentOfgeoJsonStore(store);
+                }
+            });
+
+            // Tilføj store til kort og load
+            m.addGeoJsonStore(store);
+            store.load();
+
+            // Indtil nu er det normal widget. Nu begynder tabel
+
+            // Definer en column model
+            var cm = [
+                {
+                    "header": "Plannr",
+                    "dataIndex": "plannr",
+                    "type": "varchar",
+                    filterControl: "input",
+                    sortable: true
+                },
+                /*		{
+                 "header": "Plannavn",
+                 "dataIndex": "plannavn",
+                 "type": "varchar",
+                 "showInPopup": false,
+                 filterControl: "input",
+                 sortable: true
+
+                 },*/
+                {
+                    "header": "Anvendelse",
+                    "dataIndex": "anv",
+                    "showInPopup": false,
+                    filterControl: "select"
+                }, /*
+                 {
+                 "header": "Status",
+                 "dataIndex": "status",
+                 "showInPopup": false,
+                 filterControl: "select"
+                 }, */
+                {
+                    "header": "Link",
+                    "dataIndex": "html",
+                    "link": "<span style='white-space: nowrap'>Se ramme</span>",
+                    "showInPopup": true,
+                    //"formatter": "operateFormatter"
+                }
+            ];
+
+            // Start tabel widget
+
+            gc2table.init({
+                el: "#table", // Element som tabellen skal lave i
+                geocloud2: m, // geocloud object
+                store: store, // store object
+                cm: cm, // Column model
+                autoUpdate: false, // Skal kortet opdateres ved zoom?
+                height: null, // Skal være null, hvis filter funktioner bruges pga. bug i bootstrap-table
+                tableBodyHeight: 600, // Hack til at afhjælpe ovenstående
+                setViewOnSelect: true, // Zoom når det vælges i tabellen
+                openPopUp: true, // Vis pop up på valgte features
+                setSelectedStyle: true, // Skal valgte features have en Selected style?
+                locale: 'da-DK'
+            });
+        }
+    });
+</script>
