@@ -650,7 +650,8 @@ class Layer extends \app\models\Table
     public function getEstExtentAsGeoJSON($_key_, $srs = "4326")
     {
         $split = explode(".", $_key_);
-        $sql = "SELECT ST_asGeojson(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $srs . ")," . $srs . ")) as geojson";
+        $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
+        $sql = "SELECT ST_asGeojson(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geojson";
         $result = $this->prepare($sql);
         try {
             $result->execute();
