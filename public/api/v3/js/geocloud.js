@@ -542,7 +542,8 @@ geocloud = (function () {
                     format: 'image/png',
                     transparent: true,
                     subdomains: ["cdn1", "cdn2", "cdn3"],
-                    maxZoom: defaults.maxZoom
+                    maxZoom: defaults.maxZoom,
+                    tileSize: defaults.tileSize
                 });
                 l.id = layer;
                 break;
@@ -1643,7 +1644,8 @@ geocloud = (function () {
                 names: [],
                 resolutions: this.map.resolutions,
                 type: "wms",
-                maxZoom: 21
+                maxZoom: 21,
+                tileSize: 256
             };
             if (config) {
                 for (prop in config) {
@@ -2774,3 +2776,56 @@ if (geocloud.MAPLIB === "leaflet") {
     });
 }
 
+/* Patch for Leaflet 0.7.3  */
+if(L.TileLayer && L.TileLayer.WMS) {
+  /* Set tileSize option to 9999 (or greater) to switch it to single tile mode */
+  L.TileLayer.WMS.prototype.getTileUrl2 = function(tilePoint) {
+    if(!this._singleTile) {  return this.getTileUrl(tilePoint); }
+    var tmp = this._map.getSize();
+    this.wmsParams.width  = tmp.x;
+    this.wmsParams.height = tmp.y;
+    tmp = this._map.getBounds();
+
+    var nw = this._crs.project(tmp.getNorthWest());
+    var se = this._crs.project(tmp.getSouthEast());
+    var bbox = this._wmsVersion >= 1.3 && this._crs === L.CRS.EPSG4326 ?
+        [se.y, nw.x, nw.y, se.x].join(',') :
+        [nw.x, se.y, se.x, nw.y].join(',');
+    url = L.Util.template(this._url, {s: this._getSubdomain(tilePoint)});
+    return url + L.Util.getParamString(this.wmsParams, url, true) + '&BBOX=' + bbox;
+  }
+  L.TileLayer.WMS.prototype._loadTile = function (tile, tilePoint) {
+    if(this._singleTile) {
+      var siz = this._map.getSize();
+      tile.style.width  = siz.x + 'px';
+      tile.style.height = siz.y + 'px';
+    }
+    tile._layer  = this;
+    tile.onload  = function() {
+      if(this._layer._singleTile) {
+        this._layer._reset({ hard: true });
+        this._layer._tileContainer.appendChild(this);
+      }
+      L.TileLayer.WMS.prototype._tileOnLoad.call(this);
+    };
+    tile.onerror = this._tileOnError;
+    this._adjustTilePoint(tilePoint);
+    tile.src     = this.getTileUrl2(tilePoint);
+    this.fire('tileloadstart', { tile: tile, url: tile.src });
+  }
+  L.TileLayer.WMS.prototype._addTilesFromCenterOut = function (bounds) {
+    this._singleTile = this.options.tileSize >= 9999;
+    if(!this._singleTile) { return L.TileLayer.prototype._addTilesFromCenterOut.call(this, bounds); }
+
+    var fragment = document.createDocumentFragment();
+    this.fire('loading');      
+    this._addTile(new L.Point(bounds.min.x, bounds.min.y), fragment);
+    this._tileContainer.appendChild(fragment);
+  }
+  L.TileLayer.WMS.prototype._getTilePos = function(tilePoint) {
+    if(!this._singleTile) {
+      return L.TileLayer.prototype._getTilePos.call(this, tilePoint);
+    }
+    return this._map.getPixelBounds().min.subtract(this._map.getPixelOrigin())
+  }
+}
