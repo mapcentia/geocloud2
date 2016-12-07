@@ -647,6 +647,26 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    public function getEstExtentAsGeoJSON($_key_, $srs = "4326")
+    {
+        $split = explode(".", $_key_);
+        $sql = "SELECT ST_asGeojson(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $srs . ")," . $srs . ")) as geojson";
+        $result = $this->prepare($sql);
+        try {
+            $result->execute();
+            $row = $this->fetchRow($result);
+            $extent = $row["geojson"];
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e;
+            $response['code'] = 403;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['extent'] = $extent;
+        return $response;
+    }
+
     public function getCount($_key_)
     {
         $split = explode(".", $_key_);
@@ -866,10 +886,11 @@ class Layer extends \app\models\Table
         );
 
         // Get extent
-        $extent = $this->getEstExtent($key);
+        $extent = $this->getEstExtentAsGeoJSON($key);
+        //die(print_r($extent, true));
         $extentStr = "";
         if ($extent["success"]) {
-            $extentStr = "minx: " . $extent["extent"]["minx"] . ", miny: " . $extent["extent"]["miny"] . ", maxx: " . $extent["extent"]["maxx"] . ", maxy: " . $extent["extent"]["maxy"];
+            $extentStr = $extent["extent"];
         }
 
         // Get count
@@ -881,7 +902,7 @@ class Layer extends \app\models\Table
 
         $response["extras"] = array(
             array(
-                "key" => "Extent",
+                "key" => "spatial",
                 "value" => $extentStr
             ),
             array(
