@@ -2775,10 +2775,10 @@ if (geocloud.MAPLIB === "leaflet") {
         }
     });
 }
-
-/* Patch for Leaflet 0.7.3  */
+/*
+/!* Patch for Leaflet 0.7.3  *!/
 if(L.TileLayer && L.TileLayer.WMS) {
-  /* Set tileSize option to 9999 (or greater) to switch it to single tile mode */
+  /!* Set tileSize option to 9999 (or greater) to switch it to single tile mode *!/
   L.TileLayer.WMS.prototype.getTileUrl2 = function(tilePoint) {
     if(!this._singleTile) {  return this.getTileUrl(tilePoint); }
     var tmp = this._map.getSize();
@@ -2828,4 +2828,4 @@ if(L.TileLayer && L.TileLayer.WMS) {
     }
     return this._map.getPixelBounds().min.subtract(this._map.getPixelOrigin())
   }
-}
+}*/
