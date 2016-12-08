@@ -47,7 +47,7 @@ fclose($fp);
 function getCmd($dryRun = false, $o)
 {
     global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName;
-    $cmd = "PGCLIENTENCODING={$encoding} /usr/local/bin/ogr2ogr " .
+    $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
         $o . " " .
         "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
