@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use \app\conf\App;
 use \app\inc\Util;
+use \app\inc\Input;
 
 /**
  * Class Wms
@@ -16,12 +17,8 @@ class Wms extends \app\inc\Controller
      */
     function __construct()
     {
-        if (\app\inc\Input::getPath()->part(3) == "tilecache") {
-            $postgisschema = \app\inc\Input::getPath()->part(4);
-
-        } else {
-            $postgisschema = \app\inc\Input::getPath()->part(3);
-        }
+        $layers = [];
+        $postgisschema = \app\inc\Input::getPath()->part(3);
         $db = \app\inc\Input::getPath()->part(2);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
@@ -29,21 +26,6 @@ class Wms extends \app\inc\Controller
             $db = $dbSplit[1];
         } else {
             $subUser = null;
-        }
-        $path = App::$param['path'] . "/app/wms/mapfiles/";
-        $name = $db . "_" . $postgisschema . ".map";
-
-        $oMap = new \mapObj($path . $name);
-        $request = new \OWSRequestObj();
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            foreach ($_GET as $k => $v) {
-                if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
-                    $layers = $v;
-                }
-                $request->setParameter($k, $v);
-            }
-        } else {
-            $request->loadParams();
         }
 
         $trusted = false;
@@ -53,33 +35,34 @@ class Wms extends \app\inc\Controller
                 break;
             }
         }
-        if (!$trusted) {
-            foreach (explode(",", $layers) as $layer) {
-                $this->basicHttpAuthLayer($layer, $db, $subUser);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            foreach ($_GET as $k => $v) {
+                if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
+                    $layers[] = $v;
+                }
+            }
+            if (!$trusted) {
+                foreach ($layers as $layer) {
+                    $this->basicHttpAuthLayer($layer, $db, $subUser);
+                }
+            }
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $this->get($db, $postgisschema);
             }
         }
 
-        $this->fetch($db, $postgisschema);
-
-
-        /*ms_ioinstallstdouttobuffer();
-        $oMap->owsdispatch($request);
-        $contenttype = ms_iostripstdoutbuffercontenttype();
-        if ($contenttype == 'image/png') {
-            header('Content-type: image/png');
-        } else {
-            header('Content-type: text/xml');
+        // TODO check layers!
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->post($db, $postgisschema, Input::get(null, true));
         }
-        imagepng(ms_iogetStdoutBufferBytes());
-
-        ms_ioresethandlers();*/
     }
 
     /**
      * @param $db string
      * @param $postgisschema string
      */
-    public function fetch($db, $postgisschema)
+    private function get($db, $postgisschema)
     {
         $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$db}_{$postgisschema}.map&" . $_SERVER["QUERY_STRING"];
         header("X-Powered-By: GC2 WMS");
@@ -102,6 +85,22 @@ class Wms extends \app\inc\Controller
         });
         $content = curl_exec($ch);
         curl_close($ch);
+        echo $content;
+        exit();
+    }
+
+    private function post($db, $postgisschema, $data) {
+        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$db}_{$postgisschema}.map&";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: text/xml',
+                'Content-Length: ' . strlen($data))
+        );
+        $content = curl_exec($ch);
+        header("Content-Type: text/xml");
         echo $content;
         exit();
     }
