@@ -652,6 +652,7 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
                             <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
                             <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+                            <?php if ($class['label_minfeaturesize']) echo "MINFEATURESIZE {$class['label_minfeaturesize']}\n"; ?>
 
                             <?php if ($class['label_expression']) {
                                 echo "EXPRESSION (" . $class['label_expression'] . ")\n";
@@ -728,6 +729,7 @@ class Mapfile extends \app\inc\Controller
                             <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
                             <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
                             <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+                            <?php if ($class['label2_minfeaturesize']) echo "MINFEATURESIZE {$class['label2_minfeaturesize']}\n"; ?>
 
                             <?php if ($class['label2_expression']) {
                                 echo "EXPRESSION (" . $class['label2_expression'] . ")\n";

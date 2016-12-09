@@ -446,6 +446,9 @@ class Model
      */
     public function explodeTableName($table)
     {
+        if (!isset(explode(".", $table)[1])) {
+            return array("schema" => null, "table" => $table);
+        }
         preg_match("/[^.]*/", $table, $matches);
         $_schema = $matches[0];
         preg_match("/(?<=\.).*/", $table, $matches);

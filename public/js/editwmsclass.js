@@ -405,6 +405,9 @@ wmsClass.init = function (id) {
             {
                 name: "label_maxsize"
             },
+            {
+                name: "label_minfeaturesize"
+            },
 
             // label22 start
             {
@@ -468,6 +471,9 @@ wmsClass.init = function (id) {
             },
             {
                 name: "label2_maxsize"
+            },
+            {
+                name: "label2_minfeaturesize"
             },
 
             // Leader start
@@ -614,7 +620,8 @@ wmsClass.init = function (id) {
                             'label_offsetx',
                             'label_offsety',
                             'label_expression',
-                            'label_maxsize'
+                            'label_maxsize',
+                            'label_minfeaturesize'
                         ];
                         Ext.each(arr4, function (i, v) {
                             obj4[i] = store.getAt(0).data[i];
@@ -644,7 +651,8 @@ wmsClass.init = function (id) {
                             'label2_offsetx',
                             'label2_offsety',
                             'label2_expression',
-                            'label2_maxsize'
+                            'label2_maxsize',
+                            'label2_minfeaturesize'
                         ];
                         Ext.each(arr5, function (i, v) {
                             obj5[i] = store.getAt(0).data[i];
@@ -1122,7 +1130,8 @@ wmsClass.init = function (id) {
             label_font: 'Label: font',
             label_fontweight: 'Label: font weight',
             label_expression: 'Label: expression',
-            label_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true)
+            label_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true),
+            label_minfeaturesize: 'Label: min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
         },
         customRenderers: {
             label_color: cc,
@@ -1264,6 +1273,11 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
+            'label_minfeaturesize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
             'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1316,7 +1330,8 @@ wmsClass.init = function (id) {
             label2_font: 'Label: font',
             label2_fontweight: 'Label: font weight',
             label2_expression: 'Label: expression',
-            label2_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true)
+            label2_maxsize: 'Label: max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true),
+            label2_minfeaturesize: 'Label: min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
         },
         customRenderers: {
             label2_color: cc,
@@ -1455,6 +1470,11 @@ wmsClass.init = function (id) {
                 })
             }), {}),
             'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'label2_minfeaturesize': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
