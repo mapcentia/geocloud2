@@ -1273,11 +1273,6 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'label_minfeaturesize': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
             'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1470,11 +1465,6 @@ wmsClass.init = function (id) {
                 })
             }), {}),
             'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label2_minfeaturesize': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
