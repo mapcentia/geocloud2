@@ -19,7 +19,7 @@ addBitmap.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["tif", "tiff", "ecw"], srs, flag = false;
+            var arr = [], ext = ["tif", "tiff", "ecw", "jpg", "tab"], srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5',
                 url: '/controllers/upload/bitmap',
