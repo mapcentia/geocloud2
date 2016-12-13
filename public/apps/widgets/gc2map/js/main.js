@@ -94,9 +94,9 @@ MapCentia = function (globalId) {
         var url = permaLink();
         window.open("http://www.stumbleupon.com/submit?url=" + encodeURIComponent(url), '_blank', 'location=yes,height=300,width=520,scrollbars=yes,status=yes');
     };
-    permaLink = function () {
+    permaLink = function (url) {
         var p = geocloud.transformPoint(cloud.getCenter().x, cloud.getCenter().y, "EPSG:900913", "EPSG:4326");
-        return "http://mapcentia.github.io/dragoer/simpleclient/index.html#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + cloud.getNamesOfVisibleLayers();
+        return url + "/app/" + db + "/" +  schema +"/#" + cloud.getBaseLayerName() + "/" + Math.round(cloud.getZoom()).toString() + "/" + (Math.round(p.x * 10000) / 10000).toString() + "/" + (Math.round(p.y * 10000) / 10000).toString() + "/" + (cloud.getNamesOfVisibleLayers() || "");
     };
     /*autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-input'));
      google.maps.event.addListener(autocomplete, 'place_changed', function () {
@@ -300,6 +300,11 @@ MapCentia = function (globalId) {
                 qstore[i].reset();
             });
         });
+
+        $("#vidi-btn-" + id).on('click', function (e) {
+            $(this).attr("href", permaLink(conf.vidiUrl));
+        });
+
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
 
