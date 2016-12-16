@@ -96,6 +96,7 @@ class Mapcachefile extends \app\inc\Controller
                         $expire = ($def->ttl < 30) ? 30 : $def->ttl;
                         $auto_expire = $def->auto_expire ?: null;
                         $format = $def->format ?: "PNG";
+                        $layers = $def->layers ? "," . $def->layers : "";
                         ?>
 
                         <!-- <?php echo $table ?> -->
@@ -103,7 +104,7 @@ class Mapcachefile extends \app\inc\Controller
                         <getmap>
                             <params>
                                 <FORMAT>image/png</FORMAT>
-                                <LAYERS><?php echo $table ?></LAYERS>
+                                <LAYERS><?php echo $table ?><?php echo $layers ?></LAYERS>
                             </params>
                         </getmap>
                         <http>
@@ -139,7 +140,7 @@ class Mapcachefile extends \app\inc\Controller
                             }
                             ?>
                             <format><?php echo $format ?></format>
-                            <metatile><?php echo $meta_size ?> <?php echo $meta_size ?></metatile>
+                            <metatile><?php echo $meta_size . " " . $meta_size ?></metatile>
                             <metabuffer><?php echo $meta_buffer ?></metabuffer>
                             <expires><?php echo $expire ?></expires>
                             <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>

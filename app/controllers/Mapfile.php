@@ -52,7 +52,7 @@ class Mapfile extends \app\inc\Controller
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
-        "ows_title"    "<?php echo $user; ?>'s awesome WMS"
+        "ows_title"    "<?php echo $user; ?>'s OWS"
         "ows_srs"    "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832"
         "ows_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"

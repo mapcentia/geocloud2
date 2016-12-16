@@ -54,7 +54,8 @@ class Tile extends Model
             "geotype",
             "offsite",
             "format",
-            "lock"
+            "lock",
+            "layers",
         );
         $oldData = $this->get();
         $newData = array();
