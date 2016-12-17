@@ -168,7 +168,10 @@ var gc2table = (function () {
                 });
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
-                    $(el).bootstrapTable('scrollTo', row.index() * row.height());
+                    //$(el).bootstrapTable('scrollTo', row.offset().top);
+                    $(".fixed-table-body").animate({
+                        scrollTop: $(".fixed-table-body").scrollTop() + (row.offset().top - $(".fixed-table-body").offset().top)
+                    }, 300);
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
                 $(el).append("<thead><tr></tr></thead>");
@@ -193,7 +196,7 @@ var gc2table = (function () {
                                 filterControls[v.dataIndex] = v.filterControl;
                             }
                         });
-                        $.each($(el + " tbody").children(), function(x, y){
+                        $.each($(el + " tbody").children(), function (x, y) {
                             visibleRows.push($(y).attr("data-uniqueid"));
                         })
                         $.each(store.layer._layers, function (i, v) {
