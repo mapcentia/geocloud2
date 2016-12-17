@@ -421,6 +421,10 @@ input[type="radio"], input[type="checkbox"] {
 .icon-list-alt:before {
     content: "\f022"
 }
+
+.icon-share:before {
+    content: "\f019"
+}
 .icon-th:before {
     content: "\f046"
 }

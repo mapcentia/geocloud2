@@ -57,11 +57,19 @@ var gc2table = (function () {
                     if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
                         $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
                     }
+                    if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
+                    }
+                    if (typeof jQuery().tableExport === "undefined") {
+                        $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
+                    }
                     if (typeof Backbone === "undefined") {
                         $.getScript("http://backbonejs.org/backbone.js");
                     }
                     (function pollForDependants() {
                         if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                            typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
+                            typeof jQuery().tableExport !== "undefined" &&
                             typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
                             typeof Backbone !== "undefined") {
                             scriptsLoaded = true;
