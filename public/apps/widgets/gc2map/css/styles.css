@@ -215,7 +215,7 @@ input[type="radio"], input[type="checkbox"] {
     min-height: 0;
 }
 
-.locate-btn {
+.navbar .btn {
     padding: 3px 10px !important;
 }
 
@@ -420,6 +420,10 @@ input[type="radio"], input[type="checkbox"] {
 
 .icon-list-alt:before {
     content: "\f022"
+}
+
+.icon-share:before {
+    content: "\f019"
 }
 .icon-th:before {
     content: "\f046"

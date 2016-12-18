@@ -9,9 +9,8 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
-<link href='//fonts.googleapis.com/css?family=Open+Sans:700,300' rel='stylesheet' type='text/css'>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 
 <!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>
@@ -190,8 +189,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/apikeyform.js?9485c6f6a26fab43"></script>
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
-<script type="text/javascript"
-        src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
+<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 <!-- /build -->
 </body>
 </html>

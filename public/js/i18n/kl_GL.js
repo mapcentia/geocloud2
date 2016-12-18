@@ -2,12 +2,12 @@ var gc2i18n;
 gc2i18n = {
     dict: {
         /* Start of viewer and widget */
-        "Legend": "Signatur(gl)",
-        "Property": "Egenskab(gl)",
-        "Value": "V&aelig;rdi(gl)",
-        "Pop up": "Stort kort(gl)",
-        "Baselayers": "Baggrund(gl)",
-        "Layers": "Kortlag(gl)",
+        "Legend": "Atsiorneq",
+        "Property": "Piginnaasaq",
+        "Value": "Maleqassuseq",
+        "Pop up": "Nunap assinga angisooq",
+        "Baselayers": "Tunuliaqut",
+        "Layers": "Nunap assingi qaleriit",
         "Share": "Del(gl)",
         "Info": "Info(gl)",
         "Close": "Luk(gl)",
