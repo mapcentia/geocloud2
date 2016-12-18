@@ -591,17 +591,15 @@ geocloud = (function () {
             case "leaflet":
                 config = {
                     tms: true,
+                    attribution: defaults.attribution,
                     maxZoom: defaults.maxZoom,
+                    maxNativeZoom: defaults.maxNativeZoom,
                     tileSize: 256
                 };
                 if (usingSubDomains) {
                     config.subdomains = defaults.subdomains;
                 }
-                l = new L.TileLayer(url + "1.0.0/" + layer + "" + "/{z}/{x}/{y}.png", {
-                    tms: true,
-                    maxZoom: defaults.maxZoom,
-                    tileSize: 256
-                });
+                l = new L.TileLayer(url + "1.0.0/" + layer + "" + "/{z}/{x}/{y}.png", config);
                 l.id = layer;
                 break;
         }
@@ -1534,7 +1532,7 @@ geocloud = (function () {
             }());
         };
 
-        this.addBaseLayer = function (l, db) {
+        this.addBaseLayer = function (l, db, config) {
             var o;
             switch (l) {
                 case "osm":
@@ -1613,7 +1611,7 @@ geocloud = (function () {
                     o = this.addHere("hereNormalNightGrey");
                     break;
                 default : // Try to add as tile layer
-                    o = this.addTileLayers({
+                    o = this.addTileLayers($.extend({
                         layers: [l],
                         db: db,
                         isBaseLayer: true,
@@ -1622,7 +1620,7 @@ geocloud = (function () {
                         displayInLayerSwitcher: true,
                         name: l,
                         type: "tms"
-                    });
+                    }, config));
                     break;
             }
             return o;
@@ -1644,7 +1642,7 @@ geocloud = (function () {
                 names: [],
                 resolutions: this.map.resolutions,
                 type: "wms",
-                maxZoom: 21,
+                //maxZoom: 21,
                 tileSize: 256
             };
             if (config) {
