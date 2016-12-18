@@ -57,11 +57,19 @@ var gc2table = (function () {
                     if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
                         $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
                     }
+                    if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
+                    }
+                    if (typeof jQuery().tableExport === "undefined") {
+                        $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
+                    }
                     if (typeof Backbone === "undefined") {
                         $.getScript("http://backbonejs.org/backbone.js");
                     }
                     (function pollForDependants() {
                         if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                            typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
+                            typeof jQuery().tableExport !== "undefined" &&
                             typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
                             typeof Backbone !== "undefined") {
                             scriptsLoaded = true;
@@ -168,7 +176,10 @@ var gc2table = (function () {
                 });
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
-                    $(el).bootstrapTable('scrollTo', row.index() * row.height());
+                    //$(el).bootstrapTable('scrollTo', row.offset().top);
+                    $(".fixed-table-body").animate({
+                        scrollTop: $(".fixed-table-body").scrollTop() + (row.offset().top - $(".fixed-table-body").offset().top)
+                    }, 300);
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
                 $(el).append("<thead><tr></tr></thead>");
@@ -193,7 +204,7 @@ var gc2table = (function () {
                                 filterControls[v.dataIndex] = v.filterControl;
                             }
                         });
-                        $.each($(el + " tbody").children(), function(x, y){
+                        $.each($(el + " tbody").children(), function (x, y) {
                             visibleRows.push($(y).attr("data-uniqueid"));
                         })
                         $.each(store.layer._layers, function (i, v) {
