@@ -1642,7 +1642,8 @@ geocloud = (function () {
                 names: [],
                 resolutions: this.map.resolutions,
                 type: "wms",
-                //maxZoom: 21,
+                maxZoom: 21,
+                maxNativeZoom: 21,
                 tileSize: 256
             };
             if (config) {
