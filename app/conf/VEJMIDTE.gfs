@@ -72,7 +72,7 @@
     <PropertyDefn>
       <Name>Fiktiv</Name>
       <ElementPath>Fiktiv|VEJMIDTE_Fiktiv|indhold</ElementPath>
-      <Type>Integer</Type>
+      <Type>IntegerList</Type>
     </PropertyDefn>
     <!-- END -->
 
@@ -109,7 +109,7 @@
     <PropertyDefn>
       <Name>Plads</Name>
       <ElementPath>Plads|VEJMIDTE_Plads|indhold</ElementPath>
-      <Type>Integer</Type>
+      <Type>IntegerList</Type>
     </PropertyDefn>
     <!-- END -->
 
@@ -127,7 +127,7 @@
     <PropertyDefn>
       <Name>Rundkoersel</Name>
       <ElementPath>Rundkoersel|VEJMIDTE_Rundkoersel|indhold</ElementPath>
-      <Type>Integer</Type>
+      <Type>IntegerList</Type>
     </PropertyDefn>
     <!-- END -->
 
@@ -145,7 +145,7 @@
     <PropertyDefn>
       <Name>Tilogfrakoersel</Name>
       <ElementPath>Tilogfrakoersel|VEJMIDTE_Tilogfrakoersel|indhold</ElementPath>
-      <Type>Integer</Type>
+      <Type>IntegerList</Type>
     </PropertyDefn>
     <!-- END -->
 
@@ -163,7 +163,7 @@
     <PropertyDefn>
       <Name>Trafikart</Name>
       <ElementPath>Trafikart|VEJMIDTE_Trafikart|indhold</ElementPath>
-      <Type>String</Type>
+      <Type>StringList</Type>
       <Width>11</Width>
     </PropertyDefn>
     <!-- END -->
@@ -182,7 +182,7 @@
     <PropertyDefn>
       <Name>Vejbredde</Name>
       <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|indhold</ElementPath>
-      <Type>String</Type>
+      <Type>StringList</Type>
       <Width>6</Width>
     </PropertyDefn>
     <!-- END -->
@@ -201,7 +201,7 @@
     <PropertyDefn>
       <Name>Vejklasse</Name>
       <ElementPath>Vejklasse|VEJMIDTE_Vejklasse|indhold</ElementPath>
-      <Type>String</Type>
+      <Type>StringList</Type>
     </PropertyDefn>
     <!-- END -->
 
@@ -219,7 +219,7 @@
     <PropertyDefn>
       <Name>Niveau</Name>
       <ElementPath>Niveau|VEJMIDTE_Niveau|indhold</ElementPath>
-      <Type>Boolean</Type>
+      <Type>IntegerList</Type>
     </PropertyDefn>
     <!-- END -->
 
