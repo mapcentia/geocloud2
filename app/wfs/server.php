@@ -692,10 +692,15 @@ function dropNameSpace($tag)
     $tag = preg_replace('/ cs(?:.*?)?=\'.*?\'/', "", $tag);
     $tag = preg_replace('/ ts(?:.*?)?=\".*?\"/', "", $tag);
     $tag = preg_replace('/ decimal(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/wfs:(?:.*?)/', "", $tag);
-    $tag = preg_replace('/gml:(?:.*?)/', "", $tag);
-    $tag = preg_replace('/ogc:(?:.*?)/', "", $tag);
-    $tag = preg_replace('/ns:(?:.*?)/', "", $tag);
+    $tag = preg_replace('/\<wfs:(?:.*?)/', "<", $tag);
+    $tag = preg_replace('/\<gml:(?:.*?)/', "<", $tag);
+    $tag = preg_replace('/\<ogc:(?:.*?)/', "<", $tag);
+    $tag = preg_replace('/\<ns:(?:.*?)/', "<", $tag);
+
+    $tag = preg_replace('/\<\/wfs:(?:.*?)/', "</", $tag);
+    $tag = preg_replace('/\<\/gml:(?:.*?)/', "</", $tag);
+    $tag = preg_replace('/\<\/ogc:(?:.*?)/', "</", $tag);
+    $tag = preg_replace('/\<\/ns:(?:.*?)/', "</", $tag);
     //$tag = preg_replace('/EPSG:(?:.*?)/', "", $tag);
 
 
