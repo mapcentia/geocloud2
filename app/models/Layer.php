@@ -528,17 +528,19 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $_key_
+     * @return array
+     */
     public function getPrivileges($_key_)
     {
-        $privileges = (array)json_decode($this->getValueFromKey($_key_, "privileges"));
-
+        $privileges = json_decode($this->getValueFromKey($_key_, "privileges"));
         foreach ($_SESSION['subusers'] as $subuser) {
-            $privileges[$subuser] = ($privileges[$subuser]) ?: "none";
+            $privileges->$subuser = ($privileges->$subuser) ?: "none";
             if ($subuser != \app\conf\Connection::$param['postgisschema']) {
-                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges[$subuser]);
+                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser);
             }
         }
-
         if (!isset($response['data'])) {
             $response['data'] = array();
         }
@@ -547,12 +549,16 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $data
+     * @return array
+     */
     public function updatePrivileges($data)
     {
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $privilege = (array)json_decode($this->getValueFromKey($data['_key_'], "privileges"));
-        $privilege[$data['subuser']] = $data['privileges'];
+        $privilege = json_decode($this->getValueFromKey($data['_key_'], "privileges"));
+        $privilege->$data['subuser'] = $data['privileges'];
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data['_key_'];
         $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");

@@ -16,6 +16,7 @@ public/logs
 public/scheduler/.sencha
 public/scheduler/ext
 public/scheduler/sass
+public/js/leaflet1.0.2
 
 !app/tmp/.gitignore
 !public/logs/.gitignore
@@ -45,3 +46,5 @@ Vagrantfile
 ehthumbs.db
 Thumbs.db
 apasswords
+/app/composer.lock
+/app/composer.phar

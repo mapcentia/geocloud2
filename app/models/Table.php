@@ -223,9 +223,10 @@ class Table extends Model
             $matViewDefinitions[$row["matviewname"]] = $row["definition"];
         }
         while ($row = $this->fetchRow($result, "assoc")) {
-            $privileges = (array)json_decode($row["privileges"]);
+            $privileges = json_decode($row["privileges"]);
             $arr = array();
-            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
+            $prop = $_SESSION['usergroup'] ?: $_SESSION['subuser'];
+            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges->$prop != "none" && $privileges->$prop != false)) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {

@@ -27,7 +27,7 @@ class Setting extends Model
             $res = $this->execQuery($sql);
         }
         $arr = $this->fetchRow($res, "assoc");
-        return (array)json_decode($arr['viewer']);
+        return json_decode($arr['viewer']);
     }
 
     public function updateApiKey()
@@ -35,9 +35,9 @@ class Setting extends Model
         $apiKey = md5(microtime() . rand());
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
-            $arr['api_key'] = $apiKey;
+            $arr->api_key = $apiKey;
         } else {
-            $arr['api_key_subuser']->$_SESSION["subuser"] = $apiKey;
+            $arr->api_key_subuser->$_SESSION["subuser"] = $apiKey;
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -63,9 +63,9 @@ class Setting extends Model
         $arr = $this->getArray();
 
         if (!$_SESSION["subuser"]) {
-            $arr['pw'] = $this->encryptPw($pw);
+            $arr->pw = $this->encryptPw($pw);
         } else {
-            $arr['pw_subuser']->$_SESSION["subuser"] = $this->encryptPw($pw);
+            $arr->pw_subuser->$_SESSION["subuser"] = $this->encryptPw($pw);
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -179,18 +179,18 @@ class Setting extends Model
         $arr = $this->getArray();
 
         if ($_SESSION["subuser"]) {
-            $arr['pw'] = $arr['pw_subuser']->$_SESSION["subuser"];
-            $arr['api_key'] = $arr['api_key_subuser']->$_SESSION["subuser"];
-            unset($arr['api_key_subuser']);
-            unset($arr['pw_subuser']);
+            $arr->pw = $arr->pw_subuser->$_SESSION["subuser"];
+            $arr->api_key = $arr->api_key_subuser->$_SESSION["subuser"];
+            unset($arr->api_key_subuser);
+            unset($arr->pw_subuser);
         }
         // If user has no key, we generate one.
-        if (!$arr['api_key']) {
+        if (!$arr->api_key) {
             $res = $this->updateApiKey();
-            $arr['api_key'] = $res['key'];
+            $arr->api_key = $res['key'];
         }
         if ($unsetPw) {
-            unset($arr['pw']);
+            unset($arr->pw);
         }
         if (!$this->PDOerror) {
             $response['success'] = true;

@@ -20,10 +20,10 @@ $schema = "geodanmark";
 $inputRel = "kommuner";
 $outputTable = "grid";
 $grid = "grid2";
-$typeName = "BYGNING";
-$importTable = "bygning";
+$typeName = "VEJMIDTE";
+$importTable = "vejmidte";
 $useGfs = true;
-$geomType = "Polygon";
+$geomType = "LineString";
 $size = 2000;
 
 new \app\conf\App();

@@ -37,7 +37,7 @@ if ((!$_SESSION['auth']) || $_SESSION['screen_name'] != $db) {
         // Text to send if user hits Cancel button
         die("Could not authenticate you 2");
 
-    } elseif (\app\models\Setting::encryptPw($password) != $response['data']['pw']) {
+    } elseif (\app\models\Setting::encryptPw($password) != $response["data"]->pw) {
         header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
         header('HTTP/1.0 401 Unauthorized');
         header("Cache-Control: no-cache, must-revalidate");

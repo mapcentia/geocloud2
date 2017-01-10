@@ -46,8 +46,9 @@ class Controller
                 $response['code'] = 403;
             } else {
                 $layer = new \app\models\Layer();
-                $privileges = (array)json_decode($layer->getValueFromKey($key, "privileges"));
-                $subuserLevel = $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']];
+                $privileges = json_decode($layer->getValueFromKey($key, "privileges"));
+                $prop = $_SESSION['usergroup'] ?: $_SESSION['subuser'];
+                $subuserLevel = $privileges->$prop;
                 if (!isset($level[$subuserLevel])) {
                     $response['success'] = false;
                     $response['message'] = $text;

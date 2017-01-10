@@ -1,0 +1,132 @@
+<GMLFeatureClassList>
+    <GMLFeatureClass>
+        <Name>VANDLOEBSMIDTE</Name>
+        <ElementPath>VANDLOEBSMIDTE</ElementPath>
+        <GeometryType>-2147483646</GeometryType>
+        <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
+        <DatasetSpecificInfo>
+            <FeatureCount>200</FeatureCount>
+            <ExtentXMin>458006.10000</ExtentXMin>
+            <ExtentXMax>879933.98000</ExtentXMax>
+            <ExtentYMin>6061013.69000</ExtentYMin>
+            <ExtentYMax>6258198.73000</ExtentYMax>
+        </DatasetSpecificInfo>
+        <PropertyDefn>
+            <Name>objektMetadata</Name>
+            <ElementPath>objektMetadata</ElementPath>
+            <Type>String</Type>
+            <Width>21</Width>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Ejer_Vandloebsmidte</Name>
+            <ElementPath>Ejer_Vandloebsmidte</ElementPath>
+            <Type>String</Type>
+            <Width>12</Width>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>FOT_ID</Name>
+            <ElementPath>FOT_ID</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Fra_dato_FOT</Name>
+            <ElementPath>Fra_dato_FOT</ElementPath>
+            <Type>String</Type>
+            <Width>23</Width>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Geometri_status</Name>
+            <ElementPath>Geometri_status</ElementPath>
+            <Type>String</Type>
+            <Width>10</Width>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Hovedforloeb</Name>
+            <ElementPath>Hovedforloeb</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+
+        <!-- Midtebredde -->
+        <PropertyDefn>
+            <Name>Midtebredde_Fra</Name>
+            <ElementPath>Midtebredde|VANDLOEBSMIDTE_Midtebredde|Fra</ElementPath>
+            <Type>RealList</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Midtebredde_Til</Name>
+            <ElementPath>Midtebredde|VANDLOEBSMIDTE_Midtebredde|Til</ElementPath>
+            <Type>RealList</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Midtebredde</Name>
+            <ElementPath>Midtebredde|VANDLOEBSMIDTE_Midtebredde|indhold</ElementPath>
+            <Type>StringList</Type>
+        </PropertyDefn>
+        <!-- END -->
+
+        <PropertyDefn>
+            <Name>Netvaerk</Name>
+            <ElementPath>Netvaerk</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Objekt_status</Name>
+            <ElementPath>Objekt_status</ElementPath>
+            <Type>String</Type>
+            <Width>12</Width>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Slutknude_Vandloebsmidte</Name>
+            <ElementPath>Slutknude_Vandloebsmidte</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Startknude_Vandloebsmidte</Name>
+            <ElementPath>Startknude_Vandloebsmidte</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+
+        <!-- Synlig_Vandloebsmidte -->
+        <PropertyDefn>
+            <Name>Synlig_Vandloebsmidte_Fra</Name>
+            <ElementPath>Synlig_Vandloebsmidte|VANDLOEBSMIDTE_Synlig_Vandloebsmidte|Fra</ElementPath>
+            <Type>RealList</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Synlig_Vandloebsmidte_Til</Name>
+            <ElementPath>Synlig_Vandloebsmidte|VANDLOEBSMIDTE_Synlig_Vandloebsmidte|Til</ElementPath>
+            <Type>RealList</Type>
+        </PropertyDefn>
+        <PropertyDefn>
+            <Name>Synlig_Vandloebsmidte</Name>
+            <ElementPath>Synlig_Vandloebsmidte|VANDLOEBSMIDTE_Synlig_Vandloebsmidte|indhold</ElementPath>
+            <Type>IntegerList</Type>
+        </PropertyDefn>
+        <!-- END -->
+
+        <PropertyDefn>
+            <Name>Vandloebstype</Name>
+            <ElementPath>Vandloebstype</ElementPath>
+            <Type>String</Type>
+            <Width>10</Width>
+        </PropertyDefn>
+
+        <!-- Synlig -->
+        <PropertyDefn>
+            <PropertyDefn>
+                <Name>Synlig_Fra</Name>
+                <ElementPath>Synlig|VANDLOEBSMIDTE_Synlig|Fra</ElementPath>
+                <Type>RealList</Type>
+            </PropertyDefn>
+            <PropertyDefn>
+                <Name>Synlig_Til</Name>
+                <ElementPath>Synlig|VANDLOEBSMIDTE_Synlig|Til</ElementPath>
+                <Type>RealList</Type>
+            </PropertyDefn>
+            <Name>Synlig</Name>
+            <ElementPath>Synlig|VANDLOEBSMIDTE_Synlig|indhold</ElementPath>
+            <Type>IntegerList</Type>
+         <!-- END -->
+        </PropertyDefn>
+    </GMLFeatureClass>
+</GMLFeatureClassList>

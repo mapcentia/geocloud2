@@ -40,7 +40,7 @@ if (sizeof($dbSplit) == 2 || $_SESSION["subuser"]) { //Sub-user
 
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
-    $userGroup = $response["data"]["userGroups"]->$subUser;
+    $userGroup = $response->data->userGroups->$subUser;
     if ($dbSplit[0] != $postgisschema) {
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
@@ -54,16 +54,17 @@ if (sizeof($dbSplit) == 2 || $_SESSION["subuser"]) { //Sub-user
             makeExceptionReport($response);
         }
         while ($row = $postgisObject->fetchRow($res, "assoc")) {
-            $privileges = (array)json_decode($row["privileges"]);
+            $privileges = json_decode($row["privileges"]);
             //die(print_r($privileges,true));
+            $prop = $userGroup ?: $subUser;
             switch ($transaction) {
                 case false:
-                    if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
+                    if ($privileges->$prop == false || $privileges->$prop == "none") {
                         makeExceptionReport(array("You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges."));
                     }
                     break;
                 case true:
-                    if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") {
+                    if ($privileges->$prop == false || $privileges->$prop == "none" || $privileges->$prop == "read") {
                         makeExceptionReport(array("You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges."));
                     }
                     break;
