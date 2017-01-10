@@ -82,6 +82,8 @@ $sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
 // Post method is used
+// ===================
+
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
