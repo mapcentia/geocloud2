@@ -28,9 +28,12 @@ class Processvector extends \app\inc\Controller
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
         }
-        //Check if file is .zip
+
+        // Check if file is .zip
+        // =====================
         $zipCheck1 = explode(".", $_REQUEST['file']);
         $zipCheck2 = array_reverse($zipCheck1);
+        $format = strtolower($zipCheck2[0]);
         if (strtolower($zipCheck2[0]) == "zip" || strtolower($zipCheck2[0]) == "rar") {
             $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
             $folderArr = array();
@@ -39,8 +42,10 @@ class Processvector extends \app\inc\Controller
                 $folderArr[] = $zipCheck1[$i];
             }
             $folder = implode(".", $folderArr);
+
+            // ZIP start
+            // =========
             if (strtolower($zipCheck2[0]) == "zip") {
-                // ZIP start
                 $zip = new \ZipArchive;
                 $res = $zip->open($dir . "/" . $_REQUEST['file']);
                 if ($res === false) {
@@ -50,10 +55,11 @@ class Processvector extends \app\inc\Controller
                 }
                 $zip->extractTo($dir . "/" . $folder);
                 $zip->close();
-                // ZIP end
             }
+
+            // RAR start
+            // =========
             if (strtolower($zipCheck2[0]) == "rar") {
-                // RAR start
                 $rar_file = rar_open($dir . "/" . $_REQUEST['file']);
                 if (!$rar_file) {
                     $response['success'] = false;
@@ -67,8 +73,8 @@ class Processvector extends \app\inc\Controller
                     $file->extract($dir . "/" . $folder); // extract to the current dir
                 }
                 rar_close($rar_file);
-                // RAR end
             }
+
             if ($handle = opendir($dir . "/" . $folder)) {
                 while (false !== ($entry = readdir($handle))) {
                     if ($entry !== "." && $entry !== "..") {
@@ -87,6 +93,7 @@ class Processvector extends \app\inc\Controller
                 }
             }
         }
+        
         $fileType = strtolower($zipCheck2[0]);
         $srid = ($_REQUEST['srid']) ?: "4326";
         $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
@@ -143,28 +150,39 @@ class Processvector extends \app\inc\Controller
             (($delete || $append) ? "" : "-lco 'FID=gid' ") .
             (($delete || $append) ? "" : "-lco 'PRECISION=NO' ") .
             "-a_srs 'EPSG:{$srid}' " .
+
+            // If csv, then set Open Options
+            // =============================
+            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,x,X -oo AUTODETECT_TYPE=YES " : "") .
+
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
             "-nln " . Connection::$param["postgisschema"] . ".{$safeName} " .
             "-nlt {$type}";
+
         exec($cmd . ' 2>&1', $out, $err);
 
+        // Add single class with random color
+        // ==================================
         $geoType = $model->getGeometryColumns(Connection::$param["postgisschema"] . "." . $safeName, "type");
         $key = Connection::$param["postgisschema"] . "." . $safeName . ".the_geom";
         $class = new \app\models\Classification($key);
         $arr = $class->getAll();
-
-        // Set layer editable
-        $join = new \app\models\Table("settings.geometry_columns_join");
-        $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
-        $data = (array)json_decode(urldecode($json));
-        $join->updateRecord($data, "_key_");
-
         if (empty($arr['data'])) {
             $class->insert();
             $class->update("0", \app\models\Classification::createClass($geoType));
         }
 
+        // Set layer editable
+        // ==================
+
+        $join = new \app\models\Table("settings.geometry_columns_join");
+        $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
+        $data = (array)json_decode(urldecode($json));
+        $join->updateRecord($data, "_key_");
+
+        // Insert default layer def
+        // ========================
         $def = new \app\models\Tile($key);
         $arr = $def->get();
         if (empty($arr['data'][0])) {
@@ -182,18 +200,25 @@ class Processvector extends \app\inc\Controller
             $def->update($json);
         }
 
+        // Check ogr2ogr output
+        // ====================
         if ($out[0] == "") {
             $response['success'] = true;
             $response['message'] = "Layer <b>{$safeName}</b> is created";
             $response['type'] = $geoType;
+
             // Bust cache, in case of layer already exist
+            // ==========================================
             \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $safeName);
         } else {
             $response['success'] = false;
             $response['message'] = $safeName . ": Some thing went wrong. Check the log.";
             $response['out'] = $out[0];
             Session::createLog($out, $_REQUEST['file']);
-            // Make sure the table is dropped if not skipping failures and it didn't exists before
+
+            // Make sure the table is dropped if not
+            // skipping failures and it didn't exists before
+            // =================================================
             if ($skipFailures == false && $tableExist == false) {
                 $sql = "DROP TABLE " . Connection::$param["postgisschema"] . "." . $safeName;
                 $res = $model->prepare($sql);
