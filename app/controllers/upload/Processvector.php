@@ -93,7 +93,7 @@ class Processvector extends \app\inc\Controller
                 }
             }
         }
-        
+
         $fileType = strtolower($zipCheck2[0]);
         $srid = ($_REQUEST['srid']) ?: "4326";
         $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
