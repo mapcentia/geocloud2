@@ -947,7 +947,7 @@ $(window).load(function () {
                                                 editable: false,
                                                 triggerAction: 'all',
                                                 name: 'not_querable',
-                                                fieldLabel: 'Not querable',
+                                                fieldLabel: __('Not queryable'),
                                                 value: r.data.not_querable
                                             },
                                             {
