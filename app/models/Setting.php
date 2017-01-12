@@ -89,17 +89,17 @@ class Setting extends Model
     {
         $arr = $this->getArray();
 
-        $obj = (array)$arr['extents'];
+        $obj = (array)$arr->extents;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extent->extent;
-        $arr['extents'] = $obj;
+        $arr->extents = $obj;
 
-        $obj = (array)$arr['center'];
+        $obj = (array)$arr->center;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extent->center;
-        $arr['center'] = $obj;
+        $arr->center = $obj;
 
-        $obj = (array)$arr['zoom'];
+        $obj = (array)$arr->zoom;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extent->zoom;
-        $arr['zoom'] = $obj;
+        $arr->zoom = $obj;
 
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -123,13 +123,13 @@ class Setting extends Model
     {
         $arr = $this->getArray();
 
-        $obj = (array)$arr['extentrestricts'];
+        $obj = (array)$arr->extentrestricts;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extentrestrict->extent;
-        $arr['extentrestricts'] = $obj;
+        $arr->extentrestricts = $obj;
 
-        $obj = (array)$arr['zoomrestricts'];
+        $obj = (array)$arr->zoomrestricts;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extentrestrict->zoom;
-        $arr['zoomrestricts'] = $obj;
+        $arr->zoomrestricts = $obj;
 
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -207,10 +207,10 @@ class Setting extends Model
     {
         $arr = $this->getArray();
 
-        unset($arr['pw']);
-        unset($arr['pw_subuser']);
-        unset($arr['api_key']);
-        unset($arr['api_key_subuser']);
+        unset($arr->pw);
+        unset($arr->pw_subuser);
+        unset($arr->api_key);
+        unset($arr->api_key_subuser);
 
         if (!$this->PDOerror) {
             $response['success'] = true;

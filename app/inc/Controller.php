@@ -134,15 +134,15 @@ class Controller
         if ($auth == "Read/write" || $auth == "Write") {
             $settings_viewer = new \app\models\Setting();
             $response = $settings_viewer->get();
-            if (isset($response["data"]["userGroups"]->$subUser)) {
-                $userGroup = $response["data"]["userGroups"]->$subUser;
+            if (isset($response["data"]->userGroups->$subUser)) {
+                $userGroup = $response["data"]->userGroups->$subUser;
             } else {
                 $userGroup = null;
             }
             if ($subUser) {
-                $apiKey = $response['data']['api_key_subuser']->$subUser;
+                $apiKey = $response['data']->api_key_subuser->$subUser;
             } else {
-                $apiKey = $response['data']['api_key'];
+                $apiKey = $response['data']->api_key;
             }
             $sql = "SELECT * FROM settings.geometry_columns_join WHERE _key_ LIKE :schema";
             $res = $postgisObject->prepare($sql);

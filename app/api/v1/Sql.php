@@ -41,7 +41,7 @@ class Sql extends \app\inc\Controller
         }
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
-        $this->apiKey = $res['data']['api_key'];
+        $this->apiKey = $res['data']->api_key;
 
         $this->response = $this->transaction($this->q, Input::get('client_encoding'));
 
