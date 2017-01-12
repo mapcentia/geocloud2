@@ -45,6 +45,11 @@
             <ElementPath>Hovedforloeb</ElementPath>
             <Type>Integer</Type>
         </PropertyDefn>
+        <PropertyDefn>
+            <Name>Retning</Name>
+            <ElementPath>Retning</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
 
         <!-- Midtebredde -->
         <PropertyDefn>
