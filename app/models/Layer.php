@@ -51,7 +51,7 @@ class Layer extends \app\models\Table
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
         if ($schema) {
             $ids = explode(",", $schema);
-            $schemaStr = "''" . implode("'',''" , $ids) . "''";
+            $schemaStr = "''" . implode("'',''", $ids) . "''";
             $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY sort";
         } elseif ($layer) {
             $split = explode(".", $layer);
@@ -62,7 +62,7 @@ class Layer extends \app\models\Table
         $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $res = $this->prepare($sql);
         try {
-                $res->execute();
+            $res->execute();
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -534,7 +534,7 @@ class Layer extends \app\models\Table
      */
     public function getPrivileges($_key_)
     {
-        $privileges = json_decode($this->getValueFromKey($_key_, "privileges"));
+        $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
             $privileges->$subuser = ($privileges->$subuser) ?: "none";
             if ($subuser != \app\conf\Connection::$param['postgisschema']) {
@@ -557,7 +557,7 @@ class Layer extends \app\models\Table
     {
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $privilege = json_decode($this->getValueFromKey($data['_key_'], "privileges"));
+        $privilege = json_decode($this->getValueFromKey($data['_key_'], "privileges") ?: "{}");
         $privilege->$data['subuser'] = $data['privileges'];
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data['_key_'];
@@ -573,17 +573,19 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $_key_
+     * @return array
+     */
     public function getRoles($_key_)
     {
-        $roles = (array)json_decode($this->getValueFromKey($_key_, "roles"));
-
+        $roles = json_decode($this->getValueFromKey($_key_, "roles") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
-            $roles[$subuser] = ($roles[$subuser]) ?: "none";
+            $roles->$subuser = $roles->$subuser ?: "none";
             if ($subuser != \app\conf\Connection::$param['postgisschema']) {
-                $response['data'][] = array("subuser" => $subuser, "roles" => $roles[$subuser]);
+                $response['data'][] = array("subuser" => $subuser, "roles" => $roles->$subuser);
             }
         }
-
         if (!isset($response['data'])) {
             $response['data'] = array();
         }
@@ -592,12 +594,16 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $data
+     * @return array
+     */
     public function updateRoles($data)
     {
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $role = (array)json_decode($this->getValueFromKey($data['_key_'], "roles"));
-        $role[$data['subuser']] = $data['roles'];
+        $role = json_decode($this->getValueFromKey($data['_key_'], "roles") ?: "{}");
+        $role->$data['subuser'] = $data['roles'];
         $roles['roles'] = json_encode($role);
         $roles['_key_'] = $data['_key_'];
         $res = $table->updateRecord(json_decode(json_encode($roles)), "_key_");
