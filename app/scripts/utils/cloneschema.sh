@@ -48,7 +48,7 @@ echo "from=$from, to=$to, db=$db"
 pg_dump --host ${HOST} ${CREDS} --format=c ${db} > ${DUMPPATH}
 
 # Create the tmp DB and restore the dump in it
-createdb --host ${HOST} ${CREDS} ${TMPDB}
+createdb --host ${HOST} ${CREDS} ${TMPDB} --template=template0 --locale=da_DK.UTF-8 --encoding=UTF8
 #psql --host ${HOST} ${CREDS} ${TMPDB} -c "CREATE EXTENSION postgis"
 pg_restore --host ${HOST} ${CREDS} --dbname ${TMPDB} ${DUMPPATH}
 

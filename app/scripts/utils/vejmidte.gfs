@@ -11,86 +11,230 @@
       <ExtentYMin>6137768.76000</ExtentYMin>
       <ExtentYMax>6138140.90000</ExtentYMax>
     </DatasetSpecificInfo>
+
     <PropertyDefn>
       <Name>objektMetadata</Name>
       <ElementPath>objektMetadata</ElementPath>
       <Type>String</Type>
       <Width>21</Width>
     </PropertyDefn>
+
     <PropertyDefn>
       <Name>CPRkommune</Name>
       <ElementPath>CPRkommune</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
+
     <PropertyDefn>
       <Name>CPRvejkode</Name>
       <ElementPath>CPRvejkode</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
+
     <PropertyDefn>
       <Name>FOT_ID</Name>
       <ElementPath>FOT_ID</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
-  
-    <PropertyDefn>
-      <Name>Fiktiv</Name>
-      <ElementPath>Fiktiv|VEJMIDTE_Fiktiv|indhold</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Fra_dato_FOT</Name>
       <ElementPath>Fra_dato_FOT</ElementPath>
       <Type>String</Type>
       <Width>23</Width>
     </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Geometri_status</Name>
       <ElementPath>Geometri_status</ElementPath>
       <Type>String</Type>
       <Width>7</Width>
     </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Objekt_status</Name>
       <ElementPath>Objekt_status</ElementPath>
       <Type>String</Type>
       <Width>12</Width>
     </PropertyDefn>
-    
+
+    <!-- Fiktiv -->
+    <PropertyDefn>
+      <Name>Fiktiv_Fra</Name>
+      <ElementPath>Fiktiv|VEJMIDTE_Fiktiv|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Fiktiv_Til</Name>
+      <ElementPath>Fiktiv|VEJMIDTE_Fiktiv|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Fiktiv</Name>
+      <ElementPath>Fiktiv|VEJMIDTE_Fiktiv|indhold</ElementPath>
+      <Type>Integer</Type>
+    </PropertyDefn>
+    <!-- END -->
+
+    <!-- Overflade -->
+    <PropertyDefn>
+      <Name>Overflade_Fra</Name>
+      <ElementPath>Overflade|VEJMIDTE_Overflade|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Overflade_Til</Name>
+      <ElementPath>Overflade|VEJMIDTE_Overflade|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
     <PropertyDefn>
       <Name>Overflade</Name>
       <ElementPath>Overflade|VEJMIDTE_Overflade|indhold</ElementPath>
-      <Type>String</Type>
+      <Type>StringList</Type>
       <Width>9</Width>
     </PropertyDefn>
-    
+    <!-- END -->
+
+    <!-- Plads -->
+    <PropertyDefn>
+      <Name>Plads_Fra</Name>
+      <ElementPath>Plads|VEJMIDTE_Plads|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Plads_Til</Name>
+      <ElementPath>Plads|VEJMIDTE_Plads|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
     <PropertyDefn>
       <Name>Plads</Name>
       <ElementPath>Plads|VEJMIDTE_Plads|indhold</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
-    
+    <!-- END -->
+
+    <!-- Rundkoersel -->
+    <PropertyDefn>
+      <Name>Rundkoersel_Fra</Name>
+      <ElementPath>Rundkoersel|VEJMIDTE_Rundkoersel|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Rundkoersel_Til</Name>
+      <ElementPath>Rundkoersel|VEJMIDTE_Rundkoersel|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
     <PropertyDefn>
       <Name>Rundkoersel</Name>
       <ElementPath>Rundkoersel|VEJMIDTE_Rundkoersel|indhold</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
-    
+    <!-- END -->
+
+    <!-- Tilogfrakoersel -->
+    <PropertyDefn>
+      <Name>Tilogfrakoersel_Fra</Name>
+      <ElementPath>Tilogfrakoersel|VEJMIDTE_Tilogfrakoersel|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Tilogfrakoersel_Til</Name>
+      <ElementPath>Tilogfrakoersel|VEJMIDTE_Tilogfrakoersel|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Tilogfrakoersel</Name>
+      <ElementPath>Tilogfrakoersel|VEJMIDTE_Tilogfrakoersel|indhold</ElementPath>
+      <Type>Integer</Type>
+    </PropertyDefn>
+    <!-- END -->
+
+    <!-- Trafikart -->
+    <PropertyDefn>
+      <Name>Trafikart_Fra</Name>
+      <ElementPath>Trafikart|VEJMIDTE_Trafikart|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Trafikart_Til</Name>
+      <ElementPath>Trafikart|VEJMIDTE_Trafikart|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Trafikart</Name>
+      <ElementPath>Trafikart|VEJMIDTE_Trafikart|indhold</ElementPath>
+      <Type>String</Type>
+      <Width>11</Width>
+    </PropertyDefn>
+    <!-- END -->
+
+    <!-- Vejbredde -->
+    <PropertyDefn>
+      <Name>Vejbredde_Fra</Name>
+      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Vejbredde_Til</Name>
+      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Vejbredde</Name>
+      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|indhold</ElementPath>
+      <Type>String</Type>
+      <Width>6</Width>
+    </PropertyDefn>
+    <!-- END -->
+
+    <!-- Vejklasse -->
+    <PropertyDefn>
+      <Name>Vejklasse_Fra</Name>
+      <ElementPath>Vejklasse|VEJMIDTE_Vejklasse|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Vejklasse_Til</Name>
+      <ElementPath>Vejklasse|VEJMIDTE_Vejklasse|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Vejklasse</Name>
+      <ElementPath>Vejklasse|VEJMIDTE_Vejklasse|indhold</ElementPath>
+      <Type>String</Type>
+    </PropertyDefn>
+    <!-- END -->
+
+    <!-- Niveau -->
+    <PropertyDefn>
+      <Name>Niveau_Fra</Name>
+      <ElementPath>Niveau|VEJMIDTE_Niveau|Fra</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Niveau_Til</Name>
+      <ElementPath>Niveau|VEJMIDTE_Niveau|Til</ElementPath>
+      <Type>RealList</Type>
+    </PropertyDefn>
+    <PropertyDefn>
+      <Name>Niveau</Name>
+      <ElementPath>Niveau|VEJMIDTE_Niveau|indhold</ElementPath>
+      <Type>Boolean</Type>
+    </PropertyDefn>
+    <!-- END -->
+
     <PropertyDefn>
       <Name>Slutknude_Vej</Name>
       <ElementPath>Slutknude_Vej</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Startknude_Vej</Name>
       <ElementPath>Startknude_Vej</ElementPath>
       <Type>Integer</Type>
     </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Til_dato_FOT</Name>
       <ElementPath>Til_dato_FOT</ElementPath>
@@ -98,46 +242,19 @@
       <Width>23</Width>
     </PropertyDefn>
 
-
-    <PropertyDefn>
-      <Name>Tilogfrakoersel</Name>
-      <ElementPath>Tilogfrakoersel|VEJMIDTE_Tilogfrakoersel|indhold</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-    
-    <PropertyDefn>
-      <Name>Trafikart</Name>
-      <ElementPath>Trafikart|VEJMIDTE_Trafikart|indhold</ElementPath>
-      <Type>String</Type>
-      <Width>11</Width>
-    </PropertyDefn>
-    
-    <PropertyDefn>
-      <Name>Vejbredde</Name>
-      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|indhold</ElementPath>
-      <Type>String</Type>
-      <Width>6</Width>
-    </PropertyDefn>
-    
-    <PropertyDefn>
-      <Name>Vejklasse</Name>
-      <ElementPath>Vejklasse|VEJMIDTE_Vejklasse|indhold</ElementPath>
-      <Type>String</Type>
-    </PropertyDefn>
-    
     <PropertyDefn>
       <Name>Vejmidtetype</Name>
       <ElementPath>Vejmidtetype</ElementPath>
       <Type>String</Type>
       <Width>3</Width>
     </PropertyDefn>
-    
+
     <PropertyDefn>
       <Name>Vejmyndighed</Name>
       <ElementPath>Vejmyndighed</ElementPath>
       <Type>String</Type>
       <Width>12</Width>
     </PropertyDefn>
-    
+
   </GMLFeatureClass>
 </GMLFeatureClassList>
