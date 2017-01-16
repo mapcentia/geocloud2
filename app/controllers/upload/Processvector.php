@@ -92,16 +92,25 @@ class Processvector extends \app\inc\Controller
         $encoding = ($_REQUEST['encoding']) ?: "LATIN1";
 
         switch ($_REQUEST['type']) {
-            case "Point":
+            case "point":
                 $type = "point";
                 break;
-            case "Polygon":
-                $type = "multipolygon";
+            case "linestring":
+                $type = "linestring";
                 break;
-            case "Line":
+            case "polygon":
+                $type = "polygon";
+                break;
+            case "multipoint":
+                $type = "multipoint";
+                break;
+            case "multilinestring":
                 $type = "multilinestring";
                 break;
-            case "Geometry":
+            case "multipolygon":
+                $type = "multipolygon";
+                break;
+            case "geometry":
                 $type = "geometry";
                 break;
             default:

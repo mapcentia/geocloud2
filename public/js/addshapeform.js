@@ -65,7 +65,7 @@ addShape.init = function () {
                                 return;
                             } else {
                                 spinner(true, __("processing " + e.split(".")[0]));
-                                geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
+                                //geoType = (e.split(".").reverse()[0].toLowerCase() === "shp") ? "PROMOTE_TO_MULTI" : geoType;
                                 flag = true;
                                 $.ajax({
                                     url: '/controllers/upload/processvector',
@@ -139,7 +139,7 @@ addShape.init = function () {
             ' ',
             __('Type'),
             {
-                width: 80,
+                width: 100,
                 xtype: 'combo',
                 mode: 'local',
                 triggerAction: 'all',
@@ -158,16 +158,32 @@ addShape.init = function () {
                             value: 'Auto'
                         },
                         {
-                            name: __('Point'),
-                            value: 'Point'
+                            name: 'Point',
+                            value: 'point'
                         },
                         {
-                            name: __('Line'),
-                            value: 'Line'
+                            name: 'Linestring',
+                            value: 'linestring'
                         },
                         {
-                            name: __('Polygon'),
-                            value: 'Polygon'
+                            name: 'Polygon',
+                            value: 'polygon'
+                        },
+                        {
+                            name: 'Multi-point',
+                            value: 'multipoint'
+                        },
+                        {
+                            name: 'Multi-linestring',
+                            value: 'multilinestring'
+                        },
+                        {
+                            name: 'Multi-polygon',
+                            value: 'multipolygon'
+                        },
+                        {
+                            name: 'Geometry',
+                            value: 'geometry'
                         }
                     ]
                 })
