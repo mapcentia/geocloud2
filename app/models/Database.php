@@ -255,13 +255,13 @@ class Database extends \app\inc\Model
         }
         $setObj = new \app\models\Setting();
         $settings = $setObj->getArray();
-        $extents = $settings['extents']->$schema;
-        $center = $settings['center']->$schema;
-        $zoom = $settings['zoom']->$schema;
+        $extents = $settings->extents->$schema;
+        $center = $settings->center->$schema;
+        $zoom = $settings->zoom->$schema;
         if ($extents) {
-            $settings['extents']->$newName = $extents;
-            $settings['center']->$newName = $center;
-            $settings['zoom']->$newName = $zoom;
+            $settings->extents->$newName = $extents;
+            $settings->center->$newName = $center;
+            $settings->zoom->$newName = $zoom;
             if (\app\conf\App::$param["encryptSettings"]) {
                 $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
                 $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('{$pubKey}'))";
