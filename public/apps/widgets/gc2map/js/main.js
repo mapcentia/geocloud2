@@ -387,12 +387,13 @@ MapCentia = function (globalId) {
                 } else {
                     setBaseLayer(defaults.baseLayers[0].id);
                 }
+                $("#loadscreen").hide();
             } else {
                 setTimeout(function () {
                     poll();
                 }, 20);
             }
-        }())
+        }());
 
         arr = defaults.layers;
 
