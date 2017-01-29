@@ -79,7 +79,7 @@ class Controller
         $postgisdb = $user;
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
-        $apiKey = $res['data']['api_key'];
+        $apiKey = $res['data']->api_key;
         if ($apiKey == $key && $key != false) {
             return true;
         } else {

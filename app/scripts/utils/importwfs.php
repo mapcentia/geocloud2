@@ -16,22 +16,14 @@ header("Content-type: text/plain");
 include_once(__DIR__ . "/../../conf/App.php");
 
 $db = "mydb";
-$schema = "geodanmark";
-<<<<<<< HEAD
+$schema = "fot_test";
 $inputRel = "kommuner";
 $outputTable = "grid";
 $grid = "grid2";
-$typeName = "VEJMIDTE";
-$importTable = "vejmidte";
-=======
-$inputRel = $schema . ".kommuner";
-$outputTable =  $schema . ".grid";
-$grid =  $schema . ".grid2";
 $typeName = "VANDLOEBSMIDTE";
-$importTable =  $schema . ".vandloebsmidte";
->>>>>>> master
+$importTable = "vandloebsmidte";
 $useGfs = true;
-$geomType = "LineString";
+$geomType = "Linestring";
 $size = 2000;
 
 new \app\conf\App();
@@ -41,43 +33,42 @@ $database = new Model();
 
 print_r(\app\conf\Connection::$param);
 
-$sql = "DROP TABLE {$outputTable}";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "DROP TABLE {$grid}";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "CREATE TABLE {$outputTable} AS SELECT st_fishnet('{$inputRel}','the_geom',{$size}, 25832)";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "ALTER TABLE {$outputTable} ALTER st_fishnet TYPE geometry('Polygon', 25832)";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "ALTER TABLE {$outputTable} ADD gid SERIAL";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "ALTER TABLE {$outputTable} ADD gid SERIAL";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "CREATE TABLE {$grid} AS SELECT grid.*
-            FROM
-              {$outputTable} AS grid LEFT JOIN
-              {$schema}.kommuner AS kommuner ON
-              st_intersects(grid.st_fishnet,kommuner.the_geom)
-            WHERE kommuner.gid IS NOT NULL";
-//echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid}";
-$res = $database->execQuery($sql);
+$sql = "DROP TABLE {$schema}.{$outputTable}";
 echo $sql . "\n";
+$database->execQuery($sql);
 
+$sql = "DROP TABLE {$schema}.{$grid}";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "CREATE TABLE {$schema}.{$outputTable} AS SELECT st_fishnet('{$schema}.{$inputRel}','the_geom',{$size}, 25832)";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "ALTER TABLE {$schema}.{$outputTable} ALTER st_fishnet TYPE geometry('Polygon', 25832)";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "ALTER TABLE {$schema}.{$outputTable} ADD gid SERIAL";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "ALTER TABLE {$schema}.{$outputTable} ADD gid SERIAL";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "CREATE TABLE {$schema}.{$grid} AS SELECT $schema.grid.*
+            FROM
+              {$schema}.{$outputTable} LEFT JOIN
+              {$schema}.{$inputRel} AS {$inputRel} ON
+              st_intersects(grid.st_fishnet,{$inputRel}.the_geom)
+            WHERE {$inputRel}.gid IS NOT NULL";
+echo $sql . "\n";
+$database->execQuery($sql);
+
+$sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$schema}.{$grid}";
+//echo $sql . "\n";
+$res = $database->execQuery($sql);
 
 while ($row = $database->fetchRow($res)) {
     print_r($row);
@@ -94,20 +85,19 @@ while ($row = $database->fetchRow($res)) {
     $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
         "-skipfailures " .
         "-append " .
-        "-dim 3 " .
+        "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:25832' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
         "/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml " .
-        "-nln {$importTable} " .
+        "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
     exec($cmd, $out, $err);
     print_r($out);
     unlink("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml");
 
 }
-
 
 die("END\n");
