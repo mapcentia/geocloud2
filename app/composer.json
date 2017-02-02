@@ -1,6 +1,7 @@
 {
     "require": {
         "wildbit/postmark-php": "^2.2",
-        "odesk/phystrix": "^2.0"
+        "odesk/phystrix": "^2.0",
+        "PHPOffice/PHPExcel": "^1.8"
     }
 }

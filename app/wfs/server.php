@@ -1481,7 +1481,7 @@ function makeExceptionReport($value)
     echo '</ServiceException>
 	</ServiceExceptionReport>';
     $data = ob_get_clean();
-    header("HTTP/1.0 400 " . \app\inc\Util::httpCodeText("400"));
+    header("HTTP/1.0 200 " . \app\inc\Util::httpCodeText("200"));
     echo $data;
     print("\n" . $sessionComment);
     Log::write($data);

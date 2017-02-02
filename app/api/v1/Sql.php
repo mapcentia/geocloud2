@@ -151,7 +151,7 @@ class Sql extends \app\inc\Controller
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
         try {
             $parser = new \PHPSQLParser($sql, false);
-        } catch(\UnableToCalculatePositionException $e){
+        } catch (\UnableToCalculatePositionException $e) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = $e->getMessage();
@@ -277,8 +277,20 @@ class Sql extends \app\inc\Controller
                 //echo "Not cached";
                 ob_start();
                 $srs = Input::get('srs') ?: "900913";
+
+                $format = Input::get('format') ?: "geojson";
+                if (!in_array($format, ["geojson", "csv", "excel"])) {
+                    die("{$format} is not a supported format.");
+                }
+
+                $geoformat = Input::get('geoformat') ?: null;
+                if (!in_array($geoformat, [null, "geojson", "wkt"])) {
+                    die("{$geoformat} is not a supported geom format.");
+                }
+
+
                 $api = new \app\models\Sql($srs);
-                $this->response = $api->sql($this->q, $clientEncoding);
+                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat);
                 $this->addAttr($response);
 
                 echo serialize($this->response);
@@ -298,8 +310,9 @@ class Sql extends \app\inc\Controller
     /**
      * @param $arr
      */
-    private function addAttr(array $arr){
-        foreach($arr as $key=>$value){
+    private function addAttr(array $arr)
+    {
+        foreach ($arr as $key => $value) {
             if ($key != "code") {
                 $this->response["auth_check"][$key] = $value;
             }

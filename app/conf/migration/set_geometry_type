@@ -1,0 +1,55 @@
+#!/usr/bin/php
+<?php
+use \app\conf\App;
+use \app\conf\Connection;
+use \app\inc\Model;
+
+header("Content-type: text/plain");
+include_once("../App.php");
+new \app\conf\App();
+\app\models\Database::setDb("mydb");
+$conn = new \app\inc\Model();
+$sql = "SELECT * FROM public.geometry_columns WHERE type='GEOMETRY'";
+$result = $conn->execQuery($sql);
+echo $conn->PDOerror[0];
+
+$count = 0;
+while ($row = $conn->fetchRow($result)) {
+    $table = "\"{$row['f_table_schema']}\".\"{$row['f_table_name']}\"";
+
+    $rel = $conn->isTableOrView($row['f_table_schema'] . "." . $row['f_table_name']);
+
+    if ($rel["data"] == "TABLE") {
+        $col = $row['f_geometry_column'];
+        $srid = $row['srid'];
+        $sql = "SELECT GeometryType({$col}) AS geotype FROM {$table} LIMIT 1";
+        //echo $sql . "\n";
+        $res = $conn->execQuery($sql);
+        $type = $conn->fetchRow($res)["geotype"];
+        if ($type) {
+            echo $count . " ";
+            $count++;
+            echo $row['f_table_schema'] . "." . $row['f_table_name'] . " (" . $type . ")\n";
+
+            $sql = "ALTER TABLE {$table} ALTER COLUMN {$col} TYPE geometry({$type},{$srid})";
+            echo $sql . "\n";
+            $res = $conn->prepare($sql);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                echo $e->getMessage() . "\n";
+                $sql = "ALTER TABLE {$table} ALTER COLUMN {$col} TYPE geometry(MultiPoint,{$srid}) USING ST_Multi({$col})";
+                echo $sql . "\n";
+
+                $res = $conn->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    echo $e->getMessage() . "\n";
+
+                }
+            }
+
+        }
+    }
+}

@@ -42,6 +42,11 @@ class Route
             header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
             if (isset($response["json"])) {
                 echo Response::passthru($response["json"]);
+            } elseif (isset($response["text"])) {
+                echo Response::passthru($response["text"], "text/plain");
+            } elseif (isset($response["csv"])) {
+                //header('Content-Disposition: attachment; filename="data.csv"');
+                echo Response::passthru($response["csv"], "text/plain");
             } else {
                 if (!$silent) {
                     $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);

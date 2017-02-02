@@ -895,7 +895,21 @@ class Layer extends \app\models\Table
                 "description" => "Google XYZ service",
                 "format" => "xyz",
                 "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
-            )
+            ),
+            array(
+                "id" => $id . "-excel",
+                "name" => "Excel",
+                "description" => "Excel 2007",
+                "format" => "excel",
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326&format=excel"
+            ),
+            array(
+                "id" => $id . "-csv",
+                "name" => "CSV",
+                "description" => "CSV",
+                "format" => "csv",
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326&format=csv"
+            ),
         );
 
         // Get extent
