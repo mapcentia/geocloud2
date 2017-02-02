@@ -48,4 +48,4 @@ Thumbs.db
 apasswords
 /app/composer.lock
 /app/composer.phar
-/app/conf/wfsprocessors/classes/pre/Pre_fot5.php
+#/app/conf/wfsprocessors/classes/pre/Pre_fot5.php
