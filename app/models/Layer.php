@@ -800,7 +800,7 @@ class Layer extends \app\models\Table
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_exec($ch);
         $info = curl_getinfo($ch);
-        $datasetExists = ($info["http_code"] == 200) ? true : false;
+        $datasetExists = $info["http_code"] == 200 ? true : false;
         curl_close($ch);
 
         // Create the CKAN package object
@@ -841,7 +841,7 @@ class Layer extends \app\models\Table
             return $response;
         }
 
-        $ownerOrg = (json_decode($row["meta"], true)["ckan_org_id"]) ?: $ckanOrgIdDefault;
+        $ownerOrg = json_decode($row["meta"], true)["ckan_org_id"] ?: $ckanOrgIdDefault;
 
         $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
         $response = array();
@@ -850,6 +850,7 @@ class Layer extends \app\models\Table
         }
         $response["name"] = $id;
         $response["title"] = $row["f_table_title"];
+        $response["license_id"] = json_decode($row["meta"], true)["license_id"] ?: "notspecified";
         $response["notes"] = (isset(json_decode($row["meta"])->meta_desc) && trim(json_decode($row["meta"])->meta_desc) != "") ? json_decode($row["meta"])->meta_desc : $row["f_table_abstract"];
         if (sizeof($arr) > 0) $response["tags"] = $arr;
         $response["owner_org"] = $ownerOrg;
@@ -864,9 +865,9 @@ class Layer extends \app\models\Table
             array(
                 "id" => $id . "-geojson",
                 "name" => "GeoJSON",
-                "description" => "JSON format",
+                "description" => App::$param["ckan"]["descForGeoJson"],
                 "format" => "geojson",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326"
             ),
             array(
                 "id" => $id . "-wms",
@@ -899,16 +900,16 @@ class Layer extends \app\models\Table
             array(
                 "id" => $id . "-excel",
                 "name" => "Excel",
-                "description" => "Excel 2007",
+                "description" => App::$param["ckan"]["descForExcel"],
                 "format" => "excel",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326&format=excel"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=excel"
             ),
             array(
                 "id" => $id . "-csv",
                 "name" => "CSV",
-                "description" => "CSV",
+                "description" => App::$param["ckan"]["descForCSV"],
                 "format" => "csv",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 100&srs=4326&format=csv"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=csv"
             ),
         );
 

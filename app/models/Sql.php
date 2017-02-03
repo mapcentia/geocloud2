@@ -137,7 +137,7 @@ class Sql extends \app\inc\Model
         // CSV/Excel output
         // ================
 
-        if ($format == "csv" || $format == "excel") {
+        elseif ($format == "csv" || $format == "excel") {
             $withGeom = $geoformat ? true : false;
             $separator = ",";
             $first = true;
@@ -177,10 +177,11 @@ class Sql extends \app\inc\Model
                 }
                 $csv = implode("\n", $lines);
 
+                // Convert to Excel
+                // ================
+
                 if ($format == "excel") {
-
                     include '../app/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
-
                     $file = tempnam(sys_get_temp_dir(), 'excel_');
                     $handle = fopen($file, "w");
                     fwrite($handle, $csv);
@@ -189,19 +190,17 @@ class Sql extends \app\inc\Model
                     unlink($file);
 
                     $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-                    // We'll be outputting an excel file
-                    header('Content-type: application/vnd.ms-excel');
 
-                    // It will be called file.xls
+                    // We'll be outputting an excel file
+                    header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+                    // It will be called file.xlsx
                     header('Content-Disposition: attachment; filename="file.xlsx"');
 
                     // Write file to the browser
                     $objWriter->save('php://output');
-
                     die();
                 }
-
-
             } catch (\Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -212,7 +211,6 @@ class Sql extends \app\inc\Model
             $response['csv'] = $csv;
             return $response;
         }
-
     }
 
     /**
