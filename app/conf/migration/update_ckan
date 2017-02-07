@@ -1,0 +1,31 @@
+#!/usr/bin/php
+<?php
+use \app\conf\App;
+use \app\models\Database;
+use \app\inc\Util;
+
+header("Content-type: text/plain");
+include_once("../App.php");
+new \app\conf\App();
+Database::setDb("mydb");
+$conn = new \app\inc\Model();
+$sql = "SELECT * FROM settings.geometry_columns_join";
+$result = $conn->execQuery($sql);
+echo $conn->PDOerror[0];
+$count = 0;
+$gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
+
+while ($row = $conn->fetchRow($result)) {
+
+    if (isset($row["meta"])) {
+        $meta = json_decode($row["meta"]);
+
+        if ($meta->ckan_update) {
+            print_r($meta);
+
+            $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row["_key_"] . "&host=" . $gc2host;
+            echo $url . "\n";
+            Util::wget($url);
+        }
+    }
+}
