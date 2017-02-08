@@ -139,7 +139,7 @@ class Sql extends \app\inc\Model
 
         elseif ($format == "csv" || $format == "excel") {
             $withGeom = $geoformat ? true : false;
-            $separator = ",";
+            $separator = ";";
             $first = true;
             $lines = array();
             try {
@@ -185,7 +185,12 @@ class Sql extends \app\inc\Model
                     $file = tempnam(sys_get_temp_dir(), 'excel_');
                     $handle = fopen($file, "w");
                     fwrite($handle, $csv);
-                    $objPHPExcel = \PHPExcel_IOFactory::load($file);
+                    $csv = null;
+
+                    $objReader = new \PHPExcel_Reader_CSV();
+                    $objReader->setDelimiter($separator);
+                    $objPHPExcel = $objReader->load($file);
+
                     fclose($handle);
                     unlink($file);
 

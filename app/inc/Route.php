@@ -45,8 +45,8 @@ class Route
             } elseif (isset($response["text"])) {
                 echo Response::passthru($response["text"], "text/plain");
             } elseif (isset($response["csv"])) {
-                //header('Content-Disposition: attachment; filename="data.csv"');
-                echo Response::passthru($response["csv"], "text/plain");
+                header('Content-Disposition: attachment; filename="data.csv"');
+                echo Response::passthru($response["csv"], "csv/plain");
             } else {
                 if (!$silent) {
                     $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
