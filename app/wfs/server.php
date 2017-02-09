@@ -146,7 +146,11 @@ if ($HTTP_RAW_POST_DATA) {
             if ($arr["Delete"]) $transactionType = "Delete";
             break;
     }
-} else { // Get method is used
+
+// Get method is used
+// ==================
+
+} else {
     if (sizeof($_GET) > 0) {
         Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
@@ -183,12 +187,9 @@ $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VAR
 if ($auth == "Read/write") {
     include('inc/http_basic_authen.php');
 }
-
-
-//}
 // End HTTP basic authentication
+
 print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-//ob_start();
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
         $__u = explode(".", $property); // Is it "/" for get method?
@@ -1120,6 +1121,7 @@ function doParse($arr)
             \app\controllers\Tilecache::bust($postgisschema . "." . $forSql2['tables'][$i]);
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
             $tableObj = new table($postgisschema . "." . $forSql2['tables'][$i]);
+            $originalFeature = null;
             if ($tableObj->versioning) {
                 // Get original feature
                 $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
@@ -1488,7 +1490,6 @@ function makeExceptionReport($value)
     die();
 }
 
-//echo ob_get_clean();
 print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
 print($sessionComment);
 print ("<!--\n");
