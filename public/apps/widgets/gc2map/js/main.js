@@ -135,6 +135,7 @@ MapCentia = function (globalId) {
                 defaults.width = "100%";
                 defaults.height = "100%";
                 defaults.template = "body.tmpl";
+                defaults.key = null;
                 MapappWin.document.write(
                     '<script>gc2map.init(' + JSON.stringify(defaults) + ')</script>'
                 );
