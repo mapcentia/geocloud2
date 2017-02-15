@@ -457,8 +457,6 @@ class Table extends Model
                 $sql = "UPDATE " . $this->doubleQuoteQualifiedName($this->table) . " SET ";
                 $sql .= implode(",", $pairArr);
                 $sql .= " WHERE {$where}";
-                print_r($sql);
-
                 $result = $this->execQuery($sql, "PDO", "transaction");
 
                 // If row does not exits, insert instead.
@@ -466,7 +464,6 @@ class Table extends Model
 
                 if ((!$result) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
-                    print_r($sql);
                     $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }
