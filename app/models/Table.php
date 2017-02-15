@@ -445,25 +445,28 @@ class Table extends Model
                     }
                     $value = $this->db->quote($value);
                     if ($key != $keyName) {
-                        $pairArr[] = "{$key}={$value}";
-                        $keyArr[] = $key;
+                        $pairArr[] = "\"{$key}\"={$value}";
+                        $keyArr[] = "\"{$key}\"";
                         $valueArr[] = $value;
                     } else {
-                        $where = "{$key}={$value}";
+                        $where = "\"{$key}\"={$value}";
                         $keyValue = $value;
                     }
                 }
 
-                $sql = "UPDATE {$this->table} SET ";
+                $sql = "UPDATE " . $this->doubleQuoteQualifiedName($this->table) . " SET ";
                 $sql .= implode(",", $pairArr);
                 $sql .= " WHERE {$where}";
+                print_r($sql);
+
                 $result = $this->execQuery($sql, "PDO", "transaction");
 
                 // If row does not exits, insert instead.
                 // ======================================
 
                 if ((!$result) && (!$this->PDOerror)) {
-                    $sql = "INSERT INTO {$this->table} ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
+                    $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
+                    print_r($sql);
                     $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }
