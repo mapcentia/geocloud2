@@ -453,11 +453,15 @@ class Table extends Model
                         $keyValue = $value;
                     }
                 }
+
                 $sql = "UPDATE {$this->table} SET ";
                 $sql .= implode(",", $pairArr);
                 $sql .= " WHERE {$where}";
                 $result = $this->execQuery($sql, "PDO", "transaction");
+
                 // If row does not exits, insert instead.
+                // ======================================
+
                 if ((!$result) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO {$this->table} ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
                     $this->execQuery($sql, "PDO", "transaction");
@@ -639,9 +643,9 @@ class Table extends Model
         $sql = "";
         $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
         foreach ($data as $value) {
-            $safeColumn = $this->toAscii($value->column, array(), "_");
+            $safeColumn = $value->column;
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
-                $sql = "ALTER TABLE {$this->table} ALTER {$value->column} " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
+                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"{$value->column}\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
                 try {
                     $res->execute();
@@ -683,6 +687,7 @@ class Table extends Model
         $conf['_key_'] = $key;
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
+
         $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
         if (!$res["success"]) {
             $response['success'] = false;
