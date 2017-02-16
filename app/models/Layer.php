@@ -906,18 +906,18 @@ class Layer extends \app\models\Table
                 "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
             ),
             array(
-                "id" => $id . "-excel",
-                "name" => "Excel",
-                "description" => App::$param["ckan"]["descForExcel"],
-                "format" => "excel",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=excel"
-            ),
-            array(
                 "id" => $id . "-csv",
                 "name" => "CSV",
                 "description" => App::$param["ckan"]["descForCSV"],
                 "format" => "csv",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=csv"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=csv&allstr=1"
+            ),
+            array(
+                "id" => $id . "-excel",
+                "name" => "XLSX",
+                "description" => App::$param["ckan"]["descForExcel"],
+                "format" => "xlsx",
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=excel"
             ),
         );
 

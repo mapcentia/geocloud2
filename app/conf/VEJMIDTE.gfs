@@ -13,35 +13,15 @@
     </DatasetSpecificInfo>
 
     <PropertyDefn>
-      <Name>objektMetadata</Name>
-      <ElementPath>objektMetadata</ElementPath>
+      <Name>Kommunekode</Name>
+      <ElementPath>Kommunekode</ElementPath>
       <Type>String</Type>
-      <Width>21</Width>
     </PropertyDefn>
 
     <PropertyDefn>
-      <Name>CPRkommune</Name>
-      <ElementPath>CPRkommune</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-
-    <PropertyDefn>
-      <Name>CPRvejkode</Name>
-      <ElementPath>CPRvejkode</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-
-    <PropertyDefn>
-      <Name>FOT_ID</Name>
-      <ElementPath>FOT_ID</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-
-    <PropertyDefn>
-      <Name>Fra_dato_FOT</Name>
-      <ElementPath>Fra_dato_FOT</ElementPath>
+      <Name>Vejkode</Name>
+      <ElementPath>Vejkode</ElementPath>
       <Type>String</Type>
-      <Width>23</Width>
     </PropertyDefn>
 
     <PropertyDefn>
@@ -168,25 +148,6 @@
     </PropertyDefn>
     <!-- END -->
 
-    <!-- Vejbredde -->
-    <PropertyDefn>
-      <Name>Vejbredde_Fra</Name>
-      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|Fra</ElementPath>
-      <Type>RealList</Type>
-    </PropertyDefn>
-    <PropertyDefn>
-      <Name>Vejbredde_Til</Name>
-      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|Til</ElementPath>
-      <Type>RealList</Type>
-    </PropertyDefn>
-    <PropertyDefn>
-      <Name>Vejbredde</Name>
-      <ElementPath>Vejbredde|VEJMIDTE_Vejbredde|indhold</ElementPath>
-      <Type>StringList</Type>
-      <Width>6</Width>
-    </PropertyDefn>
-    <!-- END -->
-
     <!-- Vejklasse -->
     <PropertyDefn>
       <Name>Vejklasse_Fra</Name>
@@ -224,25 +185,6 @@
     <!-- END -->
 
     <PropertyDefn>
-      <Name>Slutknude_Vej</Name>
-      <ElementPath>Slutknude_Vej</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-
-    <PropertyDefn>
-      <Name>Startknude_Vej</Name>
-      <ElementPath>Startknude_Vej</ElementPath>
-      <Type>Integer</Type>
-    </PropertyDefn>
-
-    <PropertyDefn>
-      <Name>Til_dato_FOT</Name>
-      <ElementPath>Til_dato_FOT</ElementPath>
-      <Type>String</Type>
-      <Width>23</Width>
-    </PropertyDefn>
-
-    <PropertyDefn>
       <Name>Vejmidtetype</Name>
       <ElementPath>Vejmidtetype</ElementPath>
       <Type>String</Type>
@@ -254,6 +196,11 @@
       <ElementPath>Vejmyndighed</ElementPath>
       <Type>String</Type>
       <Width>12</Width>
+    </PropertyDefn>
+
+    <PropertyDefn>
+      <Name>meta_noejagtighed</Name>
+      <Type>String</Type>
     </PropertyDefn>
 
   </GMLFeatureClass>

@@ -287,10 +287,10 @@ class Sql extends \app\inc\Controller
                 if (!in_array($geoformat, [null, "geojson", "wkt"])) {
                     die("{$geoformat} is not a supported geom format.");
                 }
-
+                $csvAllToStr = Input::get('allstr') ?: null;
 
                 $api = new \app\models\Sql($srs);
-                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat);
+                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr);
                 $this->addAttr($response);
 
                 echo serialize($this->response);

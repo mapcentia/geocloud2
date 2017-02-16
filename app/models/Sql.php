@@ -31,8 +31,13 @@ class Sql extends \app\inc\Model
      * @param string $geoformat
      * @return mixed
      */
-    public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt")
+    public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt", $csvAllToStr = false)
     {
+        if ($format == "excel") {
+            $limit = 10000;
+        } else {
+            $limit = 100000;
+        }
         $name = "_" . rand(1, 999999999) . microtime();
         $view = $this->toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
@@ -67,7 +72,7 @@ class Sql extends \app\inc\Model
             }
         }
         $sql = implode(",", $fieldsArr);
-        $sql = "SELECT {$sql} FROM {$view}";
+        $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
@@ -171,7 +176,13 @@ class Sql extends \app\inc\Model
                         $value = str_replace('"', '""', $value);
 
                         // Any text is quoted
-                        $fields[] = !is_numeric($value) ? "\"{$value}\"" : $value;
+                        if ($csvAllToStr) {
+                            $fields[] =  "\"{$value}\"";
+
+                        } else {
+                            $fields[] = !is_numeric($value) ? "\"{$value}\"" : $value;
+
+                        }
                     }
                     $lines[] = implode($separator, $fields);
                 }

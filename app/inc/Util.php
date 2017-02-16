@@ -201,11 +201,14 @@ class Util
         return $ipAddress;
     }
 
-    static function wget($url)
+    static function wget($url, $connectTimeout = 10, $timeout = 0)
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectTimeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+
         $buffer = curl_exec($ch);
         curl_close($ch);
         return $buffer;
