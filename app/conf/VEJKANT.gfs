@@ -1,0 +1,43 @@
+<GMLFeatureClassList>
+    <GMLFeatureClass>
+        <Name>VEJKANT</Name>
+        <ElementPath>VEJKANT</ElementPath>
+
+        <!--LINESTRINGZ-->
+        <GeometryType>-2147483646</GeometryType>
+        <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
+
+        <PropertyDefn>
+            <Name>Geometri_status</Name>
+            <ElementPath>Geometri_status</ElementPath>
+            <Type>String</Type>
+            <Width>7</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Objekt_status</Name>
+            <ElementPath>Objekt_status</ElementPath>
+            <Type>String</Type>
+            <Width>12</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Synlig_Vejkant</Name>
+            <ElementPath>Synlig_Vejkant</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Type</Name>
+            <ElementPath>Type</ElementPath>
+            <Type>String</Type>
+            <Width>8</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>meta_noejagtighed</Name>
+            <Type>String</Type>
+        </PropertyDefn>
+
+    </GMLFeatureClass>
+</GMLFeatureClassList>

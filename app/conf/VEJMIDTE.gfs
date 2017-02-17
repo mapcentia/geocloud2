@@ -4,13 +4,6 @@
     <ElementPath>VEJMIDTE</ElementPath>
     <GeometryType>-2147483646</GeometryType>
     <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
-    <DatasetSpecificInfo>
-      <FeatureCount>44</FeatureCount>
-      <ExtentXMin>587618.51000</ExtentXMin>
-      <ExtentXMax>588031.86000</ExtentXMax>
-      <ExtentYMin>6137768.76000</ExtentYMin>
-      <ExtentYMax>6138140.90000</ExtentYMax>
-    </DatasetSpecificInfo>
 
     <PropertyDefn>
       <Name>Kommunekode</Name>

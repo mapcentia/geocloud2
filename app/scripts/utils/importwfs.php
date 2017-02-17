@@ -20,8 +20,8 @@ $schema = "fot_test";
 $inputRel = "kommuner";
 $outputTable = "grid";
 $grid = "grid2";
-$typeName = "VANDLOEBSMIDTE";
-$importTable = "vandloebsmidte";
+$typeName = "VANDLOEBSKANT";
+$importTable = strtolower($typeName);
 $useGfs = true;
 $geomType = "Linestring";
 $size = 2000;
@@ -85,7 +85,7 @@ while ($row = $database->fetchRow($res)) {
     $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
         "-skipfailures " .
         "-append " .
-        "-dim 2 " .
+        "-dim 3 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .

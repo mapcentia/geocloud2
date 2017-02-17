@@ -2,49 +2,32 @@
     <GMLFeatureClass>
         <Name>VANDLOEBSMIDTE</Name>
         <ElementPath>VANDLOEBSMIDTE</ElementPath>
+
+        <!--LINESTRINGZ-->
         <GeometryType>-2147483646</GeometryType>
+
         <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
-        <DatasetSpecificInfo>
-            <FeatureCount>200</FeatureCount>
-            <ExtentXMin>458006.10000</ExtentXMin>
-            <ExtentXMax>879933.98000</ExtentXMax>
-            <ExtentYMin>6061013.69000</ExtentYMin>
-            <ExtentYMax>6258198.73000</ExtentYMax>
-        </DatasetSpecificInfo>
-        <PropertyDefn>
-            <Name>objektMetadata</Name>
-            <ElementPath>objektMetadata</ElementPath>
-            <Type>String</Type>
-            <Width>21</Width>
-        </PropertyDefn>
+
         <PropertyDefn>
             <Name>Ejer_Vandloebsmidte</Name>
             <ElementPath>Ejer_Vandloebsmidte</ElementPath>
             <Type>String</Type>
             <Width>12</Width>
         </PropertyDefn>
-        <PropertyDefn>
-            <Name>FOT_ID</Name>
-            <ElementPath>FOT_ID</ElementPath>
-            <Type>Integer</Type>
-        </PropertyDefn>
-        <PropertyDefn>
-            <Name>Fra_dato_FOT</Name>
-            <ElementPath>Fra_dato_FOT</ElementPath>
-            <Type>String</Type>
-            <Width>23</Width>
-        </PropertyDefn>
+
         <PropertyDefn>
             <Name>Geometri_status</Name>
             <ElementPath>Geometri_status</ElementPath>
             <Type>String</Type>
             <Width>10</Width>
         </PropertyDefn>
+
         <PropertyDefn>
             <Name>Hovedforloeb</Name>
             <ElementPath>Hovedforloeb</ElementPath>
             <Type>Integer</Type>
         </PropertyDefn>
+
         <PropertyDefn>
             <Name>Retning</Name>
             <ElementPath>Retning</ElementPath>
@@ -131,7 +114,13 @@
             <Name>Synlig</Name>
             <ElementPath>Synlig|VANDLOEBSMIDTE_Synlig|indhold</ElementPath>
             <Type>IntegerList</Type>
-         <!-- END -->
         </PropertyDefn>
+        <!-- END -->
+
+        <PropertyDefn>
+            <Name>meta_noejagtighed</Name>
+            <Type>String</Type>
+        </PropertyDefn>
+
     </GMLFeatureClass>
 </GMLFeatureClassList>

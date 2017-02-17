@@ -1,0 +1,42 @@
+<GMLFeatureClassList>
+  <GMLFeatureClass>
+    <Name>VANDLOEBSKANT</Name>
+    <ElementPath>VANDLOEBSKANT</ElementPath>
+
+    <!--LINESTRINGZ-->
+    <GeometryType>-2147483646</GeometryType>
+    <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
+
+    <PropertyDefn>
+      <Name>Geometri_status</Name>
+      <ElementPath>Geometri_status</ElementPath>
+      <Type>String</Type>
+      <Width>7</Width>
+    </PropertyDefn>
+
+    <PropertyDefn>
+      <Name>Objekt_status</Name>
+      <ElementPath>Objekt_status</ElementPath>
+      <Type>String</Type>
+      <Width>12</Width>
+    </PropertyDefn>
+
+    <PropertyDefn>
+      <Name>Synlig_VandBred</Name>
+      <ElementPath>Synlig_VandBred</ElementPath>
+      <Type>Integer</Type>
+    </PropertyDefn>
+
+    <PropertyDefn>
+      <Name>Under_Minimum_Vandkant</Name>
+      <ElementPath>Under_Minimum_Vandkant</ElementPath>
+      <Type>Integer</Type>
+    </PropertyDefn>
+
+    <PropertyDefn>
+      <Name>meta_noejagtighed</Name>
+      <Type>String</Type>
+    </PropertyDefn>
+
+  </GMLFeatureClass>
+</GMLFeatureClassList>

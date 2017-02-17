@@ -1,0 +1,63 @@
+<GMLFeatureClassList>
+    <GMLFeatureClass>
+        <Name>BYGNING</Name>
+        <ElementPath>BYGNING</ElementPath>
+        <!--POLYGONZ-->
+        <GeometryType>-2147483645</GeometryType>
+        <SRSName>urn:ogc:def:crs:EPSG::25832</SRSName>
+
+        <PropertyDefn>
+            <Name>Bygning_ID</Name>
+            <ElementPath>Bygning_ID</ElementPath>
+            <Type>String</Type>
+            <Width>36</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Bygningstype</Name>
+            <ElementPath>Bygningstype</ElementPath>
+            <Type>String</Type>
+            <Width>7</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Geometri_status</Name>
+            <ElementPath>Geometri_status</ElementPath>
+            <Type>String</Type>
+            <Width>10</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Maalested_Bygning</Name>
+            <ElementPath>Maalested_Bygning</ElementPath>
+            <Type>String</Type>
+            <Width>3</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Metode_3D</Name>
+            <ElementPath>Metode_3D</ElementPath>
+            <Type>String</Type>
+            <Width>10</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Objekt_status</Name>
+            <ElementPath>Objekt_status</ElementPath>
+            <Type>String</Type>
+            <Width>12</Width>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>Under_Minimum_Bygning</Name>
+            <ElementPath>Under_Minimum_Bygning</ElementPath>
+            <Type>Integer</Type>
+        </PropertyDefn>
+
+        <PropertyDefn>
+            <Name>meta_noejagtighed</Name>
+            <Type>String</Type>
+        </PropertyDefn>
+
+    </GMLFeatureClass>
+</GMLFeatureClassList>
