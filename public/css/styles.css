@@ -567,6 +567,11 @@ q:after, q:before {
     }
 }
 
+.layertree-btn {
+    cursor: pointer;
+    font-size: 12px;
+}
+
 
 
 

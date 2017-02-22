@@ -672,29 +672,22 @@ $(document).ready(function () {
                                         window.parent.onEditWMSClasses(e.id);
                                     }
                                 };
+
+                                if (currentId !== e.id) {
+                                    if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                        window.parent.Ext.getCmp("layerStylePanel").expand(true);
+                                        load();
+                                    }
+                                } else {
+                                    return;
+                                }
+
                                 try {
                                     stopEdit();
                                 }
                                 catch (error) {
                                 }
-                                if (currentId !== e.id) {
-                                    if (window.parent.Ext.getCmp("layerStylePanel").collapsed) {
-                                        window.parent.Ext.getCmp("layerStylePanel").expand(false);
-                                        load();
-                                        window.parent.Ext.getCmp("layerStylePanel").collapse(false);
-                                    } else {
-                                        load();
-                                    }
-                                }
-                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                    Ext.getCmp('editlayerbutton').setDisabled(false);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
-                                    Ext.getCmp('stylebutton').setDisabled(false);
-                                } else {
-                                    Ext.getCmp('editlayerbutton').setDisabled(true);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
-                                    Ext.getCmp('stylebutton').setDisabled(true);
-                                }
+
                                 if (typeof filter.win !== "undefined") {
                                     if (typeof  filter.win.hide !== "undefined") {
                                         filter.win.hide();
@@ -702,8 +695,88 @@ $(document).ready(function () {
                                     filter.win = false;
                                 }
                                 $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='fa fa-cog' style='cursor:pointer' id='style-" + id + "'></i> <i class='fa fa-arrows-alt' style='cursor:pointer' id='ext-" + id + "'></i>");
+                                $("#" + id).html(
+                                    "<i class='fa fa-bolt layertree-btn' ext:qtip='" + __("Quick draw") + "' ext id='quick-draw-" + id + "'></i>  " +
+                                    "<i class='fa fa-pencil layertree-btn' ext:qtip='" + __("Edit layer") + "' ext id='edit-" + id + "'></i>  " +
+                                    "<i class='fa fa-eye layertree-btn' ext:qtip='" + __("Class wizard") + "' ext id='wizard-" + id + "'></i>  " +
+                                    "<i class='fa fa-cog layertree-btn' ext:qtip='" + __("Show advanced options") + "' ext id='style-" + id + "'></i>  " +
+                                    "<i class='fa fa-arrows-alt layertree-btn' ext:qtip='" + __("Zoom to layer extent") + "' ext id='ext-" + id + "'></i>");
                                 currentId = e.id;
+                                $("#edit-" + id).on("click", function () {
+                                    try {
+                                        stopEdit();
+                                    }
+                                    catch (e) {
+                                    }
+                                    var node = tree.getSelectionModel().getSelectedNode();
+                                    var id = node.id.split(".");
+                                    var geomField = node.attributes.geomField;
+                                    var type = node.attributes.geomType;
+                                    attributeForm.init(id[1], geomField);
+                                    if (type === "GEOMETRY" || type === "RASTER") {
+                                        Ext.MessageBox.show({
+                                            title: 'No geometry type on layer',
+                                            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                            buttons: Ext.MessageBox.OK,
+                                            width: 400,
+                                            height: 300,
+                                            icon: Ext.MessageBox.ERROR
+                                        });
+                                    }
+                                    else {
+                                        var poll = function () {
+                                            if (typeof filter.win === "object") {
+                                                filter.win.show();
+                                            }
+                                            else {
+                                                setTimeout(poll, 10);
+                                            }
+                                        };
+                                        poll();
+                                    }
+                                });
+
+                                $("#quick-draw-" + id).on("click", function (e) {
+                                    e.preventDefault()
+                                    var node = tree.getSelectionModel().getSelectedNode();
+                                    var id = node.id.split(".");
+                                    var geomField = node.attributes.geomField;
+                                    var type = node.attributes.geomType;
+                                    if (type === "GEOMETRY" || type === "RASTER") {
+                                        Ext.MessageBox.show({
+                                            title: 'No geometry type on layer',
+                                            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                            buttons: Ext.MessageBox.OK,
+                                            width: 400,
+                                            height: 300,
+                                            icon: Ext.MessageBox.ERROR
+                                        });
+                                        return false;
+                                    }
+                                    else {
+                                        var filter = new OpenLayers.Filter.Comparison({
+                                            type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                            property: "\"dummy\"",
+                                            value: "-1"
+                                        });
+
+                                        attributeForm.init(id[1], geomField);
+                                        startWfsEdition(id[1], geomField, filter);
+                                        attributeForm.form.disable();
+                                        Ext.getCmp("edit-tbar");
+                                        wfsTools[0].control.activate();
+                                        Ext.getCmp('editcreatebutton').toggle(true);
+                                        Ext.iterate(qstore, function (v) {
+                                            v.reset();
+                                        });
+                                        queryWin.hide();
+                                    }
+                                });
+
+                                $("#wizard-" + id).on("click", function () {
+                                    window.parent.styleWizardWin(currentId);
+                                });
+
                                 $("#style-" + id).on("click", function () {
                                     window.parent.Ext.getCmp("layerStylePanel").expand(true);
                                 });
@@ -797,59 +870,15 @@ $(document).ready(function () {
                                 collapsible: true,
                                 split: true,
                                 width: 350,
-                                tbar: [{
-                                    text: '<i class="fa fa-eye"></i> ' + __('Class wizard'),
-                                    id: 'stylebutton',
-                                    disabled: true,
-                                    handler: function () {
-                                        var node = tree.getSelectionModel().getSelectedNode();
-                                        window.parent.styleWizardWin(node.id);
-                                    }
-                                }, '-', {
-                                    text: '<i class="fa fa-cloud-upload"></i> ' + __('New layer'),
-                                    disabled: (subUser === schema || subUser === false) ? false : true,
-                                    handler: function () {
-                                        window.parent.onAdd();
-                                    }
-                                }, '-',
+                                tbar: [
                                     {
-                                        text: "<i class='fa fa-edit'></i> " + __("Start edit"),
-                                        id: "editlayerbutton",
-                                        disabled: true,
-                                        handler: function (thisBtn, event) {
-                                            try {
-                                                stopEdit();
-                                            }
-                                            catch (e) {
-                                            }
-                                            var node = tree.getSelectionModel().getSelectedNode();
-                                            var id = node.id.split(".");
-                                            var geomField = node.attributes.geomField;
-                                            var type = node.attributes.geomType;
-                                            attributeForm.init(id[1], geomField);
-                                            if (type === "GEOMETRY" || type === "RASTER") {
-                                                Ext.MessageBox.show({
-                                                    title: 'No geometry type on layer',
-                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                    buttons: Ext.MessageBox.OK,
-                                                    width: 400,
-                                                    height: 300,
-                                                    icon: Ext.MessageBox.ERROR
-                                                });
-                                            }
-                                            else {
-                                                var poll = function () {
-                                                    if (typeof filter.win === "object") {
-                                                        filter.win.show();
-                                                    }
-                                                    else {
-                                                        setTimeout(poll, 10);
-                                                    }
-                                                };
-                                                poll();
-                                            }
+                                        text: '<i class="fa fa-cloud-upload"></i> ' + __('New layer'),
+                                        disabled: (subUser === schema || subUser === false) ? false : true,
+                                        handler: function () {
+                                            window.parent.onAdd();
                                         }
-                                    }, '-', {
+                                    }, '-',
+                                    {
                                         text: "<i class='fa fa-refresh'></i> " + __("Reload"),
                                         handler: function () {
                                             stopEdit();
@@ -961,46 +990,6 @@ $(document).ready(function () {
             disabled: true,
             id: "editstopbutton",
             handler: stopEdit
-        },
-        '-',
-        {
-            text: "<i class='fa fa-pencil-square-o'></i> " + __("Quick draw"),
-            id: "quickdrawbutton",
-            disabled: true,
-            handler: function () {
-                var node = tree.getSelectionModel().getSelectedNode();
-                var id = node.id.split(".");
-                var geomField = node.attributes.geomField;
-                var type = node.attributes.geomType;
-                if (type === "GEOMETRY" || type === "RASTER") {
-                    Ext.MessageBox.show({
-                        title: 'No geometry type on layer',
-                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                        buttons: Ext.MessageBox.OK,
-                        width: 400,
-                        height: 300,
-                        icon: Ext.MessageBox.ERROR
-                    });
-                    return false;
-                }
-                else {
-                    var filter = new OpenLayers.Filter.Comparison({
-                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                        property: "\"dummy\"",
-                        value: "-1"
-                    });
-
-                    attributeForm.init(id[1], geomField);
-                    startWfsEdition(id[1], geomField, filter);
-                    attributeForm.form.disable();
-                    wfsTools[0].control.activate();
-                    Ext.getCmp('editcreatebutton').toggle(true);
-                    Ext.iterate(qstore, function (v) {
-                        v.reset();
-                    });
-                    queryWin.hide();
-                }
-            }
         }
     ];
     mapTools = [{
