@@ -289,8 +289,10 @@ class Sql extends \app\inc\Controller
                 }
                 $csvAllToStr = Input::get('allstr') ?: null;
 
+                $alias = Input::get('alias') ?: null;
+
                 $api = new \app\models\Sql($srs);
-                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr);
+                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
                 $this->addAttr($response);
 
                 echo serialize($this->response);

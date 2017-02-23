@@ -29,9 +29,11 @@ class Sql extends \app\inc\Model
      * @param null $clientEncoding
      * @param string $format
      * @param string $geoformat
+     * @param bool $csvAllToStr
+     * @param null $aliasesFrom
      * @return mixed
      */
-    public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt", $csvAllToStr = false)
+    public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt", $csvAllToStr = false, $aliasesFrom = null)
     {
         if ($format == "excel") {
             $limit = 10000;
@@ -147,6 +149,12 @@ class Sql extends \app\inc\Model
             $separator = ";";
             $first = true;
             $lines = array();
+            $fieldConf = null;
+
+            if ($aliasesFrom) {
+                $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
+            }
+
             try {
                 while ($row = $this->fetchRow($result, "assoc")) {
                     $arr = array();
@@ -161,10 +169,10 @@ class Sql extends \app\inc\Model
                             $arr = $this->array_push_assoc($arr, $key, $value);
                         }
                     }
-                    // Create lines with field names
+                    // Create first lines with field names
                     if ($first) {
                         foreach ($arr as $key => $value) {
-                            $fields[] = $key;
+                            $fields[] = ($fieldConf && isset($fieldConf->$key->alias) && $fieldConf->$key->alias != "") ? "\"{$fieldConf->$key->alias}\"" : $key;
                         }
                         $lines[] = implode($separator, $fields);
                         $first = false;
@@ -177,7 +185,7 @@ class Sql extends \app\inc\Model
 
                         // Any text is quoted
                         if ($csvAllToStr) {
-                            $fields[] =  "\"{$value}\"";
+                            $fields[] = "\"{$value}\"";
 
                         } else {
                             $fields[] = !is_numeric($value) ? "\"{$value}\"" : $value;
@@ -253,3 +261,4 @@ class Sql extends \app\inc\Model
         return $array;
     }
 }
+

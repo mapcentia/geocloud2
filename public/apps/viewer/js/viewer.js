@@ -1082,6 +1082,7 @@ Viewer = function () {
             });
         }, 200);
         cloud.on("mousemove", mouseOverDisplay);
+        
         // Search begin
         var searchLayers = [], searchStyle = {
             color: '#ff0000',

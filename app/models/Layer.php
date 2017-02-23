@@ -851,7 +851,9 @@ class Layer extends \app\models\Table
 
         $ownerOrg = json_decode($row["meta"], true)["ckan_org_id"] ?: $ckanOrgIdDefault;
 
-        $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $row["f_table_schema"] . "." . $row["f_table_name"];
+        $qualifiedName = $row["f_table_schema"] . "." . $row["f_table_name"];
+
+        $widgetUrl = $gc2Host . "/apps/widgets/gc2map/" . Database::getDb() . "/" . $row["f_table_schema"] . "/" . App::$param["ckan"]["widgetState"] . "/" . $qualifiedName;
         $response = array();
         if ($datasetExists) {
             $response["id"] = $id;
@@ -875,7 +877,7 @@ class Layer extends \app\models\Table
                 "name" => "GeoJSON",
                 "description" => App::$param["ckan"]["descForGeoJson"],
                 "format" => "geojson",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326"
             ),
             array(
                 "id" => $id . "-wms",
@@ -903,21 +905,21 @@ class Layer extends \app\models\Table
                 "name" => "XYZ",
                 "description" => "Google XYZ service",
                 "format" => "xyz",
-                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $row["f_table_schema"] . "." . $row["f_table_name"] . "@g"
+                "url" => $gc2Host . "/mapcache/" . Database::getDb() . "/gmaps/" . $qualifiedName . "@g"
             ),
             array(
                 "id" => $id . "-csv",
                 "name" => "CSV",
                 "description" => App::$param["ckan"]["descForCSV"],
                 "format" => "csv",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=csv&allstr=1"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=csv&allstr=1&alias=" . $qualifiedName
             ),
             array(
                 "id" => $id . "-excel",
                 "name" => "XLSX",
                 "description" => App::$param["ckan"]["descForExcel"],
                 "format" => "xlsx",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $row["f_table_schema"] . "." . $row["f_table_name"] . " LIMIT 1000&srs=4326&format=excel"
+                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=excel&alias=" . $qualifiedName
             ),
         );
 
