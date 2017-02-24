@@ -10,7 +10,9 @@ gc2map.createSearch = function (me, komKode) {
             me.map.addLayer(resultLayer);
             resultLayer.addLayer(this.layer);
             me.zoomToExtentOfgeoJsonStore(this);
-
+            if (me.map.getZoom() > 18) {
+                me.map.setZoom(18);
+            }
         }
     });
     $("#custom-search-form").show();

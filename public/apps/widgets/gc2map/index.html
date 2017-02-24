@@ -11,6 +11,9 @@
     <script type="text/javascript" src="/js/div/html5shiv.js?262bb88879efaaf7"></script>
     <![endif]-->
     <script src="/apps/widgets/gc2map/js/gc2map.js?54d1be2e4cdd4ba0"></script>
+    <script src="/apps/widgets/gc2table/js/gc2table.js"></script>
+    <script src="/apps/widgets/gc2map/js/searchModules/danish.js"></script>
+
 </head>
 <body style="padding: 0; margin: 0">
 <div style="position: absolute; width: 100%; height: 100%;"></div>
@@ -37,7 +40,12 @@
             setBaseLayer: hashArr[0],
             staticmap: false,
             schema: path[5],
-            infoText: (mapvars['infotext']) ? decodeURIComponent(mapvars['infotext']) : null
+            infoText: (mapvars['infotext']) ? decodeURIComponent(mapvars['infotext']) : null,
+            callBack: function (m, w) {
+                if (mapvars.komkode) {
+                    gc2map.createSearch(m, mapvars.komkode);
+                }
+            }
         });
     }());
 </script>

@@ -521,7 +521,7 @@ MapCentia = function (globalId) {
                                 sql = sql + " AND gc2_version_end_date IS NULL";
                             }
                         }
-                        sql = sql + "LIMIT 5";
+                        sql = sql + " LIMIT 5";
                         qstore[index].sql = sql;
                         qstore[index].load();
                     });
