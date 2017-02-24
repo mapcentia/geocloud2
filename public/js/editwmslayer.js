@@ -70,6 +70,9 @@ wmsLayer.init = function (record) {
             },
             {
                 name: 'offsite'
+            },
+            {
+                name: 'bands'
             }
 
         ],
@@ -133,7 +136,8 @@ wmsLayer.init = function (record) {
             minscaledenom: __('Min scale denominator') + __('Maximum scale at which this LAYER is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
             symbolscaledenom: 'Symbol scale denominator' + __("The scale at which symbols and/or text appear full size. This allows for dynamic scaling of objects based on the scale of the map. If not set then this layer will always appear at the same size. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             geotype: 'Geom type',
-            offsite: 'Offsite'
+            offsite: 'Offsite' + __("This parameter tells MapServer what pixel values to render as background (or ignore). You can get the pixel values using image processing or image manipulation programs (i.e. Imagine, Photoshop, Gimp).", true),
+            bands: 'Bands' + __("This directive allows a specific band or bands to be selected from a raster file. If one band is selected, it is treated as greyscale. If 3 are selected, they are treated as red, green and blue. If 4 are selected they are treated as red, green, blue and alpha (opacity). Example: 4,2,1", true)
         },
 
         customEditors: {

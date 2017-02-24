@@ -372,6 +372,11 @@ class Mapfile extends \app\inc\Controller
                     #PROCESSING "LOAD_WHOLE_IMAGE=YES"
                     PROCESSING "RESAMPLE=AVERAGE"
                     <?php
+                    if ($layerArr['data'][0]['bands']) {
+                        echo "PROCESSING \"BANDS={$layerArr['data'][0]['bands']}\"\n";
+                    }
+                    ?>
+                    <?php
                 } else {
                     if ($type != "RASTER") {
                         if (!$row['data']) {
