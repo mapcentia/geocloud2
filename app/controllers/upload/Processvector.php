@@ -165,7 +165,7 @@ class Processvector extends \app\inc\Controller
 
             // If csv, then set Open Options
             // =============================
-            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,x,X -oo AUTODETECT_TYPE=YES " : "") .
+            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES " : "") .
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
