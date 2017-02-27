@@ -281,7 +281,7 @@ class Table extends Model
                 // Is indexed?
                 if (1 == 1) {
                     $type = $row['f_table_name'];
-                    if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                    if (\mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
                     $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
@@ -663,7 +663,7 @@ class Table extends Model
                 if ($safeColumn == "state") {
                     $safeColumn = "_state";
                 }
-                if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+                if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
                     $safeColumn = "_" . $safeColumn;
                 }
                 if (in_array($value->id, $this->sysCols)) {
@@ -753,7 +753,7 @@ class Table extends Model
         $response = [];
         $safeColumn = $this->toAscii($data['column'], array(), "_");
         $sql = "";
-        if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+        if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
         }
         if ($safeColumn == "state") {
@@ -1020,7 +1020,7 @@ class Table extends Model
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->toAscii($table, array(), "_");
-        if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
+        if (is_numeric(\mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
         $sql = "BEGIN;";

@@ -15,7 +15,7 @@ function parseFilter($filter, $table, $operator = "=")
     $serializer_options = array(
         'indent' => '  ',
     );
-    $Serializer = &new XML_Serializer($serializer_options);
+    $Serializer = new XML_Serializer($serializer_options);
     if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) OR isset($filter['Or']) OR isset($filter['Not']))) {
         $filter = array(0 => $filter);
     }

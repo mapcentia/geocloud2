@@ -12,15 +12,15 @@ use app\conf\Connection;
  */
 class Model
 {
-    var $postgishost;
-    var $postgisuser;
-    var $postgisdb;
-    var $postgispw;
-    var $connectString;
-    var $PDOerror;
-    var $db;
-    var $postgisschema;
-    var $connectionFailed;
+    public $postgishost;
+    public $postgisuser;
+    public $postgisdb;
+    public $postgispw;
+    public $connectString;
+    public $PDOerror;
+    public $db;
+    public $postgisschema;
+    public $connectionFailed;
 
     function __construct()
     {
@@ -361,7 +361,7 @@ class Model
         return ($str);
     }
 
-    function getGeometryColumns($table, $field)
+    function getGeometryColumns(string $table, string $field)
     {
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];

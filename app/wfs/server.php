@@ -4,8 +4,6 @@ use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
 
-//die($_GET["start"]);
-
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
@@ -17,13 +15,10 @@ include "libs/PEAR/Cache_Lite/Lite.php";
 include 'convertgeom.php';
 include 'explodefilter.php';
 
-if (!$gmlNameSpace) {
-    $gmlNameSpace = Connection::$param["postgisdb"];
-}
+$gmlNameSpace = Connection::$param["postgisdb"];
 
-if (!$gmlNameSpaceUri) {
-    $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
-}
+$gmlNameSpaceUri = "http://mapcentia.com/" . $gmlNameSpace;
+
 
 $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
@@ -84,10 +79,11 @@ $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 // Post method is used
 // ===================
 
+$HTTP_RAW_POST_DATA = file_get_contents("php://input");
+
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
-    //makeExceptionReport($HTTP_RAW_POST_DATA);
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
     $request = $unserializer->getRootName();
@@ -248,7 +244,7 @@ if (!(empty($bbox[0]))) {
 }
 //get the request'
 
-
+//die ($HTTP_FORM_VARS["REQUEST"]);
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
     case "GETCAPABILITIES":
         getCapabilities($postgisObject);

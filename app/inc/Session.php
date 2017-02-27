@@ -11,7 +11,7 @@ class Session
         ini_set("session.gc_maxlifetime", "86400");
         ini_set("session.gc_probability", 1);
         ini_set("session.gc_divisor", 1);
-        if (App::$param['domain']) {
+        if (isset(App::$param['domain'])) {
             session_name("PHPSESSID");
             session_set_cookie_params(0, '/', "." . App::$param['domain']);
         }

@@ -25,6 +25,7 @@ class Mapcachefile extends \app\inc\Controller
      */
     public function get_index()
     {
+        $layerArr = [];
         $cache = App::$param["mapCache"]["type"] ?: "disk";
         $postgisObject = new Model();
         ob_start(); ?>

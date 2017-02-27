@@ -12,6 +12,8 @@ Header add X-UA-Compatible "IE=edge"
 </ifmodule>
 <IfModule mod_rewrite.c>
 RewriteEngine On
+
+
 #RewriteRule index\.php - [L]
 
 #SetEnv TINYOWS_CONFIG_FILE "/mnt/hgfs/Documents/www/geocloud2/app/wms/mapfiles/mydb_goddag.xml"
@@ -67,6 +69,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/fpm-status
 RewriteCond %{REQUEST_URI} !^/fpm-ping
-RewriteRule ^(.*)$ index.php/$1 [L]
+RewriteRule ^(.*)$ index.php [L]
+
 
 </IfModule>

@@ -561,13 +561,13 @@
 </div>
 <div style="position: absolute; right: 5px; top: 3px; z-index: 2">
     <div>
-        <?php if (!$_SESSION['auth'] || !$_SESSION['screen_name']) { ?>
+        <?php if (!isset($_SESSION['auth']) || !isset($_SESSION['screen_name'])) { ?>
             <a href="/user/login">Sign In</a>
         <?php
         } else {
             ?>
             <a href="/user/login/p"><?php echo $_SESSION['screen_name'] ?></a>
-            <?php if ($_SESSION['subuser']) echo " ({$_SESSION['subuser']})" ?>
+            <?php if (isset($_SESSION['subuser']) && ($_SESSION['subuser'])) echo " ({$_SESSION['subuser']})" ?>
             <?php if (!$_SESSION['subuser']) { ?>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/user/new">New Sub-User</a>
             <?php } ?>

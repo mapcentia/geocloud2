@@ -38,7 +38,9 @@ function UserIDCheck($sValue, &$oStatus)
 $sUserID = VDFormat($_POST['UserID'], true);
 $sPassword = VDFormat($_POST['Password'], true);
 $sEmail = VDFormat($_POST['Email'], true);
-$sZone = VDFormat($_POST['Zone'], true);
+if (isset($_POST['Zone'])) {
+    $sZone = VDFormat($_POST['Zone'], true);
+}
 
 $sUserID = Model::toAscii($sUserID, NULL, "_");
 $sPassword = Setting::encryptPw($sPassword);

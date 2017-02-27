@@ -55,7 +55,7 @@ class Sql_to_es extends Model
      * @param $db
      * @return array
      */
-    public function sql($q, $index, $type, $id, $db)
+    public function runSql($q, $index, $type, $id, $db)
     {
         $response = [];
         // We create a unique index name

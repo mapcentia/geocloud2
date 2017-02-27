@@ -121,7 +121,7 @@ class Elasticsearch extends \app\inc\Controller
         }
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        return $api->sql(rawurldecode(Input::get('q')), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
+        return $api->runSql(rawurldecode(Input::get('q')), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
     }
 
     /**
@@ -358,7 +358,7 @@ class Elasticsearch extends \app\inc\Controller
             $sql = "SELECT * FROM {$fullTable}";
             $api = new \app\models\Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
-            $res = $api->sql($sql, $index, $type, $priKey, $db);
+            $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
                 return $res;
             }
@@ -415,7 +415,7 @@ class Elasticsearch extends \app\inc\Controller
         $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"='{$id}'";
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        $res = $api->sql($sql, $index, $type, $priKey, $db);
+        $res = $api->runSql($sql, $index, $type, $priKey, $db);
         if (!$res["success"]) {
             return $res;
         }
