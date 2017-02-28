@@ -1,7 +1,7 @@
 gc2map.createSearch = function (me, komKode) {
     var type1, type2, gids = [], searchString;
     var placeStore = new geocloud.geoJsonStore({
-        host: "http://eu1.mapcentia.com",
+        host: "//eu1.mapcentia.com",
         db: "dk",
         sql: null,
         pointToLayer: null,
@@ -36,7 +36,7 @@ gc2map.createSearch = function (me, komKode) {
 
             (function ca() {
                 $.ajax({
-                    url: 'http://eu1.mapcentia.com/api/v1/elasticsearch/search/dk/aws4/' + type1,
+                    url: '//eu1.mapcentia.com/api/v1/elasticsearch/search/dk/aws4/' + type1,
                     data: '&q={"query":{"filtered":{"query":{"query_string":{"default_field":"string","query":"' + encodeURIComponent(query.toLowerCase().replace(",", "")) + '","default_operator":"AND"}},"filter":{"term":{"kommunekode":"0' + komKode + '"}}}}}',
                     contentType: "application/json; charset=utf-8",
                     scriptCharset: "utf-8",
@@ -71,7 +71,7 @@ gc2map.createSearch = function (me, komKode) {
             type2 = (query.match(/\d+/g) != null) ? "jordstykke" : "ejerlav";
             (function ca() {
                 $.ajax({
-                    url: 'http://eu1.mapcentia.com/api/v1/elasticsearch/search/dk/matrikel/' + type2,
+                    url: '//eu1.mapcentia.com/api/v1/elasticsearch/search/dk/matrikel/' + type2,
                     data: '&q={"sort":[{"sort_string":"asc"}],"query":{"filtered":{"query":{"query_string":{"default_field":"string","query":"' + encodeURIComponent(query.toLowerCase()) + '","default_operator":"AND"}},"filter":{"term":{"komkode":"' + komKode + '"}}}}}',
                     contentType: "application/json; charset=utf-8",
                     scriptCharset: "utf-8",
