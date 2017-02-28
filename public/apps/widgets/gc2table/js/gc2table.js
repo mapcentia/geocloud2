@@ -28,7 +28,7 @@ var gc2table = (function () {
     if (typeof $ === "undefined") {
         js = document.createElement("script");
         js.type = "text/javascript";
-        js.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+        js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
         document.getElementsByTagName("head")[0].appendChild(js);
     }
     (function pollForjQuery() {
@@ -64,7 +64,7 @@ var gc2table = (function () {
                         $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
                     }
                     if (typeof Backbone === "undefined") {
-                        $.getScript("http://backbonejs.org/backbone.js");
+                        $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
                     }
                     (function pollForDependants() {
                         if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
