@@ -108,6 +108,7 @@ var gc2table = (function () {
                 autoPan: false,
                 locale: 'en-US',
                 callCustomOnload: true,
+                popupHtml: null,
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -139,7 +140,8 @@ var gc2table = (function () {
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
             callCustomOnload = defaults.callCustomOnload,
-            locale = defaults.locale;
+            locale = defaults.locale,
+            popupHtml = defaults.popupHtml;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -166,7 +168,7 @@ var gc2table = (function () {
                             }
                         });
                         str = str + "</table>";
-                        m.map._layers[id].bindPopup(str, {
+                        m.map._layers[id].bindPopup(popupHtml || str, {
                             className: "custom-popup",
                             autoPan: autoPan,
                             closeButton: true
