@@ -306,6 +306,11 @@ MapCentia = function (globalId) {
             $(this).attr("href", permaLink(conf.vidiUrl));
         });
 
+        // Hide location button if not HTTPS
+        if (location.protocol !== "https:") {
+            $("#locate-btn-map").parent().hide();
+        }
+
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
 
