@@ -241,9 +241,38 @@ class Elasticsearch extends \app\inc\Controller
      */
     public function post_river()
     {
+
+        // Check if Es is online
+        // =====================
+        $url = $this->host . ":9200";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode != "200") {
+            $response['success'] = false;
+            $response['message'] = "Elasticsearch is not online";
+            $response['code'] = $httpcode;
+            return $response;
+        }
+
+        // Auth
+        // ====
+
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
             return $response;
         }
+
+        // Set vars
+        // ========
+
         $triggerInstalled = false;
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
@@ -252,7 +281,6 @@ class Elasticsearch extends \app\inc\Controller
         $db = Input::getPath()->part(5);
         $fullTable = $schema . "." . $table;
         $fullIndex = $db . "_" . $schema . "_" . $table;
-
         $insert = Input::get('insert') ?: "t";
         $triggerSchema = Input::get('ts') ?: $schema;
         $triggerTable = Input::get('tt') ?: $table;
@@ -262,7 +290,11 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
 
+        $es = new \app\models\Elasticsearch();
         $model = new \app\inc\Model();
+
+        // Check which relation type we are dealing with
+        // =============================================
 
         $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
         if (!$relationCheck["success"]) {
@@ -277,19 +309,18 @@ class Elasticsearch extends \app\inc\Controller
                 $installTrigger = true;
             }
         }
-
         $relationType = $model->isTableOrView($fullTable);
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
-
         $priKey = Input::get('tp') ?: $priKey;
-
         $model->close();// Close the PDO connection
+
+        // Create or replace notify function in PG
+        // =======================================
 
         $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
         // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
-
         $result = $model->execQuery($pl, "PG");
         if (!$result) {
             $response['success'] = false;
@@ -297,6 +328,8 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Drop the trigger
+        // ================
+
         $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
         $result = $model->execQuery($pl, "PG");
         if (!$result) {
@@ -306,9 +339,9 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
 
-        $es = new \app\models\Elasticsearch();
-
         // Delete the index if exist
+        // =========================
+
         $url = $this->host . ":9200/{$fullIndex}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
@@ -333,6 +366,8 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Create the index with settings
+        // ==============================
+
         $res = $es->createIndex($fullIndex, $this->settings);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
@@ -342,7 +377,9 @@ class Elasticsearch extends \app\inc\Controller
             return $response;
         }
 
-        // Mappings from the table
+        // Create mapping
+        // ==============
+
         $map = $es->createMapFromTable($fullTable);
         $res = $es->map($fullIndex, $type, json_encode($map));
         $obj = json_decode($res["json"], true);
@@ -354,6 +391,8 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Bulk insert
+        // ===========
+
         if ($insert == "t") {
             $sql = "SELECT * FROM {$fullTable}";
             $api = new \app\models\Sql_to_es("4326");
@@ -368,6 +407,8 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         // Create the trigger
+        // ==================
+
         $triggerInstalledIn = null;
         if ($relationType["data"] == "TABLE" || ($installTrigger)) {
             $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
