@@ -308,7 +308,7 @@ MapCentia = function (globalId) {
 
         // Hide location button if not HTTPS
         if (location.protocol !== "https:") {
-            $("#locate-btn-map").parent().hide();
+            $("#locate-btn-" + id).parent().hide();
         }
 
         // Start by rendering legend, so "empty" placeholder is displayed.
