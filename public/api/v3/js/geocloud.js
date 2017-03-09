@@ -1541,7 +1541,7 @@ geocloud = (function () {
             }());
         };
 
-        this.addBaseLayer = function (l, db, config) {
+        this.addBaseLayer = function (l, db, config, host) {
             var o;
             switch (l) {
                 case "osm":
@@ -1623,6 +1623,7 @@ geocloud = (function () {
                     o = this.addTileLayers($.extend({
                         layers: [l],
                         db: db,
+			host: host,
                         isBaseLayer: true,
                         visibility: false,
                         wrapDateLine: false,
