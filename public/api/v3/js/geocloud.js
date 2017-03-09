@@ -1513,7 +1513,7 @@ geocloud = (function () {
             }());
         };
 
-        this.addBaseLayer = function (l, db, host) {
+        this.addBaseLayer = function (l, db, config, host) {
             var o;
             switch (l) {
                 case "osm":
