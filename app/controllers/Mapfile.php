@@ -37,6 +37,7 @@ class Mapfile extends \app\inc\Controller
         IMAGECOLOR 255 2 255
         UNITS METERS
         INTERLACE OFF
+
         OUTPUTFORMAT
         NAME "png"
         DRIVER AGG/PNG
@@ -46,6 +47,16 @@ class Mapfile extends \app\inc\Controller
         TRANSPARENT ON
         FORMATOPTION "GAMMA=0.75"
         END
+
+        OUTPUTFORMAT
+        NAME "utfgrid"
+        DRIVER UTFGRID
+        MIMETYPE "application/json"
+        EXTENSION "json"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
+        END
+
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         DEBUG 5
         WEB
