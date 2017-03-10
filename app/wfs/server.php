@@ -88,8 +88,14 @@ if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
     //makeExceptionReport($HTTP_RAW_POST_DATA);
+
+    // HACK. MapInfo 15 sends invalid XML with newline \n and double xmlns:wfs namespace. So we strip those
+    $HTTP_RAW_POST_DATA = str_replace("\\n"," ", $HTTP_RAW_POST_DATA);
+    $HTTP_RAW_POST_DATA = str_replace("xmlns:wfs=\"http://www.opengis.net/wfs\""," ", $HTTP_RAW_POST_DATA);
+
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
+
     $request = $unserializer->getRootName();
     switch ($request) {
         case "GetFeature":
