@@ -314,6 +314,13 @@ MapCentia = function (globalId) {
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
 
+        // If gc2SearchKomkode is set, when try to create search
+        if (typeof window.gc2SearchKomkode === "string") {
+            try {
+                gc2map.createSearch(cloud, window.gc2SearchKomkode);
+            } catch (e) {}
+        }
+
         // Media queries
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
         $("#legend-popover-" + id).on('click', function () {

@@ -32,6 +32,7 @@
     function operateFormatter(value, row, index) {
         return '<a target="_blank" href="' + value + '">Se ramme</a>';
     }
+    window.gc2SearchKomkode = "190";
 
     // Lav en widget på normal vis
     gc2map.init({
@@ -48,10 +49,10 @@
         callBack: function (m, w) {
 
             // Aktiver søgning med kommune nr.
-            gc2map.createSearch(m, "630");
+           // gc2map.createSearch(m, "630");
 
             // Lav et SQL store på normal vis
-            var store = new geocloud.sqlStore({
+/*            var store = new geocloud.sqlStore({
                 db: "jammerbugt",
                 sql: "SELECT anvgen,plannr,plannavn,html,textvalue as anv,(case when status = 'vedtaget' then 'Vedtaget' else 'Forslag' END) as status,the_geom FROM kommuneplan.kpplandk2_view,ANVGEN_PLANDK2 WHERE  (status = 'forslag' OR status = 'vedtaget') AND langid=1 AND ANVGEN_PLANDK2.fieldkey=kommuneplan.kpplandk2_view.anvgen AND distrikt = 'Tranum' AND ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) order by plannr",
 
@@ -100,7 +101,7 @@
                     filterControl: "input",
                     sortable: true
                 },
-                /*		{
+                /!*		{
                  "header": "Plannavn",
                  "dataIndex": "plannavn",
                  "type": "varchar",
@@ -108,19 +109,19 @@
                  filterControl: "input",
                  sortable: true
 
-                 },*/
+                 },*!/
                 {
                     "header": "Anvendelse",
                     "dataIndex": "anv",
                     "showInPopup": false,
                     filterControl: "select"
-                }, /*
+                }, /!*
                  {
                  "header": "Status",
                  "dataIndex": "status",
                  "showInPopup": false,
                  filterControl: "select"
-                 }, */
+                 }, *!/
                 {
                     "header": "Link",
                     "dataIndex": "html",
@@ -128,7 +129,7 @@
                     "showInPopup": true,
                     //"formatter": "operateFormatter"
                 }
-            ];
+            ];*/
 
             // Start tabel widget
 /*
