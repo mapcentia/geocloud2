@@ -129,7 +129,8 @@ module.exports = function (grunt) {
                         'public/apps/widgets/gc2map/js/bootstrap-alert.js',
                         'public/api/v3/js/geocloud.js',
                         'public/apps/widgets/gc2map/js/main.js',
-                        'public/apps/widgets/gc2map/js/templates.js'
+                        'public/apps/widgets/gc2map/js/templates.js',
+                        'public/apps/widgets/gc2map/config/config.js'
                     ]
                 }
             },
