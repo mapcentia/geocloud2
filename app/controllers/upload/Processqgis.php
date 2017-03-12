@@ -6,6 +6,7 @@ use \app\conf\Connection;
 use \app\inc\Input;
 use \app\inc\Model;
 use \app\models\Table;
+use \app\controllers\Tilecache;
 
 /**
  * Class Processqgis
@@ -28,9 +29,13 @@ class Processqgis extends \app\inc\Controller
     {
         $file = Input::get("file");
         $qgs = @simplexml_load_file(App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $file);
+        $arrT = [];
+        $arrG = [];
         $wmsNames = [];
         $wmsSrids = [];
         $layerNames = [];
+        $createWms = Input::get("createWms") == "true" ? true : false;
+        $createComp = Input::get("createComp") == "true" ? true : false;
 
         if (!$qgs) {
             return array("success" => false, "code" => 400, "message" => "Could not read qgs file");
@@ -103,14 +108,16 @@ class Processqgis extends \app\inc\Controller
                     $layerNames[] = $maplayer->layername;
 
                     break;
-                
+
                 case "wms":
-                    $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii((string)$maplayer->layername, array(), "_");;
-                    $srid = (string)$maplayer->srs->spatialrefsys->srid;
-                    $wmsSrids[] = $srid;
-                    $wmsNames[] = $layerName;
-                    $maplayer->layername = $layerName;
-                    $layerNames[] = $maplayer->layername;
+                    if ($createWms) {
+                        $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii((string)$maplayer->layername, array(), "_");;
+                        $srid = (string)$maplayer->srs->spatialrefsys->srid;
+                        $wmsSrids[] = $srid;
+                        $wmsNames[] = $layerName;
+                        $maplayer->layername = $layerName;
+                        $layerNames[] = $maplayer->layername;
+                    }
                     break;
             }
         }
@@ -123,9 +130,10 @@ class Processqgis extends \app\inc\Controller
         // =================================
 
         for ($i = 0; $i < sizeof($arrT); $i++) {
-            $layerKey = $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "." . $arrG[$i][1][0];
+            $tableName = $arrT[$i][1][0] . "." . $arrT[$i][1][1];
+            $layerKey = $tableName . "." . $arrG[$i][1][0];
             $layers[] = $layerKey;
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $arrT[$i][1][0] . "." . $arrT[$i][1][1] . "&transparent=true&";
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $tableName . "&transparent=true&";
             $urls[] = $url;
             $data = new \stdClass;
             $data->_key_ = $layerKey;
@@ -133,7 +141,7 @@ class Processqgis extends \app\inc\Controller
             $data->wmsclientepsgs = $this->sridStr;
             $data = array("data" => $data);
             $res = $this->table->updateRecord($data, "_key_");
-            \app\controllers\Tilecache::bust($arrT[$i][1][0] . "." . $arrT[$i][1][1]);
+            Tilecache::bust($tableName);
         }
 
         // Create new layers from QGIS WMS layer
@@ -151,26 +159,29 @@ class Processqgis extends \app\inc\Controller
             $data->wmsclientepsgs = $this->sridStr;
             $data = array("data" => $data);
             $res = $this->table->updateRecord($data, "_key_");
-            \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $wmsNames[$i]);
+            Tilecache::bust($tableName);
 
         }
 
         // Create the composite map from all layers in qgs-file
         // ====================================================
 
-        $tableName = Connection::$param["postgisschema"] . "." . Model::toAscii($firstName);
-        $layerKey = $tableName . ".rast";
-        $table = new \app\models\Table($tableName);
-        $table->createAsRasterTable("4326");
-        $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",",$layerNames) . "&transparent=true&";
-        $data = new \stdClass();
-        $data->_key_ = $layerKey;
-        $data->wmssource = $url;
-        $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
+        if ($createComp) {
+            $tableName = Connection::$param["postgisschema"] . "." . Model::toAscii($firstName);
+            $layerKey = $tableName . ".rast";
+            $table = new \app\models\Table($tableName);
+            $table->createAsRasterTable("4326");
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", $layerNames) . "&transparent=true&";
+            $data = new \stdClass();
+            $data->_key_ = $layerKey;
+            $data->wmssource = $url;
+            $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
 
-        $data = array("data" => $data);
-        $res = $this->table->updateRecord($data, "_key_");
-        \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $wmsNames[$i]);
+            $data = array("data" => $data);
+            $res = $this->table->updateRecord($data, "_key_");
+            Tilecache::bust(Connection::$param["postgisschema"] . "." . $wmsNames[$i]);
+
+        }
 
 
         // Write the new qgs-file

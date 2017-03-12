@@ -5,6 +5,8 @@ use \app\conf\App;
 use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
+use \app\inc\Input;
+use \app\inc\Model;
 
 /**
  * Class Processvector
@@ -19,11 +21,11 @@ class Processvector extends \app\inc\Controller
     {
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
-        $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
-        $skipFailures = ($_REQUEST["ignoreerrors"] == "true") ? true : false;
-        $delete = ($_REQUEST["delete"] == "true") ? true : false;
-        $append = ($_REQUEST["append"] == "true") ? true : false;
-        $overwrite = ($_REQUEST["overwrite"] == "true") ? true : false;
+        $safeName = Model::toAscii(Input::get("name"), array(), "_");
+        $skipFailures = Input::get("ignoreerrors") == "true" ? true : false;
+        $delete = Input::get("delete") == "true" ? true : false;
+        $append = Input::get("append") == "true" ? true : false;
+        $overwrite = Input::get("overwrite") == "true" ? true : false;
 
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
@@ -85,7 +87,7 @@ class Processvector extends \app\inc\Controller
                             for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                                 $safeNameArr[] = $zipCheck1[$i];
                             }
-                            $safeName = \app\inc\Model::toAscii(implode(".", $safeNameArr), array(), "_");
+                            $safeName =Model::toAscii(implode(".", $safeNameArr), array(), "_");
                             break;
                         }
                         $_REQUEST['file'] = $folder;
