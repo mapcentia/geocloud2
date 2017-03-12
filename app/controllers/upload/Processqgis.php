@@ -171,7 +171,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . ".rast";
             $table = new \app\models\Table($tableName);
             $table->createAsRasterTable("4326");
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", $layerNames) . "&transparent=true&";
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($layerNames)) . "&transparent=true&";
             $data = new \stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
