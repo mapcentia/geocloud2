@@ -33,7 +33,7 @@ class Processqgis extends \app\inc\Controller
         $arrG = [];
         $wmsNames = [];
         $wmsSrids = [];
-        $layerNames = [];
+        $treeOrder = [];
         $createWms = Input::get("createWms") == "true" ? true : false;
         $createComp = Input::get("createComp") == "true" ? true : false;
 
@@ -59,7 +59,6 @@ class Processqgis extends \app\inc\Controller
                     $arrG[] = $g;
                     $maplayer->layername = $t[1][0] . "." . $t[1][1];
                     $maplayer->title = (string)$maplayer->title ?: $layerName;
-                    $layerNames[] = $maplayer->layername;
                     break;
 
                 case "WFS":
@@ -105,7 +104,6 @@ class Processqgis extends \app\inc\Controller
                     $maplayer->datasource = $PGDataSource;
                     $maplayer->layername = $fullTable;
                     $maplayer->title = (string)$maplayer->title ?: $layerName;
-                    $layerNames[] = $maplayer->layername;
 
                     break;
 
@@ -116,9 +114,22 @@ class Processqgis extends \app\inc\Controller
                         $wmsSrids[] = $srid;
                         $wmsNames[] = $layerName;
                         $maplayer->layername = $layerName;
-                        $layerNames[] = $maplayer->layername;
                     }
                     break;
+            }
+        }
+
+        // Get the layers in the right order according to QGIS layertree
+        // =============================================================
+        foreach ($qgs->{"layer-tree-group"}[0] as $group) {
+            if ($group && $group[0]->attributes()) {
+                $attrs = $group[0]->attributes();
+                $id = strval($attrs['id']);
+                foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
+                    if ((string)$maplayer->id == $id) {
+                        $treeOrder[] = (string)$maplayer->layername;
+                    }
+                }
             }
         }
 
@@ -171,7 +182,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . ".rast";
             $table = new \app\models\Table($tableName);
             $table->createAsRasterTable("4326");
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($layerNames)) . "&transparent=true&";
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
             $data = new \stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
