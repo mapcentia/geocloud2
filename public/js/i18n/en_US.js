@@ -216,8 +216,14 @@ gc2i18n = {
         "MapClient Print": "MapClient Print",
         "Create layer from database view": "Create layer from database view",
         "No features found": "No features found",
-        "No geometry" : "No geometry",
+        "No geometry": "No geometry",
 
-        "GC2 Admin is loading. Hang on...": "GC2 Admin is loading. Hang on..."
-    }
-};
+        "GC2 Admin is loading. Hang on...": "GC2 Admin is loading. Hang on...",
+
+        "Create WMS layers": "Create WMS layers",
+        "Create composite layer": "Create composite layer",
+        "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.": "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.",
+        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema"
+        }
+}
+;
