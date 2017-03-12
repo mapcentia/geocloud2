@@ -1048,13 +1048,13 @@ class Table extends Model
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
-        $table = $this->toAscii($table, array(), "_");
+        //$table = $this->toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
-        $sql = "CREATE TABLE {$this->postgisschema}.{$table}(rast raster);";
+        $sql = "CREATE TABLE \"{$this->postgisschema}\".\"{$table}\"(rast raster);";
         $this->execQuery($sql, "PDO", "transaction");
-        $sql = "INSERT INTO {$this->postgisschema}.{$table}(rast)
+        $sql = "INSERT INTO \"{$this->postgisschema}\".\"{$table}\"(rast)
                 SELECT ST_AddBand(ST_MakeEmptyRaster(1000, 1000, 0.3, -0.3, 2, 2, 0, 0,{$srid}), 1, '8BSI'::TEXT, -129, NULL);";
         $this->execQuery($sql, "PDO", "transaction");
         $sql = "SELECT AddRasterConstraints('{$this->postgisschema}'::name,'{$table}'::name, 'rast'::name);";
