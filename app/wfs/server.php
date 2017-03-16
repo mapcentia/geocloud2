@@ -564,7 +564,7 @@ function doSelect($table, $sql, $sql2, $from)
         print $defaultBoundedBox;
     }
     //die($sql . $from);
-    $result = $postgisObject->execQuery($sql . $from . " LIMIT 5000");
+    $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
     if ($postgisObject->numRows($result) < 1) {
         $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
         $from = str_replace("view", "join", $from);
