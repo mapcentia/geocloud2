@@ -609,7 +609,8 @@ function doSelect($table, $sql, $sql2, $from)
                         $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
                     }
 
-                    if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
+                    // Important to use $FieldValue !== or else will int 0 evaluate to false
+                    if ($FieldValue !== false && ($FieldName != "fid" && $FieldName != "FID")) {
                         if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
                             //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
@@ -617,7 +618,7 @@ function doSelect($table, $sql, $sql2, $from)
                             $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
                         }
                         writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
-                        echo $FieldValue;
+                        echo (string)$FieldValue;
                         writeTag("close", $gmlNameSpace, $FieldName, null, False, True);
                     }
                 } elseif ($tableObj->metaData[$FieldName]['type'] == "geometry") {
