@@ -11,6 +11,14 @@
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "/js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
+
+Ext.MessageBox.buttonText = {
+    ok: "<i class='fa fa-check'></i> " + __("Ok"),
+    cancel: "<i class='fa fa-remove'></i> " + __("Cancel"),
+    yes: "<i class='fa fa-check'></i> " + __("Yes"),
+    no: "<i class='fa fa-remove'></i> " + __("No")
+}
+
 var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
@@ -602,11 +610,11 @@ $(document).ready(function () {
                         }
                         if (response.data[u].type) {
                             layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                                singleTile: false,
+                                singleTile: true,
                                 //isBaseLayer: isBaseLayer,
                                 visibility: false,
                                 wrapDateLine: false,
-                                tileCached: true,
+                                tileCached: false,
                                 displayInLayerSwitcher: true,
                                 name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                             });
@@ -797,12 +805,12 @@ $(document).ready(function () {
                                         },
                                         failure: function (response) {
                                             Ext.MessageBox.show({
-                                                title: 'Failure',
-                                                msg: __(Ext.decode(response.responseText).message),
+                                                title: __("Failure"),
+                                                msg:  __(Ext.decode(response.responseText).message),
                                                 buttons: Ext.MessageBox.OK,
                                                 width: 400,
                                                 height: 300,
-                                                icon: Ext.MessageBox.ERROR
+                                                icon: Ext.MessageBox.INFO
                                             });
                                         }
                                     });

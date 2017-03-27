@@ -628,7 +628,7 @@ class Layer extends \app\models\Table
             $resExtent->execute();
         } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $e;
+            $response['message'] = $e->getMessage();
             $response['code'] = 403;
             return $response;
         }
@@ -641,16 +641,17 @@ class Layer extends \app\models\Table
     public function getEstExtent($_key_, $srs = "4326")
     {
         $split = explode(".", $_key_);
-        $sql = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $srs . ")," . $srs . ")) as geom) ";
+        $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
+        $sql = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geom) ";
         $sql .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
         $result = $this->prepare($sql);
         try {
             $result->execute();
             $row = $this->fetchRow($result);
-            $extent = array("minx" => $row['txmin'], "miny" => $row['tymin'], "maxx" => $row['txmax'], "maxy" => $row['tymax']);
+            $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $e;
+            $response['message'] =  $e->getMessage();;
             $response['code'] = 403;
             return $response;
         }
