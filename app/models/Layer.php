@@ -323,13 +323,13 @@ class Layer extends \app\models\Table
             $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
             $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
             $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
+            $arr = $this->array_push_assoc($arr, "fielddata", $elasticsearchArr[$key]->fielddata);
             if ($value['typeObj']['type'] == "decimal") {
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
             } else {
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
             }
             $response['data'][] = $arr;
-
         }
         return $response;
     }

@@ -83,6 +83,10 @@ elasticsearch.init = function (record, screenName) {
         {
             name: 'null_value',
             allowBlank: true
+        },
+        {
+            name: 'fielddata',
+            allowBlank: true
         }
     ]);
 
@@ -192,8 +196,8 @@ elasticsearch.init = function (record, screenName) {
                         store: new Ext.data.ArrayStore({
                             fields: ['abbr', 'action'],
                             data: [
-                                ['string', 'string'],
                                 ['text', 'text'],
+                                ['keyword', 'keyword'],
                                 ['integer', 'integer'],
                                 ['float', 'float'],
                                 ['double', 'double'],
@@ -303,6 +307,15 @@ elasticsearch.init = function (record, screenName) {
                     editor: new Ext.form.TextField({
                         allowBlank: true
                     })
+                },
+                {
+                    id: "fielddata",
+                    header: __("Fielddata"),
+                    dataIndex: "fielddata",
+                    sortable: true,
+                    width: 35,
+                    tooltip: __("Check if you try to sort, aggregate, or access values from a script on a text field. Fielddata can consume a LOT of heap space, especially when loading high cardinality text fields."),
+                    xtype: 'checkcolumn'
                 },
                 {
                     id: "format",
