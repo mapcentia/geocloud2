@@ -16,7 +16,7 @@ class Loriot extends \app\inc\Controller
     public function post_index()
     {
         $data = json_decode(Input::get(), true);
-        $senti = new \app\models\Senti();
-        return $senti->insert($data,Input::getPath()->part(5));
+        $loriot = new \app\models\Loriot();
+        return $loriot->insert($data,Input::getPath()->part(5));
     }
 }
