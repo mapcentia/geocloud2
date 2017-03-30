@@ -41,6 +41,8 @@ class Loriot extends Model
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             $response["code"] = "401";
+            return $response;
+
 
         }
 
