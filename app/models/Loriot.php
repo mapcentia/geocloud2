@@ -15,7 +15,7 @@ class Loriot extends Model
         $response = array();
         $sql = "INSERT INTO {$table}(cmd, eui, ts, ack, fcnt, port, encdata, data) VALUES (:cmd, :eui, :ts, :ack, :fcnt, :port, :encdata, :data) RETURNING *";
         $res = $this->prepare($sql);
-        $arr = array($data);
+        $arr = json_decode($data, true);
         try {
             $res->execute($arr);
         } catch (\PDOException $e) {
@@ -26,6 +26,6 @@ class Loriot extends Model
 
         }
         $response["success"] = true;
-        $response["data"] = json_encode($data);
+        $response["data"] = json_encode($arr);
     }
 }
