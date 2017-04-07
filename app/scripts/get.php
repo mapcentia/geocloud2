@@ -159,7 +159,6 @@ if ($pass) {
 
             print "Table exists.\n\n";
 
-
             $o = "-append";
             $sql = "DELETE FROM {$schema}.{$safeName}";
             print "SQL run:\n";
