@@ -610,12 +610,12 @@ $(document).ready(function () {
                         }
                         if (response.data[u].type) {
                             layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                                //singleTile: false,
+                                singleTile: false,
                                 //singleTile: true,
                                 //isBaseLayer: isBaseLayer,
                                 visibility: false,
                                 wrapDateLine: false,
-                                tileCached: false,
+                                tileCached: true,
                                 //tileCached: false,
                                 displayInLayerSwitcher: true,
                                 name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
