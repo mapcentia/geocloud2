@@ -7,7 +7,7 @@ Header add X-UA-Compatible "IE=edge"
 <ifmodule mod_expires.c>
 <FilesMatch ".(ico|jpg|jpeg|png|gif|js|css|swf)$">
         ExpiresActive on
-        ExpiresDefault "access plus 100 day"
+        ExpiresDefault "access plus 1 day"
    </FilesMatch>
 </ifmodule>
 <IfModule mod_rewrite.c>
