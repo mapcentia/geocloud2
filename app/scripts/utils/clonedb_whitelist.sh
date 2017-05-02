@@ -89,7 +89,7 @@ WHERE pg_stat_activity.datname = '$targetdb'
   AND pid <> pg_backend_pid();"
 
 dropdb $targetdb
-createdb -T template0 -l da_DK.UTF-8
+createdb --template=template0 --locale=da_DK.UTF-8 --encoding=UTF8
 
 psql -c "CREATE EXTENSION postgis;"
 psql -c "CREATE EXTENSION pgcrypto;"
