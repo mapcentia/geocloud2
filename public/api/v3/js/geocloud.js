@@ -122,7 +122,8 @@ geocloud = (function () {
         method: "GET",
         clickable: true,
         error: function () {
-        }
+        },
+        key: null
     };
     // Base class for stores
     storeClass = function () {
@@ -228,7 +229,7 @@ geocloud = (function () {
             xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
-                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + '&client_encoding=' + this.defaults.clientEncoding,
+                data: 'q=' + encodeURIComponent(sql) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + '&client_encoding=' + this.defaults.clientEncoding + '&key=' + this.defaults.key,
                 jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
                 url: this.host + this.uri + '/' + this.db,
                 type: this.defaults.method,
@@ -546,7 +547,7 @@ geocloud = (function () {
                     tileSize: defaults.tileSize
                 });
                 l.id = layer;
-		if (defaults.loadEvent) {
+                if (defaults.loadEvent) {
                     l.on("load", defaults.loadEvent);
                 }
                 break;
@@ -2790,7 +2791,7 @@ if (geocloud.MAPLIB === "leaflet") {
 
 if (geocloud.MAPLIB === "leaflet") {
     (function () {
-        var bounce = false, isSet=true, first = true;
+        var bounce = false, isSet = true, first = true;
         /* Patch for Leaflet 0.7.3  */
         if (L.TileLayer && L.TileLayer.WMS) {
             /* Set tileSize option to 9999 (or greater) to switch it to single tile mode */
@@ -2847,7 +2848,7 @@ if (geocloud.MAPLIB === "leaflet") {
                     if (this._layer._singleTile) {
                         this._layer._reset({hard: true});
                         this._layer._tileContainer.appendChild(this);
-			this._layer.fire("load");
+                        this._layer.fire("load");
                     }
                     L.TileLayer.WMS.prototype._tileOnLoad.call(this);
                 };

@@ -109,6 +109,7 @@ var gc2table = (function () {
                 locale: 'en-US',
                 callCustomOnload: true,
                 popupHtml: null,
+                ns: "",
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -141,7 +142,8 @@ var gc2table = (function () {
             responsive = defaults.responsive,
             callCustomOnload = defaults.callCustomOnload,
             locale = defaults.locale,
-            popupHtml = defaults.popupHtml;
+            popupHtml = defaults.popupHtml,
+            ns = defaults.ns;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -179,8 +181,8 @@ var gc2table = (function () {
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
                     //$(el).bootstrapTable('scrollTo', row.offset().top);
-                    $(".fixed-table-body").animate({
-                        scrollTop: $(".fixed-table-body").scrollTop() + (row.offset().top - $(".fixed-table-body").offset().top)
+                    $(ns + " .fixed-table-body").animate({
+                        scrollTop: $(ns + " .fixed-table-body").scrollTop() + (row.offset().top - $(ns + " .fixed-table-body").offset().top)
                     }, 300);
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
