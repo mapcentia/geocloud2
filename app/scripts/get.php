@@ -18,6 +18,17 @@ $jobId = $argv[8];
 $deleteAppend = $argv[9];
 $extra = isset($argv[10]) ? base64_decode($argv[10]) : null;
 
+if (sizeof(explode("|", $url)) > 1){
+    $grid = explode("|", $url)[0];
+    $url = explode("|", $url)[1];
+    $deleteAppend = 1;
+    $getFunction = "getCmdPaging";
+} else {
+    $grid = null;
+    $getFunction = "getCmd";
+
+}
+
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand()) . ".gml";
 $randTableName = "_" . md5(microtime() . rand());
@@ -35,13 +46,19 @@ if (is_numeric($safeName[0])) {
     $safeName = "_" . $safeName;
 }
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-$fp = fopen($dir . "/" . $tempFile, 'w+');
-curl_setopt($ch, CURLOPT_FILE, $fp);
-curl_exec($ch);
-curl_close($ch);
-fclose($fp);
+if ($grid == null) {
+
+    print "Fetching remote data...\n\n";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    $fp = fopen($dir . "/" . $tempFile, 'w+');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
+}
+
 
 
 function getCmd($dryRun = false, $o)
@@ -62,20 +79,37 @@ function getCmd($dryRun = false, $o)
     return $cmd;
 }
 
+function getCmdPaging()
+{
+    print "Staring paged download...\n\n";
+
+    global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName, $url, $grid;
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs2.php {$db} {$schema} \"{$url}\" {$safeName} {$type} {$grid}";
+
+    return $cmd;
+}
+
+
 $pass = true;
 
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
 # Dry run
-if ($deleteAppend == "1" && $table->exits) {
+if ($deleteAppend == "1" && $table->exits && $grid == null) {
+
+    print "Starting dry run...\n\n";
+
     # clone table
     $sql = "CREATE TABLE {$schema}.{$randTableName} AS SELECT * FROM {$schema}.{$safeName}";
     $res = $table->prepare($sql);
+
     print "SQL run:\n";
     print $sql . "\n\n";
+
     try {
         $res->execute();
+
     } catch (\PDOException $e) {
         print_r($e);
         $pass = false;
@@ -108,10 +142,23 @@ if ($deleteAppend == "1" && $table->exits) {
 
 # Run for real if the dry run is passed.
 if ($pass) {
+
+    print "Passed, proceeding...\n\n";
+
     if ($deleteAppend == "1") {
+
+        print "Delete/append is enabled.\n\n";
+
         if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
+
+            print "Table doesn't exists.\n\n";
+
             $o = "-overwrite";
+
         } else {
+
+            print "Table exists.\n\n";
+
             $o = "-append";
             $sql = "DELETE FROM {$schema}.{$safeName}";
             print "SQL run:\n";
@@ -134,19 +181,31 @@ if ($pass) {
                 }
                 exit();
             }
+
+            print "Data in existing table deleted.\n\n";
         }
     } else {
+
+        print "Overwrite is enabled.\n\n";
+
         $o = "-overwrite";
     }
-    exec($cmd = getCmd(false, $o) . ' 2>&1', $out, $err);
+    exec($cmd = $getFunction(false, $o) . ' 2>&1', $out, $err);
+
     print "Wet run command:\n";
+
     print $cmd . "\n\n";
-    foreach ($out as $line) {
-        if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-            $pass = false;
-            break;
+
+    if ($grid == null) {
+        foreach ($out as $line) {
+            if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+                $pass = false;
+                break;
+            }
         }
     }
+
+
 }
 
 if ($pass) {
