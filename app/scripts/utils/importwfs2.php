@@ -21,6 +21,7 @@ $url = $argv[3];
 $importTable = $argv[4];
 $geomType = $argv[5];
 $grid = $argv[6];
+$gfs = $argv[7];
 
 $useGfs = false;
 
@@ -43,8 +44,8 @@ while ($row = $database->fetchRow($res)) {
     Util::wget($wfsUrl . $bbox);
 
     file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml", Util::wget($wfsUrl . $bbox));
-    if ($useGfs) {
-        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents("/var/www/geocloud2/app/conf/{$typeName}.gfs"));
+    if ($gfs) {
+        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
