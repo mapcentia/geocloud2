@@ -400,7 +400,7 @@ MapCentia = function (globalId) {
                 } else {
                     setBaseLayer(defaults.baseLayers[0].id);
                 }
-                $("#loadscreen").hide();
+                $("#loadscreen-" + id).hide();
             } else {
                 setTimeout(function () {
                     poll();
