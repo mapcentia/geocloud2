@@ -1,9 +1,13 @@
 <?php
 include_once(__DIR__ . "/../conf/App.php");
+require_once('/var/www/geocloud2/app/libs/vendor/autoload.php');
+
 new \app\conf\App();
 
 use \app\conf\App;
 use \app\conf\Connection;
+use Postmark\PostmarkClient;
+use Postmark\Models\PostmarkException;
 
 echo date(DATE_RFC822) . "\n\n";
 
@@ -21,13 +25,21 @@ $extra = isset($argv[10]) ? base64_decode($argv[10]) : null;
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
     $url = explode("|", $url)[1];
-    $deleteAppend = 1;
+
+    if (sizeof(explode(",", $grid)) > 1) {
+        $id = explode(",", $grid)[1];
+        $grid = explode(",", $grid)[0];
+    } else {
+        $id = "gml_id";
+    }
+
     $getFunction = "getCmdPaging";
 } else {
     $grid = null;
     $getFunction = "getCmd";
 
 }
+
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand()) . ".gml";
@@ -85,12 +97,19 @@ function getCmd($dryRun = false, $o)
     return $cmd;
 }
 
-function getCmdPaging()
+function getCmdPaging($dryRun = false, $o)
 {
+    global $safeName, $type, $db, $schema, $url, $grid, $id;
+
+
+    if ($o == "-overwrite") {
+        $o = 1;
+    } else {
+        $o = 0;
+    }
     print "Staring paged download...\n\n";
 
-    global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName, $url, $grid;
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs2.php {$db} {$schema} \"{$url}\" {$safeName} {$type} {$grid}";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$safeName} {$type} {$grid} {$o} {$id} 0";
 
     return $cmd;
 }
@@ -203,6 +222,9 @@ if ($pass) {
 
         $o = "-overwrite";
     }
+
+    //die($getFunction(false, $o));
+
     exec($cmd = $getFunction(false, $o) . ' 2>&1', $out, $err);
 
     if ($err) {
@@ -233,7 +255,7 @@ if ($pass) {
 
 
 } else {
-    print_r($out);
+    print_r(array_slice($out, -20, 20, true));
 
     print "\n\n";
 
@@ -253,6 +275,37 @@ if ($pass) {
         }
         fclose($handle);
     }
+
+    try {
+        $client = new PostmarkClient("55a76fbe-5b67-43a2-ba27-2104b5866330");
+
+    } catch (PostmarkException $ex) {
+        echo $ex->httpStatusCode;
+        echo $ex->postmarkApiErrorCode;
+
+    } catch (Exception $generalException) {
+        // A general exception is thown if the API
+    }
+
+    if (App::$param["notification"]) {
+
+        $text =
+        "Job id: {$jobId}\n" .
+        "Database: {$db}\n" .
+        "Schema: {$schema}\n" .
+        "table: {$safeName}\n".
+        "Url: {$url}\n";
+
+        $message = [
+            'To' => implode(",", App::$param["notification"]["to"]),
+            'From' => App::$param["notification"]["from"],
+            'TrackOpens' => false,
+            'Subject' => "GC2Scheduler job with error",
+            'TextBody' => $text,
+        ];
+        $sendResult = $client->sendEmailBatch([$message]);
+    }
+
 }
 
 \app\models\Database::setDb("gc2scheduler");
