@@ -35,6 +35,13 @@ $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet)
 //echo $sql . "\n";
 $res = $database->execQuery($sql);
 
+function which()
+{
+    $cmd = "/usr/bin/which ogr2ogr";
+    exec($cmd . ' 2>&1', $out, $err);
+    return $out[0];
+}
+
 while ($row = $database->fetchRow($res)) {
     print_r($row);
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
@@ -48,7 +55,7 @@ while ($row = $database->fetchRow($res)) {
         file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
 
-    $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+    $cmd = "PGCLIENTENCODING={$encoding} " . which() ." " .
         "-skipfailures " .
         "-append " .
         "-dim 3 " .

@@ -18,7 +18,7 @@ $jobId = $argv[8];
 $deleteAppend = $argv[9];
 $extra = isset($argv[10]) ? base64_decode($argv[10]) : null;
 
-if (sizeof(explode("|", $url)) > 1){
+if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
     $url = explode("|", $url)[1];
     $deleteAppend = 1;
@@ -59,12 +59,18 @@ if ($grid == null) {
     fclose($fp);
 }
 
+function which()
+{
+    $cmd = "/usr/bin/which ogr2ogr";
+    exec($cmd . ' 2>&1', $out, $err);
+    return $out[0];
+}
 
 
 function getCmd($dryRun = false, $o)
 {
     global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName;
-    $cmd = "PGCLIENTENCODING={$encoding} /usr/local/bin/ogr2ogr " .
+    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         $o . " " .
         "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
@@ -118,12 +124,19 @@ if ($deleteAppend == "1" && $table->exits && $grid == null) {
 
     if ($pass) {
         exec($cmd = getCmd(true, "-append") . ' 2>&1', $out, $err);
-        print "Dry run command:\n";
-        print $cmd . "\n\n";
-        foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-                $pass = false;
-                break;
+
+        if ($err) {
+            print "Error " . $err . "\n\n";
+            $pass = false;
+        } else {
+
+            print "Dry run command:\n";
+            print $cmd . "\n\n";
+            foreach ($out as $line) {
+                if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+                    $pass = false;
+                    break;
+                }
             }
         }
     }
@@ -192,30 +205,38 @@ if ($pass) {
     }
     exec($cmd = $getFunction(false, $o) . ' 2>&1', $out, $err);
 
-    print "Wet run command:\n";
+    if ($err) {
+        print "Error " . $err . "\n\n";
+        $pass = false;
+    } else {
 
-    print $cmd . "\n\n";
+        print "Wet run command:\n";
 
-    if ($grid == null) {
-        foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-                $pass = false;
-                break;
+        print $cmd . "\n\n";
+
+        if ($grid == null) {
+            foreach ($out as $line) {
+                if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+                    $pass = false;
+                    break;
+                }
             }
         }
     }
-
-
 }
 
 if ($pass) {
     print $url . " imported to " . $schema . "." . $safeName . "\n\n";
     $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
+    print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
+
 
 } else {
     print_r($out);
+
     print "\n\n";
+
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
 
