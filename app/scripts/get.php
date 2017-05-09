@@ -1,13 +1,13 @@
 <?php
 include_once(__DIR__ . "/../conf/App.php");
-require_once('/var/www/geocloud2/app/libs/vendor/autoload.php');
+include_once(__DIR__ . "/../vendor/autoload.php");
 
 new \app\conf\App();
 
 use \app\conf\App;
 use \app\conf\Connection;
-use Postmark\PostmarkClient;
-use Postmark\Models\PostmarkException;
+use \Postmark\PostmarkClient;
+use \Postmark\Models\PostmarkException;
 
 echo date(DATE_RFC822) . "\n\n";
 
