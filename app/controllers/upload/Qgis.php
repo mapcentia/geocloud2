@@ -3,8 +3,6 @@ namespace app\controllers\upload;
 
 use \app\conf\Connection;
 use \app\conf\App;
-use \app\inc\Model;
-
 
 class Qgis extends \app\inc\Controller
 {
@@ -35,7 +33,6 @@ class Qgis extends \app\inc\Controller
             $fileName = uniqid("file_");
         }
 
-        //$filePath = $targetDir . DIRECTORY_SEPARATOR . Model::toAscii($fileName);
         $filePath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
 
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;

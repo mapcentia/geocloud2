@@ -452,7 +452,7 @@ input[type="radio"], input[type="checkbox"] {
 .custom-popup .leaflet-popup-tip {
     background: #2c3e50 !important;
 }
-#loadscreen {
+.loadscreen {
     position: absolute;
     width: 100%;
     height: 100%;

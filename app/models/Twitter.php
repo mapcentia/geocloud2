@@ -42,6 +42,8 @@ class Twitter extends Model
             ->buildOauth($url, $requestMethod)
             ->performRequest();
         $arr = json_decode($res);
+
+
         foreach ($arr->statuses as $value) {
             $bindings = array(
                 "text" => $value->text,
@@ -58,12 +60,15 @@ class Twitter extends Model
                 "place_country" => $value->place->country,
                 "retweet_count" => $value->retweet_count,
                 "favorite_count" => $value->favorite_count,
-                "entities" => json_encode($value->entities)
+                "entities" => json_encode($value->entities),
+                "extended_entities" => json_encode($value->extended_entities),
+                "full_json" => json_encode($value),
+
             );
             $features[] = array("geometry" => $value->coordinates, "type" => "Feature", "properties" => $bindings);
             if ($store) {
                 $bindings['the_geom'] = is_object($value->coordinates) ? "POINT(" . $value->coordinates->coordinates[0] . " " . $value->coordinates->coordinates[1] . ")" : null;
-                $sql = "INSERT INTO {$schema}.tweets (id,text,created_at,source,user_name,user_screen_name,user_id,place_id,place_type,place_full_name,place_country_code,place_country,retweet_count,favorite_count,entities,the_geom) VALUES(" .
+                $sql = "INSERT INTO {$schema}.tweets (id,text,created_at,source,user_name,user_screen_name,user_id,place_id,place_type,place_full_name,place_country_code,place_country,retweet_count,favorite_count,entities,extended_entities,full_json,the_geom) VALUES(" .
                     ":id," .
                     ":text," .
                     ":created_at," .
@@ -79,6 +84,8 @@ class Twitter extends Model
                     ":retweet_count," .
                     ":favorite_count," .
                     ":entities," .
+                    ":extended_entities," .
+                    ":full_json," .
                     (is_object($value->coordinates) ? "ST_GeomFromText(:the_geom,4326)" : ":the_geom") .
                     ")";
                 $res = $this->prepare($sql);

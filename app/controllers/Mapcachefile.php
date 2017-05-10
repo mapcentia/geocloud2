@@ -64,7 +64,7 @@ class Mapcachefile extends \app\inc\Controller
                 </metadata>
                 <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
                 <srs>EPSG:3857</srs>
-                <srsalias>EPSG:3857</srsalias>
+                <srsalias>EPSG:900913</srsalias>
                 <units>m</units>
                 <size>256 256</size>
                 <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739 0.149291070869 0.074645535435 0.0373227677175</resolutions>
@@ -98,6 +98,13 @@ class Mapcachefile extends \app\inc\Controller
                         $auto_expire = $def->auto_expire ?: null;
                         $format = $def->format ?: "PNG";
                         $layers = $def->layers ? "," . $def->layers : "";
+
+                        if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) {
+                            parse_str(parse_url($row["wmssource"])["query"], $getArr);
+                            $QGISLayers = $getArr["LAYER"];
+                        } else {
+                            $QGISLayers = null;
+                        }
                         ?>
 
                         <!-- <?php echo $table ?> -->
@@ -105,13 +112,13 @@ class Mapcachefile extends \app\inc\Controller
                         <getmap>
                             <params>
                                 <FORMAT>image/png</FORMAT>
-                                <LAYERS><?php echo $table ?><?php echo $layers ?></LAYERS>
+                                <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
                             </params>
                         </getmap>
                         <http>
                             <url><?php
 
-                                if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
+                                if ($QGISLayers) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
                                     echo explode("&", $row["wmssource"])[0] . "&transparent=true&";
                                 } else {
                                     echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . ".map&";

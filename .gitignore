@@ -49,3 +49,4 @@ apasswords
 #/app/composer.lock
 #/app/composer.phar
 #/app/conf/wfsprocessors/classes/pre/Pre_fot5.php
+/public/apps/widgets/gc2map/config/config.js

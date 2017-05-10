@@ -143,7 +143,7 @@ include("html_header.php");
                 str = string;
             }
             if (toolTip) {
-                str = " <span class='tt' ext:qtip='" + string + "' ext>[?]</span>";
+                str = " <span class='tt' ext:qtip='" + str + "' ext>[?]</span>";
             }
         }
         return str;

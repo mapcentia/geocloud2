@@ -216,8 +216,13 @@ gc2i18n = {
         "MapClient Print": "MapClient Print",
         "Create layer from database view": "Opret et lag fra et database view",
         "No features found": "Ingen objekter fundet",
-        "No geometry" : "Ingen geometri",
+        "No geometry": "Ingen geometri",
 
-        "GC2 Admin is loading. Hang on...": "GC2 Admin loader. Bliv hængende..."
+        "GC2 Admin is loading. Hang on...": "GC2 Admin loader. Bliv hængende...",
+
+        "Create WMS layers": "Opret WMS lag",
+        "Create composite layer": "Opret composite lag",
+        "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.": "Dette vil oprette et nyt WMS lag i GC2 for hvert WMS lag i QGIS projektet. Det svarer til at importere WMS lag fra QGIS. De nye lag vil blive placeret i nuværende schema.",
+        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "Dette vil oprette et nyt composite lag med alle lag fra QGIS projektet. Blending mode vil blive anvendt. Dette kan bruges til at skabe et baggrundskort. Det nye lag vil tage navn fra qgs-filen og blive placeret i nuværende schema."
     }
 };

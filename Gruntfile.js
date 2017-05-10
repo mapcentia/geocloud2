@@ -129,7 +129,24 @@ module.exports = function (grunt) {
                         'public/apps/widgets/gc2map/js/bootstrap-alert.js',
                         'public/api/v3/js/geocloud.js',
                         'public/apps/widgets/gc2map/js/main.js',
-                        'public/apps/widgets/gc2map/js/templates.js'
+                        'public/apps/widgets/gc2map/js/templates.js',
+                        'public/apps/widgets/gc2map/config/config.js'
+                    ]
+                }
+            },
+            devel: {
+                files: {
+                    // The widget
+                    'public/apps/widgets/gc2map/js/build/all.min.js': [
+                        'public/js/leaflet/leaflet-all.js',
+                        'public/js/openlayers/proj4js-combined.js',
+                        'public/js/bootstrap3/js/bootstrap.min.js',
+                        'public/js/hogan/hogan-2.0.0.js',
+                        'public/apps/widgets/gc2map/js/bootstrap-alert.js',
+                        'public/api/v3/js/geocloud.js',
+                        'public/apps/widgets/gc2map/js/main.js',
+                        'public/apps/widgets/gc2map/js/templates.js',
+                        'public/apps/widgets/gc2map/config/config.js'
                     ]
                 }
             }

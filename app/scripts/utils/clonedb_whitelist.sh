@@ -73,7 +73,7 @@ for SCHEMA in "${ARRAY[@]}"
         c="$c --schema=$SCHEMA"
     done
 echo $c
-pg_dump --format=c --file dump.bak $c
+pg_dump --format=c --no-privileges --file dump.bak $c
 if_error "Could not dump database."
 
 # Load in target
@@ -89,7 +89,7 @@ WHERE pg_stat_activity.datname = '$targetdb'
   AND pid <> pg_backend_pid();"
 
 dropdb $targetdb
-createdb -T template0 -l da_DK.UTF-8
+createdb --template=template0 --locale=da_DK.UTF-8 --encoding=UTF8
 
 psql -c "CREATE EXTENSION postgis;"
 psql -c "CREATE EXTENSION pgcrypto;"
@@ -98,7 +98,7 @@ psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
 # pg_restore will ignore errors (some errors are harmless). In such case it will exit with status 1. Therefore can't we check.
-pg_restore dump.bak --no-owner --no-privileges --jobs=2 --dbname=$targetdb
+pg_restore dump.bak --no-owner --no-privileges --no-privileges --jobs=2 --dbname=$targetdb
 #if_error "Could not restore database."
 
 # Make sure all MATERIALIZED VIEWs are refreshed
