@@ -84,6 +84,8 @@ $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 // Post method is used
 // ===================
 
+$HTTP_RAW_POST_DATA = file_get_contents("php://input");
+
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
