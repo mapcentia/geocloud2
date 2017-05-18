@@ -120,7 +120,7 @@ $pass = true;
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
-# Dry run
+// Dry run
 if ($deleteAppend == "1" && $table->exits && $grid == null) {
 
     print "Starting dry run...\n\n";
@@ -172,7 +172,7 @@ if ($deleteAppend == "1" && $table->exits && $grid == null) {
 }
 
 
-# Run for real if the dry run is passed.
+// Run for real if the dry run is passed.
 if ($pass) {
 
     print "Passed, proceeding...\n\n";
@@ -262,7 +262,7 @@ if ($pass) {
     $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
 
-    # Output the first few lines of file
+    // Output the first few lines of file
     Print "Outputting the first few lines of the file:\n\n";
     $handle = @fopen($dir . "/" . $tempFile, "r");
     if ($handle) {
@@ -317,7 +317,7 @@ try {
     print_r($e);
 }
 
-# Add extra field and insert values
+// Add extra field and insert values
 if ($extra && $pass) {
     \app\models\Database::setDb($db);
     $model = new \app\inc\Model();
@@ -352,3 +352,6 @@ if ($extra && $pass) {
         print_r($e);
     }
 }
+
+// Unlink temp file
+@unlink($dir . "/" . $tempFile);
