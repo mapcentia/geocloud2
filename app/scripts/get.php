@@ -276,18 +276,19 @@ if ($pass) {
         fclose($handle);
     }
 
-    try {
-        $client = new PostmarkClient("55a76fbe-5b67-43a2-ba27-2104b5866330");
-
-    } catch (PostmarkException $ex) {
-        echo $ex->httpStatusCode;
-        echo $ex->postmarkApiErrorCode;
-
-    } catch (Exception $generalException) {
-        // A general exception is thown if the API
-    }
 
     if (App::$param["notification"]) {
+
+        try {
+            $client = new PostmarkClient(App::$param["notification"]["key"]);
+
+        } catch (PostmarkException $ex) {
+            echo $ex->httpStatusCode;
+            echo $ex->postmarkApiErrorCode;
+
+        } catch (Exception $generalException) {
+            // A general exception is thown if the API
+        }
 
         $text =
         "Job id: {$jobId}\n" .
