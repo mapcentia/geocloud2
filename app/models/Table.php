@@ -433,6 +433,14 @@ class Table extends Model
                         Util::asyncRequest($url);
                     }
                 }
+
+                // Get key value
+                foreach ($row as $key => $value) {
+                    if ($key == $keyName) {
+                        $pKeyValue = $value;
+                    }
+                }
+
                 foreach ($row as $key => $value) {
                     if ($value === false) {
                         $value = null;
@@ -440,8 +448,18 @@ class Table extends Model
                     if ($key == "editable" || $key == "skipconflict") {
                         $value = $value ?: "0";
                     }
-                    if ($key == "tags" || $key == "meta") {
+                    if ($key == "tags") {
                         $value = json_encode($value);
+                    }
+                    // If Meta when update the existing object, so not changed values persist
+                    if ($key == "meta") {
+                        $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
+
+                        foreach ($value as $fKey=>$fValue) {
+                            $rec[$fKey] = $fValue;
+                        }
+                        $value = json_encode($rec);
+
                     }
                     $value = $this->db->quote($value);
                     if ($key != $keyName) {
@@ -464,6 +482,7 @@ class Table extends Model
 
                 if ((!$result) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
+
                     $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }

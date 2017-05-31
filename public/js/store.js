@@ -1300,174 +1300,208 @@ $(window).load(function () {
                         closeAction: 'close',
                         plain: true,
                         border: false,
-                        resizable: false,
-                        items: [new Ext.Panel({
-                            frame: false,
-                            border: false,
-                            layout: 'border',
-                            items: [
-                                {
-                                    xtype: "form",
+                        resizable: true,
+                        items: [
+                            new Ext.Panel({
                                     frame: false,
                                     border: false,
-                                    region: 'center',
-                                    viewConfig: {
-                                        forceFit: true
-                                    },
-                                    id: "metaform",
-                                    layout: "form",
-                                    bodyStyle: 'padding: 10px',
-                                    labelWidth: 80,
+                                    layout: 'border',
                                     items: [
                                         {
-                                            xtype: 'fieldset',
-                                            title: __('Custom settings'),
-                                            defaults: {
-                                                anchor: '100%'
+                                            xtype: "form",
+                                            frame: false,
+                                            border: false,
+                                            region: 'center',
+                                            autoScroll: true,
+
+                                            viewConfig: {
+                                                forceFit: true
                                             },
+                                            id: "metaform",
+                                            layout: "form",
+                                            bodyStyle: 'padding: 10px',
+                                            labelWidth: 80,
                                             items: (function () {
-                                                var fields = [];
-                                                Ext.each(window.gc2Options.metaConfig, function (v) {
-                                                    switch (v.type) {
-                                                        case "text":
-                                                            fields.push(
-                                                                {
-                                                                    xtype: 'textfield',
-                                                                    fieldLabel: v.title,
-                                                                    name: v.name,
-                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
-                                                                }
-                                                            )
-                                                            break;
-                                                        case "textarea":
-                                                            fields.push(
-                                                                {
-                                                                    xtype: 'textarea',
-                                                                    fieldLabel: v.title,
-                                                                    height: 300,
-                                                                    name: v.name,
-                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
-                                                                }
-                                                            )
-                                                            break;
-                                                        case "checkbox":
-                                                            fields.push(
-                                                                {
-                                                                    xtype: 'checkbox',
-                                                                    fieldLabel: v.title,
-                                                                    name: v.name,
-                                                                    checked: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v.default) : false
-                                                                }
-                                                            )
-                                                            break;
-                                                        case "combo":
-                                                            fields.push(
-                                                                {
-                                                                    xtype: 'combo',
-                                                                    displayField: 'name',
-                                                                    valueField: 'value',
-                                                                    mode: 'local',
-                                                                    store: new Ext.data.JsonStore({
-                                                                        fields: ['name', 'value'],
-                                                                        data: v.values
-                                                                    }),
-                                                                    triggerAction: 'all',
-                                                                    name: v.name,
-                                                                    fieldLabel: v.title,
-                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name]) || v.default) : null
-                                                                }
-                                                            )
-                                                            break;
-                                                        case "superboxselect":
-                                                            fields.push(
-                                                                new Ext.ux.form.SuperBoxSelect({
-                                                                    allowBlank: true,
-                                                                    msgTarget: 'under',
-                                                                    allowAddNewData: true,
-                                                                    assertValue: null,
-                                                                    addNewDataOnBlur: true,
-                                                                    name: v.name,
-                                                                    store: new Ext.data.ArrayStore({
-                                                                        fields: ['name', 'value'],
-                                                                        data: Ext.decode(records[0].data.meta)[v.name] || []
-                                                                    }),
-                                                                    displayField: 'tag',
-                                                                    valueField: 'tag',
-                                                                    mode: 'local',
-                                                                    value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== null) ? Ext.decode(records[0].data.meta)[v.name] : []) : [],
-                                                                    listeners: {
-                                                                        newitem: function (bs, v, f) {
-                                                                            bs.addNewItem({
-                                                                                tag: v
-                                                                            });
-                                                                        }
-                                                                    }
-                                                                })
-                                                            )
-                                                            break;
-                                                    }
-                                                })
-                                                return fields;
-                                            }())
-                                        }
-                                    ],
-                                    buttons: [
-                                        {
-                                            text: '<i class="fa fa-check"></i> ' + __('Update'),
-                                            handler: function () {
-
-                                                var f = Ext.getCmp('metaform');
-                                                if (f.form.isValid()) {
-                                                    var values = f.form.getFieldValues();
-                                                    var data = [];
-                                                    Ext.iterate(records, function (v) {
-                                                        data.push(
-                                                            {
-                                                                _key_: v.get("_key_"),
-                                                                meta: values
+                                                var fieldsets = [];
+                                                Ext.each(window.gc2Options.metaConfig, function (w) {
+                                                    var fields = [];
+                                                    fieldsets.push({
+                                                        xtype: 'fieldset',
+                                                        title: w.fieldsetName,
+                                                        checkboxToggle: records.length > 1,
+                                                        collapsed: records.length > 1,
+                                                        defaults: {
+                                                            anchor: '100%'
+                                                        },
+                                                        listeners: {
+                                                            collapse: function(p) {
+                                                                p.items.each(function(i) {
+                                                                        i.disable();
+                                                                    },
+                                                                    this);
+                                                            },
+                                                            expand: function(p) {
+                                                                p.items.each(function(i) {
+                                                                        i.enable();
+                                                                    },
+                                                                    this);
                                                             }
-                                                        );
-                                                    });
-                                                    var param = {
-                                                        data: data
-                                                    };
-                                                    param = Ext.util.JSON.encode(param);
-                                                    Ext.Ajax.request({
-                                                        url: '/controllers/layer/records/_key_',
-                                                        method: 'put',
-                                                        headers: {
-                                                            'Content-Type': 'application/json; charset=utf-8'
                                                         },
-                                                        params: param,
-                                                        success: function () {
-                                                            grid.getSelectionModel().clearSelections();
-                                                            store.reload();
-                                                            App.setAlert(App.STATUS_NOTICE, __("Meta data updated"));
-                                                            win.close();
-                                                        },
-                                                        failure: function (response) {
-                                                            Ext.MessageBox.show({
-                                                                title: 'Failure',
-                                                                msg: __(Ext.decode(response.responseText).message),
-                                                                buttons: Ext.MessageBox.OK,
-                                                                width: 400,
-                                                                height: 300,
-                                                                icon: Ext.MessageBox.ERROR
-                                                            });
-                                                        }
-                                                    });
-                                                } else {
-                                                    var s = '';
-                                                    Ext.iterate(f.form.getValues(), function (key, value) {
-                                                        s += String.format("{0} = {1}<br />", key, value);
-                                                    }, this);
-                                                }
-                                            }
-                                        }
-                                    ]
+                                                        items: (function () {
+                                                            Ext.each(w.fields, function (v) {
+                                                                switch (v.type) {
+                                                                    case "text":
+                                                                        fields.push(
+                                                                            {
+                                                                                xtype: 'textfield',
+                                                                                fieldLabel: v.title,
+                                                                                name: v.name,
+                                                                                value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                            }
+                                                                        )
+                                                                        break;
+                                                                    case "textarea":
+                                                                        fields.push(
+                                                                            {
+                                                                                xtype: 'textarea',
+                                                                                fieldLabel: v.title,
+                                                                                height: 100,
+                                                                                name: v.name,
+                                                                                value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : null
+                                                                            }
+                                                                        )
+                                                                        break;
+                                                                    case "checkbox":
+                                                                        fields.push(
+                                                                            {
+                                                                                xtype: 'checkbox',
+                                                                                fieldLabel: v.title,
+                                                                                name: v.name,
+                                                                                checked: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== undefined) ? Ext.decode(records[0].data.meta)[v.name] : v.default) : false
+                                                                            }
+                                                                        )
+                                                                        break;
+                                                                    case "combo":
+                                                                        fields.push(
+                                                                            {
+                                                                                xtype: 'combo',
+                                                                                displayField: 'name',
+                                                                                valueField: 'value',
+                                                                                mode: 'local',
+                                                                                store: new Ext.data.JsonStore({
+                                                                                    fields: ['name', 'value'],
+                                                                                    data: v.values
+                                                                                }),
+                                                                                triggerAction: 'all',
+                                                                                name: v.name,
+                                                                                fieldLabel: v.title,
+                                                                                value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name]) || v.default) : null
+                                                                            }
+                                                                        )
+                                                                        break;
+                                                                    case "superboxselect":
+                                                                        fields.push(
+                                                                            new Ext.ux.form.SuperBoxSelect({
+                                                                                allowBlank: true,
+                                                                                msgTarget: 'under',
+                                                                                allowAddNewData: true,
+                                                                                assertValue: null,
+                                                                                addNewDataOnBlur: true,
+                                                                                name: v.name,
+                                                                                store: new Ext.data.ArrayStore({
+                                                                                    fields: ['name', 'value'],
+                                                                                    data: Ext.decode(records[0].data.meta)[v.name] || []
+                                                                                }),
+                                                                                displayField: 'tag',
+                                                                                valueField: 'tag',
+                                                                                mode: 'local',
+                                                                                value: (records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? ((Ext.decode(records[0].data.meta)[v.name] !== null) ? Ext.decode(records[0].data.meta)[v.name] : []) : [],
+                                                                                listeners: {
+                                                                                    newitem: function (bs, v, f) {
+                                                                                        bs.addNewItem({
+                                                                                            tag: v
+                                                                                        });
+                                                                                    }
+                                                                                }
+                                                                            })
+                                                                        )
+                                                                        break;
+                                                                }
+                                                            })
 
-                                }]
-                        })]
+                                                            return fields;
+
+                                                        }())
+
+                                                    })
+
+
+                                                })
+
+                                                return fieldsets;
+
+
+                                            }()),
+
+                                            buttons: [
+                                                {
+                                                    text: '<i class="fa fa-check"></i> ' + __('Update'),
+                                                    handler: function () {
+
+                                                        var f = Ext.getCmp('metaform');
+                                                        if (f.form.isValid()) {
+                                                            var values = f.form.getFieldValues();
+                                                            var data = [];
+                                                            Ext.iterate(records, function (v) {
+                                                                data.push(
+                                                                    {
+                                                                        _key_: v.get("_key_"),
+                                                                        meta: values
+                                                                    }
+                                                                );
+                                                            });
+                                                            var param = {
+                                                                data: data
+                                                            };
+                                                            param = Ext.util.JSON.encode(param);
+                                                            Ext.Ajax.request({
+                                                                url: '/controllers/layer/records/_key_',
+                                                                method: 'put',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json; charset=utf-8'
+                                                                },
+                                                                params: param,
+                                                                success: function () {
+                                                                    grid.getSelectionModel().clearSelections();
+                                                                    store.reload();
+                                                                    App.setAlert(App.STATUS_NOTICE, __("Meta data updated"));
+                                                                    win.close();
+                                                                },
+                                                                failure: function (response) {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'Failure',
+                                                                        msg: __(Ext.decode(response.responseText).message),
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                }
+                                                            });
+                                                        } else {
+                                                            var s = '';
+                                                            Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                s += String.format("{0} = {1}<br />", key, value);
+                                                            }, this);
+                                                        }
+                                                    }
+                                                }
+                                            ]
+
+                                        }]
+                                }
+                            )
+                        ]
                     }).show(this);
                 }
             },
