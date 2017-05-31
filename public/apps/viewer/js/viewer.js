@@ -679,11 +679,7 @@ Viewer = function () {
                                 }
                             }
                         }
-                        // Append baselayers
-                        baseLayersLi.reverse();
-                        for (u = 0; u < baseLayersLi.length; ++u) {
-                            $("#base-layer-list").append(baseLayersLi[u]);
-                        }
+
 
                         // Don't add empty group
                         if (node.items[0].items.length > 0) {
@@ -692,6 +688,13 @@ Viewer = function () {
                         }
                     }
                 }
+
+                // Append baselayers
+                baseLayersLi.reverse();
+                for (u = 0; u < baseLayersLi.length; ++u) {
+                    $("#base-layer-list").append(baseLayersLi[u]);
+                }
+
                 arrMenu[0].items.reverse();
                 $('#menu').multilevelpushmenu({
                     menu: arrMenu
