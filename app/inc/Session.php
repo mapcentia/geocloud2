@@ -65,7 +65,7 @@ class Session
         $_SESSION["log"] .= "<br /<br />";
         $_SESSION["log"] .= "<i > Failed indexing of records @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
         for ($i = 0; $i < sizeof($obj); $i++) {
-            $_SESSION["log"] .= $obj[$i]["id"] . ": " . htmlentities($obj[$i]["error"]) . " </br > ";
+            $_SESSION["log"] .= $obj[$i]["id"] . ": " . $obj[$i]["error"]["type"] . ": " . $obj[$i]["error"]["reason"] . ". caused_by: " . implode(": ", $obj[$i]["error"]["caused_by"]) . " </br > ";
             if ($i >= $num) {
                 $_SESSION["log"] .= "<i > " . (sizeof($obj) - $num - 1) . " more lines </i ><br />";
                 return;

@@ -2,6 +2,7 @@
 namespace app\models;
 
 use app\inc\Model;
+use GuzzleHttp\Client;
 
 /**
  * Class Sql_to_es
@@ -58,14 +59,23 @@ class Sql_to_es extends Model
     public function sql($q, $index, $type, $id, $db)
     {
         $response = [];
+        $i = 0;
+
+        $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
+        $client = new Client([
+            'timeout' => 10.0,
+        ]);
+        $bulKCount = 0;
+        $bulkSize = 500;
         // We create a unique index name
         $errors = false;
-        $errors_in = array();
+        $errors_in = [];
         $index = $db . "_" . $index . "_" . $type;
         $name = "_" . rand(1, 999999999) . microtime();
         $view = $this->toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
+
         try {
             $res->execute();
         } catch (\PDOException $e) {
@@ -75,6 +85,7 @@ class Sql_to_es extends Model
             $response['code'] = 400;
             return $response;
         }
+
         $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
@@ -92,31 +103,35 @@ class Sql_to_es extends Model
             }
         }
         $sql = implode(",", $fieldsArr);
+
         $sql = "SELECT {$sql} FROM {$view}";
-        $result = $this->prepare($sql);
+
+
+        $this->begin();
+
+        $result = $this->prepare("DECLARE curs CURSOR FOR {$sql}");
+
         try {
             $result->execute();
         } catch (\PDOException $e) {
+            $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['code'] = 410;
+            $response['code'] = 400;
             return $response;
         }
 
-        $i = 0;
-        $json = "";
-        $ch = curl_init(\app\conf\App::$param['esHost'] . ":9200/_bulk");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-        ));
+        $innerStatement = $this->prepare("FETCH 1 FROM curs");
+
         $geometries = [];
         $features = [];
+        $json = "";
+
         try {
-            while ($row = $this->fetchRow($result, "assoc")) {
-                $arr = array();
+
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
+
+                $arr = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
                         $geometries[] = json_decode($row[$key]);
@@ -135,50 +150,63 @@ class Sql_to_es extends Model
                 if (sizeof($geometries) == 0) {
                     $features = array("type" => "Feature", "properties" => $arr);
                 }
+
                 unset($geometries);
+
                 $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
-                if (is_int($i / 1000)) {
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-                    $buffer = curl_exec($ch);
-                    $obj = json_decode($buffer, true);
+
+                if (is_int($i / $bulkSize)) {
+
+                    $esResponse = $client->post($esUrl, ['body' => $json]);
+                    $obj = json_decode($esResponse->getBody(), true);
+
                     if (isset($obj["errors"]) && $obj["errors"] == true) {
                         $errors = true;
                         $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
                     }
                     $json = "";
+                    $bulKCount++;
+                    error_log($i);
+                    error_log(number_format(memory_get_usage()));
+
                 }
+
                 $i++;
             }
+
+
+            // Index the last bulk
+            $esResponse = $client->post($esUrl, ['body' => $json]);
+            $obj = json_decode($esResponse->getBody(), true);
+            if (isset($obj["errors"]) && $obj["errors"] == true) {
+                $errors = true;
+                $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
+            }
+
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 410;
             return $response;
         }
-        // Index the last bulk
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        $buffer = curl_exec($ch);
-        $obj = json_decode($buffer, true);
-        if (isset($obj["errors"]) && $obj["errors"] == true) {
-            $errors = true;
-            $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
-        }
-        curl_close($ch);
+
+
         if ($errors) {
             \app\inc\Session::createLogEs($errors_in);
         }
+
         $response['success'] = true;
         $response['errors'] = $errors;
         $response['errors_in'] = $errors_in;
+        $response['num_of_bulks'] = $bulKCount;
         $response['message'] = "Indexed {$i} documents";
 
-        $this->free($result);
-        $sql = "DROP VIEW {$view}";
-        $result = $this->execQuery($sql);
-        $this->free($result);
         return $response;
     }
 
