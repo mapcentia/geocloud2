@@ -67,6 +67,9 @@ class Sql_to_es extends Model
         ]);
         $bulKCount = 0;
         $bulkSize = 500;
+        $geometries = [];
+        $features = [];
+        $json = "";
         // We create a unique index name
         $errors = false;
         $errors_in = [];
@@ -106,26 +109,17 @@ class Sql_to_es extends Model
 
         $sql = "SELECT {$sql} FROM {$view}";
 
-
         $this->begin();
 
-        $result = $this->prepare("DECLARE curs CURSOR FOR {$sql}");
-
         try {
-            $result->execute();
+            $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
+            $innerStatement = $this->prepare("FETCH 1 FROM curs");
         } catch (\PDOException $e) {
-            $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-
-        $innerStatement = $this->prepare("FETCH 1 FROM curs");
-
-        $geometries = [];
-        $features = [];
-        $json = "";
 
         try {
 
@@ -176,7 +170,6 @@ class Sql_to_es extends Model
 
                 $i++;
             }
-
 
             // Index the last bulk
             $esResponse = $client->post($esUrl, ['body' => $json]);

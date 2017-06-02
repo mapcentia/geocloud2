@@ -12,7 +12,10 @@ use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
 
+include_once('../app/vendor/autoload.php');
+
 include_once("../app/conf/App.php");
+
 new \app\conf\App();
 
 // Setup host
