@@ -92,6 +92,7 @@ dropdb $targetdb
 createdb --template=template0 --locale=da_DK.UTF-8 --encoding=UTF8
 
 psql -c "CREATE EXTENSION postgis;"
+psql -c "CREATE EXTENSION pgrouting;"
 psql -c "CREATE EXTENSION pgcrypto;"
 psql -c "CREATE EXTENSION \"uuid-ossp\";"
 psql -c "CREATE EXTENSION dblink;"
