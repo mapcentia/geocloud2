@@ -110,6 +110,8 @@ var gc2table = (function () {
                 callCustomOnload: true,
                 popupHtml: null,
                 ns: "",
+                template: null,
+                usingCarto: false,
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -143,7 +145,9 @@ var gc2table = (function () {
             callCustomOnload = defaults.callCustomOnload,
             locale = defaults.locale,
             popupHtml = defaults.popupHtml,
-            ns = defaults.ns;
+            ns = defaults.ns,
+            template = defaults.template,
+            usingCartodb = defaults.usingCartodb;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -163,14 +167,22 @@ var gc2table = (function () {
                         m.map._layers[id].setStyle(styleSelected);
                     }
                     if (openPopUp) {
-                        var str = "<table>";
+                        var str = "<table>", renderedText;
                         $.each(cm, function (i, v) {
                             if (typeof v.showInPopup === "undefined" || (typeof v.showInPopup === "boolean" && v.showInPopup === true)) {
                                 str = str + "<tr><td>" + v.header + "</td><td>" + m.map._layers[id].feature.properties[v.dataIndex] + "</td></tr>";
                             }
                         });
                         str = str + "</table>";
-                        m.map._layers[id].bindPopup(popupHtml || str, {
+
+                        if (template) {
+                            renderedText = Mustache.render(template, m.map._layers[id].feature.properties);
+                            if (usingCartodb) {
+                                renderedText = $.parseHTML(renderedText)[0].children[1].innerHTML
+                            }
+                        }
+
+                        m.map._layers[id].bindPopup(renderedText || str, {
                             className: "custom-popup",
                             autoPan: autoPan,
                             closeButton: true
