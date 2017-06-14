@@ -2,8 +2,6 @@
 namespace app\models;
 
 use \app\conf\App;
-use \app\models\Database;
-
 
 class Layer extends \app\models\Table
 {
@@ -488,11 +486,15 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function delete($tables)
+    /**
+     * @param array $tables
+     * @return array
+     */
+    public function delete(array $tables)
     {
+        $response = [];
         $this->begin();
         foreach ($tables as $table) {
-            $bits = explode(".", $table);
             $check = $this->isTableOrView($table);
             if (!$check["success"]) {
                 $response['success'] = false;
@@ -501,7 +503,7 @@ class Layer extends \app\models\Table
                 return $response;
             }
             $type = $check["data"];
-            $query = "DROP {$type} \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
+            $query = "DROP {$type} " . $this->doubleQuoteQualifiedName($table) . " CASCADE";
 
             $res = $this->prepare($query);
 
