@@ -24,7 +24,7 @@ Ext.MessageBox.buttonText = {
     cancel: "<i class='fa fa-remove'></i> " + __("Cancel"),
     yes: "<i class='fa fa-check'></i> " + __("Yes"),
     no: "<i class='fa fa-remove'></i> " + __("No")
-}
+};
 
 /**
  * Set vars in global scope
@@ -1763,7 +1763,7 @@ $(window).load(function () {
                         if (btn === "yes") {
                             var tables = [];
                             Ext.iterate(records, function (v) {
-                                tables.push(v.get("_key_"));
+                                tables.push(v.get("f_table_schema") + "." + v.get("f_table_name"));
                             });
                             var param = {
                                 data: tables

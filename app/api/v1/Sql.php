@@ -101,10 +101,11 @@ class Sql extends \app\inc\Controller
     /**
      * @param array $fromArr
      */
-    private function parseSelect(array $fromArr)
+    private function parseSelect($fromArr)
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {
+
                 // Recursive call
                 $this->parseSelect($table["sub_tree"]["FROM"]);
             }
@@ -135,6 +136,7 @@ class Sql extends \app\inc\Controller
      */
     private function transaction($sql, $clientEncoding = null)
     {
+
         $response = [];
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
@@ -290,6 +292,7 @@ class Sql extends \app\inc\Controller
                 $csvAllToStr = Input::get('allstr') ?: null;
 
                 $alias = Input::get('alias') ?: null;
+
 
                 $api = new \app\models\Sql($srs);
                 $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);

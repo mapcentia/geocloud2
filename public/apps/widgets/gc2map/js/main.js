@@ -135,6 +135,7 @@ MapCentia = function (globalId) {
                 defaults.width = "100%";
                 defaults.height = "100%";
                 defaults.template = "body.tmpl";
+                defaults.key = null;
                 MapappWin.document.write(
                     '<script>gc2map.init(' + JSON.stringify(defaults) + ')</script>'
                 );
@@ -305,8 +306,20 @@ MapCentia = function (globalId) {
             $(this).attr("href", permaLink(conf.vidiUrl));
         });
 
+        // Hide location button if not HTTPS
+        if (location.protocol !== "https:") {
+            $("#locate-btn-" + id).parent().hide();
+        }
+
         // Start by rendering legend, so "empty" placeholder is displayed.
         addLegend();
+
+        // If gc2SearchKomkode is set, when try to create search
+        if (typeof window.gc2SearchKomkode === "string") {
+            try {
+                gc2map.createSearch(cloud, window.gc2SearchKomkode);
+            } catch (e) {}
+        }
 
         // Media queries
         $("#legend-popover-" + id).popover({offset: 10, html: true, content: $("#legend-" + id)});
@@ -387,7 +400,7 @@ MapCentia = function (globalId) {
                 } else {
                     setBaseLayer(defaults.baseLayers[0].id);
                 }
-                $("#loadscreen").hide();
+                $("#loadscreen-" + id).hide();
             } else {
                 setTimeout(function () {
                     poll();

@@ -37,6 +37,7 @@ class Mapfile extends \app\inc\Controller
         IMAGECOLOR 255 2 255
         UNITS METERS
         INTERLACE OFF
+
         OUTPUTFORMAT
         NAME "png"
         DRIVER AGG/PNG
@@ -46,6 +47,16 @@ class Mapfile extends \app\inc\Controller
         TRANSPARENT ON
         FORMATOPTION "GAMMA=0.75"
         END
+
+        OUTPUTFORMAT
+        NAME "utfgrid"
+        DRIVER UTFGRID
+        MIMETYPE "application/json"
+        EXTENSION "json"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
+        END
+
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         DEBUG 5
         WEB
@@ -457,11 +468,8 @@ class Mapfile extends \app\inc\Controller
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                #"ows_extent" "-180 -90 180 90"
                 "wms_format"    "image/png"
-                #"wms_extent" "-180 -90 180 90"
-                "appformap_group"  "<?php if ($row['layergroup']) echo addslashes($row['layergroup']); else echo "Default group" ?>"
-                "appformap_queryable"    "true"
-                "appformap_loader"    "true"
                 "wms_enable_request"    "*"
                 "gml_include_items" "all"
                 "wms_include_items" "all"

@@ -17,6 +17,6 @@ class Extent extends \app\inc\Controller
     {
         $layer = Input::getPath()->part(5);
         $extent = Input::getPath()->part(6) ?: "4326";
-        return $this->layers->getExtent($layer, $extent);
+        return $this->layers->getEstExtent($layer, $extent);
     }
 }

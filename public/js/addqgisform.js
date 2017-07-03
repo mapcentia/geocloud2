@@ -5,9 +5,15 @@
 /*global writeFiles:false */
 /*global store:false */
 /*global addQgis:false */
+/*global window:false */
+
+"use strict";
+
+/**
+ *
+ */
 Ext.namespace('addQgis');
 addQgis.init = function () {
-    "use strict";
     Ext.QuickTips.init();
     var me = this;
     me.form = new Ext.Panel({
@@ -19,7 +25,7 @@ addQgis.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["qgs"], flag = false;
+            var arr = [], ext = ["qgs"], flag = false, createWms, createComp;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5',
                 url: '/controllers/upload/qgis',
@@ -30,7 +36,7 @@ addQgis.init = function () {
                 init: {
                     UploadComplete: function (up, files) {
                         // *****
-                        var count = 0, errors = [], layers = [], i;
+                        var count = 0, errors = [], layers = [], i, message;
                         (function iter() {
                             var e = arr[count], strings = [];
                             if (arr.length === count) {
@@ -43,7 +49,7 @@ addQgis.init = function () {
                                         for (i = 0; i < errors.length; i = i + 1) {
                                             strings.push(errors[i]);
                                         }
-                                        var message = "<p>" + __("Some file processing resulted in errors or warnings.") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
+                                        message = "<p>" + __("Some file processing resulted in errors or warnings.") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
                                         Ext.MessageBox.show({
                                             title: __('Failure'),
                                             msg: message,
@@ -57,7 +63,7 @@ addQgis.init = function () {
                                                 strings.push(v2);
                                             });
                                         });
-                                        var message = "<p>" + __("These GC2 layers now use the QGIS styles from the project file(s)") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
+                                        message = "<p>" + __("These GC2 layers now use the QGIS styles from the project file(s)") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
                                         Ext.MessageBox.show({
                                             title: __('Success'),
                                             msg: message,
@@ -74,7 +80,7 @@ addQgis.init = function () {
                                 flag = true;
                                 $.ajax({
                                     url: '/controllers/upload/processqgis',
-                                    data: "file=" + e,
+                                    data: "file=" + e + "&createWms=" + createWms + "&createComp=" + createComp,
                                     dataType: 'json',
                                     type: 'GET',
                                     success: function (response) {
@@ -108,6 +114,10 @@ addQgis.init = function () {
                         });
                     },
                     BeforeUpload: function (up, file) {
+                        createWms = Ext.getCmp('createWms').getValue();
+                        createComp = Ext.getCmp('createComp').getValue();
+
+
                         up.settings.multipart_params = {
                             name: file.name
                         };
@@ -124,14 +134,28 @@ addQgis.init = function () {
                 }, 1000);
             }, 200);
         },
-        tbar: [{ // Add an hidden input field to get the height right
-            width: 60,
-            xtype: 'textfield',
-            id: 'srs',
-            value: '',
-            style: {visibility: 'hidden'}
+        tbar: [
+            { // Add an hidden input field to get the height right
+                width: 10,
+                xtype: 'textfield',
+                id: '',
+                value: '',
+                style: {visibility: 'hidden'}
 
-        }]
+            },
+            ' ',
+            __('Create WMS layers') + __("This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.", true),
+            {
+                xtype: 'checkbox',
+                id: 'createWms'
+            },
+            ' ',
+            __('Create composite layer') + __("This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema", true),
+            {
+                xtype: 'checkbox',
+                id: 'createComp'
+            }
+        ]
     });
     me.onSubmit = function (form, action) {
         var result = action.result;

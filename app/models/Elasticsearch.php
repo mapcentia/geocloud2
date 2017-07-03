@@ -131,6 +131,7 @@ class Elasticsearch extends Model
                 "type" => $value["type"],
                 "boost" => $value["boost"],
                 "null_value" => $value["null_value"],
+                "fielddata" => $value["fielddata"],
             );
         }
         foreach ($schema as $key => $value) {
@@ -143,6 +144,7 @@ class Elasticsearch extends Model
             if (isset($arr[$key]["search_analyzer"]) && ($arr[$key]["search_analyzer"])) $mapArr["search_analyzer"] = $arr[$key]["search_analyzer"];
             if (isset($arr[$key]["boost"]) && ($arr[$key]["boost"])) $mapArr["boost"] = $arr[$key]["boost"];
             if (isset($arr[$key]["null_value"]) && ($arr[$key]["null_value"])) $mapArr["null_value"] = $arr[$key]["null_value"];
+            if (isset($arr[$key]["fielddata"]) && ($arr[$key]["fielddata"])) $mapArr["fielddata"] = $arr[$key]["fielddata"];
             if ($pgType == "geometry") {
                 if ($mapArr["type"] == "geo_point") {
                     $map["mappings"][$type]["properties"]["geometry"]["properties"]["coordinates"] = $mapArr;
@@ -172,7 +174,7 @@ class Elasticsearch extends Model
             }
         } elseif ($pgType == "string" || $pgType == "text") {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         } elseif ($pgType == "timestamptz") {
             $esType = array(

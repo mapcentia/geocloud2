@@ -15,74 +15,68 @@ header("Content-type: text/plain");
 
 include_once(__DIR__ . "/../../conf/App.php");
 
-$db = "mydb";
-$schema = "fot_test";
-$inputRel = "kommuner";
-$outputTable = "grid";
-$grid = "grid2";
-$typeName = "VEJMIDTE";
-$importTable = strtolower($typeName);
-$useGfs = true;
-$geomType = "Linestring";
-$size = 2000;
+$db = $argv[1];
+$schema = $argv[2];
+$url = $argv[3];
+$importTable = $argv[4];
+$geomType = $argv[5];
+$grid = $argv[6];
+$overwrite = $argv[7];
+$id = $argv[8] ?: "gml_id";
+$gfs = $argv[9];
+
+
 
 new \app\conf\App();
 Database::setDb($db);
 $database = new Model();
+$database->connect();
 
-
-print_r(\app\conf\Connection::$param);
-
-$sql = "DROP TABLE {$schema}.{$outputTable}";
-echo $sql . "\n";
+$sql = "SELECT 1 FROM {$grid} LIMIT 1";
 $database->execQuery($sql);
+if ($database->PDOerror) {
+    throw new Exception("Grid table \"{$grid}\" does not exist.");
+}
 
-$sql = "DROP TABLE {$schema}.{$grid}";
-echo $sql . "\n";
-$database->execQuery($sql);
+if ($overwrite) {
+    $sql = "DROP TABLE {$schema}.{$importTable}";
+    $res = $database->prepare($sql);
+    print "SQL run:\n";
+    print $sql . "\n\n";
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
 
-$sql = "CREATE TABLE {$schema}.{$outputTable} AS SELECT st_fishnet('{$schema}.{$inputRel}','the_geom',{$size}, 25832)";
-echo $sql . "\n";
-$database->execQuery($sql);
+    }
+}
 
-$sql = "ALTER TABLE {$schema}.{$outputTable} ALTER st_fishnet TYPE geometry('Polygon', 25832)";
-echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "ALTER TABLE {$schema}.{$outputTable} ADD gid SERIAL";
-echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "ALTER TABLE {$schema}.{$outputTable} ADD gid SERIAL";
-echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "CREATE TABLE {$schema}.{$grid} AS SELECT $schema.grid.*
-            FROM
-              {$schema}.{$outputTable} LEFT JOIN
-              {$schema}.{$inputRel} AS {$inputRel} ON
-              st_intersects(grid.st_fishnet,{$inputRel}.the_geom)
-            WHERE {$inputRel}.gid IS NOT NULL";
-echo $sql . "\n";
-$database->execQuery($sql);
-
-$sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$schema}.{$grid}";
+$sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid}";
 //echo $sql . "\n";
 $res = $database->execQuery($sql);
+
+function which($cmd)
+{
+    $cmd = "/usr/bin/which {$cmd}";
+    exec($cmd . ' 2>&1', $out, $err);
+    return $out[0];
+}
+
+$pass = true;
 
 while ($row = $database->fetchRow($res)) {
     print_r($row);
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
-    $wfsUrl = "http://kortforsyningen.kms.dk/fot2007_nohistory_test?LOGIN=Kommune461&PASSWORD=Jkertyu10&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={$typeName}&SRSNAME=urn:ogc:def:crs:EPSG::25832&BBOX=";
+    $wfsUrl = $url . "&BBOX=";
     print_r($wfsUrl . $bbox);
+
     Util::wget($wfsUrl . $bbox);
 
     file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml", Util::wget($wfsUrl . $bbox));
-    if ($useGfs) {
-        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents("/var/www/geocloud2/app/conf/{$typeName}.gfs"));
+    if ($gfs) {
+        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
 
-    $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+    $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") ." " .
         "-skipfailures " .
         "-append " .
         "-dim 3 " .
@@ -94,10 +88,32 @@ while ($row = $database->fetchRow($res)) {
         "/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml " .
         "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
-    exec($cmd, $out, $err);
-    print_r($out);
+    exec($cmd . ' 2>&1', $out, $err);
+
+    foreach ($out as $line) {
+        if (strpos($line, "FAILURE") !== false) {
+            $pass = false;
+            break;
+        }
+    }
     unlink("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml");
+
+    $sql = "ALTER TABLE {$schema}.{$importTable} DROP CONSTRAINT IF EXISTS {$schema}_{$importTable}_unique_id";
+    echo $sql . "\n";
+    $database->execQuery($sql);
+    print_r($database->PDOerror);
+
+    $sql = "ALTER TABLE {$schema}.{$importTable} ADD CONSTRAINT {$schema}_{$importTable}_unique_id UNIQUE ({$id})";
+    echo $sql . "\n";
+    $database->execQuery($sql);
+    print_r($database->PDOerror);
 
 }
 
-die("END\n");
+if (!$pass) {
+    throw new Exception("Some cells threw errors");
+} else {
+    print "Completed.\n";
+}
+
+

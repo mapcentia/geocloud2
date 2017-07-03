@@ -4,6 +4,8 @@ use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
 
+//die($_GET["start"]);
+
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
@@ -15,10 +17,13 @@ include "libs/PEAR/Cache_Lite/Lite.php";
 include 'convertgeom.php';
 include 'explodefilter.php';
 
-$gmlNameSpace = Connection::$param["postgisdb"];
+if (!$gmlNameSpace) {
+    $gmlNameSpace = Connection::$param["postgisdb"];
+}
 
-$gmlNameSpaceUri = "http://mapcentia.com/" . $gmlNameSpace;
-
+if (!$gmlNameSpaceUri) {
+    $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
+}
 
 $postgisdb = Connection::$param["postgisdb"];
 $postgisschema = Connection::$param["postgisschema"];
@@ -84,8 +89,15 @@ $HTTP_RAW_POST_DATA = file_get_contents("php://input");
 if ($HTTP_RAW_POST_DATA) {
     Log::write($HTTP_RAW_POST_DATA);
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
+    //makeExceptionReport($HTTP_RAW_POST_DATA);
+
+    // HACK. MapInfo 15 sends invalid XML with newline \n and double xmlns:wfs namespace. So we strip those
+    $HTTP_RAW_POST_DATA = str_replace("\\n"," ", $HTTP_RAW_POST_DATA);
+    $HTTP_RAW_POST_DATA = str_replace("xmlns:wfs=\"http://www.opengis.net/wfs\""," ", $HTTP_RAW_POST_DATA);
+
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
+
     $request = $unserializer->getRootName();
     switch ($request) {
         case "GetFeature":
@@ -244,7 +256,7 @@ if (!(empty($bbox[0]))) {
 }
 //get the request'
 
-//die ($HTTP_FORM_VARS["REQUEST"]);
+
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
     case "GETCAPABILITIES":
         getCapabilities($postgisObject);
@@ -554,7 +566,7 @@ function doSelect($table, $sql, $sql2, $from)
         print $defaultBoundedBox;
     }
     //die($sql . $from);
-    $result = $postgisObject->execQuery($sql . $from . " LIMIT 5000");
+    $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
     if ($postgisObject->numRows($result) < 1) {
         $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
         $from = str_replace("view", "join", $from);
@@ -599,7 +611,8 @@ function doSelect($table, $sql, $sql2, $from)
                         $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
                     }
 
-                    if ($FieldValue && ($FieldName != "fid" && $FieldName != "FID")) {
+                    // Important to use $FieldValue !== or else will int 0 evaluate to false
+                    if ($FieldValue !== false && ($FieldName != "fid" && $FieldName != "FID")) {
                         if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
                             //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
@@ -607,7 +620,7 @@ function doSelect($table, $sql, $sql2, $from)
                             $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
                         }
                         writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
-                        echo $FieldValue;
+                        echo (string)$FieldValue;
                         writeTag("close", $gmlNameSpace, $FieldName, null, False, True);
                     }
                 } elseif ($tableObj->metaData[$FieldName]['type'] == "geometry") {

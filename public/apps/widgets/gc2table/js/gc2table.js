@@ -28,7 +28,7 @@ var gc2table = (function () {
     if (typeof $ === "undefined") {
         js = document.createElement("script");
         js.type = "text/javascript";
-        js.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
+        js.src = "//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js";
         document.getElementsByTagName("head")[0].appendChild(js);
     }
     (function pollForjQuery() {
@@ -64,7 +64,7 @@ var gc2table = (function () {
                         $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
                     }
                     if (typeof Backbone === "undefined") {
-                        $.getScript("http://backbonejs.org/backbone.js");
+                        $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
                     }
                     (function pollForDependants() {
                         if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
@@ -108,6 +108,8 @@ var gc2table = (function () {
                 autoPan: false,
                 locale: 'en-US',
                 callCustomOnload: true,
+                popupHtml: null,
+                ns: "",
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -139,7 +141,9 @@ var gc2table = (function () {
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
             callCustomOnload = defaults.callCustomOnload,
-            locale = defaults.locale;
+            locale = defaults.locale,
+            popupHtml = defaults.popupHtml,
+            ns = defaults.ns;
 
         (function poll() {
             if (scriptsLoaded) {
@@ -166,7 +170,7 @@ var gc2table = (function () {
                             }
                         });
                         str = str + "</table>";
-                        m.map._layers[id].bindPopup(str, {
+                        m.map._layers[id].bindPopup(popupHtml || str, {
                             className: "custom-popup",
                             autoPan: autoPan,
                             closeButton: true
@@ -177,8 +181,8 @@ var gc2table = (function () {
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
                     //$(el).bootstrapTable('scrollTo', row.offset().top);
-                    $(".fixed-table-body").animate({
-                        scrollTop: $(".fixed-table-body").scrollTop() + (row.offset().top - $(".fixed-table-body").offset().top)
+                    $(ns + " .fixed-table-body").animate({
+                        scrollTop: $(ns + " .fixed-table-body").scrollTop() + (row.offset().top - $(ns + " .fixed-table-body").offset().top)
                     }, 300);
                     object.trigger("selected" + "_" + uid, e.target._leaflet_id);
                 };
