@@ -1,5 +1,6 @@
 <?php
 ini_set("display_errors", "On");
+ini_set("display_errors", "On");
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', 0);
 error_reporting(3);
@@ -12,7 +13,10 @@ use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
 
+include_once('../app/vendor/autoload.php');
+
 include_once("../app/conf/App.php");
+
 new \app\conf\App();
 
 // Setup host
@@ -30,7 +34,9 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
+
     Database::setDb(Input::getPath()->part(4)); // Default
+
     Route::add("api/v1/sql", function () {
         Session::start();
         $db = Input::getPath()->part(4);
@@ -41,12 +47,31 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-    Route::add("api/v1/elasticsearch", function () {
-        if (Input::getPath()->part(4) == "river") {
-            Session::start(); // So we can create a session log from the indexing
+
+    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
+
+        function () {
+            $r = func_get_arg(0);
+            if ($r["action"] == "river") {
+                Session::start(); // So we can create a session log from the indexing
+            }
+            Database::setDb($r["user"]);
         }
-        Database::setDb(Input::getPath()->part(5));
-    });
+
+    );
+
+    Route::add("api/v2/elasticsearch/{action}/{user}/[indices]/[type]",
+
+        function () {
+            $r = func_get_arg(0);
+            if ($r["action"] == "river") {
+                Session::start(); // So we can create a session log from the indexing
+            }
+            Database::setDb($r["user"]);
+        }
+
+    );
+
     Route::add("api/v1/meta", function () {
         Session::start();
     });
@@ -69,10 +94,12 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/collector");
     Route::add("api/v1/decodeimg");
     Route::add("api/v1/senti");
+    Route::add("api/v1/loriot");
     Route::add("api/v1/session", function () {
         Session::start();
         Database::setDb("mapcentia");
     });
+    Route::miss();
 } elseif (Input::getPath()->part(1) == "store") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");
@@ -164,8 +191,5 @@ if (Input::getPath()->part(1) == "api") {
         \app\inc\Redirect::to("/user/login");
     }
 } else {
-    header('HTTP/1.0 404 Not Found');
-    echo "<h1>404 Not Found</h1>";
-    echo "The page that you have requested could not be found.";
-    exit();
+    Route::miss();
 }
