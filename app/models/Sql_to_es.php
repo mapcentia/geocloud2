@@ -112,8 +112,11 @@ class Sql_to_es extends Model
         $this->begin();
 
         try {
+
             $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
+
             $innerStatement = $this->prepare("FETCH 1 FROM curs");
+
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
