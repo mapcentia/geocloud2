@@ -1658,7 +1658,7 @@ geocloud = (function () {
                 type: "wms",
                 maxZoom: 21,
                 maxNativeZoom: 21,
-                tileSize: 256
+                tileSize: MAPLIB === "ol2" ? OpenLayers.Size(256, 256) : 256
             };
             if (config) {
                 for (prop in config) {
