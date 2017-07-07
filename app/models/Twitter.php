@@ -34,7 +34,7 @@ class Twitter extends Model
         /** Note: Set the GET field BEFORE calling buildOauth(); **/
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
         //die(urldecode($search));
-        $getfield = '?' . urldecode($search);
+        $getfield = '?' . $search;
         $requestMethod = 'GET';
         $twitter = new \app\inc\TwitterAPIExchange($this->settings);
         $res = $twitter

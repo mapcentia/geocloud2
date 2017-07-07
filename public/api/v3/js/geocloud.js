@@ -2856,7 +2856,7 @@ if (geocloud.MAPLIB === "leaflet") {
                 this._adjustTilePoint(tilePoint);
                 var url = this.getTileUrl2(tilePoint);
                 if (url) {
-                    console.info(url);
+                    //console.info(url);
                     tile.src = url
                 } else {
                     console.info("Skipping single tile");
