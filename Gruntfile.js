@@ -245,6 +245,9 @@ module.exports = function (grunt) {
             },
             chown: {
                 command: 'chown www-data:www-data -R /var/www/geocloud2/app/wms/files'
+            },
+            composer: {
+                command: 'cd app && php composer.phar install'
             }
         }
     });
@@ -261,7 +264,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-npm-install');
 
     grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown', 'shell:composer']);
     grunt.registerTask('migration', ['shell:migration']);
 };
 
