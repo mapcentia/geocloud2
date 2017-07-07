@@ -112,24 +112,6 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     * @return array|mixed
-     */
-    public function get_bulk()
-    {
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
-            return $response;
-        }
-        if (sizeof(Input::getPath()->parts()) < 9 || Input::getPath()->part(8) == "") {
-            $response['success'] = false;
-            $response['message'] = "The URI must be in this form: /api/v1/elasticsearch/bulk/[user]/[index]/[type]/[id]?q=[SELECT query]";
-            return $response;
-        }
-        $api = new \app\models\Sql_to_es("4326");
-        $api->execQuery("set client_encoding='UTF8'", "PDO");
-        return $api->sql(rawurldecode(Input::get('q')), Input::getPath()->part(6), Input::getPath()->part(7), Input::getPath()->part(8), Input::getPath()->part(5));
-    }
-
-    /**
      *
      * @return array|mixed
      */
@@ -174,7 +156,7 @@ class Elasticsearch extends \app\inc\Controller
         if (Input::getMethod() == "get" && Input::getQueryString()) {
 
             $q = Input::getQueryString();
-            $hasBody = false;
+            $hasBody = false; // Flag it string query
 
         }
 
@@ -183,12 +165,12 @@ class Elasticsearch extends \app\inc\Controller
         elseif (Input::getBody()) {
 
             $q = Input::getBody();
-            $hasBody = true;
+            $hasBody = true; // Flag it for having body
 
         }
 
-        // Fallback to empty query
-        // =======================
+        // Fallback to empty string query
+        // ==============================
         else {
 
             $q = "";
@@ -236,61 +218,6 @@ class Elasticsearch extends \app\inc\Controller
         $obj = $esResponse->getBody();
 
         $response['json'] = $obj;
-        return $response;
-    }
-
-    /**
-     * @return array|mixed
-     */
-    public function put_map()
-    {
-        $put = Input::get();
-        if ($response = $this->checkAuth(Input::getPath()->part(5), $put['key'])) {
-            return $response;
-        }
-        $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
-        $es = new \app\models\Elasticsearch();
-        return $es->map($index, Input::getPath()->part(7), $put["map"]);
-    }
-
-    /**
-     * @return array|mixed
-     */
-    public function post_create()
-    {
-        $post = Input::get();
-        if ($response = $this->checkAuth(Input::getPath()->part(5), $post['key'])) {
-            return $response;
-        }
-        $index = Input::getPath()->part(5) . "_" . Input::getPath()->part(6);
-        $es = new \app\models\Elasticsearch();
-        return $es->createIndex($index, $post["map"]); // TODO rename "map" to "settings"
-    }
-
-    /**
-     * @return mixed
-     */
-    public function delete_delete()
-    {
-        $type = Input::getPath()->part(7);
-        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
-            $type = "a" . $type;
-        }
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
-            return $response;
-        }
-        $index = Input::getPath()->part(5) . (Input::getPath()->part(6) ? "_" . Input::getPath()->part(6) : "");
-        $es = new \app\models\Elasticsearch();
-        $res = $es->delete($index, $type, Input::getPath()->part(8));
-        $obj = json_decode($res["json"], true);
-        if (isset($obj["error"]) && $obj["error"] != false) {
-            $response['success'] = false;
-            $response['message'] = $obj["error"];
-            $response['code'] = $obj["status"];
-            return $response;
-        }
-        $response['success'] = true;
-        $response['message'] = $obj;
         return $response;
     }
 
@@ -548,17 +475,6 @@ class Elasticsearch extends \app\inc\Controller
     public function get_upsert()
     {
         return $this->put_upsert();
-    }
-
-    public function get_delete()
-    {
-        return $this->delete_delete();
-    }
-
-    // Wrappers for HTTP POST
-    public function post_bulk()
-    {
-        return $this->get_bulk();
     }
 
     public function post_search()
