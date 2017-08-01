@@ -79,7 +79,7 @@ while ($row = $database->fetchRow($res)) {
     $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") ." " .
         "-skipfailures " .
         "-append " .
-        "-dim 3 " .
+        "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
