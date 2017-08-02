@@ -2,6 +2,17 @@ module.exports = function (grunt) {
     "use strict";
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        less: {
+            publish: {
+                options: {
+                    compress: false,
+                    optimization: 2
+                },
+                files: {
+                    "public/apps/widgets/gc2map/css/styles.css": "public/apps/widgets/gc2map/less/styles.less"
+                }
+            }
+        },
         cssmin: {
             build: {
                 files: {
@@ -17,9 +28,6 @@ module.exports = function (grunt) {
                     ],
                     // The widget
                     'public/apps/widgets/gc2map/css/build/all.min.css': [
-                        'public/apps/widgets/gc2map/css/bootstrap.css',
-                        'public/apps/widgets/gc2map/css/bootstrap-alert.css',
-                        'public/apps/widgets/gc2map/css/non-responsive.css',
                         'public/apps/widgets/gc2map/css/styles.css',
                         'public/js/leaflet/plugins/markercluster/MarkerCluster.css',
                         'public/js/leaflet/plugins/markercluster/MarkerCluster.Default.css'
@@ -262,6 +270,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-npm-install');
+    grunt.loadNpmTasks('grunt-contrib-less');
 
     grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
     grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown', 'shell:composer']);

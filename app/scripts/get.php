@@ -169,6 +169,7 @@ if ($pass) {
     }
 
     $pkSql = null;
+    $idxSql = null;
 
     $table->begin();
 
@@ -189,6 +190,7 @@ if ($pass) {
         $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
 
     } else {
+
         $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName}";
         $res = $table->prepare($sql);
         try {
@@ -198,7 +200,8 @@ if ($pass) {
 
         $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$schema}.{$randTableName}";
         $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
-        $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom);";
+        $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
+
     }
 
     print "SQL run:\n";

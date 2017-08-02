@@ -81,11 +81,6 @@ var gc2table = (function () {
                     setTimeout(pollForDependencies, 10);
                 }
             }());
-            $('<link/>').attr({
-                rel: 'stylesheet',
-                type: 'text/css',
-                href: host + '/js/bootstrap-table/bootstrap-table.min.css'
-            }).appendTo('head');
 
         } else {
             setTimeout(pollForjQuery, 10);
@@ -149,11 +144,14 @@ var gc2table = (function () {
             template = defaults.template,
             usingCartodb = defaults.usingCartodb;
 
+        $(el).parent("div").addClass("gc2map");
+
         (function poll() {
             if (scriptsLoaded) {
                 var originalLayers, filters, filterControls;
                 _.extend(object, Backbone.Events);
                 object.on("selected" + "_" + uid, function (id) {
+
                     $(el + ' tr').removeClass("selected");
                     $.each(store.layer._layers, function (i, v) {
                         try {

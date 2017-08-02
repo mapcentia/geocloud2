@@ -61,21 +61,7 @@ if (typeof gc2map === "undefined") {
                         setTimeout(pollForDependencies, 10);
                     }
                 }());
-                $('<link/>').attr({
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/css/bootstrap.css?cea63a515abbff15#grunt-cache-bust'
-                }).appendTo('head');
-                $('<link/>').attr({
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/css/bootstrap-alert.css?a849390f2a859c66#grunt-cache-bust'
-                }).appendTo('head');
-                $('<link/>').attr({
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: host + '/apps/widgets/gc2map/css/non-responsive.css?3a2e6af4eca91b40#grunt-cache-bust'
-                }).appendTo('head');
+
                 $('<link/>').attr({
                     rel: 'stylesheet',
                     type: 'text/css',
@@ -101,6 +87,7 @@ if (typeof gc2map === "undefined") {
                     type: 'text/css',
                     href: 'https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300'
                 }).appendTo('head');
+
             } else {
                 setTimeout(pollForjQuery, 10);
             }
