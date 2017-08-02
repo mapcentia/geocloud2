@@ -272,8 +272,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-npm-install');
     grunt.loadNpmTasks('grunt-contrib-less');
 
-    grunt.registerTask('default', ['npm-install', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown', 'shell:composer']);
+    grunt.registerTask('default', ['npm-install', 'less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
+    grunt.registerTask('production', ['gitreset', 'gitpull', 'npm-install', 'less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:move_bitmaps', 'shell:chown', 'shell:composer']);
     grunt.registerTask('migration', ['shell:migration']);
 };
 
