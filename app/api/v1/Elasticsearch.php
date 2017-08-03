@@ -5,6 +5,10 @@ use \app\inc\Input;
 use \app\inc\Util;
 use \app\conf\App;
 
+/**
+ * Class Elasticsearch
+ * @package app\api\v1
+ */
 class Elasticsearch extends \app\inc\Controller
 {
     /**
@@ -222,6 +226,7 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
+     *
      * @return array|mixed
      */
     public function get_map()

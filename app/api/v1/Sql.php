@@ -9,18 +9,42 @@ use \app\inc\Input;
  */
 class Sql extends \app\inc\Controller
 {
+    /**
+     * @var array
+     */
     public $response;
+
+    /**
+     * @var string
+     */
     private $q;
+
+    /**
+     * @var string
+     */
     private $apiKey;
+
+    /**
+     * @var array
+     */
     private $data;
+
+    /**
+     * @var string
+     */
     private $subUser;
+
+    /**
+     * @var array
+     */
     private $usedRelations;
+
     const USEDRELSKEY = "checked_relations";
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function get_index()
+    public function get_index() : array
     {
         include_once 'Cache_Lite/Lite.php';
 
@@ -85,7 +109,7 @@ class Sql extends \app\inc\Controller
      * @param string $needle
      * @return array
      */
-    private function recursiveFind(array $array, $needle)
+    private function recursiveFind(array $array, string $needle) : array
     {
         $iterator = new \RecursiveArrayIterator($array);
         $recursive = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
@@ -101,7 +125,7 @@ class Sql extends \app\inc\Controller
     /**
      * @param array $fromArr
      */
-    private function parseSelect($fromArr)
+    private function parseSelect(array $fromArr) : array
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {
@@ -131,10 +155,10 @@ class Sql extends \app\inc\Controller
 
     /**
      * @param string $sql
-     * @param null|string $clientEncoding
+     * @param string|null $clientEncoding
      * @return string
      */
-    private function transaction($sql, $clientEncoding = null)
+    private function transaction(string $sql, string $clientEncoding = null)
     {
 
         $response = [];

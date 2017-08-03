@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use \app\conf\App;
@@ -16,7 +17,7 @@ class Layer extends \app\models\Table
      * @param string $column
      * @return mixed
      */
-    public function getValueFromKey($_key_, $column)
+    public function getValueFromKey(string $_key_, string $column)
     {
         $rows = $this->getRecords();
         $rows = $rows['data'];
@@ -31,16 +32,15 @@ class Layer extends \app\models\Table
     }
 
     /**
-     * Secure. Using prepared statements.
-     * @param bool $schema
-     * @param bool $layer
+     * @param string|null $schema
+     * @param string|null $layer
      * @param bool $auth
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
      * @return array
      */
-    public function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
+    public function getAll(string $schema = null, string $layer = null, $auth, $includeExtent = false, $parse = false, $es = false): array
     {
         $response = [];
         $where = ($auth) ?
@@ -653,7 +653,7 @@ class Layer extends \app\models\Table
             $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] =  $e->getMessage();;
+            $response['message'] = $e->getMessage();;
             $response['code'] = 403;
             return $response;
         }

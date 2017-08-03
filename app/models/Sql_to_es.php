@@ -26,7 +26,7 @@ class Sql_to_es extends Model
     }
 
     /**
-     * @param $obj
+     * @param array $obj
      * @return array
      */
     private function checkForErrors(array $obj)
@@ -50,10 +50,10 @@ class Sql_to_es extends Model
 
     /**
      * @param string $q
-     * @param $index
-     * @param $type
-     * @param $id
-     * @param $db
+     * @param string $index
+     * @param string $type
+     * @param string $id
+     * @param string $db
      * @return array
      */
     public function runSql($q, $index, $type, $id, $db)
@@ -206,6 +206,12 @@ class Sql_to_es extends Model
         return $response;
     }
 
+    /**
+     * @param array $array
+     * @param string $key
+     * @param mixed $value
+     * @return mixed
+     */
     private function array_push_assoc($array, $key, $value)
     {
         $array[$key] = $value;

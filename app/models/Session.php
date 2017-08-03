@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
@@ -19,8 +20,14 @@ class Session extends Model
         return $sValue;
     }
 
+    /**
+     * @param $sUserID
+     * @param $pw
+     * @return array
+     */
     public function start($sUserID, $pw)
     {
+        $response = [];
         $pw = $this->VDFormat($pw, true);
         $sPassword = \app\models\Setting::encryptPw($pw);
         if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
@@ -49,7 +56,7 @@ class Session extends Model
             $response['success'] = true;
             $response['message'] = "Session started";
             $response['screen_name'] = $_SESSION['screen_name'];
-            $response['session_id'] = session_id() ;
+            $response['session_id'] = session_id();
             $response['subuser'] = $_SESSION['subuser'];
 
         } else {
@@ -61,9 +68,13 @@ class Session extends Model
         return $response;
     }
 
+    /**
+     * @return array
+     */
     public function stop()
     {
         session_unset();
+        $response = [];
         $response['success'] = true;
         $response['message'] = "Session stopped";
         return $response;

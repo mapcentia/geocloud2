@@ -1,4 +1,5 @@
 <?php
+
 namespace app\api\v2;
 
 use \app\inc\Input;
@@ -6,7 +7,10 @@ use \app\inc\Util;
 use \app\conf\App;
 use \GuzzleHttp\Client;
 
-
+/**
+ * Class Elasticsearch
+ * @package app\api\v2
+ */
 class Elasticsearch extends \app\inc\Controller
 {
     /**
@@ -23,6 +27,11 @@ class Elasticsearch extends \app\inc\Controller
      * @var array
      */
     protected $settings;
+
+    /**
+     * @var \GuzzleHttp\Client
+     */
+    protected $client;
 
     /**
      * Elasticsearch constructor.
@@ -81,6 +90,11 @@ class Elasticsearch extends \app\inc\Controller
         if (!$this->settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $this->settings = json_encode($defaultSettings);
         }
+
+        // Init the Guzzle client
+        $this->client = new Client([
+            'timeout' => 10.0,
+        ]);
     }
 
     /**
@@ -88,7 +102,7 @@ class Elasticsearch extends \app\inc\Controller
      * @param string $key
      * @return mixed
      */
-    private function checkAuth($db, $key)
+    private function checkAuth(string $db, string $key)
     {
         $trusted = false;
 
@@ -112,10 +126,9 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     *
-     * @return array|mixed
+     * @return array
      */
-    public function get_search()
+    public function get_search() : array
     {
 
         // Get the URI params from request
@@ -126,12 +139,7 @@ class Elasticsearch extends \app\inc\Controller
         $esResponse = null;
         $db = $r["user"];
         $type = isset($r["type"]) ? $r["type"] : false;
-        $hasBody=false;
-
-        // Init the Guzzle client
-        $client = new Client([
-            'timeout' => 10.0,
-        ]);
+        $hasBody = false;
 
         // TODO auth using header instead of payload
         /*
@@ -192,18 +200,18 @@ class Elasticsearch extends \app\inc\Controller
 
             if (Input::getMethod() == "post") {
 
-                $esResponse = $client->post($searchUrl, ['body' => $q]);
+                $esResponse = $this->client->post($searchUrl, ['body' => $q]);
             }
 
             if (Input::getMethod() == "get") {
 
                 if ($hasBody) {
 
-                    $esResponse = $client->get($searchUrl, ['body' => $q]);
+                    $esResponse = $this->client->get($searchUrl, ['body' => $q]);
 
                 } else {
 
-                    $esResponse = $client->get($searchUrl . "?" . $q);
+                    $esResponse = $this->client->get($searchUrl . "?" . $q);
 
                 }
             }

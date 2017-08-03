@@ -1,8 +1,15 @@
 <?php
 namespace app\api\v1;
 
+/**
+ * Class Baselayerjs
+ * @package app\api\v1
+ */
 class Baselayerjs extends \app\inc\Controller
 {
+    /**
+     * Baselayerjs constructor.
+     */
     function __construct()
     {
         header("content-type: application/javascript");
