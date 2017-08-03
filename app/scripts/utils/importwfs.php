@@ -1,5 +1,5 @@
 <?php
-ini_set("display_errors", "On");
+ini_set("display_errors", "Off");
 error_reporting(3);
 
 use \app\conf\App;
@@ -41,8 +41,8 @@ if ($database->PDOerror) {
 if ($overwrite) {
     $sql = "DROP TABLE {$schema}.{$importTable}";
     $res = $database->prepare($sql);
-    print "SQL run:\n";
-    print $sql . "\n\n";
+    //print "SQL run:\n";
+    //print $sql . "\n\n";
     try {
         $res->execute();
     } catch (\PDOException $e) {
@@ -64,16 +64,15 @@ function which($cmd)
 $pass = true;
 
 while ($row = $database->fetchRow($res)) {
-    print_r($row);
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
-    print_r($wfsUrl . $bbox);
+    $gmlName = $importTable . "-" . $row["gid"] . ".gml";
 
     Util::wget($wfsUrl . $bbox);
 
-    file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml", Util::wget($wfsUrl . $bbox));
+    file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox));
     if ($gfs) {
-        file_put_contents("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gfs", file_get_contents($gfs));
+        file_put_contents("/var/www/geocloud2/public/logs/" . $importTable . "-" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") ." " .
@@ -85,7 +84,7 @@ while ($row = $database->fetchRow($res)) {
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:25832' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
-        "/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml " .
+        "/var/www/geocloud2/public/logs/" . $gmlName . " " .
         "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
     exec($cmd . ' 2>&1', $out, $err);
@@ -96,24 +95,26 @@ while ($row = $database->fetchRow($res)) {
             break;
         }
     }
-    unlink("/var/www/geocloud2/public/logs/" . $row["gid"] . ".gml");
+    unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+
+    if (!$pass) {
+        throw new Exception(print_r($out, true));
+    }
+
 
     $sql = "ALTER TABLE {$schema}.{$importTable} DROP CONSTRAINT IF EXISTS {$schema}_{$importTable}_unique_id";
-    echo $sql . "\n";
+    //echo $sql . "\n";
     $database->execQuery($sql);
     print_r($database->PDOerror);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} ADD CONSTRAINT {$schema}_{$importTable}_unique_id UNIQUE ({$id})";
-    echo $sql . "\n";
+    //echo $sql . "\n";
     $database->execQuery($sql);
     print_r($database->PDOerror);
 
-}
+    echo ".";
 
-if (!$pass) {
-    throw new Exception("Some cells threw errors");
-} else {
-    print "Completed.\n";
 }
+echo "\n";
 
 
