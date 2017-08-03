@@ -262,7 +262,7 @@ if ($pass) {
 
 } else {
 
-    print_r(array_slice($out, -20, 20, true));
+    print_r($out);
 
     print "\n\n";
 
@@ -270,17 +270,19 @@ if ($pass) {
     $values = array(":lastcheck" => 0, ":id" => $jobId);
 
     // Output the first few lines of file
-    Print "Outputting the first few lines of the file:\n\n";
-    $handle = @fopen($dir . "/" . $tempFile, "r");
-    if ($handle) {
-        for ($i = 0; $i < 40; $i++) {
-            $buffer = fgets($handle, 4096);
-            echo $buffer;
+    if ($grid == null) {
+        Print "Outputting the first few lines of the file:\n\n";
+        $handle = @fopen($dir . "/" . $tempFile, "r");
+        if ($handle) {
+            for ($i = 0; $i < 40; $i++) {
+                $buffer = fgets($handle, 4096);
+                echo $buffer;
+            }
+            if (!feof($handle)) {
+                echo "Error: unexpected fgets() fail\n";
+            }
+            fclose($handle);
         }
-        if (!feof($handle)) {
-            echo "Error: unexpected fgets() fail\n";
-        }
-        fclose($handle);
     }
 
 
@@ -302,7 +304,7 @@ if ($pass) {
             "Database: {$db}\n" .
             "Schema: {$schema}\n" .
             "table: {$safeName}\n" .
-            "Url: {$url}\n";
+            "Log: /logs/{$jobId}_scheduler.log\n";
 
         $message = [
             'To' => implode(",", App::$param["notification"]["to"]),
