@@ -95,12 +95,33 @@ while ($row = $database->fetchRow($res)) {
             break;
         }
     }
-    unlink("/var/www/geocloud2/public/logs/" . $gmlName);
 
     if (!$pass) {
-        throw new Exception(print_r($out, true));
+
+        foreach($out as $line) {
+            echo $line."\n";
+        }
+
+        echo  "\nOutputting the first few lines of the file:\n\n";
+
+        $handle = @fopen("/var/www/geocloud2/public/logs/" . $gmlName, "r");
+        if ($handle) {
+            for ($i = 0; $i < 40; $i++) {
+                $buffer = fgets($handle, 4096);
+                echo $buffer;
+            }
+            if (!feof($handle)) {
+                echo  "Error: unexpected fgets() fail\n";
+            }
+            fclose($handle);
+        }
+
+        unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+
+        exit(1);
     }
 
+    unlink("/var/www/geocloud2/public/logs/" . $gmlName);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} DROP CONSTRAINT IF EXISTS {$schema}_{$importTable}_unique_id";
     //echo $sql . "\n";
@@ -113,8 +134,8 @@ while ($row = $database->fetchRow($res)) {
     print_r($database->PDOerror);
 
     echo ".";
-
 }
 echo "\n";
+exit(0);
 
 

@@ -83,7 +83,7 @@ function getCmd()
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName;
 
-    print "Staring inserting using ogr2ogr...\n\n";
+    print "Staring inserting in temp table using ogr2ogr...\n\n";
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
@@ -104,7 +104,7 @@ function getCmdPaging()
 {
     global $randTableName, $type, $db, $schema, $url, $grid, $id;
 
-    print "Staring paged download...\n\n";
+    print "Staring inserting in temp table using paginated download...\n\n";
 
     $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0";
 
@@ -116,10 +116,6 @@ $pass = true;
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
-// Dry run
-
-print "Starting dry run...\n\n";
-
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 if ($err) {
@@ -127,7 +123,7 @@ if ($err) {
     $pass = false;
 } else {
 
-    print "Dry run command:\n";
+    print "Commando:\n";
     print $cmd . "\n\n";
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
@@ -142,7 +138,7 @@ if ($err) {
 // Run for real if the dry run is passed.
 if ($pass) {
 
-    print "Passed, proceeding...\n\n";
+    print "Inserting in temp table done, proceeding...\n\n";
 
     if ($deleteAppend == "1") {
 
@@ -176,8 +172,6 @@ if ($pass) {
     if ($o != "-overwrite") {
 
         $sql = "DELETE FROM {$schema}.{$safeName}";
-        print "SQL run:\n";
-        print $sql . "\n\n";
         $res = $table->prepare($sql);
         try {
             $res->execute();
@@ -203,9 +197,6 @@ if ($pass) {
         $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
 
     }
-
-    print "SQL run:\n";
-    print $sql . "\n\n";
 
     $res = $table->prepare($sql);
 
@@ -243,8 +234,8 @@ if ($pass) {
     # Clean up
     $sql = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
     $res = $table->prepare($sql);
-    print "SQL run:\n";
-    print $sql . "\n\n";
+    print "Existing table dropped.\n\n";
+
     try {
         $res->execute();
     } catch (\PDOException $e) {
@@ -255,7 +246,7 @@ if ($pass) {
 
 if ($pass) {
 
-    print $url . " imported to " . $schema . "." . $safeName . "\n\n";
+    print "Data imported into " . $schema . "." . $safeName . "\n\n";
     $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
     print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
@@ -304,7 +295,7 @@ if ($pass) {
             "Database: {$db}\n" .
             "Schema: {$schema}\n" .
             "table: {$safeName}\n" .
-            "Log: /logs/{$jobId}_scheduler.log\n";
+            "Log: https://geofyn.mapcentia.com/logs/{$jobId}_scheduler.log\n";
 
         $message = [
             'To' => implode(",", App::$param["notification"]["to"]),
