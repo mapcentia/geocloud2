@@ -26,7 +26,6 @@ $id = $argv[8] ?: "gml_id";
 $gfs = $argv[9];
 
 
-
 new \app\conf\App();
 Database::setDb($db);
 $database = new Model();
@@ -76,7 +75,7 @@ while ($row = $database->fetchRow($res)) {
         file_put_contents("/var/www/geocloud2/public/logs/" . $importTable . "-" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
 
-    $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") ." " .
+    $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
         "-skipfailures " .
         "-append " .
         "-dim 2 " .
@@ -99,11 +98,13 @@ while ($row = $database->fetchRow($res)) {
 
     if (!$pass) {
 
-        foreach($out as $line) {
-            echo $line."\n";
+        foreach ($out as $line) {
+            echo $line . "\n";
         }
 
-        echo  "\nOutputting the first few lines of the file:\n\n";
+        echo "Request: " . $wfsUrl . $bbox . "\n\n";
+
+        echo "\nOutputting the first few lines of the file:\n\n";
 
         $handle = @fopen("/var/www/geocloud2/public/logs/" . $gmlName, "r");
         if ($handle) {
@@ -112,7 +113,7 @@ while ($row = $database->fetchRow($res)) {
                 echo $buffer;
             }
             if (!feof($handle)) {
-                echo  "Error: unexpected fgets() fail\n";
+                echo "Error: unexpected fgets() fail\n";
             }
             fclose($handle);
         }
