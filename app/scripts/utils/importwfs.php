@@ -64,6 +64,7 @@ function which($cmd)
 $pass = true;
 
 while ($row = $database->fetchRow($res)) {
+    $out = [];
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
     $gmlName = $importTable . "-" . $row["gid"] . ".gml";
