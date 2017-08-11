@@ -550,6 +550,9 @@ geocloud = (function () {
                 if (defaults.loadEvent) {
                     l.on("load", defaults.loadEvent);
                 }
+                if (defaults.loadingEvent) {
+                    l.on("loading", defaults.loadingEvent);
+                }
                 break;
         }
         return l;
@@ -607,6 +610,9 @@ geocloud = (function () {
                 l.id = layer;
                 if (defaults.loadEvent) {
                     l.on("load", defaults.loadEvent);
+                }
+                if (defaults.loadingEvent) {
+                    l.on("loading", defaults.loadingEvent);
                 }
                 break;
         }
@@ -1494,7 +1500,7 @@ geocloud = (function () {
 
         };
         //ol2, ol3 and leaflet
-        this.setBaseLayer = function (baseLayerName, loadEvent) {
+        this.setBaseLayer = function (baseLayerName, loadEvent, loadingEvent) {
             var me = this;
             var layers;
             (function poll() {
@@ -1530,9 +1536,17 @@ geocloud = (function () {
                                         if (!loadEvent) {
                                             loadEvent = function () {
                                             }
+                                        } if (!loadingEvent) {
+                                            loadingEvent = function () {
+                                            }
                                         }
+
                                         layers[key].layer.off("load", loadEvent);
                                         layers[key].layer.on("load", loadEvent);
+
+                                        layers[key].layer.off("loading", loadingEvent);
+                                        layers[key].layer.on("loading", loadingEvent);
+
                                         me.map.addLayer(layers[key].layer, false);
                                     }
                                 }
@@ -1658,7 +1672,7 @@ geocloud = (function () {
                 type: "wms",
                 maxZoom: 21,
                 maxNativeZoom: 21,
-                tileSize: 256
+                tileSize: MAPLIB === "ol2" ? OpenLayers.Size(256, 256) : 256
             };
             if (config) {
                 for (prop in config) {
