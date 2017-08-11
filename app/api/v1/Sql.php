@@ -113,7 +113,7 @@ class Sql extends \app\inc\Controller
     {
         $iterator = new \RecursiveArrayIterator($array);
         $recursive = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
-        $aHitList = array();
+        $aHitList = [];
         foreach ($recursive as $key => $value) {
             if ($key === $needle) {
                 array_push($aHitList, $value);
@@ -125,7 +125,7 @@ class Sql extends \app\inc\Controller
     /**
      * @param array $fromArr
      */
-    private function parseSelect(array $fromArr) : array
+    private function parseSelect(array $fromArr)
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {
