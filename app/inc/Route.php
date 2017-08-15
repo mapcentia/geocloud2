@@ -1,4 +1,5 @@
 <?php
+
 namespace app\inc;
 
 use \app\inc\Util;
@@ -17,23 +18,30 @@ class Route
         $routeSignature = explode("/", $uri);
         $requestSignature = explode("/", $requestUri);
 
-        for ($i = 0; $i < sizeof($routeSignature); $i++) {
+   /*     if (sizeof($requestSignature) > sizeof($routeSignature)) {
+            $signatureMatch = false;
+        } else {*/
 
-            if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                $r[trim($routeSignature[$i],"{}")] = trim($requestSignature[$i],"{}");
-                $signatureMatch = $requestSignature[$i] ? true : false;
 
-            } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                $r[trim($routeSignature[$i],"[]")] = trim($requestSignature[$i],"[]");
-            } else {
-                $e[] = $requestSignature[$i];
-                $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
+            for ($i = 0; $i < sizeof($routeSignature); $i++) {
+
+                if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
+                    $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
+                    $signatureMatch = $requestSignature[$i] ? true : false;
+
+                } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
+                    $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+                } else {
+                    $e[] = $requestSignature[$i];
+                    $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
+                }
+
+
+                if (!$signatureMatch) {
+                    break;
+                }
             }
-
-            if (!$signatureMatch) {
-                break;
-            }
-        }
+      //  }
 
         if ($signatureMatch) {
             if ($func) {
@@ -79,7 +87,8 @@ class Route
         }
     }
 
-    static public function miss(){
+    static public function miss()
+    {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 Not Found</h1>";
         exit();
