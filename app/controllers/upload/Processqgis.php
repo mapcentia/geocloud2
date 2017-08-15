@@ -5,7 +5,6 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Input;
 use \app\inc\Model;
-use \app\models\Table;
 use \app\controllers\Tilecache;
 
 /**
@@ -31,6 +30,7 @@ class Processqgis extends \app\inc\Controller
         $qgs = @simplexml_load_file(App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $file);
         $arrT = [];
         $arrG = [];
+        $arrN = [];
         $wmsNames = [];
         $wmsSrids = [];
         $treeOrder = [];
@@ -58,6 +58,7 @@ class Processqgis extends \app\inc\Controller
                     preg_match_all("/\((.*?)\)/", $dataSource, $g);
                     $arrG[] = $g;
                     $maplayer->layername = $t[1][0] . "." . $t[1][1];
+                    $arrN[] = $maplayer->layername;
                     $maplayer->title = (string)$maplayer->title ?: $layerName;
                     break;
 
@@ -93,6 +94,7 @@ class Processqgis extends \app\inc\Controller
 
                     $arrT[] = array(1 => array($schema, $table));
                     $arrG[] = array(1 => array($f_geometry_column));
+                    $arrN[] = $layerName;
 
                     $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
 
@@ -102,7 +104,7 @@ class Processqgis extends \app\inc\Controller
                     $maplayer->srs->spatialrefsys->authid = "EPSG:{$srid}";
                     $maplayer->provider = "postgres";
                     $maplayer->datasource = $PGDataSource;
-                    $maplayer->layername = $fullTable;
+                    //$maplayer->layername = $fullTable;
                     $maplayer->title = (string)$maplayer->title ?: $layerName;
 
                     break;
@@ -143,8 +145,9 @@ class Processqgis extends \app\inc\Controller
         for ($i = 0; $i < sizeof($arrT); $i++) {
             $tableName = $arrT[$i][1][0] . "." . $arrT[$i][1][1];
             $layerKey = $tableName . "." . $arrG[$i][1][0];
+            $wmsLayerName = $arrN[$i];
             $layers[] = $layerKey;
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $tableName . "&transparent=true&";
+            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $wmsLayerName . "&transparent=true&";
             $urls[] = $url;
             $data = new \stdClass;
             $data->_key_ = $layerKey;
