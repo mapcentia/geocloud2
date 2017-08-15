@@ -79,11 +79,14 @@ function which()
 }
 
 
-function getCmd($dryRun = false, $o)
+function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $safeName, $type, $db, $schema, $randTableName;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName;
+
+    print "Staring inserting in temp table using ogr2ogr...\n\n";
+
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-        $o . " " .
+        "-overwrite " .
         "-dim 2 " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
@@ -91,91 +94,51 @@ function getCmd($dryRun = false, $o)
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $dir . "/" . $tempFile . "' " .
-        "-nln " . ($dryRun ? $schema . "." . $randTableName : $schema . "." . $safeName) . " " .
+        "-nln " . $schema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
     return $cmd;
 }
 
-function getCmdPaging($dryRun = false, $o)
+function getCmdPaging()
 {
-    global $safeName, $type, $db, $schema, $url, $grid, $id;
+    global $randTableName, $type, $db, $schema, $url, $grid, $id;
 
+    print "Staring inserting in temp table using paginated download...\n\n";
 
-    if ($o == "-overwrite") {
-        $o = 1;
-    } else {
-        $o = 0;
-    }
-    print "Staring paged download...\n\n";
-
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$safeName} {$type} {$grid} {$o} {$id} 0";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0";
 
     return $cmd;
 }
-
 
 $pass = true;
 
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
-// Dry run
-if ($deleteAppend == "1" && $table->exits && $grid == null) {
+exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
-    print "Starting dry run...\n\n";
+if ($err) {
+    print "Error " . $err . "\n\n";
+    $pass = false;
+} else {
 
-    # clone table
-    $sql = "CREATE TABLE {$schema}.{$randTableName} AS SELECT * FROM {$schema}.{$safeName}";
-    $res = $table->prepare($sql);
-
-    print "SQL run:\n";
-    print $sql . "\n\n";
-
-    try {
-        $res->execute();
-
-    } catch (\PDOException $e) {
-        print_r($e);
-        $pass = false;
-        exit("Could not create temporary table.");
-    }
-
-    if ($pass) {
-        exec($cmd = getCmd(true, "-append") . ' 2>&1', $out, $err);
-
-        if ($err) {
-            print "Error " . $err . "\n\n";
+    print "Commando:\n";
+    print $cmd . "\n\n";
+    foreach ($out as $line) {
+        if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
             $pass = false;
-        } else {
-
-            print "Dry run command:\n";
-            print $cmd . "\n\n";
-            foreach ($out as $line) {
-                if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-                    $pass = false;
-                    break;
-                }
-            }
+            break;
         }
     }
-    # Clean up
-    $sql = "DROP TABLE {$schema}.{$randTableName}";
-    $res = $table->prepare($sql);
-    print "SQL run:\n";
-    print $sql . "\n\n";
-    try {
-        $res->execute();
-    } catch (\PDOException $e) {
-        print_r($e);
-    }
+
 }
 
 
 // Run for real if the dry run is passed.
 if ($pass) {
 
-    print "Passed, proceeding...\n\n";
+    print "Inserting in temp table done, proceeding...\n\n";
 
     if ($deleteAppend == "1") {
 
@@ -192,29 +155,7 @@ if ($pass) {
             print "Table exists.\n\n";
 
             $o = "-append";
-            $sql = "DELETE FROM {$schema}.{$safeName}";
-            print "SQL run:\n";
-            print $sql . "\n\n";
-            $res = $table->prepare($sql);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                // Set the  success of the job to false
-                print_r($e);
-                \app\models\Database::setDb("gc2scheduler");
-                $model = new \app\inc\Model();
-                $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
-                $values = array(":lastcheck" => 0, ":id" => $jobId);
-                $res = $model->prepare($sql);
-                try {
-                    $res->execute($values);
-                } catch (\PDOException $e) {
-                    print_r($e);
-                }
-                exit();
-            }
 
-            print "Data in existing table deleted.\n\n";
         }
     } else {
 
@@ -223,39 +164,96 @@ if ($pass) {
         $o = "-overwrite";
     }
 
-    //die($getFunction(false, $o));
+    $pkSql = null;
+    $idxSql = null;
 
-    exec($cmd = $getFunction(false, $o) . ' 2>&1', $out, $err);
+    $table->begin();
 
-    if ($err) {
-        print "Error " . $err . "\n\n";
-        $pass = false;
+    if ($o != "-overwrite") {
+
+        $sql = "DELETE FROM {$schema}.{$safeName}";
+        $res = $table->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+
+        }
+
+        print "Data in existing table deleted.\n\n";
+
+        $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
+
     } else {
 
-        print "Wet run command:\n";
+        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName}";
+        $res = $table->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+        }
 
-        print $cmd . "\n\n";
+        $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$schema}.{$randTableName}";
+        $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
+        $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
 
-        if ($grid == null) {
-            foreach ($out as $line) {
-                if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-                    $pass = false;
-                    break;
-                }
-            }
+    }
+
+    $res = $table->prepare($sql);
+
+    try {
+
+        $res->execute();
+
+    } catch (\PDOException $e) {
+
+        print_r($e->getMessage());
+        $pass = false;
+
+    }
+
+    $table->commit();
+
+    if ($pkSql) {
+        $res = $table->prepare($pkSql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
         }
     }
+
+    if ($idxSql) {
+        $res = $table->prepare($idxSql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+        }
+    }
+
+    # Clean up
+    $sql = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
+    $res = $table->prepare($sql);
+    print "Existing table dropped.\n\n";
+
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+
 }
 
 if ($pass) {
-    print $url . " imported to " . $schema . "." . $safeName . "\n\n";
+
+    print "Data imported into " . $schema . "." . $safeName . "\n\n";
     $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
     print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 
-
 } else {
-    print_r(array_slice($out, -20, 20, true));
+
+    print_r($out);
 
     print "\n\n";
 
@@ -263,17 +261,19 @@ if ($pass) {
     $values = array(":lastcheck" => 0, ":id" => $jobId);
 
     // Output the first few lines of file
-    Print "Outputting the first few lines of the file:\n\n";
-    $handle = @fopen($dir . "/" . $tempFile, "r");
-    if ($handle) {
-        for ($i = 0; $i < 40; $i++) {
-            $buffer = fgets($handle, 4096);
-            echo $buffer;
+    if ($grid == null) {
+        Print "Outputting the first few lines of the file:\n\n";
+        $handle = @fopen($dir . "/" . $tempFile, "r");
+        if ($handle) {
+            for ($i = 0; $i < 40; $i++) {
+                $buffer = fgets($handle, 4096);
+                echo $buffer;
+            }
+            if (!feof($handle)) {
+                echo "Error: unexpected fgets() fail\n";
+            }
+            fclose($handle);
         }
-        if (!feof($handle)) {
-            echo "Error: unexpected fgets() fail\n";
-        }
-        fclose($handle);
     }
 
 
@@ -291,11 +291,11 @@ if ($pass) {
         }
 
         $text =
-        "Job id: {$jobId}\n" .
-        "Database: {$db}\n" .
-        "Schema: {$schema}\n" .
-        "table: {$safeName}\n".
-        "Url: {$url}\n";
+            "Job id: {$jobId}\n" .
+            "Database: {$db}\n" .
+            "Schema: {$schema}\n" .
+            "table: {$safeName}\n" .
+            "Log: https://geofyn.mapcentia.com/logs/{$jobId}_scheduler.log\n";
 
         $message = [
             'To' => implode(",", App::$param["notification"]["to"]),
