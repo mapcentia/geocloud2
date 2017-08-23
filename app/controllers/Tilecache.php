@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers;
 
 use \app\inc\Response;
@@ -141,6 +142,7 @@ class Tilecache extends \app\inc\Controller
                     if (!$response['success']) {
                         return $response;
                     }
+                    $layer= Input::getPath()->part(5);
                     $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . Input::getPath()->part(5) . ".*";
                 } else {
                     $parts = explode(".", Input::getPath()->part(4));
@@ -149,7 +151,7 @@ class Tilecache extends \app\inc\Controller
                     $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
 
                 }
-                $res = self::unlinkTiles($dir, Connection::$param["postgisdb"]);
+                $res = self::unlinkTiles($dir, $layer);
                 if (!$res["success"]) {
                     $response['success'] = false;
                     $response['message'] = $res["message"];
@@ -172,10 +174,9 @@ class Tilecache extends \app\inc\Controller
             case "sqlite":
                 $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
                 break;
-            case
-            "disk":
+            case "disk":
                 $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
-                $res = self::unlinkTiles($dir);
+                $res = self::unlinkTiles($dir, $layer);
                 break;
         }
         if (!$res["success"]) {
@@ -223,19 +224,30 @@ class Tilecache extends \app\inc\Controller
         $response['success'] = true;
         return $response;
     }
-     private function unlinkTiles($dir){
-         if ($dir) {
-             exec("rm -R {$dir}");
-             if (strpos($dir, ".*") !== false) {
-                 $dir = str_replace(".*", "", $dir);
-                 exec("rm -R {$dir}");
-             }
-             $response['success'] = true;
-         } else {
-             $response['success'] = false;
-         }
-         return $response;
-     }
+
+    private function unlinkTiles($dir, $layerName)
+    {
+        $layer = new \app\models\Layer();
+        $meta = $layer->getAll(false, $layerName, true, false, true, false);
+        if ($meta["data"][0]["def"]->lock) {
+            $response['success'] = false;
+            $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
+            $response['code'] = '406';
+            return $response;
+        }
+
+        if ($dir) {
+            exec("rm -R {$dir}");
+            if (strpos($dir, ".*") !== false) {
+                $dir = str_replace(".*", "", $dir);
+                exec("rm -R {$dir}");
+            }
+            $response['success'] = true;
+        } else {
+            $response['success'] = false;
+        }
+        return $response;
+    }
 
 }
 
