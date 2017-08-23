@@ -1,4 +1,5 @@
 <?php
+
 namespace app\inc;
 
 use \app\conf\App;
@@ -47,16 +48,20 @@ class Session
     static function createLog($lines, $file)
     {
         $num = 15;
+        $plainTxt = "";
         $_SESSION["log"] .= "<br /<br />";
-        $_SESSION["log"] .= "<i > Failed upload of {
-        $file} @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
+        $_SESSION["log"] .= "<i > Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
+        //$plainTxt .= "Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . " \n";
         for ($i = 0; $i < sizeof($lines); $i++) {
             $_SESSION["log"] .= htmlentities($lines[$i]) . "</br > ";
+            $plainTxt .= htmlentities($lines[$i]) . "\n";
             if ($i >= $num) {
                 $_SESSION["log"] .= "<i > " . (sizeof($lines) - $num - 1) . " more lines </i ><br />";
-                return;
+                $plainTxt .= "" . (sizeof($lines) - $num - 1) . " more lines\n";
+                return $plainTxt;
             }
         }
+        return $plainTxt;
     }
 
     static function createLogEs($obj)
