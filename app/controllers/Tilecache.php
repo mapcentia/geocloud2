@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers;
 
 use \app\inc\Response;
@@ -172,8 +173,7 @@ class Tilecache extends \app\inc\Controller
             case "sqlite":
                 $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
                 break;
-            case
-            "disk":
+            case "disk":
                 $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
                 $res = self::unlinkTiles($dir);
                 break;
@@ -223,19 +223,21 @@ class Tilecache extends \app\inc\Controller
         $response['success'] = true;
         return $response;
     }
-     private function unlinkTiles($dir){
-         if ($dir) {
-             exec("rm -R {$dir}");
-             if (strpos($dir, ".*") !== false) {
-                 $dir = str_replace(".*", "", $dir);
-                 exec("rm -R {$dir}");
-             }
-             $response['success'] = true;
-         } else {
-             $response['success'] = false;
-         }
-         return $response;
-     }
+
+    private function unlinkTiles($dir)
+    {
+        if ($dir) {
+            exec("rm -R {$dir}");
+            if (strpos($dir, ".*") !== false) {
+                $dir = str_replace(".*", "", $dir);
+                exec("rm -R {$dir}");
+            }
+            $response['success'] = true;
+        } else {
+            $response['success'] = false;
+        }
+        return $response;
+    }
 
 }
 
