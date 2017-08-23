@@ -20,12 +20,31 @@ class Session extends Model
         return $sValue;
     }
 
+    public function check()
+    {
+        $response = [];
+
+        if ($_SESSION['auth']) {
+            $response['data']['message'] = "Session started";
+            $response['data']['session'] = true;
+            $response['data']['db'] = $_SESSION['screen_name'];
+            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['subusers'] = $_SESSION['subusers'];
+        } else {
+            $response['data']['message'] = "Session not started";
+            $response['data']['session'] = false;
+        }
+        return $response;
+
+    }
+
     /**
-     * @param $sUserID
-     * @param $pw
+     * @param string $sUserID
+     * @param string $pw
+     * @param string $schema
      * @return array
      */
-    public function start($sUserID, $pw)
+    public function start(string $sUserID, string $pw, string $schema = "public"): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
@@ -52,11 +71,14 @@ class Session extends Model
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
+            $_SESSION['postgisschema'] = $schema;
+
 
             $response['success'] = true;
             $response['message'] = "Session started";
             $response['screen_name'] = $_SESSION['screen_name'];
             $response['session_id'] = session_id();
+            $response['subuser'] = $_SESSION['subuser'];
             $response['subuser'] = $_SESSION['subuser'];
 
         } else {

@@ -1,4 +1,5 @@
 <?php
+
 namespace app\api\v1;
 
 use \app\inc\Input;
@@ -27,7 +28,15 @@ class Session extends \app\inc\Controller
      */
     public function post_start()
     {
-        return $this->session->start(Input::get("u"), Input::get("p"));
+        return $this->session->start(Input::get("u"), Input::get("p"), Input::get("s"));
+    }
+
+    /**
+     * @return array
+     */
+    public function get_index()
+    {
+        return $this->session->check();
     }
 
     /**

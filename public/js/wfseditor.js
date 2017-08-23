@@ -17,7 +17,7 @@ Ext.MessageBox.buttonText = {
     cancel: "<i class='fa fa-remove'></i> " + __("Cancel"),
     yes: "<i class='fa fa-check'></i> " + __("Yes"),
     no: "<i class='fa fa-remove'></i> " + __("No")
-}
+};
 
 var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {

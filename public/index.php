@@ -94,7 +94,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/decodeimg");
     Route::add("api/v1/senti");
     Route::add("api/v1/loriot");
-    Route::add("api/v1/session", function () {
+    Route::add("api/v1/session/[action]", function () {
         Session::start();
         Database::setDb("mapcentia");
     });
@@ -140,6 +140,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/processbitmap");
     Route::add("controllers/upload/processraster");
     Route::add("controllers/upload/processqgis");
+    Route::add("controllers/upload/processfkg");
     Route::add("controllers/logstash");
     Route::add("controllers/drawing");
     Route::add("controllers/job", function () {
