@@ -51,39 +51,51 @@ var gc2table = (function () {
                     typeof jQuery().bootstrapTable.locales !== "undefined" &&
                     typeof _ !== 'undefined' &&
                     typeof jRespond !== "undefined") {
-                    if (typeof jQuery().bootstrapTable.locales['da-DK'] === "undefined") {
-                        $.getScript(host + "/js/bootstrap-table/bootstrap-table-locale-all.js");
-                    }
-                    if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
-                        $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
-                    }
-                    if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
-                        $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
-                    }
-                    if (typeof jQuery().tableExport === "undefined") {
-                        $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
-                    }
-                    if (typeof Backbone === "undefined") {
-                        $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
-                    }
-                    (function pollForDependants() {
-                        if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
-                            typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
-                            typeof jQuery().tableExport !== "undefined" &&
-                            typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
-                            typeof Backbone !== "undefined") {
-                            scriptsLoaded = true;
-                        } else {
-                            setTimeout(pollForDependants, 10);
+
+                    // Small timeout for IE
+                    setTimeout(function () {
+
+                        if (typeof jQuery().bootstrapTable.locales['da-DK'] === "undefined") {
+                            $.getScript(host + "/js/bootstrap-table/bootstrap-table-locale-all.js");
                         }
-                    }());
+                        if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
+                            $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
+                        }
+                        if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
+                            $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
+                        }
+                        if (typeof jQuery().tableExport === "undefined") {
+                            $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
+                        }
+                        if (typeof Backbone === "undefined") {
+                            $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
+                        }
+                        (function pollForDependants() {
+                            if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                                typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
+                                typeof jQuery().tableExport !== "undefined" &&
+                                typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
+                                typeof Backbone !== "undefined") {
+
+                                // Small timeout for IE
+                                setTimeout(function () {
+                                    scriptsLoaded = true;
+                                }, 20);
+
+                            } else {
+                                setTimeout(pollForDependants, 50);
+                            }
+                        }());
+
+                    }, 20);
+
                 } else {
-                    setTimeout(pollForDependencies, 10);
+                    setTimeout(pollForDependencies, 50);
                 }
             }());
 
         } else {
-            setTimeout(pollForjQuery, 10);
+            setTimeout(pollForjQuery, 50);
         }
     }());
 
