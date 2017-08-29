@@ -140,7 +140,6 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/upload/processbitmap");
     Route::add("controllers/upload/processraster");
     Route::add("controllers/upload/processqgis");
-    Route::add("controllers/upload/processfkg");
     Route::add("controllers/logstash");
     Route::add("controllers/drawing");
     Route::add("controllers/job", function () {
@@ -148,6 +147,13 @@ if (Input::getPath()->part(1) == "api") {
     });
     Route::add("controllers/workflow");
     Route::add("controllers/qgis/");
+
+} elseif (Input::getPath()->part(1) == "extensions"){
+
+    foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
+        include_once($filename);
+
+    }
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
@@ -193,3 +199,4 @@ if (Input::getPath()->part(1) == "api") {
 } else {
     Route::miss();
 }
+
