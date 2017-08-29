@@ -42,12 +42,10 @@ Build date: 2013-04-03 15:07:25
 }
 
 .x-item-disabled {
-    color: gray;
+    color: #ffffff;
 }
 
-.x-item-disabled * {
-    color: gray !important;
-}
+
 
 .x-splitbar-proxy {
     background-color: #848482 /*Battleship Gray*/;

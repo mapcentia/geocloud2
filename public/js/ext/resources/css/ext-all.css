@@ -5404,9 +5404,7 @@ body.ext-ie6.x-body-masked .x-window select {
     color: gray
 }
 
-.x-item-disabled * {
-    color: gray !important
-}
+
 
 .x-splitbar-proxy {
     background-color: #aaa
