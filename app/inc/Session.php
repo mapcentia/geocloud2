@@ -37,6 +37,11 @@ class Session
         return $_SESSION['auth'];
     }
 
+    static function getUser()
+    {
+        return $_SESSION['screen_name'];
+    }
+
     static function getLog()
     {
         if (!$_SESSION["log"]) {
