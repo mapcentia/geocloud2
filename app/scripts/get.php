@@ -87,7 +87,9 @@ function getCmd()
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
+        "-overwrite " .
         "-dim 2 " .
+        ($db == "mydb" ? "-oo 'DOWNLOAD_SCHEMA=NO' " : "") .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -122,7 +124,6 @@ if ($err) {
     print "Error " . $err . "\n\n";
     $pass = false;
 } else {
-
     print "Commando:\n";
     print $cmd . "\n\n";
     foreach ($out as $line) {
@@ -355,4 +356,4 @@ if ($extra && $pass) {
 }
 
 // Unlink temp file
-@unlink($dir . "/" . $tempFile);
+//@unlink($dir . "/" . $tempFile);
