@@ -330,7 +330,8 @@ var gc2table = (function () {
         return {
             loadDataInTable: loadDataInTable,
             object: object,
-            uid: uid
+            uid: uid,
+            store: store
         };
     };
     return {

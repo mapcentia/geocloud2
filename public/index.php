@@ -31,6 +31,12 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Credentials: true");
 }
 
+elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Credentials: true");
+}
+
 // Start routing
 if (Input::getPath()->part(1) == "api") {
 

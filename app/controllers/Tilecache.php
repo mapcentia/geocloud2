@@ -104,7 +104,7 @@ class Tilecache extends \app\inc\Controller
         $cache = App::$param["mapCache"]["type"] ?: "disk";
         $response = [];
         switch ($cache) {
-            case "sqlite":
+            case "mbtiles":
                 if (Input::getPath()->part(4) === "schema") {
                     $response = $this->auth(null, array());
                     if (!$response['success']) {
@@ -171,7 +171,7 @@ class Tilecache extends \app\inc\Controller
         $response = [];
         $res = null;
         switch ($cache) {
-            case "sqlite":
+            case "mbtiles":
                 $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
                 break;
             case "disk":
@@ -190,10 +190,10 @@ class Tilecache extends \app\inc\Controller
         return $response;
     }
 
-    private function deleteFromTileset($searchStr, $dbName)
+    private function deleteFromTileset($layerName)
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll(false, $searchStr, true, false, true, false);
+        $meta = $layer->getAll(false, $layerName, true, false, true, false);
         if ($meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
@@ -202,7 +202,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . $dbName . ".sqlite3");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . $layerName . ".mbtiles");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
@@ -211,9 +211,8 @@ class Tilecache extends \app\inc\Controller
 
             return $response;
         }
-        $oper = (strpos($searchStr, "%")) ? "LIKE" : "=";
 
-        $result = $db->query("DELETE FROM tiles WHERE tileset {$oper} '{$searchStr}'");
+        $result = $db->query("DELETE FROM images");
         if (!$result) {
             $response['success'] = false;
             $response['message'] = $db->lastErrorMsg();

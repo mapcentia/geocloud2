@@ -26,7 +26,6 @@ class Mapcachefile extends \app\inc\Controller
     public function get_index()
     {
         $layerArr = [];
-        $cache = App::$param["mapCache"]["type"] ?: "disk";
         $postgisObject = new Model();
         ob_start(); ?>
 
@@ -36,11 +35,6 @@ class Mapcachefile extends \app\inc\Controller
                 <abstract>woot! this is a service abstract!</abstract>
                 <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
             </metadata>
-            <cache name="sqlite" type="sqlite3">
-                <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . ".sqlite3"; ?></dbfile>
-                <symlink_blank/>
-            </cache>
-
             <cache name="disk" type="disk">
                 <base><?php echo App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param['postgisdb'] . "/"; ?></base>
             </cache>
@@ -97,6 +91,7 @@ class Mapcachefile extends \app\inc\Controller
                         $expire = ($def->ttl < 30) ? 30 : $def->ttl;
                         $auto_expire = $def->auto_expire ?: null;
                         $format = $def->format ?: "PNG";
+                        $cache = $def->cache ?: "mbtiles";
                         $layers = $def->layers ? "," . $def->layers : "";
 
                         if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) {
@@ -108,6 +103,10 @@ class Mapcachefile extends \app\inc\Controller
                         ?>
 
                         <!-- <?php echo $table ?> -->
+                        <cache name="<?php echo $table ?>" type="mbtiles">
+                            <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . $table . ".mbtiles"; ?></dbfile>
+                            <symlink_blank/>
+                        </cache>
                         <source name="<?php echo $table ?>" type="wms">
                         <getmap>
                             <params>
@@ -119,9 +118,9 @@ class Mapcachefile extends \app\inc\Controller
                             <url><?php
 
                                 if ($QGISLayers) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
-                                    echo explode("&", $row["wmssource"])[0] . "&transparent=true&";
+                                    echo explode("&", $row["wmssource"])[0] . "&transparent=true&DPI_=96&";
                                 } else {
-                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . ".map&";
+                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . ".map&map_resolution=96_&";
                                 }
 
                                 ?></url>
@@ -140,7 +139,7 @@ class Mapcachefile extends \app\inc\Controller
                         </source>
                         <tileset name="<?php echo $table ?>">
                             <source><?php echo $table ?></source>
-                            <cache><?php echo $cache ?></cache>
+                            <cache><?php echo $cache == "mbtiles" ? $table : "disk" ?></cache>
                             <grid>g20</grid>
                             <?php
                             foreach ($grids as $k => $v) {
@@ -166,10 +165,19 @@ class Mapcachefile extends \app\inc\Controller
             /**
              * Schema start
              */
+
             foreach ($layerArr as $k => $v) {
                 if (sizeof($v) > 0) {
+
+                    $cache = App::$param["mapCache"]["type"] ?: "disk";
+
                     ?>
                     <!-- <?php echo $k ?> -->
+                    <cache name="<?php echo $k ?>" type="mbtiles">
+                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . $k . ".mbtiles"; ?></dbfile>
+                        <symlink_blank/>
+                    </cache>
+
                     <source name="<?php echo $k ?>" type="wms">
                     <getmap>
                         <params>
@@ -191,7 +199,7 @@ class Mapcachefile extends \app\inc\Controller
                     </source>
                     <tileset name="<?php echo $k ?>">
                         <source><?php echo $k ?></source>
-                        <cache><?php echo $cache ?></cache>
+                        <cache><?php echo $cache == "mbtiles" ? $k : "disk" ?></cache>
                         <grid>g20</grid>
                         <?php
                         foreach ($grids as $k2 => $v2) {
@@ -215,6 +223,9 @@ class Mapcachefile extends \app\inc\Controller
              * Group start
              */
             foreach ($groupArr as $k => $v) {
+
+                $cache = App::$param["mapCache"]["type"] ?: "disk";
+
                 $unique = array_unique($groups[$k]);
                 foreach ($unique as $v2) {
                     $layers = array();
@@ -227,6 +238,11 @@ class Mapcachefile extends \app\inc\Controller
                     $layersStr = implode(",", $layers);
                     ?>
                     <!-- <?php echo $tileSetName ?> -->
+                    <cache name="<?php echo $tileSetName ?>" type="mbtiles">
+                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . $tileSetName . ".mbtiles"; ?></dbfile>
+                        <symlink_blank/>
+                    </cache>
+
                     <source name="<?php echo $tileSetName ?>" type="wms">
                     <getmap>
                         <params>
@@ -247,7 +263,8 @@ class Mapcachefile extends \app\inc\Controller
                     </source>
                     <tileset name="<?php echo $tileSetName ?>">
                         <source><?php echo $tileSetName ?></source>
-                        <cache><?php echo $cache ?></cache>
+                        <cache><?php echo $cache == "mbtiles" ? $tileSetName : "disk" ?></cache>
+
                         <grid>g20</grid>
                         <?php
                         foreach ($grids as $k2 => $v2) {
@@ -255,8 +272,8 @@ class Mapcachefile extends \app\inc\Controller
                         }
                         ?>
                         <format>PNG</format>
-                        <metatile>5 5</metatile>
-                        <metabuffer>20</metabuffer>
+                        <metatile>7 7</metatile>
+                        <metabuffer>10</metabuffer>
                         <expires>60</expires>
                         <metadata>
                             <title><?php echo $tileSetName; ?></title>

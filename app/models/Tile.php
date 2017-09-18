@@ -56,7 +56,8 @@ class Tile extends Model
             "format",
             "lock",
             "layers",
-            "bands"
+            "bands",
+            "cache"
         );
         $oldData = $this->get();
         $newData = array();

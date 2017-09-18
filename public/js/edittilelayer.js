@@ -59,6 +59,9 @@ tileLayer.init = function (record) {
             },
             {
                 name: 'layers'
+            },
+            {
+                name: 'cache'
             }
         ],
         listeners: {
@@ -117,7 +120,8 @@ tileLayer.init = function (record) {
             auto_expire: 'Auto expire' + __('Tiles older (in seconds) than this value will be re-requested and updated in the cache. Note that this will only delete tiles from the cache when they are accessed: You cannot use this configuration to limit the size of the created cache. Note that, if set, this value overrides the value given by "Time to live".', true),
             format: 'Format' + __('Image format that will be used to return tile data to clients. Defaults to PNG.', true),
             lock: 'Lock' + __("Lock the tile cache, so it can not be busted.", true),
-            layers: 'Layers' + __("Merged other layers on top of this one. Comma separated list of schema qulified layers names.", true)
+            layers: 'Layers' + __("Merged other layers on top of this one. Comma separated list of schema qulified layers names.", true),
+            cache: 'Cache' + __("", true)
         },
 
         customEditors: {
@@ -195,6 +199,26 @@ tileLayer.init = function (record) {
                         }, {
                             name: 'JPEG, high quality',
                             value: 'jpeg_high'
+                        }
+                    ]
+                }),
+                editable: false,
+                triggerAction: 'all',
+                value: 'PNG'
+            }), {}),
+            'cache': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                displayField: 'name',
+                valueField: 'value',
+                mode: 'local',
+                store: new Ext.data.JsonStore({
+                    fields: ['name', 'value'],
+                    data: [
+                        {
+                            name: 'Disk',
+                            value: 'disk'
+                        }, {
+                            name: 'MBTiles',
+                            value: 'mbtiles'
                         }
                     ]
                 }),

@@ -59,7 +59,7 @@ geocloud = (function () {
         resolutions = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
-            1.19432856696, 0.597164283478, 0.298582141739, 0.149291070869],
+            1.19432856696, 0.597164283478, 0.298582141739, 0.149291070869, 0.074645535],
         googleMapAdded = {}, yandexMapAdded = {};
     // Try to set host from script if not set already
     if (typeof window.geocloud_host === "undefined") {
@@ -113,6 +113,8 @@ geocloud = (function () {
         },
         onLoad: function () {
         },
+        loading: function () {
+        },
         index: "",
         type: "",
         size: 100,
@@ -139,6 +141,7 @@ geocloud = (function () {
         // Initiate base class settings
         this.init = function () {
             this.onLoad = this.defaults.onLoad;
+            this.loading = this.defaults.loading;
             switch (MAPLIB) {
                 case 'ol2':
                     this.layer = new OpenLayers.Layer.Vector(this.defaults.name, {
@@ -208,12 +211,20 @@ geocloud = (function () {
         this.db = this.defaults.db;
         this.host = this.defaults.host.replace("cdn.", "");
         this.onLoad = this.defaults.onLoad;
+        this.loading = this.defaults.loading;
         this.dataType = this.defaults.dataType;
         this.async = this.defaults.async;
         this.jsonp = this.defaults.jsonp;
         this.method = this.defaults.method;
         this.uri = this.defaults.uri;
         this.load = function (doNotShowAlertOnError) {
+
+            try {
+                me.abort();
+            } catch (e) {
+                console.error(e.message);
+            }
+
             try {
                 map = me.map;
                 sql = this.sql;
@@ -226,6 +237,7 @@ geocloud = (function () {
                 sql = sql.replace("{bbox}", map.getExtent().toString());
             } catch (e) {
             }
+            me.loading();
             xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,

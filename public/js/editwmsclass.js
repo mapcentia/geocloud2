@@ -772,11 +772,11 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
+         /*   'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
-            }), {}),
+            }), {}),*/
             'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
