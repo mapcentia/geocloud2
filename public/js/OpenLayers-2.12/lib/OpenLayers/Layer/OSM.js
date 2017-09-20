@@ -48,16 +48,16 @@ OpenLayers.Layer.OSM = OpenLayers.Class(OpenLayers.Layer.XYZ, {
      * (end)
      */
     url: [
-        'http://a.tile.openstreetmap.org/${z}/${x}/${y}.png',
-        'http://b.tile.openstreetmap.org/${z}/${x}/${y}.png',
-        'http://c.tile.openstreetmap.org/${z}/${x}/${y}.png'
+        'https://a.tile.openstreetmap.org/${z}/${x}/${y}.png',
+        'https://b.tile.openstreetmap.org/${z}/${x}/${y}.png',
+        'https://c.tile.openstreetmap.org/${z}/${x}/${y}.png'
     ],
 
     /**
      * Property: attribution
      * {String} The layer attribution.
      */
-    attribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
+    attribution: "Data CC-By-SA by <a href='https://openstreetmap.org/'>OpenStreetMap</a>",
 
     /**
      * Property: sphericalMercator

@@ -202,7 +202,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . $layerName . ".mbtiles");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $layerName . ".mbtiles");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
