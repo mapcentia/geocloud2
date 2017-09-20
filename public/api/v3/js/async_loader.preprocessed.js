@@ -91,11 +91,13 @@ if (typeof gc2apiLoader === "undefined") {
                         href: host + '/js/leaflet/plugins/Leaflet.print/leaflet.print.css'
                     }).appendTo('head');
                 }
-                $('<link/>').attr({
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: '//netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'
-                }).appendTo('head');
+                if (window.geocloud_loadcss) {
+                    $('<link/>').attr({
+                        rel: 'stylesheet',
+                        type: 'text/css',
+                        href: '//netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'
+                    }).appendTo('head');
+                }
             } else {
                 setTimeout(pollForjQuery, 3);
             }
