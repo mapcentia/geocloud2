@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers;
 
 use \app\conf\App;
@@ -33,7 +34,8 @@ class Mapcachefile extends \app\inc\Controller
             <metadata>
                 <title>my mapcache service</title>
                 <abstract>woot! this is a service abstract!</abstract>
-                <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
+                <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>
+                    /mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
             </metadata>
             <cache name="disk" type="disk">
                 <base><?php echo App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param['postgisdb'] . "/"; ?></base>
@@ -61,7 +63,12 @@ class Mapcachefile extends \app\inc\Controller
                 <srsalias>EPSG:900913</srsalias>
                 <units>m</units>
                 <size>256 256</size>
-                <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561 4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048 152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032 4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739 0.149291070869 0.074645535435 0.0373227677175</resolutions>
+                <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561
+                    4891.969810251280 2445.984905125640 1222.992452562820 611.4962262814100 305.7481131407048
+                    152.8740565703525 76.43702828517624 38.21851414258813 19.10925707129406 9.554628535647032
+                    4.777314267823516 2.388657133911758 1.194328566955879 0.5971642834779395 0.298582141739
+                    0.149291070869 0.074645535435 0.0373227677175
+                </resolutions>
             </grid>
             <?php
             $grids = \app\controllers\Mapcache::getGrids();
@@ -103,10 +110,15 @@ class Mapcachefile extends \app\inc\Controller
                         ?>
 
                         <!-- <?php echo $table ?> -->
-                        <cache name="<?php echo $table ?>" type="mbtiles">
-                            <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $table . ".mbtiles"; ?></dbfile>
-                            <symlink_blank/>
+
+                        <cache name="<?php echo $table ?>.mbtiles" type="mbtiles">
+                            <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/" . $table . ".mbtiles"; ?></dbfile>
                         </cache>
+
+                        <cache name="<?php echo $table ?>.sqlite3" type="sqlite3">
+                            <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/" . $table . ".sqlite3"; ?></dbfile>
+                        </cache>
+
                         <source name="<?php echo $table ?>" type="wms">
                         <getmap>
                             <params>
@@ -139,7 +151,7 @@ class Mapcachefile extends \app\inc\Controller
                         </source>
                         <tileset name="<?php echo $table ?>">
                             <source><?php echo $table ?></source>
-                            <cache><?php echo $cache == "mbtiles" ? $table : "disk" ?></cache>
+                            <cache><?php echo $cache != "disk" ? $table . "." . $cache : "disk" ?></cache>
                             <grid>g20</grid>
                             <?php
                             foreach ($grids as $k => $v) {
@@ -173,8 +185,8 @@ class Mapcachefile extends \app\inc\Controller
 
                     ?>
                     <!-- <?php echo $k ?> -->
-                    <cache name="<?php echo $k ?>" type="mbtiles">
-                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $k . ".mbtiles"; ?></dbfile>
+                    <cache name="<?php echo $k . ".mbtiles" ?>" type="mbtiles">
+                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/" . $k . ".mbtiles"; ?></dbfile>
                         <symlink_blank/>
                     </cache>
 
@@ -199,7 +211,7 @@ class Mapcachefile extends \app\inc\Controller
                     </source>
                     <tileset name="<?php echo $k ?>">
                         <source><?php echo $k ?></source>
-                        <cache><?php echo $cache == "mbtiles" ? $k : "disk" ?></cache>
+                        <cache><?php echo $cache != "disk" ? $k . "." . $cache : "disk" ?></cache>
                         <grid>g20</grid>
                         <?php
                         foreach ($grids as $k2 => $v2) {
@@ -238,8 +250,8 @@ class Mapcachefile extends \app\inc\Controller
                     $layersStr = implode(",", $layers);
                     ?>
                     <!-- <?php echo $tileSetName ?> -->
-                    <cache name="<?php echo $tileSetName ?>" type="mbtiles">
-                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $tileSetName . ".mbtiles"; ?></dbfile>
+                    <cache name="<?php echo $tileSetName . ".mbtiles" ?>" type="mbtiles">
+                        <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/" . $tileSetName . ".mbtiles"; ?></dbfile>
                         <symlink_blank/>
                     </cache>
 
@@ -263,7 +275,7 @@ class Mapcachefile extends \app\inc\Controller
                     </source>
                     <tileset name="<?php echo $tileSetName ?>">
                         <source><?php echo $tileSetName ?></source>
-                        <cache><?php echo $cache == "mbtiles" ? $tileSetName : "disk" ?></cache>
+                        <cache><?php echo $cache != "disk" ? $tileSetName . "." . $cache : "disk" ?></cache>
 
                         <grid>g20</grid>
                         <?php

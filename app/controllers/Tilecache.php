@@ -101,7 +101,9 @@ class Tilecache extends \app\inc\Controller
 
     public function delete_index()
     {
-        $cache = App::$param["mapCache"]["type"] ?: "disk";
+        $layer = new \app\models\Layer();
+        $cache = $layer->getAll(false, Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
+
         $response = [];
         switch ($cache) {
             case "mbtiles":
@@ -165,18 +167,22 @@ class Tilecache extends \app\inc\Controller
         return Response::json($response);
     }
 
-    static function bust($layer)
+    static function bust($layerName)
     {
-        $cache = App::$param["mapCache"]["type"] ?: "disk";
+        $layer = new \app\models\Layer();
+        $cache = $layer->getAll(false, $layerName, true, false, true, false)["data"][0]["def"]->cache;
+
         $response = [];
+
         $res = null;
+
         switch ($cache) {
             case "mbtiles":
-                $res = self::deleteFromTileset($layer, Connection::$param["postgisdb"]);
+                $res = self::deleteFromTileset($layerName, Connection::$param["postgisdb"]);
                 break;
             case "disk":
-                $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layer;
-                $res = self::unlinkTiles($dir, $layer);
+                $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layerName;
+                $res = self::unlinkTiles($dir, $layerName);
                 break;
         }
         if (!$res["success"]) {
