@@ -1,5 +1,5 @@
-<script src="http://127.0.0.1:8080/apps/widgets/gc2map/js/gc2map.js"></script>
-<script src="http://127.0.0.1:8080/apps/widgets/gc2table/js/gc2table.js"></script>
+<script src="http://127.0.0.1/apps/widgets/gc2map/js/gc2map.js"></script>
+<script src="http://127.0.0.1/apps/widgets/gc2table/js/gc2table.js"></script>
 <script src="http://gc2.mapcentia.com/apps/widgets/gc2map/js/searchModules/danish.js"></script>
 <style>
     #legend-popover-li-map, #open-win-li-map {
@@ -36,115 +36,16 @@
 
     // Lav en widget på normal vis
     gc2map.init({
+        host: "http://cowi.mapcentia.com",
         key: "map",
-        db: 'mydb',
+        db: 'nyborg',
         zoom: [9.2067, 57.3207, 9],
-        layers: ["public.opstilkr"],
+        layers: ["kommuneplan2017.lavbund"],
         baseLayers: [{id: 'dtkSkaermkortDaempet', name: 'Skærmkort'}],
         setBaseLayer: 'dtkSkaermkortDaempet',
         width: '100%',
         height: '400px',
         schema: "public",
-        vidiUrl: "http://cowi-vidi.mapcentia.com",
-        callBack: function (m, w) {
-
-            // Aktiver søgning med kommune nr.
-           // gc2map.createSearch(m, "630");
-
-            // Lav et SQL store på normal vis
-          var store = new geocloud.sqlStore({
-                db: "mydb",
-                sql: "SELECT * from public.opstilkr",
-                // StyleMap laves som en funktion
-                styleMap: function (feature) {
-                    return {
-                        fillColor: (function (d) {
-                            return d === "11" ? '#c66100' :
-                                    d === "21" ? '#ff615a' :
-                                            d === "31" ? '#6bffff' :
-                                                    d === "41" ? '#ff69ff' :
-                                                            d === "51" ? '#39ff39' :
-                                                                    d === "61" ? '#ffefad' :
-                                                                            d === "71" ? '#efef00' :
-                                                                                    d === "81" ? '#9c9e9c' :
-                                                                                            d === "91" ? '#9c9e9c' :
-                                                                                                    d === "96" ? '#C0C0C0' :
-                                                                                                            '#FFEDA0'
-
-
-                        }(feature.properties.anvgen)),
-                        weight: 1,
-                        opacity: 1,
-                        color: "#000",
-                        fillOpacity: 0.5
-                    }
-                },
-                onLoad: function () {
-                    // Brug IKKE denne funktion sammen med autoUpdate
-                    m.zoomToExtentOfgeoJsonStore(store);
-                }
-            });
-
-            // Tilføj store til kort og load
-            m.addGeoJsonStore(store);
-            store.load();
-
-            // Indtil nu er det normal widget. Nu begynder tabel
-
-            // Definer en column model
-            var cm = [
-                {
-                    "header": "Plannr",
-                    "dataIndex": "plannr",
-                    "type": "varchar",
-                    filterControl: "input",
-                    sortable: true
-                },
-                	{
-                 "header": "Plannavn",
-                 "dataIndex": "plannavn",
-                 "type": "varchar",
-                 "showInPopup": false,
-                 filterControl: "input",
-                 sortable: true
-
-                 },
-                {
-                    "header": "Anvendelse",
-                    "dataIndex": "anv",
-                    "showInPopup": false,
-                    filterControl: "select"
-                },
-                 {
-                 "header": "Status",
-                 "dataIndex": "status",
-                 "showInPopup": false,
-                 filterControl: "select"
-                 },
-                {
-                    "header": "Link",
-                    "dataIndex": "html",
-                    "link": "<span style='white-space: nowrap'>Se ramme</span>",
-                    "showInPopup": true,
-                    //"formatter": "operateFormatter"
-                }
-            ];
-
-            // Start tabel widget
-
-            gc2table.init({
-                el: "#table", // Element som tabellen skal lave i
-                geocloud2: m, // geocloud object
-                store: store, // store object
-                cm: cm, // Column model
-                autoUpdate: false, // Skal kortet opdateres ved zoom?
-                height: null, // Skal være null, hvis filter funktioner bruges pga. bug i bootstrap-table
-                tableBodyHeight: 600, // Hack til at afhjælpe ovenstående
-                setViewOnSelect: true, // Zoom når det vælges i tabellen
-                openPopUp: true, // Vis pop up på valgte features
-                setSelectedStyle: true, // Skal valgte features have en Selected style?
-                locale: 'da-DK'
-            });
-        }
+        vidiUrl: "http://cowi-vidi.mapcentia.com"
     });
 </script>

@@ -20,7 +20,7 @@ var MapCentia;
 MapCentia = function (globalId) {
     "use strict";
 
-    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles, ready = [],
+    var layers = {}, i, text, arr, id = globalId, defaults, db, schema, init, switchLayer, setBaseLayer, autocomplete, hostname, cloud, qstore = [], share, permaLink, shareTwitter, shareFacebook, shareLinkedIn, shareGooglePlus, shareTumblr, shareStumbleupon, openMapWin, fullScreen, list, addTileLayers, metaData, metaDataKeys = [], metaDataKeysTitle = [], addTiles, addLegend, removeTiles, ready = [],
         eWidth = $("#" + id).width(),
         eHeight = $("#" + id).height();
     switchLayer = function (name, visible) {
@@ -104,6 +104,16 @@ MapCentia = function (globalId) {
      center = new geocloud.transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
      cloud.zoomToPoint(center.x, center.y, 10);
      });*/
+    fullScreen = function () {
+        var doc = document.getElementById(id);
+        for (var i = 0; i < doc.childNodes.length; i++) {
+            if (doc.childNodes[i].className == "pane") {
+                doc.childNodes[i].webkitRequestFullScreen();
+                break;
+            }
+        }
+    };
+
     openMapWin = function (page, width, height) {
         var strWinName = "Map",
             popleft = (screen.width - width) / 2,
@@ -550,6 +560,7 @@ MapCentia = function (globalId) {
         switchLayer: switchLayer,
         setBaseLayer: setBaseLayer,
         openMapWin: openMapWin,
+        fullScreen: fullScreen,
         share: share,
         shareTwitter: shareTwitter,
         shareFacebook: shareFacebook,
