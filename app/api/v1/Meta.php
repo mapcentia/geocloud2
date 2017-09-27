@@ -1,4 +1,5 @@
 <?php
+
 namespace app\api\v1;
 
 use \app\inc\Input;
@@ -28,13 +29,9 @@ class Meta extends \app\inc\Controller
      */
     public function get_index()
     {
-        $q = Input::getPath()->part(5);
-        $split = explode(".",$q);
-        if (sizeof($split) == 1) {
-            return $this->layers->getAll($q, null, Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"));
-        }
-        else {
-            return $this->layers->getAll(null, $q, Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"));
-        }
+        // Get the URI params from request
+        // /meta/{user}/[query]
+        $r = func_get_arg(0);
+        return $this->layers->getAll($r["query"], Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"));
     }
 }

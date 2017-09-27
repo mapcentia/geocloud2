@@ -1,4 +1,5 @@
 <?php
+
 namespace app\inc;
 
 use Exception;
@@ -35,18 +36,18 @@ class Model
     /**
      * @param PDOStatement $result
      * @param string $result_type
-     * @return array
-     * @throws Exception
+     * @return array|mixed
      */
     public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
         $row = [];
-        if (isset($this->PDOerror)) {
-           // throw new Exception($this->PDOerror[0]);
-        }
         switch ($result_type) {
             case "assoc" :
-                $row = $result->fetch(PDO::FETCH_ASSOC);
+                try {
+                    $row = $result->fetch(PDO::FETCH_ASSOC);
+                } catch (\PDOException $e) {
+                    throw new \PDOException($e->getMessage());
+                }
                 break;
             case "both" :
                 break;
@@ -57,7 +58,7 @@ class Model
     /**
      * @param PDOStatement $result
      * @param string $result_type
-     * @return mixed
+     * @return array
      * @throws Exception
      */
     public function fetchAll(PDOStatement $result, $result_type = "both")
@@ -176,7 +177,11 @@ class Model
     public function prepare($sql)
     {
         if (!$this->db) {
-            $this->connect("PDO");
+            try {
+                $this->connect("PDO");
+            } catch (\PDOException $e) {
+                throw new \PDOException($e->getMessage());
+            }
         }
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
@@ -207,7 +212,11 @@ class Model
                 break;
             case "PDO" :
                 if (!$this->db) {
-                    $this->connect("PDO");
+                    try {
+                        $this->connect("PDO");
+                    } catch (\PDOException $e) {
+                        throw new \PDOException($e->getMessage());
+                    }
                 }
                 if ($this->connectionFailed) {
                     return false;
@@ -284,8 +293,9 @@ class Model
                         AND attnum > 0
                         AND NOT attisdropped";
 
-        $res = $this->prepare($sql);
+
         try {
+            $res = $this->prepare($sql);
             if ($temp) {
                 $res->execute(array("table" => $table));
             } else {
@@ -343,7 +353,7 @@ class Model
                 } catch (\PDOException $e) {
                     $this->db = NULL;
                     $this->connectionFailed = true;
-                    $this->PDOerror[] = "Could not connect to database";
+                    throw new \PDOException($e->getMessage());
                 }
                 break;
         }
@@ -379,8 +389,12 @@ class Model
         $query = "SELECT * FROM settings.getColumns('f_table_name=''{$_table}'' AND f_table_schema=''{$_schema}''',
                     'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
 
+        try {
+            $result = $this->execQuery($query);
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
+        }
 
-        $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
 
         if (!$row)

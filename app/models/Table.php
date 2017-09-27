@@ -45,7 +45,13 @@ class Table extends Model
         $this->schema = str_replace(".", "", $_schema);
         $this->table = $table;
         $sql = "SELECT 1 FROM {$table} LIMIT 1";
-        $this->execQuery($sql);
+
+        try {
+            $this->execQuery($sql);
+        } catch (\PDOException $e) {
+
+        }
+
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
