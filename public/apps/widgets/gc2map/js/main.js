@@ -117,6 +117,8 @@ MapCentia = function (globalId) {
                     elem.webkitRequestFullscreen();
                 } else if (elem.msRequestFullscreen) {
                     elem.msRequestFullscreen();
+                } else {
+                    alert("Din browser understøtter ikke fuldskærm.")
                 }
                 break;
             }
