@@ -77,9 +77,11 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
-    Route::add("api/v1/meta", function () {
+    Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
+
+
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
