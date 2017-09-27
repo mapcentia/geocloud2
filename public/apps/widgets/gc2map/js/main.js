@@ -108,7 +108,16 @@ MapCentia = function (globalId) {
         var doc = document.getElementById(id);
         for (var i = 0; i < doc.childNodes.length; i++) {
             if (doc.childNodes[i].className == "pane") {
-                doc.childNodes[i].webkitRequestFullScreen();
+                var elem = doc.childNodes[i];
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
                 break;
             }
         }
