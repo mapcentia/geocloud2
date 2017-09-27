@@ -1,5 +1,5 @@
-<script src="http://127.0.0.1/apps/widgets/gc2map/js/gc2map.js"></script>
-<script src="http://127.0.0.1/apps/widgets/gc2table/js/gc2table.js"></script>
+<script src="http://gc2.mapcentia.com/apps/widgets/gc2map/js/gc2map.js"></script>
+<script src="http://gc2.mapcentia.com/apps/widgets/gc2table/js/gc2table.js"></script>
 <script src="http://gc2.mapcentia.com/apps/widgets/gc2map/js/searchModules/danish.js"></script>
 <style>
     #legend-popover-li-map, #open-win-li-map {
@@ -36,11 +36,10 @@
 
     // Lav en widget på normal vis
     gc2map.init({
-        host: "http://cowi.mapcentia.com",
         key: "map",
-        db: 'nyborg',
+        db: 'mydb',
         zoom: [9.2067, 57.3207, 9],
-        layers: ["kommuneplan2017.lavbund"],
+        layers: ["public._706"],
         baseLayers: [{id: 'dtkSkaermkortDaempet', name: 'Skærmkort'}],
         setBaseLayer: 'dtkSkaermkortDaempet',
         width: '100%',
