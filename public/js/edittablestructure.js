@@ -399,8 +399,10 @@ tableStructure.init = function (record, screenName) {
                         name: 'column',
                         emptyText: __("New column name"),
                         allowBlank: false
-                    },
-                    {
+                    }, {
+                        xtype: 'container',
+                        width: 1,
+                    }, {
                         width: 150,
                         xtype: 'combo',
                         mode: 'local',
@@ -665,7 +667,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                             spinner(false);
                             Ext.MessageBox.show({
                                 title: __("Failure"),
-                                msg: (typeof Ext.decode(response.responseText).message === "object") ? __(response.responseText): Ext.decode(response.responseText).message,
+                                msg: (typeof Ext.decode(response.responseText).message === "object") ? __(response.responseText) : Ext.decode(response.responseText).message,
                                 buttons: Ext.MessageBox.OK,
                                 width: 400,
                                 height: 300,

@@ -3,10 +3,11 @@ include("html_header.php");
 ?>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-flat.css?d597d957caed6c0e"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-dark.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
+<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/RowEditor.css"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
@@ -153,14 +154,19 @@ include("html_header.php");
 <script>
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
+
+
+<script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
+
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base-debug.js?7eec3ebfb294b86f"></script>
-<script type="text/javascript" src="/js/ext/ext-all.js?0035a5fa730b0514"></script>
+<script type="text/javascript" src="/js/ext/ext-all-debug.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?7ba8b5b8eb4a6981"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/RangeMenu.js?77e3a4d93b747edc"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/ListMenu.js?606a1414d8824c81"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/superboxselect/SuperBoxSelect.js"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>
 
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/GridFilters.js?e2cd680acbd6d211"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js?91c56cbc41e461f1"></script>
@@ -191,6 +197,30 @@ include("html_header.php");
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 <!-- /build -->
+
+<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js?d259f3b931eb8104"></script>
+<script type="text/javascript" src="/js/canvasResize/binaryajax.js?0bd13c39b3649026"></script>
+<script type="text/javascript" src="/js/canvasResize/exif.js?33363140df0199f5"></script>
+<script type="text/javascript" src="/js/canvasResize/canvasResize.js?c1543e89ec75a4b0"></script>
+
+<!-- build:js /js/build/editor/all.min.js -->
+<script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?1627edfa794e03c7"></script>
+<script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
+<script type="text/javascript" src="/js/attributeform.js?522193f8e55216bb"></script>
+<script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
+<script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>
+<script type="text/javascript" src="/js/comparisoncomboBox.js?8542bc57943e21ff"></script>
+<script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
+<!-- /build -->
+<script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
+
+
+
+
+
+
 </body>
 </html>
 

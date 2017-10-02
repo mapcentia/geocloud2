@@ -35,7 +35,7 @@ classWizards.init = function (record) {
                         Ext.getCmp("a3").remove(wmsClass.grid);
                         wmsClasses.store.load();
                         wmsLayer.store.load();
-                        writeFiles(record._key_);
+                        writeFiles(record._key_, map);
                         store.load();
                     },
                     exception: function (proxy, type, action, options, response, arg) {
@@ -635,7 +635,7 @@ classWizards.init = function (record) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
-                                                                                writeFiles(record._key_);
+                                                                                writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
                                                                                         updateClassGrid();
@@ -926,7 +926,7 @@ classWizards.init = function (record) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
-                                                                                writeFiles(record._key_);
+                                                                                writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
                                                                                         updateClassGrid();
@@ -1137,7 +1137,7 @@ classWizards.init = function (record) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
-                                                                                writeFiles(record._key_);
+                                                                                writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
                                                                                         updateClassGrid();
@@ -1249,7 +1249,7 @@ classWizards.init = function (record) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
                                                                                 wmsLayer.store.load();
-                                                                                writeFiles(record._key_);
+                                                                                writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
                                                                                         updateClassGrid();

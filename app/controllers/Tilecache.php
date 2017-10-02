@@ -102,7 +102,8 @@ class Tilecache extends \app\inc\Controller
     public function delete_index()
     {
         $layer = new \app\models\Layer();
-        $cache = $layer->getAll(false, Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
+        $cache = $layer->getAll(Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
+
 
         $response = [];
         switch ($cache) {
@@ -170,7 +171,7 @@ class Tilecache extends \app\inc\Controller
     static function bust($layerName)
     {
         $layer = new \app\models\Layer();
-        $cache = $layer->getAll(false, $layerName, true, false, true, false)["data"][0]["def"]->cache;
+        $cache = $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache;
 
         $response = [];
 
@@ -199,7 +200,7 @@ class Tilecache extends \app\inc\Controller
     private function deleteFromTileset($layerName)
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll(false, $layerName, true, false, true, false);
+        $meta = $layer->getAll($layerName, true, false, true, false);
         if ($meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
@@ -233,7 +234,7 @@ class Tilecache extends \app\inc\Controller
     private function unlinkTiles($dir, $layerName)
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll(false, $layerName, true, false, true, false);
+        $meta = $layer->getAll($layerName, true, false, true, false);
         if ($meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";

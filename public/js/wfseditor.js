@@ -19,7 +19,7 @@ Ext.MessageBox.buttonText = {
     no: "<i class='fa fa-remove'></i> " + __("No")
 };
 
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
+var App = new Ext.App({}), cloud, gc2, layer, grid, featureStore, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
@@ -239,7 +239,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         });
     }
 
-    store = new GeoExt.data.FeatureStore({
+    featureStore = new GeoExt.data.FeatureStore({
         proxy: new GeoExt.data.ProtocolProxy({
             protocol: layer.protocol
         }),
@@ -258,7 +258,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         viewConfig: {
             //forceFit: true
         },
-        store: store,
+        store: featureStore,
         listeners: {
             afteredit: function (e) {
                 var feature = e.record.get("feature");
@@ -878,42 +878,78 @@ $(document).ready(function () {
                                 border: false,
                                 region: "west",
                                 collapsible: true,
-                                split: true,
-                                width: 350,
-                                tbar: [
-                                    {
-                                        text: '<i class="fa fa-cloud-upload"></i> ' + __('New layer'),
-                                        disabled: (subUser === schema || subUser === false) ? false : true,
-                                        handler: function () {
-                                            window.parent.onAdd();
-                                        }
-                                    }, '-',
-                                    {
-                                        text: "<i class='fa fa-refresh'></i> " + __("Reload"),
-                                        handler: function () {
-                                            stopEdit();
-                                            reLoadTree();
-                                        }
-                                    }],
-                                items: [
-                                    {
-                                        xtype: "panel",
-                                        border: false,
-                                        tbar: wfsTools,
-                                        html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>"
-                                    },
-                                    new Ext.Panel({
-                                        border: false,
-                                        id: "treepanel",
-                                        style: {
-                                            height: (Ext.getBody().getViewSize().height - 120) + "px",
-                                            overflow: "auto"
-                                        },
-                                        collapsible: false
+                                split: false,
+                                width: 700,
+                                layout: "fit",
 
-                                    })
-                                ]
+                                items: new Ext.Panel({
+                                    border: false,
+                                    region: "center",
+                                    collapsible: false,
+                                    split: false,
+                                    layout: "border",
+                                    items: [
+                                        new Ext.Panel({
+                                            border: false,
+                                            region: "center",
+                                            collapsible: false,
+                                            split: true,
+                                            width: 350,
+                                            tbar: [
+                                                {
+                                                    text: '<i class="fa fa-cloud-upload"></i> ' + __('New layer'),
+                                                    disabled: (subUser === schema || subUser === false) ? false : true,
+                                                    handler: function () {
+                                                        window.parent.onAdd();
+                                                    }
+                                                }, '-',
+                                                {
+                                                    text: "<i class='fa fa-refresh'></i> " + __("Reload"),
+                                                    handler: function () {
+                                                        stopEdit();
+                                                        reLoadTree();
+                                                    }
+                                                }],
+                                            items: [
+                                                {
+                                                    xtype: "panel",
+                                                    border: false,
+                                                    tbar: wfsTools,
+                                                    html: "<div class=\"layer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>"
+                                                },
+                                                new Ext.Panel({
+                                                    border: false,
+                                                    id: "treepanel",
+                                                    style: {
+                                                        height: (Ext.getBody().getViewSize().height - 120) + "px",
+                                                        overflow: "auto"
+                                                    },
+                                                    collapsible: false
+
+                                                })
+                                            ]
+                                        }),
+                                        new Ext.Panel({
+                                            border: false,
+                                            region: "east",
+                                            collapsible: true,
+                                            width: 350,
+
+                                            items: [
+                                                {
+                                                    xtype: "panel",
+                                                    border: false,
+                                                    html: "<div class=\"ladyer-desc\">Click on a layer title to access settings and to edit data. Check the box to see the layer in the map.</div>"
+                                                }
+                                            ]
+                                        })
+                                    ]
+                                })
+
+
+
                             })
+
                         ]
                     });
 
@@ -990,7 +1026,7 @@ $(document).ready(function () {
                 if (modifyControl.feature) {
                     modifyControl.selectControl.unselectAll();
                 }
-                store.commitChanges();
+                featureStore.commitChanges();
                 saveStrategy.save();
             }
         },

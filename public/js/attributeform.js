@@ -28,7 +28,6 @@ attributeForm.init = function (layer, geomtype) {
                         region: "center",
                         border: false,
                         bodyStyle: {
-                            background: '#ffffff',
                             padding: '7px'
                         },
                         tbar: ["->",
@@ -67,7 +66,7 @@ attributeForm.init = function (layer, geomtype) {
                     });
                     filter.win = new Ext.Window({
                         title: __("Load features"),
-                        modal: false,
+                        modal: true,
                         layout: 'fit',
                         initCenter: true,
                         border: false,
@@ -96,7 +95,6 @@ attributeForm.init = function (layer, geomtype) {
         border: false,
         labelWidth: 150,
         bodyStyle: {
-            background: '#ffffff',
             padding: '7px'
         },
         defaults: {
