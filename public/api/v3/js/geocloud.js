@@ -197,7 +197,7 @@ geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, me = this, map, sql, xhr;
+        var prop, me = this, map, sql, xhr = {abort:function () {/* stup */} };
         this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
