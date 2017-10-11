@@ -158,7 +158,6 @@ class Elasticsearch extends \app\inc\Controller
             $type = "a" . $type;
         }
 
-
         // Support for query string search. The string is passed to Es unaltered
         // =====================================================================
         if (Input::getMethod() == "get" && Input::getQueryString()) {
