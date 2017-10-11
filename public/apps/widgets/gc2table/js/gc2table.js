@@ -131,7 +131,7 @@ var gc2table = (function () {
             height = defaults.height,
             tableBodyHeight = defaults.tableBodyHeight,
             styleSelected = defaults.styleSelected,
-            el = defaults.el, click, loadDataInTable,
+            el = defaults.el, click, loadDataInTable, moveEndOff,
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
             openPopUp = defaults.openPopUp,
@@ -285,13 +285,20 @@ var gc2table = (function () {
                     $(".fixed-table-body").css("max-height", tableBodyHeight + "px");
                     $(".fixed-table-body").css("height", tableBodyHeight + "px");
                 };
+
+                var moveEndEvent = function () {
+                    store.reset();
+                    store.load();
+                };
+
+                moveEndOff = function () {
+                    m.map.off("moveend", moveEndEvent);
+                };
+
                 if (autoUpdate) {
-                    m.on("moveend", _.debounce(function () {
-                            store.reset();
-                            store.load();
-                        }, 200)
-                    );
+                    m.on("moveend", moveEndEvent);
                 }
+
                 var jRes = jRespond([
                     {
                         label: 'handheld',
@@ -330,7 +337,8 @@ var gc2table = (function () {
             loadDataInTable: loadDataInTable,
             object: object,
             uid: uid,
-            store: store
+            store: store,
+            moveEndOff: moveEndOff
         };
     };
     return {
