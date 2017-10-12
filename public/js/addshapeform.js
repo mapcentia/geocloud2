@@ -51,7 +51,7 @@ addShape.init = function () {
                                         for (i = 0; i < errors.length; i = i + 1) {
                                             strings.push(errors[i]);
                                         }
-                                        var message = "<p>" + __("Some file processing resulted in errors or warnings.") + "</p><br/><textarea rows=7' cols='74'>" + strings.join("\n") + "</textarea>";
+                                        var message = "<p>" + __("Some file processing resulted in errors or warnings.") + "</p><br/><textarea rows=7' cols='56'>" + strings.join("\n") + "</textarea>";
                                         Ext.MessageBox.show({
                                             title: __('Failure'),
                                             msg: message,

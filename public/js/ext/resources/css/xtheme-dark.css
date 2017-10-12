@@ -1589,7 +1589,7 @@ a.x-menu-item {
 }
 
 .x-panel-header {
-    color: #fff;
+    color: rgba(255,255,255,.5);
     font-weight: bold;
     font-size: 11px;
     font-family: 'Open Sans', arial, verdana, sans-serif;
@@ -1601,7 +1601,7 @@ a.x-menu-item {
 .x-panel-body {
     border-color: #404040 /*Gray Cloud*/;
     background-color: #404040;
-    color: #fff;
+    color: rgba(255,255,255,.8);
 }
 
 .x-panel-bbar .x-toolbar, .x-panel-tbar .x-toolbar {
@@ -1722,7 +1722,6 @@ a.x-menu-item {
 .x-window-ml {
     background-color: #404040 /*Battleship Gray*/;
     background-image: none;
-    padding-top: 3px;
 }
 
 .x-window-mr {
@@ -1804,12 +1803,12 @@ body.x-body-masked .x-window-plain .x-window-mc {
 }
 
 .x-layout-collapsed {
-    background-color: #dfdfdf;
+    /*background-color: #dfdfdf;*/
     border-color: #606061 /*Battleship Gray*/;
 }
 
 .x-layout-collapsed-over {
-    background-color: #e7e7e7;
+    background-color: #606061;
 }
 
 .x-layout-split-west .x-layout-mini {
