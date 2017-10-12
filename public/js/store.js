@@ -767,10 +767,6 @@ $(document).ready(function () {
         url: '/controllers/database/schemas'
     });
 
-    var editor = new Ext.ux.grid.RowEditor({
-        saveText: 'Update'
-    });
-
     /**
      * Main layer grid in Database tabe
      * @type {Ext.grid.EditorGridPanel}

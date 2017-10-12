@@ -112,22 +112,17 @@ module.exports = function (grunt) {
                         'public/js/apikeyform.js',
                         'public/js/plupload/js/moxie.min.js',
                         'public/js/plupload/js/plupload.min.js',
-                        'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js'
-                    ],
-                    //Editor
-                    'public/js/build/editor/all.min.js': [
-                        'public/js/jquery/1.10.0/jquery.min.js',
-                        'public/js/msg.js',
+                        'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js',
                         'public/js/GeoExt/script/GeoExt.js',
                         'public/api/v1/js/api.js',
                         'public/api/v3/js/geocloud.js',
-                        'public/js/wfseditor.js',
                         'public/js/attributeform.js',
                         'public/js/filterfield.js',
                         'public/js/filterbuilder.js',
                         'public/js/comparisoncomboBox.js',
                         'public/js/openlayers/proj4js-combined.js'
                     ],
+
                     // The widget
                     'public/apps/widgets/gc2map/js/build/all.min.js': [
                         'public/js/leaflet/leaflet-all.js',

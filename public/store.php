@@ -155,6 +155,10 @@ include("html_header.php");
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
 
+<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
+<script type="text/javascript" src="/js/canvasResize/binaryajax.js?0bd13c39b3649026"></script>
+<script type="text/javascript" src="/js/canvasResize/exif.js?33363140df0199f5"></script>
+<script type="text/javascript" src="/js/canvasResize/canvasResize.js?c1543e89ec75a4b0"></script>
 
 <script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
 
@@ -166,8 +170,6 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/RangeMenu.js?77e3a4d93b747edc"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/menu/ListMenu.js?606a1414d8824c81"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/superboxselect/SuperBoxSelect.js"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/RowEditor.js"></script>
-
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/GridFilters.js?e2cd680acbd6d211"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js?91c56cbc41e461f1"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/StringFilter.js?94547080e205a1bb"></script>
@@ -196,15 +198,6 @@ include("html_header.php");
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
-<!-- /build -->
-
-<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
-<script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js?d259f3b931eb8104"></script>
-<script type="text/javascript" src="/js/canvasResize/binaryajax.js?0bd13c39b3649026"></script>
-<script type="text/javascript" src="/js/canvasResize/exif.js?33363140df0199f5"></script>
-<script type="text/javascript" src="/js/canvasResize/canvasResize.js?c1543e89ec75a4b0"></script>
-
-<!-- build:js /js/build/editor/all.min.js -->
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?1627edfa794e03c7"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
@@ -214,6 +207,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/comparisoncomboBox.js?8542bc57943e21ff"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
 <!-- /build -->
+
 <script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
 
 
