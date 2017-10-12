@@ -585,12 +585,11 @@ class Layer extends \app\models\Table
      */
     public function updatePrivileges($data)
     {
-        $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $privilege = json_decode($this->getValueFromKey($data['_key_'], "privileges") ?: "{}");
-        $privilege->$data['subuser'] = $data['privileges'];
+        $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
+        $privilege->{$data->subuser} = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
-        $privileges['_key_'] = $data['_key_'];
+        $privileges['_key_'] = $data->_key_;
         $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
         if ($res['success'] == true) {
             $response['success'] = true;

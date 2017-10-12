@@ -37,7 +37,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->api_key = $apiKey;
         } else {
-            $arr->api_key_subuser->$_SESSION["subuser"] = $apiKey;
+            $arr->api_key_subuser->{$_SESSION["subuser"]} = $apiKey;
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -65,7 +65,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
         } else {
-            $arr->pw_subuser->$_SESSION["subuser"] = $this->encryptPw($pw);
+            $arr->pw_subuser->{$_SESSION["subuser"]} = $this->encryptPw($pw);
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -179,8 +179,8 @@ class Setting extends Model
         $arr = $this->getArray();
 
         if ($_SESSION["subuser"]) {
-            $arr->pw = $arr->pw_subuser->$_SESSION["subuser"];
-            $arr->api_key = $arr->api_key_subuser->$_SESSION["subuser"];
+            $arr->pw = $arr->pw_subuser->{$_SESSION["subuser"]};
+            $arr->api_key = $arr->api_key_subuser->{$_SESSION["subuser"]};
             unset($arr->api_key_subuser);
             unset($arr->pw_subuser);
         }
