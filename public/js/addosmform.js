@@ -167,7 +167,7 @@ addOsm.init = function () {
                         var param = {
                             data: values
                         };
-                        param.data.extent = document.getElementById("wfseditor").contentWindow.window.map.getExtent();
+                        param.data.extent = map.getExtent();
                         var width = (param.data.extent.left - param.data.extent.right);
                         var height = (param.data.extent.top - param.data.extent.bottom);
                         var max = 50000;
@@ -203,7 +203,7 @@ addOsm.init = function () {
                             },
                             success: function () {
                                 store.reload();
-                                document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                reLoadTree();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },
                             failure: function (response) {

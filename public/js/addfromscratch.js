@@ -80,7 +80,7 @@ addScratch.init = function () {
                             waitMsg: 'Creating your new layer',
                             success: function (form, action) {
                                 App.setAlert(App.STATUS_NOTICE, action.result.message);
-                                document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                reLoadTree();
                                 store.load();
                             },
                             failure: function (form, action) {

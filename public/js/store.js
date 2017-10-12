@@ -81,6 +81,42 @@ $(document).ready(function () {
             ]
         });
 
+    /**
+     * Make sync calls
+     * TODO Make them async and poll
+     */
+    $.ajax({
+        url: '/controllers/layer/columnswithkey',
+        async: false,
+        dataType: 'json',
+        success: function (data) {
+            fieldsForStore = data.forStore;
+            fieldsForStore.push({name: "indexed_in_es", type: "bool"});
+            fieldsForStore.push({name: "reltype", type: "text"});
+        }
+    });
+    $.ajax({
+        url: '/controllers/setting',
+        async: false,
+        dataType: 'json',
+        success: function (data) {
+            settings = data.data;
+            $("#apikeyholder").html(settings.api_key);
+            if (typeof settings.extents !== "undefined") {
+                if (settings.extents[schema] !== undefined) {
+                    initExtent = settings.extents[schema];
+                }
+            }
+            if (typeof settings.extentrestricts !== "undefined") {
+                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
+                    extentRestricted = true;
+                }
+            }
+            if (typeof settings.userGroups !== "undefined") {
+                subUserGroups = settings.userGroups || {};
+            }
+        }
+    });
 
     if (typeof window.setBaseLayers !== 'object') {
         window.setBaseLayers = [
@@ -95,7 +131,7 @@ $(document).ready(function () {
             new OpenLayers.Control.Zoom(),
             new OpenLayers.Control.Attribution()
         ],
-        restrictedExtent: subUser && window.parent.settings.extentrestricts ? window.parent.settings.extentrestricts[schema] : null
+        restrictedExtent: subUser && settings.extentrestricts ? settings.extentrestricts[schema] : null
     });
     gc2 = new geocloud.map({});
 
@@ -544,43 +580,6 @@ $(document).ready(function () {
         }); // Ajax call end
     };
     getMetaData();
-
-    /**
-     * Make sync calls
-     * TODO Make them async and poll
-     */
-    $.ajax({
-        url: '/controllers/layer/columnswithkey',
-        async: false,
-        dataType: 'json',
-        success: function (data) {
-            fieldsForStore = data.forStore;
-            fieldsForStore.push({name: "indexed_in_es", type: "bool"});
-            fieldsForStore.push({name: "reltype", type: "text"});
-        }
-    });
-    $.ajax({
-        url: '/controllers/setting',
-        async: false,
-        dataType: 'json',
-        success: function (data) {
-            settings = data.data;
-            $("#apikeyholder").html(settings.api_key);
-            if (typeof settings.extents !== "undefined") {
-                if (settings.extents[schema] !== undefined) {
-                    initExtent = settings.extents[schema];
-                }
-            }
-            if (typeof settings.extentrestricts !== "undefined") {
-                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
-                    extentRestricted = true;
-                }
-            }
-            if (typeof settings.userGroups !== "undefined") {
-                subUserGroups = settings.userGroups || {};
-            }
-        }
-    });
 
     /**
      *

@@ -38,7 +38,7 @@ addRasterFile.init = function () {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
-                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                    reLoadTree();
                                     store.load();
                                 }
                                 spinner(false);

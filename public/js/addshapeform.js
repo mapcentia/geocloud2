@@ -45,7 +45,7 @@ addShape.init = function () {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
-                                    document.getElementById("wfseditor").contentWindow.window.reLoadTree();
+                                    reLoadTree();
                                     store.load();
                                     if (errors.length > 0) {
                                         for (i = 0; i < errors.length; i = i + 1) {
