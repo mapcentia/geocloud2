@@ -726,6 +726,8 @@ class Table extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = "406";
+
         }
         return $response;
     }
@@ -763,6 +765,7 @@ class Table extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = "406";
         }
         $this->purgeFieldConf($_key_);
         return $response;

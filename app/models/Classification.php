@@ -215,7 +215,7 @@ class Classification extends \app\inc\Model
         $def = $this->tile->get();
         if (!$def['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $def['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -224,7 +224,7 @@ class Classification extends \app\inc\Model
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -238,7 +238,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -251,7 +251,7 @@ class Classification extends \app\inc\Model
             $response['message'] = "Updated one class";
         } else {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
         }
         $this->storeWizard(json_encode($data));
@@ -263,7 +263,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -327,7 +327,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -377,7 +377,7 @@ class Classification extends \app\inc\Model
             $res = $this->update(($i - 1), $class);
             if (!$res['success']) {
                 $response['success'] = false;
-                $response['message'] = "Error";
+                $response['message'] = $res['message'];
                 $response['code'] = 400;
                 return $response;
             }
@@ -393,7 +393,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -449,7 +449,7 @@ class Classification extends \app\inc\Model
                     $r = $this->update($u, $class);
                     if (!$r['success']) {
                         $response['success'] = false;
-                        $response['message'] = "Error";
+                        $response['message'] = $r['message'];
                         $response['code'] = 400;
                         return $response;
                     }
@@ -481,7 +481,7 @@ class Classification extends \app\inc\Model
         $def = $this->tile->get();
         if (!$def['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $def['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -492,7 +492,7 @@ class Classification extends \app\inc\Model
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -507,7 +507,7 @@ class Classification extends \app\inc\Model
         $res = $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -530,7 +530,7 @@ class Classification extends \app\inc\Model
         $res = $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }

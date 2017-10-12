@@ -39,16 +39,7 @@ classWizards.init = function (record) {
                         store.load();
                     },
                     exception: function (proxy, type, action, options, response, arg) {
-                        if (type === 'remote') {
-                            var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
-                            Ext.MessageBox.show({
-                                title: __('Failure'),
-                                msg: message,
-                                buttons: Ext.MessageBox.OK,
-                                width: 300,
-                                height: 300
-                            });
-                        } else {
+                        if (response.status !== 200) {
                             Ext.MessageBox.show({
                                 title: __("Failure"),
                                 msg: __(Ext.decode(response.responseText).message),

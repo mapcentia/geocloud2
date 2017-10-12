@@ -1118,19 +1118,10 @@ $(document).ready(function () {
                             },
                             listeners: {
                                 exception: function (proxy, type, action, options, response, arg) {
-                                    if (type === 'remote') {
-                                        var message = "<p>" + __("Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong") + "</p><br/><textarea rows=5' cols='31'>" + __(response.message) + "</textarea>";
-                                        Ext.MessageBox.show({
-                                            title: __('Failure'),
-                                            msg: message,
-                                            buttons: Ext.MessageBox.OK,
-                                            width: 300,
-                                            height: 300
-                                        });
-                                    } else {
+                                    if (response.status !== 200) {
                                         workflowWin.close();
                                         Ext.MessageBox.show({
-                                            title: __("Failurse"),
+                                            title: __("Failure"),
                                             msg: __(Ext.decode(response.responseText).message),
                                             buttons: Ext.MessageBox.OK,
                                             width: 300,
@@ -3693,9 +3684,7 @@ $(document).ready(function () {
                         frame: false,
                         border: false,
                         plugins: [new Ext.ux.grid.GridFilters({
-                            // encode and local configuration options defined previously for easier reuse
-                            //encode: encode, // json encode the filter query
-                            local: true,   // defaults to false (remote filtering)
+                            local: true,
                             filters: [{
                                 type: 'string',
                                 dataIndex: 'f_table_name',

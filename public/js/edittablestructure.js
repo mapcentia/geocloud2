@@ -125,18 +125,7 @@ tableStructure.init = function (record, screenName) {
             listeners: {
                 write: tableStructure.onWrite,
                 exception: function (proxy, type, action, options, response, arg) {
-                    if (type === 'remote') { // success is false
-                        var message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
-                        Ext.MessageBox.show({
-                            title: __("Failure"),
-                            msg: message,
-                            buttons: Ext.MessageBox.OK,
-                            width: 400,
-                            height: 300,
-                            icon: Ext.MessageBox.ERROR
-                        });
-                    } else {
-                        //tableStructure.store.load();
+                    if (response.status !== 200) {
                         Ext.MessageBox.show({
                             title: __("Failure"),
                             msg: __(Ext.decode(response.responseText).message),
@@ -144,6 +133,7 @@ tableStructure.init = function (record, screenName) {
                             width: 300,
                             height: 300
                         });
+                        tableStructure.store.load();
                     }
 
                 }
@@ -479,6 +469,7 @@ tableStructure.init = function (record, screenName) {
                                     height: 300,
                                     icon: Ext.MessageBox.ERROR
                                 });
+                                tableStructure.store.load();
                             }
                         });
                     } else {
