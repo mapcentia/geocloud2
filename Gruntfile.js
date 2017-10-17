@@ -79,7 +79,7 @@ module.exports = function (grunt) {
                     // The Viewer
                     'public/apps/viewer/js/build/all.min.js': [
                         'public/js/jquery/1.10.0/jquery.min.js',
-                        'public//js/bootstrap3/js/bootstrap.min.js',
+                        'public/js/bootstrap3/js/bootstrap.min.js',
                         'public/js/hogan/hogan-2.0.0.js',
                         'public/js/div/jRespond.js',
                         'public/js/common.js',
@@ -88,11 +88,11 @@ module.exports = function (grunt) {
                         'public/apps/viewer/js/viewer.js',
                         'public/js/leaflet/leaflet-all.js'
                     ],
-                    //store
-                    'public/js/build/store/all.min.js': [
+                    //admin
+                    'public/js/admin/build/all.min.js': [
                         'public/js/jquery/1.10.0/jquery.min.js',
                         'public/js/msg.js',
-                        'public/js/store.js',
+                        'public/js/admin.js',
                         'public/js/edittablestructure.js',
                         'public/js/cartomobilesetup.js',
                         'public/js/elasticsearchmapping.js',

@@ -3951,7 +3951,7 @@ $(document).ready(function () {
      * @param clearCachedLayer
      * @param map
      */
-    writeFiles = function (clearCachedLayer, map) {
+    writeFiles = function (clearCachedLayer) {
         $.ajax({
             url: '/controllers/mapfile',
             success: function (response) {
@@ -3959,7 +3959,7 @@ $(document).ready(function () {
                 // getMetaData();
 
                 if (clearCachedLayer) {
-                    clearTileCache(clearCachedLayer, map);
+                    clearTileCache(clearCachedLayer);
                 }
             }
         });
@@ -3985,7 +3985,7 @@ $(document).ready(function () {
      * @param layer
      * @param map
      */
-    clearTileCache = function (layer, map) {
+    clearTileCache = function (layer) {
         var key = layer.split(".")[0] + "." + layer.split(".")[1];
         $.ajax({
             url: '/controllers/tilecache/index/' + layer,
@@ -3995,11 +3995,7 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success === true) {
                     App.setAlert(App.STATUS_NOTICE, __(response.message));
-                    var l;
-                    l = map.getLayersByName(key)[0];
-                    if (l === undefined) { // If called from iframe
-                        l = map.getLayersByName(key)[0];
-                    }
+                    var l = map.getLayersByName(key)[0];
                     l.clearGrid();
                     var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);

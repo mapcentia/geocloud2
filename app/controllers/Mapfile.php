@@ -373,14 +373,15 @@ class Mapfile extends \app\inc\Controller
                     TYPE RASTER
                     CONNECTIONTYPE WMS
                     CONNECTION "<?php echo $row['wmssource']; ?>"
-                    PROCESSING "RESAMPLE=AVERAGE"
+                    PROCESSING "LOAD_WHOLE_IMAGE=YES"
+                    PROCESSING "LOAD_FULL_RES_IMAGE=YES"
+                    PROCESSING "RESAMPLE=BILINEAR"
 
                     <?php
                 } elseif ($row['bitmapsource']) {
                     ?>
                     TYPE RASTER
                     DATA "<?php echo App::$param['path'] . "/app/wms/files/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
-                    #PROCESSING "LOAD_WHOLE_IMAGE=YES"
                     PROCESSING "RESAMPLE=AVERAGE"
                     <?php
                     if ($layerArr['data'][0]['bands']) {

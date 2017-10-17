@@ -241,11 +241,8 @@ class Table extends Model
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-                    if ($key == "layergroup") {
-                        if (!$value && \app\conf\App::$param['hideUngroupedLayers'] == true) {
-                            //$value = "_gc2_hide_in_viewer";
-                        }
-                    }
+                    // Set empty strings to NULL
+                    $value = $value == "" ?  null : $value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
                 }
                 if ($createKeyFrom) {

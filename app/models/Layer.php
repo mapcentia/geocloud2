@@ -78,10 +78,10 @@ class Layer extends \app\models\Table
 
         }
         if (sizeof($schemata) == 0 && sizeof($layers) == 0) {
-            $sqls[] = "SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort " . $order . ")";
+            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort " . $order . ")";
         }
 
-        $sql = implode(" UNION ALL", $sqls);
+        $sql = implode(" UNION ALL ", $sqls);
 
         try {
             $res = $this->prepare($sql);
@@ -112,15 +112,15 @@ class Layer extends \app\models\Table
                 $extent = $this->fetchRow($resExtent, "assoc");
             }
             foreach ($row as $key => $value) {
+                // Set empty strings to NULL
+                $value = $value == "" ?  null : $value;
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
                     if (isset($def->geotype) && $def->geotype != "Default") {
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                if ($key == "layergroup" && (!$value)) {
-                    $value = "<font color='red'>[Ungrouped]</font>";
-                }
+
                 if ($key == "fieldconf" && ($value)) {
                     $obj = json_decode($value, true);
                     if (is_array($obj)) {

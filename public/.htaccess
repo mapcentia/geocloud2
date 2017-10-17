@@ -13,13 +13,6 @@ Header add X-UA-Compatible "IE=edge"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-
-#RewriteRule index\.php - [L]
-
-#SetEnv TINYOWS_CONFIG_FILE "/mnt/hgfs/Documents/www/geocloud2/app/wms/mapfiles/mydb_goddag.xml"
-
-#SetEnvIf Request_URI "tinyows/(.*)/(.*)" TINYOWS_CONFIG_FILE="/mnt/hgfs/Documents/www/geocloud2/app/wms/mapfiles/$1_$2.xml"
-
 # Rewrite URLs for user module
 RewriteRule user/login/p$ user/login/login_p.php [L]
 RewriteRule user/login/$ user/login/login_f.php [L]
@@ -49,9 +42,6 @@ RewriteRule user/delete/p$ user/delete/delete_p.php [L]
 #RewriteRule wms/(.*)/tilecache/(.*)/(.*)/(.*)/(.*)/(.*)$ /cgi/tilecache.py/$2/$3/$4/$5/$6?cfg=$1 [QSA,L]
 #RewriteRule wms/(.*)/tilecache/(.*)$ /cgi/tilecache.py?cfg=$1 [QSA,L]
 
-# Rewrite URL so tinyows request is going direct to tinyows cgi
-#RewriteRule tinyows/(.*)/(.*) /cgi/tinyows.cgi [QSA,L]
-
 # Rewrite URL to HTML map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
@@ -70,6 +60,5 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/fpm-status
 RewriteCond %{REQUEST_URI} !^/fpm-ping
 RewriteRule ^(.*)$ index.php [L]
-
 
 </IfModule>

@@ -11,7 +11,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
-<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
 <!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>
@@ -76,7 +76,7 @@ include("html_header.php");
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
                 </td>
             </tr>
-            </tbody>
+            </tbody>st
         </table>
     </div>
     <div id="tms-dialog">
@@ -174,47 +174,41 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js?91c56cbc41e461f1"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/StringFilter.js?94547080e205a1bb"></script>
 
-<!-- build:js /js/build/store/all.min.js -->
+<!-- build:js /js/admin/build/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
-<script type="text/javascript" src="/js/msg.js?eee550936a4b4231"></script>
-<script type="text/javascript" src="/js/store.js?f70703cd9c4737fa"></script>
-<script type="text/javascript" src="/js/edittablestructure.js?16bbb4ace3bc3977"></script>
-<script type="text/javascript" src="/js/cartomobilesetup.js?18b434a3917cddf4"></script>
-<script type="text/javascript" src="/js/elasticsearchmapping.js?9d7efee6c8406f63"></script>
-<script type="text/javascript" src="/js/editwmsclass.js?78db6f79d8ee26a1"></script>
-<script type="text/javascript" src="/js/editwmslayer.js?6cd3fec277824e02"></script>
-<script type="text/javascript" src="/js/edittilelayer.js?6cd3fec277824e02"></script>
-<script type="text/javascript" src="/js/classwizards.js?b8da68ac7ecfbe3b"></script>
-<script type="text/javascript" src="/js/addshapeform.js?a1a04d59aa4b5edb"></script>
-<script type="text/javascript" src="/js/addbitmapform.js?38dde20cbaec7c80"></script>
-<script type="text/javascript" src="/js/addrasterform.js?e9f707ad6e5100ff"></script>
-<script type="text/javascript" src="/js/addfromscratch.js?e4a993729b4639ad"></script>
-<script type="text/javascript" src="/js/addviewform.js?d223f9da67a51165"></script>
-<script type="text/javascript" src="/js/addosmform.js?6fa514ebc5d91d01"></script>
-<script type="text/javascript" src="/js/addqgisform.js?6fa514ebc5d91d01"></script>
-<script type="text/javascript" src="/js/colorfield.js?4c80541098c1f93d"></script>
-<script type="text/javascript" src="/js/httpauthform.js?2acab5ae23de010f"></script>
-<script type="text/javascript" src="/js/apikeyform.js?9485c6f6a26fab43"></script>
-<script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
-<script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
-<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?1627edfa794e03c7"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
-<script type="text/javascript" src="/js/attributeform.js?522193f8e55216bb"></script>
-<script type="text/javascript" src="/js/filterfield.js?9fab5fb4d6b41f47"></script>
-<script type="text/javascript" src="/js/filterbuilder.js?e2b0efb0da913a52"></script>
-<script type="text/javascript" src="/js/comparisoncomboBox.js?8542bc57943e21ff"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
-<!-- /build -->
-
 <script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
+<script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
+<script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
+<script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
 
+<script type="text/javascript" src="/js/admin/msg.js?eee550936a4b4231"></script>
+<script type="text/javascript" src="/js/admin/admin.js?f70703cd9c4737fa"></script>
+<script type="text/javascript" src="/js/admin/edittablestructure.js?16bbb4ace3bc3977"></script>
+<script type="text/javascript" src="/js/admin/elasticsearchmapping.js?9d7efee6c8406f63"></script>
+<script type="text/javascript" src="/js/admin/editwmsclass.js?78db6f79d8ee26a1"></script>
+<script type="text/javascript" src="/js/admin/editwmslayer.js?6cd3fec277824e02"></script>
+<script type="text/javascript" src="/js/admin/edittilelayer.js?6cd3fec277824e02"></script>
+<script type="text/javascript" src="/js/admin/classwizards.js?b8da68ac7ecfbe3b"></script>
+<script type="text/javascript" src="/js/admin/addshapeform.js?a1a04d59aa4b5edb"></script>
+<script type="text/javascript" src="/js/admin/addbitmapform.js?38dde20cbaec7c80"></script>
+<script type="text/javascript" src="/js/admin/addrasterform.js?e9f707ad6e5100ff"></script>
+<script type="text/javascript" src="/js/admin/addfromscratch.js?e4a993729b4639ad"></script>
+<script type="text/javascript" src="/js/admin/addviewform.js?d223f9da67a51165"></script>
+<script type="text/javascript" src="/js/admin/addosmform.js?6fa514ebc5d91d01"></script>
+<script type="text/javascript" src="/js/admin/addqgisform.js?6fa514ebc5d91d01"></script>
+<script type="text/javascript" src="/js/admin/colorfield.js?4c80541098c1f93d"></script>
+<script type="text/javascript" src="/js/admin/httpauthform.js?2acab5ae23de010f"></script>
+<script type="text/javascript" src="/js/admin/apikeyform.js?9485c6f6a26fab43"></script>
+<script type="text/javascript" src="/js/admin/attributeform.js?522193f8e55216bb"></script>
+<script type="text/javascript" src="/js/admin/filterfield.js?9fab5fb4d6b41f47"></script>
+<script type="text/javascript" src="/js/admin/filterbuilder.js?e2b0efb0da913a52"></script>
+<script type="text/javascript" src="/js/admin/comparisoncomboBox.js?8542bc57943e21ff"></script>
 
-
-
-
-
+<!-- /build -->
 </body>
 </html>
 

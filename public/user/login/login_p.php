@@ -161,7 +161,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                     <a data-toggle="tooltip" data-placement="top"
                        title="Open GC2 administration for '<%= this . schema %>'"
                        class="btn btn-xs btn-primary fixed-width" target="_blank"
-                       href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
+                       href="<?php echo $cdnHost . "/admin/" ?><%= db %>/<%= this . schema %>"><span
                             class="glyphicon glyphicon-cog"></span>
                     </a>
                 </div>

@@ -107,7 +107,7 @@ class Tilecache extends \app\inc\Controller
 
         $response = [];
         switch ($cache) {
-            case "mbtiles":
+            case "sqlite":
                 if (Input::getPath()->part(4) === "schema") {
                     $response = $this->auth(null, array());
                     if (!$response['success']) {
@@ -178,7 +178,7 @@ class Tilecache extends \app\inc\Controller
         $res = null;
 
         switch ($cache) {
-            case "mbtiles":
+            case "sqlite":
                 $res = self::deleteFromTileset($layerName, Connection::$param["postgisdb"]);
                 break;
             case "disk":
@@ -209,7 +209,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $layerName . ".mbtiles");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $layerName . ".sqlite3");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
@@ -219,7 +219,7 @@ class Tilecache extends \app\inc\Controller
             return $response;
         }
 
-        $result = $db->query("DELETE FROM images");
+        $result = $db->query("DELETE FROM tiles");
         if (!$result) {
             $response['success'] = false;
             $response['message'] = $db->lastErrorMsg();

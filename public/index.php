@@ -85,6 +85,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
+
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
     Route::add("api/v1/setting");
@@ -107,11 +108,11 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb("mapcentia");
     });
     Route::miss();
-} elseif (Input::getPath()->part(1) == "store") {
+} elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");
     $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ?: "public";
-    include_once("store.php");
+    include_once("admin.php");
     if (\app\conf\App::$param['intercom_io']) {
         include_once("../app/conf/intercom.js.inc");
     }
