@@ -73,9 +73,7 @@ if ($grid == null) {
 
 function which()
 {
-    $cmd = "/usr/bin/which ogr2ogr";
-    exec($cmd . ' 2>&1', $out, $err);
-    return $out[0];
+    return "/usr/local/bin/ogr2ogr";
 }
 
 
@@ -86,7 +84,6 @@ function getCmd()
     print "Staring inserting in temp table using ogr2ogr...\n\n";
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-        "-overwrite " .
         "-overwrite " .
         "-dim 2 " .
         ($db == "mydb" ? "-oo 'DOWNLOAD_SCHEMA=NO' " : "") .
@@ -186,7 +183,7 @@ if ($pass) {
 
     } else {
 
-        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName}";
+        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
         $res = $table->prepare($sql);
         try {
             $res->execute();
