@@ -2484,7 +2484,7 @@ $(document).ready(function () {
                                                                         params: param,
                                                                         success: function (response) {
                                                                             var data = eval('(' + response.responseText + ')');
-                                                                            window.location = "/store/" + screenName + "/" + data.data.name;
+                                                                            window.location = "/admin/" + screenName + "/" + data.data.name;
                                                                         },
                                                                         failure: function (response) {
                                                                             winSchemaRename.close();
@@ -2526,7 +2526,7 @@ $(document).ready(function () {
                                                 'Content-Type': 'application/json; charset=utf-8'
                                             },
                                             success: function (response) {
-                                                window.location = "/store/" + screenName + "/public";
+                                                window.location = "/admin/" + screenName + "/public";
                                             },
                                             failure: function (response) {
                                                 Ext.MessageBox.show({
@@ -4067,7 +4067,7 @@ $(document).ready(function () {
      * Add listener on schema select box
      */
     Ext.getCmp("schemabox").on('select', function (e) {
-        window.location = "/store/" + screenName + "/" + e.value;
+        window.location = "/admin/" + screenName + "/" + e.value;
     });
 
     /**

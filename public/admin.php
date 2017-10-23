@@ -180,7 +180,6 @@ include("html_header.php");
 <script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
 <script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
-<script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
@@ -209,6 +208,8 @@ include("html_header.php");
 <script type="text/javascript" src="/js/admin/comparisoncomboBox.js?8542bc57943e21ff"></script>
 
 <!-- /build -->
+<script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
+
 </body>
 </html>
 

@@ -91,10 +91,17 @@ module.exports = function (grunt) {
                     //admin
                     'public/js/admin/build/all.min.js': [
                         'public/js/jquery/1.10.0/jquery.min.js',
+                        'public/js/GeoExt/script/GeoExt.js',
+                        'public/api/v1/js/api.js',
+                        'public/api/v3/js/geocloud.js',
+                        'public/js/openlayers/proj4js-combined.js',
+                        'public/js/plupload/js/moxie.min.js',
+                        'public/js/plupload/js/plupload.min.js',
+                        'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js',
+
                         'public/js/msg.js',
-                        'public/js/admin.js',
+                        'public/js/admin/admin.js',
                         'public/js/edittablestructure.js',
-                        'public/js/cartomobilesetup.js',
                         'public/js/elasticsearchmapping.js',
                         'public/js/editwmsclass.js',
                         'public/js/editwmslayer.js',
@@ -110,17 +117,10 @@ module.exports = function (grunt) {
                         'public/js/colorfield.js',
                         'public/js/httpauthform.js',
                         'public/js/apikeyform.js',
-                        'public/js/plupload/js/moxie.min.js',
-                        'public/js/plupload/js/plupload.min.js',
-                        'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js',
-                        'public/js/GeoExt/script/GeoExt.js',
-                        'public/api/v1/js/api.js',
-                        'public/api/v3/js/geocloud.js',
                         'public/js/attributeform.js',
                         'public/js/filterfield.js',
                         'public/js/filterbuilder.js',
-                        'public/js/comparisoncomboBox.js',
-                        'public/js/openlayers/proj4js-combined.js'
+                        'public/js/comparisoncomboBox.js'
                     ],
 
                     // The widget
@@ -183,8 +183,7 @@ module.exports = function (grunt) {
             assets: {
                 files: [{
                     src: [
-                        'public/store.php',
-                        'public/editor.php',
+                        'public/admin.php',
                         'public/apps/viewer/index.html',
                         'public/apps/widgets/gc2map/index.html',
                         'public/api/v3/js/async_loader.js',
@@ -197,8 +196,7 @@ module.exports = function (grunt) {
         processhtml: {
             dist: {
                 files: {
-                    'public/store.php': ['public/store.php'],
-                    'public/editor.php': ['public/editor.php'],
+                    'public/admin.php': ['public/admin.php'],
                     'public/apps/viewer/index.html': ['public/apps/viewer/index.html']
                 }
             }
