@@ -73,9 +73,7 @@ if ($grid == null) {
 
 function which()
 {
-    $cmd = "/usr/bin/which ogr2ogr";
-    exec($cmd . ' 2>&1', $out, $err);
-    return $out[0];
+    return "/usr/local/bin/ogr2ogr";
 }
 
 
@@ -88,6 +86,7 @@ function getCmd()
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
+        ($db == "mydb" ? "-oo 'DOWNLOAD_SCHEMA=NO' " : "") .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -122,7 +121,6 @@ if ($err) {
     print "Error " . $err . "\n\n";
     $pass = false;
 } else {
-
     print "Commando:\n";
     print $cmd . "\n\n";
     foreach ($out as $line) {
@@ -185,7 +183,7 @@ if ($pass) {
 
     } else {
 
-        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName}";
+        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
         $res = $table->prepare($sql);
         try {
             $res->execute();
