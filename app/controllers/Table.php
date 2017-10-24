@@ -124,4 +124,11 @@ class Table extends \app\inc\Controller
         $response = $this->auth(Input::getPath()->part(6), array("write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->deleteRecord($data, $key);
     }
+
+    public function get_depend()
+    {
+        $this->table = new \app\models\table(Input::getPath()->part(4));
+        $response = $this->auth(Input::getPath()->part(4), array("write" => true, "all" => true));
+        return (!$response['success']) ? $response : $this->table->getDependTree();
+    }
 }
