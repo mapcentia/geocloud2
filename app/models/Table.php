@@ -1343,7 +1343,7 @@ class Table extends Model
                     -- Note: In pg_depend, the triple (classid,objid,objsubid) describes some object that depends
                     -- on the object described by the tuple (refclassid,refobjid).
                     -- So to drop the depending object, the referenced object (refclassid,refobjid) must be dropped first
-                    SELECT DISTINCT
+                    SELECT
                         -- dep_name: Name of dependent object
                         CASE classid
                             WHEN 'pg_class'::regclass THEN objid::regclass::text
@@ -1398,6 +1398,8 @@ class Table extends Model
                     FROM pg_catalog.pg_depend
                     WHERE deptype = 'n'                 -- look at normal dependencies only
                     AND refclassid NOT IN (2615, 2612)  -- schema and language are ignored as dependencies
+                    GROUP BY classid,objid,refclassid,refobjid,deptype
+
             
                 ) depedencies
                 -- Recursion: Join with results of last query, search for dependencies recursively
