@@ -411,8 +411,8 @@ $(document).ready(function () {
                         border: false,
                         closeAction: 'hide',
                         html: '<div style="padding: 5px" id="searchContent"><input style="width: 270px" type="text" id="gAddress" name="gAddress" value="" /></div>',
-                        x: 450,
-                        y: 35
+                        x: 660,
+                        y: 175
                     });
                 }
                 if (typeof(objRef) === "object") {
@@ -800,8 +800,7 @@ $(document).ready(function () {
                     tooltip: "T) Table<br>V) View<br>MV) Materialized view <br>FT) Foreign table",
                     sortable: true,
                     editable: false,
-                    width: 50,
-                    flex: 1,
+                    width: 35,
                     renderer: function (v, p) {
                         var c;
                         c = v === "v" ? "#a6cee3" :
@@ -811,33 +810,33 @@ $(document).ready(function () {
                     }
                 },
                 {
-                    header: __("Name"),
-                    dataIndex: "f_table_name",
-                    sortable: true,
-                    editable: false,
-                    tooltip: "This can't be changed",
-                    width: 150,
-                    flex: 1,
-                    renderer: function (v, p) {
-                        return v;
-                    }
-                },
-                {
                     header: __("Type"),
                     dataIndex: "type",
                     sortable: true,
                     editable: false,
                     tooltip: "This can't be changed",
-                    width: 150,
+                    //width: 150,
                     renderer: function (v, p) {
                         return v || __('No geometry');
                     }
                 },
                 {
+                    header: __("Name"),
+                    dataIndex: "f_table_name",
+                    sortable: true,
+                    editable: false,
+                    tooltip: "This can't be changed",
+                    //width: 150,
+                    renderer: function (v, p) {
+                        return v;
+                    }
+                },
+
+                {
                     header: __("Title"),
                     dataIndex: "f_table_title",
                     sortable: true,
-                    width: 150
+                    //width: 150
                 },
                 {
                     id: "desc",
@@ -846,14 +845,14 @@ $(document).ready(function () {
                     sortable: true,
                     editable: true,
                     tooltip: "",
-                    width: 250
+
                 },
                 {
                     header: __("Group"),
                     dataIndex: 'layergroup',
                     sortable: true,
                     editable: true,
-                    width: 150,
+                    //width: 50,
                     editor: {
                         xtype: 'combo',
                         mode: 'local',
@@ -869,7 +868,7 @@ $(document).ready(function () {
                     header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
                     dataIndex: "extra",
                     sortable: true,
-                    width: 100,
+                    //width: 100,
                     hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
 
                 },
@@ -878,7 +877,7 @@ $(document).ready(function () {
                     dataIndex: 'sort_id',
                     sortable: true,
                     editable: true,
-                    width: 55,
+                    //width: 55,
                     editor: new Ext.form.NumberField({
                         decimalPrecision: 0,
                         decimalSeparator: '?'// Some strange char nobody is using
@@ -887,7 +886,7 @@ $(document).ready(function () {
                 {
                     header: __("Authentication"),
                     dataIndex: 'authentication',
-                    width: 80,
+                    //width: 80,
                     tooltip: __('When accessing your layer from external clients, which level of authentication do you want?'),
                     editor: {
                         xtype: 'combo',
@@ -911,14 +910,14 @@ $(document).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Editable"),
                     dataIndex: 'editable',
-                    width: 50
+                    //width: 50
                 },
                 {
                     xtype: 'checkcolumn',
                     header: __("Skip conflict"),
                     dataIndex: 'skipconflict',
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
-                    width: 50
+                    //width: 50
                 }
             ]
         }),
@@ -4495,9 +4494,9 @@ $(document).ready(function () {
                 plain: true,
                 border: false,
                 closeAction: 'hide',
-                html: '<div style="padding: 5px"><div id="output" style="height: 20px; margin-bottom: 10px"></div><div>' + __("Close this window to disable measure tool") + '</div></div>',
-                x: 450,
-                y: 35,
+                html: '<div style="padding: 5px"><div id="output" style="height: 27px; margin-bottom: 10px; color: #fff"></div><div style="color: rgba(255, 255, 255, .5)">' + __("Close this window to disable measure tool") + '</div></div>',
+                x: 660,
+                y: 65,
                 listeners: {
                     hide: {
                         fn: function (el, e) {

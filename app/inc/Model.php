@@ -36,7 +36,8 @@ class Model
     /**
      * @param PDOStatement $result
      * @param string $result_type
-     * @return array|mixed
+     * @return array
+     * @throws Exception
      */
     public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
@@ -52,7 +53,7 @@ class Model
             case "both" :
                 break;
         }
-        return ($row);
+        return $row;
     }
 
     /**
@@ -75,7 +76,7 @@ class Model
                 $rows = $result->fetchAll();
                 break;
         }
-        return ($rows);
+        return $rows;
     }
 
     /**
@@ -86,7 +87,7 @@ class Model
     public function numRows($result)
     {
         $num = sizeof($result);
-        return ($num);
+        return $num;
     }
 
     /**

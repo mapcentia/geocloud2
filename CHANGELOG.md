@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Extension mechanism for the REST API.
 - Admin URI is changed from /store to /admin.
 - Upgraded to QGIS-server 2.18 LTR. Upload of 2.14 QGS files will not work anymore.
-- SQLite3 is now default cache type for MapCache.
+- Dedicated MapFile for WFS, so it works for QGIS-Server based layers.
+- SQLite3 is now default cache type for MapCache. Each layers gets a db.
 - The advanced layer panel is moved from right side to the left.
 - Some rearrangement of buttons.
 - "Private" tags with prefix "_". These will not be added to CKAN.

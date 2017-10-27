@@ -236,8 +236,10 @@ class Layer extends \app\models\Table
      * Secure. Using now user input.
      * @return array
      */
-    public function getSchemas() // All tables
+    public function getSchemas() : array
     {
+        $response = [];
+        $arr = [];
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
@@ -249,70 +251,6 @@ class Layer extends \app\models\Table
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
-        }
-        return $response;
-    }
-
-    /**
-     * CartoMobile is deprecated
-     * @param $_key_
-     * @return mixed
-     */
-    public function getCartoMobileSettings($_key_) // Only geometry tables
-    {
-        $response['success'] = true;
-        $response['message'] = "Structure loaded";
-        $arr = array();
-        $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1]);
-        $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
-        foreach ($table->metaData as $key => $value) {
-            if ($value['type'] != "geometry" && $key != $table->primeryKey['attname']) {
-                $arr = $this->array_push_assoc($arr, "id", $key);
-                $arr = $this->array_push_assoc($arr, "column", $key);
-                $arr = $this->array_push_assoc($arr, "available", $cartomobileArr[$key]->available);
-                $arr = $this->array_push_assoc($arr, "cartomobiletype", $cartomobileArr[$key]->cartomobiletype);
-                $arr = $this->array_push_assoc($arr, "properties", $cartomobileArr[$key]->properties);
-                if ($value['typeObj']['type'] == "decimal") {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
-                } else {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
-                }
-                $response['data'][] = $arr;
-            }
-        }
-        return $response;
-    }
-
-    /**
-     * CartoMobile is deprecated
-     * @param $data
-     * @param $_key_
-     * @return mixed
-     */
-    public function updateCartoMobileSettings($data, $_key_)
-    {
-        $table = new Table("settings.geometry_columns_join");
-        $data = $table->makeArray($data);
-        $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
-        foreach ($data as $value) {
-            $safeColumn = $table->toAscii($value->column, array(), "_");
-            if ($value->id != $value->column && ($value->column) && ($value->id)) {
-                unset($cartomobileArr[$value->id]);
-            }
-            $cartomobileArr[$safeColumn] = $value;
-        }
-        $conf['cartomobile'] = json_encode($cartomobileArr);
-        $conf['_key_'] = $_key_;
-
-        $table->updateRecord(json_decode(json_encode($conf)), "_key_");
-        //$this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror)) {
-            $response['success'] = true;
-            $response['message'] = "Column renamed";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
         }
         return $response;
     }

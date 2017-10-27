@@ -148,6 +148,8 @@ ul.x-tab-strip-bottom {
 .x-tab-panel-footer-plain .x-tab-strip-spacer {
     border-color: #404040 /*Battleship Gray*/;
     background-color: #404040 /*Battleship Gray*/;
+    border: none;
+    height: 0;
 }
 
 .x-tab-strip span.x-tab-strip-text {
@@ -176,7 +178,7 @@ ul.x-tab-strip-bottom {
 
 
 .x-tab-panel-body {
-    border-color: #606061 /*Battleship Gray*/;
+    border: none;
     background-color: #fff;
 }
 
@@ -710,8 +712,8 @@ table .x-btn-click {
 }
 
 .x-grid3-hd-row td {
-    border-left: none !important;
-    border-right-color: rgba(255, 255, 255, 0.2) /*Gray Cloud*/;
+    border: none !important;
+    /*border-left-color: rgba(255, 255, 255, 0.2) !*Gray Cloud*!;*/
     color: #fff;
 }
 
@@ -1373,12 +1375,12 @@ td.x-date-mp-sep {
 }
 
 .x-menu {
-    background-color: #fff;
+    background-color: #000;
     background-image: none;
 }
 
 .x-menu-floating {
-    border-color: #ccc;
+    border-color: #000;
 }
 
 .x-menu-nosep {
@@ -1399,17 +1401,19 @@ td.x-date-mp-sep {
 }
 
 a.x-menu-item {
-    color: #222;
+    color: rgba(255,255,255,.9);
+
 }
 
 .x-menu-item-active {
     background-image: none;
-    background-color: #f1f1f1;
-    border-color: #fff;
+    background-color: rgba(255,255,255,.40);
+    border-color: #000;
+    color: #fff
 }
 
 .x-menu-item-active a.x-menu-item {
-    border-color: #fff;
+    border-color: #000;
 }
 
 .x-menu-check-item .x-menu-item-icon {

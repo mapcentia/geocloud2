@@ -7,7 +7,6 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/css/RowEditor.css"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">

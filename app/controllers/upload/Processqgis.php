@@ -42,6 +42,8 @@ class Processqgis extends \app\inc\Controller
             return array("success" => false, "code" => 400, "message" => "Could not read qgs file");
         }
 
+        $ver = (string)$qgs->attributes()["version"];
+
         foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
 
             $provider = (string)$maplayer->provider;
@@ -64,10 +66,22 @@ class Processqgis extends \app\inc\Controller
                     break;
 
                 case "WFS":
-                    $TYPENAME = "";
                     $dataSource = (string)$maplayer->datasource;
-                    $layerName = (string)$maplayer->layername;
-                    $parsed = parse_url($dataSource);
+
+                    // 2.14
+           /*         $parsed = parse_url($dataSource);
+                    $schema = explode("/", $parsed["path"])[4];
+                    parse_str($parsed["query"]);
+                    $table = explode(":", $TYPENAME)[1];*/
+
+                    // 2.18
+                    preg_match("/(?<=url\=)\S*/", $dataSource, $matches);
+                    $parsed = parse_url(str_replace("'", "", $matches[0]));
+                    preg_match("/(?<=typename\=)\S*/", $dataSource, $matches);
+                    $split = explode(":", str_replace("'", "", $matches[0]));
+                    $schema = explode("/", $parsed["path"])[3];
+                    $table = $split[1];
+
                     $db = explode("/", $parsed["path"])[2];
 
                     $split = explode("@", $db);
@@ -75,14 +89,9 @@ class Processqgis extends \app\inc\Controller
                         $db = $split[1];
                     }
 
-                    $schema = explode("/", $parsed["path"])[3];
-
-                    parse_str($parsed["query"]);
-                    $table = explode(":", $TYPENAME)[1];
-
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll(null, $fullTable, true);
+                    $rec = $this->layer->getAll($fullTable, false, true);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
@@ -91,11 +100,11 @@ class Processqgis extends \app\inc\Controller
                     $spatialRefSys = new \app\models\Spatial_ref_sys();
                     $spatialRefSysRow = $spatialRefSys->getRowBySrid($srid);
 
-                    $proj4text = $spatialRefSysRow["data"]["proj4text"];
+                    $proj4text = $spatialRefSysRow;
 
                     $arrT[] = array(1 => array($schema, $table));
                     $arrG[] = array(1 => array($f_geometry_column));
-                    $arrN[] = $layerName;
+                    $arrN[] = $fullTable;
 
                     $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
 
@@ -105,8 +114,8 @@ class Processqgis extends \app\inc\Controller
                     $maplayer->srs->spatialrefsys->authid = "EPSG:{$srid}";
                     $maplayer->provider = "postgres";
                     $maplayer->datasource = $PGDataSource;
-                    //$maplayer->layername = $fullTable;
-                    $maplayer->title = (string)$maplayer->title ?: $layerName;
+                    $maplayer->layername = $fullTable;
+                    $maplayer->title = (string)$maplayer->title ?: $fullTable;
 
                     break;
 

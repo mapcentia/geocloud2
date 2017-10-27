@@ -503,7 +503,7 @@ classWizards.init = function (record) {
         items: [
             new Ext.Panel({
                 region: 'center',
-                border: false,
+                border: true,
                 layout: "border",
                 defaults: {
                     border: false
@@ -513,7 +513,7 @@ classWizards.init = function (record) {
                         region: "center",
                         items: [
                             new Ext.TabPanel({
-                                resizeTabs: true,
+                                resizeTabs: false,
                                 activeTab: (function () {
                                     var i, pre;
                                     if (customIsSet) {

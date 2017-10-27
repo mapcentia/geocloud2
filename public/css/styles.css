@@ -176,8 +176,8 @@ q:after, q:before {
 
 .x-grid3-check-col-on, .x-grid3-check-col {
     background-image: none !important;
-    text-align: center;
     line-height: 19px;
+    padding-left: 5px;
 
 }
 

@@ -220,14 +220,14 @@ tableStructure.init = function (record, screenName) {
                     editor: new Ext.form.TextField({
                         allowBlank: false
                     }),
-                    width: 60
+                    //width: 60
                 },
                 {
                     id: "type",
                     header: __("Type"),
                     dataIndex: "type",
                     sortable: true,
-                    width: 30,
+                    //width: 30,
                     editor: new Ext.form.ComboBox({
                         typeAhead: false,
                         triggerAction: 'all',
@@ -244,7 +244,7 @@ tableStructure.init = function (record, screenName) {
                     xtype: 'checkcolumn',
                     header: __("Allow null"),
                     dataIndex: 'is_nullable',
-                    width: 40
+                    //width: 40
                 },
                 {
                     id: "alias",
@@ -260,34 +260,34 @@ tableStructure.init = function (record, screenName) {
                     xtype: 'checkcolumn',
                     header: __("Show in click info"),
                     dataIndex: 'querable',
-                    width: 40
+                    //width: 40
                 },
                 {
                     id: "mouseover",
                     xtype: 'checkcolumn',
                     header: __("Show in mouse-over"),
                     dataIndex: 'mouseover',
-                    width: 40
+                    //width: 40
                 },
                 {
                     id: "searchable",
                     xtype: 'checkcolumn',
                     header: __("Searchable"),
                     dataIndex: 'searchable',
-                    width: 40
+                    //width: 40
                 },
                 {
                     id: "filter",
                     xtype: 'checkcolumn',
                     header: __("Enable filtering"),
                     dataIndex: 'filter',
-                    width: 40
+                    //width: 40
                 }, {
                     id: "conflict",
                     xtype: 'checkcolumn',
                     header: __("Show in conflict"),
                     dataIndex: 'conflict',
-                    width: 40,
+                    //width: 40,
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
                 },
                 {
@@ -295,21 +295,21 @@ tableStructure.init = function (record, screenName) {
                     xtype: 'checkcolumn',
                     header: __("Make link"),
                     dataIndex: 'link',
-                    width: 35
+                    //width: 35
                 },
                 {
                     id: "image",
                     xtype: 'checkcolumn',
                     header: __("Image"),
                     dataIndex: 'image',
-                    width: 35
+                    //width: 35
                 },
                 {
                     id: "linkprefix",
                     header: __("Link prefix"),
                     dataIndex: "linkprefix",
                     sortable: true,
-                    width: 60,
+                    //width: 60,
                     editor: new Ext.form.TextField({
                         allowBlank: true
                     })
@@ -319,7 +319,7 @@ tableStructure.init = function (record, screenName) {
                     header: __("Properties"),
                     dataIndex: "properties",
                     sortable: true,
-                    width: 80,
+                    //width: 80,
                     editor: new Ext.form.TextField({
                         allowBlank: true
                     })
