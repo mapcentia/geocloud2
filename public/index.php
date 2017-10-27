@@ -29,9 +29,7 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Origin: " . $http_origin);
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     header("Access-Control-Allow-Credentials: true");
-}
-
-elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
+} elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     header("Access-Control-Allow-Credentials: true");
@@ -52,6 +50,19 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
+
+    Route::add("api/v2/sql/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
 
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
 
@@ -157,7 +168,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/workflow");
     Route::add("controllers/qgis/");
 
-} elseif (Input::getPath()->part(1) == "extensions"){
+} elseif (Input::getPath()->part(1) == "extensions") {
 
     foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
         include_once($filename);

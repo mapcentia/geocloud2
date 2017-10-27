@@ -11,6 +11,10 @@ class Setting extends Model
         parent::__construct();
     }
 
+    /**
+     * @return mixed
+     * @throws \PDOException;
+     */
     public function getArray()
     {
         if (\app\conf\App::$param["encryptSettings"]) {
@@ -19,13 +23,20 @@ class Setting extends Model
         } else {
             $sql = "SELECT viewer FROM settings.viewer";
         }
-        $res = $this->execQuery($sql);
+
+        try {
+            $res = $this->execQuery($sql);
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
+        }
+
         // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
         if ($this->PDOerror[0]) {
             $this->PDOerror = null;
             $sql = "SELECT viewer FROM settings.viewer";
             $res = $this->execQuery($sql);
         }
+
         $arr = $this->fetchRow($res, "assoc");
         return json_decode($arr['viewer']);
     }
@@ -119,9 +130,22 @@ class Setting extends Model
         return $response;
     }
 
-    public function updateExtentRestrict($extentrestrict)
+    /**
+     * @param $extentrestrict
+     * @return array
+     */
+    public function updateExtentRestrict($extentrestrict) : array
     {
-        $arr = $this->getArray();
+        $response = [];
+
+        try {
+            $arr = $this->getArray();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
 
         $obj = (array)$arr->extentrestricts;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extentrestrict->extent;
@@ -140,7 +164,7 @@ class Setting extends Model
         $this->execQuery($sql, "PDO", "transaction");
         if (!$this->PDOerror) {
             $response['success'] = true;
-            $response['message'] = ($extentrestrict->extent)? "Extent locked": "Extent unlocked";
+            $response['message'] = ($extentrestrict->extent) ? "Extent locked" : "Extent unlocked";
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
@@ -148,12 +172,27 @@ class Setting extends Model
         }
         return $response;
     }
-    public function updateUserGroups($userGroup)
+
+    /**
+     * @param $userGroup
+     * @return array
+     */
+    public function updateUserGroups($userGroup) : array
     {
-        $arr = $this->getArray();
+        $response = [];
+
+        try {
+            $arr = $this->getArray();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+
         $obj = (array)$arr['userGroups'];
-        foreach($userGroup as $key => $value) {
-            $obj[$key] =$value;
+        foreach ($userGroup as $key => $value) {
+            $obj[$key] = $value;
         }
         $arr['userGroups'] = $obj;
         if (\app\conf\App::$param["encryptSettings"]) {
@@ -176,7 +215,15 @@ class Setting extends Model
 
     public function get($unsetPw = false)
     {
-        $arr = $this->getArray();
+        try {
+            $arr = $this->getArray();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+
+        }
 
         if ($_SESSION["subuser"]) {
             $arr->pw = $arr->pw_subuser->{$_SESSION["subuser"]};

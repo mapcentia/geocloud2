@@ -42,7 +42,10 @@ class Processqgis extends \app\inc\Controller
             return array("success" => false, "code" => 400, "message" => "Could not read qgs file");
         }
 
-        $ver = (string)$qgs->attributes()["version"];
+        $ver = explode(".", $qgs->attributes()["version"]);
+
+        $majorVer = $ver[0];
+        $minorVer = $ver[1];
 
         foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
 
@@ -68,19 +71,24 @@ class Processqgis extends \app\inc\Controller
                 case "WFS":
                     $dataSource = (string)$maplayer->datasource;
 
-                    // 2.14
-           /*         $parsed = parse_url($dataSource);
-                    $schema = explode("/", $parsed["path"])[4];
-                    parse_str($parsed["query"]);
-                    $table = explode(":", $TYPENAME)[1];*/
+                    switch ($minorVer) {
 
-                    // 2.18
-                    preg_match("/(?<=url\=)\S*/", $dataSource, $matches);
-                    $parsed = parse_url(str_replace("'", "", $matches[0]));
-                    preg_match("/(?<=typename\=)\S*/", $dataSource, $matches);
-                    $split = explode(":", str_replace("'", "", $matches[0]));
-                    $schema = explode("/", $parsed["path"])[3];
-                    $table = $split[1];
+                        case "14":
+                            $parsed = parse_url($dataSource);
+                            $schema = explode("/", $parsed["path"])[4];
+                            parse_str($parsed["query"]);
+                            $table = explode(":", $TYPENAME)[1];
+                            break;
+
+                        default:
+                            preg_match("/(?<=url\=)\S*/", $dataSource, $matches);
+                            $parsed = parse_url(str_replace("'", "", $matches[0]));
+                            preg_match("/(?<=typename\=)\S*/", $dataSource, $matches);
+                            $split = explode(":", str_replace("'", "", $matches[0]));
+                            $schema = explode("/", $parsed["path"])[3];
+                            $table = $split[1];
+                            break;
+                    }
 
                     $db = explode("/", $parsed["path"])[2];
 

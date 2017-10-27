@@ -3,6 +3,16 @@ namespace app\inc;
 
 class Input
 {
+    static $params;
+
+    /**
+     *
+     * @param array $arr
+     */
+    public static function setParams(array $arr){
+        self::$params = $arr;
+    }
+
     public static function getPath()
     {
         $request = explode("/", strtok($_SERVER["REQUEST_URI"], '?'));
@@ -15,9 +25,25 @@ class Input
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
+    public static function getBody()
+    {
+        return file_get_contents('php://input');;
+    }
+
     public static function get($key = null, $raw = false)
     {
+        if (isset(self::$params)) {
+
+            if (isset($key)) {
+                return self::$params[$key];
+            } else {
+                return self::$params;
+            }
+
+        }
+
         $query = "";
+
         switch (static::getMethod()) {
             case "get":
                 $query = $_GET;
@@ -32,6 +58,7 @@ class Input
                 $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
         }
+
         if (!reset($query) && $key == null)
             return str_replace("__gc2_plus__", "+", key($query));
         else {

@@ -1,5 +1,6 @@
 <?php
-namespace app\api\v1;
+
+namespace app\api\v2;
 
 use \app\inc\Input;
 
@@ -39,16 +40,23 @@ class Sql extends \app\inc\Controller
      */
     private $usedRelations;
 
+    /**
+     *
+     */
     const USEDRELSKEY = "checked_relations";
 
     /**
      * @return array
      */
-    public function get_index() : array
+    public function get_index(): array
     {
         include_once 'Cache_Lite/Lite.php';
 
-        $db = Input::getPath()->part(4);
+        // Get the URI params from request
+        // /{user}
+        $r = func_get_arg(0);
+
+        $db = $r["user"];
         $dbSplit = explode("@", $db);
 
         if (sizeof($dbSplit) == 2) {
@@ -58,13 +66,59 @@ class Sql extends \app\inc\Controller
         } else {
             $this->subUser = null;
         }
+
+        // Check if body is JSON
+        // Supports both GET and POST
+        // ==========================
+
+        $json = json_decode(Input::getBody(), true);
+
+        // If JSON when set get params from body
+        // And call get_index
+        // =====================================
+        if ($json != null) {
+
+            // Set input params
+            // ================
+            Input::setParams(
+                [
+                    "q" => $json["q"],
+                    "client_encoding" => $json["client_encoding"],
+                    "srs" => $json["srs"],
+                    "format" => $json["format"],
+                    "geoformat" => $json["geoformat"],
+                    "key" => $json["key"],
+                    "geojson" => $json["geojson"],
+                    "allstr" => $json["allstr"],
+                    "alias" => $json["alias"],
+                    "lifetime" => $json["lifetime"],
+                ]
+            );
+
+        }
+
         if (Input::get('base64') === "true") {
             $this->q = base64_decode(Input::get('q'));
         } else {
             $this->q = urldecode(Input::get('q'));
         }
+
+        if (!$this->q) {
+            $response['success'] = false;
+            $response['code'] = 403;
+            $response['message'] = "Query is missing (the 'q' parameter)";
+            return $response;
+        }
+
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
+
+        // Check if success
+        // ================
+        if (!$res["success"]) {
+            return $res;
+        }
+
         $this->apiKey = $res['data']->api_key;
 
         $this->response = $this->transaction($this->q, Input::get('client_encoding'));
@@ -76,32 +130,12 @@ class Sql extends \app\inc\Controller
         return unserialize($this->data);
     }
 
-    public function post_index()
-    {
-        return $this->get_index();
-    }
-
     /**
-     * TODO is it used?
+     * @return array
      */
-    public function post_select()
+    public function post_index(): array
     {
-        $input = json_decode(Input::get());
-        $tokens = $input->data;
-        print_r($tokens);
-
-        $sql = "SELECT " . $tokens->fields . " FROM " . $tokens->from;
-        if (isset($tokens->where)) {
-            $sql .= " WHERE " . $tokens->where;
-        }
-        if (isset($tokens->order)) {
-            $sql .= " ORDER BY " . $tokens->where;
-        }
-        if (isset($tokens->LIMIT)) {
-            $sql .= " LIMIT " . $tokens->where;
-        }
-        print_r($sql);
-
+        return $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -109,7 +143,7 @@ class Sql extends \app\inc\Controller
      * @param string $needle
      * @return array
      */
-    private function recursiveFind(array $array, string $needle) : array
+    private function recursiveFind(array $array, string $needle): array
     {
         $iterator = new \RecursiveArrayIterator($array);
         $recursive = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
