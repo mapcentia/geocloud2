@@ -1,18 +1,19 @@
 <?php
 include("html_header.php");
 ?>
+
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
+<link rel="stylesheet" type="text/css"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-dark.css?d597d957caed6c0e"/>
-<link rel="stylesheet" type="text/css" href="/js/ext/examples/shared/icons/silk.css?84655ed526dfbc2a"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
-<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
-<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>
 <!-- /build -->
 </head>
@@ -75,7 +76,8 @@ include("html_header.php");
                            value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
                 </td>
             </tr>
-            </tbody>st
+            </tbody>
+            st
         </table>
     </div>
     <div id="tms-dialog">
@@ -153,14 +155,12 @@ include("html_header.php");
 <script>
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
-
 <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
+<script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
+<!-- build:js /js/admin/build/all.min.js -->
 <script type="text/javascript" src="/js/canvasResize/binaryajax.js?0bd13c39b3649026"></script>
 <script type="text/javascript" src="/js/canvasResize/exif.js?33363140df0199f5"></script>
 <script type="text/javascript" src="/js/canvasResize/canvasResize.js?c1543e89ec75a4b0"></script>
-
-<script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
-
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base-debug.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all-debug.js?0035a5fa730b0514"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
@@ -172,8 +172,6 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/GridFilters.js?e2cd680acbd6d211"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/Filter.js?91c56cbc41e461f1"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/StringFilter.js?94547080e205a1bb"></script>
-
-<!-- build:js /js/admin/build/all.min.js -->
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?1627edfa794e03c7"></script>
 <script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
@@ -182,7 +180,6 @@ include("html_header.php");
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
 <script type="text/javascript" src="/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js?78b92aab54b9f806"></script>
-
 <script type="text/javascript" src="/js/admin/msg.js?eee550936a4b4231"></script>
 <script type="text/javascript" src="/js/admin/admin.js?f70703cd9c4737fa"></script>
 <script type="text/javascript" src="/js/admin/edittablestructure.js?16bbb4ace3bc3977"></script>
@@ -205,10 +202,8 @@ include("html_header.php");
 <script type="text/javascript" src="/js/admin/filterfield.js?9fab5fb4d6b41f47"></script>
 <script type="text/javascript" src="/js/admin/filterbuilder.js?e2b0efb0da913a52"></script>
 <script type="text/javascript" src="/js/admin/comparisoncomboBox.js?8542bc57943e21ff"></script>
-
-<!-- /build -->
 <script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
-
+<!-- /build -->
 </body>
 </html>
 

@@ -22,8 +22,15 @@ module.exports = function (grunt) {
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.css',
                         'public/apps/viewer/css/styles.css'
                     ],
-                    // The Viewer
+                    // Admin
                     'public/css/build/styles.min.css': [
+                        'public/js/ext/examples/ux/superboxselect/superboxselect.css',
+                        'public/js/ext/resources/css/ext-all-notheme.css',
+                        'public/js/ext/resources/css/xtheme-dark.css',
+                        'public/js/ext/examples/ux/gridfilters/css/GridFilters.css',
+                        'public/js/ext/examples/ux/gridfilters/css/RangeMenu.css',
+                        'public/js/bootstrap/css/bootstrap.icons.min.css',
+                        'public/css/jquery.plupload.queue.css',
                         'public/css/styles.css'
                     ],
                     // The widget
@@ -53,6 +60,10 @@ module.exports = function (grunt) {
         },
         uglify: {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
+            options: {
+                mangle: false,
+                compress : false
+            },
             publish: {
                 files: {
                     'public/js/leaflet/leaflet-plugins-all.js': [
@@ -90,37 +101,54 @@ module.exports = function (grunt) {
                     ],
                     //admin
                     'public/js/admin/build/all.min.js': [
+                        'public/js/canvasResize/binaryajax.js',
+                        'public/js/canvasResize/exif.js',
+                        'public/js/canvasResize/canvasResize.js',
+
+                        'public/js/ext/adapter/ext/ext-base-debug.js',
+                        'public/js/ext/ext-all-debug.js',
+                        'public/js/ext/examples/ux/Spinner.js',
+                        'public/js/ext/examples/ux/SpinnerField.js',
+                        'public/js/ext/examples/ux/CheckColumn.js',
+                        'public/js/ext/examples/ux/gridfilters/menu/RangeMenu.js',
+                        'public/js/ext/examples/ux/gridfilters/menu/ListMenu.js',
+                        'public/js/ext/examples/ux/superboxselect/SuperBoxSelect.js',
+                        'public/js/ext/examples/ux/gridfilters/GridFilters.js',
+                        'public/js/ext/examples/ux/gridfilters/filter/Filter.js',
+                        'public/js/ext/examples/ux/gridfilters/filter/StringFilter.js',
+
                         'public/js/jquery/1.10.0/jquery.min.js',
+                        'public/js/openlayers/proj4js-combined.js',
                         'public/js/GeoExt/script/GeoExt.js',
                         'public/api/v1/js/api.js',
                         'public/api/v3/js/geocloud.js',
-                        'public/js/openlayers/proj4js-combined.js',
                         'public/js/plupload/js/moxie.min.js',
                         'public/js/plupload/js/plupload.min.js',
                         'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js',
 
-                        'public/js/msg.js',
+                        'public/js/admin/msg.js',
                         'public/js/admin/admin.js',
-                        'public/js/edittablestructure.js',
-                        'public/js/elasticsearchmapping.js',
-                        'public/js/editwmsclass.js',
-                        'public/js/editwmslayer.js',
-                        'public/js/edittilelayer.js',
-                        'public/js/classwizards.js',
-                        'public/js/addshapeform.js',
-                        'public/js/addbitmapform.js',
-                        'public/js/addrasterform.js',
-                        'public/js/addfromscratch.js',
-                        'public/js/addviewform.js',
-                        'public/js/addosmform.js',
-                        'public/js/addqgisform.js',
-                        'public/js/colorfield.js',
-                        'public/js/httpauthform.js',
-                        'public/js/apikeyform.js',
-                        'public/js/attributeform.js',
-                        'public/js/filterfield.js',
-                        'public/js/filterbuilder.js',
-                        'public/js/comparisoncomboBox.js'
+                        'public/js/admin/edittablestructure.js',
+                        'public/js/admin/elasticsearchmapping.js',
+                        'public/js/admin/editwmsclass.js',
+                        'public/js/admin/editwmslayer.js',
+                        'public/js/admin/edittilelayer.js',
+                        'public/js/admin/classwizards.js',
+                        'public/js/admin/addshapeform.js',
+                        'public/js/admin/addbitmapform.js',
+                        'public/js/admin/addrasterform.js',
+                        'public/js/admin/addfromscratch.js',
+                        'public/js/admin/addviewform.js',
+                        'public/js/admin/addosmform.js',
+                        'public/js/admin/addqgisform.js',
+                        'public/js/admin/colorfield.js',
+                        'public/js/admin/httpauthform.js',
+                        'public/js/admin/apikeyform.js',
+                        'public/js/admin/attributeform.js',
+                        'public/js/admin/filterfield.js',
+                        'public/js/admin/filterbuilder.js',
+                        'public/js/admin/comparisoncomboBox.js',
+                        'public/js/openlayers/defs/EPSG3857.js'
                     ],
 
                     // The widget

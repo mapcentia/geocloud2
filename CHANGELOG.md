@@ -33,7 +33,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Deprecated
 - Version 1 of the Elasticsearch API
 - Version 2 of the SQL API
+
 ### Removed
+
 ### Fixed
+
 ### Security
 

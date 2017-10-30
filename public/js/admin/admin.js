@@ -11,6 +11,7 @@
 /*global subUser:false */
 /*global __:false */
 
+
 "use strict";
 
 /**
@@ -27,11 +28,12 @@ Ext.MessageBox.buttonText = {
 };
 
 /**
- * Set vars in global scope
+ * Set vars in function scope
  */
 var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, resetButtons,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
-    extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false, subUserGroups = {},
+    extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
+    subUserGroups = {},
     dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
     enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
@@ -146,7 +148,7 @@ $(document).ready(function () {
                 altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
                 lName = window.setBaseLayers[i].name;
             }
-            bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+            bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName, window.setBaseLayers[i].host);
         }
     }
     if (bl !== null) {
@@ -490,7 +492,7 @@ $(document).ready(function () {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
+                        App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
@@ -511,10 +513,10 @@ $(document).ready(function () {
             enableToggle: true,
             tooltip: __('Lock the map extent for sub-users in Admin and for all users in the public Viewer.'),
             disabled: subUser ? true : false,
-            pressed: (window.parent.extentRestricted ? true : false),
+            pressed: (extentRestricted ? true : false),
             handler: function () {
-                window.parent.extentRestricted = this.pressed;
-                if (window.parent.extentRestricted) {
+                extentRestricted = this.pressed;
+                if (extentRestricted) {
                     extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
                 }
                 else {
@@ -526,15 +528,15 @@ $(document).ready(function () {
                     params: Ext.util.JSON.encode({
                         data: {
                             schema: schema,
-                            extent: window.parent.extentRestricted ? cloud.getExtent() : null,
-                            zoom: window.parent.extentRestricted ? cloud.getZoom() : null
+                            extent: extentRestricted ? cloud.getExtent() : null,
+                            zoom: extentRestricted ? cloud.getZoom() : null
                         }
                     }),
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     success: function (response) {
-                        window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
+                        App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
                     },
                     failure: function (response) {
                         Ext.MessageBox.show({
@@ -3094,7 +3096,7 @@ $(document).ready(function () {
                                                         text: '<i class="fa fa-plus-circle"></i> ' + __('New layer'),
                                                         disabled: (subUser === schema || subUser === false) ? false : true,
                                                         handler: function () {
-                                                            window.parent.onAdd();
+                                                            onAdd();
                                                         }
                                                     }, '-',
                                                     {
@@ -3137,7 +3139,7 @@ $(document).ready(function () {
                                                     disabled: true,
                                                     handler: function () {
                                                         var node = tree.getSelectionModel().getSelectedNode();
-                                                        window.parent.styleWizardWin(node.id);
+                                                        styleWizardWin(node.id);
                                                     }
                                                 }, '-',
                                                     {
@@ -4219,7 +4221,7 @@ $(document).ready(function () {
                     fn: function (e) {
                         var id = e.id.split('.').join('-'), load = function () {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                window.parent.onEditWMSClasses(e.id);
+                                onEditWMSClasses(e.id);
                             }
                         };
 
@@ -4235,7 +4237,7 @@ $(document).ready(function () {
 
                         if (currentId !== e.id) {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                window.parent.Ext.getCmp("layerStylePanel").expand(true);
+                                Ext.getCmp("layerStylePanel").expand(true);
                                 load();
                             }
                         } else {
@@ -4331,7 +4333,7 @@ $(document).ready(function () {
 
                         $("#ext-" + id).on("click", function () {
                             if (metaDataRealKeys[e.id].type === "RASTER") {
-                                window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
+                                App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
                                 return false;
                             }
                             Ext.Ajax.request({
@@ -4397,7 +4399,7 @@ $(document).ready(function () {
             })
         });
         if (extentRestricted) {
-            extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
+            extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
         }
         if (initExtent !== null) {
             cloud.map.zoomToExtent(initExtent, false);
@@ -4531,7 +4533,8 @@ $(document).ready(function () {
 
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
-    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"),
+    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm,
+        south = Ext.getCmp("attrtable"),
         singleEditing = single;
     layerBeingEditing = layerName;
     layerBeingEditingGeomField = geomField;
@@ -4692,7 +4695,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     map.addLayers([layer]);
     layer.events.register("loadend", layer, function () {
         var count = layer.features.length;
-        window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
+        App.setAlert(App.STATUS_NOTICE, count + " features loaded");
         if (layer.features.length > 0) {
             map.zoomToExtent(layer.getDataExtent());
         }
@@ -4825,6 +4828,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     Ext.getCmp('editstopbutton').setDisabled(false);
     Ext.getCmp('infobutton').setDisabled(false);
 }
+
 function stopEdit() {
     "use strict";
     layerBeingEditing = null;
@@ -4849,10 +4853,12 @@ function stopEdit() {
     }
     Ext.getCmp("attrtable").collapse(true);
 }
+
 function onInsert() {
     var pos = grid.getStore().getCount() - 1;
     grid.selModel.selectRow(pos);
 }
+
 function array_unique(ar) {
     var sorter = {}, out = [];
     if (ar.length && typeof ar !== 'string') {
@@ -4865,6 +4871,7 @@ function array_unique(ar) {
     }
     return out || ar;
 }
+
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
         var format, doc, error;
@@ -4948,17 +4955,17 @@ saveStrategy = new OpenLayers.Strategy.Save({
             var message = "";
             if (inserted) {
                 message = "<p>Inserted: " + inserted + "</p>";
-                window.parent.App.setAlert(App.STATUS_OK, message);
+                App.setAlert(App.STATUS_OK, message);
             }
             if (updated) {
                 message = "<p>Updated: " + updated + "</p>";
-                window.parent.App.setAlert(App.STATUS_OK, message);
+                App.setAlert(App.STATUS_OK, message);
             }
             if (deleted) {
                 message = "<p>Deleted: " + deleted + "</p>";
-                window.parent.App.setAlert(App.STATUS_OK, message);
+                App.setAlert(App.STATUS_OK, message);
             }
-            window.parent.writeFiles(false, map);
+            writeFiles(false, map);
             var l;
             l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
             l.clearGrid();
@@ -4974,3 +4981,4 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
+

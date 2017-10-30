@@ -695,13 +695,13 @@ geocloud = (function () {
                     break;
             }
         };
-        this.zoomToExtentOfgeoJsonStore = function (store) {
+        this.zoomToExtentOfgeoJsonStore = function (store, maxZoom) {
             switch (MAPLIB) {
                 case "ol2":
                     this.map.zoomToExtent(store.layer.getDataExtent());
                     break;
                 case "leaflet":
-                    this.map.fitBounds(store.layer.getBounds());
+                    this.map.fitBounds(store.layer.getBounds(), {maxZoom: maxZoom});
                     break;
             }
         };

@@ -75,9 +75,9 @@ class Processqgis extends \app\inc\Controller
 
                         case "14":
                             $parsed = parse_url($dataSource);
-                            $schema = explode("/", $parsed["path"])[4];
-                            parse_str($parsed["query"]);
-                            $table = explode(":", $TYPENAME)[1];
+                            $schema = explode("/", $parsed["path"])[3];
+                            parse_str($parsed["query"], $result);
+                            $table = explode(":", $result["TYPENAME"])[1];
                             break;
 
                         default:
@@ -229,7 +229,7 @@ class Processqgis extends \app\inc\Controller
 
         $res = json_decode($this->reload());
         $reloaded = $res->success ?: false;
-        return array("success" => true, "message" => "Qgs file parsed", "reloaded" => $reloaded, "ch" => $path . $name, "layers" => $layers, "urls" => $urls);
+        return array("success" => true, "version" => $minorVer, "message" => "Qgs file parsed", "reloaded" => $reloaded, "ch" => $path . $name, "layers" => $layers, "urls" => $urls);
     }
 
     public static function reload()

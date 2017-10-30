@@ -16,8 +16,14 @@ class Legend extends \app\inc\Controller
 
     }
 
+    /**
+     * @return array
+     * @throws \PDOException
+     */
     private function createLegendObj()
     {
+
+        $response = [];
 
         $path = App::$param['path'] . "/app/wms/mapfiles/";
 
@@ -33,16 +39,26 @@ class Legend extends \app\inc\Controller
 
             $meta = new Layer();
 
-            $layers = $meta->getAll(implode(",", $layerNames), false)["data"];
+            try {
+
+                $layers = $meta->getAll(implode(",", $layerNames), false)["data"];
+
+            } catch (\PDOException $e) {
+
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = $e->getCode();
+                return $response;
+
+            }
 
             foreach ($layers as $layer) {
 
                 $layerName = $layer["f_table_schema"] . "." . $layer["f_table_name"];
 
                 $classes = json_decode($layer["class"], true);
-                $numClass = sizeof($classes);
 
-                //print_r($classes);
+                $numClass = sizeof($classes);
 
                 $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . ".map";
 
@@ -92,8 +108,6 @@ class Legend extends \app\inc\Controller
                     }
                 }
 
-                // }
-
             }
 
         }
@@ -103,6 +117,9 @@ class Legend extends \app\inc\Controller
         return $response;
     }
 
+    /**
+     * @return array
+     */
     public function get_png()
     {
         $res = $this->createLegendObj();
@@ -138,6 +155,9 @@ class Legend extends \app\inc\Controller
         exit($data);
     }
 
+    /**
+     * @return array
+     */
     public function get_html()
     {
         $res = $this->createLegendObj();
@@ -146,8 +166,8 @@ class Legend extends \app\inc\Controller
             return $res;
         }
 
-
         $html = "";
+
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
                 //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
@@ -163,10 +183,16 @@ class Legend extends \app\inc\Controller
                 $html .= "</table>";
             }
         }
+
         $response['html'] = $html;
+
         return $response;
+
     }
 
+    /**
+     * @return array
+     */
     public function get_json()
     {
         $res = $this->createLegendObj();
@@ -197,9 +223,4 @@ class Legend extends \app\inc\Controller
         return $json;
     }
 
-    public function get_quantile()
-    {
-        $this->class = new \app\models\Classification(Input::get("l"));
-        return $this->class->createQuantile(Input::get("f"), Input::get("n"), "#" . Input::get(s), "#" . Input::get(e), null, false);
-    }
 }
