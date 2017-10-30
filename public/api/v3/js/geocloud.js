@@ -194,7 +194,10 @@ geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, me = this, map, sql, xhr = {abort:function () {/* stub */} };
+        var prop, me = this, map, sql, xhr = {
+            abort: function () {/* stub */
+            }
+        };
         this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
@@ -683,13 +686,13 @@ geocloud = (function () {
                     break;
             }
         };
-        this.zoomToExtentOfgeoJsonStore = function (store) {
+        this.zoomToExtentOfgeoJsonStore = function (store, maxZoom) {
             switch (MAPLIB) {
                 case "ol2":
                     this.map.zoomToExtent(store.layer.getDataExtent());
                     break;
                 case "leaflet":
-                    this.map.fitBounds(store.layer.getBounds());
+                    this.map.fitBounds(store.layer.getBounds(), {maxZoom: maxZoom});
                     break;
             }
         };
@@ -1536,7 +1539,8 @@ geocloud = (function () {
                                         if (!loadEvent) {
                                             loadEvent = function () {
                                             }
-                                        } if (!loadingEvent) {
+                                        }
+                                        if (!loadingEvent) {
                                             loadingEvent = function () {
                                             }
                                         }
