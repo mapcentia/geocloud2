@@ -197,7 +197,10 @@ geocloud = (function () {
         };
     };
     geoJsonStore = sqlStore = function (config) {
-        var prop, me = this, map, sql, xhr = {abort:function () {/* stub */} };
+        var prop, me = this, map, sql, xhr = {
+            abort: function () {/* stub */
+            }
+        };
         this.defaults = $.extend({}, STOREDEFAULTS);
         if (config) {
             for (prop in config) {
@@ -1548,7 +1551,8 @@ geocloud = (function () {
                                         if (!loadEvent) {
                                             loadEvent = function () {
                                             }
-                                        } if (!loadingEvent) {
+                                        }
+                                        if (!loadingEvent) {
                                             loadingEvent = function () {
                                             }
                                         }
