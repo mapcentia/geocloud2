@@ -2788,6 +2788,23 @@ $(document).ready(function () {
         }
     }
 
+    var clearLayerPanel = function () {
+        Ext.getCmp("a1").removeAll();
+        Ext.getCmp("a2").removeAll();
+        Ext.getCmp("a3").removeAll();
+        Ext.getCmp("a4").removeAll();
+        Ext.getCmp("a5").hide();
+        Ext.getCmp("a6").removeAll();
+        Ext.getCmp("a8").removeAll();
+        Ext.getCmp("a9").removeAll();
+        Ext.getCmp("a10").removeAll();
+        Ext.getCmp("a11").removeAll();
+        Ext.getCmp("a12").removeAll();
+        Ext.getCmp("layerStyleTabs").disable();
+        Ext.getCmp("classTabs").disable();
+
+    };
+
     /**
      *
      * @param e
@@ -2795,6 +2812,11 @@ $(document).ready(function () {
      */
     onEditWMSClasses = function (e) {
         var record = null, markup;
+
+        Ext.getCmp("layerStyleTabs").enable();
+        Ext.getCmp("a5").show();
+        Ext.getCmp("classTabs").disable();
+
         grid.getStore().each(function (rec) {  // for each row
             var row = rec.data; // get record
             if (row._key_ === e) {
@@ -3222,6 +3244,7 @@ $(document).ready(function () {
                                                     {
                                                         xtype: "tabpanel",
                                                         id: "layerStyleTabs",
+                                                        disabled: true,
                                                         activeTab: 0,
                                                         plain: true,
                                                         border: false,
@@ -3238,10 +3261,11 @@ $(document).ready(function () {
                                                                         xtype: "panel",
                                                                         id: "a2",
                                                                         layout: "fit",
-                                                                        height: 150
+                                                                        height: 200
                                                                     },
                                                                     new Ext.TabPanel({
                                                                         activeTab: 0,
+                                                                        disabled: true,
                                                                         region: 'center',
                                                                         plain: true,
                                                                         id: "classTabs",
@@ -4222,6 +4246,8 @@ $(document).ready(function () {
                         var id = e.id.split('.').join('-'), load = function () {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                 onEditWMSClasses(e.id);
+                            } else {
+                                clearLayerPanel();
                             }
                         };
 
@@ -4233,6 +4259,7 @@ $(document).ready(function () {
                             Ext.getCmp('editlayerbutton').setDisabled(true);
                             Ext.getCmp('quickdrawbutton').setDisabled(true);
                             Ext.getCmp('stylebutton').setDisabled(true);
+                            clearLayerPanel();
                         }
 
                         if (currentId !== e.id) {

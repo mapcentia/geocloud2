@@ -162,6 +162,10 @@ wmsClasses.init = function (record) {
         listeners: {
             rowclick: function () {
                 var record = wmsClasses.grid.getSelectionModel().getSelected(), a3, a8, a9, a10, a11;
+
+                Ext.getCmp("classTabs").enable();
+
+
                 if (!record) {
                     App.setAlert(App.STATUS_NOTICE, "You\'ve to select a layer");
                     return false;

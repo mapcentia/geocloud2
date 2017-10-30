@@ -48,6 +48,11 @@ Build date: 2013-04-03 15:07:25
     opacity: 0.6;
 }
 
+#layerStylePanel .ext-el-mask {
+    background-color: #222;
+    opacity: 0.6;
+}
+
 .ext-el-mask-msg {
     border-color: #999;
     background-color: #ddd;
