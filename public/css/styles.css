@@ -630,6 +630,16 @@ q:after, q:before {
     font-size: 12px;
 }
 
+#gc-log {
+    font: 1.2em 'Andale Mono', Consolas, 'Courier New';
+
+}
+#gc-log i {
+    color: #45D40C;
+    font-style: normal;
+}
+
+
 
 
 

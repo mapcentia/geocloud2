@@ -1644,6 +1644,10 @@ a.x-menu-item {
     background-image: none;
 }
 
+.x-panel-tl {
+    border: none !important;
+}
+
 .x-panel-bc {
     background-color: #000000;
     background-image: none;
@@ -2112,4 +2116,10 @@ td.x-grid3-hd.x-grid3-cell {
 
 .x-superboxselect-input-field {
     background: #000000;
+}
+
+.x-window-body textarea {
+    background-color: black;
+    color: rgba(255,255,255,.8);
+    border: none;
 }
