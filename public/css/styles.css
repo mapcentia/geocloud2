@@ -359,6 +359,7 @@ q:after, q:before {
     top: 3px;
     right: 3px;
     display: none;
+    color: #ffffff;
 }
 
 #spinner img {
@@ -368,11 +369,17 @@ q:after, q:before {
 
 #spinner span {
     position: absolute;
-    top: 1px;
+    top: 2px;
     right: 20px;
     font-family: verdana, arial, sans-serif;
     font-size: 8pt;
     white-space: nowrap;
+}
+
+#spinner i {
+
+    font-size: 12pt;
+
 }
 
 .color-ramp {

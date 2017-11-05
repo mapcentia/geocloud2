@@ -132,7 +132,7 @@ include("html_header.php");
         </table>
     </div>
 </div>
-<div id="spinner"><span></span><img src='/assets/images/ajax_loader.gif?5c2beec3d6a058e0'/></div>
+<div id="spinner"><span></span><i class="fa fa-cog fa-spin fa-3x fa-fw"></i></div>
 <script type="text/javascript" src="/api/v1/baselayerjs"></script>
 <script>
     window.__ = function (string, toolTip) {

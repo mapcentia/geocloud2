@@ -51,37 +51,7 @@ $(document).ready(function () {
         metaDataKeys = [], metaDataKeysTitle = [], metaDataRealKeys = [], extent = null, clicktimer, qstore = [],
         layers = {},
         LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin()),
-        queryWin = new Ext.Window({
-            title: "Query result",
-            modal: false,
-            border: false,
-            layout: 'fit',
-            width: 400,
-            height: 400,
-            closeAction: 'hide',
-            x: 400,
-            y: 150,
-            plain: true,
-            listeners: {
-                hide: {
-                    fn: function (el, e) {
-                        Ext.iterate(qstore, function (v) {
-                            v.reset();
-                        });
-                    }
-                }
-            },
-            items: [
-                new Ext.TabPanel({
-                    activeTab: 0,
-                    frame: false,
-                    id: "queryTabs",
-                    resizeTabs: false,
-                    plain: true,
-                    border: false
-                })
-            ]
-        });
+        queryWin;
 
     /**
      * Make sync calls
@@ -982,7 +952,7 @@ $(document).ready(function () {
                     });
                     privilegesStore.load();
                     var privilgesWin = new Ext.Window({
-                        title: __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
+                        title: '<i class="fa fa-user"></i> ' + __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
                         modal: true,
                         width: 600,
                         height: 330,
@@ -1162,7 +1132,7 @@ $(document).ready(function () {
                                         var r = Ext.decode(response.responseText), go;
                                         go = function () {
                                             workflowWin = new Ext.Window({
-                                                title: __("Apply role to sub-users on") + " '" + records[0].get("f_table_name") + "'",
+                                                title: '<i class="fa fa-users"></i> ' + __("Apply role to sub-users on") + " '" + records[0].get("f_table_name") + "'",
                                                 modal: true,
                                                 width: 500,
                                                 height: 330,
@@ -1520,7 +1490,7 @@ $(document).ready(function () {
                 text: '<i class="fa fa-lock"></i> ' + __('Services'),
                 handler: function (btn, ev) {
                     new Ext.Window({
-                        title: "Services",
+                        title: '<i class="fa fa-lock"></i> ' + __('Services'),
                         modal: true,
                         width: 850,
                         height: 430,
@@ -1987,7 +1957,7 @@ $(document).ready(function () {
                         return false;
                     }
                     var winMoveTable = new Ext.Window({
-                        title: __("Move") + " " + records.length + " " + __("selected to another schema"),
+                        title: '<i class="fa fa-arrow-right"></i> ' + __("Move") + " " + records.length + " " + __("selected to another schema"),
                         modal: true,
                         layout: 'fit',
                         width: 270,
@@ -2108,7 +2078,7 @@ $(document).ready(function () {
                         return false;
                     }
                     var winTableRename = new Ext.Window({
-                        title: __("Rename table") + " '" + record.data.f_table_name + "'",
+                        title: '<i class="fa fa-pencil"></i> ' + __("Rename table") + " '" + record.data.f_table_name + "'",
                         modal: true,
                         layout: 'fit',
                         width: 270,
@@ -2222,7 +2192,7 @@ $(document).ready(function () {
                         App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
                         return false;
                     }
-                    Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('table(s)') + '?', function (btn) {
+                    Ext.MessageBox.confirm('<i class="fa fa-cut"></i> ' + __('Confirm'), __('Are you sure you want to delete') + ' ' + records.length + ' ' + __('table(s)') + '?', function (btn) {
                         if (btn === "yes") {
                             var tables = [];
                             Ext.iterate(records, function (v) {
@@ -2274,7 +2244,7 @@ $(document).ready(function () {
                         return false;
                     }
                     var winCopyMeta = new Ext.Window({
-                        title: __("Copy all properties from another layer"),
+                        title: '<i class="fa fa-copy"></i> ' + __("Copy all properties from another layer"),
                         modal: true,
                         layout: 'fit',
                         width: 350,
@@ -2800,7 +2770,7 @@ $(document).ready(function () {
         Ext.getCmp("a10").removeAll();
         Ext.getCmp("a11").removeAll();
         Ext.getCmp("a12").removeAll();
-        Ext.getCmp("layerStyleTabs").disable();
+        Ext.getCmp("layerStylePanel").disable();
         Ext.getCmp("classTabs").disable();
 
     };
@@ -2813,7 +2783,7 @@ $(document).ready(function () {
     onEditWMSClasses = function (e) {
         var record = null, markup;
 
-        Ext.getCmp("layerStyleTabs").enable();
+        Ext.getCmp("layerStylePanel").enable();
         Ext.getCmp("a5").show();
         Ext.getCmp("classTabs").disable();
 
@@ -2985,7 +2955,7 @@ $(document).ready(function () {
             return false;
         }
         new Ext.Window({
-            title: __("Class wizard"),
+            title: '<i class="fa fa-eye"></i> ' +__("Class wizard"),
             layout: 'fit',
             width: 700,
             height: 540,
@@ -3147,6 +3117,7 @@ $(document).ready(function () {
                                                 region: 'east',
                                                 collapsible: false,
                                                 id: "layerStylePanel",
+                                                disabled: true,
                                                 width: 340,
                                                 frame: false,
                                                 split: true,
@@ -3244,7 +3215,6 @@ $(document).ready(function () {
                                                     {
                                                         xtype: "tabpanel",
                                                         id: "layerStyleTabs",
-                                                        disabled: true,
                                                         activeTab: 0,
                                                         plain: true,
                                                         border: false,
@@ -4516,15 +4486,16 @@ $(document).ready(function () {
     function openMeasureWin(objRef) {
         if (!measureWin) {
             measureWin = new Ext.Window({
-                title: __("Measure"),
+                title: '<i class="fa fa-arrows-v"></i> ' + __("Measure"),
                 layout: 'fit',
                 width: 300,
                 height: 90,
                 plain: true,
                 border: false,
                 closeAction: 'hide',
+                renderTo: 'mappanel',
                 html: '<div style="padding: 5px"><div id="output" style="height: 27px; margin-bottom: 10px; color: #fff"></div><div style="color: rgba(255, 255, 255, .5)">' + __("Close this window to disable measure tool") + '</div></div>',
-                x: 660,
+                x: 50,
                 y: 65,
                 listeners: {
                     hide: {
@@ -4542,6 +4513,42 @@ $(document).ready(function () {
             measureWin.show();
         }//end if object reference was passed
     }
+
+    queryWin = new Ext.Window({
+        title: '<i class="fa fa-info"></i> ' + __("Query result"),
+        modal: false,
+        border: false,
+        layout: 'fit',
+        width: 400,
+        height: 400,
+        renderTo: 'mappanel',
+        closeAction: 'hide',
+        x: 50,
+        y: 150,
+        plain: true,
+        listeners: {
+            hide: {
+                fn: function (el, e) {
+                    Ext.iterate(qstore, function (v) {
+                        v.reset();
+                    });
+                }
+            }
+        },
+        items: [
+            new Ext.TabPanel({
+                activeTab: 0,
+                frame: false,
+                id: "queryTabs",
+                resizeTabs: false,
+                plain: true,
+                border: false
+            })
+        ]
+    })
+
+
+
 
     measureControls.line.events.on({
         "measure": handleMeasurements,
@@ -4830,7 +4837,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     gridPanel = Ext.getCmp("gridpanel");
     south.doLayout();
     attributeForm.win = new Ext.Window({
-        title: "Attributes",
+        title: '<i class="fa fa-list"></i> ' + __("Attributes"),
         modal: false,
         layout: 'fit',
         initCenter: true,
@@ -4838,6 +4845,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         width: 500,
         height: 350,
         closeAction: 'hide',
+        renderTo: 'mappanel',
         plain: true,
         items: [new Ext.Panel({
             frame: false,

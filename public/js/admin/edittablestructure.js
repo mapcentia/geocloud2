@@ -514,7 +514,7 @@ tableStructure.onDelete = function () {
     if (!record) {
         return false;
     }
-    Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to do that?'),
+    Ext.MessageBox.confirm('<i class="fa fa-stop-circle"></i> ' + __('Confirm'), __('Are you sure you want to do delete the column?'),
         function (btn) {
             if (btn === "yes") {
                 tableStructure.grid.store.remove(record);
@@ -545,7 +545,7 @@ tableStructure.onAdd = function (btn, ev) {
  * @param record
  */
 tableStructure.onVersion = function (record) {
-    Ext.MessageBox.confirm(__('Confirm'), __('This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?'),
+    Ext.MessageBox.confirm('<i class="fa fa-history"></i> ' + __('Confirm'), __('This will track changes on the table. For each edit a new version of the feature is made. Four new system columns will be added to the table. Do you want to proceed?'),
         function (btn) {
             if (btn === "yes") {
                 Ext.Ajax.request(
@@ -581,7 +581,7 @@ tableStructure.onVersion = function (record) {
  * @param record
  */
 tableStructure.onRemoveVersion = function (record) {
-    Ext.MessageBox.confirm(__('Confirm'), __("This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?"),
+    Ext.MessageBox.confirm('<i class="fa fa-stop-circle"></i> ' + __('Confirm'), __("This will remove 'track changes' from the table. The versions will not be deleted, but all tracking information will be deleted. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
                 Ext.Ajax.request(
@@ -617,7 +617,7 @@ tableStructure.onRemoveVersion = function (record) {
  * @param record
  */
 tableStructure.onIndexInElasticsearch = function (record) {
-    Ext.MessageBox.confirm(__('Confirm'), __("This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?"),
+    Ext.MessageBox.confirm('<i class="fa fa-search-plus"></i> ' + __('Confirm'), __("This will pipe the data from the table/view to an index in Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
                 if (record.data.triggertable && record.data.triggertable.split(".").length < 2) {
@@ -678,7 +678,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
  * @param record
  */
 tableStructure.onDeleteFromElasticsearch = function (record) {
-    Ext.MessageBox.confirm(__('Confirm'), __("This will delete the type from Elasticsearch. Do you want to proceed?"),
+    Ext.MessageBox.confirm('<i class="fa fa-search-minus"></i> ' + __('Confirm'), __("This will delete the type from Elasticsearch. Do you want to proceed?"),
         function (btn) {
             if (btn === "yes") {
                 var param = "&key=" + settings.api_key;
