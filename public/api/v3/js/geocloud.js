@@ -278,7 +278,7 @@ geocloud = (function () {
                 },
                 error: this.defaults.error,
                 complete: function () {
-                    me.onLoad();
+                    me.onLoad(me);
                 }
 
             });

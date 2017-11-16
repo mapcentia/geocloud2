@@ -107,6 +107,10 @@ var gc2table = (function () {
                 ns: "",
                 template: null,
                 usingCarto: false,
+                onSelect: function () {
+                },
+                onMouseOver: function () {
+                },
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -134,6 +138,8 @@ var gc2table = (function () {
             el = defaults.el, click, loadDataInTable, moveEndOff,
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
+            onSelect = defaults.onSelect,
+            onMouseOver = defaults.onMouseOver,
             openPopUp = defaults.openPopUp,
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
@@ -230,15 +236,27 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
+
                         $(el + ' > tbody > tr').on("click", function (e) {
-                            object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
-                            var layer = m.map._layers[$(this).data('uniqueid')];
+                            var id = $(this).data('uniqueid');
+                            object.trigger("selected" + "_" + uid, id);
+                            var layer = m.map._layers[id];
                             setTimeout(function () {
                                 if (setViewOnSelect) {
                                     m.map.fitBounds(layer.getBounds());
                                 }
                             }, 100);
+                            onSelect(id, layer);
                         });
+
+                        $(el + ' > tbody > tr').on("mouseover", function (e) {
+                            var id = $(this).data('uniqueid');
+                            object.trigger("selected" + "_" + uid, id);
+                            var layer = m.map._layers[id];
+                            onMouseOver(id, layer);
+                        });
+
+
                     }, 100);
                 };
                 $(el).bootstrapTable({
@@ -274,16 +292,21 @@ var gc2table = (function () {
                         });
 
                     });
+
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
+
                     $(el).bootstrapTable("load", data);
-                    if (callCustomOnload) {
-                        customOnLoad();
-                    }
+
                     bindEvent();
+
+                    if (callCustomOnload) {
+                        customOnLoad(store);
+                    }
 
                     $(".fixed-table-body").css("overflow", "auto");
                     $(".fixed-table-body").css("max-height", tableBodyHeight + "px");
                     $(".fixed-table-body").css("height", tableBodyHeight + "px");
+
                 };
 
                 var moveEndEvent = function () {
