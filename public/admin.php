@@ -16,6 +16,7 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>
 <!-- /build -->
+
 </head>
 <body>
 <div id="loadscreen">
@@ -152,11 +153,14 @@ include("html_header.php");
     };
     document.write("<script src='/js/i18n/" + window.gc2Al + ".js'><\/script>");
 </script>
+
 <script>
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
+
 <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
 <script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
+
 <!-- build:js /js/admin/build/all.min.js -->
 <script type="text/javascript" src="/js/canvasResize/binaryajax.js?0bd13c39b3649026"></script>
 <script type="text/javascript" src="/js/canvasResize/exif.js?33363140df0199f5"></script>
@@ -174,8 +178,6 @@ include("html_header.php");
 <script type="text/javascript" src="/js/ext/examples/ux/gridfilters/filter/StringFilter.js?94547080e205a1bb"></script>
 <script type="text/javascript" src="/js/jquery/1.10.0/jquery.min.js?c1c829b72179d9c3"></script>
 <script type="text/javascript" src="/js/GeoExt/script/GeoExt.js?1627edfa794e03c7"></script>
-<script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
-<script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
 <script type="text/javascript" src="/js/openlayers/proj4js-combined.js?e3d43fb0b6487682"></script>
 <script type="text/javascript" src="/js/plupload/js/moxie.min.js?5eb0c30ea42430c9"></script>
 <script type="text/javascript" src="/js/plupload/js/plupload.min.js?745552fc001e46c4"></script>
@@ -204,6 +206,10 @@ include("html_header.php");
 <script type="text/javascript" src="/js/admin/comparisoncomboBox.js?8542bc57943e21ff"></script>
 <script type="text/javascript" src="/js/openlayers/defs/EPSG3857.js"></script>
 <!-- /build -->
+
+<script type="text/javascript" src="/api/v1/js/api.js?1dde131588eeca14"></script>
+<script type="text/javascript" src="/api/v3/js/geocloud.js?af2941abf63d3844"></script>
+
 </body>
 </html>
 
