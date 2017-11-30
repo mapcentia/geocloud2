@@ -1,3 +1,8 @@
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 .layout-table {
     background: #F2F3F7;
     font-family: arial, helvetica, sans-serif;
