@@ -261,7 +261,7 @@ var gc2table = (function () {
                 };
                 $(el).bootstrapTable({
                     uniqueId: "_id",
-                    height: height,
+                    height: "200px",
                     locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
@@ -274,7 +274,7 @@ var gc2table = (function () {
                 store.onLoad = function () {
                     loadDataInTable();
                 };
-                loadDataInTable = function () {
+                loadDataInTable = function (doNotCallCustomOnload) {
                     data = [];
                     $.each(store.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
@@ -299,7 +299,7 @@ var gc2table = (function () {
 
                     bindEvent();
 
-                    if (callCustomOnload) {
+                    if (callCustomOnload && !doNotCallCustomOnload) {
                         customOnLoad(store);
                     }
 
