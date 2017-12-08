@@ -68,7 +68,7 @@ class Table extends Model
             $this->workflow = $res["exists"];
         }
         $this->sysCols = array("gc2_version_gid", "gc2_version_start_date", "gc2_version_end_date", "gc2_version_uuid", "gc2_version_user");
-        $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
+        $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬.]/";
     }
 
     /**

@@ -3529,7 +3529,7 @@ $(document).ready(function () {
                                                                 height: 300
                                                             });
                                                         }
-                                                        dataStore.reload();
+                                                        //dataStore.reload();
                                                     }
                                                 }
                                             });
