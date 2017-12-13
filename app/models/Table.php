@@ -450,23 +450,25 @@ class Table extends Model
                     if ($value === false) {
                         $value = null;
                     }
-                    if ($key == "editable" || $key == "skipconflict") {
-                        $value = $value ?: "0";
-                    }
-                    if ($key == "tags") {
-                        $value = json_encode($value);
-                    }
-                    // If Meta when update the existing object, so not changed values persist
-                    if ($key == "meta") {
-                        $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
-
-                        foreach ($value as $fKey => $fValue) {
-                            $rec[$fKey] = $fValue;
+                    if ($this->table == "settings.geometry_columns_join") {
+                        if ($key == "editable" || $key == "skipconflict") {
+                            $value = $value ?: "0";
                         }
-                        $value = json_encode($rec);
+                        if ($key == "tags") {
+                            $value = json_encode($value);
+                        }
+                        // If Meta when update the existing object, so not changed values persist
+                        if ($key == "meta") {
+                            $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
 
+                            foreach ($value as $fKey => $fValue) {
+                                $rec[$fKey] = $fValue;
+                            }
+                            $value = json_encode($rec);
+
+                        }
                     }
-                    $value = $this->db->quote($value);
+                    $value = stripcslashes($this->db->quote($value));
                     if ($key != $keyName) {
                         $pairArr[] = "\"{$key}\"={$value}";
                         $keyArr[] = "\"{$key}\"";
