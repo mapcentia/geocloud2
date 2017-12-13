@@ -70,11 +70,9 @@ class Sql extends \app\inc\Controller
         // Check if body is JSON
         // Supports both GET and POST
         // ==========================
-
         $json = json_decode(Input::getBody(), true);
 
         // If JSON when set get params from body
-        // And call get_index
         // =====================================
         if ($json != null) {
 
