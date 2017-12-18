@@ -36,10 +36,19 @@ if (sizeof(explode("|", $url)) > 1) {
     $getFunction = "getCmdPaging";
 } else {
     $grid = null;
-    $getFunction = "getCmd";
+
+    // Check if file extension
+    // =======================
+    $extCheck1 = explode(".", $url);
+    $extCheck2 = array_reverse($extCheck1);
+    if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "geojson") {
+        $getFunction = "getCmdFile";
+    } else {
+        $getFunction = "getCmd";
+    }
+
 
 }
-
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand()) . ".gml";
@@ -101,11 +110,22 @@ function getCmd()
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $schema, $url, $grid, $id;
+    global $randTableName, $type, $db, $schema, $url, $grid, $id, $encoding;
 
     print "Staring inserting in temp table using paginated download...\n\n";
 
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding}";
+
+    return $cmd;
+}
+
+function getCmdFile()
+{
+    global $randTableName, $type, $db, $schema, $url, $encoding;
+
+    print "Staring inserting in temp table using file download...\n\n";
+
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} 1 {$encoding}";
 
     return $cmd;
 }
@@ -131,7 +151,6 @@ if ($err) {
     }
 
 }
-
 
 // Run for real if the dry run is passed.
 if ($pass) {
@@ -229,23 +248,12 @@ if ($pass) {
         }
     }
 
-    # Clean up
-    $sql = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
-    $res = $table->prepare($sql);
-    print "Existing table dropped.\n\n";
-
-    try {
-        $res->execute();
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
-    }
-
 }
 
 if ($pass) {
 
     print "Data imported into " . $schema . "." . $safeName . "\n\n";
-    $sql = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
+    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
     $values = array(":lastcheck" => 1, ":id" => $jobId);
     print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 
@@ -255,7 +263,7 @@ if ($pass) {
 
     print "\n\n";
 
-    $sql = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
+    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
     $values = array(":lastcheck" => 0, ":id" => $jobId);
 
     // Output the first few lines of file
@@ -273,45 +281,32 @@ if ($pass) {
             fclose($handle);
         }
     }
+}
 
+# Clean up
+$sqlCleanUp = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
+$res = $table->prepare($sqlCleanUp);
+print "\nTemp table dropped.\n\n";
 
-    if (App::$param["notification"]) {
-
-        try {
-            $client = new PostmarkClient(App::$param["notification"]["key"]);
-
-        } catch (PostmarkException $ex) {
-            echo $ex->httpStatusCode;
-            echo $ex->postmarkApiErrorCode;
-
-        } catch (Exception $generalException) {
-            // A general exception is thown if the API
-        }
-
-        $text =
-            "Job id: {$jobId}\n" .
-            "Database: {$db}\n" .
-            "Schema: {$schema}\n" .
-            "table: {$safeName}\n" .
-            "Log: https://geofyn.mapcentia.com/logs/{$jobId}_scheduler.log\n";
-
-        $message = [
-            'To' => implode(",", App::$param["notification"]["to"]),
-            'From' => App::$param["notification"]["from"],
-            'TrackOpens' => false,
-            'Subject' => "GC2Scheduler job with error",
-            'TextBody' => $text,
-        ];
-        $sendResult = $client->sendEmailBatch([$message]);
-    }
-
+try {
+    $res->execute();
+} catch (\PDOException $e) {
+    print_r($e->getMessage());
 }
 
 \app\models\Database::setDb("gc2scheduler");
 $model = new \app\inc\Model();
-$res = $model->prepare($sql);
+$res = $model->prepare($sqlSuccessJob);
 try {
     $res->execute($values);
+} catch (\PDOException $e) {
+    print_r($e);
+}
+
+$sqlLastRun = "UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
+$res = $model->prepare($sqlLastRun);
+try {
+    $res->execute(["id" => $jobId]);
 } catch (\PDOException $e) {
     print_r($e);
 }
@@ -351,6 +346,3 @@ if ($extra && $pass) {
         print_r($e);
     }
 }
-
-// Unlink temp file
-//@unlink($dir . "/" . $tempFile);
