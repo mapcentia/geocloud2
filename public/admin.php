@@ -6,12 +6,13 @@ include("html_header.php");
 <link rel="stylesheet" type="text/css"
       href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
-<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/superboxselect/superboxselect.css?d9fa260554f90c1f"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/ext-all-notheme.css?51cabb17d7568573"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/resources/css/xtheme-dark.css?d597d957caed6c0e"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/GridFilters.css?fb821750e712f717"/>
 <link rel="stylesheet" type="text/css" href="/js/ext/examples/ux/gridfilters/css/RangeMenu.css?d9fa260554f90c1f"/>
+
+<!-- build:css /css/build/styles.min.css -->
 <link rel="stylesheet" type="text/css" href="/js/bootstrap/css/bootstrap.icons.min.css?946b6da947019f90"/>
 <link rel="stylesheet" type="text/css" href="/css/jquery.plupload.queue.css?0883487d9fdc30c9"/>
 <link rel="stylesheet" type="text/css" href="/css/styles.css?6b07a34a1f155c03"/>

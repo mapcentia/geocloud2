@@ -24,11 +24,11 @@ module.exports = function (grunt) {
                     ],
                     // Admin
                     'public/css/build/styles.min.css': [
-                        'public/js/ext/examples/ux/superboxselect/superboxselect.css',
-                        'public/js/ext/resources/css/ext-all-notheme.css',
-                        'public/js/ext/resources/css/xtheme-dark.css',
-                        'public/js/ext/examples/ux/gridfilters/css/GridFilters.css',
-                        'public/js/ext/examples/ux/gridfilters/css/RangeMenu.css',
+                        //'public/js/ext/examples/ux/superboxselect/superboxselect.css',
+                        //'public/js/ext/resources/css/ext-all-notheme.css',
+                        //'public/js/ext/resources/css/xtheme-dark.css',
+                        //'public/js/ext/examples/ux/gridfilters/css/GridFilters.css',
+                        //'public/js/ext/examples/ux/gridfilters/css/RangeMenu.css',
                         'public/js/bootstrap/css/bootstrap.icons.min.css',
                         'public/css/jquery.plupload.queue.css',
                         'public/css/styles.css'
@@ -105,8 +105,8 @@ module.exports = function (grunt) {
                         'public/js/canvasResize/exif.js',
                         'public/js/canvasResize/canvasResize.js',
 
-                        'public/js/ext/adapter/ext/ext-base-debug.js',
-                        'public/js/ext/ext-all-debug.js',
+                        'public/js/ext/adapter/ext/ext-base.js',
+                        'public/js/ext/ext-all.js',
                         'public/js/ext/examples/ux/Spinner.js',
                         'public/js/ext/examples/ux/SpinnerField.js',
                         'public/js/ext/examples/ux/CheckColumn.js',
@@ -120,8 +120,6 @@ module.exports = function (grunt) {
                         'public/js/jquery/1.10.0/jquery.min.js',
                         'public/js/openlayers/proj4js-combined.js',
                         'public/js/GeoExt/script/GeoExt.js',
-                        //'public/api/v1/js/api.js',
-                        //'public/api/v3/js/geocloud.js',
                         'public/js/plupload/js/moxie.min.js',
                         'public/js/plupload/js/plupload.min.js',
                         'public/js/plupload/js/jquery.plupload.queue/jquery.plupload.queue.min.js',
