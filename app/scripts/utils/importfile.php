@@ -1,5 +1,7 @@
 <?php
 ini_set("display_errors", "Off");
+include_once(__DIR__ . "/../../vendor/autoload.php");
+
 error_reporting(3);
 
 use \app\conf\App;
@@ -7,6 +9,7 @@ use \app\conf\Connection;
 use \app\inc\Model;
 use \app\inc\Util;
 use \app\models\Database;
+use \GuzzleHttp\Client;
 
 header("Content-type: text/plain");
 
@@ -20,10 +23,11 @@ $geomType = $argv[5];
 $overwrite = $argv[6];
 $encoding = $argv[7];
 
-new \app\conf\App();
+new App();
 Database::setDb($db);
 $database = new Model();
 $database->connect();
+$client = new Client();
 
 if ($overwrite) {
     $sql = "DROP TABLE {$schema}.{$importTable}";
@@ -61,7 +65,7 @@ $base = implode(".", array_reverse($extCheck2));
 switch ($extension) {
     case "shp":
         $files[$randFileName . ".shp"] = $url;
-        $files[$randFileName . ".SHP"] = $url;
+        // Try to get both upper and lower case extension
         $files[$randFileName . ".dbf"] = $base . ".dbf";
         $files[$randFileName . ".DBF"] = $base . ".DBF";
         $files[$randFileName . ".shx"] = $base . ".shx";
@@ -71,14 +75,14 @@ switch ($extension) {
 
     case "tab":
         $files[$randFileName . ".tab"] = $url;
-        $files[$randFileName . ".TAB"] = $url;
+        // Try to get both upper and lower case extension
         $files[$randFileName . ".map"] = $base.".map";
         $files[$randFileName . ".MAP"] = $base.".MAP";
         $files[$randFileName . ".dat"] = $base.".dat";
         $files[$randFileName . ".DAT"] = $base.".DAT";
         $files[$randFileName . ".id"] = $base.".id";
         $files[$randFileName . ".ID"] = $base.".ID";
-        $fileSetName = $randFileName . ".TAB";
+        $fileSetName = $randFileName . ".tab";
         break;
 
     default:
@@ -88,7 +92,16 @@ switch ($extension) {
 }
 
 foreach ($files as $key => $file) {
-    file_put_contents("/var/www/geocloud2/public/logs/" . $key, Util::wget($file));
+    $path = "/var/www/geocloud2/public/logs/" . $key;
+    $fileRes = fopen($path,'w');
+    try {
+        $response = $client->get($file, ['save_to' => $fileRes]);
+    } catch (Exception $e) {
+        print $file . "   ";
+        // Delete files with errors
+        unlink($path);
+        print $e->getMessage() . "\n";
+    }
 }
 
 $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
