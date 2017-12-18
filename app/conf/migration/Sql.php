@@ -563,7 +563,8 @@ class Sql
     public static function gc2scheduler()
     {
         $sqls[] = "ALTER TABLE jobs ALTER url TYPE TEXT";
-        $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE ";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN lastrun timestamp with time zone";
         return $sqls;
     }
 }
