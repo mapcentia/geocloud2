@@ -24,6 +24,7 @@ $grid = $argv[6];
 $overwrite = $argv[7];
 $id = $argv[8] ?: "gml_id";
 $gfs = $argv[9];
+$encoding = $argv[10];
 
 
 new \app\conf\App();
@@ -40,8 +41,6 @@ if ($database->PDOerror) {
 if ($overwrite) {
     $sql = "DROP TABLE {$schema}.{$importTable}";
     $res = $database->prepare($sql);
-    //print "SQL run:\n";
-    //print $sql . "\n\n";
     try {
         $res->execute();
     } catch (\PDOException $e) {
@@ -67,8 +66,6 @@ while ($row = $database->fetchRow($res)) {
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
     $gmlName = $importTable . "-" . $row["gid"] . ".gml";
-
-    Util::wget($wfsUrl . $bbox);
 
     file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox));
     if ($gfs) {
