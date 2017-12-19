@@ -28,7 +28,7 @@ try {
 $failedJobs[] = "<table class=\"table table-striped\">\n";
 $failedJobs[] = "<tr><th>Id</th><th>Database</th><th>Schema</th><th>Table</th><th>Log</th></tr>\n";
 while ($row = $model->fetchRow($res, "assoc")) {
-    $failedJobs[] = "<tr><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td><a target=\"_blank\" href=\"" . App::$param["notification"]["logUrl"] . "/" . $row["id"] . "_scheduler.log\">{$row["id"]}_scheduler.log</a></td></tr>\n";
+    $failedJobs[] = "<tr><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td><a target=\"_blank\" href=\"" . App::$param["notification"]["logUrl"] . "/logs/" . $row["id"] . "_scheduler.log\">{$row["id"]}_scheduler.log</a></td></tr>\n";
 }
 $failedJobs[] = "</table>\n";
 
