@@ -20,8 +20,8 @@ $encoding = $argv[7];
 $jobId = $argv[8];
 $deleteAppend = $argv[9];
 $extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
-$preSql = isset($argv[11]) ? base64_decode($argv[11]) : null;
-$postSql = isset($argv[12]) ? base64_decode($argv[12]) : null;
+$preSql = $argv[11] == "null" ? null : base64_decode($argv[11]);
+$postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
 
 $client = new Client([
     'timeout' => 20.0,
