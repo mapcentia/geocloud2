@@ -6,8 +6,7 @@ new \app\conf\App();
 
 use \app\conf\App;
 use \app\conf\Connection;
-use \Postmark\PostmarkClient;
-use \Postmark\Models\PostmarkException;
+use \GuzzleHttp\Client;
 
 echo date(DATE_RFC822) . "\n\n";
 
@@ -20,19 +19,23 @@ $type = $argv[6];
 $encoding = $argv[7];
 $jobId = $argv[8];
 $deleteAppend = $argv[9];
-$extra = isset($argv[10]) ? base64_decode($argv[10]) : null;
+$extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
+$preSql = isset($argv[11]) ? base64_decode($argv[11]) : null;
+$postSql = isset($argv[12]) ? base64_decode($argv[12]) : null;
+
+$client = new Client([
+    'timeout' => 20.0,
+]);
 
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
     $url = explode("|", $url)[1];
-
     if (sizeof(explode(",", $grid)) > 1) {
         $id = explode(",", $grid)[1];
         $grid = explode(",", $grid)[0];
     } else {
         $id = "gml_id";
     }
-
     $getFunction = "getCmdPaging";
 } else {
     $grid = null;
@@ -46,8 +49,6 @@ if (sizeof(explode("|", $url)) > 1) {
     } else {
         $getFunction = "getCmd";
     }
-
-
 }
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
@@ -121,16 +122,14 @@ function getCmdPaging()
 
 function getCmdFile()
 {
-    global $randTableName, $type, $db, $schema, $url, $encoding;
+    global $randTableName, $type, $db, $schema, $url, $encoding, $srid;
 
     print "Staring inserting in temp table using file download...\n\n";
 
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} 1 {$encoding}";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} 1 {$encoding} {$srid}";
 
     return $cmd;
 }
-
-$pass = true;
 
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
@@ -138,133 +137,10 @@ $table = new \app\models\Table($schema . "." . $safeName);
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 if ($err) {
+
     print "Error " . $err . "\n\n";
-    $pass = false;
-} else {
-    print "Commando:\n";
-    print $cmd . "\n\n";
-    foreach ($out as $line) {
-        if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-            $pass = false;
-            break;
-        }
-    }
-
-}
-
-// Run for real if the dry run is passed.
-if ($pass) {
-
-    print "Inserting in temp table done, proceeding...\n\n";
-
-    if ($deleteAppend == "1") {
-
-        print "Delete/append is enabled.\n\n";
-
-        if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
-
-            print "Table doesn't exists.\n\n";
-
-            $o = "-overwrite";
-
-        } else {
-
-            print "Table exists.\n\n";
-
-            $o = "-append";
-
-        }
-    } else {
-
-        print "Overwrite is enabled.\n\n";
-
-        $o = "-overwrite";
-    }
-
-    $pkSql = null;
-    $idxSql = null;
-
-    $table->begin();
-
-    if ($o != "-overwrite") {
-
-        $sql = "DELETE FROM {$schema}.{$safeName}";
-        $res = $table->prepare($sql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-
-        }
-
-        print "Data in existing table deleted.\n\n";
-
-        $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
-
-    } else {
-
-        $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
-        $res = $table->prepare($sql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-        }
-
-        $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$schema}.{$randTableName}";
-        $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
-        $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
-
-    }
-
-    $res = $table->prepare($sql);
-
-    try {
-
-        $res->execute();
-
-    } catch (\PDOException $e) {
-
-        print_r($e->getMessage());
-        $pass = false;
-
-    }
-
-    $table->commit();
-
-    if ($pkSql) {
-        $res = $table->prepare($pkSql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            print_r($e->getMessage());
-        }
-    }
-
-    if ($idxSql) {
-        $res = $table->prepare($idxSql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            print_r($e->getMessage());
-        }
-    }
-
-}
-
-if ($pass) {
-
-    print "Data imported into " . $schema . "." . $safeName . "\n\n";
-    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck, lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
-    $values = array(":lastcheck" => 1, ":id" => $jobId);
-    print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
-
-} else {
-
     print_r($out);
-
     print "\n\n";
-
-    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
-    $values = array(":lastcheck" => 0, ":id" => $jobId);
 
     // Output the first few lines of file
     if ($grid == null) {
@@ -281,68 +157,218 @@ if ($pass) {
             fclose($handle);
         }
     }
+    cleanUp();
+    exit(1);
+
+} else {
+
+    print "Commando:\n";
+    print $cmd . "\n\n";
+    foreach ($out as $line) {
+        if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+            print_r($e->getMessage());
+            cleanUp();
+            exit(1);
+        }
+    }
+
 }
 
-# Clean up
-$sqlCleanUp = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
-$res = $table->prepare($sqlCleanUp);
-print "\nTemp table dropped.\n\n";
+// Run for real if the dry run is passed.
+print "Inserting in temp table done, proceeding...\n\n";
+if ($deleteAppend == "1") {
+    print "Delete/append is enabled.\n\n";
+    if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
+        print "Table doesn't exists.\n\n";
+        $o = "-overwrite";
+    } else {
+        print "Table exists.\n\n";
+        $o = "-append";
+    }
+} else {
+    print "Overwrite is enabled.\n\n";
+    $o = "-overwrite";
+}
 
+$pkSql = null;
+$idxSql = null;
+
+$table->begin();
+
+// Pre run SQL
+// ============
+if ($preSql) {
+    foreach (explode(";", $preSql) as $q) {
+        print "Running post-SQL: {$q}\n";
+        $res = $table->prepare($q);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+            $table->rollback();
+            cleanUp();
+            exit(1);
+        }
+    }
+    print "\n";
+}
+
+if ($o != "-overwrite") {
+    $sql = "DELETE FROM {$schema}.{$safeName}";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+    print "Data in existing table deleted.\n\n";
+    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
+} else {
+    $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+    $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$schema}.{$randTableName}";
+    $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
+    $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
+}
+
+print "Insert/update final table...\n\n";
+$res = $table->prepare($sql);
 try {
     $res->execute();
 } catch (\PDOException $e) {
     print_r($e->getMessage());
+    $table->rollback();
+    cleanUp();
+    exit(1);
 }
 
-\app\models\Database::setDb("gc2scheduler");
-$model = new \app\inc\Model();
-$res = $model->prepare($sqlSuccessJob);
-try {
-    $res->execute($values);
-} catch (\PDOException $e) {
-    print_r($e);
+if ($pkSql) {
+    $res = $table->prepare($pkSql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
 }
 
-$sqlLastRun = "UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
-$res = $model->prepare($sqlLastRun);
-try {
-    $res->execute(["id" => $jobId]);
-} catch (\PDOException $e) {
-    print_r($e);
+if ($idxSql) {
+    $res = $table->prepare($idxSql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
 }
 
 // Add extra field and insert values
-if ($extra && $pass) {
-    \app\models\Database::setDb($db);
-    $model = new \app\inc\Model();
+// =================================
+if ($extra) {
     $fieldObj = json_decode($extra);
-
     $fieldName = $fieldObj->name;
-    $fieldType = isset($fieldObj->type) ?: "varchar";
-    $fieldValue = $fieldObj->value;
-
-    $check = $model->doesColumnExist($schema . "." . $safeName, $fieldName);
-
+    $fieldType = isset($fieldObj->type) ? $fieldObj->type : "varchar";
+    $fieldValue = isset($fieldObj->value) ? $fieldObj->value : null;
+    $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
     if (!$check["exists"]) {
         $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-        print "SQL run:\n";
         print $sql . "\n\n";
-        $res = $model->prepare($sql);
+        $res = $table->prepare($sql);
         try {
             $res->execute();
         } catch (\PDOException $e) {
-            print_r($e);
+            print_r($e->getMessage());
+            $table->rollback();
+            cleanUp();
+            exit(1);
         }
     } else {
         print "Extra field already exists.\n\n";
     }
     $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
-    print "SQL run:\n";
-    print $sql . "\n\n";
-    $res = $model->prepare($sql);
+    print "Updating extra field...\n\n";
+    $res = $table->prepare($sql);
     try {
         $res->execute(array(":value" => $fieldValue));
     } catch (\PDOException $e) {
-        print_r($e);
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+
     }
 }
+
+// Post run SQL
+// ============
+if ($postSql) {
+    foreach (explode(";", $postSql) as $q) {
+        print "Running post-SQL: {$q}\n";
+        $res = $table->prepare($q);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+            $table->rollback();
+            cleanUp();
+            exit(1);
+        }
+    }
+    print "\n";
+}
+$table->commit();
+
+print "Data imported into " . $schema . "." . $safeName . "\n\n";
+print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
+
+// Clean up
+// ========
+function cleanUp($success = 0)
+{
+    global $schema, $randTableName, $table, $jobId;
+
+    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
+    $values = array(":lastcheck" => $success, ":id" => $jobId);
+
+    $sqlCleanUp = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
+    $res = $table->prepare($sqlCleanUp);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+    print "\nTemp table dropped.\n\n";
+
+    // Update jobs table
+    // =================
+    \app\models\Database::setDb("gc2scheduler");
+    $model = new \app\inc\Model();
+    $res = $model->prepare($sqlSuccessJob);
+    try {
+        $res->execute($values);
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+
+    $sqlLastRun = "UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
+    $res = $model->prepare($sqlLastRun);
+    try {
+        $res->execute(["id" => $jobId]);
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+}
+
+cleanUp(1);
+exit(0);
+
+

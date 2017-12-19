@@ -24,7 +24,7 @@ Ext.define('MyApp.view.MyWindow', {
         'Ext.button.Button'
     ],
 
-    height: 336,
+    height: 390,
     itemId: 'window',
     width: 600,
     title: 'Job',
@@ -341,6 +341,18 @@ Ext.define('MyApp.view.MyWindow', {
                             fieldLabel: 'Delete/append',
                             name: 'delete_append',
                             uncheckedValue: 'false'
+                        },
+                        {
+                            xtype: 'textfield',
+                            flex: 1,
+                            fieldLabel: 'Pre-run SQL',
+                            name: 'presql'
+                        },
+                        {
+                            xtype: 'textfield',
+                            flex: 1,
+                            fieldLabel: 'Post-run SQL',
+                            name: 'postsql'
                         },
                         {
                             xtype: 'button',

@@ -565,6 +565,8 @@ class Sql
         $sqls[] = "ALTER TABLE jobs ALTER url TYPE TEXT";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN lastrun timestamp with time zone";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN presql text";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN postsql text";
         return $sqls;
     }
 }
