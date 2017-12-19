@@ -86,13 +86,10 @@ function which()
     return "/usr/local/bin/ogr2ogr";
 }
 
-
 function getCmd()
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName;
-
     print "Staring inserting in temp table using ogr2ogr...\n\n";
-
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
@@ -112,22 +109,16 @@ function getCmd()
 function getCmdPaging()
 {
     global $randTableName, $type, $db, $schema, $url, $grid, $id, $encoding;
-
     print "Staring inserting in temp table using paginated download...\n\n";
-
     $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding}";
-
     return $cmd;
 }
 
 function getCmdFile()
 {
     global $randTableName, $type, $db, $schema, $url, $encoding, $srid;
-
     print "Staring inserting in temp table using file download...\n\n";
-
     $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} 1 {$encoding} {$srid}";
-
     return $cmd;
 }
 
@@ -137,11 +128,9 @@ $table = new \app\models\Table($schema . "." . $safeName);
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 if ($err) {
-
     print "Error " . $err . "\n\n";
     print_r($out);
     print "\n\n";
-
     // Output the first few lines of file
     if ($grid == null) {
         Print "Outputting the first few lines of the file:\n\n";
@@ -161,7 +150,6 @@ if ($err) {
     exit(1);
 
 } else {
-
     print "Commando:\n";
     print $cmd . "\n\n";
     foreach ($out as $line) {
@@ -171,7 +159,6 @@ if ($err) {
             exit(1);
         }
     }
-
 }
 
 // Run for real if the dry run is passed.
@@ -193,13 +180,15 @@ if ($deleteAppend == "1") {
 $pkSql = null;
 $idxSql = null;
 
+// Begin transaction
+// =================
 $table->begin();
 
 // Pre run SQL
 // ============
 if ($preSql) {
     foreach (explode(";", $preSql) as $q) {
-        print "Running post-SQL: {$q}\n";
+        print "Running pre-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
             $res->execute();
@@ -213,6 +202,7 @@ if ($preSql) {
     print "\n";
 }
 
+// Overwrite
 if ($o != "-overwrite") {
     $sql = "DELETE FROM {$schema}.{$safeName}";
     $res = $table->prepare($sql);
@@ -226,6 +216,8 @@ if ($o != "-overwrite") {
     }
     print "Data in existing table deleted.\n\n";
     $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
+
+// Delete/append
 } else {
     $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
     $res = $table->prepare($sql);
@@ -325,6 +317,9 @@ if ($postSql) {
     }
     print "\n";
 }
+
+// Commit transaction
+// =================
 $table->commit();
 
 print "Data imported into " . $schema . "." . $safeName . "\n\n";
