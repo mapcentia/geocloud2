@@ -331,36 +331,43 @@ function cleanUp($success = 0)
 {
     global $schema, $randTableName, $table, $jobId;
 
-    $sqlSuccessJob = "UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id";
-    $values = array(":lastcheck" => $success, ":id" => $jobId);
+    // Update jobs table
+    // =================
+    \app\models\Database::setDb("gc2scheduler");
+    $job = new \app\inc\Model();
 
-    $sqlCleanUp = "DROP TABLE IF EXISTS {$schema}.{$randTableName}";
-    $res = $table->prepare($sqlCleanUp);
+    // lastcheck
+    $res = $job->prepare("UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id");
+    try {
+        $res->execute([":lastcheck" => $success, ":id" => $jobId]);
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+
+    // lastrun
+    $res = $job->prepare("UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
+    try {
+        $res->execute(["id" => $jobId]);
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+
+    // lasttimestamp
+    $res = $job->prepare("UPDATE jobs SET lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
+    try {
+        $res->execute(["id" => $jobId]);
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
+
+    // Drop temp table
+    $res = $table->prepare("DROP TABLE IF EXISTS {$schema}.{$randTableName}");
     try {
         $res->execute();
     } catch (\PDOException $e) {
         print_r($e->getMessage());
     }
     print "\nTemp table dropped.\n\n";
-
-    // Update jobs table
-    // =================
-    \app\models\Database::setDb("gc2scheduler");
-    $model = new \app\inc\Model();
-    $res = $model->prepare($sqlSuccessJob);
-    try {
-        $res->execute($values);
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
-    }
-
-    $sqlLastRun = "UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id";
-    $res = $model->prepare($sqlLastRun);
-    try {
-        $res->execute(["id" => $jobId]);
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
-    }
 }
 
 cleanUp(1);
