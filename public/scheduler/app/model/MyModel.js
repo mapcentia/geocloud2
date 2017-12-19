@@ -69,6 +69,12 @@ Ext.define('MyApp.model.MyModel', {
         },
         {
             name: 'delete_append'
+        },
+        {
+            name: 'presql'
+        },
+        {
+            name: 'postsql'
         }
     ],
 

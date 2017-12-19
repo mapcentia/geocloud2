@@ -22,6 +22,7 @@ $importTable = $argv[4];
 $geomType = $argv[5];
 $overwrite = $argv[6];
 $encoding = $argv[7];
+$srid = $argv[8];
 
 new App();
 Database::setDb($db);
@@ -111,7 +112,7 @@ $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
     "-lco 'GEOMETRY_NAME=the_geom' " .
     "-lco 'FID=gid' " .
     "-lco 'PRECISION=NO' " .
-    "-a_srs 'EPSG:25832' " .
+    "-a_srs 'EPSG:{$srid}' " .
     "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
     "/var/www/geocloud2/public/logs/" . $fileSetName . " " .
     "-nln {$schema}.{$importTable} " .
