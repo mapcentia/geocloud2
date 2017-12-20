@@ -62,7 +62,6 @@ $extension = strtolower($extCheck2[0]);
 array_shift($extCheck2);
 $base = implode(".", array_reverse($extCheck2));
 
-
 switch ($extension) {
     case "shp":
         $files[$randFileName . ".shp"] = $url;
@@ -129,13 +128,10 @@ foreach ($out as $line) {
 }
 
 if (!$pass) {
-
     foreach ($out as $line) {
         echo $line . "\n";
     }
-
     exit(1);
-
 }
 
 echo "\n";

@@ -6,7 +6,6 @@ new \app\conf\App();
 
 use \app\conf\App;
 use \app\conf\Connection;
-use \GuzzleHttp\Client;
 
 echo date(DATE_RFC822) . "\n\n";
 
@@ -22,10 +21,6 @@ $deleteAppend = $argv[9];
 $extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
 $preSql = $argv[11] == "null" ? null : base64_decode($argv[11]);
 $postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
-
-$client = new Client([
-    'timeout' => 20.0,
-]);
 
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
@@ -69,9 +64,7 @@ if (is_numeric($safeName[0])) {
 }
 
 if ($grid == null) {
-
     print "Fetching remote data...\n\n";
-
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile, 'w+');
