@@ -103,7 +103,7 @@ class Mapcachefile extends \app\inc\Controller
                         $expire = ($def->ttl < 30) ? 30 : $def->ttl;
                         $auto_expire = $def->auto_expire ?: null;
                         $format = $def->format ?: "PNG";
-                        $cache = $def->cache ?: "disk";
+                        $cache = $def->cache ?: "sqlite";
                         $layers = $def->layers ? "," . $def->layers : "";
 
                         if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) {
@@ -178,7 +178,7 @@ class Mapcachefile extends \app\inc\Controller
             foreach ($layerArr as $k => $v) {
                 if (sizeof($v) > 0) {
 
-                    $cache = App::$param["mapCache"]["type"] ?: "disk";
+                    $cache = App::$param["mapCache"]["type"] ?: "sqlite";
 
                     ?>
                     <!-- <?php echo $k ?> -->
@@ -228,7 +228,7 @@ class Mapcachefile extends \app\inc\Controller
              */
             foreach ($groupArr as $k => $v) {
 
-                $cache = App::$param["mapCache"]["type"] ?: "disk";
+                $cache = App::$param["mapCache"]["type"] ?: "sqlite";
 
                 $unique = array_unique($groups[$k]);
                 foreach ($unique as $v2) {
