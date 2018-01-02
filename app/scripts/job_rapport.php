@@ -52,7 +52,7 @@ if (App::$param["notification"]) {
         'To' => implode(",", App::$param["notification"]["to"]),
         'From' => App::$param["notification"]["from"],
         'TrackOpens' => false,
-        'Subject' => "GC2Scheduler job with error",
+        'Subject' => "GC2Scheduler jobs with error. " . App::$param["notification"]["logUrl"],
         'HtmlBody' => "<html><head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\"/></head><body style=\"padding: 20px\">" . $html . "</body></html>",
     ];
 
