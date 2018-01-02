@@ -93,7 +93,7 @@ module.exports = function (grunt) {
                         'public/js/bootstrap3/js/bootstrap.min.js',
                         'public/js/hogan/hogan-2.0.0.js',
                         'public/js/div/jRespond.js',
-                        'public/js/common.js',
+                        'public/js/admin/common.js',
                         'public/js/MultiLevelPushMenu/jquery.multilevelpushmenu.js',
                         'public/apps/viewer/js/templates.js',
                         'public/apps/viewer/js/viewer.js',
