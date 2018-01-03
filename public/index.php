@@ -105,7 +105,6 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/user");
     Route::add("api/v1/legend", function () {
         Database::setDb(Input::getPath()->part(5));
-        Connection::$param["postgisschema"] = "trackunit";
     });
     Route::add("api/v1/baselayerjs");
     Route::add("api/v1/staticmap");
