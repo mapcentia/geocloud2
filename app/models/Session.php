@@ -66,20 +66,22 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = ($row['parentdb']) ?: $sUserID;
-            $_SESSION['subuser'] = ($row['parentdb']) ? $row['screenname'] : false;
+            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
             $_SESSION['postgisschema'] = $schema;
-
 
             $response['success'] = true;
             $response['message'] = "Session started";
             $response['screen_name'] = $_SESSION['screen_name'];
             $response['session_id'] = session_id();
             $response['subuser'] = $_SESSION['subuser'];
-            $response['subuser'] = $_SESSION['subuser'];
+
+            Database::setDb($response['screen_name']);
+            $settings_viewer = new \app\models\Setting();
+            $response['api_key'] = $settings_viewer->get()['data']->api_key;
 
         } else {
             session_unset();
