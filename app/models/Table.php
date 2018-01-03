@@ -455,7 +455,7 @@ class Table extends Model
                             $value = $value ?: "0";
                         }
                         if ($key == "tags") {
-                            $value = json_encode($value);
+                            $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                         }
                         // If Meta when update the existing object, so not changed values persist
                         if ($key == "meta") {
@@ -464,7 +464,7 @@ class Table extends Model
                             foreach ($value as $fKey => $fValue) {
                                 $rec[$fKey] = $fValue;
                             }
-                            $value = json_encode($rec);
+                            $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
 
                         }
                     }
@@ -1429,14 +1429,18 @@ class Table extends Model
                   WHEN 'MATERIALIZED VIEW' THEN (SELECT definition FROM pg_matviews WHERE schemaname = split_part(dep_name, '.', 1) AND matviewname = split_part(dep_name, '.', 2))
                 END AS \"definition\"
             FROM dep_recursive
-            --WHERE level > 0                  -- ignore the initial object (level 0)
+            --  WHERE level > 0                  -- ignore the initial object (level 0)
             GROUP BY dep_name               -- ignore multiple references to dependent objects, dropping them once is enough
             ORDER BY level, dep_name;   -- level descending: deepest dependency first
         ";
 
         $res = $this->prepare($sql);
+
+        // If rel is in public, when don't use schema qualified name
+        $relName = explode(".", $this->table)[0] == "public" ? explode(".", $this->table)[1] : $this->table;
+
         try {
-            $res->execute(["relName" => $this->table]);
+            $res->execute(["relName" => $relName]);
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
