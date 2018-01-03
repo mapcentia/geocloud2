@@ -47,13 +47,20 @@ class Layer extends \app\models\Table
         $response = [];
         $schemata = [];
         $layers = [];
+        $tags = [];
         $sqls = [];
 
         if ($query) {
             foreach (explode(",", $query) as $part) {
+                // Check for schema qualified rels
                 if (sizeof($bits = explode(".", $part)) > 1) {
                     $layers[] = $part;
-                } else {
+
+                } // Check for tags
+                elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
+                    $tags[] = explode(":", $part)[1];
+                } // Check for schema names
+                else {
                     $schemata[] = $part;
                 }
             }
@@ -69,6 +76,7 @@ class Layer extends \app\models\Table
             $schemaStr = "''" . implode("'',''", $schemata) . "''";
             $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY sort " . $order . ")";
         }
+
         if (sizeof($layers) > 0) {
 
             foreach ($layers as $layer) {
@@ -77,11 +85,24 @@ class Layer extends \app\models\Table
             }
 
         }
-        if (sizeof($schemata) == 0 && sizeof($layers) == 0) {
+
+        if (sizeof($tags) > 0) {
+
+            foreach ($tags as $tag) {
+                $tag = urldecode($tag);
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags::jsonb ? ''{$tag}'' AND {$where}','tags::jsonb  ? ''{$tag}'' AND {$where}') ORDER BY sort " . $order . ")";
+            }
+
+        }
+
+        if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
             $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort " . $order . ")";
         }
 
         $sql = implode(" UNION ALL ", $sqls);
+
+        //print_r($sqls);
+        //die();
 
         try {
             $res = $this->prepare($sql);
@@ -92,6 +113,7 @@ class Layer extends \app\models\Table
             $response['code'] = 401;
             return $response;
         }
+
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
             $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
@@ -113,7 +135,7 @@ class Layer extends \app\models\Table
             }
             foreach ($row as $key => $value) {
                 // Set empty strings to NULL
-                $value = $value == "" ?  null : $value;
+                $value = $value == "" ? null : $value;
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
                     if (isset($def->geotype) && $def->geotype != "Default") {
@@ -220,6 +242,13 @@ class Layer extends \app\models\Table
 
         }
         $response['data'] = isset($response['data']) ? $response['data'] : array();
+
+        // Remove dups
+        $response['data'] = array_unique($response['data'], SORT_REGULAR);
+
+        // Reindex array
+        $response['data'] = array_values($response['data']);
+
         if (!isset($this->PDOerror)) {
             $response['auth'] = $auth ?: false;
             $response['success'] = true;
@@ -236,7 +265,7 @@ class Layer extends \app\models\Table
      * Secure. Using now user input.
      * @return array
      */
-    public function getSchemas() : array
+    public function getSchemas(): array
     {
         $response = [];
         $arr = [];
