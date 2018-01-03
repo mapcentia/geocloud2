@@ -291,8 +291,8 @@ class Mapcachefile extends \app\inc\Controller
                 <resample_mode>bilinear</resample_mode>
                 <format allow_client_override="true">PNG</format>
                 <maxsize>4096</maxsize>
-
             </service>
+
             <service type="wmts" enabled="true"/>
             <service type="tms" enabled="true"/>
             <service type="kml" enabled="true"/>
