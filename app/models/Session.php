@@ -44,7 +44,7 @@ class Session extends Model
      * @param string $schema
      * @return array
      */
-    public function start(string $sUserID, string $pw, string $schema = "public"): array
+    public function start(string $sUserID, string $pw, $schema = "public"): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
