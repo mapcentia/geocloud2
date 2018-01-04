@@ -346,11 +346,13 @@ function cleanUp($success = 0)
     }
 
     // lasttimestamp
-    $res = $job->prepare("UPDATE jobs SET lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
-    try {
-        $res->execute(["id" => $jobId]);
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
+    if ($success) {
+        $res = $job->prepare("UPDATE jobs SET lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
+        try {
+            $res->execute(["id" => $jobId]);
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+        }
     }
 
     // Drop temp table
