@@ -163,7 +163,7 @@ class Elasticsearch extends \app\inc\Controller
         if (Input::getMethod() == "get" && Input::getQueryString()) {
 
             $q = Input::getQueryString();
-            $hasBody = false; // Flag it string query
+            $hasBody = false; // Flag it as string query
 
         }
 
@@ -183,7 +183,7 @@ class Elasticsearch extends \app\inc\Controller
             $q = "";
         }
 
-        $arr = array();
+        $arr = [];
 
         $indices = explode(",", $r["indices"]);
 
