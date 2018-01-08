@@ -88,6 +88,19 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
+    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]",
+
+        function () {
+            $db = Route::getParam("user");
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        }
+
+    );
+
     Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
@@ -171,7 +184,6 @@ if (Input::getPath()->part(1) == "api") {
 
     foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
         include_once($filename);
-
     }
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {

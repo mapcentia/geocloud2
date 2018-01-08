@@ -1,5 +1,7 @@
 <?php
+use \app\conf\App;
 use \app\inc\Log;
+use \app\inc\Util;
 use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
@@ -44,6 +46,14 @@ if ($timeSlice != "all") {
 $postgisObject = new \app\inc\Model();
 
 $geometryColumnsObj = new \app\controllers\Layer();
+
+
+foreach (App::$param["trustedAddresses"] as $address) {
+    if (Util::ipInRange(Util::clientIp(), $address)) {
+        $trusted = true;
+        break;
+    }
+}
 
 function microtime_float()
 {
@@ -92,8 +102,8 @@ if ($HTTP_RAW_POST_DATA) {
     //makeExceptionReport($HTTP_RAW_POST_DATA);
 
     // HACK. MapInfo 15 sends invalid XML with newline \n and double xmlns:wfs namespace. So we strip those
-    $HTTP_RAW_POST_DATA = str_replace("\\n"," ", $HTTP_RAW_POST_DATA);
-    $HTTP_RAW_POST_DATA = str_replace("xmlns:wfs=\"http://www.opengis.net/wfs\""," ", $HTTP_RAW_POST_DATA);
+    $HTTP_RAW_POST_DATA = str_replace("\\n", " ", $HTTP_RAW_POST_DATA);
+    $HTTP_RAW_POST_DATA = str_replace("xmlns:wfs=\"http://www.opengis.net/wfs\"", " ", $HTTP_RAW_POST_DATA);
 
     $status = $unserializer->unserialize($HTTP_RAW_POST_DATA);
     $arr = $unserializer->getUnserializedData();
@@ -823,6 +833,7 @@ function doParse($arr)
     global $parentUser;
     global $transaction;
     global $db;
+    global $trusted;
 
     $serializer_options = array(
         'indent' => '  ',
@@ -939,13 +950,17 @@ function doParse($arr)
                         //TODO check
                         //$field = "";
                         //$value = "";
+
                         // Start HTTP basic authentication
-                        $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
-                        if ($auth == "Write" OR $auth == "Read/write") {
-                            $HTTP_FORM_VARS["TYPENAME"] = $typeName;
-                            include('inc/http_basic_authen.php');
+                        if (!$trusted) {
+                            $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
+                            if ($auth == "Write" OR $auth == "Read/write") {
+                                $HTTP_FORM_VARS["TYPENAME"] = $typeName;
+                                include('inc/http_basic_authen.php');
+                            }
                         }
                         // End HTTP basic authentication
+
                     }
                 }
             }
@@ -1023,11 +1038,14 @@ function doParse($arr)
                 $forSql2['values'] = $values;
                 $forSql2['wheres'][$fid] = parseFilter($hey['Filter'], $hey['typeName']);
                 $fid++;
+
                 // Start HTTP basic authentication
-                $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                if ($auth == "Write" OR $auth == "Read/write") {
-                    $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                    include('inc/http_basic_authen.php');
+                if (!$trusted) {
+                    $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
+                    if ($auth == "Write" OR $auth == "Read/write") {
+                        $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
+                        include('inc/http_basic_authen.php');
+                    }
                 }
                 // End HTTP basic authentication
             }
@@ -1067,11 +1085,14 @@ function doParse($arr)
                 if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                     makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                 }
+
                 // Start HTTP basic authentication
-                $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                if ($auth == "Write" OR $auth == "Read/write") {
-                    $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                    include('inc/http_basic_authen.php');
+                if (!$trusted) {
+                    $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
+                    if ($auth == "Write" OR $auth == "Read/write") {
+                        $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
+                        include('inc/http_basic_authen.php');
+                    }
                 }
                 // End HTTP basic authentication
             }
@@ -1345,7 +1366,9 @@ function doParse($arr)
         $results['delete'] = 0;
         makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
     }
+
     // InsertResult
+    $numOfInserts = 0;
     if (sizeof($results['insert']) > 0) {
         if (isset($forSql['tables'])) reset($forSql['tables']);
         echo '<wfs:InsertResult>';
@@ -1353,7 +1376,14 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql['tables'])) echo current($forSql['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-            echo $row['gid'];
+
+            if ($row['gid']) {
+                echo $row['gid'];
+                $numOfInserts++;
+            } else {
+                echo "nan";
+            }
+
             echo '"/>';
             if (isset($row["gc2_workflow"])) {
                 $workflowData[] = array(
@@ -1372,7 +1402,9 @@ function doParse($arr)
         }
         echo '</wfs:InsertResult>';
     }
+
     // UpdateResult
+    $numOfUpdates = 0;
     if (sizeof($results['update']) > 0) {
         if (isset($forSql2['tables'])) reset($forSql2['tables']);
         echo '<wfs:UpdateResult>';
@@ -1380,7 +1412,14 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql2['tables'])) echo current($forSql2['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-            echo $row['gid'];
+
+            if ($row['gid']) {
+                echo $row['gid'];
+                $numOfUpdates++;
+            } else {
+                echo "nan";
+            }
+
             echo '" />';
             if (isset($row["gc2_workflow"])) {
                 $workflowData[] = array(
@@ -1398,11 +1437,22 @@ function doParse($arr)
             if (isset($forSql2['tables'])) next($forSql2['tables']);
         }
         echo '</wfs:UpdateResult>';
-    }// deleteResult
+    }
+
+    // deleteResult
+    $numOfDeletes = 0;
     if (sizeof($results['delete']) > 0) {
         if (isset($forSql3['tables'])) reset($forSql3['tables']);
         foreach ($results['delete'] as $res) {
             $row = $postgisObject->fetchRow($res);
+
+            if ($row['gid']) {
+                echo $row['gid'];
+                $numOfDeletes++;
+            } else {
+                echo "nan";
+            }
+
             if (isset($row["gc2_workflow"])) {
                 $workflowData[] = array(
                     "schema" => $postgisschema,
@@ -1425,13 +1475,13 @@ function doParse($arr)
     if (isset($results)) foreach ($results as $operation => $result) {
 
         if ($operation == "insert") {
-            echo "<wfs:totalInserted>" . sizeof($result) . "</wfs:totalInserted>";
+            echo "<wfs:totalInserted>" . $numOfInserts . "</wfs:totalInserted>";
         }
         if ($operation == "update") {
-            echo "<wfs:totalUpdated>" . sizeof($result) . "</wfs:totalUpdated>";
+            echo "<wfs:totalUpdated>" . $numOfUpdates . "</wfs:totalUpdated>";
         }
         if ($operation == "delete") {
-            echo "<wfs:totalDeleted>" . sizeof($result) . "</wfs:totalDeleted>";
+            echo "<wfs:totalDeleted>" . $numOfDeletes . "</wfs:totalDeleted>";
         }
     }
     echo '</wfs:TransactionSummary>';

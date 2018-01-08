@@ -474,7 +474,7 @@ class XML_Parser extends PEAR
         if (is_resource($fp)) {
             $this->fp = $fp;
             return true;
-        } elseif (eregi('^[a-z]+://', substr($fp, 0, 10))) {
+        } elseif (preg_match("/^[a-z]+:\/\//", substr($fp, 0, 10))) {
             // see if it's an absolute URL (has a scheme at the beginning)
             return $this->setInputFile($fp);
         } elseif (file_exists($fp)) {
