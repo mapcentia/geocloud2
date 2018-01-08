@@ -3,10 +3,21 @@
 namespace app\inc;
 
 use \app\inc\Util;
+use phpDocumentor\Reflection\Types\Null_;
 
 class Route
 {
-    static public function add($uri, $func = "", $silent = false)
+    /**
+     * @var array
+     */
+    static $params;
+
+    /**
+     * @param string $uri
+     * @param \Closure|null $func
+     * @param bool $silent
+     */
+    static public function add(string $uri, \Closure $func = null, bool $silent = false)
     {
         $signatureMatch = false;
         $e = [];
@@ -18,35 +29,38 @@ class Route
         $routeSignature = explode("/", $uri);
         $requestSignature = explode("/", $requestUri);
 
-   /*     if (sizeof($requestSignature) > sizeof($routeSignature)) {
-            $signatureMatch = false;
-        } else {*/
+        /*     if (sizeof($requestSignature) > sizeof($routeSignature)) {
+                 $signatureMatch = false;
+             } else {*/
 
 
-            for ($i = 0; $i < sizeof($routeSignature); $i++) {
+        for ($i = 0; $i < sizeof($routeSignature); $i++) {
 
-                if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                    $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
-                    $signatureMatch = $requestSignature[$i] ? true : false;
+            if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
+                $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
+                $signatureMatch = $requestSignature[$i] ? true : false;
 
-                } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                    $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
-                } else {
-                    $e[] = $requestSignature[$i];
-                    $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
-                }
-
-
-                if (!$signatureMatch) {
-                    break;
-                }
+            } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
+                $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+            } else {
+                $e[] = $requestSignature[$i];
+                $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
             }
-      //  }
+
+            if (!$signatureMatch) {
+                break;
+            }
+        }
+        //  }
 
         if ($signatureMatch) {
+
+            self::$params = $r;
+
             if ($func) {
                 $func($r);
             }
+
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
             $uri = implode($e, "/");
             $n = sizeof($e);
@@ -87,10 +101,24 @@ class Route
         }
     }
 
+    /**
+     *
+     */
     static public function miss()
     {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 Not Found</h1>";
         exit();
     }
+
+    /**
+     * @param string $parameter
+     * @return string|null
+     */
+    static public function getParam(string $parameter)
+    {
+        return self::$params[$parameter];
+    }
+
+
 }
