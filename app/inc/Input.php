@@ -1,37 +1,65 @@
 <?php
+
 namespace app\inc;
 
 class Input
 {
+    /**
+     * @var
+     */
     static $params;
 
     /**
      *
      * @param array $arr
      */
-    public static function setParams(array $arr){
+    public static function setParams(array $arr)
+    {
         self::$params = $arr;
     }
 
-    public static function getPath()
+    /**
+     * @return GetPart
+     */
+    public static function getPath(): GetPart
     {
         $request = explode("/", strtok($_SERVER["REQUEST_URI"], '?'));
         $obj = new GetPart($request);
         return $obj;
     }
 
-    public static function getMethod()
+    /**
+     * @return string
+     */
+    public static function getMethod(): string
     {
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
-    public static function getBody()
+    /**
+     * @return string
+     */
+    public static function getApiKey(): string
     {
-        return file_get_contents('php://input');;
+        return $_SERVER['HTTP_GC2_API_KEY'];
     }
 
-    public static function get($key = null, $raw = false)
+    /**
+     * @return string
+     */
+    public static function getBody(): string
     {
+        return file_get_contents('php://input');
+    }
+
+    /**
+     * @param string|null $key
+     * @param bool $raw
+     * @return array|mixed|string
+     */
+    public static function get(string $key = null, bool $raw = false)
+    {
+
         if (isset(self::$params)) {
 
             if (isset($key)) {
@@ -67,15 +95,21 @@ class Input
             else
                 return $query;
         }
+
     }
 
-    static function parseQueryString($str, $raw)
+    /**
+     * @param string $str
+     * @param bool $raw
+     * @return array
+     */
+    static function parseQueryString(string $str, bool $raw = false): array
     {
+        $op = [];
         $str = str_replace("+", "__gc2_plus__", $str);
         if ($raw) {
             return array($str => false);
         }
-        $op = array();
         $pairs = explode("&", $str);
         foreach ($pairs as $pair) {
             list($k, $v) = array_map("urldecode", explode("=", $pair));
@@ -85,21 +119,39 @@ class Input
     }
 }
 
+/**
+ * Class GetPart
+ * @package app\inc
+ */
 class GetPart
 {
+    /**
+     * @var array
+     */
     private $parts;
 
-    function __construct($request)
+    /**
+     * GetPart constructor.
+     * @param array $request
+     */
+    function __construct(array $request)
     {
         $this->parts = $request;
     }
 
-    function part($e)
+    /**
+     * @param string $e
+     * @return string|null
+     */
+    function part(string $e)
     {
         return $this->parts[$e];
     }
 
-    function parts()
+    /**
+     * @return array
+     */
+    function parts():array
     {
         return $this->parts;
     }
