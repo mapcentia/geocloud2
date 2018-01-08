@@ -3,13 +3,10 @@
 namespace app\api\v2;
 
 use \app\inc\Input;
-use \app\inc\Util;
 use \app\inc\Route;
-use \app\conf\App;
 use app\models\Layer;
 use \GuzzleHttp\Client;
 use \mapcentia;
-use PHPUnit\Runner\Exception;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/phpgeometry_class_namespace.php");
@@ -34,14 +31,16 @@ class Feature extends \app\inc\Controller
     private $field;
     private $key;
 
+    /**
+     * Feature constructor.
+     */
     function __construct()
     {
 
         parent::__construct();
 
+        // Check privileges of user on layer
         try {
-            //die($this->sUser);
-            //die(Input::getApiKey());
             $response = $this->ApiKeyAuthLayer(Route::getParam("layer"), $this->sUser, true, Input::getApiKey(), [Route::getParam("layer")]);
         } catch (\PDOException $e) {
             die($e->getMessage());
@@ -51,9 +50,8 @@ class Feature extends \app\inc\Controller
             $this->notAuth = $response;
         }
 
-        //
+        // Set properties
         $this->wfsUrl = "http://127.0.0.1/wfs/%s/%s/%s";
-
         $this->sourceSrid = Route::getParam("srid");
         $this->db = Route::getParam("user");
         $this->schema = explode(".", Route::getParam("layer"))[0];
@@ -80,6 +78,9 @@ class Feature extends \app\inc\Controller
         }
     }
 
+    /**
+     * @return array
+     */
     public function post_index(): array
     {
         // Return if not auth
@@ -106,16 +107,16 @@ class Feature extends \app\inc\Controller
 
             // Create the Insert section
             $xml .= "<wfs:Insert>\n";
-            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/mydb\">\n";
+            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/{$this->db}\">\n";
 
             try {
-                // Get WKT from GeoJSON feature and catch error if geom is missing
+                // Get GML from WKT geom and catch error if geom is missing
                 $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<feature:{$this->geom}>\n";
                 $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
                 $xml .= "</feature:{$this->geom}>\n";
             } catch (\Exception $e) {
-
+                // Pass. Geom is not required
             }
 
             // Create the properties
@@ -132,6 +133,9 @@ class Feature extends \app\inc\Controller
         return $this->commit($xml);
     }
 
+    /**
+     * @return array
+     */
     public function put_index(): array
     {
         // Return if not auth
@@ -147,8 +151,6 @@ class Feature extends \app\inc\Controller
             return $response;
         }
 
-        //print_r($features);
-
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
@@ -159,9 +161,9 @@ class Feature extends \app\inc\Controller
             $props = $feature["properties"];
 
             // Create the Insert section
-            $xml .= "<wfs:Update typeName=\"mydb:{$this->table}\">\n";
+            $xml .= "<wfs:Update typeName=\"{$this->db}:{$this->table}\">\n";
 
-            // Get WKT from GeoJSON feature and catch error if geom is missing
+            // Get GML from WKT geom and catch error if geom is missing
             try {
                 $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<wfs:Property>\n";
@@ -171,7 +173,7 @@ class Feature extends \app\inc\Controller
                 $xml .= "</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
             } catch (\Exception $e) {
-                //die($e->getMessage());
+                // Pass. Geom is not required
             }
 
             // Create the properties
@@ -187,6 +189,7 @@ class Feature extends \app\inc\Controller
             $xml .= "<ogc:FeatureId fid=\"{$this->table}." . $props[$this->field] . "\"/>";
             $xml .= "</ogc:Filter>\n";
 
+            // Close update
             $xml .= "</wfs:Update>\n";
 
         }
@@ -195,6 +198,9 @@ class Feature extends \app\inc\Controller
         return $this->commit($xml);
     }
 
+    /**
+     * @return array
+     */
     public function delete_index(): array
     {
         // Return if not auth
@@ -205,7 +211,7 @@ class Feature extends \app\inc\Controller
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
-        $xml.="<wfs:Delete typeName=\"mydb:test\" xmlns:mydb=\"http://mapcentia.com/mydb\">";
+        $xml.="<wfs:Delete typeName=\"{$this->db}:test\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
         $xml.="<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
         $xml.="<ogc:FeatureId fid=\"test.{$this->key}\"/>";
         $xml.="</ogc:Filter>";
@@ -214,12 +220,16 @@ class Feature extends \app\inc\Controller
         $xml .= "</wfs:Transaction>\n";
 
         return $this->commit($xml);
-
     }
 
-    private function commit($xml)
+    /**
+     * @param $xml
+     * @return array
+     */
+    private function commit(string $xml) : array
     {
         //echo $xml;
+        $response = [];
 
         $unserializer = new \XML_Unserializer(array(
             'parseAttributes' => TRUE,
