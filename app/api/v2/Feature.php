@@ -9,6 +9,7 @@ use \app\conf\App;
 use app\models\Layer;
 use \GuzzleHttp\Client;
 use \mapcentia;
+use PHPUnit\Runner\Exception;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/phpgeometry_class_namespace.php");
@@ -29,6 +30,7 @@ class Feature extends \app\inc\Controller
     private $db;
     private $schema;
     private $table;
+    private $geom;
     private $field;
     private $key;
 
@@ -56,6 +58,7 @@ class Feature extends \app\inc\Controller
         $this->db = Route::getParam("user");
         $this->schema = explode(".", Route::getParam("layer"))[0];
         $this->table = explode(".", Route::getParam("layer"))[1];
+        $this->geom = explode(".", Route::getParam("layer"))[2];
         $this->key = Route::getParam("key");
 
         $layer = new Layer();
@@ -101,16 +104,19 @@ class Feature extends \app\inc\Controller
             // Get properties
             $props = $feature["properties"];
 
-            // Get WKT from GeoJSON feature
-            // TODO exception handling
-            $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
-
             // Create the Insert section
             $xml .= "<wfs:Insert>\n";
             $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/mydb\">\n";
-            $xml .= "<feature:the_geom>\n";
-            $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
-            $xml .= "</feature:the_geom>\n";
+
+            try {
+                // Get WKT from GeoJSON feature and catch error if geom is missing
+                $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
+                $xml .= "<feature:{$this->geom}>\n";
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= "</feature:{$this->geom}>\n";
+            } catch (\Exception $e) {
+
+            }
 
             // Create the properties
             foreach ($props as $elem => $prop) {
@@ -141,6 +147,8 @@ class Feature extends \app\inc\Controller
             return $response;
         }
 
+        //print_r($features);
+
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
@@ -150,20 +158,21 @@ class Feature extends \app\inc\Controller
             // Get properties
             $props = $feature["properties"];
 
-            // Get WKT from GeoJSON feature
-            // TODO exception handling
-            $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
-
             // Create the Insert section
             $xml .= "<wfs:Update typeName=\"mydb:{$this->table}\">\n";
 
-            // The geom
-            $xml .= "<wfs:Property>\n";
-            $xml .= "<wfs:Name>the_geom</wfs:Name>\n";
-            $xml .= "<wfs:Value>\n";
-            $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
-            $xml .= "</wfs:Value>\n";
-            $xml .= "</wfs:Property>\n";
+            // Get WKT from GeoJSON feature and catch error if geom is missing
+            try {
+                $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
+                $xml .= "<wfs:Property>\n";
+                $xml .= "<wfs:Name>{$this->geom}</wfs:Name>\n";
+                $xml .= "<wfs:Value>\n";
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= "</wfs:Value>\n";
+                $xml .= "</wfs:Property>\n";
+            } catch (\Exception $e) {
+                //die($e->getMessage());
+            }
 
             // Create the properties
             foreach ($props as $elem => $prop) {
@@ -211,14 +220,13 @@ class Feature extends \app\inc\Controller
     private function commit($xml)
     {
         //echo $xml;
+
         $unserializer = new \XML_Unserializer(array(
             'parseAttributes' => TRUE,
             'typeHints' => FALSE
         ));
 
         $url = sprintf($this->wfsUrl, $this->db, $this->schema, $this->sourceSrid);
-
-        //die($url);
 
         // Init the Guzzle client
         $client = new Client([

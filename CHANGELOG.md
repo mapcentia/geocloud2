@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - New version 2 of the Elasticsearch API, which acts as the native Elasticsearch search API. Including GET with body.
 - New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Support GET with body.
+- New REST "Feature" API, which wraps the WFS-T API in a simple GeoJSON based REST service. Made for JavaScript clients.
 - New modern dark theme for Admin.
 - This change log.
 
@@ -22,7 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Better handling of exceptions in REST API.
 - New routing framework. Routes are now added with full URI paths.
 - Better Meta API. Can now be called with tags, multiple relation names and combos.
-- Extension mechanism for the REST API. Just drop in code and it works.
+- Extension mechanism for the REST API. Just drop in code.
 - Admin URI is changed from /store to /admin.
 - Upgraded to QGIS-server 2.18 LTR. Upload of 2.14 QGS files will work.
 - SQLite3 is now default cache type for MapCache. Each layers gets a db.
