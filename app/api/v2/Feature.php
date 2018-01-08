@@ -160,7 +160,9 @@ class Feature extends \app\inc\Controller
             // The geom
             $xml .= "<wfs:Property>\n";
             $xml .= "<wfs:Name>the_geom</wfs:Name>\n";
+            $xml .= "<wfs:Value>\n";
             $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+            $xml .= "</wfs:Value>\n";
             $xml .= "</wfs:Property>\n";
 
             // Create the properties
