@@ -160,6 +160,14 @@ class Feature extends \app\inc\Controller
             // Get properties
             $props = $feature["properties"];
 
+            // Check if property with primary key is missing
+            if (!isset($props[$this->field])){
+                $response['success'] = false;
+                $response['message'] = "Property with primary key is missing from at least one GeoJSON feature";
+                $response['code'] = 500;
+                return $response;
+            }
+
             // Create the Insert section
             $xml .= "<wfs:Update typeName=\"{$this->db}:{$this->table}\">\n";
 
