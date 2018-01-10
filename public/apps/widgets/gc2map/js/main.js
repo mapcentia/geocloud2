@@ -181,8 +181,23 @@ MapCentia = function (globalId) {
             }
             return false;
         }
+        var _layers = cloud.map._layers, unordered={};
+
+        for (var key in _layers) {
+            if (_layers.hasOwnProperty(key)) {
+                if (_layers[key].baseLayer !== true && typeof _layers[key]._tiles === "object") {
+                    unordered[_layers[key].options.zIndex] = _layers[key].id;
+                }
+            }
+        }
+
+        var ordered = [];
+        Object.keys(unordered).sort().forEach(function(key) {
+            ordered.push(unordered[key]);
+        });
+
         $.ajax({
-            url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + cloud.getVisibleLayers(false),
+            url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + ordered.join(";"),
             dataType: 'jsonp',
             jsonp: 'jsonp_callback',
             success: function (response) {
@@ -273,13 +288,14 @@ MapCentia = function (globalId) {
                             zIndex = metaData.data[i].sort_id + 999999;
                         }
                         cloud.setZIndexOfLayer(layers[layerName][0], zIndex);
+                        layers[layerName][1] = zIndex;
                         if (metaData.data[i].baselayer) {
                             text = (metaData.data[i].f_table_title === null || metaData.data[i].f_table_title === "") ? metaData.data[i] : metaData.data[i].f_table_title;
                             $("#base-layer-list-" + id).append(
                                 "<li><a href=\"javascript:void(0)\" onclick=\"gc2map.maps['" + id + "'].setBaseLayer('" + metaData.data[i].f_table_schema + "." + metaData.data[i].f_table_name + "')\">" + text + "</a></li>"
                             );
                         }
-                        addLegend();
+                        //addLegend();
                     }
                     ready.push(layer);
                 }
@@ -422,6 +438,7 @@ MapCentia = function (globalId) {
                     setBaseLayer(defaults.baseLayers[0].id);
                 }
                 $("#loadscreen-" + id).hide();
+                addLegend();
             } else {
                 setTimeout(function () {
                     poll();
