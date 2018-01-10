@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Some rearrangement of buttons.
 - "Private" tags with prefix "_". These will not be added to CKAN.
 - HTML title changed to "GC2 Admin"
+- MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
