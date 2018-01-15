@@ -12,9 +12,8 @@ class GmlParser extends \app\inc\Model
 		parent::__construct();
 	
 
-	
 		include_once("libs/class_xml_check.php");
-		$check = new XML_check();
+		$check = new \XML_check();
 		if($check->check_string($gmlSource)) {
 			print("GML is well-formed\n");
 			//print("Elements      : ".$check->get_xml_elements());
@@ -31,7 +30,7 @@ class GmlParser extends \app\inc\Model
 		}
 
 		$this -> gmlSource = $gmlSource;
-		$this -> gmlCon = new gmlConverter;
+		$this -> gmlCon = new \mapcentia\gmlConverter();
 		require_once("XML/Unserializer.php");
 		$unserializer_options = array ('parseAttributes' => TRUE);
 
@@ -89,7 +88,7 @@ class GmlParser extends \app\inc\Model
 						$this -> arr['fields'][] = $fieldsStr;
 						$this -> arr['values'][] = $valuesStr;
 						$this -> arr['geom'][] = current($wktArr[0]);
-						$this -> arr['srid'][] = gmlConverter::parseEpsgCode(current($wktArr[1]));
+						$this -> arr['srid'][] = \mapcentia\gmlConverter::parseEpsgCode(current($wktArr[1]));
 
 						// Reset vars
 						$fields = array();

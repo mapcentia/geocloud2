@@ -72,7 +72,7 @@ class XML_check {
   function check_url($url) {
     $this->_init();
     $this->parser = xml_parser_create_ns("",'^');
-    xml_set_object($this->parser,&$this);
+    xml_set_object($this->parser,$this);
     xml_parser_set_option($this->parser, XML_OPTION_CASE_FOLDING, false);
     xml_set_element_handler($this->parser, "_startElement", "_endElement");
     xml_set_character_data_handler($this->parser,"_data");
@@ -123,7 +123,7 @@ class XML_check {
   function check_string($xml) {
     $this->_init();
     $this->parser = xml_parser_create_ns("",'^');
-    xml_set_object($this->parser,&$this);
+    xml_set_object($this->parser,$this);
     xml_parser_set_option($this->parser, XML_OPTION_CASE_FOLDING, false);
     xml_set_element_handler($this->parser, "_startElement", "_endElement");
     xml_set_character_data_handler($this->parser,"_data");
@@ -141,8 +141,4 @@ class XML_check {
   
   
 }
-
-
-
-?>
 
