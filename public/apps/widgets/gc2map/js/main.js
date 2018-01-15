@@ -179,6 +179,8 @@ MapCentia = function (globalId) {
             }
             return false;
         }
+
+        // Order legend items by sort id
         var _layers = cloud.map._layers, unordered={};
 
         for (var key in _layers) {
@@ -189,15 +191,12 @@ MapCentia = function (globalId) {
             }
         }
 
-        console.log(unordered);
-
         var ordered = [];
         Object.keys(unordered).sort().forEach(function(key) {
             ordered.push(unordered[key]);
         });
 
-        console.log(ordered);
-
+        // Get legend itmes
         $.ajax({
             url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + ordered.join(";"),
             dataType: 'jsonp',
