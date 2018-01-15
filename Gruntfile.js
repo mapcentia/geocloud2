@@ -85,6 +85,14 @@ module.exports = function (grunt) {
                         'public/js/leaflet/leaflet-0.7.7-src.js',
                         'public/js/leaflet/leaflet-plugins-all.js'
                     ],
+                    'public/js/leaflet1/leaflet-1.2.0-all.js': [
+                        'public/js/leaflet1/leaflet.js',
+                        'public/js/leaflet1/plugins/Leaflet.Draw/leaflet.draw.js',
+                        'public/js/leaflet1/plugins/Leaflet.Editable/src/Leaflet.Editable.js',
+                        'public/js/leaflet1/plugins/Leaflet.GraphicScale/Leaflet.GraphicScale.min.js',
+                        'public/js/leaflet1/plugins/Leaflet.Locate/dist/L.Control.Locate.min.js',
+                        'public/js/leaflet1/plugins/Leaflet.Toolbar/dist/leaflet.toolbar.min.js'
+                    ],
                     // geocloud.js
                     'public/api/v3/js/geocloud.min.js': ['public/api/v3/js/geocloud.js'],
                     // The Viewer
