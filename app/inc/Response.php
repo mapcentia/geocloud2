@@ -13,10 +13,10 @@ class Response
         $callback = Input::get('jsonp_callback') ?: Input::get('callback');
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');
-            return $callback . '(' . json_encode($response) . ');';
+            return $callback . '(' . json_encode($response, JSON_UNESCAPED_UNICODE) . ');';
         } else {
             header('Content-type: application/json; charset=utf-8');
-            return json_encode($response);
+            return json_encode($response, JSON_UNESCAPED_UNICODE);
         }
     }
 
