@@ -47,7 +47,7 @@ $postgisObject = new \app\inc\Model();
 
 $geometryColumnsObj = new \app\controllers\Layer();
 
-
+$trusted = false;
 foreach (App::$param["trustedAddresses"] as $address) {
     if (Util::ipInRange(Util::clientIp(), $address)) {
         $trusted = true;
@@ -199,11 +199,13 @@ $featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
 $bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
 $resultType = $HTTP_FORM_VARS["RESULTTYPE"];
 
+
 // Start HTTP basic authentication
-//if(!$_SESSION["oauth_token"]) {
-$auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "authentication");
-if ($auth == "Read/write") {
-    include('inc/http_basic_authen.php');
+if (!$trusted) {
+    $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "authentication");
+    if ($auth == "Read/write") {
+        include('inc/http_basic_authen.php');
+    }
 }
 // End HTTP basic authentication
 
@@ -379,6 +381,7 @@ function doQuery($queryType)
     global $fieldConfArr;
     global $geometryColumnsObj;
     global $specialChars;
+    global $trusted;
 
     if (!$srs) {
         makeExceptionReport("You need to specify a srid in the URL.");
@@ -388,7 +391,9 @@ function doQuery($queryType)
         case "Select":
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
-                include_once("inc/http_basic_authen_subuser.php");
+                if (!$trusted) {
+                    include_once("inc/http_basic_authen_subuser.php");
+                }
                 $tableObj = new table($postgisschema . "." . $table);
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
                 $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom", "fieldconf"));
