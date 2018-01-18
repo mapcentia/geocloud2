@@ -4,12 +4,13 @@ namespace app\api\v2;
 
 use \app\inc\Input;
 use \app\inc\Route;
-use app\models\Layer;
+use \app\models\Database;
+use \app\models\Layer;
 use \GuzzleHttp\Client;
-use \mapcentia;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/phpgeometry_class_namespace.php");
+include_once(__DIR__ . "../../../libs/gmlparser.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
 
@@ -53,7 +54,7 @@ class Feature extends \app\inc\Controller
         // Set properties
         $this->wfsUrl = "http://127.0.0.1/wfs/%s/%s/%s";
         $this->sourceSrid = Route::getParam("srid");
-        $this->db = Route::getParam("user");
+        $this->db = Database::getDb();
         $this->schema = explode(".", Route::getParam("layer"))[0];
         $this->table = explode(".", Route::getParam("layer"))[1];
         $this->geom = explode(".", Route::getParam("layer"))[2];
@@ -63,7 +64,7 @@ class Feature extends \app\inc\Controller
         $this->field = $layer->getAll(Route::getParam("layer"), true)["data"][0]["pkey"];
 
         // Init geometryfactory
-        $this->geometryfactory = new mapcentia\geometryfactory();
+        $this->geometryfactory = new \mapcentia\geometryfactory();
 
         // Set transaction xml header
         $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.0.0\"
@@ -74,8 +75,86 @@ class Feature extends \app\inc\Controller
     public function get_index()
     {
         if ($this->notAuth) {
-            return $this->notAuth;
+           return $this->notAuth;
         }
+
+        $response = [];
+
+        $unserializer = new \XML_Unserializer(array(
+            'parseAttributes' => false,
+            'typeHints' => false
+        ));
+
+        $url = sprintf($this->wfsUrl, $this->db, $this->schema, $this->sourceSrid);
+
+        // Init the Guzzle client
+        $client = new Client([
+            'timeout' => 10.0,
+        ]);
+
+        // GET the transaction
+        try {
+            $res = $client->get($url . "?request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 500;
+            return $response;
+        }
+
+        $xml = $res->getBody();
+
+        // Unserialize the transaction response
+        $status = $unserializer->unserialize($xml);
+
+        // Check if transaction response could be unserialized
+        if (gettype($status) != "boolean" && $status !== true) {
+            $response['success'] = false;
+            $response['message'] = "Could not unserialize transaction response";
+            $response['code'] = 500;
+            return $response;
+        }
+
+        // Get unserialized data
+        $arr = $unserializer->getUnserializedData();
+
+        // Check if WFS returned a service exception
+        if (isset($arr["ServiceException"])) {
+            $response['success'] = false;
+            $response['message'] = $arr;
+            $response['code'] = "500";
+            return $response;
+        }
+
+        // Convert GML to WKT
+        $gmlConverter = new \mapcentia\gmlConverter();
+        $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
+
+        // Convert WKT to GeoJSON
+        try {
+            $json  = \geoPHP::load($wkt, 'wkt')->out('json');
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = "Could not create GeoJSON";
+            $response['code'] = "500";
+        }
+
+        foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {
+            if (!is_array($prop)){
+                $props[ explode(":", $key)[1]] = $prop;
+            }
+        }
+
+        $jArr = [
+            "type"=>"FeatureCollection",
+            "features" => [[
+                "type" => "Feature",
+                "properties" => $props,
+                "geometry" => json_decode($json)
+            ]]
+        ];
+
+        return $jArr;
     }
 
     /**
@@ -219,9 +298,9 @@ class Feature extends \app\inc\Controller
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
-        $xml.="<wfs:Delete typeName=\"{$this->db}:test\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
+        $xml.="<wfs:Delete typeName=\"{$this->db}:{$this->table}\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
         $xml.="<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
-        $xml.="<ogc:FeatureId fid=\"test.{$this->key}\"/>";
+        $xml.="<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
         $xml.="</ogc:Filter>";
         $xml.="</wfs:Delete>";
 
