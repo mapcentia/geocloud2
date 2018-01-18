@@ -39,7 +39,7 @@ class Input
     /**
      * @return string
      */
-    public static function getApiKey(): string
+    public static function getApiKey()
     {
         return $_SERVER['HTTP_GC2_API_KEY'];
     }
