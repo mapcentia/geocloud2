@@ -215,7 +215,7 @@ class Sql extends \app\inc\Controller
             $this->response['message'] = $e->getMessage();
             return serialize($this->response);
         }
-        $parsedSQL = $parser->parsed;
+        $parsedSQL = $parser->parsed ?:[]; // Make its an array
         $this->usedRelations = array();
 
         // First recursive go through the SQL to find FROM in select, update and delete
