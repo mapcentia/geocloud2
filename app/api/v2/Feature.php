@@ -4,6 +4,7 @@ namespace app\api\v2;
 
 use \app\inc\Input;
 use \app\inc\Route;
+use \app\inc\Response;
 use \app\models\Database;
 use \app\models\Layer;
 use \GuzzleHttp\Client;
@@ -40,17 +41,6 @@ class Feature extends \app\inc\Controller
 
         parent::__construct();
 
-        // Check privileges of user on layer
-        try {
-            $response = $this->ApiKeyAuthLayer(Route::getParam("layer"), $this->sUser, true, Input::getApiKey(), [Route::getParam("layer")]);
-        } catch (\PDOException $e) {
-            die($e->getMessage());
-        }
-
-        if (!$response["success"]) {
-            $this->notAuth = $response;
-        }
-
         // Set properties
         $this->wfsUrl = "http://127.0.0.1/wfs/%s/%s/%s";
         $this->sourceSrid = Route::getParam("srid");
@@ -59,6 +49,24 @@ class Feature extends \app\inc\Controller
         $this->table = explode(".", Route::getParam("layer"))[1];
         $this->geom = explode(".", Route::getParam("layer"))[2];
         $this->key = Route::getParam("key");
+
+        if ((!$this->schema) || (!$this->table) || (!$this->geom)) {
+            $response['success'] = false;
+            $response['message'] = "The layer must be in the form schema.table.geom_field";
+            $response['code'] = 500;
+            die(Response::toJson($response));
+        }
+
+        // Check privileges of user on layer
+        try {
+            $response = $this->ApiKeyAuthLayer($this->schema . "." . $this->table, $this->sUser, true, Input::getApiKey(), [Route::getParam("layer")]);
+        } catch (\PDOException $e) {
+            die($e->getMessage());
+        }
+
+        if (!$response["success"]) {
+            die(Response::toJson($response));
+        }
 
         $layer = new Layer();
         $this->field = $layer->getAll(Route::getParam("layer"), true)["data"][0]["pkey"];
@@ -74,10 +82,6 @@ class Feature extends \app\inc\Controller
 
     public function get_index()
     {
-        if ($this->notAuth) {
-           return $this->notAuth;
-        }
-
         $response = [];
 
         $unserializer = new \XML_Unserializer(array(
@@ -162,11 +166,6 @@ class Feature extends \app\inc\Controller
      */
     public function post_index(): array
     {
-        // Return if not auth
-        if ($this->notAuth) {
-            return $this->notAuth;
-        }
-
         // Decode GeoJSON
         if (!$features = json_decode(Input::getBody(), true)["features"]) {
             $response['success'] = false;
@@ -208,7 +207,6 @@ class Feature extends \app\inc\Controller
 
         }
         $xml .= "</wfs:Transaction>\n";
-
         return $this->commit($xml);
     }
 
@@ -217,10 +215,6 @@ class Feature extends \app\inc\Controller
      */
     public function put_index(): array
     {
-        // Return if not auth
-        if ($this->notAuth) {
-            return $this->notAuth;
-        }
 
         // Decode GeoJSON
         if (!$features = json_decode(Input::getBody(), true)["features"]) {
@@ -290,10 +284,6 @@ class Feature extends \app\inc\Controller
      */
     public function delete_index(): array
     {
-        // Return if not auth
-        if ($this->notAuth) {
-            return $this->notAuth;
-        }
 
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
