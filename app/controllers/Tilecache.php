@@ -104,11 +104,9 @@ class Tilecache extends \app\inc\Controller
         $layer = new \app\models\Layer();
         $cache = $layer->getAll(Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
 
-        // Default to disk
-        // ===============
-        if (!$cache) {
-            $cache = "disk";
-        }
+        // Default to sqlite
+        // =================
+        $cache = $cache ?: "sqlite";
 
         $response = [];
         switch ($cache) {
@@ -150,7 +148,7 @@ class Tilecache extends \app\inc\Controller
                     if (!$response['success']) {
                         return $response;
                     }
-                    $layer= Input::getPath()->part(5);
+                    $layer = Input::getPath()->part(5);
                     $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . Input::getPath()->part(5) . ".*";
                 } else {
                     $parts = explode(".", Input::getPath()->part(4));
@@ -178,11 +176,9 @@ class Tilecache extends \app\inc\Controller
         $layer = new \app\models\Layer();
         $cache = $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache;
 
-        // Default to disk
-        // ===============
-        if (!$cache) {
-            $cache = "disk";
-        }
+        // Default to sqlite
+        // =================
+        $cache = $cache ?: "sqlite";
 
         $response = [];
 
@@ -220,7 +216,7 @@ class Tilecache extends \app\inc\Controller
         }
 
         try {
-            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb']. "/" . $layerName . ".sqlite3");
+            $db = new \SQLite3(App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/" . $layerName . ".sqlite3");
         } catch (\Exception $exception) {
             // sqlite3 throws an exception when it is unable to connect
             $response['success'] = false;
