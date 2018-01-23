@@ -3,7 +3,7 @@
 namespace app\api\v1;
 
 use \app\conf\App;
-use \app\inc\Input;
+use \app\inc\Session;
 use \app\models\Layer;
 use \GuzzleHttp\Client;
 
@@ -41,7 +41,7 @@ class Legend extends \app\inc\Controller
 
             try {
 
-                $layers = $meta->getAll(implode(",", $layerNames), false)["data"];
+                $layers = $meta->getAll(implode(",", $layerNames), Session::isAuth())["data"];
 
             } catch (\PDOException $e) {
 
