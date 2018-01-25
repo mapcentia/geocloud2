@@ -528,7 +528,7 @@ class Table extends Model
             if ($value->properties == "*") {
                 $table = new \app\models\Table($this->table);
                 $distinctValues = $table->getGroupByAsArray($key);
-                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);;
+                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK, JSON_UNESCAPED_UNICODE);
             }
         }
         if ($this->geomType == "POLYGON" || $this->geomType == "MULTIPOLYGON") {
@@ -649,10 +649,10 @@ class Table extends Model
                 unset($fieldconfArr[$key]);
             }
         }
-        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $_key_;
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
         return $res;
     }
 
@@ -709,12 +709,12 @@ class Table extends Model
 
             $fieldconfArr[$safeColumn] = $value;
         }
-        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $key;
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
 
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];
@@ -757,10 +757,10 @@ class Table extends Model
         }
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
-            $conf['fieldconf'] = json_encode($fieldconfArr);
+            $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
             $conf['f_table_name'] = $this->table;
             $geometryColumnsObj = new table("settings.geometry_columns_join");
-            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "f_table_name", $whereClause);
+            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "f_table_name", $whereClause);
             $response['success'] = true;
             $response['message'] = "Column deleted";
         } else {
