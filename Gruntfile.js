@@ -115,6 +115,7 @@ module.exports = function (grunt) {
 
                         'public/js/ext/adapter/ext/ext-base-debug.js',
                         'public/js/ext/ext-all-debug.js',
+                        'public/js/ext/examples/ux/fileuploadfield/FileUploadField.js',
                         'public/js/ext/examples/ux/Spinner.js',
                         'public/js/ext/examples/ux/SpinnerField.js',
                         'public/js/ext/examples/ux/CheckColumn.js',
