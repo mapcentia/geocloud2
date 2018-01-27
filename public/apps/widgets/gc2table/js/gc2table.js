@@ -135,7 +135,7 @@ var gc2table = (function () {
             height = defaults.height,
             tableBodyHeight = defaults.tableBodyHeight,
             styleSelected = defaults.styleSelected,
-            el = defaults.el, click, loadDataInTable, moveEndOff,
+            el = defaults.el, click, loadDataInTable, moveEndOff, moveEndOn,
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
             onSelect = defaults.onSelect,
@@ -191,6 +191,8 @@ var gc2table = (function () {
                             autoPan: autoPan,
                             closeButton: true
                         }).openPopup();
+
+                        object.trigger("openpopup" + "_" + uid, m.map._layers[id]);
                     }
 
                 });
@@ -318,6 +320,10 @@ var gc2table = (function () {
                     m.map.off("moveend", moveEndEvent);
                 };
 
+                moveEndOn = function () {
+                    m.on("moveend", moveEndEvent);
+                };
+
                 if (autoUpdate) {
                     m.on("moveend", moveEndEvent);
                 }
@@ -361,7 +367,8 @@ var gc2table = (function () {
             object: object,
             uid: uid,
             store: store,
-            moveEndOff: moveEndOff
+            moveEndOff: moveEndOff,
+            moveEndOn: moveEndOn
         };
     };
     return {
