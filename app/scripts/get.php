@@ -322,7 +322,11 @@ print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $randTableName, $table, $jobId;
+    global $schema, $randTableName, $table, $jobId, $dir, $tempFile;
+
+    // Unlink temp file
+    // ================
+    unlink($dir . "/" . $tempFile);
 
     // Update jobs table
     // =================
