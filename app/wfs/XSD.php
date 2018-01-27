@@ -79,7 +79,7 @@ foreach ($tables as $table) {
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
-        $properties = $fieldConf->$atts["name"];
+        $properties = $fieldConf->{$atts["name"]};
         $atts["label"] = $properties->alias ?: $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
@@ -158,8 +158,8 @@ foreach ($tables as $table) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
             echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
-            if ($fieldConf->$atts["name"]->properties) {
-                if ($fieldConf->$atts["name"]->properties == "*") {
+            if ($fieldConf->{$atts["name"]}->properties) {
+                if ($fieldConf->{$atts["name"]}->properties == "*") {
                     $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
                     foreach ($distinctValues["data"] as $prop) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";

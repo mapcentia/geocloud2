@@ -168,6 +168,7 @@ include("html_header.php");
 <script type="text/javascript" src="/js/canvasResize/canvasResize.js?c1543e89ec75a4b0"></script>
 <script type="text/javascript" src="/js/ext/adapter/ext/ext-base-debug.js?7eec3ebfb294b86f"></script>
 <script type="text/javascript" src="/js/ext/ext-all-debug.js?0035a5fa730b0514"></script>
+<script type="text/javascript" src="/js/ext/examples/ux/fileuploadfield/FileUploadField.js"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/Spinner.js?00006e0276bf36d4"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/SpinnerField.js?12cd89e35dc66bc2"></script>
 <script type="text/javascript" src="/js/ext/examples/ux/CheckColumn.js?7ba8b5b8eb4a6981"></script>
