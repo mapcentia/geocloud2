@@ -9,29 +9,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Dedicated MapFile for WFS, so it works for QGIS-Server based layers.
 
 
-## [2.0.0] - 2017-06-20
+## [2018.1] - 2017-06-20
 ### Added
-- New version 2 of the Elasticsearch API, which acts as the native Elasticsearch search API. Including GET with body.
-- New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Support GET with body.
-- New REST "Feature" API, which wraps the WFS-T API in a simple GeoJSON based REST service. Made for JavaScript clients.
+- New version 2 of the Elasticsearch API, which acts like the native Elasticsearch search API. Including GET with body and the query string "mini-language".  
+- New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Supports GET with body.
+- New REST "Feature Edit" API, which wraps the WFS-T API in a simple GeoJSON based REST service. Made for JavaScript clients.
 - New modern dark theme for Admin.
 - This change log.
 
 
 ### Changed
-- Back-end rewritten for PHP 7.x. MapScript is no longer used.
+- Back-end rewritten for PHP7. MapScript is no longer used.
 - Better handling of exceptions in REST API.
-- New routing framework. Routes are now added with full URI paths.
-- Better Meta API. Can now be called with tags, multiple relation names and combos.
-- Extension mechanism for the REST API. Just drop in code.
+- Updated routing framework. Routes are now added with full URI paths.
+- Better Meta API. Can now be filtered using tags, multiple relation names, schemas and combos.
+- Extension mechanism for the REST API. Just drop in code for creating custom APIs.
 - Admin URI is changed from /store to /admin.
-- Upgraded to QGIS-server 2.18 LTR. Upload of 2.14 QGS files will work.
-- SQLite3 is now default cache type for MapCache. Each layers gets a db.
+- Upgraded QGIS-server to 2.18 LTR. Upload of 2.14 QGS files will still work.
+- SQLite3 is now default cache type for MapCache. Each layer gets a db.
 - The advanced layer panel is moved from right side to the left.
 - Some rearrangement of buttons.
 - "Private" tags with prefix "_". These will not be added to CKAN.
 - HTML title changed to "GC2 Admin"
 - MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
+- AWS S3 cache back-end is added.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
