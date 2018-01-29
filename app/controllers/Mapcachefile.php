@@ -119,7 +119,7 @@ class Mapcachefile extends \app\inc\Controller
                     $expire = $def->ttl < 30 ? 30 : $def->ttl;
                     $auto_expire = $def->lock ? null : ($def->auto_expire ?: ($row['filesource'] ? null : 3600));
                     $format = $def->format ?: "PNG";
-                    $cache = $def->cache ?: "sqlite";
+                    $cache = $def->cache ?: App::$param["mapCache"]["type"];
                     $layers = $def->layers ? "," . $def->layers : "";
 
                     if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) {
