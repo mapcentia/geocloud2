@@ -147,7 +147,7 @@ if ($err) {
     print $cmd . "\n\n";
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-            print_r($e->getMessage());
+            print $line . "\n";
             cleanUp();
             exit(1);
         }
