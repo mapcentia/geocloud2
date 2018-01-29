@@ -104,9 +104,9 @@ class Tilecache extends \app\inc\Controller
         $layer = new \app\models\Layer();
         $cache = $layer->getAll(Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
 
-        // Default to sqlite
-        // =================
-        $cache = $cache ?: "sqlite";
+        // Default
+        // =======
+        $cache = $cache ?: App::$param["mapCache"]["type"];
 
         $response = [];
         switch ($cache) {
@@ -176,9 +176,9 @@ class Tilecache extends \app\inc\Controller
         $layer = new \app\models\Layer();
         $cache = $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache;
 
-        // Default to sqlite
-        // =================
-        $cache = $cache ?: "sqlite";
+        // Default
+        // =======
+        $cache = $cache ?: App::$param["mapCache"]["type"];
 
         $response = [];
 
