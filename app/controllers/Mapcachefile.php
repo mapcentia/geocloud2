@@ -34,8 +34,7 @@ class Mapcachefile extends \app\inc\Controller
         <metadata>
             <title>my mapcache service</title>
             <abstract>woot! this is a service abstract!</abstract>
-            <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>
-                /mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
+            <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
         </metadata>
 
         <cache name="sqlite" type="sqlite3">
