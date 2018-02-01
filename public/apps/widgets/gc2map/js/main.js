@@ -510,6 +510,7 @@ MapCentia = function (globalId) {
                             host: defaults.host,
                             db: db,
                             id: index,
+                            base64: true,
                             onLoad: function () {
                                 var layerObj = qstore[this.id], out = [], fieldLabel;
                                 isEmpty = layerObj.isEmpty();
