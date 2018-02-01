@@ -26,13 +26,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Extension mechanism for the REST API. Just drop in code for creating custom APIs.
 - Admin URI is changed from /store to /admin.
 - Upgraded QGIS-server to 2.18 LTR. Upload of 2.14 QGS files will still work.
-- SQLite3 is now default cache type for MapCache. Each layer gets a db.
 - The advanced layer panel is moved from right side to the left.
 - Some rearrangement of buttons.
 - "Private" tags with prefix "_". These will not be added to CKAN.
 - HTML title changed to "GC2 Admin"
 - MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
-- AWS S3 cache back-end is added.
+- SQLite3 and AWS S3 cache back-ends are added.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
