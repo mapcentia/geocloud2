@@ -14,6 +14,7 @@ use app\conf\Connection;
 class Model
 {
     public $postgishost;
+    public $postgisport;
     public $postgisuser;
     public $postgisdb;
     public $postgispw;
@@ -37,7 +38,7 @@ class Model
      * @param PDOStatement $result
      * @param string $result_type
      * @return array
-     * @throws Exception
+     * @throws \PDOException
      */
     public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
@@ -173,7 +174,7 @@ class Model
     /**
      * @param $sql
      * @return mixed
-     * @throws Exception
+     * @throws \PDOException
      */
     public function prepare($sql)
     {
@@ -189,7 +190,7 @@ class Model
             $stmt = $this->db->prepare($sql);
         } catch (\PDOException $e) {
             $this->PDOerror[] = $e->getMessage();
-            throw new Exception($e->getMessage());
+            throw new \PDOException($e->getMessage());
         }
         return $stmt;
     }
