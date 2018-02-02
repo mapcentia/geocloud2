@@ -95,12 +95,13 @@ foreach ($files as $key => $file) {
     $path = "/var/www/geocloud2/public/logs/" . $key;
     $fileRes = fopen($path,'w');
     try {
-        $response = $client->get($file, ['save_to' => $fileRes]);
+        file_put_contents($path, Util::wget($file . $bbox));
     } catch (Exception $e) {
         print $file . "   ";
         // Delete files with errors
         unlink($path);
         print $e->getMessage() . "\n";
+        exit(1);
     }
 }
 

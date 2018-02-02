@@ -1,12 +1,22 @@
 <?php
+
 namespace app\inc;
+
 class Util
 {
+    /**
+     * @param $class
+     * @param $object
+     * @return mixed
+     */
     static function casttoclass($class, $object)
     {
         return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
     }
 
+    /**
+     * @param $dir
+     */
     static function rrmdir($dir)
     {
         if (is_dir($dir)) {
@@ -21,11 +31,21 @@ class Util
         }
     }
 
+    /**
+     * @param $match
+     * @return null|string|string[]
+     */
     static function replace_unicode_escape_sequence($match)
     {
         return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
     }
 
+    /**
+     * @param $hexStr
+     * @param bool $returnAsString
+     * @param string $seperator
+     * @return array|bool|string
+     */
     static function hex2RGB($hexStr, $returnAsString = false, $seperator = ',')
     {
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
@@ -48,11 +68,18 @@ class Util
         // returns the rgb string or the associative array
     }
 
+    /**
+     * @return string
+     */
     static function randHexColor()
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
     }
 
+    /**
+     * @param $code
+     * @return mixed
+     */
     static function httpCodeText($code)
     {
         $codes = array(
@@ -75,6 +102,12 @@ class Util
         return $codes[$code];
     }
 
+    /**
+     * @param $start
+     * @param $end
+     * @param $steps
+     * @return array
+     */
     static function makeGradient($start, $end, $steps)
     {
 
@@ -112,12 +145,18 @@ class Util
 
     }
 
+    /**
+     * @return float
+     */
     static function microtime_float()
     {
         list($usec, $sec) = explode(" ", microtime());
         return ((float)$usec + (float)$sec);
     }
 
+    /**
+     * @return string
+     */
     static function protocol()
     {
         if (isset($_SERVER['HTTPS']) &&
@@ -132,6 +171,11 @@ class Util
         return $protocol;
     }
 
+    /**
+     * @param $ip
+     * @param $range
+     * @return bool
+     */
     static function ipInRange($ip, $range)
     {
         if (strpos($range, '/') !== false) {
@@ -182,6 +226,9 @@ class Util
         }
     }
 
+    /**
+     * @return string
+     */
     static function clientIp()
     {
         if ($_SERVER['HTTP_CLIENT_IP'])
@@ -201,6 +248,13 @@ class Util
         return $ipAddress;
     }
 
+    /**
+     * @param $url
+     * @param int $connectTimeout
+     * @param int $timeout
+     * @return mixed
+     * @throws \Exception
+     */
     static function wget($url, $connectTimeout = 10, $timeout = 0)
     {
         $ch = curl_init($url);
@@ -211,6 +265,10 @@ class Util
 
         $buffer = curl_exec($ch);
         curl_close($ch);
+
+        if (isset($buffer['curl_error'])) throw new \Exception($buffer['curl_error']);
+        if (isset($buffer['http_code']) && $buffer['http_code'] != '200') throw new \Exception("HTTP Code = " . $buffer['http_code']);
+
         return $buffer;
     }
 
