@@ -24,6 +24,7 @@ $overwrite = $argv[6];
 $encoding = $argv[7];
 $srid = $argv[8];
 
+
 new App();
 Database::setDb($db);
 $database = new Model();
@@ -57,24 +58,26 @@ $out = [];
 // =======================
 $extCheck1 = explode(".", $url);
 $extCheck2 = array_reverse($extCheck1);
-$extension = strtolower($extCheck2[0]);
+$extension = $extCheck2[0];
 
 array_shift($extCheck2);
 $base = implode(".", array_reverse($extCheck2));
 
-switch ($extension) {
+switch (strtolower($extension)) {
     case "shp":
         $files[$randFileName . ".shp"] = $url;
+        $files[$randFileName . ".SHP"] = $url;
         // Try to get both upper and lower case extension
         $files[$randFileName . ".dbf"] = $base . ".dbf";
         $files[$randFileName . ".DBF"] = $base . ".DBF";
         $files[$randFileName . ".shx"] = $base . ".shx";
         $files[$randFileName . ".SHX"] = $base . ".SHX";
-        $fileSetName = $randFileName . ".shp";
+        $fileSetName = $randFileName . "." . $extension;
         break;
 
     case "tab":
         $files[$randFileName . ".tab"] = $url;
+        $files[$randFileName . ".TAB"] = $url;
         // Try to get both upper and lower case extension
         $files[$randFileName . ".map"] = $base.".map";
         $files[$randFileName . ".MAP"] = $base.".MAP";
@@ -82,7 +85,7 @@ switch ($extension) {
         $files[$randFileName . ".DAT"] = $base.".DAT";
         $files[$randFileName . ".id"] = $base.".id";
         $files[$randFileName . ".ID"] = $base.".ID";
-        $fileSetName = $randFileName . ".tab";
+        $fileSetName = $randFileName . "." . $extension;
         break;
 
     default:
@@ -119,7 +122,7 @@ $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
     "-nlt {$geomType}";
 exec($cmd . ' 2>&1', $out, $err);
 
-array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
+//array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
 
 foreach ($out as $line) {
     if (strpos($line, "FAILURE") !== false) {

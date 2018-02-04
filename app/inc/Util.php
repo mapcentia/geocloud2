@@ -272,9 +272,13 @@ class Util
         return $buffer;
     }
 
+    /**
+     * @param $url
+     * @param string $payload
+     * @return bool
+     */
     static function asyncRequest($url, $payload = "")
     {
-
         $cmd = "curl -XGET -H 'Content-Type: application/json'";
         $cmd .= " -d '" . $payload . "' " . "'" . $url . "'";
         $cmd .= " > /dev/null 2>&1 &";
