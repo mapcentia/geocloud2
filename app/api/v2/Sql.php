@@ -76,8 +76,8 @@ class Sql extends \app\inc\Controller
         // =====================================
         if ($json != null) {
 
-            // Set input params
-            // ================
+            // Set input params from JSON
+            // ==========================
             Input::setParams(
                 [
                     "q" => $json["q"],
@@ -90,13 +90,14 @@ class Sql extends \app\inc\Controller
                     "allstr" => $json["allstr"],
                     "alias" => $json["alias"],
                     "lifetime" => $json["lifetime"],
+                    "base64" => $json["base64"],
                 ]
             );
 
         }
 
         if (Input::get('base64') === "true") {
-            $this->q = base64_decode(Input::get('q'));
+            $this->q = urldecode(base64_decode(urldecode(Input::get('q'))));
         } else {
             $this->q = urldecode(Input::get('q'));
         }
