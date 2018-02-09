@@ -186,15 +186,12 @@ MapCentia = function (globalId) {
         for (var key in _layers) {
             if (_layers.hasOwnProperty(key)) {
                 if (_layers[key].baseLayer !== true && typeof _layers[key]._tiles === "object") {
-                    unordered[_layers[key].options.zIndex] = _layers[key].id;
+                    unordered[_layers[key].id] = _layers[key].options.zIndex;
                 }
             }
         }
 
-        var ordered = [];
-        Object.keys(unordered).sort().forEach(function(key) {
-            ordered.push(unordered[key]);
-        });
+        var ordered = Object.keys(unordered).sort(function(a,b){return unordered[a]-unordered[b]});
 
         // Get legend itmes
         $.ajax({
