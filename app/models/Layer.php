@@ -40,9 +40,10 @@ class Layer extends \app\models\Table
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
+     * @param $subOrder
      * @return array
      */
-    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
+    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $subOrder): array
     {
         $response = [];
         $schemata = [];
@@ -70,18 +71,20 @@ class Layer extends \app\models\Table
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
+        $subOrder = $subOrder ?: "f_table_name";
+        $sort = $subOrder != "" ? "sort," . $subOrder: "sort";
         $order = (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
 
         if (sizeof($schemata) > 0) {
             $schemaStr = "''" . implode("'',''", $schemata) . "''";
-            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY sort " . $order . ")";
+            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY {$sort} " . $order . ")";
         }
 
         if (sizeof($layers) > 0) {
 
             foreach ($layers as $layer) {
                 $split = explode(".", $layer);
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY sort " . $order . ")";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY {$sort} " . $order . ")";
             }
 
         }
@@ -90,13 +93,13 @@ class Layer extends \app\models\Table
 
             foreach ($tags as $tag) {
                 $tag = urldecode($tag);
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags::jsonb ? ''{$tag}'' AND {$where}','tags::jsonb  ? ''{$tag}'' AND {$where}') ORDER BY sort " . $order . ")";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags::jsonb ? ''{$tag}'' AND {$where}','tags::jsonb  ? ''{$tag}'' AND {$where}') ORDER BY {$sort} " . $order . ")";
             }
 
         }
 
         if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
-            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort " . $order . ")";
+            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY {$sort} " . $order . ")";
         }
 
         $sql = implode(" UNION ALL ", $sqls);

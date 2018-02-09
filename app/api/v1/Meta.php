@@ -32,6 +32,6 @@ class Meta extends \app\inc\Controller
         // Get the URI params from request
         // /meta/{user}/[query]
         $r = func_get_arg(0);
-        return $this->layers->getAll($r["query"], Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"));
+        return $this->layers->getAll($r["query"], Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"), Input::get("suborder"));
     }
 }
