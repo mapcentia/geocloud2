@@ -73,8 +73,8 @@ class Layer extends \app\models\Table
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-        $preOrder = $preOrder ?: "f_table_name";
-        $sort = $preOrder != "" ? $preOrder . ",sort,f_table_name" : $preOrder;
+        $preOrder = $preOrder ?: "";
+        $sort = $preOrder != "" ? $preOrder . ",sort" : "sort";
         $order = (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
 
         if (sizeof($schemata) > 0) {
