@@ -40,7 +40,6 @@ class Layer extends \app\models\Table
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
-     * @param $subOrder
      * @return array
      */
     public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
@@ -62,7 +61,7 @@ class Layer extends \app\models\Table
                     $tags[] = explode(":", $part)[1];
                 } // Check for schema names
                 elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "order") {
-                    $subOrder = urldecode(explode(":", $part)[1]);
+                    $preOrder = urldecode(explode(":", $part)[1]);
                 }
                 else {
                     $schemata[] = $part;
@@ -74,8 +73,8 @@ class Layer extends \app\models\Table
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-        $subOrder = $subOrder ?: "f_table_name";
-        $sort = $subOrder != "" ? "sort," . $subOrder: "sort";
+        $preOrder = $preOrder ?: "f_table_name";
+        $sort = $preOrder != "" ? $preOrder . ",sort,f_table_name" : $preOrder;
         $order = (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
 
         if (sizeof($schemata) > 0) {
@@ -106,9 +105,6 @@ class Layer extends \app\models\Table
         }
 
         $sql = implode(" UNION ALL ", $sqls);
-
-        //print_r($sqls);
-        //die();
 
         try {
             $res = $this->prepare($sql);
