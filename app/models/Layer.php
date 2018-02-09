@@ -43,7 +43,7 @@ class Layer extends \app\models\Table
      * @param $subOrder
      * @return array
      */
-    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $subOrder): array
+    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
     {
         $response = [];
         $schemata = [];
@@ -61,6 +61,9 @@ class Layer extends \app\models\Table
                 elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
                     $tags[] = explode(":", $part)[1];
                 } // Check for schema names
+                elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "order") {
+                    $subOrder = urldecode(explode(":", $part)[1]);
+                }
                 else {
                     $schemata[] = $part;
                 }
