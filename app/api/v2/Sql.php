@@ -72,8 +72,8 @@ class Sql extends \app\inc\Controller
         // ==========================
         $json = json_decode(Input::getBody(), true);
 
-        // If JSON when set get params from body
-        // =====================================
+        // If JSON body when set GET input params
+        // ======================================
         if ($json != null) {
 
             // Set input params from JSON

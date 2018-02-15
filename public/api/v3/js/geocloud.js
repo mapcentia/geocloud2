@@ -127,7 +127,7 @@ geocloud = (function () {
         error: function () {
         },
         key: null,
-        base64: false
+        base64: true
     };
     // Base class for stores
     storeClass = function () {

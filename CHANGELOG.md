@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Back-end rewritten for PHP7. MapScript is no longer used.
 - Better handling of exceptions in REST API.
 - Updated routing framework. Routes are now added with full URI paths.
-- Better Meta API. Can now be filtered using tags, multiple relation names, schemas and combos. Takes a "suborder" param to order by more properties. Defaults to f_table_name.
+- Better Meta API. Can now be filtered using tags, multiple relation names, schemas and combos. Orders now by sort_id,f_table_name.
 - Extension mechanism for the REST API. Just drop in code for creating custom APIs.
 - Admin URI is changed from /store to /admin.
 - Upgraded QGIS-server to 2.18 LTR. Upload of 2.14 QGS files will still work.
@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - HTML title changed to "GC2 Admin"
 - MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
 - SQLite3 and AWS S3 cache back-ends are added.
+- geocloud.js can now base64 encode the SQL string to avoid filtering in "threat filters". Use base64:true|false in request (true is default)
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
