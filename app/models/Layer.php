@@ -60,9 +60,6 @@ class Layer extends \app\models\Table
                 } // Check for tags
                 elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
                     $tags[] = explode(":", $part)[1];
-                } // Check for schema names
-                elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "order") {
-                    $preOrder = urldecode(explode(":", $part)[1]);
                 }
                 else {
                     $schemata[] = $part;
@@ -75,7 +72,7 @@ class Layer extends \app\models\Table
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-        $sort = $preOrder ? $preOrder . ",sort" : "sort";
+        $sort = "sort";
         $sort.= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
         $sort.= ",f_table_name";
 
