@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
@@ -64,6 +65,9 @@ class Sql_to_es extends Model
         $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
         $client = new Client([
             'timeout' => 10.0,
+            'headers' => [
+                'Content-Type' => 'application/json'
+            ]
         ]);
         $bulKCount = 0;
         $bulkSize = 500;

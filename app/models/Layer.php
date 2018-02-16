@@ -74,7 +74,7 @@ class Layer extends \app\models\Table
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
         $sort = "sort";
         $sort.= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        $sort.= ",f_table_name";
+        $sort.= ",f_table_name DESC";
 
         if (sizeof($schemata) > 0) {
             $schemaStr = "''" . implode("'',''", $schemata) . "''";

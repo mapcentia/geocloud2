@@ -38,6 +38,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
@@ -59,6 +60,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
@@ -86,6 +88,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
