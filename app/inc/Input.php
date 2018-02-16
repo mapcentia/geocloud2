@@ -39,6 +39,14 @@ class Input
     /**
      * @return string
      */
+    public static function getQueryString(): string
+    {
+        return $_SERVER['QUERY_STRING'];
+    }
+
+    /**
+     * @return string
+     */
     public static function getApiKey()
     {
         return $_SERVER['HTTP_GC2_API_KEY'];

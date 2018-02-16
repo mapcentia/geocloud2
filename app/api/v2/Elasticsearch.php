@@ -94,6 +94,9 @@ class Elasticsearch extends \app\inc\Controller
         // Init the Guzzle client
         $this->client = new Client([
             'timeout' => 10.0,
+            'headers' => [
+                'Content-Type' => 'application/json'
+            ]
         ]);
     }
 
