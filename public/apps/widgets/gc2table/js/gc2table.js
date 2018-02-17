@@ -263,7 +263,7 @@ var gc2table = (function () {
                 };
                 $(el).bootstrapTable({
                     uniqueId: "_id",
-                    height: "200px",
+                    height: height,
                     locale: locale,
                     onToggle: bindEvent,
                     onSort: bindEvent,
