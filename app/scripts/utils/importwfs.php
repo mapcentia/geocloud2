@@ -25,6 +25,7 @@ $overwrite = $argv[7];
 $id = $argv[8] ?: "gml_id";
 $gfs = $argv[9];
 $encoding = $argv[10];
+$downloadSchema = $argv[11];
 
 
 new \app\conf\App();
@@ -76,6 +77,7 @@ while ($row = $database->fetchRow($res)) {
         "-skipfailures " .
         "-append " .
         "-dim 2 " .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -84,6 +86,8 @@ while ($row = $database->fetchRow($res)) {
         "/var/www/geocloud2/public/logs/" . $gmlName . " " .
         "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
+
+    die($cmd);
     exec($cmd . ' 2>&1', $out, $err);
 
     foreach ($out as $line) {

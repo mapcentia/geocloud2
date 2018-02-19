@@ -21,6 +21,9 @@ $deleteAppend = $argv[9];
 $extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
 $preSql = $argv[11] == "null" ? null : base64_decode($argv[11]);
 $postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
+$downloadSchema = $argv[13];
+
+
 
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
@@ -81,12 +84,12 @@ function which()
 
 function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName, $downloadSchema;
     print "Staring inserting in temp table using ogr2ogr...\n\n";
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
-        ($db == "mydb" ? "-oo 'DOWNLOAD_SCHEMA=NO' " : "") .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES":"NO"). "' " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -101,9 +104,9 @@ function getCmd()
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $schema, $url, $grid, $id, $encoding;
+    global $randTableName, $type, $db, $schema, $url, $grid, $id, $encoding, $downloadSchema;
     print "Staring inserting in temp table using paginated download...\n\n";
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding}";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding} {$downloadSchema}";
     return $cmd;
 }
 

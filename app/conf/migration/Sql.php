@@ -567,6 +567,7 @@ class Sql
         $sqls[] = "ALTER TABLE jobs ADD COLUMN lastrun timestamp with time zone";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN presql text";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN postsql text";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN download_schema BOOL DEFAULT TRUE";
         return $sqls;
     }
 }

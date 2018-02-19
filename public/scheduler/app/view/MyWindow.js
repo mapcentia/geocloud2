@@ -24,7 +24,7 @@ Ext.define('MyApp.view.MyWindow', {
         'Ext.button.Button'
     ],
 
-    height: 390,
+    height: 440,
     itemId: 'window',
     width: 600,
     title: 'Job',
@@ -341,6 +341,14 @@ Ext.define('MyApp.view.MyWindow', {
                             fieldLabel: 'Delete/append',
                             name: 'delete_append',
                             uncheckedValue: 'false'
+                        },
+                        {
+                            xtype: 'checkboxfield',
+                            flex: 1,
+                            fieldLabel: 'Download schema',
+                            name: 'download_schema',
+                            uncheckedValue: 'false',
+                            checked: true
                         },
                         {
                             xtype: 'textfield',
