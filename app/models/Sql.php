@@ -75,11 +75,14 @@ class Sql extends \app\inc\Model
         }
         $sql = implode(",", $fieldsArr);
         $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
+
+        $this->begin();
+        $this->execQuery('SET LOCAL statement_timeout = 5000');
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
-        $result = $this->prepare($sql);
         try {
+            $result = $this->prepare($sql);
             $result->execute();
         } catch (\PDOException $e) {
             $response['success'] = false;
@@ -87,6 +90,8 @@ class Sql extends \app\inc\Model
             $response['code'] = 410;
             return $response;
         }
+        $this->commit();
+
         $geometries = [];
         $fieldsForStore = [];
         $columnsForGrid = [];
