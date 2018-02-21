@@ -87,7 +87,6 @@ while ($row = $database->fetchRow($res)) {
         "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
 
-    die($cmd);
     exec($cmd . ' 2>&1', $out, $err);
 
     foreach ($out as $line) {
