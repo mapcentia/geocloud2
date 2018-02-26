@@ -68,7 +68,11 @@ while ($row = $database->fetchRow($res)) {
     $wfsUrl = $url . "&BBOX=";
     $gmlName = $importTable . "-" . $row["gid"] . ".gml";
 
-    file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox));
+    if(!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))){
+        echo "Error: could not get GML for cell #{$row["gid"]}\n";
+        $pass = false;
+    };
+
     if ($gfs) {
         file_put_contents("/var/www/geocloud2/public/logs/" . $importTable . "-" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
@@ -92,7 +96,7 @@ while ($row = $database->fetchRow($res)) {
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false) {
             $pass = false;
-            break;
+            break 1;
         }
     }
 

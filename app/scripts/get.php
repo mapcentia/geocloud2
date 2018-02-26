@@ -123,6 +123,14 @@ $table = new \app\models\Table($schema . "." . $safeName);
 
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
+$tmpTable = new \app\models\Table($schema . "." . $randTableName);
+
+if(!$tmpTable->exits) {
+    print "Empty temp table. Maybe there are no data for area?\n";
+    cleanUp();
+    exit(1);
+}
+
 if ($err) {
     print "Error " . $err . "\n\n";
     print_r($out);
