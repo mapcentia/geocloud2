@@ -158,7 +158,7 @@ class Sql extends \app\inc\Controller
     /**
      * @param array $fromArr
      */
-    private function parseSelect(array $fromArr)
+    private function parseSelect(array $fromArr = null)
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {

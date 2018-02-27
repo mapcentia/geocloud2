@@ -63,6 +63,9 @@ class Sql extends \app\inc\Controller
         } else {
             $this->q = urldecode(Input::get('q'));
         }
+
+        //die($this->q);
+
         $settings_viewer = new \app\models\Setting();
         $res = $settings_viewer->get();
         $this->apiKey = $res['data']->api_key;
@@ -125,7 +128,7 @@ class Sql extends \app\inc\Controller
     /**
      * @param array $fromArr
      */
-    private function parseSelect(array $fromArr)
+    private function parseSelect(array $fromArr = null)
     {
         foreach ($fromArr as $table) {
             if ($table["expr_type"] == "subquery") {
