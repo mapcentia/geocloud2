@@ -465,10 +465,22 @@ class Table extends Model
                                 $rec[$fKey] = $fValue;
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
+                            $stripSlashes = false;
 
+                        } else {
+                            $stripSlashes = true;
                         }
+                    } else {
+                        $stripSlashes = true;
                     }
-                    $value = stripcslashes($this->db->quote($value));
+
+                    $value = $this->db->quote($value);
+
+                    // TODO why are we stripping slashes?
+                    if($stripSlashes) {
+                        $value = stripcslashes($value);
+                    }
+
                     if ($key != $keyName) {
                         $pairArr[] = "\"{$key}\"={$value}";
                         $keyArr[] = "\"{$key}\"";
