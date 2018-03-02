@@ -172,17 +172,12 @@ function getCmdZip()
         rar_close($rar_file);
     }
 
-    if ($handle = opendir($dir . "/" . $tempFile)) {
-        while (false !== ($entry = readdir($handle))) {
-            if ($entry !== "." && $entry !== "..") {
-                $zipCheck1 = explode(".", $entry);
-                $zipCheck2 = array_reverse($zipCheck1);
-                if (in_array(strtolower($zipCheck2[0]), $ext)) {
-                    $file = $entry;
-                    break;
-                }
-            }
-        }
+    $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile);
+    foreach(new RecursiveIteratorIterator($it) as $file)
+    {
+        $files = explode('.', $file);
+        if (in_array(strtolower(array_pop($files)), $ext))
+           break;
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
@@ -194,7 +189,7 @@ function getCmdZip()
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        "'" . $dir . "/" . $tempFile . "/" . $file . "' " .
+        "'" . $file . "' " .
         "-nln " . $schema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
