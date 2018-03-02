@@ -63,12 +63,22 @@ function which($cmd)
 $pass = true;
 
 while ($row = $database->fetchRow($res)) {
+
+    fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
+
+}
+
+echo "\n";
+exit(0);
+
+function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs)
+{
     $out = [];
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
     $gmlName = $importTable . "-" . $row["gid"] . ".gml";
 
-    if(!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))){
+    if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))) {
         echo "Error: could not get GML for cell #{$row["gid"]}\n";
         $pass = false;
     };
@@ -101,6 +111,12 @@ while ($row = $database->fetchRow($res)) {
     }
 
     if (!$pass) {
+
+        echo "-";
+
+        sleep(10);
+        fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
+
 
         foreach ($out as $line) {
             echo $line . "\n";
@@ -141,7 +157,5 @@ while ($row = $database->fetchRow($res)) {
 
     echo ".";
 }
-echo "\n";
-exit(0);
 
 
