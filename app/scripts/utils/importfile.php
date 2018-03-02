@@ -1,6 +1,5 @@
 <?php
 ini_set("display_errors", "Off");
-include_once(__DIR__ . "/../../vendor/autoload.php");
 
 error_reporting(3);
 
@@ -9,7 +8,6 @@ use \app\conf\Connection;
 use \app\inc\Model;
 use \app\inc\Util;
 use \app\models\Database;
-use \GuzzleHttp\Client;
 
 header("Content-type: text/plain");
 
@@ -29,7 +27,6 @@ new App();
 Database::setDb($db);
 $database = new Model();
 $database->connect();
-$client = new Client();
 
 if ($overwrite) {
     $sql = "DROP TABLE {$schema}.{$importTable}";

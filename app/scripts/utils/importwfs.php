@@ -73,6 +73,7 @@ exit(0);
 
 function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs)
 {
+    global $pass;
     $out = [];
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
@@ -155,7 +156,7 @@ function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $g
     $database->execQuery($sql);
     print_r($database->PDOerror);
 
-    echo ".";
+    echo "+";
 }
 
 

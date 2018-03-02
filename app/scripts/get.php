@@ -24,7 +24,7 @@ $postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
 $downloadSchema = $argv[13];
 
 
-
+// Check if Paging should be used
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
     $url = explode("|", $url)[1];
@@ -34,7 +34,7 @@ if (sizeof(explode("|", $url)) > 1) {
     } else {
         $id = "gml_id";
     }
-    $getFunction = "getCmdPaging";
+    $getFunction = "getCmdPaging"; // Paging by grid
 } else {
     $grid = null;
 
@@ -42,15 +42,17 @@ if (sizeof(explode("|", $url)) > 1) {
     // =======================
     $extCheck1 = explode(".", $url);
     $extCheck2 = array_reverse($extCheck1);
-    if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "geojson") {
-        $getFunction = "getCmdFile";
+    if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "geojson") {
+        $getFunction = "getCmdFile"; // Shape or TAB file set
+    } elseif (strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "rar") {
+        $getFunction = "getCmdZip"; // Zip or rar file
     } else {
-        $getFunction = "getCmd";
+        $getFunction = "getCmd"; // Service or single file
     }
 }
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
-$tempFile = md5(microtime() . rand()) . ".gml";
+$tempFile = md5(microtime() . rand());
 $randTableName = "_" . md5(microtime() . rand());
 $out = null;
 
@@ -67,14 +69,7 @@ if (is_numeric($safeName[0])) {
 }
 
 if ($grid == null) {
-    print "Fetching remote data...\n\n";
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    $fp = fopen($dir . "/" . $tempFile, 'w+');
-    curl_setopt($ch, CURLOPT_FILE, $fp);
-    curl_exec($ch);
-    curl_close($ch);
-    fclose($fp);
+
 }
 
 function which()
@@ -84,12 +79,22 @@ function which()
 
 function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName, $downloadSchema;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName, $downloadSchema, $url;
+
+    print "Fetching remote data...\n\n";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    $fp = fopen($dir . "/" . $tempFile, 'w+');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
+
     print "Staring inserting in temp table using ogr2ogr...\n\n";
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
-        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES":"NO"). "' " .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -118,18 +123,90 @@ function getCmdFile()
     return $cmd;
 }
 
+function getCmdZip()
+{
+    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $schema, $randTableName, $downloadSchema;
+
+    $file = "";
+
+    print "Fetching remote zip...\n\n";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
+
+    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
+
+    // ZIP start
+    // =========
+    if (strtolower($extCheck2[0]) == "zip") {
+        $zip = new ZipArchive;
+        $res = $zip->open($dir . "/" . $tempFile . "." . $extCheck2[0]);
+        if ($res === false) {
+            $response['success'] = false;
+            $response['message'] = "Could not unzip file";
+            return Response::json($response);
+        }
+        $zip->extractTo($dir . "/" . $tempFile);
+        $zip->close();
+    }
+
+    // RAR start
+    // =========
+    if (strtolower($extCheck2[0]) == "rar") {
+        $rar_file = rar_open($dir . "/" . $tempFile . "." . $extCheck2[0]);
+        if (!$rar_file) {
+            $response['success'] = false;
+            $response['message'] = "Could not unrar file";
+            return Response::json($response);
+        }
+
+        $list = rar_list($rar_file);
+        foreach ($list as $file) {
+            $entry = rar_entry_get($rar_file, $file);
+            $file->extract($dir . "/" . $tempFile); // extract to the current dir
+        }
+        rar_close($rar_file);
+    }
+
+    if ($handle = opendir($dir . "/" . $tempFile)) {
+        while (false !== ($entry = readdir($handle))) {
+            if ($entry !== "." && $entry !== "..") {
+                $zipCheck1 = explode(".", $entry);
+                $zipCheck2 = array_reverse($zipCheck1);
+                if (in_array(strtolower($zipCheck2[0]), $ext)) {
+                    $file = $entry;
+                    break;
+                }
+            }
+        }
+    }
+
+    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
+        "-overwrite " .
+        "-dim 2 " .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
+        "-lco 'GEOMETRY_NAME=the_geom' " .
+        "-lco 'FID=gid' " .
+        "-lco 'PRECISION=NO' " .
+        "-a_srs 'EPSG:{$srid}' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        "'" . $dir . "/" . $tempFile . "/" . $file . "' " .
+        "-nln " . $schema . "." . $randTableName . " " .
+        ($type == "AUTO" ? "" : "-nlt {$type}") .
+        "";
+    return $cmd;
+}
+
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 $tmpTable = new \app\models\Table($schema . "." . $randTableName);
-
-if(!$tmpTable->exits) {
-    print "Empty temp table. Maybe there are no data for area?\n";
-    cleanUp();
-    exit(1);
-}
 
 if ($err) {
     print "Error " . $err . "\n\n";
@@ -337,7 +414,7 @@ function cleanUp($success = 0)
 
     // Unlink temp file
     // ================
-    unlink($dir . "/" . $tempFile);
+    //unlink($dir . "/" . $tempFile);
 
     // Update jobs table
     // =================
