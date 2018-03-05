@@ -44,7 +44,7 @@ if (sizeof(explode("|", $url)) > 1) {
     $extCheck2 = array_reverse($extCheck1);
     if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "geojson") {
         $getFunction = "getCmdFile"; // Shape or TAB file set
-    } elseif (strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "rar") {
+    } elseif (strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "rar" || strtolower($extCheck2[0]) == "gz") {
         $getFunction = "getCmdZip"; // Zip or rar file
     } else {
         $getFunction = "getCmd"; // Service or single file
@@ -146,9 +146,9 @@ function getCmdZip()
         $zip = new ZipArchive;
         $res = $zip->open($dir . "/" . $tempFile . "." . $extCheck2[0]);
         if ($res === false) {
-            $response['success'] = false;
-            $response['message'] = "Could not unzip file";
-            return Response::json($response);
+            echo "Could not unzip file";
+            cleanUp();
+            exit(1);
         }
         $zip->extractTo($dir . "/" . $tempFile);
         $zip->close();
@@ -157,27 +157,51 @@ function getCmdZip()
     // RAR start
     // =========
     if (strtolower($extCheck2[0]) == "rar") {
-        $rar_file = rar_open($dir . "/" . $tempFile . "." . $extCheck2[0]);
-        if (!$rar_file) {
-            $response['success'] = false;
-            $response['message'] = "Could not unrar file";
-            return Response::json($response);
+        $rarFile = rar_open($dir . "/" . $tempFile . "." . $extCheck2[0]);
+        if (!$rarFile) {
+            echo "Could not unrar file";
+            cleanUp();
+            exit(1);
         }
 
-        $list = rar_list($rar_file);
+        $list = rar_list($rarFile);
         foreach ($list as $file) {
-            $entry = rar_entry_get($rar_file, $file);
+            $entry = rar_entry_get($rarFile, $file);
             $file->extract($dir . "/" . $tempFile); // extract to the current dir
         }
-        rar_close($rar_file);
+        rar_close($rarFile);
+    }
+
+    // GZIP start
+    // ==========
+    if (strtolower($extCheck2[0]) == "gz") {
+        $bufferSize = 4096; // read 4kb at a time
+        mkdir($dir . "/" . $tempFile);
+        $outFileName = str_replace('.gz', '', $dir . "/" . $tempFile . "/" . $tempFile . "." . $extCheck2[0]);
+
+        $file = gzopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'rb');
+
+        if (!$file) {
+            echo "Could not gunzip file";
+            cleanUp();
+            exit(1);
+        }
+        
+        $outFile = fopen($outFileName, 'wb');
+
+        while (!gzeof($file)) {
+            fwrite($outFile, gzread($file, $bufferSize));
+        }
+
+        fclose($outFile);
+        gzclose($file);
     }
 
     $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile);
-    foreach(new RecursiveIteratorIterator($it) as $file)
-    {
+    foreach (new RecursiveIteratorIterator($it) as $file) {
         $files = explode('.', $file);
         if (in_array(strtolower(array_pop($files)), $ext))
-           break;
+            break;
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
