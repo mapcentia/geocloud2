@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Extension mechanism for the REST API. Just drop in code for creating custom APIs.
 - SQLite3 and AWS S3 cache back-ends are added.
 - "Private" tags with prefix "_". These will not be added to CKAN.
-- Scheduler has added support for Shape and TAB file sets and zip/rar files over HTTP or FTP.
+- Scheduler has added support for Shape and TAB file sets and zip/rar/gz files over HTTP or FTP.
 - Scheduler can now run SQLs before and after a job.
 - Scheduler has new option "Download Schema" for GML, so inaccessible schemas can be ignorred.
 - Scheduler has a daily email rapport generator. Need a Postmark account.
