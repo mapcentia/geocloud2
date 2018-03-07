@@ -80,6 +80,16 @@ class Feature extends \app\inc\Controller
                  xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd\">\n";
     }
 
+    private function decodeCode($code){
+        return preg_replace_callback(
+            "@\\\(x)?([0-9a-f]{2,3})@",
+            function($m){
+                return chr($m[1]?hexdec($m[2]):octdec($m[2]));
+            },
+            $code
+        );
+    }
+
     public function get_index()
     {
         $response = [];
@@ -166,8 +176,9 @@ class Feature extends \app\inc\Controller
      */
     public function post_index(): array
     {
+
         // Decode GeoJSON
-        if (!$features = json_decode(Input::getBody(), true)["features"]) {
+        if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
             $response['success'] = false;
             $response['message'] = "Could not decode GeoJSON";
             $response['code'] = 500;
@@ -217,7 +228,7 @@ class Feature extends \app\inc\Controller
     {
 
         // Decode GeoJSON
-        if (!$features = json_decode(Input::getBody(), true)["features"]) {
+        if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
             $response['success'] = false;
             $response['message'] = "Could not decode GeoJSON";
             $response['code'] = 500;
