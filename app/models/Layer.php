@@ -229,12 +229,16 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
             }
+
             // If session is sub-user we always check privileges
             if (isset($_SESSION) && $_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
                 } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
+                    $response['data'][] = $arr;
+                // Always add layers with Write and None.
+                } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
                     $response['data'][] = $arr;
                 }
             } else {
