@@ -49,6 +49,8 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN featureid VARCHAR(255)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER meta TYPE JSONB";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER tags TYPE JSONB";
 
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";

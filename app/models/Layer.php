@@ -94,7 +94,7 @@ class Layer extends \app\models\Table
 
             foreach ($tags as $tag) {
                 $tag = urldecode($tag);
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags::jsonb ? ''{$tag}'' AND {$where}','tags::jsonb  ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
             }
 
         }
