@@ -50,7 +50,9 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN featureid VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER meta TYPE JSONB";
+        $sqls[] = "CREATE INDEX geometry_columns_join_meta_idx ON settings.geometry_columns_join USING gin (meta)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER tags TYPE JSONB";
+        $sqls[] = "CREATE INDEX geometry_columns_join_tags_idx ON settings.geometry_columns_join USING gin (tags)";
 
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
