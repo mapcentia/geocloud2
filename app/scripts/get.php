@@ -186,7 +186,7 @@ function getCmdZip()
             cleanUp();
             exit(1);
         }
-        
+
         $outFile = fopen($outFileName, 'wb');
 
         while (!gzeof($file)) {
@@ -433,7 +433,20 @@ function cleanUp($success = 0)
 
     // Unlink temp file
     // ================
-    //unlink($dir . "/" . $tempFile);
+    if (is_dir($dir . "/" . $tempFile)) {
+        $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile, RecursiveDirectoryIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getRealPath());
+            } else {
+                unlink($file->getRealPath());
+            }
+        }
+        rmdir($dir . "/" . $tempFile);
+    }
+        unlink($dir . "/" . $tempFile);
+
 
     // Update jobs table
     // =================
