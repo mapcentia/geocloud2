@@ -176,7 +176,7 @@ class Legend extends \app\inc\Controller
                     foreach ($layer['classes'] as $class) {
                         if ($class['name']) {
                             $html .= "<tr><td style=\"padding: 3px\" class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
-                            $html .= "<td style=\"padding: 3px\" class=\"legend legend-text\">" . (($class['name'] == "_gc2_wms_legend") ? "" : $class['name']) . "</td></tr>";
+                            $html .= "<td style=\"padding: 3px\" class=\"legend legend-text\">" . (($class['name'] == "_gc2_wms_legend") ? "" : htmlentities($class['name'])) . "</td></tr>";
                         }
                     }
                 }
