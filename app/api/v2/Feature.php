@@ -53,7 +53,8 @@ class Feature extends \app\inc\Controller
         if ((!$this->schema) || (!$this->table) || (!$this->geom)) {
             $response['success'] = false;
             $response['message'] = "The layer must be in the form schema.table.geom_field";
-            $response['code'] = 500;
+            $response['code'] = 400;
+            header("HTTP/1.1 400 Bad Request");
             die(Response::toJson($response));
         }
 
@@ -61,10 +62,12 @@ class Feature extends \app\inc\Controller
         try {
             $response = $this->ApiKeyAuthLayer($this->schema . "." . $this->table, $this->sUser, true, Input::getApiKey(), [Route::getParam("layer")]);
         } catch (\PDOException $e) {
+            header("HTTP/1.1 401 Unauthorized");
             die($e->getMessage());
         }
 
         if (!$response["success"]) {
+            header("HTTP/1.1 401 Unauthorized");
             die(Response::toJson($response));
         }
 
