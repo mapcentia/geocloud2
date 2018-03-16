@@ -420,7 +420,7 @@ class Table extends Model
      * @param $keyName
      * @return array
      */
-    public function updateRecord($data, $keyName)
+    public function updateRecord($data, $keyName, $raw = false)
     {
         $response = [];
         $data = $this->makeArray($data);
@@ -455,17 +455,23 @@ class Table extends Model
                             $value = $value ?: "0";
                         }
                         if ($key == "tags") {
-                            $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                            $value = $value?:"null";
+                            if (!$raw) {
+                                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                            }
                         }
                         // If Meta when update the existing object, so not changed values persist
                         if ($key == "meta") {
-                            $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
+                            $value = $value?:"null";
+                            if ($raw == false) {
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
 
-                            foreach ($value as $fKey => $fValue) {
-                                $rec[$fKey] = $fValue;
+                                foreach ($value as $fKey => $fValue) {
+                                    $rec[$fKey] = $fValue;
+                                }
+                                $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
+                                $stripSlashes = false;
                             }
-                            $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
-                            $stripSlashes = false;
 
                         } else {
                             $stripSlashes = true;

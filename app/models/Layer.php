@@ -729,7 +729,7 @@ class Layer extends \app\models\Table
 
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_", true);
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];
