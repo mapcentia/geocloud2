@@ -77,7 +77,7 @@ class Sql extends \app\inc\Model
         $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
 
         $this->begin();
-        $this->execQuery('SET LOCAL statement_timeout = 5000');
+        $this->execQuery('SET LOCAL statement_timeout = 10000');
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
