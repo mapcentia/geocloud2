@@ -60,8 +60,7 @@ class Layer extends \app\models\Table
                 } // Check for tags
                 elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
                     $tags[] = explode(":", $part)[1];
-                }
-                else {
+                } else {
                     $schemata[] = $part;
 
                 }
@@ -73,8 +72,8 @@ class Layer extends \app\models\Table
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
         $sort = "sort";
-        $sort.= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        $sort.= ",f_table_name DESC";
+        $sort .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+        $sort .= ",f_table_name DESC";
 
         if (sizeof($schemata) > 0) {
             $schemaStr = "''" . implode("'',''", $schemata) . "''";
@@ -237,7 +236,7 @@ class Layer extends \app\models\Table
                     $response['data'][] = $arr;
                 } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
                     $response['data'][] = $arr;
-                // Always add layers with Write and None.
+                    // Always add layers with Write and None.
                 } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
                     $response['data'][] = $arr;
                 }
@@ -566,6 +565,27 @@ class Layer extends \app\models\Table
         if ($res['success'] == true) {
             $response['success'] = true;
             $response['message'] = "Privileges updates";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $res['message'];
+            $response['code'] = 403;
+        }
+        return $response;
+    }
+
+    /**
+     * @param $_key_
+     * @return array
+     */
+    public function updateLastmodified($_key_)
+    {
+        $response = [];
+        $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
+        $table = new Table("settings.geometry_columns_join");
+        $res = $table->updateRecord(["data" => $object], "_key_");
+        if ($res['success'] == true) {
+            $response['success'] = true;
+            $response['message'] = "Lastmodified updates";
         } else {
             $response['success'] = false;
             $response['message'] = $res['message'];
