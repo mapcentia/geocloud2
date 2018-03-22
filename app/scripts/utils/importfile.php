@@ -119,7 +119,7 @@ $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
     "-nlt {$geomType}";
 exec($cmd . ' 2>&1', $out, $err);
 
-//array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
+array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
 
 foreach ($out as $line) {
     if (strpos($line, "FAILURE") !== false) {

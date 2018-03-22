@@ -125,9 +125,7 @@ function getCmdFile()
 
 function getCmdZip()
 {
-    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $schema, $randTableName, $downloadSchema;
-
-    $file = "";
+    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $schema, $randTableName, $downloadSchema, $outFileName;
 
     print "Fetching remote zip...\n\n";
     $ch = curl_init();
@@ -198,8 +196,8 @@ function getCmdZip()
     }
 
     $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile);
-    foreach (new RecursiveIteratorIterator($it) as $file) {
-        $files = explode('.', $file);
+    foreach (new RecursiveIteratorIterator($it) as $f) {
+        $files = explode('.', $f);
         if (in_array(strtolower(array_pop($files)), $ext))
             break;
     }
@@ -213,7 +211,7 @@ function getCmdZip()
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        "'" . $file . "' " .
+        "'" . $outFileName . "' " .
         "-nln " . $schema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
@@ -287,7 +285,7 @@ $table->begin();
 // Pre run SQL
 // ============
 if ($preSql) {
-    foreach (explode(";", $preSql) as $q) {
+    foreach (explode(";", trim($preSql, ";")) as $q) {
         print "Running pre-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
@@ -403,7 +401,7 @@ if ($extra) {
 // Post run SQL
 // ============
 if ($postSql) {
-    foreach (explode(";", $postSql) as $q) {
+    foreach (explode(";",  trim($postSql, ";")) as $q) {
         print "Running post-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
@@ -429,7 +427,7 @@ print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $randTableName, $table, $jobId, $dir, $tempFile;
+    global $schema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db;
 
     // Unlink temp file
     // ================
@@ -443,9 +441,10 @@ function cleanUp($success = 0)
                 unlink($file->getRealPath());
             }
         }
-        rmdir($dir . "/" . $tempFile);
+       rmdir($dir . "/" . $tempFile);
     }
-        unlink($dir . "/" . $tempFile);
+    unlink($dir . "/" . $tempFile);
+    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
 
 
     // Update jobs table
@@ -469,8 +468,8 @@ function cleanUp($success = 0)
         print_r($e->getMessage());
     }
 
-    // lasttimestamp
     if ($success) {
+        // lasttimestamp
         $res = $job->prepare("UPDATE jobs SET lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
         try {
             $res->execute(["id" => $jobId]);
@@ -487,6 +486,13 @@ function cleanUp($success = 0)
         print_r($e->getMessage());
     }
     print "\nTemp table dropped.\n\n";
+
+    if ($success) {
+        \app\models\Database::setDb($db);
+        $layer = new \app\models\Layer();
+        $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
+        print_r($res);
+    }
 }
 
 cleanUp(1);
