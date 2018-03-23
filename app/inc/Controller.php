@@ -198,6 +198,12 @@ class Controller
                         switch ($transaction) {
                             case false:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
+                                    // Always let suusers read from layers open to all
+                                    if($auth == "None"  || $auth == "Write") {
+                                        $response['success'] = true;
+                                        $response['code'] = 200;
+                                        break;
+                                    }
                                     $response['success'] = false;
                                     $response['message'] = "You don't have privileges to see '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
