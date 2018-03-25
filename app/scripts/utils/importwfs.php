@@ -63,9 +63,9 @@ function which($cmd)
 $pass = true;
 
 while ($row = $database->fetchRow($res)) {
-
+    global $count;
+    $count = 1;
     fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
-
 }
 
 echo "\n";
@@ -73,7 +73,7 @@ exit(0);
 
 function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs)
 {
-    global $pass;
+    global $pass, $count;
     $out = [];
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
@@ -113,11 +113,14 @@ function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $g
 
     if (!$pass) {
 
-        echo "-";
+        if ($count > 2) {
+            echo "Too many recursive tries to fetch cell\n";
+            exit(1);
+        }
 
-        sleep(10);
+        sleep(5);
+        $count++;
         fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
-
 
         foreach ($out as $line) {
             echo $line . "\n";
@@ -156,7 +159,7 @@ function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $g
     $database->execQuery($sql);
     print_r($database->PDOerror);
 
-    echo "+";
+    echo $count;
 }
 
 
