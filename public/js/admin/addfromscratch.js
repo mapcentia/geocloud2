@@ -45,7 +45,6 @@ addScratch.init = function () {
                 triggerAction: 'all',
                 forceSelection: true,
                 editable: false,
-                //fieldLabel: 'type',
                 name: 'type',
                 displayField: 'name',
                 valueField: 'value',
@@ -57,6 +56,17 @@ addScratch.init = function () {
                         {
                             name: 'POINT',
                             value: 'POINT'
+                        },
+                        {
+                            name: 'LINESTRING',
+                            value: 'LINESTRING'
+                        },
+                        {
+                            name: 'POLYGON',
+                            value: 'POLYGON'
+                        },{
+                            name: 'MULTIPOINT',
+                            value: 'MULTIPOINT'
                         },
                         {
                             name: 'MULTILINESTRING',

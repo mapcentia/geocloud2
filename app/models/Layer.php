@@ -116,8 +116,9 @@ class Layer extends \app\models\Table
 
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
-            $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-            $resVersioning = $this->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
+            $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
+            $primeryKey = $this->getPrimeryKey($rel);
+            $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
             $versioning = $resVersioning["exists"];
             if ($row['type'] != "RASTER" && $includeExtent == true) {
                 $srsTmp = "900913";
@@ -205,6 +206,8 @@ class Layer extends \app\models\Table
                     curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0.1);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 0.1);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
                     ));
@@ -228,6 +231,8 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
             }
+
+            $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel));
 
             // If session is sub-user we always check privileges
             if (isset($_SESSION) && $_SESSION['subuser']) {
