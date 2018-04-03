@@ -221,6 +221,7 @@ class Feature extends \app\inc\Controller
 
         }
         $xml .= "</wfs:Transaction>\n";
+
         return $this->commit($xml);
     }
 
