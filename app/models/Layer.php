@@ -164,7 +164,8 @@ class Layer extends \app\models\Table
                         ($key == "fieldconf" ||
                             $key == "def" ||
                             $key == "class" ||
-                            $key == "classwizard"
+                            $key == "classwizard" ||
+                            $key == "meta"
                         ) && ($value)
                     ) {
                         $value = json_decode($value);
