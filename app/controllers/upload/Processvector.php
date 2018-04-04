@@ -154,10 +154,8 @@ class Processvector extends \app\inc\Controller
             ($skipFailures ? "-skipfailures " : " ") .
             (($delete || $append) ? "-append " : " ") .
             (($overwrite == true && $delete == false) ? "-overwrite " : " ") .
-
             // TODO Set dim i GUI
-
-            /*"-dim XY " . */
+            "-dim XY " .
             /*"--config DXF_ENCODING WIN1252 " .*/
             (($fileType == "csv") ? "-oo AUTODETECT_TYPE=YES " : "") .
             (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
