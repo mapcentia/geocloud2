@@ -193,7 +193,8 @@ class Mapcachefile extends \app\inc\Controller
 foreach ($layerArr as $k => $v) {
     if (sizeof($v) > 0) {
 
-        $cache = App::$param["mapCache"]["type"] ?: "sqlite";
+        //$cache = App::$param["mapCache"]["type"] ?: "sqlite";
+        $cache = "disk";
 
         ?>
         <!-- <?php echo $k ?> -->
@@ -243,7 +244,8 @@ foreach ($layerArr as $k => $v) {
  */
 foreach ($groupArr as $k => $v) {
 
-    $cache = App::$param["mapCache"]["type"] ?: "sqlite";
+    //$cache = App::$param["mapCache"]["type"] ?: "sqlite";
+    $cache = "disk";
 
     $unique = array_unique($groups[$k]);
     foreach ($unique as $v2) {
