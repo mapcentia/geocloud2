@@ -186,6 +186,7 @@ if (Input::getPath()->part(1) == "api") {
     foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
         include_once($filename);
     }
+    Route::miss();
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
