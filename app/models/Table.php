@@ -230,6 +230,27 @@ class Table extends Model
             $matViews[$row["matviewname"]] = true;
             $matViewDefinitions[$row["matviewname"]] = $row["definition"];
         }
+
+        // Check if Es is online
+        // =====================
+        $esOnline = false;
+        $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+        $ch = curl_init($esUrl);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode == "200") {
+            $esOnline = true;
+        }
+
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $arr = array();
@@ -283,18 +304,18 @@ class Table extends Model
                 }
                 $arr = $this->array_push_assoc($arr, "reltype", $relType);
 
-                // Is indexed?
-                if (1 == 1) {
+                if ($esOnline) {
                     $type = $row['f_table_name'];
                     if (\mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
                     ));
@@ -306,7 +327,10 @@ class Table extends Model
                     } else {
                         $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                     }
+                } else {
+                    $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
+
                 $response['data'][] = $arr;
             }
         }
