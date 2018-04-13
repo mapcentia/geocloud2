@@ -39,10 +39,14 @@ class Mapcachefile extends \app\inc\Controller
 
         <cache name="sqlite" type="sqlite3">
             <dbfile><?php echo App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param['postgisdb'] . "/{tileset}.sqlite3" ?></dbfile>
+            <symlink_blank/>
+            <creation_retry>3</creation_retry>
         </cache>
 
         <cache name="disk" type="disk">
             <base><?php echo App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param['postgisdb'] . "/"; ?></base>
+            <symlink_blank/>
+            <creation_retry>3</creation_retry>
         </cache>
 
         <cache name="s3" type="s3">
@@ -59,6 +63,8 @@ class Mapcachefile extends \app\inc\Controller
                     <x-amz-acl>public-read</x-amz-acl>
                 </headers>
             </operation>
+            <symlink_blank/>
+            <creation_retry>3</creation_retry>
         </cache>
 
         <format name="jpeg_low" type="JPEG">
@@ -130,6 +136,41 @@ class Mapcachefile extends \app\inc\Controller
                     ?>
 
                     <!-- <?php echo $table ?> -->
+
+                    <?php
+
+                    if ($cache == "bdb") {
+
+                        $cache = "bdb_" . $table;
+
+                    $bdbBase = App::$param['path'] . "app/wms/mapcache/bdb/";
+
+                    if (!file_exists($bdbBase)) {
+                        @mkdir($bdbBase);
+                    }
+
+                    $bdbBase = App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param['postgisdb'] . "/";
+
+                    if (!file_exists($bdbBase)) {
+                        @mkdir($bdbBase);
+                    }
+
+                    $bdbBase = App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param['postgisdb'] . "/" . $table;
+
+                    if (!file_exists($bdbBase)) {
+                        @mkdir($bdbBase);
+                    }
+
+
+                    ?>
+
+                   <cache name="<?php echo $cache ?>" type="bdb">
+                        <base><?php echo $bdbBase ?></base>
+                        <symlink_blank/>
+                        <creation_retry>3</creation_retry>
+                    </cache>
+
+                    <?php } ?>
 
                     <source name="<?php echo $table ?>" type="wms">
                     <getmap>

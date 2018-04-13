@@ -213,7 +213,10 @@ tileLayer.init = function (record) {
                         }, {
                             name: 'S3',
                             value: 's3'
-                        }
+                        }/*, {
+                            name: 'Berke',
+                            value: 'bdb'
+                        }*/
                     ]
                 }),
                 editable: false,

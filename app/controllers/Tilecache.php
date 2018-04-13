@@ -167,6 +167,22 @@ class Tilecache extends \app\inc\Controller
                 $response['success'] = true;
                 $response['message'] = "Tile cache deleted";
                 break;
+
+            case "bdb";
+
+
+                $dba = \dba_open(App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param["postgisdb"] . "/" . "feature.polygon/bdb_feature.polygon.db", "c", "db4");
+
+                $key = dba_firstkey($dba);
+                while ($key !== false && $key !== null) {
+                    dba_delete($key, $dba);
+                    $key = dba_nextkey($dba);
+                }
+                dba_sync($dba);
+
+                $response['success'] = true;
+                $response['message'] = "Tile cache deleted";
+                break;
         }
         return Response::json($response);
     }
