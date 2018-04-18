@@ -39,7 +39,7 @@ var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, ac
 
 var cloud, gc2, layer, grid, featureStore, map, viewport, drawControl, gridPanel, modifyControl, tree,
     viewerSettings,
-    loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin,
+    loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, searchWin,
     measureWin, privilegesStore,
     placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
 
@@ -530,27 +530,6 @@ $(document).ready(function () {
             }
         }];
 
-    getMetaData = function () {
-        $.ajax({
-            url: '/controllers/layer/records',
-            async: true,
-            dataType: 'json',
-            type: 'GET',
-            success: function (response) {
-                metaData = response;
-                for (var i = 0; i < metaData.data.length; i++) {
-                    metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                    if (!metaData.data[i].f_table_title) {
-                        metaData.data[i].f_table_title = metaData.data[i].f_table_name;
-                    }
-                    metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
-                }
-                loadTree(response)
-            }
-        }); // Ajax call end
-    };
-    getMetaData();
-
     /**
      *
      * @type {Ext.data.JsonReader}
@@ -600,6 +579,18 @@ $(document).ready(function () {
         },
         listeners: {
             write: onWrite,
+            load: function (store, records, data, the) {
+              console.log(records.reader.jsonData);
+                metaData = records.reader.jsonData;
+                for (var i = 0; i < metaData.data.length; i++) {
+                    metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                    if (!metaData.data[i].f_table_title) {
+                        metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                    }
+                    metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+                }
+                loadTree(records.reader.jsonData)
+            },
             exception: function (proxy, type, action, options, response, arg) {
                 if (response.status !== 200) {
                     Ext.MessageBox.show({
@@ -3951,7 +3942,6 @@ $(document).ready(function () {
             url: '/controllers/mapfile',
             success: function (response) {
                 updateLegend();
-                // getMetaData();
 
                 if (clearCachedLayer) {
                     clearTileCache(clearCachedLayer);
@@ -4411,7 +4401,7 @@ $(document).ready(function () {
     };
 
     reLoadTree = function () {
-        getMetaData();
+        store.reload();
     };
     var sketchSymbolizers = {
         "Point": {
