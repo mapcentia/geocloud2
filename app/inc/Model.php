@@ -441,6 +441,9 @@ class Model
         if ($field == 'featureid') {
             return $row['featureid'];
         }
+        if ($field == '*') {
+            return $row;
+        }
     }
 
     public function toAscii($str, $replace = array(), $delimiter = '-')

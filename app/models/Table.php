@@ -56,9 +56,10 @@ class Table extends Model
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
+            $geometryColumns = $this->getGeometryColumns($this->table, "*");
             $this->metaData = $this->getMetaData($this->table, $temp);
-            $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
-            $this->geomType = $this->getGeometryColumns($this->table, "type");
+            $this->geomField = $geometryColumns["f_geometry_column"];
+            $this->geomType = $geometryColumns["type"];
             $this->primeryKey = $this->getPrimeryKey($this->table);
             $this->setType();
             $this->exits = true;
