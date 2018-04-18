@@ -249,7 +249,7 @@ tileLayer.init = function (record) {
                             'Content-Type': 'application/json; charset=utf-8'
                         },
                         success: function (response) {
-                            writeFiles(record._key_);
+                            writeMapCacheFile(record._key_);
                             App.setAlert(App.STATUS_NOTICE, __("The layer settings are updated"));
                         },
                         failure: function (response) {

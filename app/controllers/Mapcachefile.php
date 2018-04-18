@@ -103,7 +103,7 @@ class Mapcachefile extends \app\inc\Controller
         }
         $arr = array();
         $table = null;
-        $sql = "SELECT * FROM settings.geometry_columns_view ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.geometry_columns_view";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             ob_get_clean();

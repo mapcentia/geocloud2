@@ -30,7 +30,7 @@ Ext.MessageBox.buttonText = {
 /**
  * Set vars in function scope
  */
-var form, store, writeFiles, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, resetButtons,
+var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, resetButtons,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
@@ -3942,9 +3942,9 @@ $(document).ready(function () {
     });
 
     /**
-     *
+     * TODO Rename to writeMapFile
+     * Write out the MapFile
      * @param clearCachedLayer
-     * @param map
      */
     writeFiles = function (clearCachedLayer) {
         $.ajax({
@@ -3958,10 +3958,19 @@ $(document).ready(function () {
                 }
             }
         });
+    };
 
+    /**
+     * Write out the MapCache file
+     * @param clearCachedLayer
+     */
+    writeMapCacheFile = function (clearCachedLayer) {
         $.ajax({
             url: '/controllers/mapcachefile',
             success: function (response) {
+                if (clearCachedLayer) {
+                    clearTileCache(clearCachedLayer);
+                }
             }
         });
     };
