@@ -12,6 +12,7 @@ class Table extends Model
     // TODO Set access on all vars
     public $table;
     public $schema;
+    public $geometryColumns;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
@@ -56,10 +57,10 @@ class Table extends Model
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
-            $geometryColumns = $this->getGeometryColumns($this->table, "*");
+            $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
             $this->metaData = $this->getMetaData($this->table, $temp);
-            $this->geomField = $geometryColumns["f_geometry_column"];
-            $this->geomType = $geometryColumns["type"];
+            $this->geomField = $this->geometryColumns["f_geometry_column"];
+            $this->geomType = $this->geometryColumns["type"];
             $this->primeryKey = $this->getPrimeryKey($this->table);
             $this->setType();
             $this->exits = true;
@@ -566,7 +567,7 @@ class Table extends Model
         $fieldsForStore = [];
         $columnsForGrid = [];
         $type = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
             if ($value->properties == "*") {
                 $table = new \app\models\Table($this->table);
@@ -642,7 +643,7 @@ class Table extends Model
     {
         $response = [];
         $arr = array();
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         if (!$this->metaData) {
             $response['data'] = array();
         }
@@ -686,7 +687,7 @@ class Table extends Model
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
             if (!$this->metaData[$key]) {
                 unset($fieldconfArr[$key]);
@@ -710,7 +711,7 @@ class Table extends Model
         $this->purgeFieldConf($key); // TODO What?
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
@@ -787,7 +788,7 @@ class Table extends Model
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             if (in_array($value, $this->sysCols)) {
                 $response['success'] = false;
