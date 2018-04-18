@@ -3958,16 +3958,7 @@ $(document).ready(function () {
                 }
             }
         });
-        $.ajax({
-            url: '/controllers/cfgfile',
-            success: function (response) {
-            }
-        });
-        /*$.ajax({
-         url: '/controllers/tinyowsfile',
-         success: function (response) {
-         }
-         });*/
+
         $.ajax({
             url: '/controllers/mapcachefile',
             success: function (response) {
