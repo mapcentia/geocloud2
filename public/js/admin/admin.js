@@ -30,7 +30,8 @@ Ext.MessageBox.buttonText = {
 /**
  * Set vars in function scope
  */
-var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd, resetButtons,
+var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd,
+    resetButtons,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
@@ -41,7 +42,8 @@ var cloud, gc2, layer, grid, featureStore, map, viewport, drawControl, gridPanel
     viewerSettings,
     loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, searchWin,
     measureWin, privilegesStore,
-    placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
+    placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools,
+    firstLoad = true;
 
 /**
  * Init the app on ready state
@@ -580,7 +582,6 @@ $(document).ready(function () {
         listeners: {
             write: onWrite,
             load: function (store, records, data, the) {
-              console.log(records.reader.jsonData);
                 metaData = records.reader.jsonData;
                 for (var i = 0; i < metaData.data.length; i++) {
                     metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
@@ -589,7 +590,10 @@ $(document).ready(function () {
                     }
                     metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
                 }
-                loadTree(records.reader.jsonData)
+                if (firstLoad) {
+                    firstLoad = false;
+                    loadTree(records.reader.jsonData);
+                }
             },
             exception: function (proxy, type, action, options, response, arg) {
                 if (response.status !== 200) {
@@ -1603,7 +1607,7 @@ $(document).ready(function () {
                                             displayField: 'tag',
                                             valueField: 'tag',
                                             mode: 'local',
-                                            value: (records.length === 1 ) ? ((records[0].data.tags !== null) ? Ext.decode(records[0].data.tags) : []) : [],
+                                            value: (records.length === 1) ? ((records[0].data.tags !== null) ? Ext.decode(records[0].data.tags) : []) : [],
                                             listeners: {
                                                 newitem: function (bs, v, f) {
                                                     bs.addNewItem({
@@ -2946,7 +2950,7 @@ $(document).ready(function () {
             return false;
         }
         new Ext.Window({
-            title: '<i class="fa fa-eye"></i> ' +__("Class wizard"),
+            title: '<i class="fa fa-eye"></i> ' + __("Class wizard"),
             layout: 'fit',
             width: 700,
             height: 540,
@@ -4401,6 +4405,7 @@ $(document).ready(function () {
     };
 
     reLoadTree = function () {
+        firstLoad = true; // Reset
         store.reload();
     };
     var sketchSymbolizers = {
@@ -4458,6 +4463,7 @@ $(document).ready(function () {
             }
         )
     };
+
     function handleMeasurements(event) {
         var geometry = event.geometry;
         var units = event.units;
@@ -4536,8 +4542,6 @@ $(document).ready(function () {
             })
         ]
     })
-
-
 
 
     measureControls.line.events.on({
