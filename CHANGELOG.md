@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Upgraded QGIS-server to 2.18 LTR. Upload of 2.14 QGS files will still work.
 - The advanced layer panel is moved from right side to the left.
 - Some rearrangement of buttons.
+- Optimized queries for geometry_columns in models.
+- Reduced number of API call ind GC2 Admin making it faster.
 - HTML title changed to "GC2 Admin"
 - MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
 - geocloud.js can now base64 encode the SQL string to avoid filtering in "threat filters". Use base64:true|false in request (true is default).
