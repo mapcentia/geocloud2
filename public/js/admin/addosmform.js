@@ -202,7 +202,6 @@ addOsm.init = function () {
                                 'Content-Type': 'application/json; charset=utf-8'
                             },
                             success: function () {
-                                store.reload();
                                 reLoadTree();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },

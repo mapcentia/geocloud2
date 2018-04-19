@@ -1,57 +1,144 @@
+<script>window.geocloud_host="http://cowi.mapcentia.com"</script>
 <script src="http://127.0.0.1/apps/widgets/gc2map/js/gc2map.js"></script>
 <script src="http://127.0.0.1/apps/widgets/gc2table/js/gc2table.js"></script>
 <script src="http://127.0.0.1/apps/widgets/gc2map/js/searchModules/danish.js"></script>
-    <style>
-#legend-popover-li-map, #open-win-li-map{
-    display:inline;
-}
-.table > thead > tr > th > div,
-.table > tbody > tr > td
-{
-    font-size: 12px !important;
-    line-height: 2 !important;
-    vertical-align: top !important;
+
+<style>
+    #legend-popover-li-map, #open-win-li-map{
+        display:none;
+    }
+    .table > thead > tr > th > div,
+    .table > tbody > tr > td
+    {
+        font-size: 12px !important;
+        line-height: 2 !important;
+        vertical-align: top !important;
 
 
-}
+    }
 
-}
+    }
 </style>
-<div id="test">
-<div style="position:relative" id="map"></div>
+<div>
+    <div style="position:relative" id="map"></div>
     <div>
-    <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"
-data-filter-control="true"></table>
+        <table id="table" data-show-toggle="true" data-show-export="true" data-show-columns="true"
+               data-filter-control="true"></table>
     </div>
 </div>
 
-    <script>
+<script>
+    // Lav en widget på normal vis
+    gc2map.init({
+        key: "map",
+        db: 'vejle',
+        zoom: [9.5354,55.7042,9],
+        layers: ['kommuneplan17.perspektivomraader','kommuneplan17.kpplandk2_view_labels'],
+        baseLayers: [{"id": "osm", "name": "OSM"}, {id: "public.ddo_2014", "name": "Ortofoto DDO 2014"}],
+        setBaseLayer: 'osm',
+        width: '100%',
+        height: '100px',
+        callBack: function (m, w) {
 
-// Render function for creating hyperlink in grid
-var formatURL = function(value){
-    myURL = '';
-    if(value !== ''){
-        myURL = '<a href="' + value + '" target="_blank">' + "Link" +'</a>';
-    }
-    return myURL;
-};
+            // Aktiver søgning med kommune nr.
+            gc2map.createSearch(m, "630");
+
+            // Lav et SQL store på normal vis
+            var store = new geocloud.sqlStore({
+                db: "vejle",
+                sql: "SELECT anvgen,plannr,plannavn,html,textvalue as anv,(case when status = 'vedtaget' then 'Vedtaget' else 'Forslag' END) as status,the_geom FROM kommuneplan17.kpplandk2_view,ANVGEN_PLANDK2 WHERE  (status = 'forslag' OR status = 'vedtaget') AND langid=1 AND ANVGEN_PLANDK2.fieldkey=kommuneplan17.kpplandk2_view.anvgen AND distrikt = '1.5' AND ST_transform(the_geom, 4326) && ST_MakeEnvelope({minX}, {minY}, {maxX}, {maxY}, 4326) order by plannr",
+
+                // StyleMap laves som en funktion
+                styleMap: function (feature) {
+                    return {
+                        fillColor: (function (d) {
+                            return d === "11" ? '#c66100' :
+                                d === "21" ? '#ff615a' :
+                                    d === "31" ? '#6bffff' :
+                                        d === "41" ? '#ff69ff' :
+                                            d === "51" ? '#39ff39' :
+                                                d === "61" ? '#ffefad' :
+                                                    d === "71" ? '#efef00' :
+                                                        d === "81" ? '#9c9e9c' :
+                                                            d === "91" ? '#9c9e9c' :
+                                                                d === "96" ? '#C0C0C0' :
+                                                                    '#FFEDA0'
 
 
-// Lav en widget på normal vis
-gc2map.init({
-    key: "map",
-    db: 'mydb',
-    zoom: [11.3904,55.3127,10],
-    layers: ['test.dbo_t_5710_born_skole_dis_region'],
-    baseLayers: [{"id": "osm", "name": "OSM"}],
-    setBaseLayer: 'osm',
-    width: '100%',
-    height: '400px',
-
-});
 
 
+                        }(feature.properties.anvgen)),
+                        weight: 1,
+                        opacity: 1,
+                        color: "#000",
+                        fillOpacity: 0.5
+                    }
+                },
+                onLoad: function () {
+                    // Brug IKKE denne funktion sammen med autoUpdate
+                    m.zoomToExtentOfgeoJsonStore(store);
+                }
+            });
+
+            // Tilføj store til kort og load
+            m.addGeoJsonStore(store);
+            store.load();
+
+            // Indtil nu er det normal widget. Nu begynder tabel
+
+            // Definer en column model
+            var cm = [
+                {
+                    "header": "Plannr",
+                    "dataIndex": "plannr",
+                    "type": "varchar",
+                    filterControl: "input",
+                    sortable: true
+                },
+                {
+                    "header": "Plannavn",
+                    "dataIndex": "plannavn",
+                    "type": "varchar",
+                    "showInPopup": false,
+                    filterControl: "input",
+                    sortable: true
+
+                },
+                {
+                    "header": "Anvendelse",
+                    "dataIndex": "anv",
+                    "showInPopup": false,
+                    filterControl: "select"
+                },
+                {
+                    "header": "Status",
+                    "dataIndex": "status",
+                    "showInPopup": false,
+                    filterControl: "select"
+                },
+                {
+                    "header": "Link",
+                    "dataIndex": "html",
+                    "link": "<span style='white-space: nowrap'>Se ramme</span>",
+                    "showInPopup": true
+                }
+            ];
+
+            // Start tabel widget
+
+            gc2table.init({
+                el: "#table", // Element som tabellen skal lave i
+                geocloud2: m, // geocloud object
+                store: store, // store object
+                cm: cm, // Column model
+                autoUpdate: false, // Skal kortet opdateres ved zoom?
+                height: null, // Skal være null, hvis filter funktioner bruges pga. bug i bootstrap-table
+                tableBodyHeight: 300, // Hack til at afhjælpe ovenstående
+                setViewOnSelect: true, // Zoom når det vælges i tabellen
+                openPopUp: true, // Vis pop up på valgte features
+                setSelectedStyle: true, // Skal valgte features have en Selected style?
+                locale: 'da-DK'
+            });
+        }
+    });
 </script>
-
-<div id="map_example3" style="width: 100%;height: 300px"></div>
-    <div id="grid_example3" style="width: 100%;height: 350px"></div>

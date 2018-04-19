@@ -69,7 +69,6 @@ addView.init = function () {
                             params: param,
                             success: function () {
                                 store.reload();
-                                reLoadTree();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },
                             failure: function (response) {

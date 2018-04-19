@@ -2145,7 +2145,6 @@ $(document).ready(function () {
                                                                 } catch (e) {
                                                                 }
                                                                 reLoadTree();
-                                                                store.reload();
                                                                 App.setAlert(App.STATUS_OK, __("layer rename"));
                                                             },
                                                             failure: function (response) {
@@ -2349,7 +2348,6 @@ $(document).ready(function () {
                                                             },
                                                             success: function () {
                                                                 reLoadTree();
-                                                                store.reload();
                                                                 App.setAlert(App.STATUS_OK, __("Layer properties copied"));
                                                             },
                                                             failure: function (response) {
@@ -2778,6 +2776,7 @@ $(document).ready(function () {
     onEditWMSClasses = function (e) {
         var record = null, markup;
 
+
         Ext.getCmp("layerStylePanel").enable();
         Ext.getCmp("a5").show();
         Ext.getCmp("classTabs").disable();
@@ -2792,6 +2791,141 @@ $(document).ready(function () {
             App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
             return false;
         }
+
+        var _store = new Ext.data.JsonStore({
+            // store config
+            autoLoad: true,
+            url: '/controllers/tile/index/' + record._key_,
+            storeId: 'configStore',
+            // reader config
+            successProperty: 'success',
+            idProperty: 'id',
+            root: 'data',
+            fields: [
+                {
+                    name: 'theme_column'
+                },
+                {
+                    name: 'label_column'
+                },
+                {
+                    name: 'opacity'
+                },
+                {
+                    name: 'label_max_scale'
+                },
+                {
+                    name: 'label_min_scale'
+                },
+                {
+                    name: 'cluster'
+                },
+                {
+                    name: 'maxscaledenom'
+                },
+                {
+                    name: 'minscaledenom'
+                },
+                {
+                    name: 'symbolscaledenom'
+                },
+                {
+                    name: 'geotype'
+                },
+                {
+                    name: 'offsite'
+                },
+                {
+                    name: 'bands'
+                },
+                {
+                    name: 'meta_size'
+                },
+                {
+                    name: 'meta_buffer'
+                },
+                {
+                    name: 'ttl'
+                },
+                {
+                    name: 'auto_expire'
+                },
+                {
+                    name: 'format'
+                },
+                {
+                    name: 'lock',
+                    type: 'boolean'
+                },
+                {
+                    name: 'layers'
+                },
+                {
+                    name: 'cache'
+                }
+
+            ],
+            listeners: {
+                load: {
+                    fn: function (store, records, options) {
+                        var propGridLayer = Ext.getCmp('propGridLayer');
+                        if (propGridLayer) {
+                            // Remove default sorting
+                            delete propGridLayer.getStore().sortInfo;
+                            // set sorting of first column to false
+                            propGridLayer.getColumnModel().getColumnById('name').sortable = false;
+                            propGridLayer.setSource({
+                                "theme_column": store.getAt(0).data.theme_column,
+                                "label_column": store.getAt(0).data.label_column,
+                                "opacity": store.getAt(0).data.opacity,
+                                "label_max_scale": store.getAt(0).data.label_max_scale,
+                                "label_min_scale": store.getAt(0).data.label_min_scale,
+                                "cluster": store.getAt(0).data.cluster,
+                                "maxscaledenom": store.getAt(0).data.maxscaledenom,
+                                "minscaledenom": store.getAt(0).data.minscaledenom,
+                                "symbolscaledenom": store.getAt(0).data.symbolscaledenom,
+                                "geotype": store.getAt(0).data.geotype,
+                                "offsite": store.getAt(0).data.offsite,
+                                "bands": store.getAt(0).data.bands
+                            });
+                        }
+
+                        var propGridTiles = Ext.getCmp('propGridTiles');
+                        if (propGridTiles) {
+                            // Remove default sorting
+                            delete propGridTiles.getStore().sortInfo;
+                            // set sorting of first column to false
+                            propGridTiles.getColumnModel().getColumnById('name').sortable = false;
+                            propGridTiles.setSource({
+                                "meta_size": store.getAt(0).data.meta_size,
+                                "meta_buffer": store.getAt(0).data.meta_buffer,
+                                "ttl": store.getAt(0).data.ttl,
+                                "auto_expire": store.getAt(0).data.auto_expire,
+                                "format": store.getAt(0).data.format,
+                                "lock": store.getAt(0).data.lock,
+                                "layers": store.getAt(0).data.layers,
+                                "cache": store.getAt(0).data.cache
+
+                            });
+                        }
+                    }
+                },
+                exception: function (proxy, type, action, options, response, arg) {
+                    if (response.status !== 200) {
+                        Ext.MessageBox.show({
+                            title: __('Failure'),
+                            msg: __(Ext.decode(response.responseText).message),
+                            buttons: Ext.MessageBox.OK,
+                            width: 300,
+                            height: 300
+                        });
+                        store.reload();
+                    }
+                }
+            }
+        });
+
+
         activeLayer = record.f_table_schema + "." + record.f_table_name;
         markup = [
             '<table style="margin-bottom: 7px"><tr class="x-grid3-row"><td>' + __('A SQL must return a primary key and a geometry. Naming and srid must match this') + '</td></tr></table>' +
@@ -2816,7 +2950,7 @@ $(document).ready(function () {
         a4.remove(wmsLayer.sqlForm);
         wmsLayer.grid = null;
         wmsLayer.sqlForm = null;
-        wmsLayer.init(record);
+        wmsLayer.init(record); // TODO
         a1.add(wmsLayer.grid);
         a4.add(wmsLayer.sqlForm);
         a1.doLayout();
@@ -2826,7 +2960,7 @@ $(document).ready(function () {
         var a12 = Ext.getCmp("a12");
         a12.remove(tileLayer.grid);
         tileLayer.grid = null;
-        tileLayer.init(record);
+        tileLayer.init(record); // TODO
         a12.add(tileLayer.grid);
         a12.doLayout();
 

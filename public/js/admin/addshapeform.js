@@ -46,7 +46,6 @@ addShape.init = function () {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
                                     reLoadTree();
-                                    store.load();
                                     if (errors.length > 0) {
                                         for (i = 0; i < errors.length; i = i + 1) {
                                             strings.push(errors[i]);

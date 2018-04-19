@@ -135,7 +135,7 @@ if (Input::getPath()->part(1) == "api") {
 } elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");
-    $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ?: "public";
+    $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
     include_once("admin.php");
     if (\app\conf\App::$param['intercom_io']) {
         include_once("../app/conf/intercom.js.inc");

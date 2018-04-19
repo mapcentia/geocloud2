@@ -38,7 +38,6 @@ addRasterFile.init = function () {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
-                                    reLoadTree();
                                     store.load();
                                 }
                                 spinner(false);

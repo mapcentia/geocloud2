@@ -1,99 +1,8 @@
 Ext.namespace('tileLayer');
 tileLayer.init = function (record) {
-    tileLayer.fieldsForStore = [];
-    tileLayer.numFieldsForStore = [];
-    tileLayer.fieldsForStoreBrackets = [];
     tileLayer.defaultSql = record.data || "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name;
-    $.ajax({
-        url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
-        async: false,
-        dataType: 'json',
-        type: 'GET',
-        success: function (data) {
-            var response = data,
-                forStore = response.forStore,
-                i;
-            tileLayer.fieldsForStore.push("");
-            tileLayer.numFieldsForStore.push("");
-            tileLayer.fieldsForStoreBrackets.push("");
-            for (i in forStore) {
-                if (forStore.hasOwnProperty(i)) {
-                    tileLayer.fieldsForStore.push(forStore[i].name);
-                    tileLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
-                    if (forStore[i].type === "number" || forStore[i].type === "int") {
-                        tileLayer.numFieldsForStore.push(forStore[i].name);
-                    }
-                }
-            }
-        }
-    });
     tileLayer.classId = record._key_;
-    tileLayer.store = new Ext.data.JsonStore({
-        // store config
-        autoLoad: true,
-        url: '/controllers/tile/index/' + record._key_,
-        storeId: 'configStore',
-        // reader config
-        successProperty: 'success',
-        idProperty: 'id',
-        root: 'data',
-        fields: [
-            {
-                name: 'meta_size'
-            },
-            {
-                name: 'meta_buffer'
-            },
-            {
-                name: 'ttl'
-            },
-            {
-                name: 'auto_expire'
-            },
-            {
-                name: 'format'
-            },
-            {
-                name: 'lock',
-                type: 'boolean'
-            },
-            {
-                name: 'layers'
-            },
-            {
-                name: 'cache'
-            }
-        ],
-        listeners: {
-            load: {
-                fn: function (store, records, options) {
-                    // get the property grid component
-                    var propGridTiles = Ext.getCmp('propGridTiles');
-                    // make sure the property grid exists
-                    if (propGridTiles) {
-                        // Remove default sorting
-                        delete propGridTiles.getStore().sortInfo;
-                        // set sorting of first column to false
-                        propGridTiles.getColumnModel().getColumnById('name').sortable = false;
-                        // populate the property grid with store data
-                        propGridTiles.setSource(store.getAt(0).data);
-                    }
-                }
-            },
-            exception: function (proxy, type, action, options, response, arg) {
-                if (response.status !== 200) {
-                    Ext.MessageBox.show({
-                        title: __('Failure'),
-                        msg: __(Ext.decode(response.responseText).message),
-                        buttons: Ext.MessageBox.OK,
-                        width: 300,
-                        height: 300
-                    });
-                    store.reload();
-                }
-            }
-        }
-    });
+
     tileLayer.grid = new Ext.grid.PropertyGrid({
         id: 'propGridTiles',
         autoHeight: true,
@@ -116,16 +25,6 @@ tileLayer.init = function (record) {
         },
 
         customEditors: {
-            'label_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: tileLayer.fieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'theme_column': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: tileLayer.fieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
             'opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char nobody is using

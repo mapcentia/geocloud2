@@ -38,7 +38,6 @@ addBitmap.init = function () {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
                                     reLoadTree();
-                                    store.load();
                                 }
                                 spinner(false);
                                 return;

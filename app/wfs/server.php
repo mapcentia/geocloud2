@@ -87,7 +87,7 @@ $unserializer_options = array(
 );
 $unserializer = new XML_Unserializer($unserializer_options);
 
-$sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$_SESSION['screen_name']} -->\n<!-- usergroup: {$_SESSION['usergroup']} -->\n";
+$sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$_SESSION['screen_name']} -->\n<!-- usergroup: {$_SESSION['usergroup']} -->\n<!-- schema: {$_SESSION['postgisschema']} -->\n";
 
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
