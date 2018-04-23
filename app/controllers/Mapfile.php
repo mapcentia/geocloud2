@@ -332,7 +332,7 @@ class Mapfile extends \app\inc\Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-
+                GROUP "<?php echo $row['layergroup']?>"
 
                 <?php if ($row['filter']) { ?>
                     FILTER "<?php echo $row['filter']; ?>"
@@ -466,6 +466,7 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "ows_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
+                "wms_group_title" "<?php echo $row['layergroup']?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
