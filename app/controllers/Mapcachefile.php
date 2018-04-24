@@ -31,6 +31,13 @@ class Mapcachefile extends \app\inc\Controller
         ob_start(); ?>
 
         <mapcache>
+
+            <locker type="disk">
+                <directory><?php echo App::$param['path'] . "app/wms/mapcache/disk/"; ?></directory>
+                <timeout>10</timeout>
+                <retry>0.2</retry>
+            </locker>
+
         <metadata>
             <title>my mapcache service</title>
             <abstract>woot! this is a service abstract!</abstract>
@@ -122,7 +129,9 @@ class Mapcachefile extends \app\inc\Controller
                     $meta_size = $def->meta_size ?: "3";
                     $meta_buffer = $def->meta_buffer ?: 0;
                     $expire = $def->ttl < 30 ? 30 : $def->ttl;
-                    $auto_expire = $def->lock ? null : ($def->auto_expire ?: ($row['filesource'] ? null : 3600));
+                    // It seems that auto expire makes the server hang!
+                    //$auto_expire = $def->lock ? null : ($def->auto_expire ?: ($row['filesource'] ? null : 3600));
+                    $auto_expire = $def->auto_expire ?: null;
                     $format = $def->format ?: "PNG";
                     $cache = $def->cache ?: App::$param["mapCache"]["type"];
                     $layers = $def->layers ? "," . $def->layers : "";
