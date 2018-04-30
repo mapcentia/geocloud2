@@ -27,6 +27,9 @@ class Processvector extends \app\inc\Controller
         $append = Input::get("append") == "true" ? true : false;
         $overwrite = Input::get("overwrite") == "true" ? true : false;
 
+        // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
+        putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
+
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
         }
@@ -187,7 +190,6 @@ class Processvector extends \app\inc\Controller
 
         // Set layer editable
         // ==================
-
         $join = new \app\models\Table("settings.geometry_columns_join");
         $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
         $data = (array)json_decode(urldecode($json));
