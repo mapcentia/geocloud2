@@ -190,11 +190,11 @@ class Setting extends Model
             return $response;
         }
 
-        $obj = (array)$arr['userGroups'];
-        foreach ($userGroup as $key => $value) {
+        $obj = $arr->userGroups;
+        foreach ((array)$userGroup as $key => $value) {
             $obj[$key] = $value;
         }
-        $arr['userGroups'] = $obj;
+        $arr->userGroups = $obj;
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
             $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
