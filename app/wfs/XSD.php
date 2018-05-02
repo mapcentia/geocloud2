@@ -32,6 +32,8 @@ foreach ($tables as $table) {
     $tableObj = new \app\models\table($postgisschema . "." . $table);
     $primeryKey = $tableObj->primeryKey;
 
+    $simpleType = false;
+
     foreach ($tableObj->metaData as $key => $value) {
         if ($key != $primeryKey['attname']) {
             $fieldsArr[$table][] = $key;
@@ -131,13 +133,30 @@ foreach ($tables as $table) {
                 }
             }
         } else {
-            unset($atts["type"]);
+
+            if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
+                $atts["type"] = "xsd:decimal";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "text") {
+                $atts["type"] = "xsd:string";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+                $atts["type"] = "xsd:date";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+                $atts["type"] = "xsd:base64Binary";
+            }
+            else {
+                $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
+            }
+            $simpleType = true;
         }
         $atts["minOccurs"] = "0";
         writeTag("open", "xsd", "element", $atts, True, True);
-        if (!isset($atts["type"])) {
+        if ($simpleType) {
             $minLength = "0";
             $maxLength = "256";
+
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $tableObj->metaData[$atts["name"]]['type'] = "decimal";
             }
