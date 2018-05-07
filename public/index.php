@@ -64,6 +64,20 @@ if (Input::getPath()->part(1) == "api") {
             Database::setDb($db);
         });
 
+    Route::add("api/v2/sql/{action}/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
+
+
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
 
         function () {

@@ -3,6 +3,10 @@
 namespace app\api\v2;
 
 use \app\inc\Input;
+use app\inc\Model;
+
+include_once 'Cache_Lite/Lite.php';
+
 
 /**
  * Class Sql
@@ -36,6 +40,11 @@ class Sql extends \app\inc\Controller
     private $subUser;
 
     /**
+     * @var \app\models\Sql
+     */
+    private $api;
+
+    /**
      * @var array
      */
     private $usedRelations;
@@ -45,12 +54,18 @@ class Sql extends \app\inc\Controller
      */
     const USEDRELSKEY = "checked_relations";
 
+    function __construct()
+    {
+        parent::__construct();
+        $this->api = new \app\models\Sql();
+        $this->api->connect();
+    }
+
     /**
      * @return array
      */
     public function get_index(): array
     {
-        include_once 'Cache_Lite/Lite.php';
 
         // Get the URI params from request
         // /{user}
@@ -134,7 +149,43 @@ class Sql extends \app\inc\Controller
      */
     public function post_index(): array
     {
-        return $this->get_index(func_get_arg(0));
+        // Set API key from headers
+        Input::setParams(
+            [
+                "key" => Input::getApiKey()
+            ]
+        );
+
+        $settings_viewer = new \app\models\Setting();
+        $res = $settings_viewer->get();
+
+        // Check if success
+        // ================
+        if (!$res["success"]) {
+            return $res;
+        }
+
+        $this->apiKey = $res['data']->api_key;
+
+        // Only use bulk if content type is text/plain
+        if (Input::getContentType() == Input::TEXT_PLAIN) {
+            $sqls = explode("\n", Input::getBody());
+            $this->api->begin(); // Start transaction
+            foreach ($sqls as $q) {
+                $this->q = $q;
+                if ($this->q != "") {
+                    $res = unserialize($this->transaction($this->q));
+                    if (!$res["success"]) {
+                        $this->api->rollback();
+                        return $res;
+                    }
+                }
+            }
+            $this->api->commit();
+            return $res;
+        } else {
+            return $this->get_index(func_get_arg(0));
+        }
     }
 
     /**
@@ -193,7 +244,6 @@ class Sql extends \app\inc\Controller
      */
     private function transaction(string $sql, string $clientEncoding = null)
     {
-
         $response = [];
         if (strpos($sql, ';') !== false) {
             $this->response['success'] = false;
@@ -216,7 +266,7 @@ class Sql extends \app\inc\Controller
             $this->response['message'] = $e->getMessage();
             return serialize($this->response);
         }
-        $parsedSQL = $parser->parsed ?:[]; // Make its an array
+        $parsedSQL = $parser->parsed ?: []; // Make its an array
         $this->usedRelations = array();
 
         // First recursive go through the SQL to find FROM in select, update and delete
@@ -307,10 +357,9 @@ class Sql extends \app\inc\Controller
             $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
         } elseif ($parsedSQL['CREATE']) {
-            if (isset($parsedSQL['CREATE']) && isset($parsedSQL['VIEW'])) {
+            if (isset($parsedSQL['CREATE']) && (isset($parsedSQL['VIEW']) || isset($parsedSQL['TABLE']))) {
                 if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
-                    $api = new \app\models\Sql();
-                    $this->response = $api->transaction($this->q);
+                    $this->response = $this->api->transaction($this->q);
                     $this->addAttr($response);
                 } else {
                     $this->response['success'] = false;
@@ -323,8 +372,7 @@ class Sql extends \app\inc\Controller
                 $this->response['code'] = 403;
             }
         } elseif ($parsedSQL['UPDATE'] || $parsedSQL['INSERT'] || $parsedSQL['DELETE']) {
-            $api = new \app\models\Sql();
-            $this->response = $api->transaction($this->q);
+            $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
             $lifetime = (Input::get('lifetime')) ?: 0;
@@ -351,8 +399,7 @@ class Sql extends \app\inc\Controller
                 $alias = Input::get('alias') ?: null;
 
 
-                $api = new \app\models\Sql($srs);
-                $this->response = $api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
+                $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
                 $this->addAttr($response);
 
                 echo serialize($this->response);

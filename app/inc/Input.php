@@ -8,6 +8,7 @@ class Input
      * @var
      */
     static $params;
+    const TEXT_PLAIN = "text/plain";
 
     /**
      *
@@ -34,6 +35,14 @@ class Input
     public static function getMethod(): string
     {
         return strtolower($_SERVER['REQUEST_METHOD']);
+    }
+
+    /**
+     * @return string
+     */
+    public static function getContentType(): string
+    {
+        return $_SERVER["CONTENT_TYPE"];
     }
 
     /**
