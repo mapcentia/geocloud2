@@ -332,7 +332,7 @@ class Feature extends \app\inc\Controller
 
         // Init the Guzzle client
         $client = new Client([
-            'timeout' => 10.0,
+            'timeout' => 100.0,
         ]);
 
         // POST the transaction
