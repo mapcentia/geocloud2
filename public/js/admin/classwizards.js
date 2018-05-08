@@ -34,7 +34,6 @@ classWizards.init = function (record) {
                         classGrid.getSelectionModel().clearSelections();
                         Ext.getCmp("a3").remove(wmsClass.grid);
                         wmsClasses.store.load();
-                        wmsLayer.store.load();
                         writeFiles(record._key_, map);
                         store.load();
                     },
@@ -625,7 +624,6 @@ classWizards.init = function (record) {
                                                                             success: function (response) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
-                                                                                wmsLayer.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
@@ -916,7 +914,6 @@ classWizards.init = function (record) {
                                                                             success: function (response) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
-                                                                                wmsLayer.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
@@ -1127,7 +1124,6 @@ classWizards.init = function (record) {
                                                                             success: function (response) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
-                                                                                wmsLayer.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
@@ -1239,7 +1235,6 @@ classWizards.init = function (record) {
                                                                             success: function (response) {
                                                                                 Ext.getCmp("a3").remove(wmsClass.grid);
                                                                                 wmsClasses.store.load();
-                                                                                wmsLayer.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
                                                                                     callback: function () {
@@ -1281,5 +1276,3 @@ classWizards.init = function (record) {
         ]
     });
 };
-
-
