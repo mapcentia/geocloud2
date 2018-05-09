@@ -481,14 +481,14 @@ class Table extends Model
                             $value = $value ?: "0";
                         }
                         if ($key == "tags") {
-                            $value = $value?:"null";
+                            $value = $value ?: "null";
                             if (!$raw) {
                                 $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                             }
                         }
                         // If Meta when update the existing object, so not changed values persist
                         if ($key == "meta") {
-                            $value = $value?:"null";
+                            $value = $value ?: "null";
                             if ($raw == false) {
                                 $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
 
@@ -500,7 +500,12 @@ class Table extends Model
                             }
 
                         } else {
-                            $stripSlashes = true;
+                            if (is_object($value) || is_array($value)) {
+                                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                                $stripSlashes = false;
+                            } else {
+                                $stripSlashes = true;
+                            }
                         }
                     } else {
                         $stripSlashes = true;
@@ -509,7 +514,7 @@ class Table extends Model
                     $value = $this->db->quote($value);
 
                     // TODO why are we stripping slashes?
-                    if($stripSlashes) {
+                    if ($stripSlashes) {
                         $value = stripcslashes($value);
                     }
 
