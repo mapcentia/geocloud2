@@ -251,14 +251,6 @@ var gc2table = (function () {
                             onSelect(id, layer);
                         });
 
-                        $(el + ' > tbody > tr').on("mouseover", function (e) {
-                            var id = $(this).data('uniqueid');
-                            object.trigger("selected" + "_" + uid, id);
-                            var layer = m.map._layers[id];
-                            onMouseOver(id, layer);
-                        });
-
-
                     }, 100);
                 };
                 $(el).bootstrapTable({
