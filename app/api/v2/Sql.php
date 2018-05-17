@@ -57,7 +57,8 @@ class Sql extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
-        $this->api = new \app\models\Sql();
+        $srs = Input::get('srs') ?: "900913";
+        $this->api = new \app\models\Sql($srs);
         $this->api->connect();
     }
 
@@ -383,7 +384,6 @@ class Sql extends \app\inc\Controller
             } else {
                 //echo "Not cached";
                 ob_start();
-                $srs = Input::get('srs') ?: "900913";
 
                 $format = Input::get('format') ?: "geojson";
                 if (!in_array($format, ["geojson", "csv", "excel"])) {
