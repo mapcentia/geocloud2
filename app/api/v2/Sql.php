@@ -149,24 +149,24 @@ class Sql extends \app\inc\Controller
      */
     public function post_index(): array
     {
-        // Set API key from headers
-        Input::setParams(
-            [
-                "key" => Input::getApiKey()
-            ]
-        );
-
-        $settings_viewer = new \app\models\Setting();
-        $res = $settings_viewer->get();
-
-        // Check if success
-        // ================
-        if (!$res["success"]) {
-            return $res;
-        }
-
-        // Only use bulk if content type is text/plain
+        // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
+
+            // Set API key from headers
+            Input::setParams(
+                [
+                    "key" => Input::getApiKey()
+                ]
+            );
+
+            $settings_viewer = new \app\models\Setting();
+            $res = $settings_viewer->get();
+
+            // Check if success
+            // ================
+            if (!$res["success"]) {
+                return $res;
+            }
 
             $this->api = new \app\models\Sql();
             $this->api->connect();
@@ -186,6 +186,7 @@ class Sql extends \app\inc\Controller
             }
             $this->api->commit();
             return $res;
+
         } else {
             return $this->get_index(func_get_arg(0));
         }
