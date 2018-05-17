@@ -57,9 +57,6 @@ class Sql extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
-        $srs = Input::get('srs') ?: "900913";
-        $this->api = new \app\models\Sql($srs);
-        $this->api->connect();
     }
 
     /**
@@ -67,7 +64,6 @@ class Sql extends \app\inc\Controller
      */
     public function get_index(): array
     {
-
         // Get the URI params from request
         // /{user}
         $r = func_get_arg(0);
@@ -134,6 +130,9 @@ class Sql extends \app\inc\Controller
             return $res;
         }
 
+        $srs = Input::get('srs') ?: "900913";
+        $this->api = new \app\models\Sql($srs);
+        $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
         $this->response = $this->transaction($this->q, Input::get('client_encoding'));
@@ -166,10 +165,13 @@ class Sql extends \app\inc\Controller
             return $res;
         }
 
-        $this->apiKey = $res['data']->api_key;
-
         // Only use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
+
+            $this->api = new \app\models\Sql();
+            $this->api->connect();
+            $this->apiKey = $res['data']->api_key;
+
             $sqls = explode("\n", Input::getBody());
             $this->api->begin(); // Start transaction
             foreach ($sqls as $q) {
