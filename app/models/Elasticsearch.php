@@ -202,19 +202,23 @@ class Elasticsearch extends Model
             );
         } elseif ($pgType == "uuid") {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         } elseif ($pgType == "hstore") {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         } elseif ($pgType == "bytea") {
             $esType = array(
                 "type" => "binary"
             );
+        } elseif ($pgType == "json" || $pgType == "jsonb") {
+            $esType = array(
+                "type" => "object"
+            );
         } else {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         }
         return $esType;

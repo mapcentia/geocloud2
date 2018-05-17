@@ -107,22 +107,12 @@ class Elasticsearch extends \app\inc\Controller
      */
     private function checkAuth(string $db, string $key)
     {
-        $trusted = false;
 
-        foreach (App::$param["trustedAddresses"] as $address) {
-            if (Util::ipInRange($this->clientIp, $address)) {
-                $trusted = true;
-                break;
-            }
-        }
-
-        if (!$trusted) {
-            if (!$this->authApiKey($db, $key)) {
-                $response['success'] = false;
-                $response['message'] = "Not the right key.";
-                $response['code'] = 403;
-                return $response;
-            }
+        if (!$this->authApiKey($db, $key)) {
+            $response['success'] = false;
+            $response['message'] = "Not the right key.";
+            $response['code'] = 403;
+            return $response;
         }
 
         return false; //Auth passed
@@ -131,7 +121,7 @@ class Elasticsearch extends \app\inc\Controller
     /**
      * @return array
      */
-    public function get_search() : array
+    public function get_search(): array
     {
 
         // Get the URI params from request
@@ -236,7 +226,7 @@ class Elasticsearch extends \app\inc\Controller
      */
     public function get_map()
     {
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
             return $response;
         }
         $schema = Input::getPath()->part(6);
@@ -407,7 +397,7 @@ class Elasticsearch extends \app\inc\Controller
             $sql = "SELECT * FROM {$fullTable}";
             $api = new \app\models\Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
-            $res = $api->sql($sql, $index, $type, $priKey, $db);
+            $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
                 return $res;
             }
@@ -437,6 +427,226 @@ class Elasticsearch extends \app\inc\Controller
         $res["relation"] = $relationType["data"];
         $res["trigger_installed"] = $triggerInstalled;
         $res["trigger_installed_in"] = $triggerInstalledIn;
+        return $res;
+    }
+
+    /**
+     * Creates a dedicated Es index with Meta
+     * @return array|mixed
+     */
+    public function get_meta()
+    {
+        $typeahead = [
+            "type" => "text",
+            "analyzer" => "auto_complete_analyzer",
+            "search_analyzer" => "auto_complete_search_analyzer",
+            "fielddata" => true
+        ];
+
+        $map = [
+            "geometry_columns_join" =>
+                [
+                    "properties" =>
+                        [
+                            "properties" =>
+                                [
+                                    "type" => "object",
+                                    "properties" =>
+                                        [
+                                            "_key_" =>
+                                                [
+                                                    "type" => "keyword"
+                                                ],
+
+                                            "f_table_abstract" => $typeahead,
+
+                                            "f_table_title" => $typeahead,
+
+                                            "created" =>
+                                                [
+                                                    "type" => "text"
+                                                ],
+
+                                            "lastmodified" =>
+                                                [
+                                                    "type" => "text"
+                                                ],
+
+                                            "layergroup" => $typeahead,
+
+                                            "uuid" =>
+                                                [
+                                                    "type" => "text"
+                                                ],
+
+                                            "tags" =>
+                                                [
+                                                    "type" => "text"
+                                                ],
+
+                                            "meta" =>
+                                                [
+                                                    "type" => "object",
+                                                    "properties" => [
+                                                        "meta_desc" => [
+
+                                                            "type" => "text",
+                                                            "analyzer" => "auto_complete_analyzer",
+                                                            "search_analyzer" => "auto_complete_search_analyzer",
+                                                            "fielddata" => true
+
+
+                                                        ]
+                                                    ]
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ];
+
+        // Check if Es is online
+        // =====================
+        $url = $this->host . ":9200";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode != "200") {
+            $response['success'] = false;
+            $response['message'] = "Elasticsearch is not online";
+            $response['code'] = $httpcode;
+            return $response;
+        }
+
+        // Auth
+        // ====
+
+//        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+//            return $response;
+//        }
+
+        // Set vars
+        // ========
+        $triggerInstalled = false;
+        $schema = "settings";
+        $table = "geometry_columns_join";
+        $index = $schema;
+        $type = $table;
+        $db = Input::getPath()->part(5);
+        $fullTable = $schema . "." . $table;
+        $fullIndex = $db . "_" . $schema . "_" . $table;
+        $triggerSchema = Input::get('ts') ?: $schema;
+        $triggerTable = Input::get('tt') ?: $table;
+        $installTrigger = false;
+
+        $es = new \app\models\Elasticsearch();
+        $model = new \app\inc\Model();
+
+        $priKey = "_key_";
+
+        // Create or replace notify function in PG
+        // =======================================
+        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        // TODO check if sprintf is needed
+        $pl = sprintf($pl, $priKey, $priKey, $priKey);
+        $result = $model->execQuery($pl, "PG");
+        if (!$result) {
+            $response['success'] = false;
+            return $response;
+        }
+
+        // Drop the trigger
+        // ================
+        $pl = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON {$triggerSchema}.{$triggerTable}";
+        $result = $model->execQuery($pl, "PG");
+        if (!$result) {
+            $response['success'] = false;
+            $response['code'] = "400";
+            $response['message'] = "Could not drop trigger";
+            return $response;
+        }
+
+        // Delete the index if exist
+        // =========================
+        $url = $this->host . ":9200/{$fullIndex}";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode == "200") {
+            $res = $es->delete($fullIndex);
+            $obj = json_decode($res["json"], true);
+            if (isset($obj["error"]) && $obj["error"] != false) {
+                $response['success'] = false;
+                $response['message'] = $obj["error"];
+                $response['code'] = $obj["status"];
+                return $response;
+            }
+        }
+
+        // Create the index with settings
+        // ==============================
+        $res = $es->createIndex($fullIndex, $this->settings);
+        $obj = json_decode($res["json"], true);
+        if (isset($obj["error"]) && $obj["error"] != false) {
+            $response['success'] = false;
+            $response['message'] = $obj["error"];
+            $response['code'] = $obj["status"];
+            return $response;
+        }
+
+        // Create mapping
+        // ==============
+        $res = $es->map($fullIndex, $type, json_encode($map));
+        $obj = json_decode($res["json"], true);
+        if (isset($obj["error"]) && $obj["error"] != false) {
+            $response['success'] = false;
+            $response['message'] = $obj["error"];
+            $response['code'] = $obj["status"];
+            return $response;
+        }
+
+        // Bulk insert
+        // ===========
+        if (1 == 1) {
+            $sql = "SELECT * FROM {$fullTable}";
+            $api = new \app\models\Sql_to_es("4326");
+            $api->execQuery("set client_encoding='UTF8'", "PDO");
+            $res = $api->runSql($sql, $index, $type, $priKey, $db);
+            if (!$res["success"]) {
+                return $res;
+            }
+            $res["Indexed"] = true;
+        } else {
+            $res = array("succes" => true, "indexed" => false, "message" => "Indexing skipped");
+        }
+
+        // Create the trigger
+        // ==================
+        if ($installTrigger) {
+            $pl = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON {$triggerSchema}.{$triggerTable} FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$priKey}', '{$schema}','{$table}')";
+            $result = $model->execQuery($pl, "PG");
+            if (!$result) {
+                $response['success'] = false;
+                $response['code'] = "400";
+                $response['message'] = "Could not create trigger";
+                return $response;
+            }
+            $triggerInstalled = true;
+        }
+        $res["_index"] = $fullIndex;
+        $res["_type"] = $type;
+        $res["trigger_installed"] = $triggerInstalled;
         return $res;
     }
 
