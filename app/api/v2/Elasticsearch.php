@@ -444,7 +444,7 @@ class Elasticsearch extends \app\inc\Controller
         ];
 
         $map = [
-            "geometry_columns_join" =>
+            "geometry_columns_view" =>
                 [
                     "properties" =>
                         [
@@ -496,6 +496,9 @@ class Elasticsearch extends \app\inc\Controller
                                                             "fielddata" => true
 
 
+                                                        ],
+                                                        "layer_search_include" => [
+                                                            "type" => "boolean"
                                                         ]
                                                     ]
                                                 ]
@@ -535,7 +538,7 @@ class Elasticsearch extends \app\inc\Controller
         // ========
         $triggerInstalled = false;
         $schema = "settings";
-        $table = "geometry_columns_join";
+        $table = "geometry_columns_view";
         $index = $schema;
         $type = $table;
         $db = Input::getPath()->part(5);
