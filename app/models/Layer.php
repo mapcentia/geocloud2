@@ -423,7 +423,7 @@ class Layer extends \app\models\Table
                     return $response;
                 }
             }
-            $sql = "ALTER TABLE {$tableName} RENAME TO {$newName}";
+            $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($tableName) . " RENAME TO {$newName}";
             $res = $this->prepare($sql);
             try {
                 $res->execute();
@@ -490,7 +490,7 @@ class Layer extends \app\models\Table
                     return $response;
                 }
             }
-            $query = "ALTER TABLE {$table} SET SCHEMA {$schema}";
+            $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA {$schema}";
             $res = $this->prepare($query);
             try {
                 $res->execute();

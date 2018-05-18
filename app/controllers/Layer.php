@@ -89,7 +89,7 @@ class Layer extends \app\inc\Controller
     public function put_name()
     {
         $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->rename(Input::getPath()->part(4), json_decode(Input::get())->data);
+        return (!$response['success']) ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
     }
 
     public function put_schema()
