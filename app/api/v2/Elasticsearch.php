@@ -458,6 +458,8 @@ class Elasticsearch extends \app\inc\Controller
                                                     "type" => "keyword"
                                                 ],
 
+                                            "f_table_name" => $typeahead,
+
                                             "f_table_abstract" => $typeahead,
 
                                             "f_table_title" => $typeahead,
