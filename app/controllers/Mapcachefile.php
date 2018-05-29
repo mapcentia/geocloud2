@@ -226,8 +226,8 @@ class Mapcachefile extends \app\inc\Controller
                         <expires><?php echo $expire ?></expires>
                         <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
                         <metadata>
-                            <title><?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?></title>
-                            <abstract><?php echo $row['f_table_abstract']; ?></abstract>
+                            <title><![CDATA[<?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?>]]></title>
+                            <abstract><![CDATA[<?php echo $row['f_table_abstract']; ?>]]></abstract>
                             <wgs84boundingbox><?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
                         </metadata>
                     </tileset>
