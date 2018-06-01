@@ -9,6 +9,9 @@ use \app\conf\Connection;
 
 echo date(DATE_RFC822) . "\n\n";
 
+// Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
+putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
+
 $db = $argv[1];
 $schema = $argv[2];
 $safeName = $argv[3];
@@ -22,6 +25,10 @@ $extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
 $preSql = $argv[11] == "null" ? null : base64_decode($argv[11]);
 $postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
 $downloadSchema = $argv[13];
+
+$workingSchema = "_gc2scheduler";
+
+
 
 
 // Check if Paging should be used
@@ -79,7 +86,7 @@ function which()
 
 function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $schema, $randTableName, $downloadSchema, $url;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url;
 
     print "Fetching remote data...\n\n";
     $ch = curl_init();
@@ -101,7 +108,7 @@ function getCmd()
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $dir . "/" . $tempFile . "' " .
-        "-nln " . $schema . "." . $randTableName . " " .
+        "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
     return $cmd;
@@ -109,23 +116,23 @@ function getCmd()
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $schema, $url, $grid, $id, $encoding, $downloadSchema;
+    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema;
     print "Staring inserting in temp table using paginated download...\n\n";
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding} {$downloadSchema}";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$workingSchema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding} {$downloadSchema}";
     return $cmd;
 }
 
 function getCmdFile()
 {
-    global $randTableName, $type, $db, $schema, $url, $encoding, $srid;
+    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid;
     print "Staring inserting in temp table using file download...\n\n";
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$schema} \"{$url}\" {$randTableName} {$type} 1 {$encoding} {$srid}";
+    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$workingSchema} \"{$url}\" {$randTableName} {$type} 1 {$encoding} {$srid}";
     return $cmd;
 }
 
 function getCmdZip()
 {
-    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $schema, $randTableName, $downloadSchema, $outFileName;
+    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName;
 
     print "Fetching remote zip...\n\n";
     $ch = curl_init();
@@ -212,7 +219,7 @@ function getCmdZip()
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $outFileName . "' " .
-        "-nln " . $schema . "." . $randTableName . " " .
+        "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
     return $cmd;
@@ -221,9 +228,18 @@ function getCmdZip()
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
+$sql = "CREATE SCHEMA IF NOT EXISTS {$workingSchema}";
+$res = $table->prepare($sql);
+try {
+    $res->execute();
+} catch (\PDOException $e) {
+    print_r($e->getMessage());
+    exit(1);
+}
+
 exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
-$tmpTable = new \app\models\Table($schema . "." . $randTableName);
+$tmpTable = new \app\models\Table($workingSchema . "." . $randTableName);
 
 if ($err) {
     print "Error " . $err . "\n\n";
@@ -313,7 +329,7 @@ if ($o != "-overwrite") {
         exit(1);
     }
     print "Data in existing table deleted.\n\n";
-    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$schema}.{$randTableName})";
+    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$workingSchema}.{$randTableName})";
 
 // Delete/append
 } else {
@@ -327,7 +343,7 @@ if ($o != "-overwrite") {
         cleanUp();
         exit(1);
     }
-    $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$schema}.{$randTableName}";
+    $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$workingSchema}.{$randTableName}";
     $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
     $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
 }
@@ -402,6 +418,7 @@ if ($extra) {
 // ============
 if ($postSql) {
     foreach (explode(";",  trim($postSql, ";")) as $q) {
+        $q = str_replace("@TABLE@", $schema . "." . $safeName, $q);
         print "Running post-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
@@ -427,7 +444,7 @@ print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db;
 
     // Unlink temp file
     // ================
@@ -479,7 +496,7 @@ function cleanUp($success = 0)
     }
 
     // Drop temp table
-    $res = $table->prepare("DROP TABLE IF EXISTS {$schema}.{$randTableName}");
+    $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
     try {
         $res->execute();
     } catch (\PDOException $e) {
