@@ -29,8 +29,6 @@ $downloadSchema = $argv[13];
 $workingSchema = "_gc2scheduler";
 
 
-
-
 // Check if Paging should be used
 if (sizeof(explode("|", $url)) > 1) {
     $grid = explode("|", $url)[0];
@@ -142,7 +140,6 @@ function getCmdZip()
     curl_exec($ch);
     curl_close($ch);
     fclose($fp);
-
     $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
 
     // ZIP start
@@ -157,6 +154,7 @@ function getCmdZip()
         }
         $zip->extractTo($dir . "/" . $tempFile);
         $zip->close();
+        unlink($dir . "/" . $tempFile . "." . $extCheck2[0]);
     }
 
     // RAR start
@@ -172,9 +170,11 @@ function getCmdZip()
         $list = rar_list($rarFile);
         foreach ($list as $file) {
             $entry = rar_entry_get($rarFile, $file);
-            $file->extract($dir . "/" . $tempFile); // extract to the current dir
+            $file->extract($dir . "/" . $tempFile);
         }
         rar_close($rarFile);
+        unlink($dir . "/" . $tempFile . "." . $extCheck2[0]);
+
     }
 
     // GZIP start
@@ -205,8 +205,11 @@ function getCmdZip()
     $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile);
     foreach (new RecursiveIteratorIterator($it) as $f) {
         $files = explode('.', $f);
-        if (in_array(strtolower(array_pop($files)), $ext))
+        if (in_array(strtolower(array_pop($files)), $ext)) {
+            $outFileName = $f->getPathName();
             break;
+        }
+
     }
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
@@ -417,7 +420,7 @@ if ($extra) {
 // Post run SQL
 // ============
 if ($postSql) {
-    foreach (explode(";",  trim($postSql, ";")) as $q) {
+    foreach (explode(";", trim($postSql, ";")) as $q) {
         $q = str_replace("@TABLE@", $schema . "." . $safeName, $q);
         print "Running post-SQL: {$q}\n";
         $res = $table->prepare($q);
@@ -444,7 +447,7 @@ print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $outFileName;
 
     // Unlink temp file
     // ================
@@ -458,7 +461,7 @@ function cleanUp($success = 0)
                 unlink($file->getRealPath());
             }
         }
-       rmdir($dir . "/" . $tempFile);
+        rmdir($dir . "/" . $tempFile);
     }
     unlink($dir . "/" . $tempFile);
     unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
