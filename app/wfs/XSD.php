@@ -176,8 +176,9 @@ foreach ($tables as $table) {
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
             if ($fieldConf->{$atts["name"]}->properties) {
+                echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
+
                 if ($fieldConf->{$atts["name"]}->properties == "*") {
                     $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
                     foreach ($distinctValues["data"] as $prop) {
@@ -189,12 +190,13 @@ foreach ($tables as $table) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 }
+                echo '</xsd:restriction></xsd:simpleType>';
+
             }
-            if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
-                echo "<xsd:minLength value=\"{$minLength}\"/>";
-                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
-            }
-            echo '</xsd:restriction></xsd:simpleType>';
+//            if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+//                echo "<xsd:minLength value=\"{$minLength}\"/>";
+//                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
+//            }
         }
         writeTag("close", "xsd", "element", NULL, False, True);
         $atts = Null;
