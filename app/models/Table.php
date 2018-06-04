@@ -446,7 +446,7 @@ class Table extends Model
      * @param $keyName
      * @return array
      */
-    public function updateRecord($data, $keyName, $raw = false)
+    public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
         $response = [];
         $data = $this->makeArray($data);
@@ -481,8 +481,14 @@ class Table extends Model
                             $value = $value ?: "0";
                         }
                         if ($key == "tags") {
-                            $value = $value ?: "null";
+                            $value = $value ?: [];
                             if (!$raw) {
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?:[];
+
+                                if ($append) {
+                                    $value = array_merge($rec, $value);
+                                }
+
                                 $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                             }
                         }

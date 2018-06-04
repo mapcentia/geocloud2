@@ -37,7 +37,7 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         $response = $this->auth($data["data"]->_key_);
-        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
+        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_", false, Input::getPath()->part(5));
     }
 
     public function delete_records()

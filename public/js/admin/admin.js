@@ -1594,9 +1594,11 @@ $(document).ready(function () {
                                     defaults: {
                                         anchor: '100%'
                                     },
-                                    labelWidth: 1,
+                                    labelWidth: 60,
+                                    html: __("Write tag names into the field 'Tags'. Finish the tag name with an 'Enter' key stroke. If 'Append' is checked, new tags are appended to existing one. Append is only available when multiple layers are selected."),
                                     items: [
                                         new Ext.ux.form.SuperBoxSelect({
+                                            fieldLabel: __("Tags"),
                                             allowBlank: true,
                                             msgTarget: 'under',
                                             allowAddNewData: true,
@@ -1615,7 +1617,14 @@ $(document).ready(function () {
                                                     });
                                                 }
                                             }
-                                        })
+                                        }),
+                                        {
+                                            xtype: "checkbox",
+                                            fieldLabel: __("Append"),
+                                            name: "append",
+                                            checked:  records.length > 1,
+                                            disabled: records.length === 1
+                                        }
                                     ],
                                     buttons: [
                                         {
@@ -1639,7 +1648,7 @@ $(document).ready(function () {
                                                     };
                                                     param = Ext.util.JSON.encode(param);
                                                     Ext.Ajax.request({
-                                                        url: '/controllers/layer/records/_key_',
+                                                        url: '/controllers/layer/records/_key_/' + (values.append ? "1":"0"),
                                                         method: 'put',
                                                         headers: {
                                                             'Content-Type': 'application/json; charset=utf-8'

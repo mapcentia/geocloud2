@@ -1088,7 +1088,7 @@ class Layer extends \app\models\Table
         }
         $arr = array();
         while ($row = $this->fetchRow($res, "assoc")) {
-            if ($row["tags"]) {
+            if (isset($row["tags"]) && json_decode($row["tags"])) {
                 $arr[] = implode(",", json_decode($row["tags"]));
             }
         }

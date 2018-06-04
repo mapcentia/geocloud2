@@ -223,7 +223,9 @@ gc2i18n = {
         "Create WMS layers": "Create WMS layers",
         "Create composite layer": "Create composite layer",
         "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.": "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.",
-        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema"
-        }
-}
-;
+        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema",
+
+        "Append": "Append",
+        "Write tag names into the field 'Tags'. Finish the tag name with an 'Enter' key stroke. If 'Append' is checked, new tags are appended to existing one. Append is only availably when mulitple layers are selected.": "Write tag names into the field 'Tags'. Finish the tag name with an 'Enter' key stroke. If 'Append' is checked, new tags are appended to existing one. Append is only availably when mulitple layers are selected."
+    }
+};
