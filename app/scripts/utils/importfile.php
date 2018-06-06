@@ -106,7 +106,6 @@ foreach ($files as $key => $file) {
 }
 
 $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
-    "-skipfailures " .
     "-append " .
     "-dim 2 " .
     "-lco 'GEOMETRY_NAME=the_geom' " .
