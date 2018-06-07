@@ -466,6 +466,7 @@ class Mapfile extends \app\inc\Controller
                 METADATA
                 "ows_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
                 "wms_group_title" "<?php echo $row['layergroup']?>"
+                "wms_group_abstract" "<?php echo $row['layergroup']?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
