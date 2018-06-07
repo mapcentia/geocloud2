@@ -240,9 +240,10 @@ try {
     exit(1);
 }
 
-exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 $tmpTable = new \app\models\Table($workingSchema . "." . $randTableName);
+
+exec($cmd = $getFunction() . ' 2>&1', $out, $err);
 
 if ($err) {
     print "Error " . $err . "\n\n";
@@ -271,7 +272,7 @@ if ($err) {
     print $cmd . "\n\n";
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
-            print $line . "\n";
+            print_r($out);
             cleanUp();
             exit(1);
         }
@@ -451,20 +452,20 @@ function cleanUp($success = 0)
 
     // Unlink temp file
     // ================
-    if (is_dir($dir . "/" . $tempFile)) {
-        $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile, RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getRealPath());
-            } else {
-                unlink($file->getRealPath());
-            }
-        }
-        rmdir($dir . "/" . $tempFile);
-    }
-    unlink($dir . "/" . $tempFile);
-    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
+//    if (is_dir($dir . "/" . $tempFile)) {
+//        $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile, RecursiveDirectoryIterator::SKIP_DOTS);
+//        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+//        foreach ($files as $file) {
+//            if ($file->isDir()) {
+//                rmdir($file->getRealPath());
+//            } else {
+//                unlink($file->getRealPath());
+//            }
+//        }
+//        rmdir($dir . "/" . $tempFile);
+//    }
+//    unlink($dir . "/" . $tempFile);
+//    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
 
 
     // Update jobs table
@@ -499,12 +500,12 @@ function cleanUp($success = 0)
     }
 
     // Drop temp table
-    $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
-    try {
-        $res->execute();
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
-    }
+//    $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
+//    try {
+//        $res->execute();
+//    } catch (\PDOException $e) {
+//        print_r($e->getMessage());
+//    }
     print "\nTemp table dropped.\n\n";
 
     if ($success) {

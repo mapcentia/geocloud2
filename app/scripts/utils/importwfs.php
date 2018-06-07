@@ -150,14 +150,10 @@ function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $g
     unlink("/var/www/geocloud2/public/logs/" . $gmlName);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} DROP CONSTRAINT IF EXISTS {$schema}_{$importTable}_unique_id";
-    //echo $sql . "\n";
     $database->execQuery($sql);
-    print_r($database->PDOerror);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} ADD CONSTRAINT {$schema}_{$importTable}_unique_id UNIQUE ({$id})";
-    //echo $sql . "\n";
     $database->execQuery($sql);
-    print_r($database->PDOerror);
 
     echo $count;
 }
