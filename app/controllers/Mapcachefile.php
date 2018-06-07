@@ -367,7 +367,8 @@ foreach ($groupArr as $k => $v) {
     <service type="ve" enabled="true"/>
     <errors>report</errors>
     <lock_dir>/tmp</lock_dir>
-
+    <lock_retry>10000</lock_retry>
+    <log_level>warn</log_level>
     <!-- start extra -->
 
     <?php
