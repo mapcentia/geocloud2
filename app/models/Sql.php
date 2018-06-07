@@ -69,7 +69,11 @@ class Sql extends \app\inc\Model
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
                 }
-            } else {
+            }
+            elseif ($arr['type'] == "bytea") {
+                $fieldsArr[] = "encode(\"" . $key . "\",'escape') as \"" . $key . "\"";
+            }
+            else {
                 $fieldsArr[] = "\"{$key}\"";
             }
         }
