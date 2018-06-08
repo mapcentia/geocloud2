@@ -79,7 +79,6 @@ include("html_header.php");
                 </td>
             </tr>
             </tbody>
-            st
         </table>
     </div>
     <div id="tms-dialog">
