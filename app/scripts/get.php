@@ -320,7 +320,7 @@ if ($preSql) {
     print "\n";
 }
 
-// Overwrite
+// Delete/append
 if ($o != "-overwrite") {
     $sql = "DELETE FROM {$schema}.{$safeName}";
     $res = $table->prepare($sql);
@@ -332,10 +332,15 @@ if ($o != "-overwrite") {
         cleanUp();
         exit(1);
     }
-    print "Data in existing table deleted.\n\n";
-    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT * FROM {$workingSchema}.{$randTableName})";
 
-// Delete/append
+    foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
+        $fields[] = $k;
+    }
+
+    print "Data in existing table deleted.\n\n";
+    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$randTableName})";
+
+// Overwrite
 } else {
     $sql = "DROP TABLE IF EXISTS {$schema}.{$safeName} CASCADE";
     $res = $table->prepare($sql);
@@ -352,7 +357,8 @@ if ($o != "-overwrite") {
     $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
 }
 
-print "Insert/update final table...\n\n";
+print "Create/update final table...\n\n";
+print $sql . "\n\n";
 $res = $table->prepare($sql);
 try {
     $res->execute();
@@ -452,20 +458,20 @@ function cleanUp($success = 0)
 
     // Unlink temp file
     // ================
-//    if (is_dir($dir . "/" . $tempFile)) {
-//        $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile, RecursiveDirectoryIterator::SKIP_DOTS);
-//        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-//        foreach ($files as $file) {
-//            if ($file->isDir()) {
-//                rmdir($file->getRealPath());
-//            } else {
-//                unlink($file->getRealPath());
-//            }
-//        }
-//        rmdir($dir . "/" . $tempFile);
-//    }
-//    unlink($dir . "/" . $tempFile);
-//    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
+    if (is_dir($dir . "/" . $tempFile)) {
+        $it = new RecursiveDirectoryIterator($dir . "/" . $tempFile, RecursiveDirectoryIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getRealPath());
+            } else {
+                unlink($file->getRealPath());
+            }
+        }
+        rmdir($dir . "/" . $tempFile);
+    }
+    unlink($dir . "/" . $tempFile);
+    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
 
 
     // Update jobs table
@@ -500,12 +506,12 @@ function cleanUp($success = 0)
     }
 
     // Drop temp table
-//    $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
-//    try {
-//        $res->execute();
-//    } catch (\PDOException $e) {
-//        print_r($e->getMessage());
-//    }
+    $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+    }
     print "\nTemp table dropped.\n\n";
 
     if ($success) {
