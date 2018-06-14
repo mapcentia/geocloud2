@@ -335,6 +335,9 @@ if ($o != "-overwrite") {
 
     foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
         $fields[] = $k;
+        if ($k == "the_geom") {
+            break;
+        }
     }
 
     print "Data in existing table deleted.\n\n";
