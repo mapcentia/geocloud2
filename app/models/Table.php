@@ -548,7 +548,7 @@ class Table extends Model
                     $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }
-                if (!$this->PDOerror) {
+                if (!isset($this->PDOerror) || !$this->PDOerror) {
                     $response['success'] = true;
                     $response['message'] = "Row updated";
                 } else {

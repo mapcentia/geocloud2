@@ -6,6 +6,8 @@ new \app\conf\App();
 
 use \app\conf\App;
 use \app\conf\Connection;
+use \app\inc\Util;
+
 
 echo date(DATE_RFC822) . "\n\n";
 
@@ -37,7 +39,7 @@ if (sizeof(explode("|", $url)) > 1) {
         $id = explode(",", $grid)[1];
         $grid = explode(",", $grid)[0];
     } else {
-        $id = "gml_id";
+        $id = "id";
     }
     $getFunction = "getCmdPaging"; // Paging by grid
 } else {
@@ -84,7 +86,7 @@ function which()
 
 function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $out, $err;
 
     print "Fetching remote data...\n\n";
     $ch = curl_init();
@@ -109,28 +111,328 @@ function getCmd()
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
-    return $cmd;
+    exec($cmd . ' 2>&1', $out, $err);
 }
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema;
-    print "Staring inserting in temp table using paginated download...\n\n";
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importwfs.php {$db} {$workingSchema} \"{$url}\" {$randTableName} {$type} {$grid} 1 {$id} 0 {$encoding} {$downloadSchema}";
-    return $cmd;
+    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $numberOfFeatures, $out, $err;
+
+    print "Start paged download...\n\n";
+
+    $pass = true;
+    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid}";
+    $res = $table->execQuery($sql);
+    $cellTemps = [];
+
+    function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id)
+    {
+        global $pass, $count, $table, $cellTemps, $id, $numberOfFeatures, $out, $err;
+        $out = [];
+        $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
+        $wfsUrl = $url . "&BBOX=";
+        $gmlName = $randTableName . "-" . $row["gid"] . ".gml";
+
+        $cellTemp = "cell_" . md5(microtime() . rand());
+
+
+        if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox . ",EPSG:25832"))) {
+            echo "Error: could not get GML for cell #{$row["gid"]}\n";
+            $pass = false;
+        };
+
+        $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
+            "-unsetFid " .
+            "-nomd " .
+            "-overwrite " .
+            "-dim 2 " .
+            "-oo 'REMOVE_UNUSED_LAYERS=YES' " .
+            "-oo 'REMOVE_UNUSED_FIELDS=NO' " .
+            "-lco 'GEOMETRY_NAME=the_geom' " .
+            "-lco 'FID=gid' " .
+            "-lco 'PRECISION=NO' " .
+            "-a_srs 'EPSG:25832' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
+            "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " .
+            "-nln {$workingSchema}.{$cellTemp} " .
+            "-nlt {$type}";
+
+        echo $cmd . "\n\n";
+
+        exec($cmd . ' 2>&1', $out, $err);
+
+        foreach ($out as $line) {
+            if (strpos($line, "FAILURE") !== false) {
+                $pass = false;
+                break 1;
+            }
+        }
+
+        if (!$pass) {
+            if ($count > 2) {
+                echo "Too many recursive tries to fetch cell\n";
+                exit(1);
+            }
+            sleep(5);
+            $count++;
+            fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
+            foreach ($out as $line) {
+                echo $line . "\n";
+            }
+            echo "Request: " . $wfsUrl . $bbox . "\n\n";
+            echo "\nOutputting the first few lines of the file:\n\n";
+            $handle = @fopen("/var/www/geocloud2/public/logs/" . $gmlName, "r");
+            if ($handle) {
+                for ($i = 0; $i < 40; $i++) {
+                    $buffer = fgets($handle, 4096);
+                    echo $buffer;
+                }
+                if (!feof($handle)) {
+                    echo "Error: unexpected fgets() fail\n";
+                }
+                fclose($handle);
+            }
+            unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+            exit(1);
+        }
+
+        @unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+
+        $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
+
+        $res = $table->prepare($sql);
+
+        try {
+            $res->execute();
+            $numberOfFeatures[] = $table->fetchRow($res)["number"];
+            $cellTemps[] = $cellTemp;
+        } catch (\PDOException $e) {
+            $numberOfFeatures[] = 0;
+        }
+        echo $count;
+    }
+
+    while ($row = $table->fetchRow($res)) {
+        global $count;
+        $count = 1;
+        fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
+    }
+
+    $selects = [];
+    $drops = [];
+
+    $gotFields = false;
+    foreach ($cellTemps as $t) {
+        if (!$gotFields) {
+            foreach ($table->getMetaData("{$workingSchema}.{$t}") as $k => $v) {
+                if (
+                    array_reverse(explode("_", $k))[0] != "nil" &&
+                    $k !="description_href" &&
+                    $k !="description_title" &&
+                    $k !="description_nilreason" &&
+                    $k !="description" &&
+                    $k !="descriptionreference_href" &&
+                    $k !="descriptionreference_title" &&
+                    $k !="descriptionreference_nilreason" &&
+                    $k !="identifier_codespace" &&
+                    $k !="identifier" &&
+                    $k !="location_location_pkid"
+                ) {
+                    $fields[] = $k;
+                }
+            }
+            if (sizeof($fields) > 0) {
+                $gotFields = true;
+                print_r($fields);
+            }
+        }
+        $selects[] = "SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$t}";
+        $drops[] = "DROP TABLE {$workingSchema}.{$t}";
+    }
+
+    // Create UNION table
+    $sql = "CREATE TABLE {$workingSchema}.{$randTableName} AS " . implode("\nUNION ALL\n", $selects);
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    } finally {
+        // Clean cell tmp tables
+        foreach ($drops as $d) {
+            $res = $table->prepare($d);
+            try {
+                $res->execute();
+            } catch (\PDOException $e) {
+                print_r($e->getMessage());
+            }
+        }
+    }
+
+    // If source has an "id" fields, it will be mapped to id2 by GMLAS driver
+    // We try to rename id2 to id and drop id1
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME id2 TO id";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print "Notice: Could not rename id2 to id. Source may not has an 'id' field.";
+        print "\n\n";
+    }
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP id1";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print "Notice: Could not drop id1. Source may not has an 'id' field.";
+        print "\n\n";
+    }
+
+    // Remove dups
+    $sql = "DELETE FROM {$workingSchema}.{$randTableName} a USING (
+      SELECT MIN(ctid) as ctid, {$id}
+        FROM {$workingSchema}.{$randTableName} 
+        GROUP BY {$id} HAVING COUNT(*) > 1
+      ) b
+      WHERE a.{$id} = b.{$id} 
+      AND a.ctid <> b.ctid";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+
+    // Create a dummy gml_id field
+    // Support of legacy destination tables with gml_id field
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} ADD gml_id INT";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print "Warning: Could not create a dummy gml_id field.";
+        print "\n\n";
+    }
+
+    // Drop gid serial
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP gid";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+
+    // Rename ogr_pkid to gid
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME ogr_pkid TO gid";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+
+    rsort($numberOfFeatures);
+    print "Highest number of features in cell: " . $numberOfFeatures[0] . "\n\n";
+
 }
 
 function getCmdFile()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid;
+    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $out, $err;
     print "Staring inserting in temp table using file download...\n\n";
-    $cmd = "php -f /var/www/geocloud2/app/scripts/utils/importfile.php {$db} {$workingSchema} \"{$url}\" {$randTableName} {$type} 1 {$encoding} {$srid}";
-    return $cmd;
+
+    $pass = true;
+
+    $randFileName = "_" . md5(microtime() . rand());
+    $files = [];
+    $out = [];
+
+// Check if file extension
+// =======================
+    $extCheck1 = explode(".", $url);
+    $extCheck2 = array_reverse($extCheck1);
+    $extension = $extCheck2[0];
+
+    array_shift($extCheck2);
+    $base = implode(".", array_reverse($extCheck2));
+
+    switch (strtolower($extension)) {
+        case "shp":
+            $files[$randFileName . ".shp"] = $url;
+            $files[$randFileName . ".SHP"] = $url;
+            // Try to get both upper and lower case extension
+            $files[$randFileName . ".dbf"] = $base . ".dbf";
+            $files[$randFileName . ".DBF"] = $base . ".DBF";
+            $files[$randFileName . ".shx"] = $base . ".shx";
+            $files[$randFileName . ".SHX"] = $base . ".SHX";
+            $fileSetName = $randFileName . "." . $extension;
+            break;
+
+        case "tab":
+            $files[$randFileName . ".tab"] = $url;
+            $files[$randFileName . ".TAB"] = $url;
+            // Try to get both upper and lower case extension
+            $files[$randFileName . ".map"] = $base.".map";
+            $files[$randFileName . ".MAP"] = $base.".MAP";
+            $files[$randFileName . ".dat"] = $base.".dat";
+            $files[$randFileName . ".DAT"] = $base.".DAT";
+            $files[$randFileName . ".id"] = $base.".id";
+            $files[$randFileName . ".ID"] = $base.".ID";
+            $fileSetName = $randFileName . "." . $extension;
+            break;
+
+        default:
+            $files[$randFileName . ".general"] = $url;
+            $fileSetName = $randFileName . ".general";
+            break;
+    }
+
+    foreach ($files as $key => $file) {
+        $path = "/var/www/geocloud2/public/logs/" . $key;
+        $fileRes = fopen($path,'w');
+        try {
+            file_put_contents($path, Util::wget($file));
+        } catch (Exception $e) {
+            print $file . "   ";
+            // Delete files with errors
+            unlink($path);
+            print $e->getMessage() . "\n";
+            exit(1);
+        }
+    }
+
+    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
+        "-append " .
+        "-dim 2 " .
+        "-lco 'GEOMETRY_NAME=the_geom' " .
+        "-lco 'FID=gid' " .
+        "-lco 'PRECISION=NO' " .
+        "-a_srs 'EPSG:{$srid}' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        "/var/www/geocloud2/public/logs/" . $fileSetName . " " .
+        "-nln {$workingSchema}.{$randTableName} " .
+        "-nlt {$type}";
+    exec($cmd . ' 2>&1', $out, $err);
+
+    array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
 }
 
 function getCmdZip()
 {
-    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName;
+    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $out, $err;
 
     print "Fetching remote zip...\n\n";
     $ch = curl_init();
@@ -225,7 +527,7 @@ function getCmdZip()
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
-    return $cmd;
+    exec($cmd . ' 2>&1', $out, $err);
 }
 
 \app\models\Database::setDb($db);
@@ -243,7 +545,7 @@ try {
 
 $tmpTable = new \app\models\Table($workingSchema . "." . $randTableName);
 
-exec($cmd = $getFunction() . ' 2>&1', $out, $err);
+$getFunction();
 
 if ($err) {
     print "Error " . $err . "\n\n";
@@ -268,8 +570,6 @@ if ($err) {
     exit(1);
 
 } else {
-    print "Commando:\n";
-    print $cmd . "\n\n";
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
             print_r($out);
@@ -466,15 +766,15 @@ function cleanUp($success = 0)
         $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($files as $file) {
             if ($file->isDir()) {
-                rmdir($file->getRealPath());
+                @rmdir($file->getRealPath());
             } else {
-                unlink($file->getRealPath());
+                @unlink($file->getRealPath());
             }
         }
         rmdir($dir . "/" . $tempFile);
     }
-    unlink($dir . "/" . $tempFile);
-    unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
+    @unlink($dir . "/" . $tempFile);
+    @unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
 
 
     // Update jobs table

@@ -20,7 +20,7 @@ $schema = $argv[2];
 $inputRel = $argv[3];
 $grid = $argv[4];
 
-$size = 8000;
+$size = 30000;
 $useGfs = false;
 $outputTable = "grid";
 
