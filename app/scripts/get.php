@@ -39,7 +39,7 @@ if (sizeof(explode("|", $url)) > 1) {
         $id = explode(",", $grid)[1];
         $grid = explode(",", $grid)[0];
     } else {
-        $id = "id";
+        $id = "ogr_pkid";
     }
     $getFunction = "getCmdPaging"; // Paging by grid
 } else {
@@ -225,7 +225,6 @@ function getCmdPaging()
             foreach ($table->getMetaData("{$workingSchema}.{$t}") as $k => $v) {
                 if (
                     array_reverse(explode("_", $k))[0] != "nil" &&
-                    $k !="ogr_pkid" &&
                     $k !="description_href" &&
                     $k !="description_title" &&
                     $k !="description_nilreason" &&
@@ -290,7 +289,7 @@ function getCmdPaging()
         print "\n\n";
     }
 
-    // Remove dups
+    // Remove dups. Default to ogr_pkid as unique field
     $sql = "DELETE FROM {$workingSchema}.{$randTableName} a USING (
       SELECT MIN(ctid) as ctid, {$id}
         FROM {$workingSchema}.{$randTableName} 
@@ -341,6 +340,18 @@ function getCmdPaging()
         exit(1);
     }
     $sql = "UPDATE {$workingSchema}.{$randTableName} SET gid=DEFAULT";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+
+    // Drop ogr_pkid
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP ogr_pkid";
     $res = $table->prepare($sql);
     try {
         $res->execute();
