@@ -159,8 +159,13 @@ function getCmdPaging()
 
         exec($cmd . ' 2>&1', $out, $err);
 
+
+        if ($err) {
+            $pass = false;
+        }
+
         foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false) {
+            if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
                 $pass = false;
                 break 1;
             }
@@ -168,7 +173,7 @@ function getCmdPaging()
 
         if (!$pass) {
             if ($count > 2) {
-                echo "Too many recursive tries to fetch cell\n";
+                echo "Too many recursive tries to fetch cell #{$row["gid"]}\n";
                 exit(1);
             }
             sleep(5);
@@ -225,16 +230,16 @@ function getCmdPaging()
             foreach ($table->getMetaData("{$workingSchema}.{$t}") as $k => $v) {
                 if (
                     array_reverse(explode("_", $k))[0] != "nil" &&
-                    $k !="description_href" &&
-                    $k !="description_title" &&
-                    $k !="description_nilreason" &&
-                    $k !="description" &&
-                    $k !="descriptionreference_href" &&
-                    $k !="descriptionreference_title" &&
-                    $k !="descriptionreference_nilreason" &&
-                    $k !="identifier_codespace" &&
-                    $k !="identifier" &&
-                    $k !="location_location_pkid"
+                    $k != "description_href" &&
+                    $k != "description_title" &&
+                    $k != "description_nilreason" &&
+                    $k != "description" &&
+                    $k != "descriptionreference_href" &&
+                    $k != "descriptionreference_title" &&
+                    $k != "descriptionreference_nilreason" &&
+                    $k != "identifier_codespace" &&
+                    $k != "identifier" &&
+                    $k != "location_location_pkid"
                 ) {
                     $fields[] = $k;
                 }
@@ -403,12 +408,12 @@ function getCmdFile()
             $files[$randFileName . ".tab"] = $url;
             $files[$randFileName . ".TAB"] = $url;
             // Try to get both upper and lower case extension
-            $files[$randFileName . ".map"] = $base.".map";
-            $files[$randFileName . ".MAP"] = $base.".MAP";
-            $files[$randFileName . ".dat"] = $base.".dat";
-            $files[$randFileName . ".DAT"] = $base.".DAT";
-            $files[$randFileName . ".id"] = $base.".id";
-            $files[$randFileName . ".ID"] = $base.".ID";
+            $files[$randFileName . ".map"] = $base . ".map";
+            $files[$randFileName . ".MAP"] = $base . ".MAP";
+            $files[$randFileName . ".dat"] = $base . ".dat";
+            $files[$randFileName . ".DAT"] = $base . ".DAT";
+            $files[$randFileName . ".id"] = $base . ".id";
+            $files[$randFileName . ".ID"] = $base . ".ID";
             $fileSetName = $randFileName . "." . $extension;
             break;
 
@@ -420,7 +425,7 @@ function getCmdFile()
 
     foreach ($files as $key => $file) {
         $path = "/var/www/geocloud2/public/logs/" . $key;
-        $fileRes = fopen($path,'w');
+        $fileRes = fopen($path, 'w');
         try {
             file_put_contents($path, Util::wget($file));
         } catch (Exception $e) {
