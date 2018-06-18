@@ -157,8 +157,6 @@ function getCmdPaging()
             "-nln {$workingSchema}.{$cellTemp} " .
             "-nlt {$type}";
 
-        echo $cmd . "\n\n";
-
         exec($cmd . ' 2>&1', $out, $err);
 
         foreach ($out as $line) {
@@ -227,6 +225,7 @@ function getCmdPaging()
             foreach ($table->getMetaData("{$workingSchema}.{$t}") as $k => $v) {
                 if (
                     array_reverse(explode("_", $k))[0] != "nil" &&
+                    $k !="ogr_pkid" &&
                     $k !="description_href" &&
                     $k !="description_title" &&
                     $k !="description_nilreason" &&
@@ -320,8 +319,8 @@ function getCmdPaging()
         print "\n\n";
     }
 
-    // Drop gid serial
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP gid";
+    // Alter gid so it becomes unique
+    $sql = "CREATE TEMPORARY SEQUENCE gid_seq";
     $res = $table->prepare($sql);
     try {
         $res->execute();
@@ -331,9 +330,17 @@ function getCmdPaging()
         cleanUp();
         exit(1);
     }
-
-    // Rename ogr_pkid to gid
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME ogr_pkid TO gid";
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} ALTER gid SET DEFAULT nextval('gid_seq')";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
+    $sql = "UPDATE {$workingSchema}.{$randTableName} SET gid=DEFAULT";
     $res = $table->prepare($sql);
     try {
         $res->execute();
