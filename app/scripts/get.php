@@ -122,7 +122,6 @@ function getCmdPaging()
 
     $pass = true;
     $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax";
-    echo $sql;
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
@@ -142,12 +141,9 @@ function getCmdPaging()
         };
 
         $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
-            "-unsetFid " .
-            "-nomd " .
             "-overwrite " .
             "-dim 2 " .
-            "-oo 'REMOVE_UNUSED_LAYERS=YES' " .
-            "-oo 'REMOVE_UNUSED_FIELDS=NO' " .
+            "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
@@ -163,9 +159,9 @@ function getCmdPaging()
             $pass = false;
         }
 
-        // The GMLAS driver sometimes throws a 404 error, so we can't stop on ERROR
+        // The GMLAS driver sometimes throws a 404 error, so we can't stop on this kind of error
         foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404") ) {
+            if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404")) {
                 $pass = false;
                 break 1;
             }
@@ -246,7 +242,7 @@ function getCmdPaging()
             }
             if (sizeof($fields) > 0) {
                 $gotFields = true;
-                print "Fields in source:\n";
+                print "\n\nFields in source:\n";
                 print_r($fields);
                 print "\n";
             }
@@ -596,7 +592,7 @@ if ($err) {
 
 } else {
     foreach ($out as $line) {
-        if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404") ) {
+        if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404")) {
             print_r($out);
             cleanUp();
             exit(1);
