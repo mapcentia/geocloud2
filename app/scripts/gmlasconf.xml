@@ -37,7 +37,7 @@
         <CaseInsensitiveIdentifier>true</CaseInsensitiveIdentifier>
         <!-- Launder identifiers like the OGR PG driver does.
              Note: this laundering is safe for other backends as well. -->
-        <PostgreSQLIdentifierLaundering>true</PostgreSQLIdentifierLaundering>
+        <PostgreSQLIdentifierLaundering>false</PostgreSQLIdentifierLaundering>
         <FlatteningRules>
             <!-- Maximum number of fields allowed for element flattening -->
             <MaximumNumberOfFields>10</MaximumNumberOfFields>

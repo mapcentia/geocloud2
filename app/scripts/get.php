@@ -39,7 +39,7 @@ if (sizeof(explode("|", $url)) > 1) {
         $id = explode(",", $grid)[1];
         $grid = explode(",", $grid)[0];
     } else {
-        $id = "ogr_pkid";
+        $id = null;
     }
     $getFunction = "getCmdPaging"; // Paging by grid
 } else {
@@ -142,6 +142,7 @@ function getCmdPaging()
 
         $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
             "-overwrite " .
+            "-preserve_fid " .
             "-dim 2 " .
             "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " .
             "-lco 'GEOMETRY_NAME=the_geom' " .
@@ -170,6 +171,7 @@ function getCmdPaging()
         if (!$pass) {
             if ($count > 2) {
                 echo "Too many recursive tries to fetch cell #{$row["gid"]}\n";
+                cleanUp();
                 exit(1);
             }
             sleep(5);
@@ -192,6 +194,7 @@ function getCmdPaging()
                 fclose($handle);
             }
             @unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+            cleanUp();
             exit(1);
         }
 
@@ -272,7 +275,7 @@ function getCmdPaging()
         }
     }
 
-    // If source has an "id" fields, it will be mapped to id2 by GMLAS driver
+    // If source has an "id" fields and identifier is gml:id, it will be mapped to id2 by GMLAS driver
     // We try to rename id2 to id and drop id1
     $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME id2 TO id";
     $res = $table->prepare($sql);
@@ -291,6 +294,41 @@ function getCmdPaging()
         print "\n\n";
     }
 
+
+    if (!$id) {
+        $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='id'";
+        $res = $table->prepare($sql);
+        try {
+            $res->execute();
+            $row = $table->fetchRow($res);
+            if ($row) {
+                $id = "id";
+            } else {
+                $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='fid'";
+                $res = $table->prepare($sql);
+                try {
+                    $res->execute();
+                    $row = $table->fetchRow($res);
+                    if ($row) {
+                        $id = "fid";
+                    } else {
+                        print "Could not find id or fid field. Please set identifier name in URL\n\n";
+                        cleanUp();
+                        exir(1);
+                    }
+                } catch (\PDOException $e) {
+
+                }
+            }
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+            cleanUp();
+            exit(1);
+        }
+    }
+
+    print "Identifier set to: {$id}\n\n";
+
     // Remove dups. Default to ogr_pkid as unique field
     $sql = "DELETE FROM {$workingSchema}.{$randTableName} a USING (
       SELECT MIN(ctid) as ctid, {$id}
@@ -298,10 +336,18 @@ function getCmdPaging()
         GROUP BY {$id} HAVING COUNT(*) > 1
       ) b
       WHERE a.{$id} = b.{$id} 
-      AND a.ctid <> b.ctid";
+      AND a.ctid <> b.ctid RETURNING a.{$id}";
     $res = $table->prepare($sql);
     try {
         $res->execute();
+        $row = $table->fetchRow($res);
+        print_r($row);
+        if (sizeof($row) > 0) {
+            print "Removed " . sizeof($row). " dups\n\n";
+        } else {
+            print "Removed no dups\n\n";
+
+        }
     } catch (\PDOException $e) {
         print_r($e->getMessage());
         $table->rollback();
@@ -428,8 +474,9 @@ function getCmdFile()
         } catch (Exception $e) {
             print $file . "   ";
             // Delete files with errors
-            unlink($path);
+            @unlink($path);
             print $e->getMessage() . "\n";
+            cleanUp();
             exit(1);
         }
     }
