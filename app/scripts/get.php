@@ -121,7 +121,8 @@ function getCmdPaging()
     print "Start paged download...\n\n";
 
     $pass = true;
-    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid}";
+    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax";
+    echo $sql;
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
@@ -135,8 +136,7 @@ function getCmdPaging()
 
         $cellTemp = "cell_" . md5(microtime() . rand());
 
-
-        if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox . ",EPSG:25832"))) {
+        if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))) {
             echo "Error: could not get GML for cell #{$row["gid"]}\n";
             $pass = false;
         };
@@ -159,13 +159,13 @@ function getCmdPaging()
 
         exec($cmd . ' 2>&1', $out, $err);
 
-
         if ($err) {
             $pass = false;
         }
 
+        // The GMLAS driver sometimes throws a 404 error, so we can't stop on ERROR
         foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+            if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404") ) {
                 $pass = false;
                 break 1;
             }
@@ -195,7 +195,7 @@ function getCmdPaging()
                 }
                 fclose($handle);
             }
-            unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+            @unlink("/var/www/geocloud2/public/logs/" . $gmlName);
             exit(1);
         }
 
@@ -246,7 +246,9 @@ function getCmdPaging()
             }
             if (sizeof($fields) > 0) {
                 $gotFields = true;
+                print "Fields in source:\n";
                 print_r($fields);
+                print "\n";
             }
         }
         $selects[] = "SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$t}";
@@ -594,7 +596,7 @@ if ($err) {
 
 } else {
     foreach ($out as $line) {
-        if (strpos($line, "FAILURE") !== false || strpos($line, "ERROR") !== false) {
+        if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404") ) {
             print_r($out);
             cleanUp();
             exit(1);
