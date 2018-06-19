@@ -116,7 +116,7 @@ function getCmd()
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $numberOfFeatures, $out, $err;
+    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $numberOfFeatures, $srid, $out, $err;
 
     print "Start paged download...\n\n";
 
@@ -127,9 +127,9 @@ function getCmdPaging()
 
     function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id)
     {
-        global $pass, $count, $table, $cellTemps, $id, $numberOfFeatures, $out, $err;
+        global $pass, $count, $table, $cellTemps, $id, $numberOfFeatures, $srid, $out, $err;
         $out = [];
-        $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
+        $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]},EPSG:{$srid}";
         $wfsUrl = $url . "&BBOX=";
         $gmlName = $randTableName . "-" . $row["gid"] . ".gml";
 
@@ -147,7 +147,7 @@ function getCmdPaging()
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
-            "-a_srs 'EPSG:25832' " .
+            "-a_srs 'EPSG:{$srid}' " .
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " .
             "-nln {$workingSchema}.{$cellTemp} " .
@@ -219,7 +219,6 @@ function getCmdPaging()
 
     $selects = [];
     $drops = [];
-
     $gotFields = false;
     foreach ($cellTemps as $t) {
         if (!$gotFields) {
@@ -241,7 +240,7 @@ function getCmdPaging()
                 }
             }
             if (sizeof($fields) > 0) {
-                $gotFields = true;
+                $gotFields = true; // Don't read fields again
                 print "\n\nFields in source:\n";
                 print_r($fields);
                 print "\n";
