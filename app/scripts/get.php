@@ -349,7 +349,7 @@ function getCmdPaging()
         $row = $table->fetchRow($res);
         print_r($row);
         if (sizeof($row) > 0) {
-            print "Removed " . sizeof($row). " dups\n\n";
+            print "Removed " . sizeof($row) . " dups\n\n";
         } else {
             print "Removed no dups\n\n";
 
@@ -706,10 +706,22 @@ if ($o != "-overwrite") {
         exit(1);
     }
 
+    $extras = [];
+    $fieldObj = json_decode($extra);
+
+    if ($fieldObj) {
+        if (gettype($fieldObj) == "object") {
+            $fieldObj = [$fieldObj];
+        }
+
+        foreach ($fieldObj as $f) {
+            $extras[] = $f->name;
+        }
+    }
+
     foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
-        $fields[] = $k;
-        if ($k == "the_geom") {
-            break;
+        if (!in_array($k, $extras)) {
+            $fields[] = $k;
         }
     }
 
@@ -782,36 +794,48 @@ if ($idxSql) {
 // =================================
 if ($extra) {
     $fieldObj = json_decode($extra);
-    $fieldName = $fieldObj->name;
-    $fieldType = isset($fieldObj->type) ? $fieldObj->type : "varchar";
-    $fieldValue = isset($fieldObj->value) ? $fieldObj->value : null;
-    $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
-    if (!$check["exists"]) {
-        $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-        print $sql . "\n\n";
-        $res = $table->prepare($sql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            print_r($e->getMessage());
-            $table->rollback();
-            cleanUp();
-            exit(1);
-        }
-    } else {
-        print "Extra field already exists.\n\n";
-    }
-    $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
-    print "Updating extra field...\n\n";
-    $res = $table->prepare($sql);
-    try {
-        $res->execute(array(":value" => $fieldValue));
-    } catch (\PDOException $e) {
-        print_r($e->getMessage());
-        $table->rollback();
-        cleanUp();
-        exit(1);
 
+    if (!$fieldObj) {
+        print "\n\nExtra fields JSON string is not valid\n\n";
+    } else {
+
+        if (gettype($fieldObj) == "object") {
+            $fieldObj = [$fieldObj];
+        }
+
+        foreach ($fieldObj as $f) {
+            $fieldName = $f->name;
+            $fieldType = isset($f->type) ? $f->type : "varchar";
+            $fieldValue = isset($f->value) ? $f->value : null;
+            $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
+            if (!$check["exists"]) {
+                $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
+                print $sql . "\n\n";
+                $res = $table->prepare($sql);
+                try {
+                    $res->execute();
+                } catch (\PDOException $e) {
+                    print_r($e->getMessage());
+                    $table->rollback();
+                    cleanUp();
+                    exit(1);
+                }
+            } else {
+                print "Extra field {$fieldName} already exists.\n\n";
+            }
+            $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
+            print "Updating extra field {$fieldName}...\n\n";
+            $res = $table->prepare($sql);
+            try {
+                $res->execute(array(":value" => $fieldValue));
+            } catch (\PDOException $e) {
+                print_r($e->getMessage());
+                $table->rollback();
+                cleanUp();
+                exit(1);
+
+            }
+        }
     }
 }
 
