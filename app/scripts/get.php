@@ -254,6 +254,12 @@ function getCmdPaging()
     }
 
     // Create UNION table
+    if (sizeof($selects) == 0) {
+        print "No data for the area.\n\n";
+        cleanUp();
+        exit(1);
+    }
+
     $sql = "CREATE TABLE {$workingSchema}.{$randTableName} AS " . implode("\nUNION ALL\n", $selects);
     $res = $table->prepare($sql);
     try {
@@ -724,7 +730,22 @@ if ($o != "-overwrite") {
     }
     $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$workingSchema}.{$randTableName}";
     $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
-    $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
+
+    // Check for the_geom and create GIST index on it
+    $sqlCheckForGeom = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$schema}' AND table_name='{$safeName}' and column_name='the_geom'";
+    $res = $table->prepare($sqlCheckForGeom);
+    try {
+        $res->execute();
+        $row = $table->fetchRow($res);
+        if ($row) {
+            $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
+        }
+    } catch (\PDOException $e) {
+        print_r($e->getMessage());
+        cleanUp();
+        exit(1);
+    }
+
 }
 
 print "Create/update final table...\n\n";
