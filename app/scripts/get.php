@@ -9,7 +9,7 @@ use \app\conf\Connection;
 use \app\inc\Util;
 
 
-echo date(DATE_RFC822) . "\n\n";
+print "Info: " . date(DATE_RFC822) . "\n\n";
 
 // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
 putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
@@ -88,7 +88,7 @@ function getCmd()
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $out, $err;
 
-    print "Fetching remote data...\n\n";
+    print "Info: Fetching remote data...\n\n";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile, 'w+');
@@ -97,7 +97,7 @@ function getCmd()
     curl_close($ch);
     fclose($fp);
 
-    print "Staring inserting in temp table using ogr2ogr...\n\n";
+    print "Info: Staring inserting in temp table using ogr2ogr...\n\n";
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
@@ -118,7 +118,7 @@ function getCmdPaging()
 {
     global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $numberOfFeatures, $srid, $out, $err;
 
-    print "Start paged download...\n\n";
+    print "Info: Start paged download...\n\n";
 
     $pass = true;
     $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax";
@@ -136,7 +136,7 @@ function getCmdPaging()
         $cellTemp = "cell_" . md5(microtime() . rand());
 
         if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))) {
-            echo "Error: could not get GML for cell #{$row["gid"]}\n";
+            print "Error: could not get GML for cell #{$row["gid"]}\n";
             $pass = false;
         };
 
@@ -170,7 +170,7 @@ function getCmdPaging()
 
         if (!$pass) {
             if ($count > 2) {
-                echo "Too many recursive tries to fetch cell #{$row["gid"]}\n";
+                print "Error; Too many recursive tries to fetch cell #{$row["gid"]}\n";
                 cleanUp();
                 exit(1);
             }
@@ -178,18 +178,18 @@ function getCmdPaging()
             $count++;
             fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
             foreach ($out as $line) {
-                echo $line . "\n";
+                print $line . "\n";
             }
-            echo "Request: " . $wfsUrl . $bbox . "\n\n";
-            echo "\nOutputting the first few lines of the file:\n\n";
+            print "Request: " . $wfsUrl . $bbox . "\n\n";
+            print "\nInfo: Outputting the first few lines of the file:\n\n";
             $handle = @fopen("/var/www/geocloud2/public/logs/" . $gmlName, "r");
             if ($handle) {
                 for ($i = 0; $i < 40; $i++) {
                     $buffer = fgets($handle, 4096);
-                    echo $buffer;
+                    print $buffer;
                 }
                 if (!feof($handle)) {
-                    echo "Error: unexpected fgets() fail\n";
+                    print "Error: unexpected fgets() fail\n";
                 }
                 fclose($handle);
             }
@@ -211,14 +211,15 @@ function getCmdPaging()
         } catch (\PDOException $e) {
             $numberOfFeatures[] = 0;
         }
-        echo $count;
+        print $count;
     }
-
+    print "Cells: ";
     while ($row = $table->fetchRow($res)) {
         global $count;
         $count = 1;
         fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
     }
+    print "\n\n";
 
     $selects = [];
     $drops = [];
@@ -244,9 +245,6 @@ function getCmdPaging()
             }
             if (sizeof($fields) > 0) {
                 $gotFields = true; // Don't read fields again
-                print "\n\nFields in source:\n";
-                print_r($fields);
-                print "\n";
             }
         }
         $selects[] = "SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$t}";
@@ -255,7 +253,7 @@ function getCmdPaging()
 
     // Create UNION table
     if (sizeof($selects) == 0) {
-        print "No data for the area.\n\n";
+        print "Notice: No data for the area.\n\n";
         cleanUp();
         exit(1);
     }
@@ -265,6 +263,7 @@ function getCmdPaging()
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -276,6 +275,7 @@ function getCmdPaging()
             try {
                 $res->execute();
             } catch (\PDOException $e) {
+                print "Warning: ";
                 print_r($e->getMessage());
             }
         }
@@ -318,7 +318,7 @@ function getCmdPaging()
                     if ($row) {
                         $id = "fid";
                     } else {
-                        print "Could not find id or fid field. Please set identifier name in URL\n\n";
+                        print "Error: Could not find id or fid field. Please set identifier name in URL\n\n";
                         cleanUp();
                         exir(1);
                     }
@@ -327,13 +327,37 @@ function getCmdPaging()
                 }
             }
         } catch (\PDOException $e) {
+            print "Error: ";
             print_r($e->getMessage());
             cleanUp();
             exit(1);
         }
     }
 
-    print "Identifier set to: {$id}\n\n";
+    print "Info: Identifier set to: {$id}\n\n";
+
+    // Count dups
+    $sql = "SELECT count(*) as num
+        FROM {$workingSchema}.{$randTableName}
+        GROUP BY {$id} HAVING COUNT(*) > 1";
+    $res = $table->prepare($sql);
+    try {
+        $res->execute();
+        $row = $table->fetchRow($res);
+        print_r($row);
+        if (sizeof($row["num"]) > 0) {
+            print "Info: Removed " . $row["num"] . " dups\n\n";
+        } else {
+            print "Notice: Removed no dups\n\n";
+
+        }
+    } catch (\PDOException $e) {
+        print "Error: ";
+        print_r($e->getMessage());
+        $table->rollback();
+        cleanUp();
+        exit(1);
+    }
 
     // Remove dups. Default to ogr_pkid as unique field
     $sql = "DELETE FROM {$workingSchema}.{$randTableName} a USING (
@@ -342,19 +366,12 @@ function getCmdPaging()
         GROUP BY {$id} HAVING COUNT(*) > 1
       ) b
       WHERE a.{$id} = b.{$id} 
-      AND a.ctid <> b.ctid RETURNING a.{$id}";
+      AND a.ctid <> b.ctid";
     $res = $table->prepare($sql);
     try {
         $res->execute();
-        $row = $table->fetchRow($res);
-        print_r($row);
-        if (sizeof($row) > 0) {
-            print "Removed " . sizeof($row) . " dups\n\n";
-        } else {
-            print "Removed no dups\n\n";
-
-        }
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -378,6 +395,7 @@ function getCmdPaging()
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -388,6 +406,7 @@ function getCmdPaging()
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -398,6 +417,7 @@ function getCmdPaging()
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -410,6 +430,7 @@ function getCmdPaging()
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -417,14 +438,14 @@ function getCmdPaging()
     }
 
     rsort($numberOfFeatures);
-    print "Highest number of features in cell: " . $numberOfFeatures[0] . "\n\n";
+    print "Info: Highest number of features in cell: " . $numberOfFeatures[0] . "\n\n";
 
 }
 
 function getCmdFile()
 {
     global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $out, $err;
-    print "Staring inserting in temp table using file download...\n\n";
+    print "Info: Staring inserting in temp table using file download...\n\n";
 
     $pass = true;
 
@@ -432,8 +453,8 @@ function getCmdFile()
     $files = [];
     $out = [];
 
-// Check if file extension
-// =======================
+    // Check if file extension
+    // =======================
     $extCheck1 = explode(".", $url);
     $extCheck2 = array_reverse($extCheck1);
     $extension = $extCheck2[0];
@@ -478,6 +499,7 @@ function getCmdFile()
         try {
             file_put_contents($path, Util::wget($file));
         } catch (Exception $e) {
+            print "Error: ";
             print $file . "   ";
             // Delete files with errors
             @unlink($path);
@@ -507,7 +529,7 @@ function getCmdZip()
 {
     global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $out, $err;
 
-    print "Fetching remote zip...\n\n";
+    print "Info: Fetching remote zip...\n\n";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
@@ -523,7 +545,7 @@ function getCmdZip()
         $zip = new ZipArchive;
         $res = $zip->open($dir . "/" . $tempFile . "." . $extCheck2[0]);
         if ($res === false) {
-            echo "Could not unzip file";
+            print "Error: Could not unzip file";
             cleanUp();
             exit(1);
         }
@@ -537,7 +559,7 @@ function getCmdZip()
     if (strtolower($extCheck2[0]) == "rar") {
         $rarFile = rar_open($dir . "/" . $tempFile . "." . $extCheck2[0]);
         if (!$rarFile) {
-            echo "Could not unrar file";
+            print "Error: Could not unrar file";
             cleanUp();
             exit(1);
         }
@@ -562,7 +584,7 @@ function getCmdZip()
         $file = gzopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'rb');
 
         if (!$file) {
-            echo "Could not gunzip file";
+            print "Error: Could not gunzip file";
             cleanUp();
             exit(1);
         }
@@ -611,12 +633,11 @@ $res = $table->prepare($sql);
 try {
     $res->execute();
 } catch (\PDOException $e) {
+    print "Error: ";
     print_r($e->getMessage());
+    cleanUp();
     exit(1);
 }
-
-
-$tmpTable = new \app\models\Table($workingSchema . "." . $randTableName);
 
 $getFunction();
 
@@ -626,15 +647,15 @@ if ($err) {
     print "\n\n";
     // Output the first few lines of file
     if ($grid == null) {
-        Print "Outputting the first few lines of the file:\n\n";
+        Print "Info: Outputting the first few lines of the file:\n\n";
         $handle = @fopen($dir . "/" . $tempFile, "r");
         if ($handle) {
             for ($i = 0; $i < 40; $i++) {
                 $buffer = fgets($handle, 4096);
-                echo $buffer;
+                print $buffer;
             }
             if (!feof($handle)) {
-                echo "Error: unexpected fgets() fail\n";
+                print "Error: unexpected fgets() fail\n";
             }
             fclose($handle);
         }
@@ -653,18 +674,18 @@ if ($err) {
 }
 
 // Run for real if the dry run is passed.
-print "Inserting in temp table done, proceeding...\n\n";
+print "Info: Inserting in temp table done, proceeding...\n\n";
 if ($deleteAppend == "1") {
-    print "Delete/append is enabled.\n\n";
+    print "Info: Delete/append is enabled.\n\n";
     if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
-        print "Table doesn't exists.\n\n";
+        print "Notice: Table doesn't exists.\n\n";
         $o = "-overwrite";
     } else {
-        print "Table exists.\n\n";
+        print "Info: Table exists.\n\n";
         $o = "-append";
     }
 } else {
-    print "Overwrite is enabled.\n\n";
+    print "Info: Overwrite is enabled.\n\n";
     $o = "-overwrite";
 }
 
@@ -675,15 +696,29 @@ $idxSql = null;
 // =================
 $table->begin();
 
+// Count features
+// ==============
+$sql = "SELECT count(*) AS number FROM {$workingSchema}.{$randTableName}";
+
+$res = $table->prepare($sql);
+
+try {
+    $res->execute();
+    print "Info: Total number of fetched features: " . $table->fetchRow($res)["number"] . "\n";
+} catch (\PDOException $e) {
+    print "Warning: Could not get the total number of fetched features!\n";
+}
+
 // Pre run SQL
 // ============
 if ($preSql) {
     foreach (explode(";", trim($preSql, ";")) as $q) {
-        print "Running pre-SQL: {$q}\n";
+        print "Info: Running pre-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
             $res->execute();
         } catch (\PDOException $e) {
+            print "Error: ";
             print_r($e->getMessage());
             $table->rollback();
             cleanUp();
@@ -693,39 +728,45 @@ if ($preSql) {
     print "\n";
 }
 
+$extras = [];
+$fieldObj = json_decode($extra);
+
+if ($fieldObj) {
+    if (gettype($fieldObj) == "object") {
+        $fieldObj = [$fieldObj];
+    }
+
+    foreach ($fieldObj as $f) {
+        $extras[] = $f->name;
+    }
+}
+
+foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
+    if (!in_array($k, $extras)) {
+        $fields[] = $k;
+    }
+}
+
+print "\nInfo: Fields in source: ";
+print implode(", " , $fields);
+print "\n\n";
+
 // Delete/append
+// =============
 if ($o != "-overwrite") {
     $sql = "DELETE FROM {$schema}.{$safeName}";
     $res = $table->prepare($sql);
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
         exit(1);
     }
 
-    $extras = [];
-    $fieldObj = json_decode($extra);
-
-    if ($fieldObj) {
-        if (gettype($fieldObj) == "object") {
-            $fieldObj = [$fieldObj];
-        }
-
-        foreach ($fieldObj as $f) {
-            $extras[] = $f->name;
-        }
-    }
-
-    foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
-        if (!in_array($k, $extras)) {
-            $fields[] = $k;
-        }
-    }
-
-    print "Data in existing table deleted.\n\n";
+    print "Info: Data in existing table deleted.\n\n";
     $sql = "INSERT INTO {$schema}.{$safeName} (SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$randTableName})";
 
 // Overwrite
@@ -735,6 +776,7 @@ if ($o != "-overwrite") {
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
         cleanUp();
@@ -753,6 +795,7 @@ if ($o != "-overwrite") {
             $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
         }
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
         cleanUp();
         exit(1);
@@ -760,12 +803,13 @@ if ($o != "-overwrite") {
 
 }
 
-print "Create/update final table...\n\n";
-print $sql . "\n\n";
+print "Info: Create/update final table...\n\n";
+//print $sql . "\n\n";
 $res = $table->prepare($sql);
 try {
     $res->execute();
 } catch (\PDOException $e) {
+    print "Error: ";
     print_r($e->getMessage());
     $table->rollback();
     cleanUp();
@@ -777,6 +821,7 @@ if ($pkSql) {
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
     }
 }
@@ -786,6 +831,7 @@ if ($idxSql) {
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Error: ";
         print_r($e->getMessage());
     }
 }
@@ -796,7 +842,7 @@ if ($extra) {
     $fieldObj = json_decode($extra);
 
     if (!$fieldObj) {
-        print "\n\nExtra fields JSON string is not valid\n\n";
+        print "\n\nWarning: Extra fields JSON string is not valid\n\n";
     } else {
 
         if (gettype($fieldObj) == "object") {
@@ -810,25 +856,27 @@ if ($extra) {
             $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
             if (!$check["exists"]) {
                 $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-                print $sql . "\n\n";
+                print "info: Adding {$fieldName}\n\n";
                 $res = $table->prepare($sql);
                 try {
                     $res->execute();
                 } catch (\PDOException $e) {
+                    print "Error: ";
                     print_r($e->getMessage());
                     $table->rollback();
                     cleanUp();
                     exit(1);
                 }
             } else {
-                print "Extra field {$fieldName} already exists.\n\n";
+                print "Info: Extra field {$fieldName} already exists.\n\n";
             }
             $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
-            print "Updating extra field {$fieldName}...\n\n";
+            print "Info: Updating extra field {$fieldName}...\n\n";
             $res = $table->prepare($sql);
             try {
                 $res->execute(array(":value" => $fieldValue));
             } catch (\PDOException $e) {
+                print "Error: ";
                 print_r($e->getMessage());
                 $table->rollback();
                 cleanUp();
@@ -844,11 +892,12 @@ if ($extra) {
 if ($postSql) {
     foreach (explode(";", trim($postSql, ";")) as $q) {
         $q = str_replace("@TABLE@", $schema . "." . $safeName, $q);
-        print "Running post-SQL: {$q}\n";
+        print "Info: Running post-SQL: {$q}\n";
         $res = $table->prepare($q);
         try {
             $res->execute();
         } catch (\PDOException $e) {
+            print "Error: ";
             print_r($e->getMessage());
             $table->rollback();
             cleanUp();
@@ -862,8 +911,8 @@ if ($postSql) {
 // =================
 $table->commit();
 
-print "Data imported into " . $schema . "." . $safeName . "\n\n";
-print_r(\app\controllers\Tilecache::bust($schema . "." . $safeName));
+print "Info: Data imported into " . $schema . "." . $safeName . "\n";
+print "\nInfo: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["message"] . "\n";
 
 // Clean up
 // ========
@@ -899,6 +948,7 @@ function cleanUp($success = 0)
     try {
         $res->execute([":lastcheck" => $success, ":id" => $jobId]);
     } catch (\PDOException $e) {
+        print "Warning: ";
         print_r($e->getMessage());
     }
 
@@ -907,6 +957,7 @@ function cleanUp($success = 0)
     try {
         $res->execute(["id" => $jobId]);
     } catch (\PDOException $e) {
+        print "Warning: ";
         print_r($e->getMessage());
     }
 
@@ -916,6 +967,7 @@ function cleanUp($success = 0)
         try {
             $res->execute(["id" => $jobId]);
         } catch (\PDOException $e) {
+            print "Warning: ";
             print_r($e->getMessage());
         }
     }
@@ -925,15 +977,16 @@ function cleanUp($success = 0)
     try {
         $res->execute();
     } catch (\PDOException $e) {
+        print "Warning: ";
         print_r($e->getMessage());
     }
-    print "\nTemp table dropped.\n\n";
+    print "\nInfo: Temp table dropped.\n\n";
 
     if ($success) {
         \app\models\Database::setDb($db);
         $layer = new \app\models\Layer();
         $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
-        print_r($res);
+        print "Info: " . $res["message"] . "\n";
     }
 }
 
