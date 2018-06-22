@@ -129,7 +129,7 @@ date_default_timezone_set("CET");
 \app\models\Database::setDb("gc2scheduler");
 $job = new \app\inc\Model();
 
-$res = $job->prepare("SELECT * FROM jobs");
+$res = $job->prepare("SELECT * FROM jobs ORDER BY db, id");
 try {
     $res->execute();
 } catch (\PDOException $e) {
