@@ -190,7 +190,7 @@ class Tilecache extends \app\inc\Controller
     static function bust($layerName)
     {
         $layer = new \app\models\Layer();
-        $cache = $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache;
+        $cache = isset($layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache) ? $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache : null;
 
         // Default
         // =======
@@ -258,7 +258,7 @@ class Tilecache extends \app\inc\Controller
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false);
-        if ($meta["data"][0]["def"]->lock) {
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
@@ -266,10 +266,10 @@ class Tilecache extends \app\inc\Controller
         }
 
         if ($dir) {
-            exec("rm -R {$dir}");
+            exec("rm -R {$dir} 2> /dev/null");
             if (strpos($dir, ".*") !== false) {
                 $dir = str_replace(".*", "", $dir);
-                exec("rm -R {$dir}");
+                exec("rm -R {$dir} 2> /dev/null");
             }
             $response['success'] = true;
         } else {
