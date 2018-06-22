@@ -8,6 +8,16 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Util;
 
+$report = [];
+
+const DOWNLOADTYPE = "downloadType";
+const FEATURECOUNT = "featureCount";
+const MAXCELLCOUNT = "maxCellCount";
+const DUPSCOUNT = "dupsCount";
+const URL = "Url";
+const GMLAS = "GMLAS";
+const FILE = "File";
+const ZIP = "Zip";
 
 print "Info: " . date(DATE_RFC822) . "\n\n";
 
@@ -86,7 +96,9 @@ function which()
 
 function getCmd()
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $out, $err;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err;
+
+    $report[DOWNLOADTYPE] = URL;
 
     print "Info: Fetching remote data...\n\n";
     $ch = curl_init();
@@ -98,6 +110,7 @@ function getCmd()
     fclose($fp);
 
     print "Info: Staring inserting in temp table using ogr2ogr...\n\n";
+
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
@@ -116,7 +129,9 @@ function getCmd()
 
 function getCmdPaging()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $numberOfFeatures, $srid, $out, $err;
+    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures;
+
+    $report[DOWNLOADTYPE] = GMLAS;
 
     print "Info: Start paged download...\n\n";
 
@@ -347,9 +362,10 @@ function getCmdPaging()
         print_r($row);
         if (sizeof($row["num"]) > 0) {
             print "Info: Removed " . $row["num"] . " dups\n\n";
+            $report[DUPSCOUNT] =  $row["num"];
         } else {
             print "Notice: Removed no dups\n\n";
-
+            $report[DUPSCOUNT] = 0;
         }
     } catch (\PDOException $e) {
         print "Error: ";
@@ -439,15 +455,17 @@ function getCmdPaging()
 
     rsort($numberOfFeatures);
     print "Info: Highest number of features in cell: " . $numberOfFeatures[0] . "\n\n";
+    $report[MAXCELLCOUNT] = $numberOfFeatures[0];
 
 }
 
 function getCmdFile()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $out, $err;
-    print "Info: Staring inserting in temp table using file download...\n\n";
+    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err;
 
-    $pass = true;
+    $report[DOWNLOADTYPE] = FILE;
+
+    print "Info: Staring inserting in temp table using file download...\n\n";
 
     $randFileName = "_" . md5(microtime() . rand());
     $files = [];
@@ -527,7 +545,9 @@ function getCmdFile()
 
 function getCmdZip()
 {
-    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $out, $err;
+    global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $report, $out, $err;
+
+    $report[DOWNLOADTYPE] = ZIP;
 
     print "Info: Fetching remote zip...\n\n";
     $ch = curl_init();
@@ -704,9 +724,13 @@ $res = $table->prepare($sql);
 
 try {
     $res->execute();
-    print "Info: Total number of fetched features: " . $table->fetchRow($res)["number"] . "\n";
+    $n = $table->fetchRow($res)["number"];
+    print "Info: Total number of fetched features: " . $n . "\n";
+    $report[FEATURECOUNT] = $n;
+
 } catch (\PDOException $e) {
     print "Warning: Could not get the total number of fetched features!\n";
+    $report[FEATURECOUNT] = "na";
 }
 
 // Pre run SQL
@@ -918,7 +942,7 @@ print "\nInfo: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $outFileName;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report;
 
     // Unlink temp file
     // ================
@@ -944,6 +968,7 @@ function cleanUp($success = 0)
     $job = new \app\inc\Model();
 
     // lastcheck
+    // =========
     $res = $job->prepare("UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id");
     try {
         $res->execute([":lastcheck" => $success, ":id" => $jobId]);
@@ -953,9 +978,20 @@ function cleanUp($success = 0)
     }
 
     // lastrun
+    // =======
     $res = $job->prepare("UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
     try {
         $res->execute(["id" => $jobId]);
+    } catch (\PDOException $e) {
+        print "Warning: ";
+        print_r($e->getMessage());
+    }
+
+    // Report
+    // ======
+    $res = $job->prepare("UPDATE jobs SET report=:report WHERE id=:id");
+    try {
+        $res->execute(["id" => $jobId, "report" => json_encode($report)]);
     } catch (\PDOException $e) {
         print "Warning: ";
         print_r($e->getMessage());
