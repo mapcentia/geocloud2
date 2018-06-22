@@ -228,6 +228,7 @@ function getCmdPaging()
         }
         print $count;
     }
+
     print "Cells: ";
     while ($row = $table->fetchRow($res)) {
         global $count;
@@ -269,8 +270,8 @@ function getCmdPaging()
     // Create UNION table
     if (sizeof($selects) == 0) {
         print "Notice: No data for the area.\n\n";
-        cleanUp();
-        exit(1);
+        $report[FEATURECOUNT] = 0;
+        cleanUp(1);
     }
 
     $sql = "CREATE TABLE {$workingSchema}.{$randTableName} AS " . implode("\nUNION ALL\n", $selects);
@@ -362,7 +363,7 @@ function getCmdPaging()
         print_r($row);
         if (sizeof($row["num"]) > 0) {
             print "Info: Removed " . $row["num"] . " dups\n\n";
-            $report[DUPSCOUNT] =  $row["num"];
+            $report[DUPSCOUNT] = $row["num"];
         } else {
             print "Notice: Removed no dups\n\n";
             $report[DUPSCOUNT] = 0;
@@ -729,8 +730,9 @@ try {
     $report[FEATURECOUNT] = $n;
 
 } catch (\PDOException $e) {
-    print "Warning: Could not get the total number of fetched features!\n";
-    $report[FEATURECOUNT] = "na";
+    print "Notice: No data for the area (a guess).\n\n";
+    $report[FEATURECOUNT] = 0;
+    cleanUp(1);
 }
 
 // Pre run SQL
@@ -772,7 +774,7 @@ foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
 }
 
 print "\nInfo: Fields in source: ";
-print implode(", " , $fields);
+print implode(", ", $fields);
 print "\n\n";
 
 // Delete/append
