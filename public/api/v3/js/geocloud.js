@@ -1031,7 +1031,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.osm = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                        attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        attribution: "&copy; <a target='_blank' href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 21,
                         maxNativeZoom: 18
                     });
