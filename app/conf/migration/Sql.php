@@ -572,6 +572,7 @@ class Sql
         $sqls[] = "ALTER TABLE jobs ADD COLUMN presql text";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN postsql text";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN download_schema BOOL DEFAULT TRUE";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN report jsonb";
         return $sqls;
     }
 }
