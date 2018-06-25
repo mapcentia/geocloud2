@@ -542,7 +542,7 @@ class Table extends Model
                 // If row does not exits, insert instead.
                 // ======================================
 
-                if ((!$result) && (!$this->PDOerror)) {
+                if ((!$result) && (!isset($this->PDOerror)) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
 
                     $this->execQuery($sql, "PDO", "transaction");

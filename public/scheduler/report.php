@@ -139,7 +139,7 @@ try {
 
 print "<div class=\"datagrid\">";
 print "<table border=0>";
-print "<thead><tr><th>Id</th><th>Database</th><th>Schema</th><th>Table</th><th>Type</th><th>Last run</th><th>Since last success</th><th>Total feature count</th><th>Max features in cell</th><th>Duplicates removed</th><th>Success</th><th>Log</th></tr></thead>";
+print "<thead><tr><th>Id</th><th>Database</th><th>Schema</th><th>Table</th><th>Type</th><th>Last run</th><th>Since last success</th><th>Total feature count</th><th>Max features in cell</th><th>Duplicates removed</th><th>Waited (seconds)</th><th>Success</th><th>Log</th></tr></thead>";
 
 $count = 1;
 while ($row = $job->fetchRow($res)) {
@@ -165,9 +165,10 @@ while ($row = $job->fetchRow($res)) {
     $featureCount = is_int($report["featureCount"] / 1000) ? "<font color=\"orange\">{$report["featureCount"]}</font>" : $report["featureCount"];
     $maxCellCount = is_int($report["maxCellCount"] / 1000) ? "<font color=\"orange\">{$report["maxCellCount"]}</font>" : $report["maxCellCount"];
     $dupsCount = isset($report["dupsCount"]) && $report["dupsCount"] == 0 ? "<font color=\"orange\">{$report["dupsCount"]}</font>" : $report["dupsCount"];
+    $waited = isset($report["sleep"]) ? $report["sleep"] : "0";
 
 
-    print "\n<tr {$alt}><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td>{$report["downloadType"]}</td><td>{$lastrun}</td><td>$lasttimestamp</td><td>{$featureCount}</td><td>{$maxCellCount}</td><td>{$dupsCount}</td><td>{$lastcheck}</td><td><a target='_blank' href='/logs/{$row["id"]}_scheduler.log'>Link</a></td></tr>";
+    print "\n<tr {$alt}><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td>{$report["downloadType"]}</td><td>{$lastrun}</td><td>$lasttimestamp</td><td>{$featureCount}</td><td>{$maxCellCount}</td><td>{$dupsCount}</td><td>{$waited}</td><td>{$lastcheck}</td><td><a target='_blank' href='/logs/{$row["id"]}_scheduler.log'>Link</a></td></tr>";
 
 }
 
