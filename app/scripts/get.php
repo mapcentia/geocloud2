@@ -10,6 +10,12 @@ use \app\inc\Util;
 
 $report = [];
 
+$lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
+
+if (!file_exists($lockDir)) {
+    @mkdir($lockDir);
+}
+
 const DOWNLOADTYPE = "downloadType";
 const FEATURECOUNT = "featureCount";
 const MAXCELLCOUNT = "maxCellCount";
@@ -18,6 +24,7 @@ const URL = "Url";
 const GMLAS = "GMLAS";
 const FILE = "File";
 const ZIP = "Zip";
+const SLEEP = "sleep";
 
 print "Info: " . date(DATE_RFC822) . "\n\n";
 
@@ -39,6 +46,18 @@ $postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
 $downloadSchema = $argv[13];
 
 $workingSchema = "_gc2scheduler";
+
+// Create lock file
+$lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
+$lockFile = $lockDir . "/" . $jobId . ".lock";
+
+if (!file_exists($lockDir)) {
+    @mkdir($lockDir);
+}
+
+if (!file_exists($lockFile)) {
+    @touch($lockFile);
+}
 
 
 // Check if Paging should be used
@@ -353,14 +372,16 @@ function getCmdPaging()
     print "Info: Identifier set to: {$id}\n\n";
 
     // Count dups
-    $sql = "SELECT count(*) as num
-        FROM {$workingSchema}.{$randTableName}
-        GROUP BY {$id} HAVING COUNT(*) > 1";
+    $sql = "SELECT count(*) as num FROM (
+              SELECT {$id},count(*) as num
+              FROM {$workingSchema}.{$randTableName}
+              GROUP BY {$id} HAVING COUNT(*) > 1
+          ) AS foo";
+
     $res = $table->prepare($sql);
     try {
         $res->execute();
         $row = $table->fetchRow($res);
-        print_r($row);
         if (sizeof($row["num"]) > 0) {
             print "Info: Removed " . $row["num"] . " dups\n\n";
             $report[DUPSCOUNT] = $row["num"];
@@ -503,6 +524,8 @@ function getCmdFile()
             $files[$randFileName . ".DAT"] = $base . ".DAT";
             $files[$randFileName . ".id"] = $base . ".id";
             $files[$randFileName . ".ID"] = $base . ".ID";
+            $files[$randFileName . ".ind"] = $base . ".ind";
+            $files[$randFileName . ".IND"] = $base . ".IND";
             $fileSetName = $randFileName . "." . $extension;
             break;
 
@@ -660,8 +683,28 @@ try {
     exit(1);
 }
 
-$getFunction();
+// We poll for running jobs
+// ========================
+function poll()
+{
+    global $getFunction, $lockDir, $report;
+    $sleep = 10;
+    $maxJobs = 3;
+    $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
+    if (iterator_count($fi) > $maxJobs) {
+        print "info: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...\n\n";
+        $report[SLEEP]+= $sleep;
+        sleep($sleep);
+        poll();
+    } else {
+        $getFunction();
+    }
+}
 
+poll();
+
+// Check output
+// ============
 if ($err) {
     print "Error " . $err . "\n\n";
     print_r($out);
@@ -732,6 +775,7 @@ try {
 } catch (\PDOException $e) {
     print "Notice: No data for the area (a guess).\n\n";
     $report[FEATURECOUNT] = 0;
+    $table->rollback();
     cleanUp(1);
 }
 
@@ -767,7 +811,7 @@ if ($fieldObj) {
     }
 }
 
-foreach ($table->getMetaData("{$schema}.{$safeName}") as $k => $v) {
+foreach ($table->getMetaData("{$workingSchema}.{$randTableName}") as $k => $v) {
     if (!in_array($k, $extras)) {
         $fields[] = $k;
     }
@@ -944,7 +988,10 @@ print "\nInfo: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["
 // ========
 function cleanUp($success = 0)
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
+
+    // Unlink lock file
+    unlink($lockFile);
 
     // Unlink temp file
     // ================
