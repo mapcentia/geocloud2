@@ -1,4 +1,6 @@
 <?php
+set_time_limit(0);
+
 include_once(__DIR__ . "/../conf/App.php");
 include_once(__DIR__ . "/../vendor/autoload.php");
 
@@ -689,7 +691,7 @@ function poll()
 {
     global $getFunction, $lockDir, $report;
     $sleep = 10;
-    $maxJobs = 3;
+    $maxJobs = 10;
     $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
     if (iterator_count($fi) > $maxJobs) {
         print "info: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...\n\n";
@@ -700,7 +702,6 @@ function poll()
         $getFunction();
     }
 }
-
 poll();
 
 // Check output
