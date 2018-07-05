@@ -2,13 +2,16 @@
 <?php
 use \app\conf\App;
 use \app\models\Database;
+use \app\models\Layer;
 use \app\inc\Util;
+use \app\inc\Model;
 
 header("Content-type: text/plain");
 include_once("../App.php");
 new \app\conf\App();
-Database::setDb("mydb");
-$conn = new \app\inc\Model();
+Database::setDb("flis");
+$conn = new Model();
+$layer = new Layer();
 $sql = "SELECT * FROM settings.geometry_columns_join";
 $result = $conn->execQuery($sql);
 echo $conn->PDOerror[0];
@@ -20,12 +23,21 @@ while ($row = $conn->fetchRow($result)) {
     if (isset($row["meta"])) {
         $meta = json_decode($row["meta"]);
 
-        if ($meta->ckan_update) {
-            print_r($meta);
+        if (isset($meta->ckan_update) && $meta->ckan_update) {
+            //print_r($meta);
 
             $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row["_key_"] . "&host=" . $gc2host;
-            echo $url . "\n";
-            Util::wget($url);
+            try {
+                print Util::wget($url);
+            } catch (Exception $exception) {
+                print $exception->getMessage();
+            }
+        } else {
+            $uuid = $layer->getUuid($row["_key_"]);
+            print_r($layer->deleteCkan($uuid["uuid"]));
         }
+    } else {
+        $uuid = $layer->getUuid($row["_key_"]);
+        print_r($layer->deleteCkan($uuid["uuid"]));
     }
 }
