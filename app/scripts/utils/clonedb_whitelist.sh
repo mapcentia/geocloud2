@@ -143,3 +143,8 @@ echo "Writing MapCache file"
 RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)['ch']")
 echo $RES
 
+#Write out the QGIS files
+echo "Writing QGIS files"
+RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)['ch']")
+echo $RES
+
