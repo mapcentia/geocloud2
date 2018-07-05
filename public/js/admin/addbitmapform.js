@@ -36,8 +36,9 @@ addBitmap.init = function () {
                             if (arr.length === count) {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
-                                    writeFiles();
                                     reLoadTree();
+                                    writeFiles();
+                                    writeMapCacheFile();
                                 }
                                 spinner(false);
                                 return;

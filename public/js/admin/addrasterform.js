@@ -4,6 +4,7 @@
 /*global document:false */
 /*global window:false */
 /*global writeFiles:false */
+/*global writeMapCacheFile:false */
 /*global store:false */
 /*global addRasterFile:false */
 Ext.namespace('addRasterFile');
@@ -38,6 +39,7 @@ addRasterFile.init = function () {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
                                     writeFiles();
+                                    writeMapCacheFile();
                                     store.load();
                                 }
                                 spinner(false);

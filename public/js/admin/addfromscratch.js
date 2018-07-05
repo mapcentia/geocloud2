@@ -91,6 +91,8 @@ addScratch.init = function () {
                             success: function (form, action) {
                                 App.setAlert(App.STATUS_NOTICE, action.result.message);
                                 reLoadTree();
+                                writeFiles();
+                                writeMapCacheFile();
                             },
                             failure: function (form, action) {
                                 Ext.MessageBox.show({

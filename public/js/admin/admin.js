@@ -4517,7 +4517,7 @@ $(document).ready(function () {
         west.add(tree);
         west.doLayout();
 
-        writeFiles();
+        //writeFiles();
         // Last we add the restricted area layer.
         extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
             styleMap: new OpenLayers.StyleMap({
@@ -4699,6 +4699,8 @@ $(document).ready(function () {
     });
     map.addControl(measureControls.polygon);
 
+    // Always write the MapFile on start up
+    writeFiles();
 
 });
 

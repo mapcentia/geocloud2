@@ -68,7 +68,9 @@ addView.init = function () {
                             method: 'post',
                             params: param,
                             success: function () {
-                                store.reload();
+                                reLoadTree();
+                                writeFiles();
+                                writeMapCacheFile();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },
                             failure: function (response) {

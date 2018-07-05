@@ -203,6 +203,8 @@ addOsm.init = function () {
                             },
                             success: function () {
                                 reLoadTree();
+                                writeFiles();
+                                writeMapCacheFile();
                                 App.setAlert(App.STATUS_NOTICE, __("View created"));
                             },
                             failure: function (response) {

@@ -42,8 +42,9 @@ addQgis.init = function () {
                             if (arr.length === count) {
                                 if (flag) {
                                     App.setAlert(App.STATUS_NOTICE, __("All files processed"));
-                                    writeFiles();
                                     reLoadTree();
+                                    writeFiles();
+                                    writeMapCacheFile();
                                     if (errors.length > 0) {
                                         for (i = 0; i < errors.length; i = i + 1) {
                                             strings.push(errors[i]);
