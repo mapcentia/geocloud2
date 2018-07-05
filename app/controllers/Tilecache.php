@@ -224,7 +224,7 @@ class Tilecache extends \app\inc\Controller
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false);
-        if ($meta["data"][0]["def"]->lock) {
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
