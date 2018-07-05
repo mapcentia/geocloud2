@@ -693,7 +693,7 @@ class Table extends Model
      * @param string $_key_
      * @return array
      */
-    private function purgeFieldConf($_key_)
+    public function purgeFieldConf($_key_)
     {
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
