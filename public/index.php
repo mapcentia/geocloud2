@@ -115,6 +115,10 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
+    Route::add("api/v2/qgis/{action}/{user}", function () {
+        Database::setDb(Route::getParam("user"));
+    });
+
     Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });

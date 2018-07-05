@@ -53,6 +53,13 @@ class Sql
         $sqls[] = "CREATE INDEX geometry_columns_join_meta_idx ON settings.geometry_columns_join USING gin (meta)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER tags TYPE JSONB";
         $sqls[] = "CREATE INDEX geometry_columns_join_tags_idx ON settings.geometry_columns_join USING gin (tags)";
+        $sqls[] = "CREATE TABLE settings.qgis_files
+                    (
+                      id VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY,
+                      xml TEXT NOT NULL,
+                      db VARCHAR(255) NOT NULL,
+                      timestamp TIMESTAMP DEFAULT now() NOT NULL
+                    )";
 
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
