@@ -18,7 +18,13 @@ class Mapcachefile extends \app\inc\Controller
      */
     private function checkSum($file)
     {
-        return md5_file($file);
+        if (file_exists($file)) {
+            $md5 = md5_file($file);
+
+        } else {
+            $md5 = "";
+        }
+        return $md5;
     }
 
     /**
