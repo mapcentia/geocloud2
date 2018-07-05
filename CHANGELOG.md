@@ -9,14 +9,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Dedicated MapFile for WFS, so it works for QGIS-Server based layers.
 
 
-## [2018.1] - 2017-06-20
+## [2018.1] - 2018-07-5
 ### Added
 - New version 2 of the Elasticsearch API, which acts like the native Elasticsearch search API. Including GET with body and the query string "mini-language".  
 - New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Supports GET with body.
 - New REST "Feature Edit" API, which wraps the WFS-T API in a simple GeoJSON based REST service. Made for JavaScript clients.
 - New modern dark theme for Admin.
 - Extension mechanism for the REST API. Just drop in code for creating custom APIs.
-- SQLite3 and AWS S3 cache back-ends are added.
+- SQLite3 and AWS S3 MapCache back-ends are added.
 - "Private" tags with prefix "_". These will not be added to CKAN.
 - Scheduler has added support for Shape and TAB file sets and zip/rar/gz files over HTTP or FTP.
 - Scheduler can now run SQLs before and after a job.
@@ -40,7 +40,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
 - geocloud.js can now base64 encode the SQL string to avoid filtering in "threat filters". Use base64:true|false in request (true is default).
 - Support for Elasticsearch 6.x.
-- PG statement timeout in SQL API. Prevent long running statements. 
+- PG statement timeout in SQL API. Prevent long running statements.
+- QGIS project files are stored in database for backup and easy re-creation using a NEW API.
+- Better detection of WFS connection string style in QGIS project files.
+- QGIS project files names are now randomized, so they don't get overwritten by accident.
+- Tags can now be added to existing ones when adding to multiple layers.
+- MapCache file is written only when necessary. Making databases with a lot of layers more snappy. 
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
@@ -51,6 +56,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Data Tab in Admin filters fields with illegal characters.
 - Better handling of exceptions in REST API.
+- Better handling of strange chars in database relation names.
 - A lot of smaller fixes.
 
 ### Security
