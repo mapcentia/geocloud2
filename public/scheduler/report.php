@@ -139,7 +139,7 @@ try {
 
 print "<div class=\"datagrid\">";
 print "<table border=0>";
-print "<thead><tr><th>Id</th><th>Database</th><th>Schema</th><th>Table</th><th>Type</th><th>Last run</th><th>Since last success</th><th>Total feature count</th><th>Max features in cell</th><th>Duplicates removed</th><th>Waited (seconds)</th><th>Success</th><th>Log</th></tr></thead>";
+print "<thead><tr><th>Id</th><th>Url</th><th>Database</th><th>Schema</th><th>Table</th><th>Type</th><th>Last run</th><th>Since last success</th><th>Geom type</th><th>Total feature count</th><th>Max features in cell</th><th>Duplicates removed</th><th>Waited (seconds)</th><th>Success</th><th>Log</th></tr></thead>";
 
 $count = 1;
 while ($row = $job->fetchRow($res)) {
@@ -168,7 +168,7 @@ while ($row = $job->fetchRow($res)) {
     $waited = isset($report["sleep"]) ? $report["sleep"] : "0";
 
 
-    print "\n<tr {$alt}><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td>{$report["downloadType"]}</td><td>{$lastrun}</td><td>$lasttimestamp</td><td>{$featureCount}</td><td>{$maxCellCount}</td><td>{$dupsCount}</td><td>{$waited}</td><td>{$lastcheck}</td><td><a target='_blank' href='/logs/{$row["id"]}_scheduler.log'>Link</a></td></tr>";
+    print "\n<tr {$alt}><td>{$row["id"]}</td><td><input type='text' value='{$row["url"]}'></td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td>{$report["downloadType"]}</td><td>{$lastrun}</td><td>$lasttimestamp</td><td>{$row["type"]}</td><td>{$featureCount}</td><td>{$maxCellCount}</td><td>{$dupsCount}</td><td>{$waited}</td><td>{$lastcheck}</td><td><a target='_blank' href='/logs/{$row["id"]}_scheduler.log'>Link</a></td></tr>";
 
 }
 
