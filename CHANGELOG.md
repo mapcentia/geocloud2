@@ -6,8 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 - Create "retina" tiles option in tile cache settings.
-- Dedicated MapFile for WFS, so it works for QGIS-Server based layers.
-
 
 ## [2018.1] - 2018-07-5
 ### Added
@@ -45,7 +43,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Better detection of WFS connection string style in QGIS project files.
 - QGIS project files names are now randomized, so they don't get overwritten by accident.
 - Tags can now be added to existing ones when adding to multiple layers.
-- MapCache file is written only when necessary. Making databases with a lot of layers more snappy. 
+- MapCache file is written only when necessary. Making databases with a lot of layers more snappy.
+- The MapFile is separated into two MapFiles: One for WMS and one WFS. This way all WFS request uses MapServer and only WMS request will use QGIS Server.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
