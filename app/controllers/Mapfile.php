@@ -914,7 +914,6 @@ class Mapfile extends \app\inc\Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-                GROUP "<?php echo $postgisObject->toAscii($row['layergroup']) ?>"
                 <?php
                 if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
                     $type = $layerArr['data'][0]['geotype'];
@@ -946,7 +945,6 @@ class Mapfile extends \app\inc\Controller
                             break;
                     }
                 }
-
                 if (!$row['data']) {
                     if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
                         $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
@@ -969,32 +967,29 @@ class Mapfile extends \app\inc\Controller
                 ?>
                 CONNECTIONTYPE POSTGIS
                 CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']); ?><?php echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
-                <?php
-                    ?>
-                    TYPE <?php echo $type . "\n"; ?>
-
-                <?php } ?>
-
+                <?php ?>
+                TYPE <?php echo $type . "\n"; ?>
                 METADATA
-                "wfs_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
-                "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
-                "wfs_name"    "<?php echo $layerName; ?>"
-                "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                #"ows_extent" "-180 -90 180 90"
-                "gml_include_items" "all"
-                "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
-                "gml_types" "auto"
-                "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-                "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
+                    "wfs_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
+                    "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
+                    "wfs_name"    "<?php echo $layerName; ?>"
+                    "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                    #"ows_extent" "-180 -90 180 90"
+                    "gml_include_items" "all"
+                    "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
+                    "gml_types" "auto"
+                    "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
+                    "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END
+
                 PROJECTION
-                "init=epsg:<?php echo $row['srid']; ?>"
+                    "init=epsg:<?php echo $row['srid']; ?>"
                 END
+
                 TEMPLATE "test"
                 END #Layer
-                <?php
-            }
-        ?>
+                <?php } ?>
+        <?php } ?>
         END #MapFile
         <?php
         $data = ob_get_clean();
