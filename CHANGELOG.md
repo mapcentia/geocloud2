@@ -6,8 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 - Create "retina" tiles option in tile cache settings.
-- Dedicated MapFile for WFS, so it works for QGIS-Server based layers.
-
 
 ## [2018.1] - 2018-07-5
 ### Added
@@ -22,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Scheduler can now run SQLs before and after a job.
 - Scheduler has new option "Download Schema" for GML, so inaccessible schemas can be ignorred.
 - Scheduler has a daily email rapport generator. Need a Postmark account.
+- Scheduler has a report website at /scheduler/report.php
+- Gridded WFS download uses the GMLAS ogr2ogr driver, so schemas are used.
+- Gridded WFS download now checks max feature count in single cell and count of duplicates.
+- Experimental upload of MS Access databases.
 - This change log.
 
 
@@ -45,7 +47,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Better detection of WFS connection string style in QGIS project files.
 - QGIS project files names are now randomized, so they don't get overwritten by accident.
 - Tags can now be added to existing ones when adding to multiple layers.
-- MapCache file is written only when necessary. Making databases with a lot of layers more snappy. 
+- MapCache file is written only when necessary. Making databases with a lot of layers more snappy.
+- The MapFile is separated into two MapFiles: One for WMS and one WFS. This way all WFS request uses MapServer and only WMS request will use QGIS Server.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
@@ -60,4 +63,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - A lot of smaller fixes.
 
 ### Security
+- Better checking of privileges on layers when POSTing WFS GetFeature requests.
 
