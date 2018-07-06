@@ -7,6 +7,15 @@ use \app\conf\Connection;
 header("Content-type: text/plain");
 include_once("/var/www/geocloud2/app/conf/App.php");
 new \app\conf\App();
+
+if (isset($argv[1])) {
+    $_SERVER['HTTP_HOST'] = $argv[1];
+
+} else {
+    echo "Host is not set. Use ./build_files [host.com]\n";
+    exit(1);
+}
+
 $database = new \app\models\Database();
 $arr = $database->listAllDbs();
 $cfgfile = new \app\controllers\Cfgfile();
