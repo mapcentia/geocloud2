@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Scheduler can now run SQLs before and after a job.
 - Scheduler has new option "Download Schema" for GML, so inaccessible schemas can be ignorred.
 - Scheduler has a daily email rapport generator. Need a Postmark account.
+- Scheduler has a report website at /scheduler/report.php
+- Gridded WFS download uses the GMLAS ogr2ogr driver, so schemas are used.
+- Gridded WFS download now checks max feature count in single cell and count of duplicates.
+- Experimental upload of MS Access databases.
 - This change log.
 
 
@@ -59,4 +63,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - A lot of smaller fixes.
 
 ### Security
+- Better checking of privileges on layers when POSTing WFS GetFeature requests.
 
