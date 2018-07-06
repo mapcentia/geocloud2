@@ -973,7 +973,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.mapQuestOSM = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                        attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        attribution: "&copy; <a target='_blank' href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
@@ -988,7 +988,7 @@ geocloud = (function () {
         this.addMapQuestAerial = function () {
             switch (MAPLIB) {
                 case "ol2":
-                    this.mapQuestAerial = new OpenLayers.Layer.OSM("mapQuestAerial", ["http://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "http://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
+                    this.mapQuestAerial = new OpenLayers.Layer.OSM("mapQuestAerial", ["https://oatile1.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "https://oatile2.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "https://oatile3.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg", "https://oatile4.mqcdn.com/tiles/1.0.0/sat/${z}/${x}/${y}.jpg"]);
                     this.mapQuestAerial.wrapDateLine = false;
                     this.map.addLayer(this.mapQuestAerial);
                     this.mapQuestAerial.setVisibility(false);
@@ -1001,7 +1001,7 @@ geocloud = (function () {
                     this.map.addLayer(this.mapQuestAerial);
                     break;
                 case "leaflet":
-                    this.mapQuestAerial = new L.tileLayer("http://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
+                    this.mapQuestAerial = new L.tileLayer("https://oatile1.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
                         maxZoom: 20,
                         maxNativeZoom: 18
                     });
@@ -1267,7 +1267,7 @@ geocloud = (function () {
                         type,
                         "https://1.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/${z}/${x}/${y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code,
                         {
-                            attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>",
+                            attribution: "&copy; Nokia</span>&nbsp;<a href='https://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='//api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>",
                             resolutions: resolutions
                         }
                     );
@@ -1278,7 +1278,7 @@ geocloud = (function () {
                     l = new L.TileLayer("https://{s}.base.maps.cit.api.here.com/maptile/2.1/maptile/newest/" + name + "/{z}/{x}/{y}/256/png8?app_id=" + window.gc2Options.hereApp.App_Id + "&app_code=" + window.gc2Options.hereApp.App_Code, {
                         maxZoom: 21,
                         subdomains: ["1", "2", "3", "4"],
-                        attribution: "&copy; Nokia</span>&nbsp;<a href='http://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='https://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
+                        attribution: "&copy; Nokia</span>&nbsp;<a href='https://maps.nokia.com/services/terms' target='_blank' title='Terms of Use' style='color:#333;text-decoration: underline;'>Terms of Use</a></div> <img src='https://api.maps.nokia.com/2.2.4/assets/ovi/mapsapi/by_here.png' border='0'>"
                     });
                     lControl.addBaseLayer(l, prettyName);
                     break;
@@ -1290,7 +1290,7 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache/";
+                url = "https://cdn.eu1.mapcentia.com/wms/dk/tilecache/";
 
             switch (MAPLIB) {
                 case "ol2":
@@ -1365,7 +1365,7 @@ geocloud = (function () {
                 case "ol2":
                     l = new OpenLayers.Layer.WMTS({
                         name: name,
-                        url: ["http://a.services.kortforsyningen.dk/" + uriLayerName + "?login=mh1&password=sajas&", "http://b.services.kortforsyningen.dk/" + uriLayerName, "http://c.services.kortforsyningen.dk/" + uriLayerName],
+                        url: ["https://a.services.kortforsyningen.dk/" + uriLayerName + "?login=mh1&password=sajas&", "https://b.services.kortforsyningen.dk/" + uriLayerName, "https://c.services.kortforsyningen.dk/" + uriLayerName],
                         style: "default",
                         layer: layer,
                         matrixSet: "View1",
@@ -2322,10 +2322,10 @@ geocloud = (function () {
                 "minZoom": minZoom,
                 "maxZoom": maxZoom,
                 "attribution": [
-                    'Map tiles by <a href="http://stamen.com">Stamen Design</a>, ',
-                    'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. ',
-                    'Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, ',
-                    'under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
+                    'Map tiles by <a href="https://stamen.com">Stamen Design</a>, ',
+                    'under <a href="https://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. ',
+                    'Data by <a href="https://openstreetmap.org">OpenStreetMap</a>, ',
+                    'under <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
                 ].join("")
             };
         },
@@ -3084,4 +3084,3 @@ if (geocloud.MAPLIB === "leaflet") {
         }
     }());
 }
-
