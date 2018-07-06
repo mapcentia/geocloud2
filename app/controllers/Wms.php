@@ -1,10 +1,12 @@
 <?php
-namespace app\controllers;
 
+namespace app\controllers;
 
 use \app\conf\App;
 use \app\inc\Util;
 use \app\inc\Input;
+
+include "libs/PEAR/XML/Unserializer.php";
 
 /**
  * Class Wms
@@ -12,6 +14,9 @@ use \app\inc\Input;
  */
 class Wms extends \app\inc\Controller
 {
+
+    public $service;
+
     /**
      * Wms constructor.
      */
@@ -21,6 +26,7 @@ class Wms extends \app\inc\Controller
         $postgisschema = \app\inc\Input::getPath()->part(3);
         $db = \app\inc\Input::getPath()->part(2);
         $dbSplit = explode("@", $db);
+        $this->service = null;
         if (sizeof($dbSplit) == 2) {
             $subUser = $dbSplit[0];
             $db = $dbSplit[1];
@@ -36,25 +42,49 @@ class Wms extends \app\inc\Controller
             }
         }
 
+        // Both WMS and WFS can use GET
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             foreach ($_GET as $k => $v) {
+                // Get the layer names from either WMS (layer) or WFS (typename)
                 if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
                     $layers[] = $v;
                 }
+
+                // Get the service. WMS or WFS
+                if (strtolower($k) == "service") {
+                    $this->service = strtolower($v);
+                }
             }
+
+            // If IP not trusted, when check auth on layers
             if (!$trusted) {
                 foreach ($layers as $layer) {
                     $this->basicHttpAuthLayer($layer, $db, $subUser);
                 }
             }
-            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                $this->get($db, $postgisschema);
-            }
+
+            $this->get($db, $postgisschema);
         }
 
-        // TODO check layers!
+        // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->post($db, $postgisschema, Input::get(null, true));
+            // Parse the XML request
+            $unserializer = new \XML_Unserializer(['parseAttributes' => TRUE, 'typeHints' => FALSE]);
+            $request = Input::get(null, true);
+            $status = $unserializer->unserialize($request);
+            $arr = $unserializer->getUnserializedData();
+
+            // Get service. Only WFS for now
+            $this->service = strtolower($arr["service"]);
+
+            // Get the layer name
+            $layer = sizeof(explode(":", $arr["wfs:Query"]["typeName"])) > 1 ? explode(":", $arr["wfs:Query"]["typeName"])[1] : $arr["wfs:Query"]["typeName"];
+
+            // If IP not trusted, when check auth on layer
+            if (!$trusted) {
+                $this->basicHttpAuthLayer($layer, $db, $subUser);
+            }
+            $this->post($db, $postgisschema, $request);
         }
     }
 
@@ -64,7 +94,22 @@ class Wms extends \app\inc\Controller
      */
     private function get($db, $postgisschema)
     {
-        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$db}_{$postgisschema}.map&" . $_SERVER["QUERY_STRING"];
+
+        // Set MapFile for either WMS or WFS
+        switch ($this->service) {
+            case "wms":
+                $mapFile = $db . "_" . $postgisschema . "_wms.map";
+                break;
+
+            case "wfs":
+                $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                break;
+
+            default:
+                break;
+        }
+
+        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
 
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
@@ -90,8 +135,23 @@ class Wms extends \app\inc\Controller
         exit();
     }
 
-    private function post($db, $postgisschema, $data) {
-        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$db}_{$postgisschema}.map&";
+    private function post($db, $postgisschema, $data)
+    {
+        // Set MapFile. For now this can only be WFS
+        switch ($this->service) {
+            case "wms":
+                $mapFile = $db . "_" . $postgisschema . "_wms.map";
+                break;
+
+            case "wfs":
+                $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                break;
+
+            default:
+                break;
+        }
+
+        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
