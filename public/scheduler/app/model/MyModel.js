@@ -71,6 +71,9 @@ Ext.define('MyApp.model.MyModel', {
             name: 'delete_append'
         },
         {
+            name: 'download_schema'
+        },
+        {
             name: 'presql'
         },
         {

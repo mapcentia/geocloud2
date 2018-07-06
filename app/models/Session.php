@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
@@ -19,8 +20,33 @@ class Session extends Model
         return $sValue;
     }
 
-    public function start($sUserID, $pw)
+    public function check()
     {
+        $response = [];
+
+        if ($_SESSION['auth']) {
+            $response['data']['message'] = "Session started";
+            $response['data']['session'] = true;
+            $response['data']['db'] = $_SESSION['screen_name'];
+            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['subusers'] = $_SESSION['subusers'];
+        } else {
+            $response['data']['message'] = "Session not started";
+            $response['data']['session'] = false;
+        }
+        return $response;
+
+    }
+
+    /**
+     * @param string $sUserID
+     * @param string $pw
+     * @param string $schema
+     * @return array
+     */
+    public function start(string $sUserID, string $pw, $schema = "public"): array
+    {
+        $response = [];
         $pw = $this->VDFormat($pw, true);
         $sPassword = \app\models\Setting::encryptPw($pw);
         if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
@@ -40,17 +66,22 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = ($row['parentdb']) ?: $sUserID;
-            $_SESSION['subuser'] = ($row['parentdb']) ? $row['screenname'] : false;
+            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
+            $_SESSION['postgisschema'] = $schema;
 
             $response['success'] = true;
             $response['message'] = "Session started";
             $response['screen_name'] = $_SESSION['screen_name'];
-            $response['session_id'] = session_id() ;
+            $response['session_id'] = session_id();
             $response['subuser'] = $_SESSION['subuser'];
+
+            Database::setDb($response['screen_name']);
+            $settings_viewer = new \app\models\Setting();
+            $response['api_key'] = $settings_viewer->get()['data']->api_key;
 
         } else {
             session_unset();
@@ -61,9 +92,13 @@ class Session extends Model
         return $response;
     }
 
+    /**
+     * @return array
+     */
     public function stop()
     {
         session_unset();
+        $response = [];
         $response['success'] = true;
         $response['message'] = "Session stopped";
         return $response;

@@ -49,6 +49,17 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN featureid VARCHAR(255)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER meta TYPE JSONB";
+        $sqls[] = "CREATE INDEX geometry_columns_join_meta_idx ON settings.geometry_columns_join USING gin (meta)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER tags TYPE JSONB";
+        $sqls[] = "CREATE INDEX geometry_columns_join_tags_idx ON settings.geometry_columns_join USING gin (tags)";
+        $sqls[] = "CREATE TABLE settings.qgis_files
+                    (
+                      id VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY,
+                      xml TEXT NOT NULL,
+                      db VARCHAR(255) NOT NULL,
+                      timestamp TIMESTAMP DEFAULT now() NOT NULL
+                    )";
 
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
@@ -567,6 +578,8 @@ class Sql
         $sqls[] = "ALTER TABLE jobs ADD COLUMN lastrun timestamp with time zone";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN presql text";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN postsql text";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN download_schema BOOL DEFAULT TRUE";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN report jsonb";
         return $sqls;
     }
 }

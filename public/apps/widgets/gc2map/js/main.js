@@ -117,8 +117,6 @@ MapCentia = function (globalId) {
                     elem.webkitRequestFullscreen();
                 } else if (elem.msRequestFullscreen) {
                     elem.msRequestFullscreen();
-                } else {
-                    alert("Din browser understøtter ikke fuldskærm.")
                 }
                 break;
             }
@@ -181,6 +179,8 @@ MapCentia = function (globalId) {
             }
             return false;
         }
+
+        // Order legend items by sort id
         var _layers = cloud.map._layers, unordered={};
 
         for (var key in _layers) {
@@ -193,6 +193,7 @@ MapCentia = function (globalId) {
 
         var ordered = Object.keys(unordered).sort(function(a,b){return unordered[a]-unordered[b]});
 
+        // Get legend itmes
         $.ajax({
             url: defaults.host + '/api/v1/legend/json/' + db + '/?' + 'l=' + ordered.join(";"),
             dataType: 'jsonp',

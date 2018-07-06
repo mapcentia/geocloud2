@@ -32,6 +32,8 @@ foreach ($tables as $table) {
     $tableObj = new \app\models\table($postgisschema . "." . $table);
     $primeryKey = $tableObj->primeryKey;
 
+    $simpleType = false;
+
     foreach ($tableObj->metaData as $key => $value) {
         if ($key != $primeryKey['attname']) {
             $fieldsArr[$table][] = $key;
@@ -79,7 +81,7 @@ foreach ($tables as $table) {
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
-        $properties = $fieldConf->$atts["name"];
+        $properties = $fieldConf->{$atts["name"]};
         $atts["label"] = $properties->alias ?: $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
@@ -131,13 +133,30 @@ foreach ($tables as $table) {
                 }
             }
         } else {
-            unset($atts["type"]);
+
+            if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
+                $atts["type"] = "xsd:decimal";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "text") {
+                $atts["type"] = "xsd:string";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+                $atts["type"] = "xsd:date";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+                $atts["type"] = "xsd:base64Binary";
+            }
+            else {
+                $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
+            }
+            $simpleType = true;
         }
         $atts["minOccurs"] = "0";
         writeTag("open", "xsd", "element", $atts, True, True);
-        if (!isset($atts["type"])) {
+        if ($simpleType) {
             $minLength = "0";
             $maxLength = "256";
+
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $tableObj->metaData[$atts["name"]]['type'] = "decimal";
             }
@@ -157,9 +176,10 @@ foreach ($tables as $table) {
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
-            if ($fieldConf->$atts["name"]->properties) {
-                if ($fieldConf->$atts["name"]->properties == "*") {
+            if ($fieldConf->{$atts["name"]}->properties) {
+                echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
+
+                if ($fieldConf->{$atts["name"]}->properties == "*") {
                     $distinctValues = $tableObj->getGroupByAsArray($atts["name"]);
                     foreach ($distinctValues["data"] as $prop) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
@@ -170,12 +190,13 @@ foreach ($tables as $table) {
                         echo "<xsd:enumeration value=\"{$prop}\"/>";
                     }
                 }
+                echo '</xsd:restriction></xsd:simpleType>';
+
             }
-            if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
-                echo "<xsd:minLength value=\"{$minLength}\"/>";
-                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
-            }
-            echo '</xsd:restriction></xsd:simpleType>';
+//            if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+//                echo "<xsd:minLength value=\"{$minLength}\"/>";
+//                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
+//            }
         }
         writeTag("close", "xsd", "element", NULL, False, True);
         $atts = Null;

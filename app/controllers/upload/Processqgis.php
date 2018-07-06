@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers\upload;
 
 use \app\conf\App;
@@ -15,12 +16,14 @@ class Processqgis extends \app\inc\Controller
 {
     private $table;
     private $layer;
+    private $qgis;
     private $sridStr;
 
     function __construct()
     {
         $this->table = new \app\models\Table("settings.geometry_columns_join");
         $this->layer = new \app\models\Layer();
+        $this->qgis = new \app\models\Qgis();
         $this->sridStr = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
     }
 
@@ -40,6 +43,11 @@ class Processqgis extends \app\inc\Controller
         if (!$qgs) {
             return array("success" => false, "code" => 400, "message" => "Could not read qgs file");
         }
+
+        $ver = explode(".", $qgs->attributes()["version"]);
+
+        $majorVer = $ver[0];
+        $minorVer = $ver[1];
 
         foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
 
@@ -63,10 +71,23 @@ class Processqgis extends \app\inc\Controller
                     break;
 
                 case "WFS":
-                    $TYPENAME = "";
                     $dataSource = (string)$maplayer->datasource;
-                    $layerName = (string)$maplayer->layername;
-                    $parsed = parse_url($dataSource);
+
+                    // If version 14 or 18 style WFS source
+                    if (!isset(parse_url($dataSource)["scheme"])) {
+                        preg_match("/(?<=url\=)\S*/", $dataSource, $matches);
+                        $parsed = parse_url(str_replace("'", "", $matches[0]));
+                        preg_match("/(?<=typename\=)\S*/", $dataSource, $matches);
+                        $split = explode(":", str_replace("'", "", $matches[0]));
+                        $schema = explode("/", $parsed["path"])[3];
+                        $table = $split[1];
+                    } else {
+                        $parsed = parse_url($dataSource);
+                        $schema = explode("/", $parsed["path"])[3];
+                        parse_str($parsed["query"], $result);
+                        $table = explode(":", $result["TYPENAME"])[1];
+                    }
+
                     $db = explode("/", $parsed["path"])[2];
 
                     $split = explode("@", $db);
@@ -74,14 +95,9 @@ class Processqgis extends \app\inc\Controller
                         $db = $split[1];
                     }
 
-                    $schema = explode("/", $parsed["path"])[3];
-
-                    parse_str($parsed["query"]);
-                    $table = explode(":", $TYPENAME)[1];
-
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll(null, $fullTable, true);
+                    $rec = $this->layer->getAll($fullTable, false, true);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
@@ -94,7 +110,7 @@ class Processqgis extends \app\inc\Controller
 
                     $arrT[] = array(1 => array($schema, $table));
                     $arrG[] = array(1 => array($f_geometry_column));
-                    $arrN[] = $layerName;
+                    $arrN[] = $fullTable;
 
                     $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
 
@@ -104,8 +120,8 @@ class Processqgis extends \app\inc\Controller
                     $maplayer->srs->spatialrefsys->authid = "EPSG:{$srid}";
                     $maplayer->provider = "postgres";
                     $maplayer->datasource = $PGDataSource;
-                    //$maplayer->layername = $fullTable;
-                    $maplayer->title = (string)$maplayer->title ?: $layerName;
+                    $maplayer->layername = $fullTable;
+                    $maplayer->title = (string)$maplayer->title ?: $fullTable;
 
                     break;
 
@@ -127,9 +143,11 @@ class Processqgis extends \app\inc\Controller
             if ($group && $group[0]->attributes()) {
                 $attrs = $group[0]->attributes();
                 $id = strval($attrs['id']);
-                foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
-                    if ((string)$maplayer->id == $id) {
-                        $treeOrder[] = (string)$maplayer->layername;
+                if (strval($attrs['checked']) == "Qt::Checked") {
+                    foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
+                        if ((string)$maplayer->id == $id) {
+                            $treeOrder[] = (string)$maplayer->layername;
+                        }
                     }
                 }
             }
@@ -137,11 +155,10 @@ class Processqgis extends \app\inc\Controller
 
         $path = App::$param['path'] . "/app/wms/qgsfiles/";
         $firstName = explode(".", $file)[0];
-        $name = "parsed_" . Model::toAscii($firstName) . ".qgs";
+        $name = "parsed_" . Model::toAscii($firstName) . "_" . md5(microtime() . rand()) . ".qgs";
 
         // Set QGIS wms source for PG layers
         // =================================
-
         for ($i = 0; $i < sizeof($arrT); $i++) {
             $tableName = $arrT[$i][1][0] . "." . $arrT[$i][1][1];
             $layerKey = $tableName . "." . $arrG[$i][1][0];
@@ -160,7 +177,6 @@ class Processqgis extends \app\inc\Controller
 
         // Create new layers from QGIS WMS layer
         // =====================================
-
         for ($i = 0; $i < sizeof($wmsNames); $i++) {
             $tableName = $wmsNames[$i];
             $layerKey = $tableName . ".rast";
@@ -174,12 +190,10 @@ class Processqgis extends \app\inc\Controller
             $data = array("data" => $data);
             $res = $this->table->updateRecord($data, "_key_");
             Tilecache::bust($tableName);
-
         }
 
         // Create the composite map from all layers in qgs-file
         // ====================================================
-
         if ($createComp) {
             $tableName = Connection::$param["postgisschema"] . "." . Model::toAscii($firstName);
             $layerKey = $tableName . ".rast";
@@ -197,18 +211,32 @@ class Processqgis extends \app\inc\Controller
 
         }
 
-
         // Write the new qgs-file
         // ======================
-
         @unlink($path . $name);
         $fh = fopen($path . $name, 'w');
-        fwrite($fh, $qgs->asXML());
+        if (!$fh) {
+            return ["success" => false, "message" => "Couldn't open file for writing: ". $name, "code" => 401];
+        }
+        $w = fwrite($fh, $qgs->asXML());
+        if (!$w) {
+            return ["success" => false, "message" => "Couldn't write file: ". $name, "code" => 401];
+        }
         fclose($fh);
+
+        $resDb = $this->qgis->insert([
+            "id" => $name,
+            "xml" => $qgs->asXML(),
+            "db" => Connection::$param["postgisdb"],
+        ]);
+
+        if (!$resDb["success"]) {
+            return ["success" => false, "message" => "Qgs file couldn't be stored in database"];
+        }
 
         $res = json_decode($this->reload());
         $reloaded = $res->success ?: false;
-        return array("success" => true, "message" => "Qgs file parsed", "reloaded" => $reloaded, "ch" => $path . $name, "layers" => $layers, "urls" => $urls);
+        return ["success" => true, "version" => $minorVer, "message" => "Qgs file parsed", "reloaded" => $reloaded, "ch" => $path . $name, "layers" => $layers, "urls" => $urls];
     }
 
     public static function reload()

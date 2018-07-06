@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
@@ -26,7 +27,7 @@ class Sql_to_es extends Model
     }
 
     /**
-     * @param $obj
+     * @param array $obj
      * @return array
      */
     private function checkForErrors(array $obj)
@@ -50,13 +51,13 @@ class Sql_to_es extends Model
 
     /**
      * @param string $q
-     * @param $index
-     * @param $type
-     * @param $id
-     * @param $db
+     * @param string $index
+     * @param string $type
+     * @param string $id
+     * @param string $db
      * @return array
      */
-    public function sql($q, $index, $type, $id, $db)
+    public function runSql($q, $index, $type, $id, $db)
     {
         $response = [];
         $i = 0;
@@ -64,6 +65,9 @@ class Sql_to_es extends Model
         $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
         $client = new Client([
             'timeout' => 10.0,
+            'headers' => [
+                'Content-Type' => 'application/json'
+            ]
         ]);
         $bulKCount = 0;
         $bulkSize = 500;
@@ -132,7 +136,7 @@ class Sql_to_es extends Model
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
                         $geometries[] = json_decode($row[$key]);
-                    } elseif ($arrayWithFields[$key]['type'] == "json") {
+                    } elseif ($arrayWithFields[$key]['type'] == "json" || $arrayWithFields[$key]['type'] == "jsonb") {
                         $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
                         $arr = $this->array_push_assoc($arr, $key, $value);
@@ -206,6 +210,12 @@ class Sql_to_es extends Model
         return $response;
     }
 
+    /**
+     * @param array $array
+     * @param string $key
+     * @param mixed $value
+     * @return mixed
+     */
     private function array_push_assoc($array, $key, $value)
     {
         $array[$key] = $value;

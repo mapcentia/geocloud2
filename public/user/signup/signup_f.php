@@ -65,7 +65,7 @@ include('../html_header.php');
                             <vlvalidator name="PassCmp" type="compare" control="Password" comparecontrol="Password2"
                                          operator="e" validtype="string">
                         </div>
-                        <?php if (\app\conf\App::$param['domain']) { ?>
+                        <?php if (isset(\app\conf\App::$param['domain'])) { ?>
                             <div class="alert alert-info center">
                                 Choose between data center locations
                             </div>

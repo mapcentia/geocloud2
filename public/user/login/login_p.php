@@ -12,7 +12,6 @@ if (!$_SESSION['auth'] || !$_SESSION['screen_name']) {
 // Set schema for the mapfiles write request
 $_SESSION['postgisschema'] = "public";
 
-
 // If main user fetch all sub users
 //if (!$_SESSION['subuser']) {
 $_SESSION['subusers'] = array();
@@ -152,7 +151,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                            href="<?php echo App::$param['vidiUrl'] ?>/app/<%= db %>/<%= this . schema %>"><span>Vidi</span>
                         </a>
                     <?php } ?>
-                    <?php if (App::$param['logstashHost']) { ?>
+                    <?php if (isset(App::$param['logstashHost'])) { ?>
                         <a data-toggle="tooltip" data-placement="top" data-schema="<%= this . schema %>"
                            title="See statistics for '<%= this . schema %>'"
                            class="btn btn-xs btn-default fixed-width logstash"><span
@@ -162,7 +161,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
                     <a data-toggle="tooltip" data-placement="top"
                        title="Open GC2 administration for '<%= this . schema %>'"
                        class="btn btn-xs btn-primary fixed-width" target="_blank"
-                       href="<?php echo $cdnHost . "/store/" ?><%= db %>/<%= this . schema %>"><span
+                       href="<?php echo $cdnHost . "/admin/" ?><%= db %>/<%= this . schema %>"><span
                             class="glyphicon glyphicon-cog"></span>
                     </a>
                 </div>
@@ -203,7 +202,7 @@ while ($rowSubUSers = $postgisObject->fetchRow($res)) {
     var db = "<?php echo $_SESSION['screen_name'];?>";
     var hostName = "<?php echo $host ?>";
     <?php
-    if (!$_SESSION['subuser']) {
+    if (!($_SESSION['subuser'])) {
         echo "var subUsers = " . json_encode($_SESSION['subusers']) . ";\n";
         echo "var subUserEmails = " . json_encode($_SESSION['subuserEmails']) . ";\n";
     } else {

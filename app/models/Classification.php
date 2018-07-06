@@ -153,7 +153,7 @@ class Classification extends \app\inc\Model
     {
         $classes = $this->getAll();
         $classes['data'][] = array("name" => "Unnamed class");
-        if ($this->store(json_encode($classes['data']))) {
+        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
             $response['success'] = true;
             $response['message'] = "Inserted one class";
         } else {
@@ -174,7 +174,7 @@ class Classification extends \app\inc\Model
             $classes['data'][$id][$k] = $v;
 
         }
-        if ($this->store(json_encode($classes['data']))) {
+        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
             $response['success'] = true;
             $response['message'] = "Updated one class";
         } else {
@@ -194,7 +194,7 @@ class Classification extends \app\inc\Model
             $arr[] = $value;
         }
         $classes['data'] = $arr;
-        if ($this->store(json_encode($classes['data']))) {
+        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
             $response['success'] = true;
             $response['message'] = "Deleted one class";
         } else {
@@ -215,16 +215,16 @@ class Classification extends \app\inc\Model
         $def = $this->tile->get();
         if (!$def['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $def['message'];
             $response['code'] = 400;
             return $response;
         }
         $def["data"][0]["cluster"] = null;
-        $defJson = json_encode($def["data"][0]);
+        $defJson = json_encode($def["data"][0],JSON_UNESCAPED_UNICODE);
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -238,7 +238,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -251,10 +251,10 @@ class Classification extends \app\inc\Model
             $response['message'] = "Updated one class";
         } else {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
         }
-        $this->storeWizard(json_encode($data));
+        $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
@@ -263,7 +263,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -309,11 +309,11 @@ class Classification extends \app\inc\Model
             }
             $cArr[$key] = self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data);
         }
-        if ($this->store(json_encode($cArr))) {
+        if ($this->store(json_encode($cArr, JSON_UNESCAPED_UNICODE))) {
             $response['success'] = true;
             $response['success'] = true;
             $response['message'] = "Updated " . sizeof($rows) . " classes";
-            $this->storeWizard(json_encode($data));
+            $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         } else {
             $response['success'] = false;
             $response['message'] = "Error";
@@ -327,7 +327,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -377,14 +377,14 @@ class Classification extends \app\inc\Model
             $res = $this->update(($i - 1), $class);
             if (!$res['success']) {
                 $response['success'] = false;
-                $response['message'] = "Error";
+                $response['message'] = $res['message'];
                 $response['code'] = 400;
                 return $response;
             }
         }
         $response['success'] = true;
         $response['message'] = "Updated " . $num . " classes";
-        $this->storeWizard(json_encode($data));
+        $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
@@ -393,7 +393,7 @@ class Classification extends \app\inc\Model
         $res = $this->setLayerDef();
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -449,7 +449,7 @@ class Classification extends \app\inc\Model
                     $r = $this->update($u, $class);
                     if (!$r['success']) {
                         $response['success'] = false;
-                        $response['message'] = "Error";
+                        $response['message'] = $r['message'];
                         $response['code'] = 400;
                         return $response;
                     }
@@ -461,7 +461,7 @@ class Classification extends \app\inc\Model
         $response['success'] = true;
         $response['values'] = $tops;
         $response['message'] = "Updated " . $num . " classes";
-        $this->storeWizard(json_encode($data));
+        $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
@@ -481,18 +481,18 @@ class Classification extends \app\inc\Model
         $def = $this->tile->get();
         if (!$def['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $def['message'];
             $response['code'] = 400;
             return $response;
         }
         $def["data"][0]["cluster"] = $distance;
         $def["data"][0]["meta_tiles"] = true;
         $def["data"][0]["meta_size"] = 4;
-        $defJson = json_encode($def["data"][0]);
+        $defJson = json_encode($def["data"][0], JSON_UNESCAPED_UNICODE);
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -507,7 +507,7 @@ class Classification extends \app\inc\Model
         $res = $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
@@ -530,13 +530,13 @@ class Classification extends \app\inc\Model
         $res = $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
         if (!$res['success']) {
             $response['success'] = false;
-            $response['message'] = "Error";
+            $response['message'] = $res['message'];
             $response['code'] = 400;
             return $response;
         }
         $response['success'] = true;
         $response['message'] = "Updated 2 classes";
-        $this->storeWizard(json_encode($data));
+        $this->storeWizard(json_encode($data,JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
@@ -557,7 +557,7 @@ class Classification extends \app\inc\Model
 
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf,JSON_UNESCAPED_UNICODE)), "_key_");
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];

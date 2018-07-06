@@ -130,30 +130,21 @@ psql postgres -c "drop database $tmpdb"
 #Clean up
 rm dump.bak
 
-# Get session id from target server
-SESSION_ID=$(curl -s -XPOST "$targethost/api/v1/session/start" -d "u=$sourcedb&p=hawk2000" | python -c "import sys, json; print json.load(sys.stdin)['session_id']")
-
 # Write out the MapFiles
 echo "Writing MapFiles"
 for SCHEMA in "${ARRAY[@]}"
     do
-       curl -XGET -s --cookie "PHPSESSID=$SESSION_ID" "$targethost/store/$sourcedb/$SCHEMA" > /dev/null
-       RES=$(curl -XGET -s --cookie "PHPSESSID=$SESSION_ID" "$targethost/controllers/mapfile" | python -c "import sys, json; print json.load(sys.stdin)['ch']")
+       RES=$(curl -XGET -s "$targethost/api/v2/mapfile/write/$sourcedb/$SCHEMA" | python -c "import sys, json; print json.load(sys.stdin)")
        echo $RES
     done
 
 #Write out the MapCache file
 echo "Writing MapCache file"
-RES=$(curl -XGET -s --cookie "PHPSESSID=$SESSION_ID" "$targethost/controllers/mapcachefile")
+RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)")
 echo $RES
 
-# Bust cache
-echo "Busting cache"
-for SCHEMA in "${ARRAY[@]}"
-    do
-       curl -XGET -s --cookie "PHPSESSID=$SESSION_ID" "$targethost/store/$sourcedb/$SCHEMA" > /dev/null
-       RES=$(curl -XDELETE -s --cookie "PHPSESSID=$SESSION_ID" "$targethost/controllers/tilecache/index/schema/$SCHEMA" | python -c "import sys, json; print json.load(sys.stdin)['message']")
-       echo $RES $SCHEMA
-    done
-
+#Write out the QGIS files
+echo "Writing QGIS files"
+RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)")
+echo $RES
 

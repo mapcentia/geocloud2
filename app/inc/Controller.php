@@ -1,4 +1,5 @@
 <?php
+
 namespace app\inc;
 
 use app\conf\App;
@@ -9,7 +10,36 @@ use app\conf\App;
  */
 class Controller
 {
+    /**
+     * @var array
+     */
     public $response;
+
+    /**
+     * @var null
+     */
+    protected $sUser;
+
+    /**
+     * Controller constructor.
+     */
+    function __construct()
+    {
+        // Set sub-user property from the "user" url parameter.
+        // This is just a helper for action controllers
+        // so less boilerplate is needed
+        // ====================================================
+        if ($db = Route::getParam("user")) {
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $this->sUser = $dbSplit[0];
+            } elseif (isset($_SESSION["subuser"])) {
+                $this->sUser = $_SESSION["subuser"];
+            } else {
+                $this->sUser = null;
+            }
+        }
+    }
 
     /**
      * Implement OPTIONS method for all action controllers.
@@ -28,12 +58,12 @@ class Controller
     }
 
     /**
-     * @param null $key
+     * @param string|null $key
      * @param array $level
      * @param bool $neverAllowSubUser
      * @return array
      */
-    public function auth($key = null, $level = array("all" => true), $neverAllowSubUser = false)
+    public function auth(string $key = null, array $level = array("all" => true), bool $neverAllowSubUser = false): array
     {
         $response = [];
         if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
@@ -64,11 +94,11 @@ class Controller
     }
 
     /**
-     * @param $user
-     * @param $key
+     * @param string $user
+     * @param string $key
      * @return bool
      */
-    public function authApiKey($user, $key)
+    public function authApiKey(string $user, string $key): bool
     {
         foreach (App::$param["trustedAddresses"] as $address) {
             if (Util::ipInRange(Util::clientIp(), $address)) {
@@ -88,11 +118,11 @@ class Controller
     }
 
     /**
-     * @param $layer
-     * @param $db
-     * @param $subUser
+     * @param string $layer
+     * @param string $db
+     * @param string|null $subUser
      */
-    public function basicHttpAuthLayer($layer, $db, $subUser)
+    public function basicHttpAuthLayer(string $layer, string $db, string $subUser = null)
     {
         $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
         if (!$_SESSION[$key]) {
@@ -111,14 +141,14 @@ class Controller
     }
 
     /**
-     * @param $layer
-     * @param $subUser
-     * @param $transaction
-     * @param $inputApiKey
-     * @param $rels
+     * @param string $layer
+     * @param string|null $subUser
+     * @param bool $transaction
+     * @param string $inputApiKey
+     * @param array $rels
      * @return array
      */
-    public function ApiKeyAuthLayer($layer, $subUser, $transaction, $inputApiKey, $rels)
+    public function ApiKeyAuthLayer(string $layer, string $subUser = null, bool $transaction, string $inputApiKey = null, array $rels): array
     {
         // Check if layer has schema prefix and add 'public' if no.
         $bits = explode(".", $layer);
@@ -168,6 +198,12 @@ class Controller
                         switch ($transaction) {
                             case false:
                                 if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
+                                    // Always let suusers read from layers open to all
+                                    if($auth == "None"  || $auth == "Write") {
+                                        $response['success'] = true;
+                                        $response['code'] = 200;
+                                        break;
+                                    }
                                     $response['success'] = false;
                                     $response['message'] = "You don't have privileges to see '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
@@ -197,7 +233,7 @@ class Controller
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
-                            $response['message'] = "Not the right key!";
+                            $response['message'] = "Not the right key! TEST";
                             $response['code'] = 403;
                             return $response;
                         } else {
@@ -213,7 +249,7 @@ class Controller
                     $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
 
                     if ($auth == "Read/write" || ($transaction)) {
-                        if (($apiKey == Input::get('key') && $apiKey != false) || $_SESSION["auth"]) {
+                        if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
                             $response['success'] = true;
                             $response['code'] = 200;
                             return $response;

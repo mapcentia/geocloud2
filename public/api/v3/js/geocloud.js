@@ -53,6 +53,7 @@ geocloud = (function () {
         DTKSKAERMKORT_25832 = "dtkSkaermkort@25832",
         DTKSKAERMKORT = "dtkSkaermkort",
         DTKSKAERMKORTDAEMPET = "dtkSkaermkortDaempet",
+        GEODKBRIGHT = "geodkBright",
         DIGITALGLOBE = "DigitalGlobe:Imagery",
         HERENORMALDAYGREY = "hereNormalDayGrey",
         HERENORMALNIGHTGREY = "hereNormalNightGrey",
@@ -247,7 +248,7 @@ geocloud = (function () {
             xhr = $.ajax({
                 dataType: (this.defaults.jsonp) ? 'jsonp' : 'json',
                 async: this.defaults.async,
-                data: 'q=' + (this.base64 ? base64.encode(sql) + "&base64=true": encodeURIComponent(sql)) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + '&client_encoding=' + this.defaults.clientEncoding + '&key=' + this.defaults.key,
+                data: 'q=' + (this.base64 ? base64.encode(sql) + "&base64=true" : encodeURIComponent(sql)) + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + '&client_encoding=' + this.defaults.clientEncoding + '&key=' + this.defaults.key,
                 jsonp: (this.defaults.jsonp) ? 'jsonp_callback' : false,
                 url: this.host + this.uri + '/' + this.db,
                 type: this.defaults.method,
@@ -281,7 +282,7 @@ geocloud = (function () {
                 },
                 error: this.defaults.error,
                 complete: function () {
-                    me.onLoad();
+                    me.onLoad(me);
                 }
 
             });
@@ -620,7 +621,7 @@ geocloud = (function () {
                     maxZoom: defaults.maxZoom,
                     maxNativeZoom: defaults.maxNativeZoom,
                     tileSize: 256,
-                    ran: function() {
+                    ran: function () {
                         return Math.random();
                     }
                 };
@@ -1030,7 +1031,7 @@ geocloud = (function () {
                     break;
                 case "leaflet":
                     this.osm = new L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                        attribution: "&copy; <a target='_blank' href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                        attribution: "&copy; <a target='_blank' href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
                         maxZoom: 21,
                         maxNativeZoom: 18
                     });
@@ -1314,6 +1315,39 @@ geocloud = (function () {
 
                     });
                     lControl.addBaseLayer(l);
+                    break;
+            }
+            l.baseLayer = true;
+            l.id = name;
+            return (l);
+        };
+        //ol2 and leaflet
+        this.addGeoDk = function (name, layer) {
+            var l,
+                url = "https://gc2.io/mapcache/baselayers/tms/";
+
+            switch (MAPLIB) {
+                case "ol2":
+                    l = new OpenLayers.Layer.TMS(name, url, {
+                        layername: layer,
+                        type: 'png',
+                        attribution: "&copy; Geodatastyrelsen",
+                        resolutions: resolutions,
+                        wrapDateLine: true
+                    });
+                    this.map.addLayer(l);
+                    l.setVisibility(false);
+                    break;
+                case "leaflet":
+                    l = new L.TileLayer(url + "1.0.0/" + layer + "/{z}/{x}/{y}.png", {
+                        tms: true,
+                        attribution: "",
+                        maxZoom: 21,
+                        maxNativeZoom: 19
+
+                    });
+                    lControl.addBaseLayer(l);
+                    console.log(l)
                     break;
             }
             l.baseLayer = true;
@@ -1649,6 +1683,9 @@ geocloud = (function () {
                     break;
                 case "dtkSkaermkortDaempet@25832":
                     o = this.addDtkSkaermkortUtm("dtkSkaermkortDaempet@25832", "dtk_skaermkort_daempet");
+                    break;
+                case "geodkBright":
+                    o = this.addGeoDk("geodkBright", "geodk.bright");
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");
@@ -2260,6 +2297,7 @@ geocloud = (function () {
         DTKSKAERMKORT: DTKSKAERMKORT,
         DTKSKAERMKORT_25832: DTKSKAERMKORT_25832,
         DTKSKAERMKORTDAEMPET: DTKSKAERMKORTDAEMPET,
+        GEODKBRIGHT: GEODKBRIGHT,
         DIGITALGLOBE: DIGITALGLOBE,
         HERENORMALDAYGREY: HERENORMALDAYGREY,
         HERENORMALNIGHTGREY: HERENORMALNIGHTGREY,

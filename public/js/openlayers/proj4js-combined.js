@@ -60,7 +60,7 @@ $Id: Proj.js 2956 2007-07-09 12:17:52Z steven $
 /**
  * Global namespace object for Proj4js library
  */
-Proj4js = {
+window.Proj4js = {
 
     /**
      * Property: defaultDatum

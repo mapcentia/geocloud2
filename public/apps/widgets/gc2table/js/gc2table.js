@@ -51,51 +51,39 @@ var gc2table = (function () {
                     typeof jQuery().bootstrapTable.locales !== "undefined" &&
                     typeof _ !== 'undefined' &&
                     typeof jRespond !== "undefined") {
-
-                    // Small timeout for IE
-                    setTimeout(function () {
-
-                        if (typeof jQuery().bootstrapTable.locales['da-DK'] === "undefined") {
-                            $.getScript(host + "/js/bootstrap-table/bootstrap-table-locale-all.js");
+                    if (typeof jQuery().bootstrapTable.locales['da-DK'] === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/bootstrap-table-locale-all.js");
+                    }
+                    if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
+                    }
+                    if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
+                        $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
+                    }
+                    if (typeof jQuery().tableExport === "undefined") {
+                        $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
+                    }
+                    if (typeof Backbone === "undefined") {
+                        $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
+                    }
+                    (function pollForDependants() {
+                        if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
+                            typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
+                            typeof jQuery().tableExport !== "undefined" &&
+                            typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
+                            typeof Backbone !== "undefined") {
+                            scriptsLoaded = true;
+                        } else {
+                            setTimeout(pollForDependants, 10);
                         }
-                        if (typeof jQuery().bootstrapTable.defaults.filterControl === "undefined") {
-                            $.getScript(host + "/js/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js");
-                        }
-                        if (typeof jQuery().bootstrapTable.defaults.exportDataType === "undefined") {
-                            $.getScript(host + "/js/bootstrap-table/extensions/export/bootstrap-table-export.min.js");
-                        }
-                        if (typeof jQuery().tableExport === "undefined") {
-                            $.getScript(host + "/js/tableExport.jquery.plugin/tableExport.min.js");
-                        }
-                        if (typeof Backbone === "undefined") {
-                            $.getScript("//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js");
-                        }
-                        (function pollForDependants() {
-                            if (typeof jQuery().bootstrapTable.defaults.filterControl !== "undefined" &&
-                                typeof jQuery().bootstrapTable.defaults.exportDataType !== "undefined" &&
-                                typeof jQuery().tableExport !== "undefined" &&
-                                typeof jQuery().bootstrapTable.locales['da-DK'] !== "undefined" &&
-                                typeof Backbone !== "undefined") {
-
-                                // Small timeout for IE
-                                setTimeout(function () {
-                                    scriptsLoaded = true;
-                                }, 20);
-
-                            } else {
-                                setTimeout(pollForDependants, 50);
-                            }
-                        }());
-
-                    }, 20);
-
+                    }());
                 } else {
-                    setTimeout(pollForDependencies, 50);
+                    setTimeout(pollForDependencies, 10);
                 }
             }());
 
         } else {
-            setTimeout(pollForjQuery, 50);
+            setTimeout(pollForjQuery, 10);
         }
     }());
 
@@ -119,6 +107,10 @@ var gc2table = (function () {
                 ns: "",
                 template: null,
                 usingCarto: false,
+                onSelect: function () {
+                },
+                onMouseOver: function () {
+                },
                 styleSelected: {
                     weight: 5,
                     color: '#666',
@@ -143,9 +135,11 @@ var gc2table = (function () {
             height = defaults.height,
             tableBodyHeight = defaults.tableBodyHeight,
             styleSelected = defaults.styleSelected,
-            el = defaults.el, click, loadDataInTable, moveEndOff,
+            el = defaults.el, click, loadDataInTable, moveEndOff, moveEndOn,
             setSelectedStyle = defaults.setSelectedStyle,
             setViewOnSelect = defaults.setViewOnSelect,
+            onSelect = defaults.onSelect,
+            onMouseOver = defaults.onMouseOver,
             openPopUp = defaults.openPopUp,
             autoPan = defaults.autoPan,
             responsive = defaults.responsive,
@@ -197,12 +191,13 @@ var gc2table = (function () {
                             autoPan: autoPan,
                             closeButton: true
                         }).openPopup();
+
+                        object.trigger("openpopup" + "_" + uid, m.map._layers[id]);
                     }
 
                 });
                 click = function (e) {
                     var row = $('*[data-uniqueid="' + e.target._leaflet_id + '"]');
-                    //$(el).bootstrapTable('scrollTo', row.offset().top);
                     $(ns + " .fixed-table-body").animate({
                         scrollTop: $(ns + " .fixed-table-body").scrollTop() + (row.offset().top - $(ns + " .fixed-table-body").offset().top)
                     }, 300);
@@ -232,7 +227,7 @@ var gc2table = (function () {
                         });
                         $.each($(el + " tbody").children(), function (x, y) {
                             visibleRows.push($(y).attr("data-uniqueid"));
-                        })
+                        });
                         $.each(store.layer._layers, function (i, v) {
                             if (visibleRows.indexOf(v._leaflet_id + "") === -1) {
                                 m.map.removeLayer(v);
@@ -243,15 +238,19 @@ var gc2table = (function () {
 
                 var bindEvent = function (e) {
                     setTimeout(function () {
+
                         $(el + ' > tbody > tr').on("click", function (e) {
-                            object.trigger("selected" + "_" + uid, $(this).data('uniqueid'));
-                            var layer = m.map._layers[$(this).data('uniqueid')];
+                            var id = $(this).data('uniqueid');
+                            object.trigger("selected" + "_" + uid, id);
+                            var layer = m.map._layers[id];
                             setTimeout(function () {
                                 if (setViewOnSelect) {
                                     m.map.fitBounds(layer.getBounds());
                                 }
                             }, 100);
+                            onSelect(id, layer);
                         });
+
                     }, 100);
                 };
                 $(el).bootstrapTable({
@@ -269,7 +268,7 @@ var gc2table = (function () {
                 store.onLoad = function () {
                     loadDataInTable();
                 };
-                loadDataInTable = function () {
+                loadDataInTable = function (doNotCallCustomOnload) {
                     data = [];
                     $.each(store.layer._layers, function (i, v) {
                         v.feature.properties._id = i;
@@ -287,16 +286,21 @@ var gc2table = (function () {
                         });
 
                     });
+
                     originalLayers = jQuery.extend(true, {}, store.layer._layers);
+
                     $(el).bootstrapTable("load", data);
-                    if (callCustomOnload) {
-                        customOnLoad();
-                    }
+
                     bindEvent();
+
+                    if (callCustomOnload && !doNotCallCustomOnload) {
+                        customOnLoad(store);
+                    }
 
                     $(".fixed-table-body").css("overflow", "auto");
                     $(".fixed-table-body").css("max-height", tableBodyHeight + "px");
                     $(".fixed-table-body").css("height", tableBodyHeight + "px");
+
                 };
 
                 var moveEndEvent = function () {
@@ -306,6 +310,10 @@ var gc2table = (function () {
 
                 moveEndOff = function () {
                     m.map.off("moveend", moveEndEvent);
+                };
+
+                moveEndOn = function () {
+                    m.on("moveend", moveEndEvent);
                 };
 
                 if (autoUpdate) {
@@ -350,7 +358,9 @@ var gc2table = (function () {
             loadDataInTable: loadDataInTable,
             object: object,
             uid: uid,
-            moveEndOff: moveEndOff
+            store: store,
+            moveEndOff: moveEndOff,
+            moveEndOn: moveEndOn
         };
     };
     return {

@@ -3,7 +3,6 @@ use \app\inc\Model;
 use \app\conf\App;
 
 include("../header.php");
-$postgisdb = $databaseTemplate;
 \app\models\Database::setDb("postgres");
 if (!$_SESSION['screen_name']) {
     header("location: " . \app\conf\App::$param['userHostName'] . "/user/login/p");

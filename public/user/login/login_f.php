@@ -7,15 +7,14 @@ $postgisObject = new Model();
 include('../vdaemon/vdaemon.php');
 include '../html_header.php';
 //  Check if user is logged in - and redirect if this is the case
-if ($_SESSION['auth'] && $_SESSION['screen_name']) {
-    die("<script>window.location='{$userHostName}/user/login/p'</script>");
+if (isset($_SESSION['auth']) && isset($_SESSION['screen_name'])) {
+    die("<script>window.location='" .  (isset($userHostName) ? $userHostName : "") . "/user/login/p'</script>");
 }
-function UserIDCheck($sValue, &$oStatus)
+function UserIDCheck($sValue, $oStatus)
 {
     global $sTable;
     global $postgisObject;
     global $sUserID;
-
     $sUserID = Model::toAscii($sValue, NULL, "_");
     $sPassword = VDFormat($_POST['Password'], true);
     $sPassword = Setting::encryptPw($sPassword);
@@ -96,7 +95,7 @@ if ($oVDaemonStatus && $oVDaemonStatus->bValid) {
                             Account</a>
                     </div>
                 </div>
-                <input type="hidden" name="r" value="<?php echo $_GET["r"] ?>">
+                <input type="hidden" name="r" value="<?php if (isset($_GET["r"])) echo $_GET["r"] ?>">
             </form>
         </div>
     </div>

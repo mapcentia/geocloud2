@@ -127,6 +127,7 @@ class Table extends \app\inc\Controller
 
     public function get_depend()
     {
+        $this->table = new \app\models\table(Input::getPath()->part(4));
         $response = $this->auth(Input::getPath()->part(4), array("write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->getDependTree();
     }

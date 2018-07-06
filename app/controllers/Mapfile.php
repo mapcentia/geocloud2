@@ -57,7 +57,7 @@ class Mapfile extends \app\inc\Controller
         FORMATOPTION "DUPLICATES=false"
         END
 
-        #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
+        CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         DEBUG 5
         WEB
         IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
@@ -332,8 +332,7 @@ class Mapfile extends \app\inc\Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-
-
+                GROUP "<?php echo $postgisObject->toAscii($row['layergroup'])?>"
                 <?php if ($row['filter']) { ?>
                     FILTER "<?php echo $row['filter']; ?>"
                 <?php } ?>
@@ -373,14 +372,15 @@ class Mapfile extends \app\inc\Controller
                     TYPE RASTER
                     CONNECTIONTYPE WMS
                     CONNECTION "<?php echo $row['wmssource']; ?>"
-                    PROCESSING "RESAMPLE=AVERAGE"
+                    PROCESSING "LOAD_WHOLE_IMAGE=YES"
+                    PROCESSING "LOAD_FULL_RES_IMAGE=YES"
+                    PROCESSING "RESAMPLE=BILINEAR"
 
                     <?php
                 } elseif ($row['bitmapsource']) {
                     ?>
                     TYPE RASTER
                     DATA "<?php echo App::$param['path'] . "/app/wms/files/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
-                    #PROCESSING "LOAD_WHOLE_IMAGE=YES"
                     PROCESSING "RESAMPLE=AVERAGE"
                     <?php
                     if ($layerArr['data'][0]['bands']) {
@@ -465,6 +465,8 @@ class Mapfile extends \app\inc\Controller
                 #LABELMAXSCALE
                 METADATA
                 "ows_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
+                "wms_group_title" "<?php echo $row['layergroup']?>"
+                "wms_group_abstract" "<?php echo $row['layergroup']?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
@@ -474,6 +476,7 @@ class Mapfile extends \app\inc\Controller
                 "gml_include_items" "all"
                 "wms_include_items" "all"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
+                "gml_types" "auto"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 <?php if ($row['wmssource']) {

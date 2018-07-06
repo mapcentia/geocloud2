@@ -1,8 +1,11 @@
 <?php
+
 namespace app\api\v1;
 
 use \app\conf\App;
-use \app\inc\Input;
+use \app\inc\Session;
+use \app\models\Layer;
+use \GuzzleHttp\Client;
 
 class Legend extends \app\inc\Controller
 {
@@ -10,68 +13,121 @@ class Legend extends \app\inc\Controller
 
     function __construct()
     {
-        $path = App::$param['path'] . "/app/wms/mapfiles/";
-        if (\app\inc\Input::get("l")) {
-            $layerNames = explode(";", \app\inc\Input::get("l"));
-            $layerNames = array_reverse($layerNames);
-            $temp = $layerNames;
-            $newLayerNames = $arr = array();
-            // Check if schema is given as param and get the layer names
-            foreach ($temp as $layerName) {
-                $splitName = explode(".", $layerName);
-                if ($splitName[0] !== "gc2_group") {
-                    if (sizeof($splitName) < 2) {
-                        $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
-                        if (file_exists($path . $mapFile)) {
-                            $map = ms_newMapobj($path . $mapFile);
-                            $arr = $map->getAllLayerNames();
-                        }
-                    } else {
-                        $newLayerNames[] = $layerName;
-                    }
-                    $newLayerNames = array_merge($newLayerNames, $arr);
-                }
-            }
-            $i = 0;
-            foreach ($newLayerNames as $layerName) {
-                $splitName = explode(".", $layerName);
-                $mapFile = \app\inc\Input::getPath()->part(5) . "_" . $splitName[0] . ".map";
-                $map = ms_newMapobj($path . $mapFile);
-                $layer = $map->getLayerByName($layerName);
-                if ($layer) {
-                    $this->legendArr[$layerName]['title'] = $layer->getMetaData("wms_title");
-                    if ($layer->getMetaData("wms_get_legend_url")) {
-                        $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
-                        imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
-                        imagealphablending($icon, false);
-                        imagesavealpha($icon, true);
-                        ob_start();
-                        imagepng($icon);
-                        imagedestroy($icon);
-                        $data = base64_encode(ob_get_clean());
-                        $this->legendArr[$layerName]['classes'][0]['img'] = $data;
-                        $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
-                        $this->legendArr[$layerName]['classes'][0]['expression'] = null;
-                    } else {
-                        for ($i = 0; $i < $layer->numclasses; $i++) {
-                            $class = $layer->getClass($i);
-                            $icon = $class->createLegendIcon(17, 17);
-                            ob_start();
-                            $icon->saveImage("", $map);
-                            $data = base64_encode(ob_get_clean());
-                            $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-                            $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
-                            $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
 
-                        }
-                    }
-                }
-            }
-        }
     }
 
+    /**
+     * @return array
+     * @throws \PDOException
+     */
+    private function createLegendObj()
+    {
+
+        $response = [];
+
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+
+        $client = new Client([
+            'timeout' => 1,
+        ]);
+
+        if (\app\inc\Input::get("l")) {
+
+            $layerNames = explode(";", \app\inc\Input::get("l"));
+
+            $layerNames = array_reverse($layerNames);
+
+            $meta = new Layer();
+
+            try {
+
+                $layers = $meta->getAll(implode(",", $layerNames), Session::isAuth())["data"];
+
+            } catch (\PDOException $e) {
+
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = $e->getCode();
+                return $response;
+
+            }
+
+            foreach ($layers as $layer) {
+
+                $layerName = $layer["f_table_schema"] . "." . $layer["f_table_name"];
+
+                $classes = json_decode($layer["class"], true);
+
+                $numClass = sizeof($classes);
+
+                $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . ".map";
+
+                $this->legendArr[$layerName]['title'] = $layer["wms_title"];
+
+                if (isset($layer["wmssource"])) {
+
+                    $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $layer['wmssource']);
+
+                    $icon = imagecreatefrompng($wmsCon . "&REQUEST=getlegendgraphic");
+                    imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                    imagealphablending($icon, false);
+                    imagesavealpha($icon, true);
+                    ob_start();
+                    imagepng($icon);
+                    imagedestroy($icon);
+                    $data = base64_encode(ob_get_clean());
+                    $this->legendArr[$layerName]['classes'][0]['img'] = $data;
+                    $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                    $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+
+                } else {
+
+                    for ($i = 0; $i < $numClass; $i++) {
+
+                        $iconUrl = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=" . $mapFile . "&MODE=legendicon&icon=" . $layerName . "," . $i;
+
+                        try {
+
+                            $content = $client->get($iconUrl);
+
+                        } catch (\Exception $e) {
+
+                            $response['success'] = false;
+                            $response['message'] = $e->getMessage();
+                            $response['code'] = $e->getCode();
+                            return $response;
+
+                        }
+
+                        $data = base64_encode($content->getBody());
+
+                        $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+                        $this->legendArr[$layerName]['classes'][$i]['name'] = $classes[$i]["name"];
+                        $this->legendArr[$layerName]['classes'][$i]['expression'] = $classes[$i]["expression"];
+
+                    }
+                }
+
+            }
+
+        }
+
+        $response['success'] = true;
+        $response['message'] = "";
+        return $response;
+    }
+
+    /**
+     * @return array
+     */
     public function get_png()
     {
+        $res = $this->createLegendObj();
+
+        if (!$res["success"]) {
+            return $res;
+        }
+
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         if (!\app\inc\Input::getPath()->part(6)) {
             $response['success'] = false;
@@ -99,9 +155,19 @@ class Legend extends \app\inc\Controller
         exit($data);
     }
 
+    /**
+     * @return array
+     */
     public function get_html()
     {
+        $res = $this->createLegendObj();
+
+        if (!$res["success"]) {
+            return $res;
+        }
+
         $html = "";
+
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
                 //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
@@ -117,12 +183,24 @@ class Legend extends \app\inc\Controller
                 $html .= "</table>";
             }
         }
+
         $response['html'] = $html;
+
         return $response;
+
     }
 
+    /**
+     * @return array
+     */
     public function get_json()
     {
+        $res = $this->createLegendObj();
+
+        if (!$res["success"]) {
+            return $res;
+        }
+
         $json = array();
         $classes = array();
         if (is_array($this->legendArr)) {
@@ -145,9 +223,4 @@ class Legend extends \app\inc\Controller
         return $json;
     }
 
-    public function get_quantile()
-    {
-        $this->class = new \app\models\Classification(Input::get("l"));
-        return $this->class->createQuantile(Input::get("f"), Input::get("n"), "#" . Input::get(s), "#" . Input::get(e), null, false);
-    }
 }

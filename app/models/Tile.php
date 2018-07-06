@@ -28,8 +28,8 @@ class Tile extends Model
             $response['data'] = array($arr);
         } else {
             $response['success'] = false;
-            $response['message'] = "Hej hej";
-            $response['code'] = 500;
+            $response['message'] = $this->PDOerror[0];
+            $response['code'] = 406;
         }
         return $response;
     }
@@ -56,7 +56,8 @@ class Tile extends Model
             "format",
             "lock",
             "layers",
-            "bands"
+            "bands",
+            "cache"
         );
         $oldData = $this->get();
         $newData = array();
@@ -73,7 +74,7 @@ class Tile extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
-            $response['code'] = 500;
+            $response['code'] = 406;
         }
         return $response;
     }

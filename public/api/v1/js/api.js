@@ -7,6 +7,7 @@
 /*global schema:false */
 /*global document:false */
 /*global mygeocloud_host:false */
+
 var popup;
 var scriptSource = (function (scripts) {
     'use strict';
@@ -468,7 +469,7 @@ var mygeocloud_ol = (function () {
         this.setBaseLayer = function (baseLayer) {
             this.map.setBaseLayer(baseLayer);
         };
-        this.addBaseLayer = function (l, db, altId, lName) {
+        this.addBaseLayer = function (l, db, altId, lName, host) {
             var o;
             switch (l) {
                 case "osm":
@@ -525,6 +526,7 @@ var mygeocloud_ol = (function () {
                 default : // Try to add as tile layer
                     o = this.addTileLayers([l], {
                         db: db,
+                        host: host,
                         isBaseLayer: true,
                         visibility: false,
                         wrapDateLine: false,
@@ -539,6 +541,7 @@ var mygeocloud_ol = (function () {
         this.addTileLayers = function (layers, config) {
             var defaults = {
                 db: this.db,
+                host: host,
                 singleTile: false,
                 opacity: 1,
                 isBaseLayer: false,
@@ -565,9 +568,9 @@ var mygeocloud_ol = (function () {
         this.createTileLayer = function (layer, defaults) {
             var parts = layer.split("."), url;
             if (!defaults.tileCached) {
-                url = host + "/wms/" + defaults.db + "/" + parts[0] + "?";
+                url = (defaults.host || host) + "/wms/" + defaults.db + "/" + parts[0] + "?";
             } else {
-                url = host + "/mapcache/" + defaults.db + "/wms?";
+                url = (defaults.host || host) + "/mapcache/" + defaults.db + "/wms?";
             }
             var l = new OpenLayers.Layer.WMS(defaults.name, url, {
                 layers: layer,

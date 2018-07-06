@@ -25,6 +25,7 @@ $overwrite = $argv[7];
 $id = $argv[8] ?: "gml_id";
 $gfs = $argv[9];
 $encoding = $argv[10];
+$downloadSchema = $argv[11];
 
 
 new \app\conf\App();
@@ -62,12 +63,27 @@ function which($cmd)
 $pass = true;
 
 while ($row = $database->fetchRow($res)) {
+    global $count;
+    $count = 1;
+    fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
+}
+
+echo "\n";
+exit(0);
+
+function fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs)
+{
+    global $pass, $count;
     $out = [];
     $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]}";
     $wfsUrl = $url . "&BBOX=";
     $gmlName = $importTable . "-" . $row["gid"] . ".gml";
 
-    file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox));
+    if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))) {
+        echo "Error: could not get GML for cell #{$row["gid"]}\n";
+        $pass = false;
+    };
+
     if ($gfs) {
         file_put_contents("/var/www/geocloud2/public/logs/" . $importTable . "-" . $row["gid"] . ".gfs", file_get_contents($gfs));
     }
@@ -76,6 +92,7 @@ while ($row = $database->fetchRow($res)) {
         "-skipfailures " .
         "-append " .
         "-dim 2 " .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
@@ -84,16 +101,26 @@ while ($row = $database->fetchRow($res)) {
         "/var/www/geocloud2/public/logs/" . $gmlName . " " .
         "-nln {$schema}.{$importTable} " .
         "-nlt {$geomType}";
+
     exec($cmd . ' 2>&1', $out, $err);
 
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false) {
             $pass = false;
-            break;
+            break 1;
         }
     }
 
     if (!$pass) {
+
+        if ($count > 2) {
+            echo "Too many recursive tries to fetch cell\n";
+            exit(1);
+        }
+
+        sleep(5);
+        $count++;
+        fetch($row, $url, $importTable, $encoding, $downloadSchema, $schema, $geomType, $database, $id, $gfs);
 
         foreach ($out as $line) {
             echo $line . "\n";
@@ -123,18 +150,12 @@ while ($row = $database->fetchRow($res)) {
     unlink("/var/www/geocloud2/public/logs/" . $gmlName);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} DROP CONSTRAINT IF EXISTS {$schema}_{$importTable}_unique_id";
-    //echo $sql . "\n";
     $database->execQuery($sql);
-    print_r($database->PDOerror);
 
     $sql = "ALTER TABLE {$schema}.{$importTable} ADD CONSTRAINT {$schema}_{$importTable}_unique_id UNIQUE ({$id})";
-    //echo $sql . "\n";
     $database->execQuery($sql);
-    print_r($database->PDOerror);
 
-    echo ".";
+    echo $count;
 }
-echo "\n";
-exit(0);
 
 

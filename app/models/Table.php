@@ -1,4 +1,5 @@
 <?php
+
 namespace app\models;
 
 use app\inc\Model;
@@ -11,6 +12,7 @@ class Table extends Model
     // TODO Set access on all vars
     public $table;
     public $schema;
+    public $geometryColumns;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
@@ -45,13 +47,20 @@ class Table extends Model
         $this->schema = str_replace(".", "", $_schema);
         $this->table = $table;
         $sql = "SELECT 1 FROM {$table} LIMIT 1";
-        $this->execQuery($sql);
+
+        try {
+            $this->execQuery($sql);
+        } catch (\PDOException $e) {
+
+        }
+
         if ($this->PDOerror) {
             $this->exits = false;
         } else {
+            $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
             $this->metaData = $this->getMetaData($this->table, $temp);
-            $this->geomField = $this->getGeometryColumns($this->table, "f_geometry_column");
-            $this->geomType = $this->getGeometryColumns($this->table, "type");
+            $this->geomField = $this->geometryColumns["f_geometry_column"];
+            $this->geomType = $this->geometryColumns["type"];
             $this->primeryKey = $this->getPrimeryKey($this->table);
             $this->setType();
             $this->exits = true;
@@ -61,7 +70,7 @@ class Table extends Model
             $this->workflow = $res["exists"];
         }
         $this->sysCols = array("gc2_version_gid", "gc2_version_start_date", "gc2_version_end_date", "gc2_version_uuid", "gc2_version_user");
-        $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
+        $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬.]/";
     }
 
     /**
@@ -152,6 +161,7 @@ class Table extends Model
     }
 
     // TODO Move to layer model. This may belong to the Layer class
+
     /**
      * @param null $createKeyFrom
      * @return mixed
@@ -222,6 +232,27 @@ class Table extends Model
             $matViews[$row["matviewname"]] = true;
             $matViewDefinitions[$row["matviewname"]] = $row["definition"];
         }
+
+        // Check if Es is online
+        // =====================
+        $esOnline = false;
+        $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+        $ch = curl_init($esUrl);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+        ));
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode == "200") {
+            $esOnline = true;
+        }
+
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $arr = array();
@@ -235,11 +266,8 @@ class Table extends Model
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-                    if ($key == "layergroup") {
-                        if (!$value && \app\conf\App::$param['hideUngroupedLayers'] == true) {
-                            //$value = "_gc2_hide_in_viewer";
-                        }
-                    }
+                    // Set empty strings to NULL
+                    $value = $value == "" ? null : $value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
                 }
                 if ($createKeyFrom) {
@@ -278,18 +306,18 @@ class Table extends Model
                 }
                 $arr = $this->array_push_assoc($arr, "reltype", $relType);
 
-                // Is indexed?
-                if (1 == 1) {
+                if ($esOnline) {
                     $type = $row['f_table_name'];
-                    if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+                    if (\mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
                     ));
@@ -301,7 +329,10 @@ class Table extends Model
                     } else {
                         $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                     }
+                } else {
+                    $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
+
                 $response['data'][] = $arr;
             }
         }
@@ -415,7 +446,7 @@ class Table extends Model
      * @param $keyName
      * @return array
      */
-    public function updateRecord($data, $keyName)
+    public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
         $response = [];
         $data = $this->makeArray($data);
@@ -445,23 +476,54 @@ class Table extends Model
                     if ($value === false) {
                         $value = null;
                     }
-                    if ($key == "editable" || $key == "skipconflict") {
-                        $value = $value ?: "0";
-                    }
-                    if ($key == "tags") {
-                        $value = json_encode($value);
-                    }
-                    // If Meta when update the existing object, so not changed values persist
-                    if ($key == "meta") {
-                        $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
-
-                        foreach ($value as $fKey=>$fValue) {
-                            $rec[$fKey] = $fValue;
+                    if ($this->table == "settings.geometry_columns_join") {
+                        if ($key == "editable" || $key == "skipconflict") {
+                            $value = $value ?: "0";
                         }
-                        $value = json_encode($rec);
+                        if ($key == "tags") {
+                            $value = $value ?: [];
+                            if (!$raw) {
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?:[];
 
+                                if ($append) {
+                                    $value = array_merge($rec, $value);
+                                }
+
+                                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                            }
+                        }
+                        // If Meta when update the existing object, so not changed values persist
+                        if ($key == "meta") {
+                            $value = $value ?: "null";
+                            if ($raw == false) {
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
+
+                                foreach ($value as $fKey => $fValue) {
+                                    $rec[$fKey] = $fValue;
+                                }
+                                $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
+                                $stripSlashes = false;
+                            }
+
+                        } else {
+                            if (is_object($value) || is_array($value)) {
+                                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                                $stripSlashes = false;
+                            } else {
+                                $stripSlashes = true;
+                            }
+                        }
+                    } else {
+                        $stripSlashes = true;
                     }
+
                     $value = $this->db->quote($value);
+
+                    // TODO why are we stripping slashes?
+                    if ($stripSlashes) {
+                        $value = stripcslashes($value);
+                    }
+
                     if ($key != $keyName) {
                         $pairArr[] = "\"{$key}\"={$value}";
                         $keyArr[] = "\"{$key}\"";
@@ -480,13 +542,13 @@ class Table extends Model
                 // If row does not exits, insert instead.
                 // ======================================
 
-                if ((!$result) && (!$this->PDOerror)) {
+                if ((!$result) && (!isset($this->PDOerror)) && (!$this->PDOerror)) {
                     $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
 
                     $this->execQuery($sql, "PDO", "transaction");
                     $response['operation'] = "Row inserted";
                 }
-                if (!$this->PDOerror) {
+                if (!isset($this->PDOerror) || !$this->PDOerror) {
                     $response['success'] = true;
                     $response['message'] = "Row updated";
                 } else {
@@ -516,12 +578,12 @@ class Table extends Model
         $fieldsForStore = [];
         $columnsForGrid = [];
         $type = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
             if ($value->properties == "*") {
                 $table = new \app\models\Table($this->table);
                 $distinctValues = $table->getGroupByAsArray($key);
-                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);;
+                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK, JSON_UNESCAPED_UNICODE);
             }
         }
         if ($this->geomType == "POLYGON" || $this->geomType == "MULTIPOLYGON") {
@@ -592,7 +654,7 @@ class Table extends Model
     {
         $response = [];
         $arr = array();
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         if (!$this->metaData) {
             $response['data'] = array();
         }
@@ -631,21 +693,21 @@ class Table extends Model
      * @param string $_key_
      * @return array
      */
-    private function purgeFieldConf($_key_)
+    public function purgeFieldConf($_key_)
     {
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
             if (!$this->metaData[$key]) {
                 unset($fieldconfArr[$key]);
             }
         }
-        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $_key_;
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
         return $res;
     }
 
@@ -660,7 +722,7 @@ class Table extends Model
         $this->purgeFieldConf($key); // TODO What?
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
@@ -682,7 +744,7 @@ class Table extends Model
                 if ($safeColumn == "state") {
                     $safeColumn = "_state";
                 }
-                if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+                if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
                     $safeColumn = "_" . $safeColumn;
                 }
                 if (in_array($value->id, $this->sysCols)) {
@@ -702,12 +764,12 @@ class Table extends Model
 
             $fieldconfArr[$safeColumn] = $value;
         }
-        $conf['fieldconf'] = json_encode($fieldconfArr);
+        $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $key;
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
 
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];
@@ -720,6 +782,8 @@ class Table extends Model
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = "406";
+
         }
         return $response;
     }
@@ -735,7 +799,7 @@ class Table extends Model
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->getGeometryColumns($this->table, "fieldconf"));
+        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             if (in_array($value, $this->sysCols)) {
                 $response['success'] = false;
@@ -748,15 +812,16 @@ class Table extends Model
         }
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
-            $conf['fieldconf'] = json_encode($fieldconfArr);
+            $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
             $conf['f_table_name'] = $this->table;
             $geometryColumnsObj = new table("settings.geometry_columns_join");
-            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "f_table_name", $whereClause);
+            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "f_table_name", $whereClause);
             $response['success'] = true;
             $response['message'] = "Column deleted";
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror[0];
+            $response['code'] = "406";
         }
         $this->purgeFieldConf($_key_);
         return $response;
@@ -772,7 +837,7 @@ class Table extends Model
         $response = [];
         $safeColumn = $this->toAscii($data['column'], array(), "_");
         $sql = "";
-        if (is_numeric(mb_substr($safeColumn, 0, 1, 'utf-8'))) {
+        if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
         }
         if ($safeColumn == "state") {
@@ -1039,7 +1104,7 @@ class Table extends Model
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->toAscii($table, array(), "_");
-        if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
+        if (is_numeric(\mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
@@ -1253,7 +1318,7 @@ class Table extends Model
      * @param string $pkey
      * @return array
      */
-    public function getRecordByPri($pkey)
+    public function getRecordByPri($pkey): array
     {
         $response = [];
         foreach ($this->metaData as $key => $value) {
@@ -1289,7 +1354,7 @@ class Table extends Model
         return $response;
     }
 
-    public function getDependTree()
+    public function getDependTree(): array
     {
         $response = [];
         $response["data"] = [];
@@ -1343,7 +1408,7 @@ class Table extends Model
                     -- Note: In pg_depend, the triple (classid,objid,objsubid) describes some object that depends
                     -- on the object described by the tuple (refclassid,refobjid).
                     -- So to drop the depending object, the referenced object (refclassid,refobjid) must be dropped first
-                    SELECT
+                    SELECT DISTINCT
                         -- dep_name: Name of dependent object
                         CASE classid
                             WHEN 'pg_class'::regclass THEN objid::regclass::text
@@ -1398,8 +1463,6 @@ class Table extends Model
                     FROM pg_catalog.pg_depend
                     WHERE deptype = 'n'                 -- look at normal dependencies only
                     AND refclassid NOT IN (2615, 2612)  -- schema and language are ignored as dependencies
-                    GROUP BY classid,objid,refclassid,refobjid,deptype
-
             
                 ) depedencies
                 -- Recursion: Join with results of last query, search for dependencies recursively
@@ -1421,14 +1484,18 @@ class Table extends Model
                   WHEN 'MATERIALIZED VIEW' THEN (SELECT definition FROM pg_matviews WHERE schemaname = split_part(dep_name, '.', 1) AND matviewname = split_part(dep_name, '.', 2))
                 END AS \"definition\"
             FROM dep_recursive
-            --WHERE level > 0                  -- ignore the initial object (level 0)
+            --  WHERE level > 0                  -- ignore the initial object (level 0)
             GROUP BY dep_name               -- ignore multiple references to dependent objects, dropping them once is enough
             ORDER BY level, dep_name;   -- level descending: deepest dependency first
         ";
 
         $res = $this->prepare($sql);
+
+        // If rel is in public, when don't use schema qualified name
+        $relName = explode(".", $this->table)[0] == "public" ? explode(".", $this->table)[1] : $this->table;
+
         try {
-            $res->execute(["relName" => $this->table]);
+            $res->execute(["relName" => $relName]);
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

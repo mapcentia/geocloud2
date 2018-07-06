@@ -223,6 +223,9 @@ gc2i18n = {
         "Create WMS layers": "Opret WMS lag",
         "Create composite layer": "Opret composite lag",
         "This will create a new WMS layer in GC2 for every WMS layer in the GGIS project. It is like importing WMS layers from QGIS. The new layers will be placed in the current schema.": "Dette vil oprette et nyt WMS lag i GC2 for hvert WMS lag i QGIS projektet. Det svarer til at importere WMS lag fra QGIS. De nye lag vil blive placeret i nuværende schema.",
-        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "Dette vil oprette et nyt composite lag med alle lag fra QGIS projektet. Blending mode vil blive anvendt. Dette kan bruges til at skabe et baggrundskort. Det nye lag vil tage navn fra qgs-filen og blive placeret i nuværende schema."
+        "This will create one new composite layer with all layers in the GGIS project. Blending mode from QGIS will be used. This is great for creating a base layer. The new layer will take name from the qgs-file and be placed in the current schema": "Dette vil oprette et nyt composite lag med alle lag fra QGIS projektet. Blending mode vil blive anvendt. Dette kan bruges til at skabe et baggrundskort. Det nye lag vil tage navn fra qgs-filen og blive placeret i nuværende schema.",
+
+        "Append" : "Tilføj",
+        "Write tag names into the field 'Tags'. Finish the tag name with an 'Enter' key stroke. If 'Append' is checked, new tags are appended to existing one. Append is only available when multiple layers are selected.": "Skriv tag-navne i feltet 'Tags'. Afslut tag-navnet ved at taste 'Enter'. Hvis 'Tilføj' er tjekket af, tilføjes nye tags til eksisterende. 'Tilføj' er kun tilgængelig, når flere lag er valgt."
     }
 };

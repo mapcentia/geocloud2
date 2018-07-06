@@ -1,4 +1,5 @@
 <?php
+
 namespace app\inc;
 
 use Exception;
@@ -12,15 +13,16 @@ use app\conf\Connection;
  */
 class Model
 {
-    var $postgishost;
-    var $postgisuser;
-    var $postgisdb;
-    var $postgispw;
-    var $connectString;
-    var $PDOerror;
-    var $db;
-    var $postgisschema;
-    var $connectionFailed;
+    public $postgishost;
+    public $postgisport;
+    public $postgisuser;
+    public $postgisdb;
+    public $postgispw;
+    public $connectString;
+    public $PDOerror;
+    public $db;
+    public $postgisschema;
+    public $connectionFailed;
 
     function __construct()
     {
@@ -36,28 +38,29 @@ class Model
      * @param PDOStatement $result
      * @param string $result_type
      * @return array
-     * @throws Exception
+     * @throws \PDOException
      */
     public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
         $row = [];
-        if (isset($this->PDOerror)) {
-           // throw new Exception($this->PDOerror[0]);
-        }
         switch ($result_type) {
             case "assoc" :
-                $row = $result->fetch(PDO::FETCH_ASSOC);
+                try {
+                    $row = $result->fetch(PDO::FETCH_ASSOC);
+                } catch (\PDOException $e) {
+                    throw new \PDOException($e->getMessage());
+                }
                 break;
             case "both" :
                 break;
         }
-        return ($row);
+        return $row;
     }
 
     /**
      * @param PDOStatement $result
      * @param string $result_type
-     * @return mixed
+     * @return array
      * @throws Exception
      */
     public function fetchAll(PDOStatement $result, $result_type = "both")
@@ -74,7 +77,7 @@ class Model
                 $rows = $result->fetchAll();
                 break;
         }
-        return ($rows);
+        return $rows;
     }
 
     /**
@@ -85,7 +88,7 @@ class Model
     public function numRows($result)
     {
         $num = sizeof($result);
-        return ($num);
+        return $num;
     }
 
     /**
@@ -102,6 +105,8 @@ class Model
      */
     public function getPrimeryKey($table)
     {
+        //return array("attname" => "objekt_id");
+
         unset($this->PDOerror);
         $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '" . $this->doubleQuoteQualifiedName($table) . "'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
         $result = $this->execQuery($query);
@@ -169,19 +174,23 @@ class Model
     /**
      * @param $sql
      * @return mixed
-     * @throws Exception
+     * @throws \PDOException
      */
     public function prepare($sql)
     {
         if (!$this->db) {
-            $this->connect("PDO");
+            try {
+                $this->connect("PDO");
+            } catch (\PDOException $e) {
+                throw new \PDOException($e->getMessage());
+            }
         }
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
             $stmt = $this->db->prepare($sql);
         } catch (\PDOException $e) {
             $this->PDOerror[] = $e->getMessage();
-            throw new Exception($e->getMessage());
+            throw new \PDOException($e->getMessage());
         }
         return $stmt;
     }
@@ -205,7 +214,11 @@ class Model
                 break;
             case "PDO" :
                 if (!$this->db) {
-                    $this->connect("PDO");
+                    try {
+                        $this->connect("PDO");
+                    } catch (\PDOException $e) {
+                        throw new \PDOException($e->getMessage());
+                    }
                 }
                 if ($this->connectionFailed) {
                     return false;
@@ -282,8 +295,9 @@ class Model
                         AND attnum > 0
                         AND NOT attisdropped";
 
-        $res = $this->prepare($sql);
+
         try {
+            $res = $this->prepare($sql);
             if ($temp) {
                 $res->execute(array("table" => $table));
             } else {
@@ -341,7 +355,7 @@ class Model
                 } catch (\PDOException $e) {
                     $this->db = NULL;
                     $this->connectionFailed = true;
-                    $this->PDOerror[] = "Could not connect to database";
+                    throw new \PDOException($e->getMessage());
                 }
                 break;
         }
@@ -361,7 +375,7 @@ class Model
         return ($str);
     }
 
-    function getGeometryColumns($table, $field)
+    function getGeometryColumns(string $table, string $field)
     {
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];
@@ -377,8 +391,12 @@ class Model
         $query = "SELECT * FROM settings.getColumns('f_table_name=''{$_table}'' AND f_table_schema=''{$_schema}''',
                     'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
 
+        try {
+            $result = $this->execQuery($query);
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
+        }
 
-        $result = $this->execQuery($query);
         $row = $this->fetchRow($result);
 
         if (!$row)
@@ -422,6 +440,9 @@ class Model
         }
         if ($field == 'featureid') {
             return $row['featureid'];
+        }
+        if ($field == '*') {
+            return $row;
         }
     }
 

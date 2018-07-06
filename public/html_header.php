@@ -4,7 +4,7 @@ header('Content-Type: text/html; charset=utf-8');
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Administration</title>
+    <title>GC2 Admin</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="description"
           content="Analyze and visualize your data. Use a powerful API for adding maps to your own apps."/>

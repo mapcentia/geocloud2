@@ -80,49 +80,18 @@ MyDesktop.GridWindow = Ext.extend(Ext.app.Module, {
                 height:480,
                 iconCls: 'icon-grid',
                 shim:false,
-                animCollapse:false,
+                animCollapse:true,
                 constrainHeader:true,
 
                 layout: 'fit',
                 items:
-                    new Ext.grid.GridPanel({
-                        border:false,
-                        ds: new Ext.data.Store({
-                            reader: new Ext.data.ArrayReader({}, [
-                               {name: 'company'},
-                               {name: 'price', type: 'float'},
-                               {name: 'change', type: 'float'},
-                               {name: 'pctChange', type: 'float'}
-                            ]),
-                            data: Ext.grid.dummyData
-                        }),
-                        cm: new Ext.grid.ColumnModel([
-                            new Ext.grid.RowNumberer(),
-                            {header: "Company", width: 120, sortable: true, dataIndex: 'company'},
-                            {header: "Price", width: 70, sortable: true, renderer: Ext.util.Format.usMoney, dataIndex: 'price'},
-                            {header: "Change", width: 70, sortable: true, dataIndex: 'change'},
-                            {header: "% Change", width: 70, sortable: true, dataIndex: 'pctChange'}
-                        ]),
-
-                        viewConfig: {
-                            forceFit:true
-                        },
-                        //autoExpandColumn:'company',
-
-                        tbar:[{
-                            text:'Add Something',
-                            tooltip:'Add a new row',
-                            iconCls:'add'
-                        }, '-', {
-                            text:'Options',
-                            tooltip:'Blah blah blah blaht',
-                            iconCls:'option'
-                        },'-',{
-                            text:'Remove Something',
-                            tooltip:'Remove the selected item',
-                            iconCls:'remove'
-                        }]
-                    })
+                    {
+                        frame: false,
+                        border: false,
+                        id: "mapPane",
+                        region: "center",
+                        html: '<iframe frameborder="0" id="wfseditor" style="width:100%;height:100%" src="https://gc2.mapcentia.com/store/mydb/test"></iframe>'
+                    }
             });
         }
         win.show();

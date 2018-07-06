@@ -142,7 +142,7 @@
             writeTag("close", null, "Name", null, False, True);
 
             writeTag("open", null, "Title", null, True, False);
-            echo $row["f_table_title"];
+            echo $row["f_table_title"] ? "<![CDATA[" . $row["f_table_title"] . "]]>" : "";
             writeTag("close", null, "Title", null, False, True);
 
 
@@ -170,7 +170,7 @@
                 }
             }
             writeTag("open", null, "Abstract", null, True, False);
-            echo $row["f_table_abstract"];
+            echo $row["f_table_abstract"] ? "<![CDATA[" . $row["f_table_abstract"] . "]]>" : "";
             writeTag("close", null, "Abstract", null, False, True);
             $depth--;
             writeTag("close", null, "FeatureType", null, True, True);

@@ -163,7 +163,7 @@ class PEAR
             $destructor = "_$classname";
             if (method_exists($this, $destructor)) {
                 global $_PEAR_destructor_object_list;
-                $_PEAR_destructor_object_list[] = &$this;
+                $_PEAR_destructor_object_list[] = $this;
                 break;
             } else {
                 $classname = get_parent_class($classname);
@@ -197,7 +197,7 @@ class PEAR
     /**
     * If you have a class that's mostly/entirely static, and you need static
     * properties, you can use this method to simulate them. Eg. in your method(s)
-    * do this: $myVar = &PEAR::getStaticProperty('myclass', 'myVar');
+    * do this: $myVar = PEAR::getStaticProperty('myclass', 'myVar');
     * You MUST use a reference, or they will not persist!
     *
     * @access public
@@ -302,11 +302,11 @@ class PEAR
     function setErrorHandling($mode = null, $options = null)
     {
         if (isset($this) && is_a($this, 'PEAR')) {
-            $setmode     = &$this->_default_error_mode;
-            $setoptions  = &$this->_default_error_options;
+            $setmode     = $this->_default_error_mode;
+            $setoptions  = $this->_default_error_options;
         } else {
-            $setmode     = &$GLOBALS['_PEAR_default_error_mode'];
-            $setoptions  = &$GLOBALS['_PEAR_default_error_options'];
+            $setmode     = $GLOBALS['_PEAR_default_error_mode'];
+            $setoptions  = $GLOBALS['_PEAR_default_error_options'];
         }
 
         switch ($mode) {
@@ -577,13 +577,13 @@ class PEAR
      */
     function pushErrorHandling($mode, $options = null)
     {
-        $stack = &$GLOBALS['_PEAR_error_handler_stack'];
+        $stack = $GLOBALS['_PEAR_error_handler_stack'];
         if (isset($this) && is_a($this, 'PEAR')) {
-            $def_mode    = &$this->_default_error_mode;
-            $def_options = &$this->_default_error_options;
+            $def_mode    = $this->_default_error_mode;
+            $def_options = $this->_default_error_options;
         } else {
-            $def_mode    = &$GLOBALS['_PEAR_default_error_mode'];
-            $def_options = &$GLOBALS['_PEAR_default_error_options'];
+            $def_mode    = $GLOBALS['_PEAR_default_error_mode'];
+            $def_options = $GLOBALS['_PEAR_default_error_options'];
         }
         $stack[] = array($def_mode, $def_options);
 
@@ -598,7 +598,7 @@ class PEAR
 
     // }}}
     // {{{ popErrorHandling()
-
+d
     /**
     * Pop the last error handler used
     *
@@ -608,7 +608,7 @@ class PEAR
     */
     function popErrorHandling()
     {
-        $stack = &$GLOBALS['_PEAR_error_handler_stack'];
+        $stack = $GLOBALS['_PEAR_error_handler_stack'];
         array_pop($stack);
         list($mode, $options) = $stack[sizeof($stack) - 1];
         array_pop($stack);

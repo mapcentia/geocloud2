@@ -693,7 +693,7 @@ class XML_Serializer extends PEAR
     * @return   string  $string      serialized data
     * @uses     XML_Util::isValidName() to check, whether key has to be substituted
     */
-    function _serializeArray(&$array, $tagName = null, $attributes = array())
+    function _serializeArray($array, $tagName = null, $attributes = array())
     {
         $_content = null;
         $_comment = null;
@@ -906,7 +906,7 @@ class XML_Serializer extends PEAR
     * @param    object  $object object to serialize
     * @return   string  $string serialized data
     */
-    function _serializeObject(&$object, $tagName = null, $attributes = array())
+    function _serializeObject($object, $tagName = null, $attributes = array())
     {
         // check for magic function
         if (method_exists($object, '__sleep')) {

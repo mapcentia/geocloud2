@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers;
 
 use \app\inc\Input;
@@ -36,7 +37,7 @@ class Layer extends \app\inc\Controller
         $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         $response = $this->auth($data["data"]->_key_);
-        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_");
+        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_", false, Input::getPath()->part(5));
     }
 
     public function delete_records()
@@ -88,7 +89,7 @@ class Layer extends \app\inc\Controller
     public function put_name()
     {
         $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->rename(Input::getPath()->part(4), json_decode(Input::get())->data);
+        return (!$response['success']) ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
     }
 
     public function put_schema()

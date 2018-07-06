@@ -29,11 +29,17 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Origin: " . $http_origin);
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     header("Access-Control-Allow-Credentials: true");
+} elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Credentials: true");
 }
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
+
     Database::setDb(Input::getPath()->part(4)); // Default
+
     Route::add("api/v1/sql", function () {
         Session::start();
         $db = Input::getPath()->part(4);
@@ -44,18 +50,92 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-    Route::add("api/v1/elasticsearch", function () {
-        if (Input::getPath()->part(4) == "river") {
-            Session::start(); // So we can create a session log from the indexing
+
+    Route::add("api/v2/sql/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
+
+    Route::add("api/v2/sql/{action}/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
+
+
+    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
+
+        function () {
+            $r = func_get_arg(0);
+            if ($r["action"] == "river") {
+                Session::start(); // So we can create a session log from the indexing
+            }
+            Database::setDb($r["user"]);
         }
-        Database::setDb(Input::getPath()->part(5));
+
+    );
+
+    Route::add("api/v2/elasticsearch/{action}/{user}/[indices]/[type]",
+
+        function () {
+            $r = func_get_arg(0);
+            if ($r["action"] == "river") {
+                Session::start(); // So we can create a session log from the indexing
+            }
+            Database::setDb($r["user"]);
+        }
+
+    );
+
+    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]",
+
+        function () {
+            $db = Route::getParam("user");
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        }
+
+    );
+
+    Route::add("api/v2/qgis/{action}/{user}", function () {
+        Database::setDb(Route::getParam("user"));
     });
-    Route::add("api/v1/meta", function () {
+
+    Route::add("api/v2/mapfile/{action}/{user}/{schema}", function () {
+        Database::setDb(Route::getParam("user"));
+    });
+
+    Route::add("api/v2/mapcachefile/{action}/{user}", function () {
+        Database::setDb(Route::getParam("user"));
+    });
+
+    Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
+
+
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
+
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
     Route::add("api/v1/setting");
@@ -63,8 +143,8 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/cartomobile", null, true); // Returns xml
     Route::add("api/v1/user");
     Route::add("api/v1/legend", function () {
+        Session::start();
         Database::setDb(Input::getPath()->part(5));
-        Connection::$param["postgisschema"] = "trackunit";
     });
     Route::add("api/v1/baselayerjs");
     Route::add("api/v1/staticmap");
@@ -73,15 +153,16 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/decodeimg");
     Route::add("api/v1/senti");
     Route::add("api/v1/loriot");
-    Route::add("api/v1/session", function () {
+    Route::add("api/v1/session/[action]", function () {
         Session::start();
         Database::setDb("mapcentia");
     });
-} elseif (Input::getPath()->part(1) == "store") {
+    Route::miss();
+} elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/user/login/");
-    $_SESSION['postgisschema'] = (Input::getPath()->part(3)) ?: "public";
-    include_once("store.php");
+    $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
+    include_once("admin.php");
     if (\app\conf\App::$param['intercom_io']) {
         include_once("../app/conf/intercom.js.inc");
     }
@@ -126,6 +207,13 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("controllers/workflow");
     Route::add("controllers/qgis/");
 
+} elseif (Input::getPath()->part(1) == "extensions") {
+
+    foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
+        include_once($filename);
+    }
+    Route::miss();
+
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
     new \app\controllers\Wms();
@@ -168,8 +256,6 @@ if (Input::getPath()->part(1) == "api") {
         \app\inc\Redirect::to("/user/login");
     }
 } else {
-    header('HTTP/1.0 404 Not Found');
-    echo "<h1>404 Not Found</h1>";
-    echo "The page that you have requested could not be found.";
-    exit();
+    Route::miss();
 }
+

@@ -38,6 +38,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
@@ -59,6 +60,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
@@ -86,6 +88,7 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
+            'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
         curl_close($ch);
@@ -199,19 +202,23 @@ class Elasticsearch extends Model
             );
         } elseif ($pgType == "uuid") {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         } elseif ($pgType == "hstore") {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         } elseif ($pgType == "bytea") {
             $esType = array(
                 "type" => "binary"
             );
+        } elseif ($pgType == "json" || $pgType == "jsonb") {
+            $esType = array(
+                "type" => "object"
+            );
         } else {
             $esType = array(
-                "type" => "string"
+                "type" => "text"
             );
         }
         return $esType;

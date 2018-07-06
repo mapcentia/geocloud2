@@ -2,12 +2,19 @@
 
 namespace app\models;
 
-use app\inc\Util;
-
+/**
+ * Class Collector
+ * @package app\models
+ */
 class Collector extends \app\inc\Model
 {
-    public function store($content)
+    /**
+     * @param array $content
+     * @return array
+     */
+    public function store(array $content) : array
     {
+        $response = [];
         $arr = array();
         $split = explode(".", $content["table"]);
         $sql = "INSERT INTO \"{$split[0]}\".\"{$split[1]}\" (\"{$content["valueField"]}\",\"{$content["geomField"]}\") VALUES(:values::hstore, St_geomfromtext(:geom,4326))";

@@ -22,7 +22,7 @@ Build date: 2013-04-03 15:07:25
 	/*background-color:#ff00cc;*/
 }
 .x-form-field-wrap .x-form-spinner-trigger {
-    background:transparent url('../images/spinner.gif') no-repeat 0 0;
+    background:none;
 }
 
 .x-form-field-wrap .x-form-spinner-overup{

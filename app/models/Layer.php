@@ -1,15 +1,17 @@
 <?php
+
 namespace app\models;
 
 use \app\conf\App;
-use \app\models\Database;
-
 
 class Layer extends \app\models\Table
 {
     function __construct()
     {
-        parent::__construct("settings.geometry_columns_view");
+        try {
+            parent::__construct("settings.geometry_columns_view");
+        } catch (\PDOException $e) {
+        }
     }
 
     /**
@@ -18,7 +20,7 @@ class Layer extends \app\models\Table
      * @param string $column
      * @return mixed
      */
-    public function getValueFromKey($_key_, $column)
+    public function getValueFromKey(string $_key_, string $column)
     {
         $rows = $this->getRecords();
         $rows = $rows['data'];
@@ -33,35 +35,77 @@ class Layer extends \app\models\Table
     }
 
     /**
-     * Secure. Using prepared statements.
-     * @param bool $schema
-     * @param bool $layer
-     * @param bool $auth
+     * @param string|null $query
+     * @param $auth
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
      * @return array
      */
-    public function getAll($schema = false, $layer = false, $auth, $includeExtent = false, $parse = false, $es = false)
+    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
     {
         $response = [];
-        $where = ($auth) ?
+        $schemata = [];
+        $layers = [];
+        $tags = [];
+        $sqls = [];
+        $preOrder = null;
+
+        if ($query) {
+            foreach (explode(",", $query) as $part) {
+                // Check for schema qualified rels
+                if (sizeof($bits = explode(".", $part)) > 1) {
+                    $layers[] = $part;
+
+                } // Check for tags
+                elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
+                    $tags[] = explode(":", $part)[1];
+                } else {
+                    $schemata[] = $part;
+
+                }
+            }
+        }
+
+        $where = $auth ?
             "(authentication<>''foo'' OR authentication is NULL)" :
             "(authentication=''Write'' OR authentication=''None'')";
         $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-        if ($schema) {
-            $ids = explode(",", $schema);
-            $schemaStr = "''" . implode("'',''", $ids) . "''";
-            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY sort";
-        } elseif ($layer) {
-            $split = explode(".", $layer);
-            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY sort";
-        } else {
-            $sql = "SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY sort";
+        $sort = "sort";
+        $sort .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+        $sort .= ",f_table_name DESC";
+
+        if (sizeof($schemata) > 0) {
+            $schemaStr = "''" . implode("'',''", $schemata) . "''";
+            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY {$sort})";
         }
-        $sql .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        $res = $this->prepare($sql);
+
+        if (sizeof($layers) > 0) {
+
+            foreach ($layers as $layer) {
+                $split = explode(".", $layer);
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY {$sort})";
+            }
+
+        }
+
+        if (sizeof($tags) > 0) {
+
+            foreach ($tags as $tag) {
+                $tag = urldecode($tag);
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
+            }
+
+        }
+
+        if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
+            $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY {$sort})";
+        }
+
+        $sql = implode(" UNION ALL ", $sqls);
+
         try {
+            $res = $this->prepare($sql);
             $res->execute();
         } catch (\PDOException $e) {
             $response['success'] = false;
@@ -69,32 +113,54 @@ class Layer extends \app\models\Table
             $response['code'] = 401;
             return $response;
         }
+
+        // Check if Es is online
+        // =====================
+        $esOnline = false;
+        $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+        $ch = curl_init($esUrl);
+        curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpcode == "200") {
+            $esOnline = true;
+        }
+
         while ($row = $this->fetchRow($res, "assoc")) {
             $arr = array();
-            $primeryKey = $this->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-            $resVersioning = $this->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
+            $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
+            $primeryKey = $this->getPrimeryKey($rel);
+            $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
             $versioning = $resVersioning["exists"];
             if ($row['type'] != "RASTER" && $includeExtent == true) {
                 $srsTmp = "900913";
-                $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
-                $resExtent = $this->prepare($sql);
+                $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
+                $resExtent = $this->prepare($sqls);
                 try {
                     $resExtent->execute();
                 } catch (\PDOException $e) {
-                    //print_r($e);
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 401;
+                    return $response;
                 }
                 $extent = $this->fetchRow($resExtent, "assoc");
             }
             foreach ($row as $key => $value) {
+                // Set empty strings to NULL
+                $value = $value == "" ? null : $value;
                 if ($key == "type" && $value == "GEOMETRY") {
                     $def = json_decode($row['def']);
                     if (isset($def->geotype) && $def->geotype != "Default") {
                         $value = "MULTI" . $def->geotype;
                     }
                 }
-                if ($key == "layergroup" && (!$value)) {
-                    $value = "<font color='red'>[Ungrouped]</font>";
-                }
+
                 if ($key == "fieldconf" && ($value)) {
                     $obj = json_decode($value, true);
                     if (is_array($obj)) {
@@ -115,7 +181,8 @@ class Layer extends \app\models\Table
                         ($key == "fieldconf" ||
                             $key == "def" ||
                             $key == "class" ||
-                            $key == "classwizard"
+                            $key == "classwizard" ||
+                            $key == "meta"
                         ) && ($value)
                     ) {
                         $value = json_decode($value);
@@ -132,20 +199,18 @@ class Layer extends \app\models\Table
                 $arr = $this->array_push_assoc($arr, "extent", $extent);
             }
             // Is indexed?
-            if ($es) {
+            if ($es && $esOnline) {
                 $type = $row['f_table_name'];
                 if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                     $type = "a" . $type;
                 }
-                $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
+                $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                 curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                    'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-                ));
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
                 curl_exec($ch);
                 $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
@@ -157,6 +222,8 @@ class Layer extends \app\models\Table
                     curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0.1);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 0.1);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
                     ));
@@ -179,13 +246,21 @@ class Layer extends \app\models\Table
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", false);
                 }
+            } else {
+                $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
             }
+
+            $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel));
+
             // If session is sub-user we always check privileges
             if (isset($_SESSION) && $_SESSION['subuser']) {
                 $privileges = (array)json_decode($row["privileges"]);
                 if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
                     $response['data'][] = $arr;
                 } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
+                    $response['data'][] = $arr;
+                    // Always add layers with Write and None.
+                } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
                     $response['data'][] = $arr;
                 }
             } else {
@@ -194,6 +269,13 @@ class Layer extends \app\models\Table
 
         }
         $response['data'] = isset($response['data']) ? $response['data'] : array();
+
+        // Remove dups
+        $response['data'] = array_unique($response['data'], SORT_REGULAR);
+
+        // Reindex array
+        $response['data'] = array_values($response['data']);
+
         if (!isset($this->PDOerror)) {
             $response['auth'] = $auth ?: false;
             $response['success'] = true;
@@ -210,8 +292,10 @@ class Layer extends \app\models\Table
      * Secure. Using now user input.
      * @return array
      */
-    public function getSchemas() // All tables
+    public function getSchemas(): array
     {
+        $response = [];
+        $arr = [];
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
@@ -223,70 +307,6 @@ class Layer extends \app\models\Table
         } else {
             $response['success'] = false;
             $response['message'] = $this->PDOerror;
-        }
-        return $response;
-    }
-
-    /**
-     * CartoMobile is deprecated
-     * @param $_key_
-     * @return mixed
-     */
-    public function getCartoMobileSettings($_key_) // Only geometry tables
-    {
-        $response['success'] = true;
-        $response['message'] = "Structure loaded";
-        $arr = array();
-        $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1]);
-        $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
-        foreach ($table->metaData as $key => $value) {
-            if ($value['type'] != "geometry" && $key != $table->primeryKey['attname']) {
-                $arr = $this->array_push_assoc($arr, "id", $key);
-                $arr = $this->array_push_assoc($arr, "column", $key);
-                $arr = $this->array_push_assoc($arr, "available", $cartomobileArr[$key]->available);
-                $arr = $this->array_push_assoc($arr, "cartomobiletype", $cartomobileArr[$key]->cartomobiletype);
-                $arr = $this->array_push_assoc($arr, "properties", $cartomobileArr[$key]->properties);
-                if ($value['typeObj']['type'] == "decimal") {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
-                } else {
-                    $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
-                }
-                $response['data'][] = $arr;
-            }
-        }
-        return $response;
-    }
-
-    /**
-     * CartoMobile is deprecated
-     * @param $data
-     * @param $_key_
-     * @return mixed
-     */
-    public function updateCartoMobileSettings($data, $_key_)
-    {
-        $table = new Table("settings.geometry_columns_join");
-        $data = $table->makeArray($data);
-        $cartomobileArr = (array)json_decode($this->getValueFromKey($_key_, "cartomobile"));
-        foreach ($data as $value) {
-            $safeColumn = $table->toAscii($value->column, array(), "_");
-            if ($value->id != $value->column && ($value->column) && ($value->id)) {
-                unset($cartomobileArr[$value->id]);
-            }
-            $cartomobileArr[$safeColumn] = $value;
-        }
-        $conf['cartomobile'] = json_encode($cartomobileArr);
-        $conf['_key_'] = $_key_;
-
-        $table->updateRecord(json_decode(json_encode($conf)), "_key_");
-        //$this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror)) {
-            $response['success'] = true;
-            $response['message'] = "Column renamed";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
         }
         return $response;
     }
@@ -403,7 +423,7 @@ class Layer extends \app\models\Table
                     return $response;
                 }
             }
-            $sql = "ALTER TABLE {$tableName} RENAME TO {$newName}";
+            $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($tableName) . " RENAME TO {$newName}";
             $res = $this->prepare($sql);
             try {
                 $res->execute();
@@ -470,7 +490,7 @@ class Layer extends \app\models\Table
                     return $response;
                 }
             }
-            $query = "ALTER TABLE {$table} SET SCHEMA {$schema}";
+            $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA {$schema}";
             $res = $this->prepare($query);
             try {
                 $res->execute();
@@ -488,11 +508,15 @@ class Layer extends \app\models\Table
         return $response;
     }
 
-    public function delete($tables)
+    /**
+     * @param array $tables
+     * @return array
+     */
+    public function delete(array $tables)
     {
+        $response = [];
         $this->begin();
         foreach ($tables as $table) {
-            $bits = explode(".", $table);
             $check = $this->isTableOrView($table);
             if (!$check["success"]) {
                 $response['success'] = false;
@@ -501,7 +525,7 @@ class Layer extends \app\models\Table
                 return $response;
             }
             $type = $check["data"];
-            $query = "DROP {$type} \"{$bits[0]}\".\"{$bits[1]}\" CASCADE";
+            $query = "DROP {$type} " . $this->doubleQuoteQualifiedName($table) . " CASCADE";
 
             $res = $this->prepare($query);
 
@@ -555,16 +579,36 @@ class Layer extends \app\models\Table
      */
     public function updatePrivileges($data)
     {
-        $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $privilege = json_decode($this->getValueFromKey($data['_key_'], "privileges") ?: "{}");
-        $privilege->$data['subuser'] = $data['privileges'];
+        $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
+        $privilege->{$data->subuser} = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
-        $privileges['_key_'] = $data['_key_'];
+        $privileges['_key_'] = $data->_key_;
         $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
         if ($res['success'] == true) {
             $response['success'] = true;
             $response['message'] = "Privileges updates";
+        } else {
+            $response['success'] = false;
+            $response['message'] = $res['message'];
+            $response['code'] = 403;
+        }
+        return $response;
+    }
+
+    /**
+     * @param $_key_
+     * @return array
+     */
+    public function updateLastmodified($_key_)
+    {
+        $response = [];
+        $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
+        $table = new Table("settings.geometry_columns_join");
+        $res = $table->updateRecord(["data" => $object], "_key_");
+        if ($res['success'] == true) {
+            $response['success'] = true;
+            $response['message'] = "Lastmodified updates";
         } else {
             $response['success'] = false;
             $response['message'] = $res['message'];
@@ -651,7 +695,7 @@ class Layer extends \app\models\Table
             $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         } catch (\PDOException $e) {
             $response['success'] = false;
-            $response['message'] =  $e->getMessage();;
+            $response['message'] = $e->getMessage();;
             $response['code'] = 403;
             return $response;
         }
@@ -728,7 +772,7 @@ class Layer extends \app\models\Table
 
 
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf)), "_key_", true);
         if (!$res["success"]) {
             $response['success'] = false;
             $response['message'] = $res["message"];
@@ -1044,7 +1088,7 @@ class Layer extends \app\models\Table
         }
         $arr = array();
         while ($row = $this->fetchRow($res, "assoc")) {
-            if ($row["tags"]) {
+            if (isset($row["tags"]) && json_decode($row["tags"])) {
                 $arr[] = implode(",", json_decode($row["tags"]));
             }
         }

@@ -1,20 +1,66 @@
 <?php
+
 namespace app\inc;
 
 use \app\inc\Util;
+use phpDocumentor\Reflection\Types\Null_;
 
 class Route
 {
-    static function add($uri, $func = "", $silent = false)
+    /**
+     * @var array
+     */
+    static $params;
+
+    /**
+     * @param string $uri
+     * @param \Closure|null $func
+     * @param bool $silent
+     */
+    static public function add(string $uri, \Closure $func = null, bool $silent = false)
     {
+        $signatureMatch = false;
+        $e = [];
+        $r = [];
         $time_start = Util::microtime_float();
-        $requestUri = strtok($_SERVER["REQUEST_URI"], '?');
-        if (strpos($requestUri, $uri) !== false) {
-            if ($func) {
-                $func();
+        $uri = trim($uri, "/");
+        $requestUri = trim(strtok($_SERVER["REQUEST_URI"], '?'), "/");
+
+        $routeSignature = explode("/", $uri);
+        $requestSignature = explode("/", $requestUri);
+
+        /*     if (sizeof($requestSignature) > sizeof($routeSignature)) {
+                 $signatureMatch = false;
+             } else {*/
+
+
+        for ($i = 0; $i < sizeof($routeSignature); $i++) {
+
+            if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
+                $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
+                $signatureMatch = $requestSignature[$i] ? true : false;
+
+            } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
+                $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+            } else {
+                $e[] = $requestSignature[$i];
+                $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
             }
-            $uri = trim($uri, "/");
-            $e = explode("/", $uri);
+
+            if (!$signatureMatch) {
+                break;
+            }
+        }
+        //  }
+
+        if ($signatureMatch) {
+
+            self::$params = $r;
+
+            if ($func) {
+                $func($r);
+            }
+
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
             $uri = implode($e, "/");
             $n = sizeof($e);
@@ -24,15 +70,13 @@ class Route
             if (class_exists($class)) {
                 $controller = new $class();
                 if (method_exists($controller, $action)) {
-                    $response = $controller->$action();
+                    $response = $controller->$action($r);
                 } else {
                     $action = Input::getMethod() . "_index";
                     if (method_exists($controller, $action)) {
-                        $response = $controller->$action();
+                        $response = $controller->$action($r);
                     } else {
-                        header('HTTP/1.0 404 Not Found');
-                        echo "<h1>404 Not Found</h1>";
-                        exit();
+                        self::miss();
                     }
                 }
             }
@@ -56,4 +100,25 @@ class Route
             exit();
         }
     }
+
+    /**
+     *
+     */
+    static public function miss()
+    {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 Not Found</h1>";
+        exit();
+    }
+
+    /**
+     * @param string $parameter
+     * @return string|null
+     */
+    static public function getParam(string $parameter)
+    {
+        return self::$params[$parameter];
+    }
+
+
 }

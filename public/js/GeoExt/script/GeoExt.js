@@ -2178,6 +2178,7 @@ GeoExt.form.recordToField = function (i, q) {
         labelStyle: c ? "" : q.mandatoryFieldLabelStyle != null ? q.mandatoryFieldLabelStyle : "font-weight:bold;"
     };
     var a = GeoExt.form.recordToField.REGEXES;
+    console.log(l)
     if (l.match(a.text)) {
         var e = g.maxLength !== undefined ? parseFloat(g.maxLength) : undefined;
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
@@ -2298,6 +2299,8 @@ GeoExt.form.recordToField = function (i, q) {
                 }
             }
         }, h);
+    } else if (l.match(a.json)) {
+        n = Ext.apply({xtype: "textfield", fieldLabel: o, allowBlank: c, maxLength: e, minLength: f}, h);
     }
     return n
 }
@@ -2306,6 +2309,7 @@ GeoExt.form.recordToField.REGEXES = {
     text: new RegExp("^(text|string)$", "i"),
     number: new RegExp("^(number|float|decimal|double|int|long|integer|short)$", "i"),
     "boolean": new RegExp("^(boolean)$", "i"),
+    "json": new RegExp("^(json)$", "i"),
     date: new RegExp("^(date|dateTime)$", "i"),
     base64Binary: new RegExp("^(base64Binary)$", "i"),
     imageType: new RegExp("^(imageType)$", "i")

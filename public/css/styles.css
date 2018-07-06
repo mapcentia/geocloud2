@@ -1,3 +1,8 @@
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 .layout-table {
     background: #F2F3F7;
     font-family: arial, helvetica, sans-serif;
@@ -41,6 +46,8 @@
     height: 35px;
     vertical-align: middle !important;
     border-bottom: 1px solid #aaa;
+    opacity: 0.3;
+
 
 }
 
@@ -174,8 +181,8 @@ q:after, q:before {
 
 .x-grid3-check-col-on, .x-grid3-check-col {
     background-image: none !important;
-    text-align: center;
     line-height: 19px;
+    padding-left: 5px;
 
 }
 
@@ -217,7 +224,7 @@ q:after, q:before {
 .x-tool-collapse-west-over, .x-tool-collapse-east-over,
 .x-tool-expand-west-over, .x-tool-expand-east-over,
 .x-tool-expand-south-over, .x-tool-collapse-south-over {
-    color: #848482;
+    color: #ffffff;
 }
 
 .x-tool-collapse-west:before {
@@ -298,7 +305,7 @@ q:after, q:before {
     font-size: 7.5pt;
     padding: 10px;
     color: #fff;
-    background-color: #777
+    background-color: #404040
 }
 
 .ol-zoom, .olControlZoom {
@@ -357,6 +364,7 @@ q:after, q:before {
     top: 3px;
     right: 3px;
     display: none;
+    color: #ffffff;
 }
 
 #spinner img {
@@ -366,11 +374,17 @@ q:after, q:before {
 
 #spinner span {
     position: absolute;
-    top: 1px;
+    top: 2px;
     right: 20px;
     font-family: verdana, arial, sans-serif;
     font-size: 8pt;
     white-space: nowrap;
+}
+
+#spinner i {
+
+    font-size: 12pt;
+
 }
 
 .color-ramp {
@@ -405,12 +419,61 @@ q:after, q:before {
 }
 
 #service-dialog td {
-    color: #808080;
+    color: rgba(255,255,255,.9);
 }
 
 .plupload_scroll .plupload_filelist {
     height: 195px;
+    background-color: #000000;
 }
+
+.plupload_filelist li {
+    background: #000000;
+    border-bottom: none;
+    padding: 10px 8px 0;
+}
+.plupload_filelist_header, .plupload_filelist_footer {
+    border-top: none;
+    border-bottom: none;
+    background: none;
+    color: rgba(255,255,255,.8);
+}
+
+.plupload_button {
+    display: -moz-inline-box;
+    display: inline-block;
+    font: normal 12px 'Open Sans';
+    text-decoration: none;
+    color: rgba(255, 255, 255, .7);
+    border: none;
+    background-color: rgba(255, 255, 255, .2);
+    padding: 2px 8px 3px 8px;
+    margin-right: 4px;
+    outline: 0;
+    background-repeat: no-repeat;
+    -moz-border-radius: 0;
+    -khtml-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}
+
+.plupload_button:hover {
+    color: #ffffff;
+    border: none;
+    background-color: rgba(255, 255, 255, .3);
+}
+
+.plupload_disabled, a.plupload_disabled:hover {
+    background: rgba(255, 255, 255, .3);
+    color: rgba(255, 255, 255, .3);
+    border: none;
+}
+
+.plupload_header_content {
+    display: none;
+}
+
+
 #gx-map-panel{
     border-left: 1px solid  #B6B6B4/*Gray Cloud*/;;
     border-right: 1px solid  #B6B6B4/*Gray Cloud*/;;
@@ -418,10 +481,10 @@ q:after, q:before {
 
 .service-url {
     font-family: 'Open Sans';
-
+    background-color: black;
+    color: white;
+    border: none;
 }
-
-
 
 .bottom-info-bar-pipe {
     padding-left: 20px !important;
@@ -571,6 +634,16 @@ q:after, q:before {
     cursor: pointer;
     font-size: 12px;
 }
+
+#gc-log {
+    font: 1.2em 'Andale Mono', Consolas, 'Courier New';
+
+}
+#gc-log i {
+    color: #45D40C;
+    font-style: normal;
+}
+
 
 
 
