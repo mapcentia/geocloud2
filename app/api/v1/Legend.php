@@ -60,7 +60,7 @@ class Legend extends \app\inc\Controller
 
                 $numClass = sizeof($classes);
 
-                $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . ".map";
+                $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . "_wms.map";
 
                 $this->legendArr[$layerName]['title'] = $layer["wms_title"];
 
@@ -138,7 +138,7 @@ class Legend extends \app\inc\Controller
 
         if (\app\inc\Input::get("l")) {
             $layerNames = explode(";", \app\inc\Input::get("l"));
-            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . \app\inc\Input::getPath()->part(6) . ".map";
+            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . \app\inc\Input::getPath()->part(6) . "_wms.map";
             $map = ms_newMapobj($path . $mapFile);
             foreach ($layerNames as $layerName) {
                 $layer = $map->getLayerByName($layerName);

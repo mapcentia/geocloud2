@@ -38,11 +38,11 @@ class Mapcachefile extends \app\inc\Controller
 
         <mapcache>
 
-            <locker type="disk">
-                <directory><?php echo App::$param['path'] . "app/wms/mapcache/disk/"; ?></directory>
-                <timeout>10</timeout>
-                <retry>0.2</retry>
-            </locker>
+        <locker type="disk">
+            <directory><?php echo App::$param['path'] . "app/wms/mapcache/"; ?></directory>
+            <timeout>10</timeout>
+            <retry>0.2</retry>
+        </locker>
 
         <metadata>
             <title>my mapcache service</title>
