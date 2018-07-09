@@ -222,5 +222,4 @@ class Legend extends \app\inc\Controller
         }
         return $json;
     }
-
 }
