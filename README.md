@@ -26,7 +26,10 @@ The GC2 project aims to make it easy for organizations to use open source softwa
 
 ![Upload files](https://i.imgur.com/OjzY7ql.png "Manage the PostGIS database")
 
-## How to install GC2
+## How to use GC2?
+Online manual [here](http://mapcentia.screenstepslive.com/s/en)
+
+## How to install GC2?
 Take a look [here](https://github.com/mapcentia/geocloud2/wiki/Install-GC2)
 
 ## Who is MapCentia?
