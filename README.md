@@ -20,7 +20,8 @@ The GC2 project aims to make it easy for organizations to use open source softwa
 - Manage user privileges on layer level.
 - Manage PostGIS database.
 - Use PostGIS SQL language over HTTP and get the result as GeoJSON, CSV or Excel.
-- Get data from PostGIS to Elasticsearch by clicking an button!
+- Get data from PostGIS indexed in Elasticsearch by clicking an button!
+- Use Workflow to control the editing of a layer in a typical author-reviewer-publisher chain.
 
 ![GC2 Admin](https://i.imgur.com/9FoOzId.png "GC2 Admin")
 
