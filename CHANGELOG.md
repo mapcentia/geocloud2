@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Gridded WFS download uses the GMLAS ogr2ogr driver, so schemas are used.
 - Gridded WFS download now checks max feature count in single cell and count of duplicates.
 - Experimental upload of MS Access databases.
+- New APIs for writing out MapFiles, MapCache files and QGIS project files.
 - This change log.
 
 
@@ -37,18 +38,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The advanced layer panel is moved from right side to the left.
 - Some rearrangement of buttons.
 - Optimized queries for geometry_columns in models.
-- Reduced number of API call ind GC2 Admin making it faster.
+- Reduced number of API calls that GC2 Admin makes on startup.
 - HTML title changed to "GC2 Admin"
-- MapCache auto expire is now defaulted to 3600 secs., except if cache lock is enabled.
 - geocloud.js can now base64 encode the SQL string to avoid filtering in "threat filters". Use base64:true|false in request (true is default).
 - Support for Elasticsearch 6.x.
 - PG statement timeout in SQL API. Prevent long running statements.
-- QGIS project files are stored in database for backup and easy re-creation using a NEW API.
+- QGIS project files are stored in database for backup and easy re-creation using a new API.
 - Better detection of WFS connection string style in QGIS project files.
 - QGIS project files names are now randomized, so they don't get overwritten by accident.
 - Tags can now be added to existing ones when adding to multiple layers.
 - MapCache file is written only when necessary. Making databases with a lot of layers more snappy.
-- The MapFile is separated into two MapFiles: One for WMS and one WFS. This way all WFS request uses MapServer and only WMS request will use QGIS Server.
+- The MapFile is separated into two MapFiles: One for WMS and one WFS. This way all WFS request uses MapServer and only WMS requests will use QGIS Server.
 
 ### Deprecated
 - Version 1 of the Elasticsearch API
