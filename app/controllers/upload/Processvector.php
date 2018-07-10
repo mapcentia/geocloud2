@@ -1,4 +1,5 @@
 <?php
+
 namespace app\controllers\upload;
 
 use \app\conf\App;
@@ -90,7 +91,7 @@ class Processvector extends \app\inc\Controller
                             for ($i = 0; $i < sizeof($zipCheck1) - 1; $i++) {
                                 $safeNameArr[] = $zipCheck1[$i];
                             }
-                            $safeName =Model::toAscii(implode(".", $safeNameArr), array(), "_");
+                            $safeName = Model::toAscii(implode(".", $safeNameArr), array(), "_");
                             break;
                         }
                         $_REQUEST['file'] = $folder;
@@ -172,8 +173,7 @@ class Processvector extends \app\inc\Controller
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
-            "-nln " . Connection::$param["postgisschema"] . ".{$safeName} " .
-            "-nlt {$type}";
+            (($fileType == "mdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".{$safeName} -nlt {$type}");
 
         exec($cmd . ' 2>&1', $out, $err);
 
