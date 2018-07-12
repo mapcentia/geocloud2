@@ -192,7 +192,7 @@ class Setting extends Model
 
         $obj = $arr->userGroups;
         foreach ((array)$userGroup as $key => $value) {
-            $obj[$key] = $value;
+            $obj->$key = $value;
         }
         $arr->userGroups = $obj;
         if (\app\conf\App::$param["encryptSettings"]) {
