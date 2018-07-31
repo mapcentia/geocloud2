@@ -1075,8 +1075,7 @@ class Layer extends \app\models\Table
 
     public function getTags()
     {
-
-        $sql = "SELECT tags FROM settings.geometry_columns_view";
+        $sql = "SELECT tags FROM settings.geometry_columns_join WHERE tags NOTNULL AND tags <> 'null' AND tags <> '\"null\"'";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1099,6 +1098,29 @@ class Layer extends \app\models\Table
         }
         $response["data"] = $res;
         $response["success"] = true;
+        return $response;
+    }
+
+    function getGroups($field)
+    {
+        $arr = [];
+        $sql = "SELECT {$field} AS {$field} FROM settings.geometry_columns_join WHERE {$field} IS NOT NULL GROUP BY {$field}";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $arr[] = array("group" => $row[$field]);
+        }
+        $response['success'] = true;
+        $response['data'] = $arr;
+
         return $response;
     }
 }

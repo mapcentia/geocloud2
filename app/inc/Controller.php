@@ -187,7 +187,6 @@ class Controller
             }
             while ($row = $postgisObject->fetchRow($res, "assoc")) {
                 if ($subUser) {
-
                     $privileges = (array)json_decode($row["privileges"]);
                     if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
                         $response = array();
@@ -233,7 +232,7 @@ class Controller
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
-                            $response['message'] = "Not the right key! TEST";
+                            $response['message'] = "Not the right key!";
                             $response['code'] = 403;
                             return $response;
                         } else {
