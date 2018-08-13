@@ -155,7 +155,7 @@
             writeTag("close", null, "SRS", null, False, True);
 
             if ($row['f_geometry_column']) {
-                $sql2 = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $postgisschema . "', '" . $TableName . "', '" . $row['f_geometry_column'] . "')," . $row['srid'] . ")," . $latLongBoundingBoxSrs . ")) as geom) ";
+                $sql2 = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_Extent(" . $row['f_geometry_column'] . ")," . $row['srid'] . ")," . $latLongBoundingBoxSrs . ")) as geom FROM " . $postgisObject->doubleQuoteQualifiedName($postgisschema . "." . $TableName) . ") ";
                 $sql2.= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
                 $result2 = $postgisObject->prepare($sql2);
                 try {
