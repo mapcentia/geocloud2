@@ -127,7 +127,7 @@ class Processqgis extends \app\inc\Controller
 
                 case "wms":
                     if ($createWms) {
-                        $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii((string)$maplayer->layername, array(), "_");;
+                        $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii(is_numeric(mb_substr((string)$maplayer->layername, 0, 1, 'utf-8')) ? "_" . (string)$maplayer->layername : (string)$maplayer->layername, array(), "_");
                         $srid = (string)$maplayer->srs->spatialrefsys->srid;
                         $wmsSrids[] = $srid;
                         $wmsNames[] = $layerName;
