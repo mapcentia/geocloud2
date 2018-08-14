@@ -23,12 +23,13 @@ const FEATURECOUNT = "featureCount";
 const MAXCELLCOUNT = "maxCellCount";
 const DUPSCOUNT = "dupsCount";
 const URL = "Url";
-const GMLAS = "GMLAS";
+const GML = "Grid/GML";
+const GMLAS = "Grid/GMLAS";
 const FILE = "File";
 const ZIP = "Zip";
 const SLEEP = "sleep";
 
-print "Info: " . date(DATE_RFC822) . "\n\n";
+print "Info: Started at " . date(DATE_RFC822) . "\n\n";
 
 // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
 putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
@@ -152,12 +153,12 @@ function getCmdPaging()
 {
     global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures;
 
-    $report[DOWNLOADTYPE] = GMLAS;
+    $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS :  $report[DOWNLOADTYPE] = GML;
 
     print "Info: Start paged download...\n\n";
 
     $pass = true;
-    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax";
+    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax ORDER BY gid";
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
@@ -180,13 +181,13 @@ function getCmdPaging()
             "-overwrite " .
             "-preserve_fid " .
             "-dim 2 " .
-            "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " .
+            ($downloadSchema ? "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " : " ") .
             "-lco 'GEOMETRY_NAME=the_geom' " .
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
-            "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " .
+            ($downloadSchema ? "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " : "/var/www/geocloud2/public/logs/" . $gmlName . " ") .
             "-nln {$workingSchema}.{$cellTemp} " .
             "-nlt {$type}";
 
@@ -339,28 +340,46 @@ function getCmdPaging()
 
 
     if (!$id) {
-        $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='id'";
+        $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='gml_id'";
         $res = $table->prepare($sql);
         try {
             $res->execute();
             $row = $table->fetchRow($res);
             if ($row) {
-                $id = "id";
+                $id = "gml_id";
             } else {
-                $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='fid'";
+                $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='id'";
                 $res = $table->prepare($sql);
                 try {
                     $res->execute();
                     $row = $table->fetchRow($res);
                     if ($row) {
-                        $id = "fid";
+                        $id = "id";
                     } else {
-                        print "Error: Could not find id or fid field. Please set identifier name in URL\n\n";
-                        cleanUp();
-                        exir(1);
+                        $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='fid'";
+                        $res = $table->prepare($sql);
+                        try {
+                            $res->execute();
+                            $row = $table->fetchRow($res);
+                            if ($row) {
+                                $id = "fid";
+                            } else {
+                                print "Error: Could not find id or fid field. Please set identifier name in URL\n\n";
+                                cleanUp();
+                                exit(1);
+                            }
+                        } catch (\PDOException $e) {
+                            print "Error: ";
+                            print_r($e->getMessage());
+                            cleanUp();
+                            exit(1);
+                        }
                     }
                 } catch (\PDOException $e) {
-
+                    print "Error: ";
+                    print_r($e->getMessage());
+                    cleanUp();
+                    exit(1);
                 }
             }
         } catch (\PDOException $e) {
@@ -385,7 +404,7 @@ function getCmdPaging()
         $res->execute();
         $row = $table->fetchRow($res);
         if (sizeof($row["num"]) > 0) {
-            print "Info: Removed " . $row["num"] . " dups\n\n";
+            print "Info: Removed " . $row["num"] . " duplicates.\n\n";
             $report[DUPSCOUNT] = $row["num"];
         } else {
             print "Notice: Removed no dups\n\n";
@@ -465,7 +484,7 @@ function getCmdPaging()
     }
 
     // Drop ogr_pkid
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP ogr_pkid";
+    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP COLUMN IF EXISTS ogr_pkid";
     $res = $table->prepare($sql);
     try {
         $res->execute();
@@ -992,7 +1011,7 @@ function cleanUp($success = 0)
     global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
 
     // Unlink lock file
-    unlink($lockFile);
+    //unlink($lockFile);
 
     // Unlink temp file
     // ================

@@ -139,13 +139,26 @@ class Job extends \app\inc\Model
             }
         }
         $this->createRapportJob();
+        $this->createPurgeJob();
         return true;
     }
 
     private function createRapportJob()
     {
 
-        $cmd = "crontab -l | { cat; echo \"0 6 * * * php " . __DIR__ . "/../scripts/job_rapport.php \n\"; } | crontab - 2>&1";
+        $cmd = "crontab -l | { cat; echo \"0 6 * * * php " . __DIR__ . "/../scripts/job_report.php \n\"; } | crontab - 2>&1";
+        $out = exec($cmd);
+        if ($out) {
+            return $out;
+        }
+
+        return true;
+    }
+
+    private function createPurgeJob()
+    {
+
+        $cmd = "crontab -l | { cat; echo \"* * * * * php " . __DIR__ . "/../scripts/purge_locks.php > " . __DIR__ . "/../scripts/purge_locks.log \n\"; } | crontab - 2>&1";
         $out = exec($cmd);
         if ($out) {
             return $out;

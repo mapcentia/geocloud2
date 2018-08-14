@@ -135,7 +135,7 @@ class Tilecache extends \app\inc\Controller
                         return $response;
                     }
                     $response['success'] = true;
-                    $response['message'] = "Tile cache deleted";
+                    $response['message'] = "Tile cache deleted.";
                 } else {
                     $response['success'] = false;
                     $response['message'] = "No tile cache to delete.";
@@ -165,7 +165,7 @@ class Tilecache extends \app\inc\Controller
                     return $response;
                 }
                 $response['success'] = true;
-                $response['message'] = "Tile cache deleted";
+                $response['message'] = "Tile cache deleted.";
                 break;
 
             case "bdb";
@@ -181,7 +181,7 @@ class Tilecache extends \app\inc\Controller
                 dba_sync($dba);
 
                 $response['success'] = true;
-                $response['message'] = "Tile cache deleted";
+                $response['message'] = "Tile cache deleted.";
                 break;
         }
         return Response::json($response);
@@ -216,7 +216,7 @@ class Tilecache extends \app\inc\Controller
             return $response;
         }
         $response['success'] = true;
-        $response['message'] = "Tile cache deleted";
+        $response['message'] = "Tile cache deleted.";
         return $response;
     }
 

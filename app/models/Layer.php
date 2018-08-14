@@ -608,7 +608,7 @@ class Layer extends \app\models\Table
         $res = $table->updateRecord(["data" => $object], "_key_");
         if ($res['success'] == true) {
             $response['success'] = true;
-            $response['message'] = "Lastmodified updates";
+            $response['message'] = "Lastmodified updated.";
         } else {
             $response['success'] = false;
             $response['message'] = $res['message'];
