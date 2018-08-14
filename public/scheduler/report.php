@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Scheduler repport</title>
+    <title>Scheduler report</title>
 <style>
     .datagrid table {
         border-collapse: collapse;
