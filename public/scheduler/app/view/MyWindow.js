@@ -24,7 +24,7 @@ Ext.define('MyApp.view.MyWindow', {
         'Ext.button.Button'
     ],
 
-    height: 440,
+    height: 455,
     itemId: 'window',
     width: 600,
     title: 'Job',
@@ -361,6 +361,14 @@ Ext.define('MyApp.view.MyWindow', {
                             flex: 1,
                             fieldLabel: 'Post-run SQL',
                             name: 'postsql'
+                        },
+                        {
+                            xtype: 'checkboxfield',
+                            flex: 1,
+                            fieldLabel: 'Active',
+                            name: 'active',
+                            uncheckedValue: 'false',
+                            checked: true
                         },
                         {
                             xtype: 'button',

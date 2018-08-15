@@ -78,6 +78,9 @@ Ext.define('MyApp.model.MyModel', {
         },
         {
             name: 'postsql'
+        },
+        {
+            name: 'active'
         }
     ],
 

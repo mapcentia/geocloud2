@@ -89,6 +89,13 @@ Ext.define('MyApp.view.MyViewport', {
                                     menuDisabled: true,
                                     text: 'Id',
                                     format: '0'
+                                },{
+                                    xtype: 'booleancolumn',
+                                    width: 35,
+                                    dataIndex: 'active',
+                                    menuDisabled: true,
+                                    text: 'Active',
+                                    format: '0'
                                 },
                                 {
                                     xtype: 'gridcolumn',
@@ -167,11 +174,6 @@ Ext.define('MyApp.view.MyViewport', {
                                     xtype: 'gridcolumn',
                                     dataIndex: 'lasttimestamp',
                                     text: 'Last success '
-                                },
-                                {
-                                    xtype: 'gridcolumn',
-                                    dataIndex: 'extra',
-                                    text: 'Extra'
                                 },
                                 {
                                     xtype: 'gridcolumn',
