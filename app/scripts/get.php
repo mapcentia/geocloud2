@@ -64,7 +64,7 @@ if (!file_exists($lockFile)) {
 
 
 // Check if Paging should be used
-if (sizeof(explode("|", $url)) > 1) {
+if (sizeof(explode("|http", $url)) > 1) {
     $grid = explode("|", $url)[0];
     $url = explode("|", $url)[1];
     if (sizeof(explode(",", $grid)) > 1) {
@@ -303,7 +303,6 @@ function getCmdPaging()
     } catch (\PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
-        $table->rollback();
         cleanUp();
         exit(1);
     } finally {
