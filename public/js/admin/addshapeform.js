@@ -27,7 +27,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf", "csv", "mdb"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf", "csv", "mdb", "accdb"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5',
                 url: '/controllers/upload/vector',

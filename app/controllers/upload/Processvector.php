@@ -173,7 +173,7 @@ class Processvector extends \app\inc\Controller
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $_REQUEST['file'] . "' " .
-            (($fileType == "mdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".{$safeName} -nlt {$type}");
+            (($fileType == "mdb" || $fileType == "accdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".{$safeName} -nlt {$type}");
 
         exec($cmd . ' 2>&1', $out, $err);
 
