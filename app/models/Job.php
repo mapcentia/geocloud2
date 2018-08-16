@@ -160,7 +160,7 @@ class Job extends \app\inc\Model
     private function createPurgeJob()
     {
 
-        $cmd = "crontab -l | { cat; echo \"* * * * * php " . __DIR__ . "/../scripts/purge_locks.php > " . __DIR__ . "/../scripts/purge_locks.log \n\"; } | crontab - 2>&1";
+        $cmd = "crontab -l | { cat; echo \"* * * * * php " . __DIR__ . "/../scripts/purge_locks.php > " . __DIR__ . "/../../public/logs/purge_locks.log \n\"; } | crontab - 2>&1";
         $out = exec($cmd);
         if ($out) {
             return $out;
