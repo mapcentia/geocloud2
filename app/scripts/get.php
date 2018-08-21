@@ -1010,7 +1010,7 @@ function cleanUp($success = 0)
     global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
 
     // Unlink lock file
-    //unlink($lockFile);
+    unlink($lockFile);
 
     // Unlink temp file
     // ================
