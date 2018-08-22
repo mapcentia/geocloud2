@@ -156,6 +156,7 @@ class Processqgis extends \app\inc\Controller
         $path = App::$param['path'] . "/app/wms/qgsfiles/";
         $firstName = explode(".", $file)[0];
         $name = "parsed_" . Model::toAscii($firstName) . "_" . md5(microtime() . rand()) . ".qgs";
+        $nameWithoutHash = "parsed_" . Model::toAscii($firstName) . ".qgs";
 
         // Set QGIS wms source for PG layers
         // =================================
@@ -221,6 +222,20 @@ class Processqgis extends \app\inc\Controller
         $w = fwrite($fh, $qgs->asXML());
         if (!$w) {
             return ["success" => false, "message" => "Couldn't write file: ". $name, "code" => 401];
+        }
+        fclose($fh);
+
+        // Write the a copy of the qgs-file with out hash
+        // This will be overwritten if exists.
+        // ==============================================
+        @unlink($path . $nameWithoutHash);
+        $fh = fopen($path . $nameWithoutHash, 'w');
+        if (!$fh) {
+            return ["success" => false, "message" => "Couldn't open file for writing: ". $nameWithoutHash, "code" => 401];
+        }
+        $w = fwrite($fh, $qgs->asXML());
+        if (!$w) {
+            return ["success" => false, "message" => "Couldn't write file: ". $nameWithoutHash, "code" => 401];
         }
         fclose($fh);
 
