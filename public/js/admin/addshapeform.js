@@ -180,6 +180,10 @@ addShape.init = function () {
                             value: 'multipolygon'
                         },
                         {
+                            name: 'Geometry Collection',
+                            value: 'geometrycollection'
+                        },
+                        {
                             name: 'Geometry',
                             value: 'geometry'
                         }

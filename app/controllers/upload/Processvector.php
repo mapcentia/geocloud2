@@ -123,6 +123,9 @@ class Processvector extends \app\inc\Controller
             case "multipolygon":
                 $type = "multipolygon";
                 break;
+            case "geometrycollection":
+                $type = "geometrycollection";
+                break;
             case "geometry":
                 $type = "geometry";
                 break;
