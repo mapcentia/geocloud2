@@ -141,7 +141,7 @@ function getCmd()
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $dir . "/" . $tempFile . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
@@ -186,7 +186,7 @@ function getCmdPaging()
             "-lco 'FID=gid' " .
             "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
+            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
             ($downloadSchema ? "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " : "/var/www/geocloud2/public/logs/" . $gmlName . " ") .
             "-nln {$workingSchema}.{$cellTemp} " .
             "-nlt {$type}";
@@ -578,7 +578,7 @@ function getCmdFile()
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "/var/www/geocloud2/public/logs/" . $fileSetName . " " .
         "-nln {$workingSchema}.{$randTableName} " .
         "-nlt {$type}";
@@ -681,7 +681,7 @@ function getCmdZip()
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $outFileName . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
