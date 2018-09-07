@@ -3,6 +3,7 @@
 namespace app\models;
 
 use \app\conf\App;
+use \app\conf\Connection;
 use \app\inc\Model;
 
 class Qgis extends Model
@@ -56,7 +57,7 @@ class Qgis extends Model
                 $response['code'] = 401;
                 return $response;
             }
-            @$w = fwrite($fh, $row["xml"]);
+            @$w = fwrite($fh, $this->parse($row["xml"]));
             if (!$w) {
                 $response['success'] = false;
                 $response['message'] = "Couldn't write the file: " . $row["id"];
@@ -71,6 +72,13 @@ class Qgis extends Model
         $response['success'] = true;
         $response['data'] = $files;
         return $response;
+    }
+
+    private function parse($xml){
+        $xml = preg_replace("/port='?[0-9]*'?/", "port=" . Connection::$param["postgisport"] . "", $xml);
+        $xml = preg_replace("/user=\'?[^\s\\\\]*\'?/", "user=" . Connection::$param["postgisuser"] . "", $xml);
+        $xml = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . Connection::$param["postgispw"] . "", $xml);
+        return $xml;
     }
 
 
