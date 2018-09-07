@@ -56,7 +56,25 @@ class Legend extends \app\inc\Controller
 
                 $layerName = $layer["f_table_schema"] . "." . $layer["f_table_name"];
 
-                $classes = json_decode($layer["class"], true);
+
+                $sortedArr = [];
+
+                // Sort classes
+                $arr = $arr2 = json_decode($layer['class'], true);
+                for ($i = 0; $i < sizeof($arr); $i++) {
+                    $last = 1000;
+                    foreach ($arr2 as $key => $value) {
+                        if ($value->sortid < $last) {
+                            $temp = $value;
+                            $del = $key;
+                            $last = $value->sortid;
+                        }
+                    }
+                    array_push($sortedArr, $temp);
+                    unset($arr2[$del]);
+                    $temp = null;
+                }
+                $classes = $sortedArr;
 
                 $numClass = sizeof($classes);
 
