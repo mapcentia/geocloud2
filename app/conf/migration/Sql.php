@@ -75,13 +75,13 @@ class Sql
                                 NOT (EXISTS ( SELECT 1
                                   FROM geometry_columns
                                       WHERE
-                                            t.matviewname::text = geometry_columns.f_table_name::text AND t.table_schema::text = geometry_columns.f_table_schema::text
+                                            t.matviewname::text = geometry_columns.f_table_name::text AND t.matviewname::text = geometry_columns.f_table_schema::text
                                       )) AND
 
                                 NOT (EXISTS ( SELECT 1
                                   FROM raster_columns
                                       WHERE
-                                            t.matviewname::text = raster_columns.r_table_name::text AND t.table_schema::text = raster_columns.r_table_schema::text
+                                            t.matviewname::text = raster_columns.r_table_name::text AND t.matviewname::text = raster_columns.r_table_schema::text
                                       ))
 
                               AND
