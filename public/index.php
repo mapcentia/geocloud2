@@ -127,6 +127,10 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb(Route::getParam("user"));
     });
 
+    Route::add("api/v2/sqlwrapper/{user}", function () {
+        Database::setDb(Route::getParam("user"));
+    });
+
     Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
