@@ -1,4 +1,5 @@
 <?php
+
 use \app\conf\App;
 use \app\inc\Log;
 use \app\inc\Util;
@@ -248,7 +249,8 @@ if (!(empty($bbox[0]))) {
 
     foreach ($tables as $table) {
         if (!$bbox[4]) {
-            $bbox[4] = $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid");
+            //$bbox[4] = $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid");
+            $bbox[4] = $srs;
         }
         $axisOrder = gmlConverter::getAxisOrderFromEpsg($bbox[4]);
         if ($axisOrder == "longitude") {
