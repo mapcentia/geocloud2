@@ -716,7 +716,7 @@ function poll()
 {
     global $getFunction, $lockDir, $report;
     $sleep = 10;
-    $maxJobs = 10;
+    $maxJobs = 20;
     $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
     if (iterator_count($fi) > $maxJobs) {
         print "info: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...\n\n";
