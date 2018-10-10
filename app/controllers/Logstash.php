@@ -1,4 +1,11 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
 namespace app\controllers;
 
 use \app\inc\Input;
@@ -12,6 +19,8 @@ class Logstash extends \app\inc\Controller
 
     function __construct()
     {
+        parent::__construct();
+
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['logstashHost'] ?: "http://127.0.0.1:1337";
     }

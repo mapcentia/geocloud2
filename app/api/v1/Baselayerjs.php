@@ -1,4 +1,18 @@
 <?php
+/**
+ * Writes out JavaScript object with config params, which a web client can use.
+ *
+ * Long description for file (if any)...
+ *  
+ * @category   API
+ * @package    app\api\v1
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ * @since      File available since Release 2013.1
+ *  
+ */
+
 namespace app\api\v1;
 
 /**
@@ -12,6 +26,8 @@ class Baselayerjs extends \app\inc\Controller
      */
     function __construct()
     {
+        parent::__construct();
+
         header("content-type: application/javascript");
         echo "window.gc2Options = {\n";
         echo "leafletDraw: " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . ",\n";

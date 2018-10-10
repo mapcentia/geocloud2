@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *  
+ */
 
 use \app\conf\App;
 use \app\inc\Log;
@@ -6,8 +12,6 @@ use \app\inc\Util;
 use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
-
-//die($_GET["start"]);
 
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);

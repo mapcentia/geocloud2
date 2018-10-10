@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 namespace app\api\v2;
 
@@ -111,6 +117,7 @@ class Sqlwrapper extends \app\inc\Controller
         $result = json_decode($res->getBody(), true);
 
         if ($rasterData) {
+            //$result["features"][0]["properties"] = [];
             $result["features"][0]["properties"]["value_0"] = $rasterData["value_0"];
             $result["features"][0]["properties"]["x"] = $rasterData["x"];
             $result["features"][0]["properties"]["y"] = $rasterData["y"];

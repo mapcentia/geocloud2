@@ -1,4 +1,11 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *  
+ */
+
 $atts["targetNamespace"] = $gmlNameSpaceUri;
 $atts["xmlns:xsd"] = "http://www.w3.org/2001/XMLSchema";
 $atts["xmlns:gml"] = "http://www.opengis.net/gml";

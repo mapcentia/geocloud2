@@ -1,16 +1,13 @@
 <?php
-
-
 /**
- * Pomm\Converter\PgHStore - HStore converter
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
- * @package Pomm
- * @version $id$
- * @copyright 2011 Grégoire HUBERT
- * @author Grégoire HUBERT <hubert.greg@gmail.com>
- * @license X11 {@link http://opensource.org/licenses/mit-license.php}
  */
+
 namespace app\inc;
+
 class PgHStore
 {
     /**

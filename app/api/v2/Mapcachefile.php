@@ -1,8 +1,19 @@
 <?php
-namespace app\api\v2;
+/**
+ * Long description for file
+ *
+ * Long description for file (if any)...
+ *  
+ * @category   API
+ * @package    app\api\v2
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ * @since      File available since Release 2013.1
+ *  
+ */
 
-use \app\inc\Route;
-use \app\conf\Connection;
+namespace app\api\v2;
 
 /**
  * Class Files
@@ -10,7 +21,11 @@ use \app\conf\Connection;
  */
 class Mapcachefile extends \app\inc\Controller
 {
+    /**
+     * @var \app\controllers\Mapcachefile 
+     */
     private $mapCacheFile;
+    
     /**
      * Mapcachefile constructor.
      */

@@ -1,14 +1,35 @@
 <?php
+/**
+ * Long description for file
+ *
+ * Long description for file (if any)...
+ *
+ * @category   API
+ * @package    app\controllers
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ * @since      File available since Release 2013.1
+ *
+ */
+
 namespace app\controllers\upload;
 
 use \app\conf\App;
 use \app\inc\Response;
 use \app\conf\Connection;
 use \app\inc\Session;
-use \app\models\Table;
 
 class Processraster extends \app\inc\Controller
 {
+    /**
+     * Processraster constructor.
+     */
+    function __construct()
+    {
+        parent::__construct();
+    }
+
     public function get_index()
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__raster";

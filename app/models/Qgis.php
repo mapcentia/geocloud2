@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *  
+ */
 
 namespace app\models;
 
@@ -66,7 +72,6 @@ class Qgis extends Model
             }
             fclose($fh);
             $files[] = $row["id"];
-
         }
 
         $response['success'] = true;
@@ -80,6 +85,4 @@ class Qgis extends Model
         $xml = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . Connection::$param["postgispw"] . "", $xml);
         return $xml;
     }
-
-
 }

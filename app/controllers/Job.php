@@ -1,4 +1,11 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
 namespace app\controllers;
 
 use \app\inc\Input;
@@ -9,6 +16,8 @@ class Job extends \app\inc\Controller
 
     function __construct()
     {
+        parent::__construct();
+
         // Prevent unauthorized use of gc2scheduler
         if (!\app\conf\App::$param["gc2scheduler"][$_SESSION["screen_name"]]){
             $code = "401";

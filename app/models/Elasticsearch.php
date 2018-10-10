@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *  
+ */
 
 namespace app\models;
 
@@ -20,6 +26,8 @@ class Elasticsearch extends Model
      */
     function __construct()
     {
+        parent::__construct();
+
         $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
     }
 

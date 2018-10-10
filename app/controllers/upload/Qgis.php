@@ -1,4 +1,18 @@
 <?php
+/**
+ * Long description for file
+ *
+ * Long description for file (if any)...
+ *
+ * @category   API
+ * @package    app\controllers
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ * @since      File available since Release 2013.1
+ *
+ */
+
 namespace app\controllers\upload;
 
 use \app\conf\Connection;
@@ -9,7 +23,18 @@ class Qgis extends \app\inc\Controller
     protected $file;
     public $response;
 
-    function post_index()
+    /**
+     * Qgis constructor.
+     */
+    function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     *
+     */
+    public function post_index()
     {
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"];

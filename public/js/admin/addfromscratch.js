@@ -1,3 +1,10 @@
+/*
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *  
+ */
+
 Ext.namespace('addScratch');
 addScratch.init = function () {
     Ext.QuickTips.init();

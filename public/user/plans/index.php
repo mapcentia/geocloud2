@@ -1,4 +1,11 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
 include '../header.php';
 include '../html_header.php';
 ($_SESSION['auth']) ? $signupBtn = "<a href='#myModal' role='button' class='btn btn-large btn-upgrade disabled'>Your plan</a>" : $signupBtn = "<a href='/user/signup' role='button' class='btn btn-large btn-warning btn-upgrade'>Get free plan</a>";

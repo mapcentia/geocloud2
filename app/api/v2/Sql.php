@@ -1,12 +1,24 @@
 <?php
+/**
+ * Long description for file
+ *
+ * Long description for file (if any)...
+ *
+ * @category   API
+ * @package    app\api\v2
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ * @since      File available since Release 2013.1
+ *
+ */
 
 namespace app\api\v2;
 
 use \app\inc\Input;
-use app\inc\Model;
+use \app\inc\Model;
 
 include_once 'Cache_Lite/Lite.php';
-
 
 /**
  * Class Sql
@@ -215,29 +227,31 @@ class Sql extends \app\inc\Controller
      */
     private function parseSelect(array $fromArr = null)
     {
-        foreach ($fromArr as $table) {
-            if ($table["expr_type"] == "subquery") {
+        if (is_array($fromArr)) {
+            foreach ($fromArr as $table) {
+                if ($table["expr_type"] == "subquery") {
 
-                // Recursive call
-                $this->parseSelect($table["sub_tree"]["FROM"]);
+                    // Recursive call
+                    $this->parseSelect($table["sub_tree"]["FROM"]);
+                }
+                $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
+                if (
+                    explode(".", $table["no_quotes"])[0] == "settings" ||
+                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
+                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
+                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
+                    $table["no_quotes"] == "geometry_columns"
+                ) {
+                    $this->response['success'] = false;
+                    $this->response['message'] = "Can't complete the query";
+                    $this->response['code'] = 403;
+                    die(\app\inc\Response::toJson($this->response));
+                }
+                if ($table["no_quotes"]) {
+                    $this->usedRelations[] = $table["no_quotes"];
+                }
+                $this->usedRelations = array_unique($this->usedRelations);
             }
-            $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
-            if (
-                explode(".", $table["no_quotes"])[0] == "settings" ||
-                explode(".", $table["no_quotes"])[0] == "information_schema" ||
-                explode(".", $table["no_quotes"])[0] == "sqlapi" ||
-                explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                $table["no_quotes"] == "geometry_columns"
-            ) {
-                $this->response['success'] = false;
-                $this->response['message'] = "Can't complete the query";
-                $this->response['code'] = 403;
-                die(\app\inc\Response::toJson($this->response));
-            }
-            if ($table["no_quotes"]) {
-                $this->usedRelations[] = $table["no_quotes"];
-            }
-            $this->usedRelations = array_unique($this->usedRelations);
         }
     }
 

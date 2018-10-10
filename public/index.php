@@ -1,5 +1,12 @@
 <?php
-ini_set("display_errors", "Off");
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
+ini_set("display_errors", "off");
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', 0);
 error_reporting(3);
@@ -27,11 +34,11 @@ App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host']
 $http_origin = $_SERVER['HTTP_ORIGIN'];
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
     header("Access-Control-Allow-Credentials: true");
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
     header("Access-Control-Allow-Credentials: true");
 }
 
