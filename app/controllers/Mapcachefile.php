@@ -45,9 +45,8 @@ class Mapcachefile extends \app\inc\Controller
         <mapcache>
 
         <locker type="disk">
-            <directory><?php echo App::$param['path'] . "app/wms/mapcache/"; ?></directory>
-            <timeout>10</timeout>
-            <retry>0.2</retry>
+            <timeout>60</timeout>
+            <retry>0.1</retry>
         </locker>
 
         <metadata>
