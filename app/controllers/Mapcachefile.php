@@ -33,6 +33,7 @@ class Mapcachefile extends \app\inc\Controller
         return $md5;
     }
 
+
     /**
      * @return array
      */
