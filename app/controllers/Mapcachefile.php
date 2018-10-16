@@ -45,7 +45,7 @@ class Mapcachefile extends \app\inc\Controller
         <mapcache>
 
         <locker type="disk">
-            <timeout>60</timeout>
+            <timeout>2</timeout>
             <retry>0.1</retry>
         </locker>
 
@@ -137,7 +137,7 @@ class Mapcachefile extends \app\inc\Controller
                 if (!in_array($table, $arr)) {
                     array_push($arr, $table);
                     $def = json_decode($row['def']);
-                    $meta_size = $def->meta_size ?: "3";
+                    $meta_size = $def->meta_size ?: null;
                     $meta_buffer = $def->meta_buffer ?: 0;
                     $expire = $def->ttl < 30 ? 30 : $def->ttl;
                     // It seems that auto expire makes the server hang!
@@ -232,7 +232,7 @@ class Mapcachefile extends \app\inc\Controller
                         }
                         ?>
                         <format><?php echo $format ?></format>
-                        <metatile><?php echo $meta_size . " " . $meta_size ?></metatile>
+                        <?php if ($meta_size) echo "<metatile>" . $meta_size . " " . $meta_size . "</metatile>\n" ?>
                         <metabuffer><?php echo $meta_buffer ?></metabuffer>
                         <expires><?php echo $expire ?></expires>
                         <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
