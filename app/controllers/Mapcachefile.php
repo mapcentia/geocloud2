@@ -33,7 +33,6 @@ class Mapcachefile extends \app\inc\Controller
         return $md5;
     }
 
-
     /**
      * @return array
      */
@@ -48,7 +47,7 @@ class Mapcachefile extends \app\inc\Controller
         <locker type="disk">
             <directory>/tmp</directory>
             <timeout>30</timeout>
-            <retry>0.1</retry>
+            <retry>0.4</retry>
         </locker>
 
         <metadata>
