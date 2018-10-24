@@ -126,7 +126,10 @@ class Processqgis extends \app\inc\Controller
                     $arrG[] = array(1 => array($f_geometry_column));
                     $arrN[] = $fullTable;
 
-                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql=";
+                    // Check if layer is versioned and if so, add a WHERE clause.
+                    $where = $this->layer->doesColumnExist("{$schema}.{$table}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+
+                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql={$where}";
 
                     $maplayer->srs->spatialrefsys = "";
                     $maplayer->srs->spatialrefsys->proj4 = $proj4text;
@@ -231,11 +234,11 @@ class Processqgis extends \app\inc\Controller
         @unlink($path . $name);
         $fh = fopen($path . $name, 'w');
         if (!$fh) {
-            return ["success" => false, "message" => "Couldn't open file for writing: ". $name, "code" => 401];
+            return ["success" => false, "message" => "Couldn't open file for writing: " . $name, "code" => 401];
         }
         $w = fwrite($fh, $qgs->asXML());
         if (!$w) {
-            return ["success" => false, "message" => "Couldn't write file: ". $name, "code" => 401];
+            return ["success" => false, "message" => "Couldn't write file: " . $name, "code" => 401];
         }
         fclose($fh);
 
@@ -245,11 +248,11 @@ class Processqgis extends \app\inc\Controller
         @unlink($path . $nameWithoutHash);
         $fh = fopen($path . $nameWithoutHash, 'w');
         if (!$fh) {
-            return ["success" => false, "message" => "Couldn't open file for writing: ". $nameWithoutHash, "code" => 401];
+            return ["success" => false, "message" => "Couldn't open file for writing: " . $nameWithoutHash, "code" => 401];
         }
         $w = fwrite($fh, $qgs->asXML());
         if (!$w) {
-            return ["success" => false, "message" => "Couldn't write file: ". $nameWithoutHash, "code" => 401];
+            return ["success" => false, "message" => "Couldn't write file: " . $nameWithoutHash, "code" => 401];
         }
         fclose($fh);
 
