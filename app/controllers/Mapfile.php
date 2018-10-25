@@ -595,6 +595,13 @@ class Mapfile extends \app\inc\Controller
                         echo "\n";
                         ?>
 
+                        #OFFSET
+                        <?php
+                            echo "OFFSET " . (isset($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
+                                (isset($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                        ?>
+
+
                         END # style
 
                         STYLE
@@ -644,6 +651,12 @@ class Mapfile extends \app\inc\Controller
                             echo "GEOMTRANSFORM '{$class['overlaygeomtransform']}'";
                         }
                         echo "\n";
+                        ?>
+
+                        #OFFSET
+                        <?php
+                        echo "OFFSET " . (isset($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
+                            (isset($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         END # style
@@ -711,7 +724,10 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
+
                             OFFSET <?php echo ($class['label_offsetx'] ?: "0") . " " . ($class['label_offsety'] ?: "0") . "\n" ?>
+
+
                             STYLE
                             <?php if ($class['label_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
@@ -788,7 +804,9 @@ class Mapfile extends \app\inc\Controller
                             echo "\n";
                             ?>
                             WRAP "\n"
+
                             OFFSET <?php echo ($class['label2_offsetx'] ?: "0") . " " . ($class['label2_offsety'] ?: "0") . "\n" ?>
+
                             STYLE
                             <?php if ($class['label2_backgroundcolor']) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");

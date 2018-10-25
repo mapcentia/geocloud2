@@ -342,6 +342,12 @@ wmsClass.init = function (id) {
             {
                 name: "maxsize"
             },
+            {
+                name: "style_offsetx"
+            },
+            {
+                name: "style_offsety"
+            },
             // Label start
             {
                 name: 'label',
@@ -524,6 +530,12 @@ wmsClass.init = function (id) {
             {
                 name: "overlaymaxsize"
             },
+            {
+                name: "overlaystyle_offsetx"
+            },
+            {
+                name: "overlaystyle_offsety"
+            }
         ],
         listeners: {
             load: {
@@ -569,7 +581,9 @@ wmsClass.init = function (id) {
                             'angle',
                             'style_opacity',
                             'geomtransform',
-                            'maxsize'
+                            'maxsize',
+                            'style_offsetx',
+                            'style_offsety'
                         ];
                         Ext.each(arr2, function (i, v) {
                             obj2[i] = store.getAt(0).data[i];
@@ -590,7 +604,9 @@ wmsClass.init = function (id) {
                             'overlayangle',
                             'overlaystyle_opacity',
                             'overlaygeomtransform',
-                            'overlaymaxsize'
+                            'overlaymaxsize',
+                            'overlaystyle_offsetx',
+                            'overlaystyle_offsety'
                         ];
                         Ext.each(arr3, function (i, v) {
                             obj3[i] = store.getAt(0).data[i];
@@ -735,7 +751,9 @@ wmsClass.init = function (id) {
             linecap: 'Style: line cap',
             pattern: 'Style: pattern',
             geomtransform: 'Style: geomtransform',
-            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true)
+            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
+            style_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
+            style_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true)
         },
         customRenderers: {
             color: cc,
@@ -886,6 +904,16 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
+            }), {}),
+            'style_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'style_offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
             }), {})
         },
         viewConfig: {
@@ -909,7 +937,9 @@ wmsClass.init = function (id) {
             overlaylinecap: 'Style: line cap',
             overlaypattern: 'Style: pattern',
             overlaygeomtransform: 'Style: geomtransform',
-            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true)
+            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
+            overlaystyle_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
+            overlaystyle_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true)
 
         },
         customRenderers: {
@@ -1098,6 +1128,16 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
+            }), {}),
+            'overlaystyle_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'overlaystyle_offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
             }), {})
         },
         viewConfig: {
