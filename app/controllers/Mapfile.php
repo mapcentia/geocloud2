@@ -597,8 +597,14 @@ class Mapfile extends \app\inc\Controller
 
                         #OFFSET
                         <?php
-                            echo "OFFSET " . (isset($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
-                                (isset($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                            echo "OFFSET " . ($class['style_offsetx'] ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
+                                ($class['style_offsety'] ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                        ?>
+
+                        #POLAROFFSET
+                        <?php
+                        echo "POLAROFFSET " . ($class['style_polaroffsetr'] ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
+                            ($class['style_polaroffsetd'] ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
 
@@ -655,8 +661,14 @@ class Mapfile extends \app\inc\Controller
 
                         #OFFSET
                         <?php
-                        echo "OFFSET " . (isset($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
-                            (isset($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                        echo "OFFSET " . ($class['overlaystyle_offsetx'] ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
+                            ($class['overlaystyle_offsety'] ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                        ?>
+
+                        #POLAROFFSET
+                        <?php
+                        echo "POLAROFFSET " . ($class['overlaystyle_polaroffsetr'] ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
+                            ($class['overlaystyle_polaroffsetd'] ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
                         END # style

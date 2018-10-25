@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
-- MapServer Style Offset added with combo field (takes numeric attribute or number).
+- MapServer Style Offset and Polar Offset added with combo field (takes numeric attribute or number).
 - Versioned layers are filtered in QGIS project file, so only the current version is rendered.
 - Fix of MAT VIEW meta tables, so layers don't show as both geometry and non-geometry MAT VIEW.
 - Longer retry wait for meta tile in MapCache to counter strange bug.

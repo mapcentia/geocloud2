@@ -348,6 +348,12 @@ wmsClass.init = function (id) {
             {
                 name: "style_offsety"
             },
+            {
+                name: "style_polaroffsetr"
+            },
+            {
+                name: "style_polaroffsetd"
+            },
             // Label start
             {
                 name: 'label',
@@ -535,6 +541,13 @@ wmsClass.init = function (id) {
             },
             {
                 name: "overlaystyle_offsety"
+            },
+            ,
+            {
+                name: "overlaystyle_polaroffsetr"
+            },
+            {
+                name: "overlaystyle_polaroffsetd"
             }
         ],
         listeners: {
@@ -583,7 +596,9 @@ wmsClass.init = function (id) {
                             'geomtransform',
                             'maxsize',
                             'style_offsetx',
-                            'style_offsety'
+                            'style_offsety',
+                            'style_polaroffsetr',
+                            'style_polaroffsetd'
                         ];
                         Ext.each(arr2, function (i, v) {
                             obj2[i] = store.getAt(0).data[i];
@@ -606,7 +621,9 @@ wmsClass.init = function (id) {
                             'overlaygeomtransform',
                             'overlaymaxsize',
                             'overlaystyle_offsetx',
-                            'overlaystyle_offsety'
+                            'overlaystyle_offsety',
+                            'overlaystyle_polaroffsetr',
+                            'overlaystyle_polaroffsetd'
                         ];
                         Ext.each(arr3, function (i, v) {
                             obj3[i] = store.getAt(0).data[i];
@@ -753,7 +770,9 @@ wmsClass.init = function (id) {
             geomtransform: 'Style: geomtransform',
             maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
             style_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            style_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true)
+            style_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
+            style_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
+            style_polaroffsetd: 'Style: polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
         },
         customRenderers: {
             color: cc,
@@ -914,6 +933,16 @@ wmsClass.init = function (id) {
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
+            }), {}),
+            'style_polaroffsetr': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'style_polaroffsetd': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
             }), {})
         },
         viewConfig: {
@@ -939,8 +968,9 @@ wmsClass.init = function (id) {
             overlaygeomtransform: 'Style: geomtransform',
             overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
             overlaystyle_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            overlaystyle_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true)
-
+            overlaystyle_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
+            overlaystyle_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
+            overlaystyle_polaroffsetd: 'Style: polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
         },
         customRenderers: {
             overlaycolor: cc,
@@ -1135,6 +1165,16 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaystyle_offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'overlaystyle_polaroffsetr': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
+            'overlaystyle_polaroffsetd': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
