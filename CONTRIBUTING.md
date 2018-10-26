@@ -10,7 +10,7 @@ Before submitting a bug, please do the following:
 
     - Make sure you’re on the latest version (Master branch). If you’re not on the most recent version, your problem may have been solved already! Upgrading is always the best first step.
 
-    - [Search the issue tracker](https://github.com/mapcentia/vidi/issues) to make sure it’s not a known issue.
+    - [Search the issue tracker](https://github.com/mapcentia/geocloud2/issues) to make sure it’s not a known issue.
 
 ### What to put in your bug report
 Make sure your report gets the attention it deserves: bug reports with missing information may be ignored or punted back to you, delaying a fix. The below constitutes a bare minimum; more info is almost always better:
@@ -23,7 +23,7 @@ Make sure your report gets the attention it deserves: bug reports with missing i
 
 ## Contributing changes
 ### Licensing of contributed material
-Your contribution will be under our [license](https://github.com/mapcentia/vidi/blob/master/LICENSE) as per GitHub's [terms of service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
+Your contribution will be under our [license](https://github.com/mapcentia/geocloud2/blob/master/LICENSE) as per GitHub's [terms of service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
 
 ## Version control branching
 - Always make a new branch for your work, no matter how small. This makes it easy for others to take just that one set of changes from your repository, in case you have multiple unrelated changes floating around.
