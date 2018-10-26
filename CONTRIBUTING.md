@@ -1,4 +1,4 @@
-# Contributing to MapCentia Open Source projects
+# Contributing to MapCentia GC2
 
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
