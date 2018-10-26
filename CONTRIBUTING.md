@@ -1,16 +1,61 @@
 # Contributing to MapCentia Open Source projects
 
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change. 
-
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
-## Pull Request Process
+## Submitting bugs
+### Due diligence
+Before submitting a bug, please do the following:
 
-1. The pull request should be commented, so its clear what it does.
-2. Update the CHANGELOG.md with details of the changes. 
-3. Increase the version numbers in CHANGELOG.md to the new version that this
-   Pull Request would represent. The versioning scheme we use is [CalVer](https://calver.org/) using YYYY.MINOR.MICRO.MODIFIER.
+- Perform basic troubleshooting steps:
+
+    - Make sure you’re on the latest version (Master branch). If you’re not on the most recent version, your problem may have been solved already! Upgrading is always the best first step.
+
+    - [Search the issue tracker](https://github.com/mapcentia/vidi/issues) to make sure it’s not a known issue.
+
+### What to put in your bug report
+Make sure your report gets the attention it deserves: bug reports with missing information may be ignored or punted back to you, delaying a fix. The below constitutes a bare minimum; more info is almost always better:
+
+- Are you using the official Docker images? If not, which versions of PHP7, PostgreSQL, PostGIS, MapServer etc. and OS (Linux, Windows, MacOS) are you using. if applicable, which browser are you using? (Chrome 70, Firefox 62, Edge 17, etc.)
+
+- How can the developers recreate the bug on their end? If possible, include a copy of your data (e.g. Shape file), link to online server with the bug, and the full error output from logs (if applicable.)
+
+    - A common tactic is to pare down your setup until a simple (but still bug-causing) “base case” remains. Not only can this help you identify problems which aren’t real bugs, but it means the developer can get to fixing the bug faster.
+
+## Contributing changes
+### Licensing of contributed material
+Your contribution will be under our [license](https://github.com/mapcentia/vidi/blob/master/LICENSE) as per GitHub's [terms of service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
+
+## Version control branching
+- Always make a new branch for your work, no matter how small. This makes it easy for others to take just that one set of changes from your repository, in case you have multiple unrelated changes floating around.
+
+    - A corollary: don’t submit unrelated changes in the same branch/pull request! The maintainer shouldn’t have to reject your awesome bugfix because the feature you put in with it needs more review.
+
+- Base your new branch off of the appropriate branch on the main repository:
+
+    - Bug fixes should be based on the branch named after the oldest supported release line the bug affects.
+
+        - E.g. if a feature was introduced in 2018.1, the latest release line is 2018.1.4, and a bug is found in that feature - make your branch based on 2018.1. The maintainer will then forward-port it to 2018.1.4 and master.
+
+        - Bug fixes requiring large changes to the code or which have a chance of being otherwise disruptive, may need to base off of master instead. This is a judgement call – ask the devs!
+
+    - New features should branch off of the ‘master’ branch.
+
+        - Note that depending on how long it takes for the dev team to merge your patch, the copy of master you worked off of may get out of date! If you find yourself ‘bumping’ a pull request that’s been sidelined for a while, make sure you rebase or merge to latest master to ensure a speedier resolution.
+
+## Documentation isn’t optional
+Pull requests without adequate documentation will be rejected. By "documentation" we mean:
+
+- The pull request should be commented, so its clear what it does.
+
+- Update the CHANGELOG.md with details of the changes. 
+
+- Increase the version numbers in CHANGELOG.md to the new version that this Pull Request would represent. The versioning scheme we use is [CalVer](https://calver.org/) using YYYY.MINOR.MICRO.MODIFIER.
+   
+## Code formatting
+Follow the style you see used in the primary repository! Consistency with the rest of the project always trumps other considerations. It doesn’t matter if you have your own style or if the rest of the code breaks with the greater community - just follow along.
+
+## Suggesting Enhancements
+We welcome suggestions for enhancements, but reserve the right to reject them if they do not follow future plans for GC2.
 
 ## Code of Conduct
 
