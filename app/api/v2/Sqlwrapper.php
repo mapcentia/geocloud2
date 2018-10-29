@@ -117,7 +117,15 @@ class Sqlwrapper extends \app\inc\Controller
         $result = json_decode($res->getBody(), true);
 
         if ($rasterData) {
+            if (!isset($result["features"][0]["geometry"])) {
+                $result["features"][0]["geometry"] = [
+
+                    "type" => "Point",
+                    "coordinates" => [(float)$rasterData["x"], (float)$rasterData["y"]]
+                ];
+            }
             //$result["features"][0]["properties"] = [];
+            $result["features"][0]["type"] = "Feature";
             $result["features"][0]["properties"]["value_0"] = $rasterData["value_0"];
             $result["features"][0]["properties"]["x"] = $rasterData["x"];
             $result["features"][0]["properties"]["y"] = $rasterData["y"];
