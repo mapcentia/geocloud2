@@ -369,7 +369,7 @@ foreach ($groupArr as $k => $v) {
         <full_wms>assemble</full_wms>
         <resample_mode>bilinear</resample_mode>
         <format allow_client_override="true">PNG</format>
-        <maxsize>4096</maxsize>
+        <maxsize>16384</maxsize>
     </service>
 
     <service type="wmts" enabled="true"/>
