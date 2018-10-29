@@ -4274,6 +4274,7 @@ $(document).ready(function () {
                 metaDataRealKeys[response.data[i]._key_] = response.data[i];// Holds the layer extents
             }
             var arr = array_unique(groups);
+
             for (var u = 0; u < response.data.length; ++u) {
                 if (response.data[u].baselayer) {
                     isBaseLayer = true;
@@ -4291,12 +4292,10 @@ $(document).ready(function () {
                 if (response.data[u].type) {
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
                         singleTile: false,
-                        //singleTile: true,
                         //isBaseLayer: isBaseLayer,
                         visibility: false,
                         wrapDateLine: false,
                         tileCached: true,
-                        //tileCached: false,
                         displayInLayerSwitcher: true,
                         name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                     });
@@ -4436,7 +4435,7 @@ $(document).ready(function () {
                         });
 
                         $("#quick-draw-" + id).on("click", function (e) {
-                            e.preventDefault()
+                            e.preventDefault();
                             var node = tree.getSelectionModel().getSelectedNode();
                             var id = node.id.split(".");
                             var geomField = node.attributes.geomField;
@@ -5041,17 +5040,12 @@ function onInsert() {
 }
 
 function array_unique(ar) {
-    var sorter = {}, out = [];
-    if (ar.length && typeof ar !== 'string') {
-        for (var i = 0, j = ar.length; i < j; i++) {
-            if (!sorter[ar[i] + typeof ar[i]]) {
-                out.push(ar[i]);
-                sorter[ar[i] + typeof ar[i]] = true;
-            }
-        }
-    }
-    return out || ar;
+    return ar.filter( function onlyUnique(value, index, self) {
+        return self.lastIndexOf(value) === index;
+    } )
 }
+
+
 
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
