@@ -1,15 +1,14 @@
+/*
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2018 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
 function array_unique(ar) {
-    if (ar.length && typeof ar !== 'string') {
-        var sorter = {};
-        var out = [];
-        for (var i = 0, j = ar.length; i < j; i++) {
-            if (!sorter[ar[i] + typeof ar[i]]) {
-                out.push(ar[i]);
-                sorter[ar[i] + typeof ar[i]] = true;
-            }
-        }
-    }
-    return out || ar;
+    return ar.filter(function onlyUnique(value, index, self) {
+        return self.lastIndexOf(value) === index;
+    })
 }
 
 /**
@@ -144,3 +143,5 @@ var Base64 = {
         return string;
     }
 }
+
+
