@@ -835,7 +835,7 @@ $(document).ready(function () {
                     dataIndex: 'layergroup',
                     sortable: true,
                     editable: true,
-                    width: 70,
+                    width: 60,
                     editor: {
                         xtype: 'combo',
                         mode: 'local',
@@ -851,7 +851,7 @@ $(document).ready(function () {
                     header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
                     dataIndex: "extra",
                     sortable: true,
-                    //width: 100,
+                    width: 60,
                     hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
 
                 },
@@ -900,7 +900,7 @@ $(document).ready(function () {
                     header: __("Skip conflict"),
                     dataIndex: 'skipconflict',
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
-                    width: 30
+                    width: 40
                 }
             ]
         }),

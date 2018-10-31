@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\models;
@@ -490,7 +490,7 @@ class Table extends Model
                         if ($key == "tags") {
                             $value = $value ?: [];
                             if (!$raw) {
-                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?:[];
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?: [];
 
                                 if ($append) {
                                     $value = array_merge($rec, $value);
@@ -675,7 +675,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "filter", $fieldconfArr[$key]->filter);
                 $arr = $this->array_push_assoc($arr, "searchable", $fieldconfArr[$key]->searchable);
                 $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
-                $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias);
+                $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias ?: "");
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
                 $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
