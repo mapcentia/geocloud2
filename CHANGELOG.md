@@ -12,6 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Not using meta tiles is now default. Before default was 3x3.
 - Scheduler cron jobs now timeout after 4h.
 - Review of file headers.
+- Added 'Note' field to main layer properties.
 
 ## [2018.1] - 2018-07-5
 ### Added

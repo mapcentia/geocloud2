@@ -92,6 +92,7 @@ gc2i18n = {
         "Type": "Type",
         "Title": "Title",
         "Description": "Description",
+        "Note": "Note",
         "Group": "Group",
         "Sort id": "Sort id",
         "Authentication": "Authentication",

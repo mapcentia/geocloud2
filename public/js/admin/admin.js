@@ -789,7 +789,7 @@ $(document).ready(function () {
                     sortable: true,
                     editable: false,
                     tooltip: "This can't be changed",
-                    //width: 150,
+                    width: 70,
                     renderer: function (v, p) {
                         return v || __('No geometry');
                     }
@@ -800,7 +800,7 @@ $(document).ready(function () {
                     sortable: true,
                     editable: false,
                     tooltip: "This can't be changed",
-                    //width: 150,
+                    width: 70,
                     renderer: function (v, p) {
                         return v;
                     }
@@ -818,7 +818,16 @@ $(document).ready(function () {
                     dataIndex: "f_table_abstract",
                     sortable: true,
                     editable: true,
-                    tooltip: "",
+                    tooltip: ""
+
+                },
+                {
+                    id: "note",
+                    header: __("Note"),
+                    dataIndex: "note",
+                    sortable: true,
+                    editable: true,
+                    tooltip: ""
 
                 },
                 {
@@ -826,7 +835,7 @@ $(document).ready(function () {
                     dataIndex: 'layergroup',
                     sortable: true,
                     editable: true,
-                    //width: 50,
+                    width: 70,
                     editor: {
                         xtype: 'combo',
                         mode: 'local',
@@ -851,7 +860,7 @@ $(document).ready(function () {
                     dataIndex: 'sort_id',
                     sortable: true,
                     editable: true,
-                    //width: 55,
+                    width: 30,
                     editor: new Ext.form.NumberField({
                         decimalPrecision: 0,
                         decimalSeparator: '?'// Some strange char nobody is using
@@ -860,7 +869,7 @@ $(document).ready(function () {
                 {
                     header: __("Authentication"),
                     dataIndex: 'authentication',
-                    //width: 80,
+                    width: 40,
                     tooltip: __('When accessing your layer from external clients, which level of authentication do you want?'),
                     editor: {
                         xtype: 'combo',
@@ -884,14 +893,14 @@ $(document).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Editable"),
                     dataIndex: 'editable',
-                    //width: 50
+                    width: 30
                 },
                 {
                     xtype: 'checkcolumn',
                     header: __("Skip conflict"),
                     dataIndex: 'skipconflict',
                     hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
-                    //width: 50
+                    width: 30
                 }
             ]
         }),
@@ -5044,8 +5053,6 @@ function array_unique(ar) {
         return self.lastIndexOf(value) === index;
     } )
 }
-
-
 
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
