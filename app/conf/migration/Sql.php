@@ -29,8 +29,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD skipconflict BOOL DEFAULT FALSE";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER wmssource TYPE TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN roles TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN note TEXT";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN note TYPE VARCHAR(255)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN note VARCHAR(255)";
         $sqls[] = "CREATE TABLE settings.workflow
                     (
                       id SERIAL NOT NULL,
