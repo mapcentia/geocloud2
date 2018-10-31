@@ -283,8 +283,8 @@ class Sql
                         geometry_columns_join.tags,
                         geometry_columns_join.meta,
                         geometry_columns_join.wmsclientepsgs,
-                        geometry_columns_join.featureid
-                        geometry_columns_join.featureid
+                        geometry_columns_join.featureid,
+                        geometry_columns_join.note
 
                       FROM non_postgis_tables
                         LEFT JOIN
@@ -335,7 +335,8 @@ class Sql
                         geometry_columns_join.tags,
                         geometry_columns_join.meta,
                         geometry_columns_join.wmsclientepsgs,
-                        geometry_columns_join.featureid
+                        geometry_columns_join.featureid,
+                        geometry_columns_join.note
 
                       FROM non_postgis_matviews
                         LEFT JOIN
@@ -391,7 +392,8 @@ class Sql
                                 geometry_columns_join.tags,
                                 geometry_columns_join.meta,
                                 geometry_columns_join.wmsclientepsgs,
-                                geometry_columns_join.featureid
+                                geometry_columns_join.featureid,
+                                geometry_columns_join.note
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -444,7 +446,8 @@ class Sql
                                 geometry_columns_join.tags,
                                 geometry_columns_join.meta,
                                 geometry_columns_join.wmsclientepsgs,
-                                geometry_columns_join.featureid
+                                geometry_columns_join.featureid,
+                                geometry_columns_join.note
 
                               FROM raster_columns
                                 LEFT JOIN
@@ -498,7 +501,8 @@ class Sql
                                 geometry_columns_join.tags,
                                 geometry_columns_join.meta,
                                 geometry_columns_join.wmsclientepsgs,
-                                geometry_columns_join.featureid
+                                geometry_columns_join.featureid,
+                                geometry_columns_join.note
 
                               FROM non_postgis_tables
 
@@ -553,7 +557,8 @@ class Sql
                                 geometry_columns_join.tags,
                                 geometry_columns_join.meta,
                                 geometry_columns_join.wmsclientepsgs,
-                                geometry_columns_join.featureid
+                                geometry_columns_join.featureid,
+                                geometry_columns_join.note
 
                               FROM non_postgis_matviews
 
