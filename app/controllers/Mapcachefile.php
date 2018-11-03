@@ -273,7 +273,7 @@ foreach ($layerArr as $k => $v) {
                 if (!App::$param["useQgisForMergedLayers"][$k]) {
                     echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
                 } else {
-                    echo "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2//app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
+                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
                 }
                 ?></url>
 
@@ -334,7 +334,7 @@ foreach ($groupArr as $k => $v) {
                 if (!App::$param["useQgisForMergedLayers"][$tileSetName]) {
                     echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
                 } else {
-                    echo "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2//app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$tileSetName] . "&transparent=true";
+                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$tileSetName] . "&transparent=true";
                 }
                 ?></url>
         </http>
