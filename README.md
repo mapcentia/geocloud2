@@ -11,7 +11,7 @@ The GC2 project aims to make it easy for organizations to use open source softwa
 ## Key features of GC2
 
 - Setup everything using a slick web based application. No configuration files!
-- Upload and import into PostGIS from different spatial formats like ESRI Shape, MapInfo tab/mif, GeoJSON, GML, KML and ESRI fileGDB. And non-spatial formats like CSV and MS Access.
+- Upload and import into PostGIS from different spatial vector and raster formats like ESRI Shape, MapInfo tab/mif, GeoJSON, GML, KML, ESRI fileGDB, GeoTIFF and ACS. And non-spatial formats like CSV and MS Access.
 - Automatically configuration of MapServer and MapCache.
 - Build-in WFS-T for feature editing with QGIS.
 - Define MapServer style classes for WMS.
@@ -34,7 +34,7 @@ Online manual [here](http://mapcentia.screenstepslive.com/s/en)
 Head over to [gc2.mapcentia.com](https://gc2.mapcentia.com/user/login), create a PostGIS database and start uploading data.
 
 ## How to install GC2?
-GC2 uses Docker to orchestra all the software needed. You can get the full stack up and running by using a docker-compose file.
+GC2 uses [Docker](https://docs.docker.com/cs-engine/1.12/) to orchestra all the software needed. You can get the full stack up and running by using a [docker-compose](https://docs.docker.com/compose/install/) file.
 
 First get the docker-compose file:
 
