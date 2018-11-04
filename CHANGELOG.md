@@ -13,6 +13,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Scheduler cron jobs now timeout after 4h.
 - Review of file headers.
 - Added 'Note' field to main layer properties.
+- MapCache container is now linked to gc2core container by container names. This means that the GC2 stack must use the same users defined Docker network.
 
 ## [2018.1] - 2018-07-5
 ### Added

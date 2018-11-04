@@ -34,7 +34,41 @@ Online manual [here](http://mapcentia.screenstepslive.com/s/en)
 Head over to [gc2.mapcentia.com](https://gc2.mapcentia.com/user/login), create a PostGIS database and start uploading data.
 
 ## How to install GC2?
-Take a look [here](https://github.com/mapcentia/geocloud2/wiki/Install-GC2)
+GC2 uses Docker to orchestra all the software needed. You can get the full stack up and running by using a docker-compose file.
+
+First get the docker-compose file:
+
+```bash
+git clone https://github.com/mapcentia/dockerfiles.git
+cd dockerfiles/docker-compose/gc2
+```  
+
+Second you have to set some environment variables. Rename the `gc2.env.dist` file to `gc2.env`:    
+
+```bash
+mv gc2.env.dist gc2.env
+```  
+
+Open the gc2.env file with your preferred text editor and set the variables. The content should be like this:
+
+```bash
+# Password for the gc2 PostgreSQL user
+GC2_PASSWORD=12345
+
+# Timezone for new databases
+TIMEZONE=CET
+
+# locale for new databases
+LOCALE=en_US.UTF-8
+```
+
+Finally deploy the containers:
+
+```bash
+docker-compose up
+```
+
+When open GC2 Admin at http://localhost and create a database by clicking Create New Account.
 
 ## Who is MapCentia?
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
