@@ -3,25 +3,23 @@
 GC2 – an enterprise platform for managing geospatial data, making map visualisations and creating applications. Built on the best open source and standard based software.
 
 ## What does GC2?
-Combines PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, Ogr2ogr and more into one easy-to-use web application.
+Make it easy to deploy PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/Ogr2ogr. And offers an easy-to-use web application to configure the software stack.
 
 ## What is the goal for GC2?
 The GC2 project aims to make it easy for organizations to use open source software for building geo-spatial infrastructure.
 
 ## Key features of GC2
-
-- Setup everything using a slick web based application. No configuration files!
+- Deploy the whole software stack by one Docker command. 
+- Configure everything using a slick web based application. No editing of configuration files!
 - Upload and import into PostGIS from different spatial vector and raster formats like ESRI Shape, MapInfo tab/mif, GeoJSON, GML, KML, ESRI fileGDB, GeoTIFF and ACS. And non-spatial formats like CSV and MS Access.
-- Automatically configuration of MapServer and MapCache.
+- Automatically configuration of MapServer, QGIS Server and MapCache.
 - Build-in WFS-T for feature editing with QGIS.
-- Define MapServer style classes for WMS.
-- Setup QGIS Server by just uploading your QGIS project file.
-- Make feature edits directly in the web application.
+- Make feature edits directly in the web administration interface.
 - Manage user privileges on layer level.
-- Manage PostGIS database.
-- Use PostGIS SQL language over HTTP and get the result as GeoJSON, CSV or Excel.
-- Get data from PostGIS indexed in Elasticsearch by clicking an button!
 - Use Workflow to control the editing of a layer in a typical author-reviewer-publisher chain.
+- Manage PostGIS database. Create, alter and drop relations.
+- Use PostGIS SQL language as a web service and get the result as GeoJSON, CSV or Excel.
+- Get data from PostGIS indexed in Elasticsearch by clicking an button!
 
 ![GC2 Admin](https://i.imgur.com/9FoOzId.png "GC2 Admin")
 
