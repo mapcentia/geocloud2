@@ -5,15 +5,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
+- Reload API in MapCache container is removed. MapCache now detects changes in configs and reloads bu it self. This makes it more suitable for scaling in a Docker Swarm.
+
+## [2018.1.2] - 2018-06-11
+### Added
 - MapServer Style Offset and Polar Offset added with combo field (takes numeric attribute or number).
-- Versioned layers are filtered in QGIS project file, so only the current version is rendered.
-- Fix of MAT VIEW meta tables, so layers don't show as both geometry and non-geometry MAT VIEW.
-- Longer retry wait for meta tile in MapCache to counter strange bug.
+- Added 'Note' field to main layer properties.
+
+### Changed
 - Not using meta tiles is now default. Before default was 3x3.
 - Scheduler cron jobs now timeout after 4h.
 - Review of file headers.
-- Added 'Note' field to main layer properties.
-- MapCache container is now linked to gc2core container by container names. This means that the GC2 stack must use the same users defined Docker network.
+
+### Fixed
+- Fix of MAT VIEW meta tables, so layers don't show as both geometry and non-geometry MAT VIEW.
+- Versioned layers are filtered in QGIS project file, so only the current version is rendered.
+- Longer retry wait for meta tile in MapCache to counter strange bug.
 
 ## [2018.1] - 2018-07-5
 ### Added
@@ -34,7 +41,6 @@ and this project adheres to [CalVer](https://calver.org/).
 - Experimental upload of MS Access databases.
 - New APIs for writing out MapFiles, MapCache files and QGIS project files.
 - This change log.
-
 
 ### Changed
 - Back-end rewritten for PHP7. 
