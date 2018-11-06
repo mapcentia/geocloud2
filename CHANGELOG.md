@@ -7,7 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [Unreleased]
 - Reload API in MapCache container is removed. MapCache now detects changes in configs and reloads bu it self. This makes it more suitable for scaling in a Docker Swarm.
 
-## [2018.1.2] - 2018-06-11
+## [2018.1.1] - 2018-06-11
 ### Added
 - MapServer Style Offset and Polar Offset added with combo field (takes numeric attribute or number).
 - Added 'Note' field to main layer properties.
