@@ -130,14 +130,14 @@ class Mapcache extends \app\inc\Controller
 
     public function get_add()
     {
-        echo \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
+        //echo \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
         exit();
     }
 
     public static function reload()
     {
-        $res = \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/reload");
-        return $res;
+        //$res = \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/reload");
+        return [];
     }
 
     public static function getGrids()
