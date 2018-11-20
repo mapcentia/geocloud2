@@ -76,4 +76,4 @@ MapCentia believes getting easy access to standard based open source software ma
 ## OSGeo Community Project
 GC2 is part of the [OSGeo Community Project GC2/Vidi](https://www.osgeo.org/projects/gc2-vidi/)
 
-![OSGeo_community](https://github.com/OSGeo/osgeo/blob/master/incubation/community/OSGeo_community.png =300px "GC2 is a OSGeo Community Project")
+<img title="GC2 is a OSGeo Community Project" src="https://github.com/OSGeo/osgeo/blob/master/incubation/community/OSGeo_community.png" alt="drawing" width="200"/>
