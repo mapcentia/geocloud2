@@ -1,6 +1,8 @@
-# What is MapCentia GC2?
+# What is MapCentia GC2?   
+GC2 – an enterprise platform for managing geospatial data, making map visualisations and creating applications. Built on the best open source and standard based software.   
+GC2 is part of the [OSGeo Community Project GC2/Vidi](https://www.osgeo.org/projects/gc2-vidi/)
 
-GC2 – an enterprise platform for managing geospatial data, making map visualisations and creating applications. Built on the best open source and standard based software.
+<img title="GC2 is a OSGeo Community Project" src="https://github.com/OSGeo/osgeo/blob/master/incubation/community/OSGeo_community.png" alt="drawing" width="200"/>
 
 ## What does GC2?
 Make it easy to deploy PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/Ogr2ogr. And offers an easy-to-use web application to configure the software stack.
@@ -72,8 +74,3 @@ When open GC2 Admin at http://localhost:8080 and create a database by clicking C
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
 
 [MapCentia.com](http://mapcentia.com)
-
-## OSGeo Community Project
-GC2 is part of the [OSGeo Community Project GC2/Vidi](https://www.osgeo.org/projects/gc2-vidi/)
-
-<img title="GC2 is a OSGeo Community Project" src="https://github.com/OSGeo/osgeo/blob/master/incubation/community/OSGeo_community.png" alt="drawing" width="200"/>
