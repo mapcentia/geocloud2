@@ -42,7 +42,7 @@ class Legend extends \app\inc\Controller
         $path = App::$param['path'] . "/app/wms/mapfiles/";
 
         $client = new Client([
-            'timeout' => 1,
+            'timeout' => 10,
         ]);
 
         if (\app\inc\Input::get("l")) {
