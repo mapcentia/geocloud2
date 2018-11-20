@@ -417,7 +417,7 @@ class Mapcachefile extends \app\inc\Controller
         </mapcache>
         <?php
         $data = ob_get_clean();
-        $path = App::$param['path'] . "/app/wms/mapcache/";
+        $path = App::$param['path'] . "app/wms/mapcache/";
         $name = Connection::$param['postgisdb'] . ".xml";
         $checkSum1 = $this->checkSumFile($path . $name);
         $checkSum2 = $this->checkSumStr($data);
