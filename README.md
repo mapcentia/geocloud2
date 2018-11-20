@@ -1,4 +1,4 @@
-# What is MapCentia GC2?   
+# What is GC2?   
 GC2 – an enterprise platform for managing geospatial data, making map visualisations and creating applications. Built on the best open source and standard based software.   
 
 GC2 is part of the [OSGeo Community Project GC2/Vidi](https://www.osgeo.org/projects/gc2-vidi/)
