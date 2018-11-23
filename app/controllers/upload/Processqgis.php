@@ -182,7 +182,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . "." . $arrG[$i][1][0];
             $wmsLayerName = $arrN[$i];
             $layers[] = $layerKey;
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $wmsLayerName . "&transparent=true&";
+            $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $wmsLayerName . "&transparent=true&";
             $urls[] = $url;
             $data = new \stdClass;
             $data->_key_ = $layerKey;
@@ -200,7 +200,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . ".rast";
             $table = new \app\models\Table($tableName);
             $table->createAsRasterTable($wmsSrids[$i]);
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $tableName . "&transparent=true&";
+            $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $tableName . "&transparent=true&";
             $data = new \stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
@@ -217,7 +217,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . ".rast";
             $table = new \app\models\Table($tableName);
             $table->createAsRasterTable("4326");
-            $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
+            $url = App::$param["mapCache"]["wmsHost"] . "cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
             $data = new \stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
