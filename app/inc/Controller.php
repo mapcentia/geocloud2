@@ -160,9 +160,11 @@ class Controller
         $bits = explode(".", $layer);
         if (sizeof($bits) == 1) {
             $schema = "public";
+            $unQualifiedName = $layer;
             $layer = $schema . "." . $layer;
         } else {
             $schema = $bits[0];
+            $unQualifiedName = $bits[1];
         }
 
         $postgisObject = new \app\inc\Model();
@@ -180,7 +182,7 @@ class Controller
             } else {
                 $apiKey = $response['data']->api_key;
             }
-            $sql = "SELECT * FROM settings.geometry_columns_join WHERE _key_ LIKE :schema";
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
             $res = $postgisObject->prepare($sql);
             try {
                 $res->execute(array("schema" => $layer . ".%"));
@@ -192,6 +194,10 @@ class Controller
                 die(Response::toJson($response));
             }
             while ($row = $postgisObject->fetchRow($res, "assoc")) {
+                // Check if we got the right layer from the database
+                if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
+                    continue;
+                }
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
                     if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
