@@ -111,7 +111,7 @@ class Processqgis extends \app\inc\Controller
 
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll($fullTable, false, true);
+                    $rec = $this->layer->getAll($fullTable, true, true);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
