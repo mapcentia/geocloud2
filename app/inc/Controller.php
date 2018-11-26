@@ -182,10 +182,10 @@ class Controller
             } else {
                 $apiKey = $response['data']->api_key;
             }
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''{$schema}'' AND f_table_name = ''{$unQualifiedName}''','raster_columns.r_table_schema = ''{$schema}'' AND raster_columns.r_table_name = ''{$unQualifiedName}''')";
             $res = $postgisObject->prepare($sql);
             try {
-                $res->execute(array("schema" => $layer . ".%"));
+                $res->execute();
             } catch (\PDOException $e) {
                 $response = array();
                 $response2['success'] = false;
