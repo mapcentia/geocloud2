@@ -8,6 +8,8 @@ and this project adheres to [CalVer](https://calver.org/).
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
 This means, that the gc2core and mapcache container must be able to discover each other on an user-defined network.   
 So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
+- V2 of session API with both POST and GET methods for starting sessions. POST uses a JSON body and GET form data.
+- Subuser class added to controllers with methods for creating new sub-users.
 
 
 ## [2018.1.1] - 2018-06-11
