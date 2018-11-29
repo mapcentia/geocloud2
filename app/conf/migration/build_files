@@ -3,10 +3,10 @@
 ini_set("display_errors", "On");
 
 use \app\conf\Connection;
+use \app\conf\App;
 
 header("Content-type: text/plain");
 include_once("/var/www/geocloud2/app/conf/App.php");
-new \app\conf\App();
 
 if (isset($argv[1])) {
     $_SERVER['HTTP_HOST'] = $argv[1];
@@ -16,16 +16,17 @@ if (isset($argv[1])) {
     exit(1);
 }
 
+new \app\conf\App();
+App::$param['host'] = $_SERVER['HTTP_HOST'];
+
 $database = new \app\models\Database();
 $arr = $database->listAllDbs();
-$cfgfile = new \app\controllers\Cfgfile();
 $mapfile = new \app\controllers\Mapfile();
 $mapcachefile = new \app\controllers\Mapcachefile();
 foreach ($arr['data'] as $db) {
     Connection::$param['postgisdb'] = $db;
 
     if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
-        $res = $cfgfile->get_index();
         echo $res["ch"]."\n";
         $res = $mapcachefile->get_index();
         echo $res["ch"]."\n";
