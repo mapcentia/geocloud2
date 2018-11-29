@@ -138,6 +138,13 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb(Route::getParam("user"));
     });
 
+    Route::add("api/v2/session", function () {
+        Session::start();
+        Database::setDb("mapcentia");
+    });
+
+
+
     Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
@@ -183,6 +190,9 @@ if (Input::getPath()->part(1) == "api") {
     include_once("editor.php");
 } elseif (Input::getPath()->part(1) == "controllers") {
     Session::start();
+
+    Route::add("controllers/subuser");
+
     Session::authenticate(null);
 
     Database::setDb($_SESSION['screen_name']);

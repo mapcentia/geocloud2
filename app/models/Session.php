@@ -101,7 +101,7 @@ class Session extends Model
     /**
      * @return array
      */
-    public function stop()
+    public function stop(): array
     {
         session_unset();
         $response = [];

@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\inc;
@@ -15,6 +15,9 @@ class Input
      */
     static $params;
     const TEXT_PLAIN = "text/plain";
+    const APPLICATION_JSON = "application/json";
+    const APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+    const MULTIPART_FORM_DATA = "multipart/form-data";
 
     /**
      *
@@ -174,7 +177,7 @@ class GetPart
     /**
      * @return array
      */
-    function parts():array
+    function parts(): array
     {
         return $this->parts;
     }

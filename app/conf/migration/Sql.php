@@ -578,6 +578,9 @@ class Sql
     {
         $sqls[] = "ALTER TABLE users ADD COLUMN parentdb VARCHAR(255)";
         $sqls[] = "ALTER TABLE users ADD COLUMN usergroup VARCHAR(255)";
+        $sqls[] = "ALTER TABLE users ALTER COLUMN screenname SET NOT NULL";
+        $sqls[] = "ALTER TABLE users ALTER COLUMN pw SET NOT NULL";
+        $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname)";
         return $sqls;
     }
 

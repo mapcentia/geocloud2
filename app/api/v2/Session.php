@@ -6,7 +6,7 @@
  *
  */
 
-namespace app\api\v1;
+namespace app\api\v2;
 
 use \app\inc\Input;
 
@@ -27,16 +27,39 @@ class Session extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
-
         $this->session = new \app\models\Session();
     }
 
     /**
      * @return array
      */
-    public function post_start()
+    public function get_start(): array
     {
-        return $this->session->start(Input::get("u"), Input::get("p"), Input::get("s"));
+        try {
+            return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"));
+        } catch (\TypeError $exception) {
+            return [
+                "success" => false,
+                "error" => $exception->getMessage(),
+                "code" => 500
+            ];
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function post_start(): array
+    {
+        $data = json_decode(Input::getBody(), true) ? : [];
+        Input::setParams(
+            [
+                "user" => $data["user"],
+                "password" => $data["password"],
+                "schema" => $data["schema"],
+            ]
+        );
+        return $this->get_start();
     }
 
     /**
