@@ -9,9 +9,12 @@
 namespace app\controllers;
 
 use app\inc\Input;
-use app\inc\Route;
 use app\inc\Session;
 
+/**
+ * Class Subuser
+ * @package app\controllers
+ */
 class Subuser extends \app\inc\Controller
 {
     /**
@@ -23,15 +26,18 @@ class Subuser extends \app\inc\Controller
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    function get_index()
+    function get_index(): array
     {
         $user = new \app\models\User(Session::getUser());
         return $user->getData();
     }
 
-    function post_index()
+    /**
+     * @return array
+     */
+    function post_index(): array
     {
         $user = new \app\models\User(Session::getUser());
         if (!Session::isAuth()) {
@@ -43,16 +49,18 @@ class Subuser extends \app\inc\Controller
         return $user->createUser(json_decode(Input::getBody(), true) ?: []);
     }
 
-    function put_index()
+    /**
+     * @return array
+     */
+    function put_index(): array
     {
-        $db = Route::getParam("user");
-        $user = new \app\models\User($db);
+        $user = new \app\models\User(Session::getUser());
         if (!Session::isAuth()) {
             $response['success'] = false;
             $response['message'] = "User unauthorized";
             $response['code'] = 401;
             return $response;
         }
-        return $user->createUser(json_decode(Input::getBody(), true) ?: []);
+        return $user->updateUser(json_decode(Input::getBody(), true) ?: []);
     }
 }

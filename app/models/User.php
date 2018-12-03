@@ -9,9 +9,11 @@
 namespace app\models;
 
 use app\inc\Model;
-use app\models\Setting;
 
-
+/**
+ * Class User
+ * @package app\models
+ */
 class User extends Model
 {
     public $userId;
@@ -23,6 +25,10 @@ class User extends Model
         $this->postgisdb = "mapcentia";
     }
 
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getAll(): array
     {
         $query = "SELECT * FROM users WHERE email<>''";
@@ -38,6 +44,9 @@ class User extends Model
         return $response;
     }
 
+    /**
+     * @return array
+     */
     public function getData(): array
     {
         $domain = \app\conf\App::$param['domain'];
@@ -61,6 +70,10 @@ class User extends Model
         return $response;
     }
 
+    /**
+     * @param array $data
+     * @return array
+     */
     public function createUser(array $data): array
     {
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
@@ -84,6 +97,44 @@ class User extends Model
 
         $response['success'] = true;
         $response['message'] = "User created";
+        $response['data'] = $row;
+        return $response;
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    public function updateUser(array $data): array
+    {
+        $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
+
+        $password = isset($data["password"]) ? Setting::encryptPw($data["password"]) : null;
+        $userGroup = isset($data["usergroup"]) ? $data["usergroup"]: null;
+
+        $sQuery = "UPDATE users set screenname=screenname";
+        if ($password)    $sQuery.= ", pw=:sPassword";
+        if ($userGroup)    $sQuery.= ", usergroup=:sUsergroup";
+        $sQuery.=" WHERE screenname=:sUserID RETURNING screenname,usergroup";
+
+        try {
+            $res = $this->prepare($sQuery);
+            if($password) $res->bindParam(":sPassword", $password);
+            if($userGroup) $res->bindParam(":sUsergroup", $userGroup);
+            $res->bindParam(":sUserID", $user);
+
+            $res->execute();
+            $row = $this->fetchRow($res, "assoc");
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['test'] = \app\inc\Session::getUser();
+            $response['code'] = 400;
+            return $response;
+        }
+
+        $response['success'] = true;
+        $response['message'] = "User update";
         $response['data'] = $row;
         return $response;
     }
