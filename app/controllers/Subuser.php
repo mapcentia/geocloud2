@@ -10,6 +10,7 @@ namespace app\controllers;
 
 use app\inc\Input;
 use app\inc\Session;
+use app\inc\Route;
 
 /**
  * Class Subuser
@@ -62,5 +63,20 @@ class Subuser extends \app\inc\Controller
             return $response;
         }
         return $user->updateUser(json_decode(Input::getBody(), true) ?: []);
+    }
+
+    /**
+     * @return array
+     */
+    function delete_index(): array
+    {
+        $user = new \app\models\User(Session::getUser());
+        if (!Session::isAuth()) {
+            $response['success'] = false;
+            $response['message'] = "User unauthorized";
+            $response['code'] = 401;
+            return $response;
+        }
+        return $user->deleteUser(Route::getParam("user"));
     }
 }

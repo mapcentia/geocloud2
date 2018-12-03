@@ -191,7 +191,7 @@ if (Input::getPath()->part(1) == "api") {
 } elseif (Input::getPath()->part(1) == "controllers") {
     Session::start();
 
-    Route::add("controllers/subuser");
+    Route::add("controllers/subuser/[user]");
 
     Session::authenticate(null);
 

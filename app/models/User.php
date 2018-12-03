@@ -79,13 +79,14 @@ class User extends Model
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
 
         $password = isset($data["password"]) ? Setting::encryptPw($data["password"]) : null;
-        $userGroup = $data["usergroup"];
+        $email = isset($data["email"]) ? $data["email"] : null;
+        $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
 
-        $sQuery = "INSERT INTO users (screenname,pw,parentdb,usergroup) VALUES(:sUserID, :sPassword, :sParentDb, :sUsergroup) RETURNING screenname,parentdb,usergroup";
+        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup) RETURNING screenname,parentdb,email,usergroup";
 
         try {
             $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $user, ":sPassword" => $password, ":sParentDb" => $this->userId, ":sUsergroup" => $userGroup));
+            $res->execute(array(":sUserID" => $user, ":sPassword" => $password, ":sEmail" => $email, ":sParentDb" => $this->userId, ":sUsergroup" => $userGroup));
             $row = $this->fetchRow($res, "assoc");
         } catch (\Exception $e) {
             $response['success'] = false;
@@ -110,17 +111,34 @@ class User extends Model
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
 
         $password = isset($data["password"]) ? Setting::encryptPw($data["password"]) : null;
-        $userGroup = isset($data["usergroup"]) ? $data["usergroup"]: null;
+        $email = isset($data["email"]) ? $data["email"] : null;
+        $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
 
-        $sQuery = "UPDATE users set screenname=screenname";
-        if ($password)    $sQuery.= ", pw=:sPassword";
-        if ($userGroup)    $sQuery.= ", usergroup=:sUsergroup";
-        $sQuery.=" WHERE screenname=:sUserID RETURNING screenname,usergroup";
+        $sQuery = "UPDATE users SET screenname=screenname";
+        if ($password) $sQuery .= ", pw=:sPassword";
+        if ($email) $sQuery .= ", email=:sEmail";
+        if ($userGroup) {
+            $sQuery .= ", usergroup=:sUsergroup";
+            $obj[$user] = $userGroup;
+
+            Database::setDb($this->getData()["data"]["userid"]);
+            $settings = new \app\models\Setting();
+            if (!$settings->updateUserGroups((object)$obj)['success']) {
+                $response['success'] = false;
+                $response['message'] = "Could not update settings.";
+                $response['code'] = 400;
+                return $response;
+            };
+            Database::setDb("mapcentia");
+
+        }
+        $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup";
 
         try {
             $res = $this->prepare($sQuery);
-            if($password) $res->bindParam(":sPassword", $password);
-            if($userGroup) $res->bindParam(":sUsergroup", $userGroup);
+            if ($password) $res->bindParam(":sPassword", $password);
+            if ($email) $res->bindParam(":sEmail", $email);
+            if ($userGroup) $res->bindParam(":sUsergroup", $userGroup);
             $res->bindParam(":sUserID", $user);
 
             $res->execute();
@@ -136,6 +154,30 @@ class User extends Model
         $response['success'] = true;
         $response['message'] = "User update";
         $response['data'] = $row;
+        return $response;
+    }
+
+    /**
+     * @param string $data
+     * @return array
+     */
+    public function deleteUser(string $data): array
+    {
+        $user = $data ? Model::toAscii($data, NULL, "_") : null;
+        $sQuery = "DELETE FROM users WHERE screenname=:sUserID";
+        try {
+            $res = $this->prepare($sQuery);
+            $res->execute([":sUserID" => $user]);
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['test'] = \app\inc\Session::getUser();
+            $response['code'] = 400;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = "User deleted";
+        $response['data'] = $res->rowCount();
         return $response;
     }
 }
