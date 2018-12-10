@@ -1044,7 +1044,7 @@ classWizards.init = function (record) {
                                                                             new Ext.ux.form.SpinnerField({
                                                                                 name: "num",
                                                                                 minValue: 1,
-                                                                                maxValue: 20,
+                                                                                maxValue: 100,
                                                                                 allowDecimals: false,
                                                                                 decimalPrecision: 0,
                                                                                 incrementValue: 1,
