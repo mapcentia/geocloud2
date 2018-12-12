@@ -10,6 +10,7 @@ This means, that the gc2core and mapcache container must be able to discover eac
 So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
 - V2 of session API with both POST and GET methods for starting sessions. POST uses a JSON body and GET form data.
 - Subuser class added to controllers with methods for creating new sub-users.
+- Increase max number of colors in Class Wizard -> Intervals to 100.
 
 
 ## [2018.1.1] - 2018-06-11
