@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\controllers;
@@ -22,6 +22,7 @@ class Wms extends \app\inc\Controller
 {
 
     public $service;
+    private $layers;
 
     /**
      * Wms constructor.
@@ -30,7 +31,7 @@ class Wms extends \app\inc\Controller
     {
         parent::__construct();
 
-        $layers = [];
+        $this->layers = [];
         $postgisschema = \app\inc\Input::getPath()->part(3);
         $db = \app\inc\Input::getPath()->part(2);
         $dbSplit = explode("@", $db);
@@ -55,7 +56,7 @@ class Wms extends \app\inc\Controller
             foreach ($_GET as $k => $v) {
                 // Get the layer names from either WMS (layer) or WFS (typename)
                 if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
-                    $layers[] = $v;
+                    $this->layers[] = $v;
                 }
 
                 // Get the service. WMS or WFS
@@ -66,7 +67,7 @@ class Wms extends \app\inc\Controller
 
             // If IP not trusted, when check auth on layers
             if (!$trusted) {
-                foreach ($layers as $layer) {
+                foreach ($this->layers as $layer) {
                     $this->basicHttpAuthLayer($layer, $db, $subUser);
                 }
             }
@@ -102,22 +103,68 @@ class Wms extends \app\inc\Controller
      */
     private function get($db, $postgisschema)
     {
+        $mapFile = "";
+        $model = new \app\inc\Model();
+        $useFilters = false;
 
-        // Set MapFile for either WMS or WFS
-        switch ($this->service) {
-            case "wms":
-                $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                break;
+        // Check if WMS filters are set
+        if (isset($_GET["filters"]) || isset($_GET["FILTERS"]) && $this->service == "wms") {
 
-            case "wfs":
-                $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                break;
+            // Parse filter
+            $filters = json_decode($_GET["filters"], true);
 
-            default:
-                break;
+            $layer = $this->layers[0];
+
+            $split = explode(".", $layer);
+
+            // Get the url for qgis_mapserv
+            $wmsUrl = $model->getGeometryColumns($layer, "*")["wmssource"];
+            // Parse query part and get "map" parameter
+            parse_str(parse_url($wmsUrl)["query"], $query);
+            $e = $query["map"];
+
+            if ($e) {
+
+                $useFilters = true;
+
+                // Read the file
+                $file = fopen($e, "r");
+                $str = fread($file,filesize($e));
+                fclose($file);
+
+                // Write out a tmp MapFile
+                $name = md5(rand(1, 999999999) . microtime());
+                $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
+                $newMapFile = fopen($mapFile, "w");
+                fwrite($newMapFile, $str);
+                fclose($newMapFile);
+
+                // Use sed to replace sql= parameter
+                $where = implode(" OR ", $filters[$layer]);
+                $sedCmd = "sed -i '/table=\"{$split[0]}\".\"{$split[1]}\"/s/sql=/sql={$where}/g' {$mapFile}";
+
+                $res = shell_exec($sedCmd);
+
+                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
+            }
         }
 
-        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
+        if (!$useFilters) {
+            // Set MapFile for either WMS or WFS
+            switch ($this->service) {
+                case "wms":
+                    $mapFile = $db . "_" . $postgisschema . "_wms.map";
+                    break;
+
+                case "wfs":
+                    $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                    break;
+
+                default:
+                    break;
+            }
+            $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
+        }
 
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
@@ -141,6 +188,8 @@ class Wms extends \app\inc\Controller
         curl_close($ch);
         echo $content;
         exit();
+
+
     }
 
     private function post($db, $postgisschema, $data)

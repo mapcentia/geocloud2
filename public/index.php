@@ -237,6 +237,17 @@ if (Input::getPath()->part(1) == "api") {
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
     Session::start();
+    $db = Input::getPath()->part(2);
+    $dbSplit = explode("@", $db);
+    if (sizeof($dbSplit) == 2) {
+        $db = $dbSplit[1];
+        $user = $dbSplit[0];
+        $parentUser = false;
+    } else {
+        $user = $db;
+        $parentUser = true;
+    }
+    Database::setDb($db);
     new \app\controllers\Wms();
 
 } elseif (Input::getPath()->part(1) == "tilecache") {
