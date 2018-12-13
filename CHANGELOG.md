@@ -6,11 +6,12 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
-This means, that the gc2core and mapcache container must be able to discover each other on an user-defined network.   
+This means, that the gc2core and mapcache containers must be able to discover each other on an user-defined network.   
 So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
 - V2 of session API with both POST and GET methods for starting sessions. POST uses a JSON body and GET form data.
-- Subuser class added to controllers with methods for creating new sub-users.
+- Subuser class added to controllers with methods for creating, updating and deleting sub-users.
 - Increase max number of colors in Class Wizard -> Intervals to 100.
+- Filtering in WMS. Use something like this: filters={"public.my_layer":["anvgen=11", "anvgen=21"]} Work for now only in QGIS layers and the operator is fixed to "OR".
 
 
 ## [2018.1.1] - 2018-06-11
@@ -28,7 +29,7 @@ So both containers must connect to the same user-defined network. Notice that Do
 - Versioned layers are filtered in QGIS project file, so only the current version is rendered.
 - Longer retry wait for meta tile in MapCache to counter strange bug.
 
-## [2018.1] - 2018-07-5
+## [2018.1] - 2018-07-05
 ### Added
 - New version 2 of the Elasticsearch API, which acts like the native Elasticsearch search API. Including GET with body and the query string "mini-language".  
 - New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Supports GET with body.
