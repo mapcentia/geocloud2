@@ -52,7 +52,9 @@ docker-compose up
 
 When open GC2 Admin at http://localhost:8080 and create a database by clicking Create New Account.
 
-This Docker-compose is for deploying GC2 and Vidi in a test environment.
+After you've created a database you can request Vidi at http://localhost:3000/app/[database]/public. Just make sure, there are some layers in `public` schema and they're in a Group.
+
+The Docker-compose file is for deploying GC2 and Vidi in a test environment.
 It will expose GC2 on port 8080 and Vidi on 3000
 PostgreSQL password is set to 12345
 
