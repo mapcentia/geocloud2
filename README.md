@@ -41,35 +41,20 @@ First get the docker-compose file:
 
 ```bash
 git clone https://github.com/mapcentia/dockerfiles.git
-cd dockerfiles/docker-compose/gc2
+cd dockerfiles/docker-compose/local/gc2
 ```  
 
-Second you have to set some environment variables. Rename the `gc2.env.dist` file to `gc2.env`:    
-
-```bash
-mv gc2.env.dist gc2.env
-```  
-
-Open the gc2.env file with your preferred text editor and set the variables. The content should be like this:
-
-```bash
-# Password for the gc2 PostgreSQL user
-GC2_PASSWORD=12345
-
-# Timezone for new databases
-TIMEZONE=CET
-
-# locale for new databases
-LOCALE=en_US.UTF-8
-```
-
-Finally deploy the containers:
+Deploy GC2 and Vidi:
 
 ```bash
 docker-compose up
 ```
 
 When open GC2 Admin at http://localhost:8080 and create a database by clicking Create New Account.
+
+This Docker-compose is for deploying GC2 and Vidi in a test environment.
+It will expose GC2 on port 8080 and Vidi on 3000
+PostgreSQL password is set to 12345
 
 ## Who is MapCentia?
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
