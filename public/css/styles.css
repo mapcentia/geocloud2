@@ -652,6 +652,10 @@ q:after, q:before {
     font-style: normal;
 }
 
+/*Fix in Firefox*/
+#layerStylePanel .x-grid-editor {
+    overflow: visible !important;
+}
 
 
 
