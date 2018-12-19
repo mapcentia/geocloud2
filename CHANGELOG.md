@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
+- Phpfastcache added to speed up Meta API.
+
+## [2018.2.0.rc1]
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
 This means, that the gc2core and mapcache containers must be able to discover each other on an user-defined network.   
 So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
