@@ -282,6 +282,16 @@ class Layer extends \app\models\Table
         // Reindex array
         $response['data'] = array_values($response['data']);
 
+
+        // Resort data, because a mix of schema and tags search will not be sorted right
+        usort($response['data'], function($a, $b) {
+            return $a['sort_id'] <=> $b['sort_id'];
+        });
+
+        if (\app\conf\App::$param["reverseLayerOrder"]) {
+            $response['data'] = array_reverse($response['data']);
+        }
+
         if (!isset($this->PDOerror)) {
             $response['auth'] = $auth ?: false;
             $response['success'] = true;
