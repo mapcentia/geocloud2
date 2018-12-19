@@ -3704,6 +3704,7 @@ $(document).ready(function () {
                                             dataGrid = new Ext.grid.EditorGridPanel({
                                                 id: "datagridpanel",
                                                 disabled: false,
+                                                stateful: false,
                                                 viewConfig: {
                                                     //forceFit: true
                                                 },
@@ -3731,6 +3732,7 @@ $(document).ready(function () {
                                                             var p = new rec({});
                                                             dataGrid.stopEditing();
                                                             dataStore.insert(0, p);
+                                                            dataStore.load();
                                                         }
                                                     }, {
                                                         text: '<i class="fa fa-cut"></i> ' + __('Delete records'),
