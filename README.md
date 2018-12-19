@@ -54,9 +54,9 @@ When open GC2 Admin at http://localhost:8080 and create a database by clicking C
 
 After you've created a database you can request Vidi at http://localhost:3000/app/[database]/public. Just make sure, there are some layers in `public` schema and they're in a Group.
 
-The Docker-compose file is for deploying GC2 and Vidi in a test environment.
-It will expose GC2 on port 8080 and Vidi on 3000
-PostgreSQL password is set to 12345
+> The Docker-compose file is for deploying GC2 and Vidi in a test environment.
+> It will expose GC2 on port 8080 and Vidi on 3000
+> PostgreSQL password is set to 12345
 
 ## Who is MapCentia?
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
