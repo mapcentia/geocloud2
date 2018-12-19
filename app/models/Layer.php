@@ -69,12 +69,14 @@ class Layer extends \app\models\Table
      */
     public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
     {
-        $key = $query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es;
+        $key = md5($query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
 
         if ($CachedString->isHit()) {
-            $response = $CachedString->get();
+            $data = $CachedString->get();
+            $response = $data;
             $response["cache_hit"] = $CachedString->getCreationDate();
+            $response["cache_signature"] = md5(serialize($data));
             return $response;
 
         } else {
@@ -331,7 +333,7 @@ class Layer extends \app\models\Table
                 $response['code'] = 401;
             }
 
-            $CachedString->set($response)->expiresAfter(50000);//in seconds, also accepts Datetime
+            $CachedString->set($response)->expiresAfter(3600 * 24);//in seconds, also accepts Datetime
             $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
             $response["cache_hit"] = false;
 
