@@ -3,7 +3,8 @@
         "wildbit/postmark-php": "^2.2",
         "odesk/phystrix": "^2.0",
         "PHPOffice/PHPExcel": "^1.8",
-        "phayes/geoPHP": "^1.2"
+        "phayes/geoPHP": "^1.2",
+        "phpFastCache/phpFastCache": "^7.0"
     },
     "require-dev": {
         "codeception/codeception": "^2.3"

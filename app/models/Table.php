@@ -12,6 +12,8 @@ use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
 use app\inc\Util;
+use Phpfastcache\CacheManager;
+use Phpfastcache\Config\ConfigurationOption;
 
 class Table extends Model
 {
@@ -19,6 +21,7 @@ class Table extends Model
     public $table;
     public $schema;
     public $geometryColumns;
+    private $InstanceCache;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
@@ -31,13 +34,28 @@ class Table extends Model
 
     /**
      * Table constructor.
-     * @param string $table
+     * @param $table
      * @param bool $temp
      * @param bool $addGeomType
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     function __construct($table, $temp = false, $addGeomType = false)
     {
         parent::__construct();
+
+        try {
+            CacheManager::setDefaultConfig(new ConfigurationOption([
+                'path' => '/var/www/geocloud2/app/tmp',
+                'itemDetailedDate' => true
+            ]));
+            $this->InstanceCache = CacheManager::getInstance('files');
+        } catch (\Exception $exception) {
+        }
+
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
         if (!$_schema) {
@@ -400,6 +418,7 @@ class Table extends Model
      */
     public function destroy()
     {
+        $this->InstanceCache->clear();
         $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
@@ -454,6 +473,7 @@ class Table extends Model
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
+        $this->InstanceCache->clear();
         $response = [];
         $data = $this->makeArray($data);
         foreach ($data as $set) {
@@ -702,6 +722,7 @@ class Table extends Model
      */
     public function purgeFieldConf($_key_)
     {
+        $this->InstanceCache->clear();
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
@@ -725,6 +746,8 @@ class Table extends Model
      */
     public function updateColumn($data, $key) // Only geometry tables
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->purgeFieldConf($key); // TODO What?
         $data = $this->makeArray($data);
@@ -803,6 +826,8 @@ class Table extends Model
      */
     public function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
@@ -841,6 +866,8 @@ class Table extends Model
      */
     public function addColumn(array $data)
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $safeColumn = $this->toAscii($data['column'], array(), "_");
         $sql = "";
@@ -907,6 +934,8 @@ class Table extends Model
      */
     public function addVersioning()
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
@@ -975,6 +1004,8 @@ class Table extends Model
      */
     public function removeVersioning()
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_gid";
@@ -1043,6 +1074,8 @@ class Table extends Model
      */
     public function addWorkflow()
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_status integer";
@@ -1090,6 +1123,8 @@ class Table extends Model
      */
     public function point2multipoint()
     {
+        $this->InstanceCache->clear();
+
         $sql = "BEGIN;";
         $sql .= "ALTER TABLE {$this->table} DROP CONSTRAINT enforce_geotype_the_geom;";
         $sql .= "UPDATE {$this->table} SET {$this->geomField} = ST_Multi({$this->geomField});";
@@ -1108,6 +1143,8 @@ class Table extends Model
      */
     public function create($table, $type, $srid = 4326)
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->toAscii($table, array(), "_");
@@ -1136,6 +1173,8 @@ class Table extends Model
      */
     public function createAsRasterTable($srid = 4326)
     {
+        $this->InstanceCache->clear();
+
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
