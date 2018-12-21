@@ -333,7 +333,7 @@ class Mapfile extends \app\inc\Controller
                 // Sort classes
                 $arr = $arr2 = (array)json_decode($row['class']);
                 for ($i = 0; $i < sizeof($arr); $i++) {
-                    $last = 1000;
+                    $last = 100000;
                     foreach ($arr2 as $key => $value) {
                         if ($value->sortid < $last) {
                             $temp = $value;
@@ -515,6 +515,8 @@ class Mapfile extends \app\inc\Controller
                 TEMPLATE "test"
                 <?php
                 if (is_array($classArr['data']) AND (!$row['wmssource'])) {
+//                    print_r($classArr['data']);
+//                    die();
                     foreach ($classArr['data'] as $class) {
                         ?>
                         CLASS
