@@ -7,7 +7,12 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [Unreleased]
 - Phpfastcache added to speed up Meta API.
 
-## [2018.2.0.rc1]
+### Fixed
+- Limit of 100 classes in sorting algorithms.
+- Style issue in Firefox for color picker in class property grid.
+- Bug in Data tab, which caused an error when first sorting one grid and when tried to edit cells in another.  
+
+## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
 This means, that the gc2core and mapcache containers must be able to discover each other on an user-defined network.   
 So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
@@ -15,7 +20,6 @@ So both containers must connect to the same user-defined network. Notice that Do
 - Subuser class added to controllers with methods for creating, updating and deleting sub-users.
 - Increase max number of colors in Class Wizard -> Intervals to 100.
 - Filtering in WMS. Use something like this: filters={"public.my_layer":["anvgen=11", "anvgen=21"]} Work for now only in QGIS layers and the operator is fixed to "OR".
-
 
 ## [2018.1.1] - 2018-06-11
 ### Added
@@ -31,6 +35,7 @@ So both containers must connect to the same user-defined network. Notice that Do
 - Fix of MAT VIEW meta tables, so layers don't show as both geometry and non-geometry MAT VIEW.
 - Versioned layers are filtered in QGIS project file, so only the current version is rendered.
 - Longer retry wait for meta tile in MapCache to counter strange bug.
+- Critical security bug. One layer could get privileges from another.
 
 ## [2018.1] - 2018-07-05
 ### Added
