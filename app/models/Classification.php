@@ -58,7 +58,7 @@ class Classification extends \app\inc\Model
             $row = $this->fetchRow($result, "assoc");
             $arr = $arr2 = (array)json_decode($row['class']);
             for ($i = 0; $i < sizeof($arr); $i++) {
-                $last = 100;
+                $last = 10000;
                 foreach ($arr2 as $key => $value) {
                     if ($value->sortid < $last) {
                         $temp = $value;
