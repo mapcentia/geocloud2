@@ -37,11 +37,6 @@ class Table extends Model
      * @param $table
      * @param bool $temp
      * @param bool $addGeomType
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     function __construct($table, $temp = false, $addGeomType = false)
     {

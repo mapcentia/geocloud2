@@ -60,11 +60,7 @@ class Layer extends \app\models\Table
      * @param bool $parse
      * @param bool $es
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
      * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
