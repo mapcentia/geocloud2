@@ -10,7 +10,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - Limit of 100 classes in sorting algorithms.
 - Style issue in Firefox for color picker in class property grid.
-- Bug in Data tab, which caused an error when first sorting one grid and when tried to edit cells in another.  
+- Bug in Data tab, which caused an error when first sorting one grid and when tried to edit cells in another.
+- CDATA is handled in Feature API, so something like HTML included in GeoJSON won't crash the API.
 
 ## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  

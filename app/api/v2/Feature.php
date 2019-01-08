@@ -223,9 +223,12 @@ class Feature extends \app\inc\Controller
                 // Pass. Geom is not required
             }
 
-            // Create the properties
-            foreach ($props as $elem => $prop) {
-                $xml .= "<feature:{$elem}>{$prop}</feature:{$elem}>\n";
+            // Create the elements
+            foreach ($props as $elem => $value) {
+                if (is_string($value)) {
+                    $value = "<![CDATA[{$value}]]>";
+                }
+                $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
             }
 
             $xml .= "</feature:{$this->table}>\n";
@@ -233,7 +236,6 @@ class Feature extends \app\inc\Controller
 
         }
         $xml .= "</wfs:Transaction>\n";
-
         return $this->commit($xml);
     }
 
@@ -284,11 +286,14 @@ class Feature extends \app\inc\Controller
                 // Pass. Geom is not required
             }
 
-            // Create the properties
-            foreach ($props as $elem => $prop) {
+            // Create the elements
+            foreach ($props as $elem => $value) {
+                if (is_string($value)) {
+                    $value = "<![CDATA[{$value}]]>";
+                }
                 $xml .= "<wfs:Property>\n";
                 $xml .= "<wfs:Name>{$elem}</wfs:Name>\n";
-                $xml .= "<wfs:Value>{$prop}</wfs:Value>\n";
+                $xml .= "<wfs:Value>{$value}</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
             }
 
