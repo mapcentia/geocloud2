@@ -6,6 +6,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
 - Phpfastcache added to speed up Meta API.
+- MapServer/MapCache now exposes layers as Mapbox Vector tiles. In MapServer just use `format=mvt` and in MapCache MVT layers are prefixed with `.mvt` like public.foo.mvt.
 
 ### Fixed
 - Limit of 100 classes in sorting algorithms.

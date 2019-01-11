@@ -34,8 +34,8 @@ class Mapcachefile extends \app\inc\Controller
     }
 
     /**
-     * @param $file string
-     * @return bool|null|string
+     * @param $str
+     * @return string
      */
     private function checkSumStr($str)
     {
@@ -112,6 +112,12 @@ class Mapcachefile extends \app\inc\Controller
                 <quality>95</quality>
                 <photometric>ycbcr</photometric>
             </format>
+
+            <format name="MVT" type="RAW">
+                <extension>mvt</extension>
+                <mime_type>application/vnd.mapbox-vector-tile</mime_type>
+            </format>
+
             <grid name="g20">
                 <metadata>
                     <title>GoogleMapsCompatible</title>
@@ -209,34 +215,27 @@ class Mapcachefile extends \app\inc\Controller
                         <?php } ?>
 
                         <source name="<?php echo $table ?>" type="wms">
-                        <getmap>
-                            <params>
-                                <FORMAT>image/png</FORMAT>
-                                <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
-                            </params>
-                        </getmap>
-                        <http>
-                            <url><?php
-
-                                if ($QGISLayers) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
-                                    echo explode("&", $row["wmssource"])[0] . "&transparent=true&DPI_=96&";
-                                } else {
-                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&map_resolution=96_&";
-                                }
-
-                                ?></url>
-                        </http>
-                        <getfeatureinfo>
-                            <!-- info_formats: comma separated list of wms info_formats supported by the source WMS.
-                            you can get this list by studying the source WMS capabilities document.
-                            -->
-                            <info_formats>text/plain,application/vnd.ogc.gml</info_formats>
-
-                            <!-- KVP params to pass with the request. QUERY_LAYERS is mandatory -->
-                            <params>
-                                <QUERY_LAYERS><?php echo $table ?></QUERY_LAYERS>
-                            </params>
-                        </getfeatureinfo>
+                            <getmap>
+                                <params>
+                                    <FORMAT>PNG</FORMAT>
+                                    <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
+                                </params>
+                            </getmap>
+                            <http>
+                                <url><?php
+                                    if ($QGISLayers) { // If layer is QGIS WMS source, then get map directly from qgis_mapserv
+                                        echo explode("&", $row["wmssource"])[0] . "&transparent=true&DPI_=96&";
+                                    } else {
+                                        echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&map_resolution=96_&";
+                                    }
+                                    ?></url>
+                            </http>
+                            <getfeatureinfo>
+                                <info_formats>text/plain,application/vnd.ogc.gml</info_formats>
+                                <params>
+                                    <QUERY_LAYERS><?php echo $table ?></QUERY_LAYERS>
+                                </params>
+                            </getfeatureinfo>
                         </source>
                         <tileset name="<?php echo $table ?>">
                             <source><?php echo $table ?></source>
@@ -250,6 +249,39 @@ class Mapcachefile extends \app\inc\Controller
                             <format><?php echo $format ?></format>
                             <?php if ($meta_size) echo "<metatile>" . $meta_size . " " . $meta_size . "</metatile>\n" ?>
                             <metabuffer><?php echo $meta_buffer ?></metabuffer>
+                            <expires><?php echo $expire ?></expires>
+                            <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
+                            <metadata>
+                                <title>
+                                    <![CDATA[<?php echo $row['f_table_title'] ? $row['f_table_title'] : $row['f_table_name']; ?>
+                                    ]]></title>
+                                <abstract><![CDATA[<?php echo $row['f_table_abstract']; ?>]]></abstract>
+                                <wgs84boundingbox><?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
+                            </metadata>
+                        </tileset>
+
+
+                        <source name="<?php echo $table ?>.mvt" type="wms">
+                            <getmap>
+                                <params>
+                                    <FORMAT>mvt</FORMAT>
+                                    <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
+                                </params>
+                            </getmap>
+                            <http>
+                                <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&"; ?></url>
+                            </http>
+                        </source>
+                        <tileset name="<?php echo $table ?>.mvt">
+                            <source><?php echo $table ?>.mvt</source>
+                            <cache><?php echo $cache ?></cache>
+                            <grid>g20</grid>
+                            <?php
+                            foreach ($grids as $k => $v) {
+                                echo "<grid>{$k}</grid>\n";
+                            }
+                            ?>
+                            <format>MVT</format>
                             <expires><?php echo $expire ?></expires>
                             <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
                             <metadata>

@@ -143,6 +143,7 @@ class Wms extends \app\inc\Controller
                 $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=/sql=' . $where . '/g" ' . $mapFile;
                 $res = shell_exec($sedCmd);
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
+
             }
         }
 
@@ -158,6 +159,7 @@ class Wms extends \app\inc\Controller
                     break;
 
                 default:
+                    $mapFile = $db . "_" . $postgisschema . "_wms.map";
                     break;
             }
             $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
