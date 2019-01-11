@@ -177,8 +177,6 @@ class Tilecache extends \app\inc\Controller
                 break;
 
             case "bdb";
-
-
                 $dba = \dba_open(App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param["postgisdb"] . "/" . "feature.polygon/bdb_feature.polygon.db", "c", "db4");
 
                 $key = dba_firstkey($dba);
@@ -257,7 +255,7 @@ class Tilecache extends \app\inc\Controller
             $response['code'] = '406';
             return $response;
         }
-        //$db->query("VACUUM");
+        $db->query("VACUUM");
         $response['success'] = true;
         return $response;
     }
