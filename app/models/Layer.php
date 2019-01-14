@@ -67,6 +67,7 @@ class Layer extends \app\models\Table
     {
         $key = md5($query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
+        $timeToLive = 1; // disabled
 
         if ($CachedString->isHit()) {
             $data = $CachedString->get();
@@ -329,7 +330,7 @@ class Layer extends \app\models\Table
                 $response['code'] = 401;
             }
 
-            $CachedString->set($response)->expiresAfter(3600 * 24);//in seconds, also accepts Datetime
+            $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
             $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
             $response["cache_hit"] = false;
 
