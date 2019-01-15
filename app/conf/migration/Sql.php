@@ -61,7 +61,13 @@ class Sql
                       db VARCHAR(255) NOT NULL,
                       timestamp TIMESTAMP DEFAULT now() NOT NULL
                     )";
-
+        $sqls[] = "CREATE TABLE settings.key_value
+                    (
+                      id    SERIAL       NOT NULL       CONSTRAINT key_value_id_pk       PRIMARY KEY,
+                      key   VARCHAR(256) NOT NULL,
+                      value JSONB        NOT NULL
+                    )";
+        $sqls[] = "CREATE UNIQUE INDEX key_value_key_uindex ON settings.key_value (key)";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS

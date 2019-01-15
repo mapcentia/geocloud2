@@ -122,6 +122,15 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
+    Route::add("api/v2/keyvalue/{user}/{key}", function () {
+        $db = Route::getParam("user");
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+        }
+        Database::setDb($db);
+    });
+
     Route::add("api/v2/qgis/{action}/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
