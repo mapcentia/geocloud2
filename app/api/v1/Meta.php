@@ -16,6 +16,7 @@
 namespace app\api\v1;
 
 use \app\inc\Input;
+use \app\inc\Route;
 use \app\inc\Session;
 
 /**
@@ -41,12 +42,19 @@ class Meta extends \app\inc\Controller
 
     /**
      * @return array
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function get_index()
     {
         // Get the URI params from request
         // /meta/{user}/[query]
-        $r = func_get_arg(0);
-        return $this->layers->getAll($r["query"], Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"));
+        $db = Route::getParam("user");
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+            //$_SESSION['subuser'] = $dbSplit[0];
+        }
+        return $this->layers->getAll(Route::getParam("query"), Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"), $db);
     }
 }

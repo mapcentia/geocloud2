@@ -63,8 +63,14 @@ class Layer extends \app\models\Table
      * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
      * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
-    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false): array
+    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $db): array
     {
+        // If user is signed in with another user than the requested,
+        // when consider the user as not signed in.
+        if ($db != \app\inc\Session::getUser()) {
+            $auth = null;
+        }
+
         $key = md5($query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
         $timeToLive = 1; // disabled
