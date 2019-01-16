@@ -64,6 +64,9 @@ class Baselayerjs extends \app\inc\Controller
         if (\app\conf\App::$param['bingApiKey']) {
             echo "window.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "';\n";
         }
+        if (\app\conf\App::$param['googleApiKey']) {
+            echo "window.googleApiKey = '" . \app\conf\App::$param['googleApiKey'] . "';\n";
+        }
         if (\app\conf\App::$param['digitalGlobeKey']) {
             echo "window.digitalGlobeKey = '" . \app\conf\App::$param['digitalGlobeKey'] . "';\n";
         }
