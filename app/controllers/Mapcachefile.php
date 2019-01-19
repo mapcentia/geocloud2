@@ -58,7 +58,7 @@ class Mapcachefile extends \app\inc\Controller
             <locker type="disk">
                 <directory>/tmp</directory>
                 <timeout>30</timeout>
-                <retry>0.4</retry>
+                <retry>0.6</retry>
             </locker>
 
             <metadata>

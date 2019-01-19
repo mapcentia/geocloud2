@@ -1,15 +1,8 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\controllers
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
@@ -19,6 +12,7 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Input;
 use \app\inc\Model;
+use \app\models\Database;
 use \app\controllers\Tilecache;
 
 /**
@@ -72,9 +66,25 @@ class Processqgis extends \app\inc\Controller
                 case "postgres":
                     $dataSource = (string)$maplayer->datasource;
                     $layerName = (string)$maplayer->layername;
-                    $newDataSource = preg_replace("/host=\S*/", "host=" . Connection::$param["postgishost"], $dataSource, 1);
+
+                    preg_match('/table=\S*/', $dataSource, $matches, PREG_OFFSET_CAPTURE);
+                    preg_match_all('/"(\w+)"/', $matches[0][0], $matches, PREG_OFFSET_CAPTURE);
+
+                    $schema = $matches[1][0][0];
+                    $table = $matches[1][1][0];
+                    $fullTable = $schema . "." . $table;
+
+                    $rec = $this->layer->getAll($fullTable, true, false);
+                    $db = Database::getDb();
+                    $pkey = $rec["data"][0]["pkey"];
+                    $srid = $rec["data"][0]["srid"];
+                    $type = $rec["data"][0]["type"];
+                    $f_geometry_column = $rec["data"][0]["f_geometry_column"];
+
+                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql={$where}";
+
                     preg_match("/table=\S*/", $dataSource, $matches);
-                    $maplayer->datasource = $newDataSource;
+                    $maplayer->datasource = $PGDataSource;
                     preg_match_all("/\"(.*?)\"/", $matches[0], $t);
                     $arrT[] = $t;
                     preg_match_all("/\((.*?)\)/", $dataSource, $g);
@@ -111,7 +121,7 @@ class Processqgis extends \app\inc\Controller
 
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll($fullTable, true, true);
+                    $rec = $this->layer->getAll($fullTable, true, false);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
@@ -217,7 +227,7 @@ class Processqgis extends \app\inc\Controller
             $layerKey = $tableName . ".rast";
             $table = new \app\models\Table($tableName);
             $table->createAsRasterTable("4326");
-            $url = App::$param["mapCache"]["wmsHost"] . "cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
+            $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
             $data = new \stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
