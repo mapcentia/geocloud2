@@ -64,8 +64,7 @@ class Mapcachefile extends \app\inc\Controller
             <metadata>
                 <title>my mapcache service</title>
                 <abstract>woot! this is a service abstract!</abstract>
-                <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>
-                    /mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
+                <url>http://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo Connection::$param['postgisdb']; ?></url>
             </metadata>
 
             <cache name="sqlite" type="sqlite3">
@@ -81,9 +80,7 @@ class Mapcachefile extends \app\inc\Controller
             </cache>
 
             <cache name="s3" type="s3">
-                <url>https://<?php echo App::$param["s3"]["host"] . "/" . Connection::$param['postgisdb'] ?>
-                    /{tileset}/{grid}/{z}/{x}/{y}/{ext}
-                </url>
+                <url>https://<?php echo App::$param["s3"]["host"] . "/" . Connection::$param['postgisdb'] ?>/{tileset}/{grid}/{z}/{x}/{y}/{ext}</url>
                 <headers>
                     <Host><?php echo App::$param["s3"]["host"] ?></Host>
                 </headers>
