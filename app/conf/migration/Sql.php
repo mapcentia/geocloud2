@@ -69,6 +69,9 @@ class Sql
                     )";
         $sqls[] = "CREATE UNIQUE INDEX key_value_key_uindex ON settings.key_value (key)";
         $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, '127.0.0.1', 'gc2core')";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN authentication TYPE VARCHAR(255) USING authentication::VARCHAR(255)";
+        $sqls[] = "CREATE UNIQUE INDEX geometry_columns_join_authentication_idx ON settings.geometry_columns_join (authentication)";
+        $sqls[] = "CREATE UNIQUE INDEX geometry_columns_join_baselayer_idx ON settings.geometry_columns_join (baselayer)";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT t.matviewname::character varying(256) AS f_table_name,

@@ -73,7 +73,7 @@ class Layer extends \app\models\Table
 
         $key = md5($query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
-        $timeToLive = 1; // disabled
+        $timeToLive = (60 * 60 * 24); // disabled
 
         if ($CachedString->isHit()) {
             $data = $CachedString->get();
