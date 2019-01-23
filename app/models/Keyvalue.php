@@ -20,7 +20,7 @@ class Keyvalue extends Model
     public function get($key): array
     {
         $fetchingAll = true;
-        if (isset($key)) $fetchingAll = false;
+        if ($key) $fetchingAll = false;
 
         if ($fetchingAll) {
             $sql = "SELECT * FROM settings.key_value";
@@ -56,6 +56,12 @@ class Keyvalue extends Model
     public function insert($key, $json): array
     {
         $response = [];
+        if (!$key) {
+            $response['success'] = false;
+            $response['message'] = "Missing key";
+            $response['code'] = 401;
+            return $response;
+        }
         $sql = "INSERT INTO settings.key_value(key, value) VALUES (:key, :value) RETURNING *";
         try {
             $res = $this->prepare($sql);
@@ -74,6 +80,12 @@ class Keyvalue extends Model
     public function update($key, $json): array
     {
         $response = [];
+        if (!$key) {
+            $response['success'] = false;
+            $response['message'] = "Missing key";
+            $response['code'] = 401;
+            return $response;
+        }
         $sql = "UPDATE settings.key_value SET value=:value WHERE key=:key RETURNING *";
         try {
             $res = $this->prepare($sql);
@@ -92,6 +104,12 @@ class Keyvalue extends Model
     public function delete($key): array
     {
         $response = [];
+        if (!$key) {
+            $response['success'] = false;
+            $response['message'] = "Missing key";
+            $response['code'] = 401;
+            return $response;
+        }
         $sql = "DELETE FROM settings.key_value WHERE key=:key";
         try {
             $res = $this->prepare($sql);
