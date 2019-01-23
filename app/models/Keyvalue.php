@@ -19,18 +19,36 @@ class Keyvalue extends Model
 
     public function get($key): array
     {
+        $fetchingAll = true;
+        if (isset($key)) $fetchingAll = false;
+
+        if ($fetchingAll) {
+            $sql = "SELECT * FROM settings.key_value";
+        } else {
+            $sql = "SELECT * FROM settings.key_value WHERE key=:key";
+        }
+
         $response = [];
-        $sql = "SELECT * FROM settings.key_value WHERE key=:key";
         try {
             $res = $this->prepare($sql);
-            $res->execute(["key" => $key]);
+            if ($fetchingAll) {
+                $res->execute();
+            } else {
+                $res->execute(["key" => $key]);
+            }
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
             return $response;
         }
-        $response["data"] = $this->fetchRow($res, "assoc");;
+
+        if ($fetchingAll) {
+            $response["data"] = $this->fetchAll($res, "assoc");
+        } else {
+            $response["data"] = $this->fetchRow($res, "assoc");
+        }
+
         $response["success"] = true;
         return $response;
     }
