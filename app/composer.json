@@ -4,7 +4,8 @@
         "odesk/phystrix": "^2.0",
         "PHPOffice/PHPExcel": "^1.8",
         "phayes/geoPHP": "^1.2",
-        "phpFastCache/phpFastCache": "^7.0"
+        "phpFastCache/phpFastCache": "^7.0",
+        "firebase/php-jwt": "^5.0"
     },
     "require-dev": {
         "codeception/codeception": "^2.3"

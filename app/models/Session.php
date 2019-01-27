@@ -8,7 +8,9 @@
 
 namespace app\models;
 
-use app\inc\Model;
+use \app\inc\Model;
+use \app\conf\App;
+use \Firebase\JWT\JWT;
 
 class Session extends Model
 {
@@ -88,6 +90,7 @@ class Session extends Model
             Database::setDb($response['screen_name']);
             $settings_viewer = new \app\models\Setting();
             $response['api_key'] = $settings_viewer->get()['data']->api_key;
+            $response['token'] = self::createJWT($response['api_key'], $response['screen_name'], $sUserID, $response['subuser']);
 
         } else {
             session_unset();
@@ -109,5 +112,25 @@ class Session extends Model
         $response['message'] = "Session stopped";
         return $response;
 
+    }
+
+    /**
+     * @param string $secret
+     * @param $db
+     * @param string $userId
+     * @param bool $isSubUser
+     * @return string
+     */
+    private static function createJWT(string $secret, $db, string $userId, bool $isSubUser): string {
+        $token = [
+            "iss" => App::$param["host"],
+            "uid" => $userId,
+            "exp" => time() + 3600,
+            "iat" => time(),
+            "database" => $db,
+            "isSubUser" => $isSubUser,
+        ];
+        $jwt = JWT::encode($token, $secret);
+        return $jwt;
     }
 }
