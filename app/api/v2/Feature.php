@@ -84,7 +84,7 @@ class Feature extends \app\inc\Controller
         }
 
         $layer = new Layer();
-        $this->field = $layer->getAll(Route::getParam("layer"), true)["data"][0]["pkey"];
+        $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
 
         // Init geometryfactory
         $this->geometryfactory = new \mapcentia\geometryfactory();
