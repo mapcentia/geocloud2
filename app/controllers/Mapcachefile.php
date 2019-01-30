@@ -149,8 +149,8 @@ class Mapcachefile extends \app\inc\Controller
             while ($row = $postgisObject->fetchRow($result)) {
                 if ($row['f_table_schema'] != "sqlapi") {
                     $layerArr[$row['f_table_schema']][] = $row['f_table_schema'] . "." . $row['f_table_name'];
-                    $groups[$row['f_table_schema']][] = $row['layergroup'];
-                    $groupArr[$row['f_table_schema']][$row['f_table_schema'] . "." . $row['f_table_name']] = $row['layergroup'];
+                    $groups[$row['f_table_schema']][] = strtolower($row['layergroup']);
+                    $groupArr[$row['f_table_schema']][$row['f_table_schema'] . "." . $row['f_table_name']] = strtolower($row['layergroup']);
 
                     $table = $row["f_table_schema"] . "." . $row["f_table_name"];
                     if (!in_array($table, $arr)) {
@@ -356,6 +356,7 @@ class Mapcachefile extends \app\inc\Controller
                 $cache = "disk";
 
                 $unique = array_unique($groups[$k]);
+
                 foreach ($unique as $v2) {
                     $layers = array();
                     $tileSetName = "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
