@@ -1769,6 +1769,29 @@ $(document).ready(function () {
                                                         items: (function () {
                                                             Ext.each(w.fields, function (v) {
                                                                 switch (v.type) {
+                                                                    case "checkboxgroup":
+                                                                        var values = ((records.length === 1 && Ext.decode(records[0].data.meta) !== null) ? (Ext.decode(records[0].data.meta)[v.name] || v.default) : '').split(',');
+                                                                        var items = [];
+                                                                        v.values.map(function (item) {
+                                                                            items.push({
+                                                                            boxLabel: item.name,
+                                                                            name: v.name,
+                                                                            inputValue: item.value,
+                                                                            checked: (values.indexOf(item.value) > -1)
+                                                                            });
+                                                                        });
+
+                                                                        fields.push({
+                                                                            xtype: 'checkboxgroup',
+                                                                            fieldLabel: v.title,
+                                                                            name: v.name,
+                                                                            vertical: true,
+                                                                            columns: 2,
+                                                                            allowBlank: false,
+                                                                            items: items,
+                                                                        });
+
+                                                                        break;
                                                                     case "text":
                                                                         fields.push(
                                                                             {
@@ -1882,6 +1905,18 @@ $(document).ready(function () {
                                                             var param = {
                                                                 data: data
                                                             };
+
+                                                            if (data.length === 1 && data[0].meta) {
+                                                                if ('vidi_layer_type' in data[0].meta) {
+                                                                    var newValues = [];
+                                                                    data[0].meta['vidi_layer_type'].map(function(item) {
+                                                                        newValues.push(item.inputValue);
+                                                                    });
+
+                                                                    data[0].meta['vidi_layer_type'] = newValues.join(",");
+                                                                }
+                                                            }
+
                                                             param = Ext.util.JSON.encode(param);
                                                             Ext.Ajax.request({
                                                                 url: '/controllers/layer/records/_key_',
