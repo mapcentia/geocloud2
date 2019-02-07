@@ -49,7 +49,7 @@ class Database extends \app\inc\Controller
 
     public function get_exist()
     {
-        \app\models\Database::setDb("postgres");
+        \app\models\Database::setDb("mapcentia");
         $this->db = new \app\models\Database();
         return $this->db->doesDbExist(Input::getPath()->part(4));
     }

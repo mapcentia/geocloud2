@@ -48,7 +48,7 @@ class Database extends \app\inc\Model
 
         $sql = "CREATE DATABASE {$screenName}
 			    WITH ENCODING='{$encoding}'
-       			OWNER={$this->postgisuser}
+       			OWNER={$screenName}
        			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
