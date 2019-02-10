@@ -13,7 +13,7 @@ use app\conf\Connection;
 use app\conf\App;
 use app\inc\Util;
 use Phpfastcache\CacheManager;
-use Phpfastcache\Config\ConfigurationOption;
+use Phpfastcache\Drivers\Files\Config;
 
 class Table extends Model
 {
@@ -31,6 +31,7 @@ class Table extends Model
     var $sysCols;
     var $primeryKey;
     var $specialChars;
+    const CACHE_SECURITY_KEY="phpfastcache";
 
     /**
      * Table constructor.
@@ -43,11 +44,13 @@ class Table extends Model
         parent::__construct();
 
         try {
-            CacheManager::setDefaultConfig(new ConfigurationOption([
-                'path' => '/var/www/geocloud2/app/tmp',
-                'itemDetailedDate' => true
-            ]));
-            $this->InstanceCache = CacheManager::getInstance('files');
+            $this->InstanceCache = CacheManager::getInstance('Files',
+                new Config([
+                    'securityKey' => self::CACHE_SECURITY_KEY,
+                    'path' => '/var/www/geocloud2/app/tmp',
+                    'itemDetailedDate' => true
+                ])
+            );
         } catch (\Exception $exception) {
         }
 

@@ -10,7 +10,7 @@ namespace app\models;
 
 use app\conf\App;
 use Phpfastcache\CacheManager;
-use Phpfastcache\Config\ConfigurationOption;
+use Phpfastcache\Drivers\Files\Config;
 
 class Layer extends \app\models\Table
 {
@@ -19,12 +19,16 @@ class Layer extends \app\models\Table
     function __construct()
     {
         try {
-            CacheManager::setDefaultConfig(new ConfigurationOption([
-                'path' => '/var/www/geocloud2/app/tmp',
-                'itemDetailedDate' => true
-            ]));
-            $this->InstanceCache = CacheManager::getInstance('files');
+            $this->InstanceCache = CacheManager::getInstance('Files',
+                new Config([
+                    'securityKey' => parent::CACHE_SECURITY_KEY,
+                    'path' => '/var/www/geocloud2/app/tmp',
+                    'itemDetailedDate' => true
+                ])
+            );
+
         } catch (\Exception $exception) {
+            die($exception->getMessage());
         }
 
         try {
@@ -71,7 +75,7 @@ class Layer extends \app\models\Table
             $auth = null;
         }
 
-        $key = md5($query  ."_" . (int)$auth."_" . (int)$includeExtent . "_" .(int)$parse ."_" .(int)$es);
+        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
         $timeToLive = (60 * 60 * 24); // disabled
 
