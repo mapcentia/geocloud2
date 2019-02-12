@@ -38,7 +38,7 @@ Ext.MessageBox.buttonText = {
  * Set vars in function scope
  */
 var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd,
-    resetButtons,
+    resetButtons, changeLayerType,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
@@ -4189,7 +4189,7 @@ $(document).ready(function () {
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + "token=" + n;
                     setTimeout(function () {
-                        l.redraw();
+                       l.redraw();
                     }, 500);
 
                 }
@@ -4199,6 +4199,40 @@ $(document).ready(function () {
             }
         });
     };
+
+    changeLayerType = function (layer) {
+        var key = layer.split(".")[0] + "." + layer.split(".")[1];
+        var elId = "#ext-change-type-" + layer.split(".").join("-");
+        var l = map.getLayersByName(key)[0];
+        var split = l.url.split("/");
+        var newUri;
+        var singleTile;
+
+        if (split[3] === "mapcache") {
+            newUri = split[0] + "//" + split[2] + "/ows/" + split[4] + "/" + layer.split(".")[0];
+            l.url = newUri;
+            singleTile = true;
+            $(elId).addClass("fa-square").removeClass("fa-delicious");
+
+        } else {
+            newUri = split[0] + "//" + split[2] + "/mapcache/" + split[4] + "/wms";
+            l.url = newUri;
+            singleTile = false;
+            $(elId).addClass("fa-delicious").removeClass("fa-square");
+
+        }
+
+        l.addOptions({
+            singleTile: singleTile
+        }, true);
+
+        setTimeout(function () {
+            l.redraw();
+            var width = Ext.getCmp("mappanel").getWidth()
+            Ext.getCmp("mappanel").setWidth(width - 1);
+            Ext.getCmp("mappanel").setWidth(width);
+        }, 500);
+    }
 
     /**
      *
@@ -4443,8 +4477,13 @@ $(document).ready(function () {
                             filter.win = false;
                         }
                         $(".leaf-tools").empty();
+
+                        var split = map.getLayersByName(id.split("-")[0] + "." + id.split("-")[1])[0].url.split("/");
+
                         $("#" + id).html(
-                            "<i class='fa fa-arrows-alt layertree-btn' ext:qtip='" + __("Zoom to layer extent") + "' ext id='ext-" + id + "'></i>");
+                            "<i class='fa " + (split[3] === "mapcache" ? "fa-delicious" : "fa-square") + " layertree-btn' ext:qtip='" + __("Change between WMS and Tile Cache") + "' ext id='ext-change-type-" + id + "'></i>  " +
+                            "<i class='fa fa-arrows-alt layertree-btn' ext:qtip='" + __("Zoom to layer extent") + "' ext id='ext-" + id + "'></i>"
+                        );
                         currentId = e.id;
                         $("#edit-" + id).on("click", function () {
                             try {
@@ -4516,6 +4555,10 @@ $(document).ready(function () {
                                 queryWin.hide();
                             }
                         });
+
+                        $("#ext-change-type-" + id).on("click", function () {
+                            changeLayerType(e.id, true)
+                        })
 
                         $("#ext-" + id).on("click", function () {
                             if (metaDataRealKeys[e.id].type === "RASTER") {
