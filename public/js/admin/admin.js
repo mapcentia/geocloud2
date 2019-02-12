@@ -4206,25 +4206,20 @@ $(document).ready(function () {
         var l = map.getLayersByName(key)[0];
         var split = l.url.split("/");
         var newUri;
-        var singleTile;
 
         if (split[3] === "mapcache") {
             newUri = split[0] + "//" + split[2] + "/ows/" + split[4] + "/" + layer.split(".")[0];
+            l.setTileSize(new OpenLayers.Size(256, 256));
             l.url = newUri;
-            singleTile = true;
             $(elId).addClass("fa-square").removeClass("fa-delicious");
 
         } else {
             newUri = split[0] + "//" + split[2] + "/mapcache/" + split[4] + "/wms";
             l.url = newUri;
-            singleTile = false;
             $(elId).addClass("fa-delicious").removeClass("fa-square");
 
         }
-
-        l.addOptions({
-            singleTile: singleTile
-        }, true);
+        l.clearGrid();
 
         setTimeout(function () {
             l.redraw();
@@ -4371,7 +4366,7 @@ $(document).ready(function () {
                 }
                 if (response.data[u].type) {
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                        singleTile: false,
+                        singleTile: true,
                         //isBaseLayer: isBaseLayer,
                         visibility: false,
                         wrapDateLine: false,
