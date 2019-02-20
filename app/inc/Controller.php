@@ -205,10 +205,9 @@ class Controller
                         $response['auth_level'] = $auth;
                         $response['privileges'] = $privileges[$subUser];
                         $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
-
                         switch ($transaction) {
                             case false:
-                                if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") {
+                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
                                     // Always let suusers read from layers open to all
                                     if($auth == "None"  || $auth == "Write") {
                                         $response['success'] = true;
@@ -224,7 +223,9 @@ class Controller
                                 }
                                 break;
                             case true:
-                                if ($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") {
+                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && $subUser != $schema) {
+
+
                                     $response['success'] = false;
                                     $response['message'] = "You don't have privileges to edit '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
