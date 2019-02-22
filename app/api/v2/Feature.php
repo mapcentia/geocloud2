@@ -163,13 +163,18 @@ class Feature extends \app\inc\Controller
         if ($wkt) {
             try {
                 $json = \geoPHP::load($wkt, 'wkt')->out('json');
+            } catch (\Exception $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = "500";
+                return $response;
             } catch (\Error $e) {
                 $response['success'] = false;
-                $response['message'] = "Could not create GeoJSON geometry";
+                $response['message'] = $e->getMessage();
                 $response['code'] = "500";
                 return $response;
             }
-        }
+       }
 
         foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {
             if (!is_array($prop)){
