@@ -84,7 +84,7 @@ class Feature extends \app\inc\Controller
         }
 
         $layer = new Layer();
-        $this->field = $layer->getAll(Route::getParam("layer"), true)["data"][0]["pkey"];
+        $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
 
         // Init geometryfactory
         $this->geometryfactory = new \mapcentia\geometryfactory();
@@ -160,12 +160,15 @@ class Feature extends \app\inc\Controller
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
 
         // Convert WKT to GeoJSON
-        try {
-            $json  = \geoPHP::load($wkt, 'wkt')->out('json');
-        } catch (\Exception $e) {
-            $response['success'] = false;
-            $response['message'] = "Could not create GeoJSON";
-            $response['code'] = "500";
+        if ($wkt) {
+            try {
+                $json = \geoPHP::load($wkt, 'wkt')->out('json');
+            } catch (\Error $e) {
+                $response['success'] = false;
+                $response['message'] = "Could not create GeoJSON geometry";
+                $response['code'] = "500";
+                return $response;
+            }
         }
 
         foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {

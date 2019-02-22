@@ -63,6 +63,7 @@ class Layer extends \app\models\Table
      * @param bool $includeExtent
      * @param bool $parse
      * @param bool $es
+     * @param $db
      * @return array
      * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
      * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
