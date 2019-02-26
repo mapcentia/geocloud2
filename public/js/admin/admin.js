@@ -4223,9 +4223,6 @@ $(document).ready(function () {
 
         setTimeout(function () {
             l.redraw();
-            var width = Ext.getCmp("mappanel").getWidth()
-            Ext.getCmp("mappanel").setWidth(width - 1);
-            Ext.getCmp("mappanel").setWidth(width);
         }, 500);
     }
 
