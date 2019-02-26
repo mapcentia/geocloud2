@@ -307,9 +307,51 @@ class Mapcachefile extends \app\inc\Controller
                     ?>
                     <!-- <?php echo $k ?> -->
                     <source name="<?php echo $k ?>" type="wms">
+                        <getmap>
+                            <params>
+                                <FORMAT>image/png</FORMAT>
+                                <LAYERS><?php echo implode(",", $v) ?></LAYERS>
+                            </params>
+                        </getmap>
+                        <http>
+                            <url><?php
+
+                                if (!App::$param["useQgisForMergedLayers"][$k]) {
+                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
+                                } else {
+                                    echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
+                                }
+                                ?></url>
+
+                        </http>
+                    </source>
+                    <tileset name="<?php echo $k ?>">
+                        <source><?php echo $k ?></source>
+                        <cache><?php echo $cache ?></cache>
+                        <grid>g20</grid>
+                        <?php
+                        foreach ($grids as $k2 => $v2) {
+                            echo "<grid>{$k2}</grid>\n";
+                        }
+                        ?>
+                        <format>PNG</format>
+                        <metatile>3 3</metatile>
+                        <metabuffer>0</metabuffer>
+                        <expires>60</expires>
+                        <metadata>
+                            <title><?php echo $k; ?></title>
+                            <abstract></abstract>
+                        </metadata>
+                    </tileset>
+
+
+
+
+
+                    <source name="<?php echo $k ?>.mvt" type="wms">
                     <getmap>
                         <params>
-                            <FORMAT>image/png</FORMAT>
+                            <FORMAT>mvt</FORMAT>
                             <LAYERS><?php echo implode(",", $v) ?></LAYERS>
                         </params>
                     </getmap>
@@ -325,8 +367,8 @@ class Mapcachefile extends \app\inc\Controller
 
                     </http>
                     </source>
-                    <tileset name="<?php echo $k ?>">
-                        <source><?php echo $k ?></source>
+                    <tileset name="<?php echo $k ?>.mvt">
+                        <source><?php echo $k ?>.mvt</source>
                         <cache><?php echo $cache ?></cache>
                         <grid>g20</grid>
                         <?php
@@ -334,9 +376,7 @@ class Mapcachefile extends \app\inc\Controller
                             echo "<grid>{$k2}</grid>\n";
                         }
                         ?>
-                        <format>PNG</format>
-                        <metatile>3 3</metatile>
-                        <metabuffer>0</metabuffer>
+                        <format>MVT</format>
                         <expires>60</expires>
                         <metadata>
                             <title><?php echo $k; ?></title>
