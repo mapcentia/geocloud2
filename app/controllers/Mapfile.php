@@ -47,7 +47,7 @@ class Mapfile extends \app\inc\Controller
         EXTENT <?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
         SIZE 2000 1500
         MAXSIZE 4096
-        FONTSET "../fonts/fonts.txt"
+        FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
         IMAGECOLOR 255 2 255
         UNITS METERS
         INTERLACE OFF
@@ -432,7 +432,7 @@ class Mapfile extends \app\inc\Controller
                         } else {
                             $dataSql = $row['data'];
                         }
-                        echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
+                        echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ({$dataSql}) as bar /*FILTER_{$layerName}*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
                         CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']); ?><?php echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
