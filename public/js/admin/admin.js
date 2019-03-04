@@ -4187,7 +4187,7 @@ $(document).ready(function () {
                         return v.toString(16);
                     });
                     l.url = l.url.replace(l.url.split("?")[1], "");
-                    l.url = l.url + "token=" + n;
+                    l.url = l.url + "?token=" + n;
                     setTimeout(function () {
                        l.redraw();
                     }, 500);
