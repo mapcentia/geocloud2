@@ -4367,7 +4367,7 @@ $(document).ready(function () {
                         //isBaseLayer: isBaseLayer,
                         visibility: false,
                         wrapDateLine: false,
-                        tileCached: true,
+                        tileCached: false,
                         displayInLayerSwitcher: true,
                         name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
                     });
