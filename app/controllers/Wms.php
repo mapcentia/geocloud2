@@ -107,15 +107,16 @@ class Wms extends \app\inc\Controller
         $useFilters = false;
 
         // Check if WMS filters are set
-        if (isset($_GET["filters"]) || isset($_GET["FILTERS"]) && $this->service == "wms") {
+        if ((isset($_GET["filters"]) || isset($_GET["FILTERS"])) && $this->service == "wms") {
             // Parse filter
             $filters = json_decode($_GET["filters"], true);
             $layer = $this->layers[0];
             $split = explode(".", $layer);
+            $wmsUrl = $model->getGeometryColumns($layer, "*")["wmssource"];
+
             // If QGIS is used
-            if ($this->service == "wms") {
+            if ($wmsUrl) {
                 // Get the url for qgis_mapserv
-                $wmsUrl = $model->getGeometryColumns($layer, "*")["wmssource"];
                 // Parse query part and get "map" parameter
                 parse_str(parse_url($wmsUrl)["query"], $query);
                 $e = $query["map"];
@@ -141,37 +142,39 @@ class Wms extends \app\inc\Controller
                     $res = shell_exec($sedCmd);
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
-            }
-            // MapServer is used
-            if (isset($_GET["filters"]) || isset($_GET["FILTERS"]) && $this->service != "wms") {
-                // Parse filter
-                $filters = json_decode($_GET["filters"], true);
-                $layer = $this->layers[0];
-                $split = explode(".", $layer);
+
+                // MapServer is used
+            } else {
                 $useFilters = true;
                 switch ($this->service) {
                     case "wms":
                         $mapFile = $db . "_" . $postgisschema . "_wms.map";
                         break;
+
                     case "wfs":
                         $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                         break;
+
                     default:
                         $mapFile = $db . "_" . $postgisschema . "_wms.map";
                         break;
                 }
+
                 $path = "/var/www/geocloud2/app/wms/mapfiles/{$mapFile}";
+
                 // Read the file
                 $file = fopen($path, "r");
                 $str = fread($file, filesize($path));
                 fclose($file);
+
                 // Write out a tmp MapFile
                 $name = md5(rand(1, 999999999) . microtime());
                 $tmpMapFile = "/var/www/geocloud2/app/tmp/{$name}.map";
                 $newMapFile = fopen($tmpMapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-                // Use sed to insert WHERE parameter
+
+                // Use sed to replace sql= parameter
                 $where = implode(" OR ", $filters[$layer]);
                 $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
                 $res = shell_exec($sedCmd);
