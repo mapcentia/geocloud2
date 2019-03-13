@@ -117,10 +117,9 @@ class Sql extends \app\inc\Controller
                     "base64" => $json["base64"],
                 ]
             );
-
         }
 
-        if (Input::get('base64')) {
+        if (Input::get('base64') === true || Input::get('base64') === "true") {
             $this->q = urldecode(base64_decode(urldecode(Input::get('q'))));
         } else {
             $this->q = urldecode(Input::get('q'));

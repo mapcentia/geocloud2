@@ -94,7 +94,7 @@ class Sqlwrapper extends \app\inc\Controller
 
         $form = [
             "q" => Input::get("q"),
-            "base64" => Input::get("base64"),
+            "base64" => Input::get("base64") === true || Input::get("base64") === "true" ? "true" : "false",
             "srs" => Input::get("srs"),
             "lifetime" => Input::get("lifetime"),
             "client_encoding" => Input::get("client_encoding"),
