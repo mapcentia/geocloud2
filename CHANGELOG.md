@@ -8,7 +8,18 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Added
 - Phpfastcache added to speed up Meta API.
 - MapServer/MapCache now exposes layers as Mapbox Vector tiles. In MapServer just use `format=mvt` and in MapCache MVT layers are prefixed with `.mvt` like public.foo.mvt.
-- Change between single WMS tile and MapCache tiles in layer tree.
+- With the new config `advertisedSrs` the advertised srs can be set for OWS in MapServer. This will override the default ones.
+- Added `checkboxgroup` widget to Meta form.
+- Filtering in WMS for both QGIS and MapServer. Use something like this: filters={"public.my_layer":["anvgen=11", "anvgen=21"]}. The operator is fixed to "OR".
+- New key/value API, which can be used by a client to store JSON objects. Vidi is using the API for storing snapshots.
+- The config `googleApiKey` for setting a Google API key for use in Vidi.
+
+### Changed
+- Change how cached/not-cached layer work in the Map tab:
+    - Default is now to display layers as not-cached.
+    - Button in layer tree to switch between cached and not-cached display.
+    - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
+   
 
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
@@ -16,6 +27,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Bug in Data tab, which caused an error when first sorting one grid and when tried to edit cells in another.
 - CDATA is handled in Feature API, so something like HTML included in GeoJSON won't crash the API.
 - Serious security bug in Meta API.
+- Avoid double group names when using name with different upper/lower case.
 
 ## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
