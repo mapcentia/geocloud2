@@ -7,6 +7,6 @@
         "phpFastCache/phpFastCache": "^7.0"
     },
     "require-dev": {
-        "codeception/codeception": "^2.3"
+        "codeception/codeception": "^2.5"
     }
 }
