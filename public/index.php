@@ -152,8 +152,6 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb("mapcentia");
     });
 
-
-
     Route::add("api/v1/meta/{user}/[query]", function () {
         Session::start();
     });
@@ -162,6 +160,8 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
+
+    Route::add("api/v2/user");
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
