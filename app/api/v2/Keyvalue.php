@@ -27,7 +27,7 @@ class Keyvalue extends \app\inc\Controller
     public function get_index(): array
     {
         $key = Route::getParam("key");
-        return $this->keyValue->get($key);
+        return $this->keyValue->get($key,  Input::get());
     }
 
     /**

@@ -17,25 +17,48 @@ class Keyvalue extends Model
         parent::__construct();
     }
 
-    public function get($key): array
+    public function get($key, $urlVars): array
     {
+       // print_r($urlVars);
+
+        $params = [];
+
         $fetchingAll = true;
-        if ($key) $fetchingAll = false;
+
+        if ($key) {
+            $fetchingAll = false;
+        }
+
+        if (isset($urlVars["paths"])) {
+            $paths = explode(";", $urlVars["paths"]);
+
+            foreach ($paths as $path) {
+                $tmp[] = "'{$path}'::text,value#>'{{$path}}'";
+            }
+            $value = "json_build_object(" . implode(",", $tmp). ") as value";
+
+        } else {
+            $value = "value";
+        }
 
         if ($fetchingAll) {
-            $sql = "SELECT * FROM settings.key_value";
+            $sql = "SELECT id,key,{$value} FROM settings.key_value WHERE 1=1";
         } else {
-            $sql = "SELECT * FROM settings.key_value WHERE key=:key";
+            $sql = "SELECT id,key,{$value} FROM settings.key_value WHERE key=:key";
+            $params["key"] = $key;
+        }
+
+        if (isset($urlVars["like"])) {
+            $sql .= " AND key LIKE :where";
+            $params["where"] = $urlVars["like"];
         }
 
         $response = [];
         try {
             $res = $this->prepare($sql);
-            if ($fetchingAll) {
-                $res->execute();
-            } else {
-                $res->execute(["key" => $key]);
-            }
+
+            $res->execute($params);
+
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
