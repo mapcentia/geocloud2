@@ -9,19 +9,25 @@
 namespace app\api\v2;
 
 use \app\inc\Input;
+use \app\inc\Controller;
+use \app\models\SuperUser;
 
 /**
  * Class User
  * @package app\api\v2
  */
-class User extends \app\inc\Controller
+class User extends Controller
 {
+
+    private $superUser;
+
     /**
      * User constructor.
      */
     function __construct()
     {
         parent::__construct();
+        $this->superUser = new SuperUser();
     }
 
     /**
@@ -29,18 +35,8 @@ class User extends \app\inc\Controller
      */
     function post_index(): array
     {
-        /*
-        passwords - force checks
-        cleaning names and additional checks
-        creating the database
-
-        POST /api/user - create superuser
-            200
-            400
-
-        */
-
-        return array();
+        $data = json_decode(Input::getBody(), true) ? : [];
+        return $this->superUser->createUser($data);
     }
 
 }

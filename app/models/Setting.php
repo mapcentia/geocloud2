@@ -275,6 +275,40 @@ class Setting extends Model
         return $response;
     }
 
+    /**
+     * Password is required to have
+     * - at least one capital letter
+     * - at least one digit
+     * - be longer than 7 characters
+     * 
+     * @return array
+     */
+    public function checkPasswordStrength($password)
+    {
+        $validationErrors = [];
+
+        if (strlen($password) < 8) {
+            $validationErrors[] = "has to be at least 8 characters long";
+        }
+
+        if (!preg_match("#[0-9]+#", $password)) {
+            $validationErrors[] = "must include at least one number";
+        }
+    
+        if (!preg_match("#[A-Z]+#", $password)) {
+            $validationErrors[] = "must include at least one capital letter";
+        }
+
+        return $validationErrors;
+    }
+
+    /**
+     * Encrypts password
+     */
+    public function encryptPwSecure($password) {
+        return password_hash($password, PASSWORD_BCRYPT);
+    }
+
     public function encryptPw($pass)
     {
         $pass = strip_tags($pass);

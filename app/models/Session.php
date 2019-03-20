@@ -54,6 +54,7 @@ class Session extends Model
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
+        
         $sPassword = \app\models\Setting::encryptPw($pw);
         if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
@@ -67,7 +68,23 @@ class Session extends Model
             $row = $this->fetchRow($res);
         }
 
+        $isAuthenticated = false;
         if ($row['screenname']) {
+            $isAuthenticated = true;
+        } else {
+            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
+            $res = $this->prepare($sQuery);
+            $res->execute(array(":sUserID" => $sUserID));
+            $row = $this->fetchRow($res);
+
+            if ($row['pw']) {
+                if (password_verify($pw, $row['pw'])) {
+                    $isAuthenticated = true;
+                }
+            }
+        }
+
+        if ($isAuthenticated) {
             // Login successful.
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;

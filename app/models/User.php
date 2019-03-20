@@ -9,12 +9,13 @@
 namespace app\models;
 
 use app\inc\Model;
+use \app\models\interfaces\UserInterface;
 
 /**
  * Class User
  * @package app\models
  */
-class User extends Model
+class User extends Model implements UserInterface
 {
     public $userId;
 
