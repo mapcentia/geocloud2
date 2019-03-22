@@ -8,14 +8,18 @@
 
 namespace app\models;
 
+use \app\conf\App;
 use app\inc\Model;
-use \app\models\interfaces\UserInterface;
+
+define('VDAEMON_PARSE', false);
+define('VD_E_POST_SECURITY', false);
+require(__DIR__ . '/../../public/user/vdaemon/vdaemon.php');
 
 /**
  * Class User
  * @package app\models
  */
-class User extends Model implements UserInterface
+class User extends Model
 {
     public $userId;
 
@@ -77,17 +81,84 @@ class User extends Model implements UserInterface
      */
     public function createUser(array $data): array
     {
-        $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
+        $mandatoryParameters = ['name', 'email', 'password'];   
+        foreach ($mandatoryParameters as $item) {
+            if (empty($data[$item])) {
+                return array(
+                    'code' => 400,
+                    'success' => false,
+                    'message' => "$item has to be provided"
+                );
+            }
+        }
 
-        $password = isset($data["password"]) ? Setting::encryptPw($data["password"]) : null;
-        $email = isset($data["email"]) ? $data["email"] : null;
-        $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
+        $name = VDFormat($data['name'], true);
+        $email = VDFormat($data['email'], true);
+        $password = VDFormat($data['password'], true);
+        $group = (empty($data['usergroup']) ? null : VDFormat($data['zone'], true));
+        $zone = (empty($data['zone']) ? null : VDFormat($data['zone'], true));
 
-        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup) RETURNING screenname,parentdb,email,usergroup";
+        // Generate user identifier from the name
+        $userId = Model::toAscii($name, NULL, "_");
+
+        // @todo In case of subuser, there can be two subusers with same name but belonging to different super users
+
+        // Check if such user identifier already exists
+        $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '$userId'");
+        $result = $this->fetchRow($res);
+        if ($result['count'] > 0) {
+            return array(
+                'code' => 400,
+                'success' => false,
+                'message' => "User identifier $userId already exists"
+            );
+        }
+
+        // Check if such email already exists
+        $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '$email'");
+        $result = $this->fetchRow($res);
+        if ($result['count'] > 0) {
+            return array(
+                'code' => 400,
+                'success' => false,
+                'message' => "Email $email already exists"
+            );
+        }
+
+        $passwordCheckResults = Setting::checkPasswordStrength($password);
+        if (sizeof($passwordCheckResults) > 0) {
+            return array(
+                'code' => 400,
+                'success' => false,
+                'message' => 'Password does not meet following requirements: ' . implode(', ', $passwordCheckResults)
+            );
+        }
+
+        $encryptedPassword = Setting::encryptPwSecure($password);
+
+        // Create new database
+        if ($data['subuser'] === false) {
+            $db = new Database();
+            $db->postgisdb = $this->postgisdb;
+            $dbObj = $db->createdb($userId, App::$param['databaseTemplate'], "UTF8");
+            if ($dbObj !== true) {
+                die("Unable to create database for user identifier $userId");
+            }
+        }
+
+        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :zone) RETURNING screenname,parentdb,email,usergroup,zone";
 
         try {
             $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $user, ":sPassword" => $password, ":sEmail" => $email, ":sParentDb" => $this->userId, ":sUsergroup" => $userGroup));
+            $res->execute(array(
+                ":sUserID" => $userId,
+                ":sPassword" => $encryptedPassword,
+                ":sEmail" => $email,
+                ":sParentDb" => $this->userId,
+                ":sUsergroup" => $group,
+                ":zone" => $zone
+            ));
+
             $row = $this->fetchRow($res, "assoc");
         } catch (\Exception $e) {
             $response['success'] = false;
@@ -98,7 +169,7 @@ class User extends Model implements UserInterface
         }
 
         $response['success'] = true;
-        $response['message'] = "User created";
+        $response['message'] = 'User was created';
         $response['data'] = $row;
         return $response;
     }

@@ -10,7 +10,8 @@ namespace app\api\v2;
 
 use \app\inc\Input;
 use \app\inc\Controller;
-use \app\models\SuperUser;
+use \app\inc\Session;
+use \app\models\User as UserModel;
 
 /**
  * Class User
@@ -19,7 +20,7 @@ use \app\models\SuperUser;
 class User extends Controller
 {
 
-    private $superUser;
+    private $user;
 
     /**
      * User constructor.
@@ -27,7 +28,7 @@ class User extends Controller
     function __construct()
     {
         parent::__construct();
-        $this->superUser = new SuperUser();
+        $this->user = new UserModel();
     }
 
     /**
@@ -36,7 +37,16 @@ class User extends Controller
     function post_index(): array
     {
         $data = json_decode(Input::getBody(), true) ? : [];
-        return $this->superUser->createUser($data);
+        if ((empty($data['subUser']) || filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN) === false)
+            || is_null(Session::isAuth()) === false && filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN)) {
+            $data['subuser'] = filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN);
+            return $this->user->createUser($data);
+        } else {
+            return [
+                'success' => false,
+                'message' => "Sub users should be created only by authenticated clients and 'subuser' parameter set to 'true'",
+                'code' => 400
+            ];
+        }
     }
-
 }
