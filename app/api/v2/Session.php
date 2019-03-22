@@ -32,6 +32,40 @@ class Session extends \app\inc\Controller
 
     /**
      * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/session/start",
+     *   tags={"session"},
+     *   summary="Starts the session",
+     *   @OA\Parameter(
+     *     name="user",
+     *     in="query",
+     *     description="User name",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="password",
+     *     in="query",
+     *     description="Password",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="schema",
+     *     in="query",
+     *     description="Schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_start(): array
     {
@@ -48,6 +82,28 @@ class Session extends \app\inc\Controller
 
     /**
      * @return array
+     * 
+     * @OA\Post(
+     *   path="/v2/session/start",
+     *   tags={"session"},
+     *   summary="Starts the session",
+     *   @OA\RequestBody(
+     *     description="Credentials",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="user",type="string"),
+     *         @OA\Property(property="password",type="string"),
+     *         @OA\Property(property="schema",type="string"),
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function post_start(): array
     {
@@ -64,6 +120,16 @@ class Session extends \app\inc\Controller
 
     /**
      * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/session",
+     *   tags={"session"},
+     *   summary="Checks the session",
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_index()
     {
@@ -72,6 +138,16 @@ class Session extends \app\inc\Controller
 
     /**
      * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/session/stop",
+     *   tags={"session"},
+     *   summary="Destroys the session",
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_stop()
     {

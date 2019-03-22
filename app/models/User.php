@@ -235,6 +235,8 @@ class User extends Model
      */
     public function deleteUser(string $data): array
     {
+        // @todo Check if parent database is the same as the signed in user (deleteing only own subusers)
+
         $user = $data ? Model::toAscii($data, NULL, "_") : null;
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID";
         try {

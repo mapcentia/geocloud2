@@ -1,0 +1,237 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Geocloud API",
+        "version": "0.1"
+    },
+    "paths": {
+        "/v2/session/start": {
+            "get": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Starts the session",
+                "operationId": "app\\api\\v2\\Session::get_start",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "query",
+                        "description": "User name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "description": "Password",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "description": "Schema",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Starts the session",
+                "operationId": "app\\api\\v2\\Session::post_start",
+                "requestBody": {
+                    "description": "Credentials",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
+        "/v2/session": {
+            "get": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Checks the session",
+                "operationId": "app\\api\\v2\\Session::get_index",
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
+        "/v2/session/stop": {
+            "get": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Destroys the session",
+                "operationId": "app\\api\\v2\\Session::get_stop",
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
+        "/v2/user": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Creates user",
+                "operationId": "app\\api\\v2\\User::post_index",
+                "requestBody": {
+                    "description": "User data",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "subuser": {
+                                        "type": "boolean"
+                                    },
+                                    "zone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
+        "/v2/user/{userId}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Returns extended information about user (meta, subusers, schemas, groups)",
+                "operationId": "app\\api\\v2\\User::get_dynamic_user_id",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Updates user information",
+                "operationId": "app\\api\\v2\\User::put_dynamic_user_id",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "User data",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Deletes user",
+                "operationId": "app\\api\\v2\\User::delete_dynamic_user_id",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        }
+    }
+}

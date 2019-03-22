@@ -1,10 +1,15 @@
 {
+    "scripts": {
+        "test": "./vendor/bin/codecept run api",
+        "build:documentation": "./vendor/bin/openapi --output api/api.json api/v2"
+    },
     "require": {
         "wildbit/postmark-php": "^2.2",
         "odesk/phystrix": "^2.0",
         "PHPOffice/PHPExcel": "^1.8",
         "phayes/geoPHP": "^1.2",
-        "phpFastCache/phpFastCache": "^7.0"
+        "phpFastCache/phpFastCache": "^7.0",
+        "zircote/swagger-php": "^3.0"
     },
     "require-dev": {
         "codeception/codeception": "^2.5"

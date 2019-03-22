@@ -19,7 +19,7 @@ class UserManagementCest
         $this->subUserEmail = 'subtest' . $date->getTimestamp() . '@example.com';
     }
 
-    public function createSuperUser(\ApiTester $I)
+    public function shouldCreateSuperUser(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('user', json_encode([
@@ -60,7 +60,7 @@ class UserManagementCest
         ]);
     }
 
-    public function createSubUser(\ApiTester $I)
+    public function shouldCreateSubUser(\ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');

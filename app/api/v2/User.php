@@ -1,5 +1,9 @@
 <?php
 /**
+ * @OA\Info(title="Geocloud API", version="0.1")
+ */
+
+/**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
@@ -33,6 +37,30 @@ class User extends Controller
 
     /**
      * @return array
+     * 
+     * @OA\Post(
+     *   path="/v2/user",
+     *   tags={"user"},
+     *   summary="Creates user",
+     *   @OA\RequestBody(
+     *     description="User data",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="name",type="string"),
+     *         @OA\Property(property="email",type="string"),
+     *         @OA\Property(property="password",type="string"),
+     *         @OA\Property(property="subuser",type="boolean"),
+     *         @OA\Property(property="zone",type="string")
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     function post_index(): array
     {
@@ -48,5 +76,96 @@ class User extends Controller
                 'code' => 400
             ];
         }
+    }
+
+    /**
+     * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/user/{userId}",
+     *   tags={"user"},
+     *   summary="Returns extended information about user (meta, subusers, schemas, groups)",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="number"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function get_dynamic_user_id(): array
+    {
+        return array();
+    }
+
+    /**
+     * @return array
+     * 
+     * @OA\Put(
+     *   path="/v2/user/{userId}",
+     *   tags={"user"},
+     *   summary="Updates user information",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="number"
+     *     )
+     *   ),
+     *   @OA\RequestBody(
+     *     description="User data",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="password",type="string"),
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function put_dynamic_user_id(): array
+    {
+        return array();
+    }
+
+    /**
+     * @return array
+     * 
+     * @OA\Delete(
+     *   path="/v2/user/{userId}",
+     *   tags={"user"},
+     *   summary="Deletes user",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="number"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function delete_dynamic_user_id(): array
+    {
+        return array();
     }
 }
