@@ -10,8 +10,8 @@ namespace app\api\v2;
 
 use \app\inc\Input;
 use \app\inc\Controller;
-use \app\inc\Session;
 use \app\models\User as UserModel;
+use \app\inc\Session;
 
 /**
  * Class User
@@ -28,7 +28,7 @@ class User extends Controller
     function __construct()
     {
         parent::__construct();
-        $this->user = new UserModel();
+        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null);
     }
 
     /**
@@ -37,9 +37,9 @@ class User extends Controller
     function post_index(): array
     {
         $data = json_decode(Input::getBody(), true) ? : [];
-        if ((empty($data['subUser']) || filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN) === false)
-            || is_null(Session::isAuth()) === false && filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN)) {
-            $data['subuser'] = filter_var($data['subUser'], FILTER_VALIDATE_BOOLEAN);
+        if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
+            || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
+            $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN);
             return $this->user->createUser($data);
         } else {
             return [

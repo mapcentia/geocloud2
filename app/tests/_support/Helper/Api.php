@@ -6,5 +6,17 @@ namespace Helper;
 
 class Api extends \Codeception\Module
 {
+    public function capturePHPSESSID()
+    {
+        $cookie = $this->getClient()->getCookieJar()->get('PHPSESSID');
+        return $cookie->getValue();
+    }
 
+    /**
+     * @return \Symfony\Component\HttpKernel\Client|\Symfony\Component\BrowserKit\Client $client
+     */
+    protected function getClient()
+    {
+        return $this->getModule('REST')->client;
+    }
 }

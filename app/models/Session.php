@@ -102,6 +102,13 @@ class Session extends Model
             $response['session_id'] = session_id();
             $response['subuser'] = $_SESSION['subuser'];
 
+            // Check if user has secure password (bcrypt hash)
+            if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
+                $response['passwordExpired'] = false;
+            } else {
+                $response['passwordExpired'] = true;
+            }
+
             Database::setDb($response['screen_name']);
             $settings_viewer = new \app\models\Setting();
             $response['api_key'] = $settings_viewer->get()['data']->api_key;
