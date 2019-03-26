@@ -5,6 +5,7 @@ class UserManagementCest
     private $userName;
     private $userEmail;
     private $userAuthCookie;
+    private $subUserAuthCookie;
     private $subUserName;
     private $subUserEmail;
     private $userId;
@@ -13,8 +14,8 @@ class UserManagementCest
     public function __construct()
     {
         $date = new DateTime();
-        $this->userName = 'Test user name ' . $date->getTimestamp();
-        $this->userEmail = 'test' . $date->getTimestamp() . '@example.com';
+        $this->userName = 'Test super user name ' . $date->getTimestamp();
+        $this->userEmail = 'supertest' . $date->getTimestamp() . '@example.com';
         $this->subUserName = 'Test sub user name ' . $date->getTimestamp();
         $this->subUserEmail = 'subtest' . $date->getTimestamp() . '@example.com';
     }
@@ -90,6 +91,27 @@ class UserManagementCest
         ]);
     }
 
+    public function shouldLetSubUserAuthorize(\ApiTester $I)
+    {
+        $I->sendPOST('session/start', json_encode([
+            'user' => $this->subUserId,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+        $this->subUserAuthCookie = $sessionCookie;
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Session started',
+            'subuser' => $this->subUserId,
+            'passwordExpired' => false
+        ]);
+    }
+
     public function shouldNotCreateUserWithSameName(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -147,5 +169,59 @@ class UserManagementCest
         $I->assertContains('Password does not meet following requirements', $response);
     }
 
+    public function superUserShouldGetInformationAboutHimself(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('user/' . $this->userId);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'data' => [
+                'email' => $this->userEmail,
+                'parentdb' => null
+            ]
+        ]);
+    }
+
+    public function subUserShouldGetInformationAboutHimself(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->sendGET('user/' . $this->subUserId);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'data' => [
+                'email' => $this->subUserEmail,
+                'parentdb' => $this->userId
+            ]
+        ]);
+    }
+
+    public function superUserShouldGetInformationAboutHisSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('user/' . $this->subUserId);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'data' => [
+                'email' => $this->subUserEmail,
+                'parentdb' => $this->userId
+            ]
+        ]);
+    }
+
+
+
+
+
+
+    /*
+        $response = $I->grabResponse();
+        var_dump($response);
+    */
 
 }

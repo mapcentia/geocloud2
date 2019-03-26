@@ -12,6 +12,7 @@
 
 namespace app\api\v2;
 
+use \app\inc\Route;
 use \app\inc\Input;
 use \app\inc\Controller;
 use \app\models\User as UserModel;
@@ -84,7 +85,7 @@ class User extends Controller
      * @OA\Get(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
-     *   summary="Returns extended information about user (meta, subusers, schemas, groups)",
+     *   summary="Returns extended information about user (meta, subusers, schemas, groups). User data is available only for the actual user and his superuser",
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -100,9 +101,39 @@ class User extends Controller
      *   )
      * )
      */
-    function get_dynamic_user_id(): array
+    function get_index(): array
     {
-        return array();
+        if (Session::isAuth()) {
+            $requestedUser = Route::getParam("userId");
+            $currentUser = Session::getUser();
+            if ($currentUser === $requestedUser) {
+                $user = $this->user->getData();
+                return [
+                    'success' => true,
+                    'data' => $user['data']
+                ];
+            } else {
+                $userModelLocal = new UserModel($requestedUser);
+                $user = $userModelLocal->getData();
+                if ($user['data']['parentdb'] === $currentUser) {
+                    return [
+                        'success' => true,
+                        'data' => $user['data']
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Requested user is not the subuser of the currently authenticated user',
+                        'code' => 403
+                    ];
+                }
+            }
+        } else {
+            return [
+                'success' => false,
+                'code' => 401
+            ];
+        }
     }
 
     /**
@@ -140,6 +171,7 @@ class User extends Controller
     function put_dynamic_user_id(): array
     {
         return array();
+        //return $this->user->updateUser($userId, $data);
     }
 
     /**

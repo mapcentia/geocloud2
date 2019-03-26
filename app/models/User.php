@@ -55,7 +55,7 @@ class User extends Model
     public function getData(): array
     {
         $domain = \app\conf\App::$param['domain'];
-        $query = "SELECT screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId));
         $row = $this->fetchRow($res);

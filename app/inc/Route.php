@@ -39,7 +39,6 @@ class Route
                  $signatureMatch = false;
              } else {*/
 
-
         for ($i = 0; $i < sizeof($routeSignature); $i++) {
 
             if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
