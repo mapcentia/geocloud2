@@ -2,6 +2,7 @@
 
 class UserManagementCest
 {
+    private $date;
     private $userName;
     private $userEmail;
     private $userAuthCookie;
@@ -13,11 +14,11 @@ class UserManagementCest
 
     public function __construct()
     {
-        $date = new DateTime();
-        $this->userName = 'Test super user name ' . $date->getTimestamp();
-        $this->userEmail = 'supertest' . $date->getTimestamp() . '@example.com';
-        $this->subUserName = 'Test sub user name ' . $date->getTimestamp();
-        $this->subUserEmail = 'subtest' . $date->getTimestamp() . '@example.com';
+        $this->date = new DateTime();
+        $this->userName = 'Test super user name ' . $this->date->getTimestamp();
+        $this->userEmail = 'supertest' . $this->date->getTimestamp() . '@example.com';
+        $this->subUserName = 'Test sub user name ' . $this->date->getTimestamp();
+        $this->subUserEmail = 'subtest' . $this->date->getTimestamp() . '@example.com';
     }
 
     public function shouldCreateSuperUser(\ApiTester $I)
@@ -214,14 +215,72 @@ class UserManagementCest
         ]);
     }
 
+    public function userShouldUpdateHimself(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('user/' . $this->userId, json_encode([
+            'password' => 'AB123oooooabc',
+        ]));
 
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was updated'
+        ]);
+    }
 
+    public function userShouldUpdateHisSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('user/' . $this->subUserId, json_encode([
+            'password' => 'AB123oooooabc',
+            'email' => 'newsubuseremail' . $this->date->getTimestamp() . '@test.com'
+        ]));
 
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was updated'
+        ]);
+    }
 
+    public function superUserShouldDeleteHisSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendDELETE('user/' . $this->subUserId);
 
-    /*
-        $response = $I->grabResponse();
-        var_dump($response);
-    */
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was deleted'
+        ]);
+    }
 
+    public function shouldReturn404OnDeletedSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('user/' . $this->subUserId);
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::NOT_FOUND);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false
+        ]);
+    }
+
+    public function superUserShouldDeleteHimself(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendDELETE('user/' . $this->userId);
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was deleted'
+        ]);
+    }
 }

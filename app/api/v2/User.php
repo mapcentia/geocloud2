@@ -105,21 +105,86 @@ class User extends Controller
     {
         if (Session::isAuth()) {
             $requestedUser = Route::getParam("userId");
+
             $currentUser = Session::getUser();
             if ($currentUser === $requestedUser) {
                 $user = $this->user->getData();
-                return [
-                    'success' => true,
-                    'data' => $user['data']
-                ];
+                return $user;
             } else {
                 $userModelLocal = new UserModel($requestedUser);
                 $user = $userModelLocal->getData();
                 if ($user['data']['parentdb'] === $currentUser) {
-                    return [
-                        'success' => true,
-                        'data' => $user['data']
-                    ];
+                    return $user;
+                } else {
+                    if (isset($user['code'])) {
+                        return $user;
+                    } else {
+                        return [
+                            'success' => false,
+                            'message' => 'Requested user is not the subuser of the currently authenticated user',
+                            'code' => 403
+                        ];
+                    }
+
+                }
+            }
+        } else {
+            return [
+                'success' => false,
+                'code' => 401
+            ];
+        }
+    }
+
+    /**
+     * @return array
+     * 
+     * @OA\Put(
+     *   path="/v2/user/{userId}",
+     *   tags={"user"},
+     *   summary="Updates user information. User can only update himself or its subuser.",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="number"
+     *     )
+     *   ),
+     *   @OA\RequestBody(
+     *     description="User data",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="password",type="string"),
+     *         @OA\Property(property="email",type="string"),
+     *         @OA\Property(property="usergroup",type="string"),
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function put_index(): array
+    {
+        if (Session::isAuth()) {
+            $data = json_decode(Input::getBody(), true) ? : [];
+
+            $requestedUserId = Route::getParam("userId");
+            $currentUserId = Session::getUser();
+
+            if ($currentUserId === $requestedUserId) {
+                return $this->user->updateUser($data);
+            } else {
+                $userModelLocal = new UserModel($requestedUserId);
+                $user = $userModelLocal->getData();
+                if ($user['data']['parentdb'] === $currentUserId) {
+                    return $userModelLocal->updateUser($data);
                 } else {
                     return [
                         'success' => false,
@@ -139,48 +204,10 @@ class User extends Controller
     /**
      * @return array
      * 
-     * @OA\Put(
-     *   path="/v2/user/{userId}",
-     *   tags={"user"},
-     *   summary="Updates user information",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier",
-     *     @OA\Schema(
-     *       type="number"
-     *     )
-     *   ),
-     *   @OA\RequestBody(
-     *     description="User data",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="password",type="string"),
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
-     */
-    function put_dynamic_user_id(): array
-    {
-        return array();
-        //return $this->user->updateUser($userId, $data);
-    }
-
-    /**
-     * @return array
-     * 
      * @OA\Delete(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
-     *   summary="Deletes user",
+     *   summary="Deletes user. User can only delete himself or be deleted by its superuser.",
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -196,8 +223,31 @@ class User extends Controller
      *   )
      * )
      */
-    function delete_dynamic_user_id(): array
+    function delete_index(): array
     {
-        return array();
+        if (Session::isAuth()) {
+            $requestedUserId = Route::getParam("userId");
+            $currentUserId = Session::getUser();
+            if ($currentUserId === $requestedUserId) {
+                return $this->user->deleteUser($currentUserId);
+            } else {
+                $userModelLocal = new UserModel($requestedUserId);
+                $user = $userModelLocal->getData();
+                if ($user['data']['parentdb'] === $currentUserId) {
+                    return $this->user->deleteUser($requestedUserId);
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Requested user is not the subuser of the currently authenticated user',
+                        'code' => 403
+                    ];
+                }
+            }
+        } else {
+            return [
+                'success' => false,
+                'code' => 401
+            ];
+        }
     }
 }

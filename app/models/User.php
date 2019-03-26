@@ -61,8 +61,8 @@ class User extends Model
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
             $response['success'] = false;
-            $response['message'] = "Userid not found";
-            //$response['code'] = 406;
+            $response['message'] = "User id not found";
+            $response['code'] = 404;
             return $response;
         }
         if (!$this->PDOerror) {
@@ -125,6 +125,7 @@ class User extends Model
             );
         }
 
+        // Check if the password is strong enough
         $passwordCheckResults = Setting::checkPasswordStrength($password);
         if (sizeof($passwordCheckResults) > 0) {
             return array(
@@ -182,8 +183,37 @@ class User extends Model
     {
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
 
-        $password = isset($data["password"]) ? Setting::encryptPw($data["password"]) : null;
-        $email = isset($data["email"]) ? $data["email"] : null;
+        // Check if such email already exists
+        $email = null;
+        if (isset($data["email"])) {
+            $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '" . $data["email"] . "'");
+            $result = $this->fetchRow($res);
+            if ($result['count'] > 0) {
+                return array(
+                    'code' => 400,
+                    'success' => false,
+                    'message' => "Email " . $data["email"] . " already exists"
+                );
+            }
+
+            $email = $data["email"];
+        }
+
+        // Check if the password is strong enough
+        $password = null;
+        if (isset($data["password"])) {
+            $passwordCheckResults = Setting::checkPasswordStrength($data["password"]);
+            if (sizeof($passwordCheckResults) > 0) {
+                return array(
+                    'code' => 400,
+                    'success' => false,
+                    'message' => 'Password does not meet following requirements: ' . implode(', ', $passwordCheckResults)
+                );
+            }
+
+            $password = Setting::encryptPwSecure($data["password"]);
+        }
+
         $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
 
         $sQuery = "UPDATE users SET screenname=screenname";
@@ -224,7 +254,7 @@ class User extends Model
         }
 
         $response['success'] = true;
-        $response['message'] = "User update";
+        $response['message'] = "User was updated";
         $response['data'] = $row;
         return $response;
     }
@@ -250,7 +280,7 @@ class User extends Model
             return $response;
         }
         $response['success'] = true;
-        $response['message'] = "User deleted";
+        $response['message'] = "User was deleted";
         $response['data'] = $res->rowCount();
         return $response;
     }
