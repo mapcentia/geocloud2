@@ -508,6 +508,20 @@ class Mapfile extends \app\inc\Controller
                 } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
+                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+
+                <?php $fields = json_decode($row['fieldconf'],true);
+                        foreach($fields as $field=>$name) {
+                            $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                        }
+
+                ?>
+                UTFDATA "<?php echo "{" . implode(",", $fieldsArr) . "}";
+
+                $fieldsArr=[];
+                ?>"
+
+
                 PROJECTION
                 "init=epsg:<?php echo $row['srid']; ?>"
                 END
