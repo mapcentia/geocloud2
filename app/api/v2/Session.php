@@ -69,14 +69,23 @@ class Session extends \app\inc\Controller
      */
     public function get_start(): array
     {
-        try {
-            return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"));
-        } catch (\TypeError $exception) {
+        if (!empty(Input::get("user")) && !empty(Input::get("password"))) {
+            try {
+                return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"));
+            } catch (\TypeError $exception) {
+                return [
+                    "success" => false,
+                    "error" => $exception->getMessage(),
+                    "code" => 500
+                ];
+            }
+        } else {
             return [
                 "success" => false,
-                "error" => $exception->getMessage(),
-                "code" => 500
+                "error" => "User or password parameter was not provided",
+                "code" => 400
             ];
+
         }
     }
 

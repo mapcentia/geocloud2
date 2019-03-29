@@ -110,6 +110,7 @@ class User extends Model
             return array(
                 'code' => 400,
                 'success' => false,
+                'errorCode' => 'USER_ALREADY_EXISTS',
                 'message' => "User identifier $userId already exists"
             );
         }
@@ -121,6 +122,7 @@ class User extends Model
             return array(
                 'code' => 400,
                 'success' => false,
+                'errorCode' => 'EMAIL_ALREADY_EXISTS',
                 'message' => "Email $email already exists"
             );
         }
@@ -131,6 +133,7 @@ class User extends Model
             return array(
                 'code' => 400,
                 'success' => false,
+                'errorCode' => 'WEAK_PASSWORD',
                 'message' => 'Password does not meet following requirements: ' . implode(', ', $passwordCheckResults)
             );
         }

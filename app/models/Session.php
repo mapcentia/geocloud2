@@ -31,15 +31,19 @@ class Session extends Model
         $response = [];
 
         if ($_SESSION['auth']) {
-            $response['data']['message'] = "Session started";
+            $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
             $response['data']['db'] = $_SESSION['screen_name'];
+            $response['data']['screen_name'] = $_SESSION['screen_name'];
+            $response['data']['email'] = $_SESSION['email'];
+            $response['data']['passwordExpired'] = $_SESSION['passwordExpired'];
             $response['data']['subuser'] = $_SESSION['subuser'];
             $response['data']['subusers'] = $_SESSION['subusers'];
         } else {
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
         }
+
         return $response;
 
     }
@@ -98,20 +102,24 @@ class Session extends Model
 
             $response['success'] = true;
             $response['message'] = "Session started";
-            $response['screen_name'] = $_SESSION['screen_name'];
-            $response['session_id'] = session_id();
-            $response['subuser'] = $_SESSION['subuser'];
+	    $response['data'] = [];
+            $response['data']['screen_name'] = $_SESSION['screen_name'];
+            $response['data']['session_id'] = session_id();
+            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['email'] = $row['email'];
 
             // Check if user has secure password (bcrypt hash)
             if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
-                $response['passwordExpired'] = false;
+                $response['data']['passwordExpired'] = false;
+                $_SESSION['passwordExpired'] = false;
             } else {
-                $response['passwordExpired'] = true;
+                $response['data']['passwordExpired'] = true;
+                $_SESSION['passwordExpired'] = true;
             }
 
             Database::setDb($response['screen_name']);
             $settings_viewer = new \app\models\Setting();
-            $response['api_key'] = $settings_viewer->get()['data']->api_key;
+            $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
 
         } else {
             session_unset();
