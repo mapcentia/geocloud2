@@ -38,7 +38,7 @@ Ext.MessageBox.buttonText = {
  * Set vars in function scope
  */
 var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd,
-    resetButtons, changeLayerType,
+    resetButtons, changeLayerType, isLoaded = false,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
@@ -4470,7 +4470,10 @@ $(document).ready(function () {
                         }
                         $(".leaf-tools").empty();
 
-                        var split = map.getLayersByName(id.split("-")[0] + "." + id.split("-")[1])[0].url.split("/");
+                        var split = [];
+                        if (id.split("-").length === 3) {
+                            var split = map.getLayersByName(id.split("-")[0] + "." + id.split("-")[1])[0].url.split("/");
+                        }
 
                         $("#" + id).html(
                             "<i class='fa " + (split[3] === "mapcache" ? "fa-delicious" : "fa-square") + " layertree-btn' ext:qtip='" + __("Change between WMS and Tile Cache") + "' ext id='ext-change-type-" + id + "'></i>  " +
@@ -4622,10 +4625,13 @@ $(document).ready(function () {
         if (extentRestricted) {
             extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
         }
-        if (initExtent !== null) {
-            cloud.map.zoomToExtent(initExtent, false);
-        } else {
-            cloud.map.zoomToMaxExtent();
+        if (!isLoaded) {
+            isLoaded = true;
+            if (initExtent !== null) {
+                cloud.map.zoomToExtent(initExtent, false);
+            } else {
+                cloud.map.zoomToMaxExtent();
+            }
         }
         map.addLayers([extentRestrictLayer]);
         // Remove the loading screen
