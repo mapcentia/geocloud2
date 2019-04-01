@@ -73,9 +73,10 @@ class Sql extends \app\inc\Controller
         try {
             $this->InstanceCache = CacheManager::getInstance('Files',
                 new Config([
-                    'securityKey' => \app\models\Table::CACHE_SECURITY_KEY,
-                    'path' => '/var/www/geocloud2/app/tmp',
-                    'itemDetailedDate' => true
+                    "securityKey" => \app\models\Table::CACHE_SECURITY_KEY,
+                    "path" => "/var/www/geocloud2/app/tmp",
+                    "itemDetailedDate" => true,
+                    "defaultTtl" => 1
                 ])
             );
 
@@ -168,7 +169,7 @@ class Sql extends \app\inc\Controller
         if (!$this->data) {
             $this->data = $this->response;
         }
-        $response  = unserialize($this->data);
+        $response = unserialize($this->data);
         $response["cache_hit"] = $this->cacheInfo;
         return $response;
     }
@@ -416,6 +417,11 @@ class Sql extends \app\inc\Controller
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
             $lifetime = (Input::get('lifetime')) ?: 0;
 
+            // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.
+            if ($lifetime == 0) {
+                $this->InstanceCache->clear();
+            }
+
             $CachedString = $this->InstanceCache->getItem(md5($this->q));
 
             if ($CachedString->isHit()) {
@@ -446,7 +452,7 @@ class Sql extends \app\inc\Controller
                 echo serialize($this->response);
                 // Cache script
                 $this->data = ob_get_contents();
-                $CachedString->set($this->data)->expiresAfter($lifetime);//in seconds, also accepts Datetime
+                $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
                 $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
                 $this->cacheInfo["cache_hit"] = false;
 
