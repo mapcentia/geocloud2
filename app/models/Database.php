@@ -176,6 +176,10 @@ class Database extends \app\inc\Model
             $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
         }
+        foreach ($rows1 as $row) {
+            $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO {$newOwner}";
+            $this->execQuery($sql);
+        }
         foreach ($rows2 as $row) {
             $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
             $this->execQuery($sql);
