@@ -59,9 +59,12 @@ class Wms extends \app\inc\Controller
                     $this->layers[] = $v;
                 }
 
-                // Get the service. WMS or WFS
+                // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
                     $this->service = strtolower($v);
+                } elseif (strtolower($k) == "format" && $v == "json") {
+                    $this->service = "utfgrid";
+
                 }
             }
 
@@ -196,6 +199,10 @@ class Wms extends \app\inc\Controller
                     break;
 
                 case "wfs":
+                    $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                    break;
+
+                case "utfgrid":
                     $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                     break;
 
