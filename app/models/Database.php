@@ -48,7 +48,6 @@ class Database extends \app\inc\Model
 
         $sql = "CREATE DATABASE {$screenName}
 			    WITH ENCODING='{$encoding}'
-       			OWNER={$screenName}
        			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
