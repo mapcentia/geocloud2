@@ -235,6 +235,29 @@ class UserManagementCest
         ]);
     }
 
+    public function shouldLetUserAuthorizeAfterPasswordChange(\ApiTester $I)
+    {
+        $I->sendPOST('session/start', json_encode([
+            'user' => $this->userId,
+            'password' => 'AB123oooooabc',
+        ]));
+
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+        //$this->userAuthCookie = $sessionCookie;
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Session started',
+            'data' => [
+                'subuser' => false,
+                'passwordExpired' => false
+            ]
+        ]);
+    }
+
     public function userShouldUpdateHisPasswordOnlyIfCurrentOneIsProvided(\ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);

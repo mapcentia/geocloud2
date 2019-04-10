@@ -179,6 +179,8 @@ class User extends Controller
             $requestedUserId = Route::getParam("userId");
             $currentUserId = Session::getUser();
 
+            $data['user'] = $requestedUserId;
+
             if ($currentUserId === $requestedUserId) {
                 if (empty($data['password'])) {
                     return $this->user->updateUser($data);

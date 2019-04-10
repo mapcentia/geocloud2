@@ -237,6 +237,7 @@ class User extends Model
             Database::setDb("mapcentia");
 
         }
+
         $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup";
 
         try {
