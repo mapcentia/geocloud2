@@ -158,8 +158,8 @@ class User extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="oldPassword",type="string"),
-     *         @OA\Property(property="newPassword",type="string"),
+     *         @OA\Property(property="currentPassword",type="string"),
+     *         @OA\Property(property="password",type="string"),
      *         @OA\Property(property="email",type="string"),
      *         @OA\Property(property="usergroup",type="string"),
      *       )

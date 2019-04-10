@@ -152,8 +152,8 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "Returns extended information about user (meta, subusers, schemas, groups)",
-                "operationId": "app\\api\\v2\\User::get_dynamic_user_id",
+                "summary": "Returns extended information about user (meta, subusers, schemas, groups). User data is available only for the actual user and his superuser",
+                "operationId": "app\\api\\v2\\User::get_index",
                 "parameters": [
                     {
                         "name": "userId",
@@ -161,7 +161,7 @@
                         "description": "User identifier",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "string"
                         }
                     }
                 ],
@@ -175,8 +175,8 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "Updates user information",
-                "operationId": "app\\api\\v2\\User::put_dynamic_user_id",
+                "summary": "Updates user information. User can only update himself or its subuser.",
+                "operationId": "app\\api\\v2\\User::put_index",
                 "parameters": [
                     {
                         "name": "userId",
@@ -184,7 +184,7 @@
                         "description": "User identifier",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "string"
                         }
                     }
                 ],
@@ -194,7 +194,16 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "currentPassword": {
+                                        "type": "string"
+                                    },
                                     "password": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "usergroup": {
                                         "type": "string"
                                     }
                                 },
@@ -213,8 +222,8 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "Deletes user",
-                "operationId": "app\\api\\v2\\User::delete_dynamic_user_id",
+                "summary": "Deletes user. User can only delete himself or be deleted by its superuser.",
+                "operationId": "app\\api\\v2\\User::delete_index",
                 "parameters": [
                     {
                         "name": "userId",
@@ -222,7 +231,7 @@
                         "description": "User identifier",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "string"
                         }
                     }
                 ],
