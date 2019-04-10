@@ -59,9 +59,12 @@ class Wms extends \app\inc\Controller
                     $this->layers[] = $v;
                 }
 
-                // Get the service. WMS or WFS
+                // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
                     $this->service = strtolower($v);
+                } elseif (strtolower($k) == "format" && $v == "json") {
+                    $this->service = "utfgrid";
+
                 }
             }
 
@@ -136,10 +139,16 @@ class Wms extends \app\inc\Controller
                     fwrite($newMapFile, $str);
                     fclose($newMapFile);
 
+                    $versionWhere = $model->doesColumnExist("{$split[0]}.{$split[1]}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+
                     // Use sed to replace sql= parameter
                     $where = implode(" OR ", $filters[$layer]);
-                    $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=/sql=' . $where . '/g" ' . $mapFile;
+                    if ($versionWhere) {
+                        $where = "({$where} AND {$versionWhere})";
+                    }
+                    $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . $where . '</g" ' . $mapFile;
                     $res = shell_exec($sedCmd);
+                    //die($res);
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
 
@@ -190,6 +199,10 @@ class Wms extends \app\inc\Controller
                     break;
 
                 case "wfs":
+                    $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                    break;
+
+                case "utfgrid":
                     $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                     break;
 

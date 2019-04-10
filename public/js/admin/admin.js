@@ -1,6 +1,6 @@
 /*
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -38,7 +38,7 @@ Ext.MessageBox.buttonText = {
  * Set vars in function scope
  */
 var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, activeLayer, onEditWMSClasses, onAdd,
-    resetButtons, changeLayerType,
+    resetButtons, changeLayerType, isLoaded = false,
     initExtent = null, App = new Ext.App({}), updatePrivileges, updateWorkflow, settings,
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
@@ -1638,7 +1638,7 @@ $(document).ready(function () {
                                             xtype: "checkbox",
                                             fieldLabel: __("Append"),
                                             name: "append",
-                                            checked:  records.length > 1,
+                                            checked: records.length > 1,
                                             disabled: records.length === 1
                                         }
                                     ],
@@ -1664,7 +1664,7 @@ $(document).ready(function () {
                                                     };
                                                     param = Ext.util.JSON.encode(param);
                                                     Ext.Ajax.request({
-                                                        url: '/controllers/layer/records/_key_/' + (values.append ? "1":"0"),
+                                                        url: '/controllers/layer/records/_key_/' + (values.append ? "1" : "0"),
                                                         method: 'put',
                                                         headers: {
                                                             'Content-Type': 'application/json; charset=utf-8'
@@ -1774,10 +1774,10 @@ $(document).ready(function () {
                                                                         var items = [];
                                                                         v.values.map(function (item) {
                                                                             items.push({
-                                                                            boxLabel: item.name,
-                                                                            name: v.name,
-                                                                            inputValue: item.value,
-                                                                            checked: (values.indexOf(item.value) > -1)
+                                                                                boxLabel: item.name,
+                                                                                name: v.name,
+                                                                                inputValue: item.value,
+                                                                                checked: (values.indexOf(item.value) > -1)
                                                                             });
                                                                         });
 
@@ -1879,44 +1879,42 @@ $(document).ready(function () {
 
 
                                                 })
-
                                                 return fieldsets;
-
-
                                             }()),
 
                                             buttons: [
                                                 {
                                                     text: '<i class="fa fa-check"></i> ' + __('Update'),
                                                     handler: function () {
-
                                                         var f = Ext.getCmp('metaform');
                                                         if (f.form.isValid()) {
                                                             var values = f.form.getFieldValues();
+                                                            // Check for checkboxgroup type and join values to string
+                                                            for (var key in values) {
+                                                                var value = values[key];
+                                                                if (values.hasOwnProperty(key)) {
+                                                                    if (typeof value === "object") {
+                                                                        console.log(value)
+                                                                        var tmp = [];
+                                                                        Ext.iterate(value, function (v) {
+                                                                            tmp.push(v.inputValue)
+                                                                        });
+                                                                        values[key] = tmp.join(",");
+                                                                    }
+                                                                }
+                                                            }
                                                             var data = [];
                                                             Ext.iterate(records, function (v) {
-                                                                data.push(
-                                                                    {
-                                                                        _key_: v.get("_key_"),
-                                                                        meta: values
-                                                                    }
-                                                                );
+                                                                    data.push(
+                                                                        {
+                                                                            _key_: v.get("_key_"),
+                                                                            meta: values
+                                                                        }
+                                                                    );
                                                             });
                                                             var param = {
                                                                 data: data
                                                             };
-
-                                                            if (data.length === 1 && data[0].meta) {
-                                                                if ('vidi_layer_type' in data[0].meta) {
-                                                                    var newValues = [];
-                                                                    data[0].meta['vidi_layer_type'].map(function(item) {
-                                                                        newValues.push(item.inputValue);
-                                                                    });
-
-                                                                    data[0].meta['vidi_layer_type'] = newValues.join(",");
-                                                                }
-                                                            }
-
                                                             param = Ext.util.JSON.encode(param);
                                                             Ext.Ajax.request({
                                                                 url: '/controllers/layer/records/_key_',
@@ -4189,7 +4187,7 @@ $(document).ready(function () {
                     l.url = l.url.replace(l.url.split("?")[1], "");
                     l.url = l.url + "?token=" + n;
                     setTimeout(function () {
-                       l.redraw();
+                        l.redraw();
                     }, 500);
 
                 }
@@ -4470,7 +4468,10 @@ $(document).ready(function () {
                         }
                         $(".leaf-tools").empty();
 
-                        var split = map.getLayersByName(id.split("-")[0] + "." + id.split("-")[1])[0].url.split("/");
+                        var split = [];
+                        if (id.split("-").length === 3) {
+                            var split = map.getLayersByName(id.split("-")[0] + "." + id.split("-")[1])[0].url.split("/");
+                        }
 
                         $("#" + id).html(
                             "<i class='fa " + (split[3] === "mapcache" ? "fa-delicious" : "fa-square") + " layertree-btn' ext:qtip='" + __("Change between WMS and Tile Cache") + "' ext id='ext-change-type-" + id + "'></i>  " +
@@ -4622,10 +4623,13 @@ $(document).ready(function () {
         if (extentRestricted) {
             extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
         }
-        if (initExtent !== null) {
-            cloud.map.zoomToExtent(initExtent, false);
-        } else {
-            cloud.map.zoomToMaxExtent();
+        if (!isLoaded) {
+            isLoaded = true;
+            if (initExtent !== null) {
+                cloud.map.zoomToExtent(initExtent, false);
+            } else {
+                cloud.map.zoomToMaxExtent();
+            }
         }
         map.addLayers([extentRestrictLayer]);
         // Remove the loading screen
@@ -5121,9 +5125,9 @@ function onInsert() {
 }
 
 function array_unique(ar) {
-    return ar.filter( function onlyUnique(value, index, self) {
+    return ar.filter(function onlyUnique(value, index, self) {
         return self.lastIndexOf(value) === index;
-    } )
+    })
 }
 
 saveStrategy = new OpenLayers.Strategy.Save({

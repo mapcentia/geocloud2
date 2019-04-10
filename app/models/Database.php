@@ -48,7 +48,6 @@ class Database extends \app\inc\Model
 
         $sql = "CREATE DATABASE {$screenName}
 			    WITH ENCODING='{$encoding}'
-       			OWNER={$screenName}
        			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
@@ -174,6 +173,10 @@ class Database extends \app\inc\Model
         $this->execQuery($sql);
         foreach ($rows1 as $row) {
             $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
+            $this->execQuery($sql);
+        }
+        foreach ($rows1 as $row) {
+            $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO {$newOwner}";
             $this->execQuery($sql);
         }
         foreach ($rows2 as $row) {

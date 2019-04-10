@@ -44,6 +44,7 @@ class Feature extends \app\inc\Controller
     private $geom;
     private $field;
     private $key;
+    private $user;
 
     /**
      * Feature constructor.
@@ -61,6 +62,7 @@ class Feature extends \app\inc\Controller
         $this->table = explode(".", Route::getParam("layer"))[1];
         $this->geom = explode(".", Route::getParam("layer"))[2];
         $this->key = Route::getParam("key");
+        $this->user = Route::getParam("user");
 
         if ((!$this->schema) || (!$this->table) || (!$this->geom)) {
             $response['success'] = false;
@@ -114,7 +116,7 @@ class Feature extends \app\inc\Controller
             'typeHints' => false
         ));
 
-        $url = sprintf($this->wfsUrl, $this->db, $this->schema, $this->sourceSrid);
+        $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
         // Init the Guzzle client
         $client = new Client([
@@ -353,7 +355,7 @@ class Feature extends \app\inc\Controller
             'typeHints' => FALSE
         ));
 
-        $url = sprintf($this->wfsUrl, $this->db, $this->schema, $this->sourceSrid);
+        $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
         // Init the Guzzle client
         $client = new Client([

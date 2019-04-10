@@ -72,6 +72,7 @@ class Layer extends \app\models\Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
+        // TODO doesn't work if session is sub-user!!!
         if ($db != \app\inc\Session::getUser()) {
             $auth = null;
         }

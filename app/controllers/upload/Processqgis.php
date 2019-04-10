@@ -81,6 +81,9 @@ class Processqgis extends \app\inc\Controller
                     $type = $rec["data"][0]["type"];
                     $f_geometry_column = $rec["data"][0]["f_geometry_column"];
 
+                    // Check if layer is versioned and if so, add a WHERE clause.
+                    $where = $this->layer->doesColumnExist("{$schema}.{$table}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+
                     $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql={$where}";
 
                     preg_match("/table=\S*/", $dataSource, $matches);

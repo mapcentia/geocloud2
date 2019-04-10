@@ -1,24 +1,16 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\api\v2
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Model;
-
-include_once 'Cache_Lite/Lite.php';
+use app\inc\Input;
+use Phpfastcache\CacheManager;
+use Phpfastcache\Drivers\Files\Config;
 
 /**
  * Class Sql
@@ -66,13 +58,38 @@ class Sql extends \app\inc\Controller
      */
     const USEDRELSKEY = "checked_relations";
 
+    /**
+     * @var \Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface
+     */
+    private $InstanceCache;
+
+    /**
+     * @var
+     */
+    private $cacheInfo;
+
     function __construct()
     {
+        try {
+            $this->InstanceCache = CacheManager::getInstance('Files',
+                new Config([
+                    "securityKey" => \app\models\Table::CACHE_SECURITY_KEY,
+                    "path" => "/var/www/geocloud2/app/tmp",
+                    "itemDetailedDate" => true,
+                    "defaultTtl" => 1
+                ])
+            );
+
+        } catch (\Exception $exception) {
+            die($exception->getMessage());
+        }
         parent::__construct();
     }
 
     /**
      * @return array
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function get_index(): array
     {
@@ -152,11 +169,15 @@ class Sql extends \app\inc\Controller
         if (!$this->data) {
             $this->data = $this->response;
         }
-        return unserialize($this->data);
+        $response = unserialize($this->data);
+        $response["cache_hit"] = $this->cacheInfo;
+        return $response;
     }
 
     /**
      * @return array
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function post_index(): array
     {
@@ -258,6 +279,8 @@ class Sql extends \app\inc\Controller
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     private function transaction(string $sql, string $clientEncoding = null)
     {
@@ -393,12 +416,20 @@ class Sql extends \app\inc\Controller
             $this->addAttr($response);
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
             $lifetime = (Input::get('lifetime')) ?: 0;
-            $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
-            $Cache_Lite = new \Cache_Lite($options);
-            if ($this->data = $Cache_Lite->get($this->q)) {
-                //echo "Cached";
+
+            // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.
+            if ($lifetime == 0) {
+                $this->InstanceCache->clear();
+            }
+
+            $CachedString = $this->InstanceCache->getItem(md5($this->q));
+
+            if ($CachedString->isHit()) {
+                $this->data = $CachedString->get();
+                $this->cacheInfo["cache_hit"] = $CachedString->getCreationDate();
+                $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
+
             } else {
-                //echo "Not cached";
                 ob_start();
 
                 $format = Input::get('format') ?: "geojson";
@@ -421,7 +452,10 @@ class Sql extends \app\inc\Controller
                 echo serialize($this->response);
                 // Cache script
                 $this->data = ob_get_contents();
-                $Cache_Lite->save($this->data, $this->q);
+                $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
+                $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+                $this->cacheInfo["cache_hit"] = false;
+
                 ob_get_clean();
             }
         } else {

@@ -508,6 +508,17 @@ class Mapfile extends \app\inc\Controller
                 } ?>
                 <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
+                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                <?php $fields = json_decode($row['fieldconf'],true);
+                        foreach($fields as $field=>$name) {
+                            $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                        }
+                ?>
+                UTFDATA "<?php echo "{" . implode(",", $fieldsArr) . "}";
+                $fieldsArr=[];
+                ?>"
+
+
                 PROJECTION
                 "init=epsg:<?php echo $row['srid']; ?>"
                 END
@@ -1012,19 +1023,33 @@ class Mapfile extends \app\inc\Controller
                     "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                     "wfs_name"    "<?php echo $layerName; ?>"
                     "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                    #"ows_extent" "-180 -90 180 90"
                     "gml_include_items" "all"
                     "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                     "gml_types" "auto"
                     "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                     "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END
+                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                <?php $fields = json_decode($row['fieldconf'],true);
+                foreach($fields as $field=>$name) {
+                    $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                }
+                ?>
+                UTFDATA "<?php echo "{" . implode(",", $fieldsArr) . "}";
+                $fieldsArr=[];
+                ?>"
 
                 PROJECTION
                     "init=epsg:<?php echo $row['srid']; ?>"
                 END
 
                 TEMPLATE "test"
+                CLASS
+                    NAME 'Unnamed class'
+                    STYLE
+                        COLOR 0 0 0
+                    END # style
+                END # Class
                 END #Layer
                 <?php } ?>
         <?php } ?>

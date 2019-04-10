@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -31,7 +31,7 @@ class Table extends Model
     var $sysCols;
     var $primeryKey;
     var $specialChars;
-    const CACHE_SECURITY_KEY="phpfastcache";
+    const CACHE_SECURITY_KEY = "phpfastcache";
 
     /**
      * Table constructor.
