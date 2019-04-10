@@ -287,4 +287,26 @@ class User extends Model
         $response['data'] = $res->rowCount();
         return $response;
     }
+
+    /**
+     * @param string $userId
+     * @param string $password
+     * @return bool
+     */
+    public function hasPassword(string $userId, string $checkedPassword): bool
+    {
+        $sQuery = "SELECT pw FROM users WHERE screenname = :sUserID";
+        $res = $this->prepare($sQuery);
+        $res->execute([":sUserID" => $userId]);
+        $row = $this->fetchRow($res, "assoc");
+
+        $hasPassword = false;
+        if (md5($checkedPassword) === $row['pw']) {
+            $hasPassword = true;
+        } else if (password_verify($checkedPassword, $row['pw'])) {
+            $hasPassword = true;
+        }
+
+        return $hasPassword;
+    }
 }

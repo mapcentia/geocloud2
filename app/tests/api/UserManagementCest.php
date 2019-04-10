@@ -57,8 +57,10 @@ class UserManagementCest
         $I->seeResponseContainsJson([
             'success' => true,
             'message' => 'Session started',
-            'subuser' => false,
-            'passwordExpired' => false
+            'data' => [
+                'subuser' => false,
+                'passwordExpired' => false
+            ]
         ]);
     }
 
@@ -108,8 +110,10 @@ class UserManagementCest
         $I->seeResponseContainsJson([
             'success' => true,
             'message' => 'Session started',
-            'subuser' => $this->subUserId,
-            'passwordExpired' => false
+            'data' => [
+                'subuser' => $this->subUserId,
+                'passwordExpired' => false
+            ]
         ]);
     }
 
@@ -219,6 +223,7 @@ class UserManagementCest
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendPUT('user/' . $this->userId, json_encode([
+            'currentPassword' => 'A1abcabcabc',
             'password' => 'AB123oooooabc',
         ]));
 
@@ -227,6 +232,21 @@ class UserManagementCest
         $I->seeResponseContainsJson([
             'success' => true,
             'message' => 'User was updated'
+        ]);
+    }
+
+    public function userShouldUpdateHisPasswordOnlyIfCurrentOneIsProvided(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('user/' . $this->userId, json_encode([
+            'password' => 'AB123oooooabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+            'errorCode' => 'EMPTY_CURRENT_PASSWORD'
         ]);
     }
 

@@ -92,7 +92,7 @@ class User extends Controller
      *     required=true,
      *     description="User identifier",
      *     @OA\Schema(
-     *       type="number"
+     *       type="string"
      *     )
      *   ),
      *   @OA\Response(
@@ -149,7 +149,7 @@ class User extends Controller
      *     required=true,
      *     description="User identifier",
      *     @OA\Schema(
-     *       type="number"
+     *       type="string"
      *     )
      *   ),
      *   @OA\RequestBody(
@@ -158,7 +158,8 @@ class User extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="password",type="string"),
+     *         @OA\Property(property="oldPassword",type="string"),
+     *         @OA\Property(property="newPassword",type="string"),
      *         @OA\Property(property="email",type="string"),
      *         @OA\Property(property="usergroup",type="string"),
      *       )
@@ -179,7 +180,27 @@ class User extends Controller
             $currentUserId = Session::getUser();
 
             if ($currentUserId === $requestedUserId) {
-                return $this->user->updateUser($data);
+                if (empty($data['password'])) {
+                    return $this->user->updateUser($data);
+                } else {
+                    if (empty($data['currentPassword'])) {
+                        return [
+                            'success' => false,
+                            'message' => 'Current password has to be provided in order to set the new one',
+                            'errorCode' => 'EMPTY_CURRENT_PASSWORD',
+                            'code' => 403
+                        ];
+                    } else if ($this->user->hasPassword($currentUserId, $data['currentPassword'])) {
+                        return $this->user->updateUser($data);
+                    } else {
+                        return [
+                            'success' => false,
+                            'message' => 'Provided current password is not correct',
+                            'errorCode' => 'INVALID_CURRENT_PASSWORD',
+                            'code' => 403
+                        ];
+                    }
+                }
             } else {
                 $userModelLocal = new UserModel($requestedUserId);
                 $user = $userModelLocal->getData();
@@ -214,7 +235,7 @@ class User extends Controller
      *     required=true,
      *     description="User identifier",
      *     @OA\Schema(
-     *       type="number"
+     *       type="string"
      *     )
      *   ),
      *   @OA\Response(
