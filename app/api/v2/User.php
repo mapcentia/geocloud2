@@ -37,6 +37,31 @@ class User extends Controller
     }
 
     /**
+     * API section GET router
+     */
+    function get_index(): array
+    {
+        if (Session::isAuth()) {
+            $action = Route::getParam("action");
+            if (empty($action)) {
+                return $this->get_default();
+            } else if ($action === "subusers") {
+                return $this->get_subusers();
+            } else {
+                return [
+                    'success' => false,
+                    'code' => 404
+                ];
+            }
+        } else {
+            return [
+                'success' => false,
+                'code' => 401
+            ];
+        }
+    }
+
+    /**
      * @return array
      * 
      * @OA\Post(
@@ -85,7 +110,7 @@ class User extends Controller
      * @OA\Get(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
-     *   summary="Returns extended information about user (meta, subusers, schemas, groups). User data is available only for the actual user and his superuser",
+     *   summary="Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -101,38 +126,29 @@ class User extends Controller
      *   )
      * )
      */
-    function get_index(): array
+    function get_default(): array
     {
-        if (Session::isAuth()) {
-            $requestedUser = Route::getParam("userId");
-
-            $currentUser = Session::getUser();
-            if ($currentUser === $requestedUser) {
-                $user = $this->user->getData();
+        $requestedUser = Route::getParam("userId");
+        $currentUser = Session::getUser();
+        if ($currentUser === $requestedUser) {
+            return $this->user->getData();
+        } else {
+            $userModelLocal = new UserModel($requestedUser);
+            $user = $userModelLocal->getData();
+            if ($user['data']['parentdb'] === $currentUser) {
                 return $user;
             } else {
-                $userModelLocal = new UserModel($requestedUser);
-                $user = $userModelLocal->getData();
-                if ($user['data']['parentdb'] === $currentUser) {
+                if (isset($user['code'])) {
                     return $user;
                 } else {
-                    if (isset($user['code'])) {
-                        return $user;
-                    } else {
-                        return [
-                            'success' => false,
-                            'message' => 'Requested user is not the subuser of the currently authenticated user',
-                            'code' => 403
-                        ];
-                    }
-
+                    return [
+                        'success' => false,
+                        'message' => 'Requested user is not the subuser of the currently authenticated user',
+                        'code' => 403
+                    ];
                 }
+
             }
-        } else {
-            return [
-                'success' => false,
-                'code' => 401
-            ];
         }
     }
 
@@ -271,6 +287,41 @@ class User extends Controller
                 'success' => false,
                 'code' => 401
             ];
+        }
+    }
+
+    /**
+     * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/user/{userId}/subusers",
+     *   tags={"user"},
+     *   summary="Returns subusers",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function get_subusers(): array
+    {
+        if (isset($_SESSION['subuser']) && $_SESSION['subuser'] === false) {
+            $currentUser = Session::getUser();
+            return $this->user->getSubusers($currentUser);
+        } else {
+            $response['success'] = false;
+            $response['message'] = '';
+            $response['code'] = 403;
+            return $response;
         }
     }
 }

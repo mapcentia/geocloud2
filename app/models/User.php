@@ -283,9 +283,33 @@ class User extends Model
             $response['code'] = 400;
             return $response;
         }
+
         $response['success'] = true;
         $response['message'] = "User was deleted";
         $response['data'] = $res->rowCount();
+        return $response;
+    }
+
+    /**
+     * @param string $userId
+     * @return bool
+     */
+    public function getSubusers(string $userId): array
+    {
+        $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
+        $res = $this->prepare($sQuery);
+        $res->execute([":sUserID" => $userId]);
+
+        $subusers = [];
+        while ($row = $this->fetchRow($res, "assoc")) {
+            unset($row["pw"]);
+            array_push($subusers, $row);
+        }
+
+        $response = [];
+        $response['success'] = true;
+        $response['data'] = $subusers;
+
         return $response;
     }
 

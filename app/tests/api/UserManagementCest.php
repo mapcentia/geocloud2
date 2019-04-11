@@ -117,6 +117,40 @@ class UserManagementCest
         ]);
     }
 
+    public function shouldListSubUsersOfSuperUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendGET('user/' . $this->userId . '/subusers');
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'data' => [
+                [
+                    'screenname' => $this->subUserId,
+                    'email' => $this->subUserEmail,
+                    'zone' => null,
+                    'parentdb' => $this->userId
+                ]
+            ]
+        ]);
+    }
+
+    public function shouldNotListSubUsersOfSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendGET('user/' . $this->subUserId . '/subusers');
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
+
     public function shouldNotCreateUserWithSameName(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -244,7 +278,6 @@ class UserManagementCest
 
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
-        //$this->userAuthCookie = $sessionCookie;
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
