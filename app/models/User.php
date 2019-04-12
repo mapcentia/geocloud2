@@ -95,7 +95,7 @@ class User extends Model
         $name = VDFormat($data['name'], true);
         $email = VDFormat($data['email'], true);
         $password = VDFormat($data['password'], true);
-        $group = (empty($data['usergroup']) ? null : VDFormat($data['zone'], true));
+        $group = (empty($data['usergroup']) ? null : VDFormat($data['usergroup'], true));
         $zone = (empty($data['zone']) ? null : VDFormat($data['zone'], true));
 
         // Generate user identifier from the name
@@ -302,6 +302,8 @@ class User extends Model
 
         $subusers = [];
         while ($row = $this->fetchRow($res, "assoc")) {
+            $row["screenName"] = $row["screenname"];
+            unset($row["screenname"]);
             unset($row["pw"]);
             array_push($subusers, $row);
         }

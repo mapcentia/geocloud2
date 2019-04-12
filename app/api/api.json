@@ -152,8 +152,8 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "Returns extended information about user (meta, subusers, schemas, groups). User data is available only for the actual user and his superuser",
-                "operationId": "app\\api\\v2\\User::get_index",
+                "summary": "Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
+                "operationId": "app\\api\\v2\\User::get_default",
                 "parameters": [
                     {
                         "name": "userId",
@@ -224,6 +224,31 @@
                 ],
                 "summary": "Deletes user. User can only delete himself or be deleted by its superuser.",
                 "operationId": "app\\api\\v2\\User::delete_index",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "User identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
+        "/v2/user/{userId}/subusers": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Returns subusers",
+                "operationId": "app\\api\\v2\\User::get_subusers",
                 "parameters": [
                     {
                         "name": "userId",

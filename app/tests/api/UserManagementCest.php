@@ -129,7 +129,7 @@ class UserManagementCest
             'success' => true,
             'data' => [
                 [
-                    'screenname' => $this->subUserId,
+                    'screenName' => $this->subUserId,
                     'email' => $this->subUserEmail,
                     'zone' => null,
                     'parentdb' => $this->userId
