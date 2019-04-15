@@ -16,6 +16,7 @@ use \app\inc\Route;
 use \app\inc\Input;
 use \app\inc\Controller;
 use \app\models\User as UserModel;
+use \app\models\Database;
 use \app\inc\Session;
 
 /**
@@ -26,6 +27,7 @@ class User extends Controller
 {
 
     private $user;
+    private $db;
 
     /**
      * User constructor.
@@ -78,6 +80,8 @@ class User extends Controller
      *         @OA\Property(property="email",type="string"),
      *         @OA\Property(property="password",type="string"),
      *         @OA\Property(property="subuser",type="boolean"),
+     *         @OA\Property(property="createschema",type="boolean"),
+     *         @OA\Property(property="usergroup",type="string"),
      *         @OA\Property(property="zone",type="string")
      *       )
      *     )
@@ -94,7 +98,16 @@ class User extends Controller
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
             $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN);
-            return $this->user->createUser($data);
+            $data['createschema'] = filter_var($data['createschema'], FILTER_VALIDATE_BOOLEAN);
+
+            $response = $this->user->createUser($data);
+            if ($data['subuser'] && $data['createschema']) {
+                Database::setDb(Session::getUser());
+                $database = new Database();
+                $database->createSchema($response['data']['screenname']);
+            }
+
+            return $response;
         } else {
             return [
                 'success' => false,

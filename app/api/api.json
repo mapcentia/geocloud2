@@ -5,6 +5,20 @@
         "version": "0.1"
     },
     "paths": {
+        "/v2/database/schemas": {
+            "get": {
+                "tags": [
+                    "database"
+                ],
+                "summary": "Returns available schemas",
+                "operationId": "app\\api\\v2\\Database::get_schemas",
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                }
+            }
+        },
         "/v2/session/start": {
             "get": {
                 "tags": [
@@ -130,6 +144,12 @@
                                     },
                                     "subuser": {
                                         "type": "boolean"
+                                    },
+                                    "createschema": {
+                                        "type": "boolean"
+                                    },
+                                    "usergroup": {
+                                        "type": "string"
                                     },
                                     "zone": {
                                         "type": "string"

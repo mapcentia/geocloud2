@@ -174,8 +174,12 @@ if (Input::getPath()->part(1) == "api") {
     });
 
     // User API
+    Route::add("api/v2/user/[userId]/[action]", function () { Session::start(); });
     Route::add("api/v2/user/[userId]", function () { Session::start(); });
     Route::add("api/v2/user", function () { Session::start(); });
+
+    // Database API
+    Route::add("api/v2/database", function () { Session::start(); });
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
