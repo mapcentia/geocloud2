@@ -145,9 +145,6 @@
                                     "subuser": {
                                         "type": "boolean"
                                     },
-                                    "createschema": {
-                                        "type": "boolean"
-                                    },
                                     "usergroup": {
                                         "type": "string"
                                     },

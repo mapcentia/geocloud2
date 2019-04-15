@@ -80,7 +80,6 @@ class User extends Controller
      *         @OA\Property(property="email",type="string"),
      *         @OA\Property(property="password",type="string"),
      *         @OA\Property(property="subuser",type="boolean"),
-     *         @OA\Property(property="createschema",type="boolean"),
      *         @OA\Property(property="usergroup",type="string"),
      *         @OA\Property(property="zone",type="string")
      *       )
@@ -98,10 +97,9 @@ class User extends Controller
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
             $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN);
-            $data['createschema'] = filter_var($data['createschema'], FILTER_VALIDATE_BOOLEAN);
 
             $response = $this->user->createUser($data);
-            if ($data['subuser'] && $data['createschema']) {
+            if ($data['subuser']) {
                 Database::setDb(Session::getUser());
                 $database = new Database();
                 $database->createSchema($response['data']['screenname']);
