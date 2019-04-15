@@ -96,10 +96,10 @@ class User extends Controller
         $data = json_decode(Input::getBody(), true) ? : [];
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
-            $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN);
+            $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) || Session::isAuth();
 
             $response = $this->user->createUser($data);
-            if ($data['subuser']) {
+            if (Session::isAuth()) {
                 Database::setDb(Session::getUser());
                 $database = new Database();
                 $database->createSchema($response['data']['screenname']);
