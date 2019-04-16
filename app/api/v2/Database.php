@@ -47,7 +47,7 @@ class Database extends Controller
     function get_schemas(): array
     {
         if (Session::isAuth()) {
-            DatabaseModel::setDb(Session::getUser());
+            DatabaseModel::setDb(Session::getDatabase());
             $database = new DatabaseModel();
             return $database->listAllSchemas();
         } else {

@@ -93,8 +93,9 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
-            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
+            $_SESSION['screen_name'] = $sUserID;
+            $_SESSION['parentdb'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['subuser'] = $row['parentdb'] ? true : false;
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
@@ -105,6 +106,7 @@ class Session extends Model
 	        $response['data'] = [];
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
+            $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['subuser'] = $_SESSION['subuser'];
             $response['data']['email'] = $row['email'];
 
@@ -117,7 +119,7 @@ class Session extends Model
                 $_SESSION['passwordExpired'] = true;
             }
 
-            Database::setDb($response['screen_name']);
+            Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
             $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
 

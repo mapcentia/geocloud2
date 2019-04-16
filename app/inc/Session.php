@@ -48,6 +48,11 @@ class Session
         return $_SESSION['screen_name'];
     }
 
+    static function getDatabase()
+    {
+        return $_SESSION['parentdb'];
+    }
+
     static function getLog()
     {
         if (!$_SESSION["log"]) {
