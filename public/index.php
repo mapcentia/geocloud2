@@ -14,12 +14,10 @@ if ($debug) {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-
-ini_set("display_errors", "off");
-ini_set('memory_limit', '1024M');
-ini_set('max_execution_time', 0);
-error_reporting(3);
-
+    ini_set("display_errors", "off");
+    ini_set('memory_limit', '1024M');
+    ini_set('max_execution_time', 0);
+    error_reporting(3);
 }
 
 use \app\inc\Input;
@@ -180,6 +178,13 @@ if (Input::getPath()->part(1) == "api") {
 
     // Database API
     Route::add("api/v2/database", function () { Session::start(); });
+
+    // Configuration API
+    Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
+        Session::start();
+    });
+
+    //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
