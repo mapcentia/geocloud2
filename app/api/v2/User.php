@@ -1,7 +1,4 @@
 <?php
-/**
- * @OA\Info(title="Geocloud API", version="0.1")
- */
 
 /**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
