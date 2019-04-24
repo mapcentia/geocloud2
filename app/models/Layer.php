@@ -79,7 +79,8 @@ class Layer extends \app\models\Table
 
         $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
-        $timeToLive = (60 * 60 * 24); // disabled
+        $timeToLive = (60 * 60 * 24);
+        //$timeToLive = (1); // disabled
 
         if ($CachedString->isHit()) {
             $data = $CachedString->get();
@@ -296,7 +297,7 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
 
-                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel));
+                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true));
 
                 // If session is sub-user we always check privileges
                 if (isset($_SESSION) && $_SESSION['subuser']) {

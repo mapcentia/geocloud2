@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\inc;
@@ -276,7 +276,7 @@ class Model
         return $response;
     }
 
-    public function getMetaData($table, $temp = false)
+    public function getMetaData($table, $temp = false, $restriction = false)
     {
         $arr = array();
         preg_match("/^[\w'-]*\./", $table, $matches);
@@ -290,6 +290,15 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
+
+        if ($restriction) {
+            $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
+            $primaryKey = $this->getPrimeryKey($table)['attname'];
+
+        } else {
+            $foreignConstrains = [];
+        }
+
         $sql = "SELECT
                   attname                          AS column_name,
                   attnum                           AS ordinal_position,
@@ -300,7 +309,6 @@ class Model
                 WHERE attrelid = :table :: REGCLASS
                         AND attnum > 0
                         AND NOT attisdropped";
-
 
         try {
             $res = $this->prepare($sql);
@@ -316,11 +324,34 @@ class Model
             return $response;
         }
         while ($row = $this->fetchRow($res)) {
+            $foreignValues = [];
+            if ($restriction) {
+                foreach ($foreignConstrains as $value) {
+                    if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
+                        $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
+                        try {
+                            $resC = $this->prepare($sql);
+                            $resC->execute();
+
+                        } catch (\PDOException $e) {
+                            $response['success'] = false;
+                            $response['message'] = $e->getMessage();
+                            $response['code'] = 401;
+                            return $response;
+                        }
+                        while ($rowC = $this->fetchRow($resC)) {
+                            $foreignValues[] = ["value" => $rowC[$value["parent_column"]], "alias" => (string)$rowC[$value["parent_column"]]];
+                        }
+                    }
+                }
+            }
+
             $arr[$row["column_name"]] = array(
                 "num" => $row["ordinal_position"],
                 "type" => $row["udt_name"],
                 "full_type" => $row['full_type'],
                 "is_nullable" => $row['is_nullable'] ? false : true,
+                "restriction" => sizeof($foreignValues) > 0 ? $foreignValues: null
             );
             // Get type and srid of geometry
             if ($row["udt_name"] == "geometry") {
@@ -634,6 +665,64 @@ class Model
         } else {
             $response['exists'] = false;
         }
+        return $response;
+    }
+
+    public function getForeignConstrains(string $schema, string $table): array
+    {
+        $response = [];
+        $sql = "SELECT 
+                    att2.attname AS \"child_column\", 
+                    cl.relname AS \"parent_table\", 
+                    nspname AS \"parent_schema\", 
+                    att.attname AS \"parent_column\",
+                    conname
+                FROM
+                   (SELECT 
+                        unnest(con1.conkey) AS \"parent\", 
+                        unnest(con1.confkey) AS \"child\", 
+                        con1.confrelid, 
+                        con1.conrelid,
+                        con1.conname,
+                        ns.nspname
+                    FROM 
+                        pg_class cl
+                        JOIN pg_namespace ns ON cl.relnamespace = ns.oid
+                        JOIN pg_constraint con1 ON con1.conrelid = cl.oid
+                    WHERE
+                        cl.relname = :table
+                        AND ns.nspname = :schema
+                        AND con1.contype = 'f'
+                   ) con
+                   JOIN pg_attribute att ON
+                       att.attrelid = con.confrelid AND att.attnum = con.child
+                   JOIN pg_class cl ON
+                       cl.oid = con.confrelid
+                   JOIN pg_attribute att2 ON
+                       att2.attrelid = con.conrelid AND att2.attnum = con.parent";
+
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(["table" => $table, "schema" => $schema]);
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+
+        try {
+            $rows = $this->fetchAll($res);
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+
+        $response['success'] = true;
+        $response['message'] = "Relation doesn't exists";
+        $response['data'] = $rows;
         return $response;
     }
 }
