@@ -64,6 +64,9 @@ class Preparedstatement extends \app\inc\Controller
                 // ==========================
                 try {
                     $arr = \GuzzleHttp\json_decode($q, true);
+                    if (!isset($arr["params"])) {
+                        $arr["params"] = [];
+                    }
                     Input::setParams(
                         [
                             "uuid" => $arr["uuid"],
@@ -92,11 +95,11 @@ class Preparedstatement extends \app\inc\Controller
         if (!$statement["success"]) {
             return $statement;
         }
-        $params = Input::get("params") ?:"{}";
+
 
         // Decode params
         try {
-            $params = \GuzzleHttp\json_decode($params, true);
+            $params = \GuzzleHttp\json_decode(Input::get("params") ?:"{}", true);
         } catch (\InvalidArgumentException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
