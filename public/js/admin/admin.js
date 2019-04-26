@@ -2920,6 +2920,9 @@ $(document).ready(function () {
                 },
                 {
                     name: 'cache'
+                },
+                {
+                    name: 's3_tile_set'
                 }
 
             ],
@@ -2962,7 +2965,8 @@ $(document).ready(function () {
                                 "format": store.getAt(0).data.format,
                                 "lock": store.getAt(0).data.lock,
                                 "layers": store.getAt(0).data.layers,
-                                "cache": store.getAt(0).data.cache
+                                "cache": store.getAt(0).data.cache,
+                                "s3_tile_set": store.getAt(0).data.s3_tile_set
 
                             });
                         }
