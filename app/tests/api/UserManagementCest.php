@@ -166,18 +166,6 @@ class UserManagementCest
                 'parentdb' => $this->secondUserId
             ]
         ]);
-
-        /*
-        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->secondUserAuthCookie);
-        $I->sendDELETE('user/' . $this->subUserId);
-
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
-        $I->seeResponseIsJson();
-        $I->seeResponseContainsJson([
-            'success' => true,
-            'message' => 'User was deleted'
-        ]);
-        */
     }
 
     public function shouldListSubUsersOfSuperUser(\ApiTester $I)
