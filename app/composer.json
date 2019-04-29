@@ -1,7 +1,7 @@
 {
     "scripts": {
         "test": "./vendor/bin/codecept run api",
-        "build:documentation": "./vendor/bin/openapi --output api/api.json api/v2"
+        "build:documentation": "./vendor/bin/openapi --output ../public/swagger-ui/api.json api/v2"
     },
     "require": {
         "wildbit/postmark-php": "^2.2",
