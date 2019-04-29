@@ -24,7 +24,6 @@ class User extends Controller
 {
 
     private $user;
-    private $db;
 
     /**
      * User constructor.
@@ -32,7 +31,7 @@ class User extends Controller
     function __construct()
     {
         parent::__construct();
-        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null);
+        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null, Session::getDatabase() ? Session::getDatabase() : null);
     }
 
     /**
@@ -137,13 +136,12 @@ class User extends Controller
     function get_default(): array
     {
         $requestedUser = Route::getParam("userId");
-        $currentUser = Session::getUser();
-        if ($currentUser === $requestedUser) {
+        if (Session::getUser() === $requestedUser) {
             return $this->user->getData();
         } else {
-            $userModelLocal = new UserModel($requestedUser);
+            $userModelLocal = new UserModel($requestedUser, Session::getDatabase());
             $user = $userModelLocal->getData();
-            if ($user['data']['parentdb'] === $currentUser) {
+            if ($user['data']['parentdb'] === Session::getUser()) {
                 return $user;
             } else {
                 if (isset($user['code'])) {
@@ -228,7 +226,7 @@ class User extends Controller
                     }
                 }
             } else {
-                $userModelLocal = new UserModel($requestedUserId);
+                $userModelLocal = new UserModel($requestedUserId, Session::getDatabase());
                 $user = $userModelLocal->getData();
                 if ($user['data']['parentdb'] === $currentUserId) {
                     return $userModelLocal->updateUser($data);
@@ -278,7 +276,7 @@ class User extends Controller
             if ($currentUserId === $requestedUserId) {
                 return $this->user->deleteUser($currentUserId);
             } else {
-                $userModelLocal = new UserModel($requestedUserId);
+                $userModelLocal = new UserModel($requestedUserId, Session::getDatabase());
                 $user = $userModelLocal->getData();
                 if ($user['data']['parentdb'] === $currentUserId) {
                     return $this->user->deleteUser($requestedUserId);

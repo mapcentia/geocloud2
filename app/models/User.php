@@ -23,10 +23,11 @@ class User extends Model
 {
     public $userId;
 
-    function __construct($userId = null)
+    function __construct($userId = null, $parentdb = null)
     {
         parent::__construct();
         $this->userId = $userId;
+        $this->parentdb = $parentdb;
         $this->postgisdb = "mapcentia";
     }
 
@@ -55,13 +56,13 @@ class User extends Model
     public function getData(): array
     {
         $domain = \app\conf\App::$param['domain'];
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
-        $res->execute(array(":sUserID" => $this->userId));
+        $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
             $response['success'] = false;
-            $response['message'] = "User id not found";
+            $response['message'] = "User identifier $this->userId was not found (parent database: " . ($this->parentdb ? $this->parentdb : 'null') . ")";
             $response['code'] = 404;
             return $response;
         }
@@ -280,13 +281,11 @@ class User extends Model
      */
     public function deleteUser(string $data): array
     {
-        // @todo Check if parent database is the same as the signed in user (deleteing only own subusers)
-
         $user = $data ? Model::toAscii($data, NULL, "_") : null;
-        $sQuery = "DELETE FROM users WHERE screenname=:sUserID";
+        $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
         try {
             $res = $this->prepare($sQuery);
-            $res->execute([":sUserID" => $user]);
+            $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

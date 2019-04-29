@@ -53,6 +53,11 @@ class Session
         return $_SESSION['parentdb'];
     }
 
+    static function isSubUser()
+    {
+        return $_SESSION['subuser'];
+    }
+
     static function getLog()
     {
         if (!$_SESSION["log"]) {
