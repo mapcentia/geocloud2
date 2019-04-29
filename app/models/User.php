@@ -101,18 +101,29 @@ class User extends Model
         // Generate user identifier from the name
         $userId = Model::toAscii($name, NULL, "_");
 
-        // @todo In case of subuser, there can be two subusers with same name but belonging to different super users
-
         // Check if such user identifier already exists
         $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '$userId'");
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
-            return array(
-                'code' => 400,
-                'success' => false,
-                'errorCode' => 'USER_ALREADY_EXISTS',
-                'message' => "User identifier $userId already exists"
-            );
+            if ($data['subuser']) {
+                $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $this->userId . "'");
+                $result = $this->fetchRow($res);
+                if ($result['count'] > 0) {
+                    return array(
+                        'code' => 400,
+                        'success' => false,
+                        'errorCode' => 'SUB_USER_ALREADY_EXISTS',
+                        'message' => "User identifier $userId already exists"
+                    );
+                }
+            } else {
+                return array(
+                    'code' => 400,
+                    'success' => false,
+                    'errorCode' => 'USER_ALREADY_EXISTS',
+                    'message' => "User identifier $userId already exists"
+                );
+            }
         }
 
         // Check if such email already exists

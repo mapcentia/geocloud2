@@ -56,6 +56,24 @@ class Session extends Model
      */
     public function start(string $sUserID, string $pw, $schema = "public"): array
     {
+
+        /*
+            // @todo Process the case when subuser is signed in, and there are more than one records
+            // with subuser's name in database - in this case check if the parentUserName parameter is present,
+            // so the subuser could be uniquely identified based on his parent database.
+
+            $parentUserName = VDFormat($data['parentUserName'], true);
+            ...
+            if ($data['subuser'] && empty($parentUserName)) {
+                return array(
+                    'code' => 400,
+                    'success' => false,
+                    'errorCode' => 'EMPTY_PARENT_USER',
+                    'message' => "Parent user has to be provided for created sub-user"
+                );
+            }
+        */
+
         $response = [];
         $pw = $this->VDFormat($pw, true);
         

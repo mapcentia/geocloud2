@@ -3,20 +3,32 @@
 class UserManagementCest
 {
     private $date;
+
+    private $userId;
+    private $userAuthCookie;
     private $userName;
     private $userEmail;
-    private $userAuthCookie;
+
+    private $secondUserId;
+    private $secondUserAuthCookie;
+    private $secondUserName;
+    private $secondUserEmail;
+
+    private $subUserId;
     private $subUserAuthCookie;
     private $subUserName;
     private $subUserEmail;
-    private $userId;
-    private $subUserId;
 
     public function __construct()
     {
         $this->date = new DateTime();
+        
         $this->userName = 'Test super user name ' . $this->date->getTimestamp();
         $this->userEmail = 'supertest' . $this->date->getTimestamp() . '@example.com';
+
+        $this->secondUserName = 'Test super user 2 name ' . $this->date->getTimestamp();
+        $this->secondUserEmail = 'supertest2' . $this->date->getTimestamp() . '@example.com';
+
         $this->subUserName = 'Test sub user name ' . $this->date->getTimestamp();
         $this->subUserEmail = 'subtest' . $this->date->getTimestamp() . '@example.com';
     }
@@ -77,10 +89,6 @@ class UserManagementCest
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
-        $I->seeResponseContainsJson([
-            'success' => true,
-            'message' => 'User was created'
-        ]);
 
         $response = json_decode($I->grabResponse());
         $this->subUserId = $response->data->screenname;
@@ -113,6 +121,51 @@ class UserManagementCest
             'data' => [
                 'subuser' => true,
                 'passwordExpired' => false
+            ]
+        ]);
+    }
+
+    public function shouldCreateSubuserForDifferentSuperuserWithExistingName(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPOST('user', json_encode([
+            'name' => $this->secondUserName,
+            'email' => $this->secondUserEmail,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $response = json_decode($I->grabResponse());
+        $this->secondUserId = $response->data->screenname;
+
+        $I->sendPOST('session/start', json_encode([
+            'user' => $this->secondUserId,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+        $this->secondUserAuthCookie = $sessionCookie;
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->secondUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPOST('user', json_encode([
+            'name' => $this->subUserName,
+            'email' => 'another_' . $this->subUserEmail,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        var_dump($this->secondUserAuthCookie, $this->subUserName . ' ' . $this->subUserEmail, json_decode($I->grabResponse()));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was created',
+            'data' => [
+                'parentdb' => $this->secondUserId
             ]
         ]);
     }
