@@ -351,7 +351,7 @@ class Model
                 "type" => $row["udt_name"],
                 "full_type" => $row['full_type'],
                 "is_nullable" => $row['is_nullable'] ? false : true,
-                "restriction" => sizeof($foreignValues) > 0 ? $foreignValues: null
+                "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null
             );
             // Get type and srid of geometry
             if ($row["udt_name"] == "geometry") {
@@ -721,8 +721,49 @@ class Model
         }
 
         $response['success'] = true;
-        $response['message'] = "Relation doesn't exists";
         $response['data'] = $rows;
+        return $response;
+    }
+
+    public function getChildTables(string $schema, string $table): array
+    {
+        $response = [];
+        $sql = "SELECT tc.*, ccu.column_name
+                    FROM information_schema.table_constraints tc 
+                    RIGHT JOIN information_schema.constraint_column_usage ccu 
+                          ON tc.constraint_catalog=ccu.constraint_catalog 
+                         AND tc.constraint_schema = ccu.constraint_schema 
+                         AND tc.constraint_name = ccu.constraint_name 
+                    AND (ccu.table_schema, ccu.table_name) IN ((:schema, :table))
+                    WHERE lower(tc.constraint_type) IN ('foreign key') AND constraint_type='FOREIGN KEY'";
+
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(["table" => $table, "schema" => $schema]);
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+
+        while ($row = $this->fetchRow($res, "assoc")) {
+            $arr = [];
+            $foreignConstrains = $this->getForeignConstrains($row["table_schema"], $row["table_name"])["data"];
+            foreach ($foreignConstrains as $value) {
+                if ($schema == $value["parent_schema"] && $table == $value["parent_table"]) {
+                    $arr = $value;
+                    break;
+                }
+            }
+            $response['data'][] = [
+                "rel" => $row["table_schema"].".".$row["table_name"],
+                "parent_column" => $row["column_name"],
+                "child_column" => $arr["child_column"],
+            ];
+        }
+
+        $response['success'] = true;
         return $response;
     }
 }
