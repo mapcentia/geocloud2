@@ -168,6 +168,40 @@ class UserManagementCest
         ]);
     }
 
+    public function shouldNotAllowSubUserWithConflictingNameAuthorizeWithNameOnly(\ApiTester $I)
+    {
+        $I->sendPOST('session/start', json_encode([
+            'user' => $this->subUserName,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+            'message' => 'Session not started',
+        ]);
+    }
+
+    public function shouldAllowSubUserWithConflictingNameAuthorizeWithNameAndEmail(\ApiTester $I)
+    {
+        $I->sendPOST('session/start', json_encode([
+            'user' => 'another_' . $this->subUserEmail,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Session started',
+            'data' => [
+                'parentdb' => $this->secondUserId,
+                'subuser' => true
+            ]
+        ]);
+    }
+
     public function shouldListSubUsersOfSuperUser(\ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);

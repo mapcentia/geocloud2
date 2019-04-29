@@ -56,27 +56,10 @@ class Session extends Model
      */
     public function start(string $sUserID, string $pw, $schema = "public"): array
     {
-
-        /*
-            // @todo Process the case when subuser is signed in, and there are more than one records
-            // with subuser's name in database - in this case check if the parentUserName parameter is present,
-            // so the subuser could be uniquely identified based on his parent database.
-
-            $parentUserName = VDFormat($data['parentUserName'], true);
-            ...
-            if ($data['subuser'] && empty($parentUserName)) {
-                return array(
-                    'code' => 400,
-                    'success' => false,
-                    'errorCode' => 'EMPTY_PARENT_USER',
-                    'message' => "Parent user has to be provided for created sub-user"
-                );
-            }
-        */
-
         $response = [];
         $pw = $this->VDFormat($pw, true);
-        
+
+        $isAuthenticated = false;
         $sPassword = \app\models\Setting::encryptPw($pw);
         if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
@@ -84,23 +67,14 @@ class Session extends Model
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
         } else {
-            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND pw = :sPassword";
-            $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword));
-            $row = $this->fetchRow($res);
-        }
-
-        $isAuthenticated = false;
-        if ($row['screenname']) {
-            $isAuthenticated = true;
-        } else {
             $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
             $res = $this->prepare($sQuery);
             $res->execute(array(":sUserID" => $sUserID));
-            $row = $this->fetchRow($res);
 
-            if ($row['pw']) {
-                if (password_verify($pw, $row['pw'])) {
+            $rows = $this->fetchAll($res);
+            if (sizeof($rows) === 1) {
+                $row = $rows[0];
+                if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
                     $isAuthenticated = true;
                 }
             }
@@ -147,6 +121,7 @@ class Session extends Model
             $response['message'] = "Session not started";
             $response['code'] = "401";
         }
+
         return $response;
     }
 
