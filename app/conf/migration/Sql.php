@@ -77,7 +77,8 @@ class Sql
                       uuid      UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
                       name      CHARACTER VARYING(255)    NOT NULL,
                       statement text                      NOT NULL,
-                      created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
+                      created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
+                      CONSTRAINT name_unique UNIQUE (name)
                     )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS

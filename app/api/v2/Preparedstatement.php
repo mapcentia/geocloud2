@@ -114,7 +114,8 @@ class Preparedstatement extends \app\inc\Controller
             $body = json_encode(
                 [
                     "q" => $sql,
-                    "key" => Input::get("key")
+                    "key" => Input::get("key"),
+                    "srs" => "4326", //TODO don't hard code this value
                 ]
             );
             $esResponse = $this->client->post($url, ['body' => $body]);
