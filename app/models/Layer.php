@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -79,8 +79,8 @@ class Layer extends \app\models\Table
 
         $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
         $CachedString = $this->InstanceCache->getItem($key);
-        //$timeToLive = (60 * 60 * 24);
-        $timeToLive = (1); // disabled
+        $timeToLive = (60 * 60 * 240);
+        //$timeToLive = (1); // disabled
 
         if ($CachedString->isHit()) {
             $data = $CachedString->get();
@@ -727,11 +727,6 @@ class Layer extends \app\models\Table
     /**
      * @param $data
      * @return mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updateRoles($data)
     {

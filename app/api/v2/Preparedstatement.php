@@ -72,6 +72,7 @@ class Preparedstatement extends \app\inc\Controller
                             "uuid" => $arr["uuid"],
                             "params" => \GuzzleHttp\json_encode($arr["params"]), // Keep as JSON
                             "key" => $arr["key"],
+                            "srs" => $arr["srs"],
                         ]
                     );
                 } catch (\InvalidArgumentException $e) {
@@ -99,7 +100,7 @@ class Preparedstatement extends \app\inc\Controller
 
         // Decode params
         try {
-            $params = \GuzzleHttp\json_decode(Input::get("params") ?:"{}", true);
+            $params = \GuzzleHttp\json_decode(Input::get("params") ?: "{}", true);
         } catch (\InvalidArgumentException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -115,7 +116,7 @@ class Preparedstatement extends \app\inc\Controller
                 [
                     "q" => $sql,
                     "key" => Input::get("key"),
-                    "srs" => "4326", //TODO don't hard code this value
+                    "srs" => Input::get("srs") ?: "4326",
                 ]
             );
             $esResponse = $this->client->post($url, ['body' => $body]);
