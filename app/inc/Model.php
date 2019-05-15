@@ -276,9 +276,10 @@ class Model
         return $response;
     }
 
-    public function getMetaData($table, $temp = false, $restriction = false)
+    public function getMetaData($table, $temp = false, $restriction = false, $restrictionTable = false)
     {
-        $arr = array();
+        $arr = [];
+        $foreignConstrains = [];
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];
 
@@ -291,12 +292,10 @@ class Model
             $_schema = str_replace(".", "", $_schema);
         }
 
-        if ($restriction) {
+        if ($restriction == true && $restrictionTable == false) {
             $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
             $primaryKey = $this->getPrimeryKey($table)['attname'];
 
-        } else {
-            $foreignConstrains = [];
         }
 
         $sql = "SELECT
@@ -325,7 +324,7 @@ class Model
         }
         while ($row = $this->fetchRow($res)) {
             $foreignValues = [];
-            if ($restriction) {
+            if ($restriction == true && $restrictionTable == false) {
                 foreach ($foreignConstrains as $value) {
                     if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
                         $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
@@ -343,6 +342,23 @@ class Model
                             $foreignValues[] = ["value" => $rowC[$value["parent_column"]], "alias" => (string)$rowC[$value["parent_column"]]];
                         }
                     }
+                }
+            } elseif ($restriction == true && $restrictionTable != false && isset($restrictionTable[$row["column_name"]])) {
+                $rel = $restrictionTable[$row["column_name"]];
+                //print_r($rel);
+                $sql = "SELECT {$rel["_value"]} AS value, {$rel["_text"]} AS text FROM {$rel["_rel"]}";
+                try {
+                    $resC = $this->prepare($sql);
+                    $resC->execute();
+
+                } catch (\PDOException $e) {
+                    $response['success'] = false;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 401;
+                    return $response;
+                }
+                while ($rowC = $this->fetchRow($resC)) {
+                   $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
                 }
             }
 
@@ -757,7 +773,7 @@ class Model
                 }
             }
             $response['data'][] = [
-                "rel" => $row["table_schema"].".".$row["table_name"],
+                "rel" => $row["table_schema"] . "." . $row["table_name"],
                 "parent_column" => $row["column_name"],
                 "child_column" => $arr["child_column"],
             ];

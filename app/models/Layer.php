@@ -197,6 +197,8 @@ class Layer extends \app\models\Table
                     }
                     $extent = $this->fetchRow($resExtent, "assoc");
                 }
+                $restrictions = [];
+
                 foreach ($row as $key => $value) {
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
@@ -206,7 +208,6 @@ class Layer extends \app\models\Table
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-
                     if ($key == "fieldconf" && ($value)) {
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
@@ -215,6 +216,8 @@ class Layer extends \app\models\Table
                                     $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
                                     $distinctValues = $table->getGroupByAsArray($k);
                                     $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
+                                } elseif (isset(json_decode(str_replace("'", '"',$obj[$k]["properties"]), true)["_rel"])) {
+                                    $restrictions[$k] = json_decode(str_replace("'", '"',$obj[$k]["properties"]), true);
                                 }
                             }
                             $value = json_encode($obj);
@@ -295,8 +298,7 @@ class Layer extends \app\models\Table
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
-
-                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true));
+                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
                 $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
 
                 // If session is sub-user we always check privileges
