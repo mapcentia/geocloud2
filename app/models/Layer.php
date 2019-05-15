@@ -72,12 +72,11 @@ class Layer extends \app\models\Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
-        // TODO doesn't work if session is sub-user!!!
         if ($db != \app\inc\Session::getUser()) {
             $auth = null;
         }
 
-        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
+        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
         $CachedString = $this->InstanceCache->getItem($key);
         $timeToLive = (60 * 60 * 240);
         //$timeToLive = (1); // disabled
