@@ -216,8 +216,8 @@ class Layer extends \app\models\Table
                                     $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
                                     $distinctValues = $table->getGroupByAsArray($k);
                                     $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
-                                } elseif (isset(json_decode(str_replace("'", '"',$obj[$k]["properties"]), true)["_rel"])) {
-                                    $restrictions[$k] = json_decode(str_replace("'", '"',$obj[$k]["properties"]), true);
+                                } elseif (isset(json_decode(str_replace("'", '"', $obj[$k]["properties"]), true)["_rel"])) {
+                                    $restrictions[$k] = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
                                 }
                             }
                             $value = json_encode($obj);
@@ -298,8 +298,21 @@ class Layer extends \app\models\Table
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
+
+                // Restrictions
                 $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
-                $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
+
+                // References
+                if ($row["meta"] != false && $row["meta"] != "" &&
+                    json_decode($row["meta"]) != false &&
+                    isset(json_decode($row["meta"], true)["referenced_by"]) &&
+                    json_decode($row["meta"], true)["referenced_by"] != false
+                ) {
+                    $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
+                    $arr = $this->array_push_assoc($arr, "children", $refBy);
+                } else {
+                    $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
+                }
 
                 // If session is sub-user we always check privileges
                 if (isset($_SESSION) && $_SESSION['subuser']) {
@@ -315,7 +328,6 @@ class Layer extends \app\models\Table
                 } else {
                     $response['data'][] = $arr;
                 }
-
             }
             $response['data'] = isset($response['data']) ? $response['data'] : array();
 
