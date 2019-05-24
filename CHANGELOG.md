@@ -14,6 +14,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - New key/value API, which can be used by a client to store JSON objects. Vidi is using the API for storing snapshots.
 - The config `googleApiKey` for setting a Google API key for use in Vidi.
 - It is now possible to set a custom path for S3 caches. This makes it possible to point a layer into an existing cache.
+- Microsoft's Core Fonts are added, so QGIS Server can use them,
 
 ### Changed
 - Change how cached/not-cached layer work in the Map tab:
