@@ -3,6 +3,9 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ * @OA\Info(title="Geocloud API", version="0.1")
+ *
  */
 
 namespace app\api\v2;
@@ -23,6 +26,25 @@ class Keyvalue extends \app\inc\Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/v2/keyvalue/{userId}",
+     *   tags={"configuration"},
+     *   summary="Returns all configurations (unpublished configurations are returned if authorized user is the author)",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_index(): array
     {
