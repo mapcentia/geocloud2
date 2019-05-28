@@ -1,11 +1,11 @@
-arialnormal                     ../../fonts/Arial.ttf
-arialbold                       ../../fonts/Arial_Bold.ttf
-arialitalic                     ../../fonts/Arial_Italic.ttf
-arialbolditalic                 ../../fonts/Arial_Bold_Italic.ttf
+arialnormal                     Arial.ttf
+arialbold                       Arial_Bold.ttf
+arialitalic                     Arial_Italic.ttf
+arialbolditalic                 Arial_Bold_Italic.ttf
 
-couriernormal                   ../../fonts/Courier_New.ttf
-courierbold                     ../../fonts/Courier_New_Bold.ttf
-courieritalic                   ../../fonts/Courier_New_Bold.ttf
-courierbolditalic               ../../fonts/Courier_New_Bold_Italic.ttf
+couriernormal                   Courier_New.ttf
+courierbold                     Courier_New_Bold.ttf
+courieritalic                   Courier_New_Bold.ttf
+courierbolditalic               Courier_New_Bold_Italic.ttf
 
 
