@@ -31,15 +31,19 @@ class Session extends Model
         $response = [];
 
         if ($_SESSION['auth']) {
-            $response['data']['message'] = "Session started";
+            $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
             $response['data']['db'] = $_SESSION['screen_name'];
+            $response['data']['screen_name'] = $_SESSION['screen_name'];
+            $response['data']['email'] = $_SESSION['email'];
+            $response['data']['passwordExpired'] = $_SESSION['passwordExpired'];
             $response['data']['subuser'] = $_SESSION['subuser'];
             $response['data']['subusers'] = $_SESSION['subusers'];
         } else {
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
         }
+
         return $response;
 
     }
@@ -54,6 +58,8 @@ class Session extends Model
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
+
+        $isAuthenticated = false;
         $sPassword = \app\models\Setting::encryptPw($pw);
         if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
@@ -61,19 +67,27 @@ class Session extends Model
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
         } else {
-            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND pw = :sPassword";
+            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
             $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $sUserID, ":sPassword" => $sPassword));
-            $row = $this->fetchRow($res);
+            $res->execute(array(":sUserID" => $sUserID));
+
+            $rows = $this->fetchAll($res);
+            if (sizeof($rows) === 1) {
+                $row = $rows[0];
+                if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
+                    $isAuthenticated = true;
+                }
+            }
         }
 
-        if ($row['screenname']) {
+        if ($isAuthenticated) {
             // Login successful.
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
-            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
+            $_SESSION['screen_name'] = $sUserID;
+            $_SESSION['parentdb'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['subuser'] = $row['parentdb'] ? true : false;
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
@@ -81,13 +95,25 @@ class Session extends Model
 
             $response['success'] = true;
             $response['message'] = "Session started";
-            $response['screen_name'] = $_SESSION['screen_name'];
-            $response['session_id'] = session_id();
-            $response['subuser'] = $_SESSION['subuser'];
+	        $response['data'] = [];
+            $response['data']['screen_name'] = $_SESSION['screen_name'];
+            $response['data']['session_id'] = session_id();
+            $response['data']['parentdb'] = $_SESSION['parentdb'];
+            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['email'] = $row['email'];
 
-            Database::setDb($response['screen_name']);
+            // Check if user has secure password (bcrypt hash)
+            if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
+                $response['data']['passwordExpired'] = false;
+                $_SESSION['passwordExpired'] = false;
+            } else {
+                $response['data']['passwordExpired'] = true;
+                $_SESSION['passwordExpired'] = true;
+            }
+
+            Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
-            $response['api_key'] = $settings_viewer->get()['data']->api_key;
+            $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
 
         } else {
             session_unset();
@@ -95,6 +121,7 @@ class Session extends Model
             $response['message'] = "Session not started";
             $response['code'] = "401";
         }
+
         return $response;
     }
 

@@ -48,6 +48,16 @@ class Session
         return $_SESSION['screen_name'];
     }
 
+    static function getDatabase()
+    {
+        return $_SESSION['parentdb'];
+    }
+
+    static function isSubUser()
+    {
+        return $_SESSION['subuser'];
+    }
+
     static function getFullUseName()
     {
         return $_SESSION['subuser'] ? $_SESSION['subuser'] . "@" . $_SESSION['screen_name'] : $_SESSION['screen_name'];

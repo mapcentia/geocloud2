@@ -1,0 +1,9 @@
+actor: ApiTester
+modules:
+    enabled:
+        - Asserts
+        - \Helper\Api
+        - REST:
+            url: http://localhost:80/api/v2/
+            depends: PhpBrowser
+            part: Json

@@ -6,10 +6,19 @@
  *
  */
 
-ini_set("display_errors", "off");
-ini_set('memory_limit', '1024M');
-ini_set('max_execution_time', 0);
-error_reporting(3);
+// @todo Remove
+
+$debug = false;
+if ($debug) {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set("display_errors", "off");
+    ini_set('memory_limit', '1024M');
+    ini_set('max_execution_time', 0);
+    error_reporting(3);
+}
 
 use \app\inc\Input;
 use \app\inc\Session;
@@ -36,6 +45,7 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Origin: " . $http_origin);
     header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
     header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
@@ -169,6 +179,21 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
+
+    // User API
+    Route::add("api/v2/user/[userId]/[action]", function () { Session::start(); });
+    Route::add("api/v2/user/[userId]", function () { Session::start(); });
+    Route::add("api/v2/user", function () { Session::start(); });
+
+    // Database API
+    Route::add("api/v2/database", function () { Session::start(); });
+
+    // Configuration API
+    Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
+        Session::start();
+    });
+
+    //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
