@@ -74,9 +74,10 @@ class Session extends Model
 
             // Trying to authenticate with regular user name
             if (sizeof($rows) === 0) {
+                $sUserID = Model::toAscii($sUserID, NULL, "_");
                 $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID)";
                 $res = $this->prepare($sQuery);
-                $res->execute(array(":sUserID" => Model::toAscii($sUserID, NULL, "_")));
+                $res->execute(array(":sUserID" => $sUserID));
                 $rows = $this->fetchAll($res);
             }
 
