@@ -33,6 +33,45 @@ class UserManagementCest
         $this->subUserEmail = 'subtest' . $this->date->getTimestamp() . '@example.com';
     }
 
+    public function shouldCreateSuperUserWitnNonASCIICharactersInNameAndAllowAuthorizeWithName(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPOST('user', json_encode([
+            'name' => $this->userName . ' symbols ø § are non ascii',
+            'email' => 'symbols_' . $this->userEmail,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'User was created'
+        ]);
+
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertContains('_symbols_are_non_ascii', $response['data']['screenname']);
+
+        $I->sendPOST('session/start', json_encode([
+            'user' => $this->userName . ' symbols ø § are non ascii',
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Session started',
+            'data' => [
+                'subuser' => false,
+                'passwordExpired' => false
+            ]
+        ]);
+    }
+
     public function shouldCreateSuperUser(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');

@@ -23,6 +23,7 @@ class Session extends Model
         if ($bQuotes xor get_magic_quotes_gpc()) {
             $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
         }
+
         return $sValue;
     }
 
@@ -45,7 +46,6 @@ class Session extends Model
         }
 
         return $response;
-
     }
 
     /**
@@ -70,8 +70,16 @@ class Session extends Model
             $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
             $res = $this->prepare($sQuery);
             $res->execute(array(":sUserID" => $sUserID));
-
             $rows = $this->fetchAll($res);
+
+            // Trying to authenticate with regular user name
+            if (sizeof($rows) === 0) {
+                $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID)";
+                $res = $this->prepare($sQuery);
+                $res->execute(array(":sUserID" => Model::toAscii($sUserID, NULL, "_")));
+                $rows = $this->fetchAll($res);
+            }
+
             if (sizeof($rows) === 1) {
                 $row = $rows[0];
                 if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
@@ -114,7 +122,6 @@ class Session extends Model
             Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
             $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
-
         } else {
             session_unset();
             $response['success'] = false;
