@@ -102,6 +102,17 @@ class Session extends Model
             $response['data']['subuser'] = $_SESSION['subuser'];
             $response['data']['email'] = $row['email'];
 
+            // Fetch sub-users
+            $_SESSION['subusers'] = [];
+            $_SESSION['subuserEmails'] = [];
+            $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
+            $res = $this->prepare($sQuery);
+            $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+            while ($rowSubUSers = $this->fetchRow($res)) {
+                $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+                $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+            };
+
             // Check if user has secure password (bcrypt hash)
             if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
                 $response['data']['passwordExpired'] = false;
