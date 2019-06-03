@@ -72,6 +72,14 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN authentication TYPE VARCHAR(255) USING authentication::VARCHAR(255)";
         $sqls[] = "CREATE INDEX geometry_columns_join_authentication_idx ON settings.geometry_columns_join (authentication)";
         $sqls[] = "CREATE INDEX geometry_columns_join_baselayer_idx ON settings.geometry_columns_join (baselayer)";
+        $sqls[] = "CREATE TABLE settings.prepared_statements
+                    (
+                      uuid      UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      name      CHARACTER VARYING(255)    NOT NULL,
+                      statement text                      NOT NULL,
+                      created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
+                      CONSTRAINT name_unique UNIQUE (name)
+                    )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT t.matviewname::character varying(256) AS f_table_name,

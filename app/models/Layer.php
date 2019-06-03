@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -72,14 +72,14 @@ class Layer extends \app\models\Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
-        // TODO doesn't work if session is sub-user!!!
         if ($db != \app\inc\Session::getUser()) {
             $auth = null;
         }
 
-        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
+        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
         $CachedString = $this->InstanceCache->getItem($key);
-        $timeToLive = (60 * 60 * 24); // disabled
+        $timeToLive = (60 * 60 * 240);
+        //$timeToLive = (1); // disabled
 
         if ($CachedString->isHit()) {
             $data = $CachedString->get();
@@ -197,6 +197,8 @@ class Layer extends \app\models\Table
                     }
                     $extent = $this->fetchRow($resExtent, "assoc");
                 }
+                $restrictions = [];
+
                 foreach ($row as $key => $value) {
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
@@ -206,7 +208,6 @@ class Layer extends \app\models\Table
                             $value = "MULTI" . $def->geotype;
                         }
                     }
-
                     if ($key == "fieldconf" && ($value)) {
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
@@ -215,6 +216,8 @@ class Layer extends \app\models\Table
                                     $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
                                     $distinctValues = $table->getGroupByAsArray($k);
                                     $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
+                                } elseif (isset(json_decode(str_replace("'", '"', $obj[$k]["properties"]), true)["_rel"])) {
+                                    $restrictions[$k] = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
                                 }
                             }
                             $value = json_encode($obj);
@@ -296,7 +299,20 @@ class Layer extends \app\models\Table
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
 
-                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel));
+                // Restrictions
+                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
+
+                // References
+                if ($row["meta"] != false && $row["meta"] != "" &&
+                    json_decode($row["meta"]) != false &&
+                    isset(json_decode($row["meta"], true)["referenced_by"]) &&
+                    json_decode($row["meta"], true)["referenced_by"] != false
+                ) {
+                    $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
+                    $arr = $this->array_push_assoc($arr, "children", $refBy);
+                } else {
+                    $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
+                }
 
                 // If session is sub-user we always check privileges
                 if (isset($_SESSION) && $_SESSION['subuser']) {
@@ -312,7 +328,6 @@ class Layer extends \app\models\Table
                 } else {
                     $response['data'][] = $arr;
                 }
-
             }
             $response['data'] = isset($response['data']) ? $response['data'] : array();
 
@@ -725,11 +740,6 @@ class Layer extends \app\models\Table
     /**
      * @param $data
      * @return mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updateRoles($data)
     {

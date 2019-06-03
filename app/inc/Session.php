@@ -58,11 +58,17 @@ class Session
         return $_SESSION['subuser'];
     }
 
+    static function getFullUseName()
+    {
+        return $_SESSION['subuser'] ? $_SESSION['subuser'] . "@" . $_SESSION['screen_name'] : $_SESSION['screen_name'];
+    }
+
     static function getLog()
     {
         if (!$_SESSION["log"]) {
             $_SESSION["log"] = "<i > Session log started @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
         }
+
         return $_SESSION["log"];
     }
 
