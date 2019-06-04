@@ -326,7 +326,7 @@ if (Input::getPath()->part(1) == "api") {
     if (App::$param["redirectTo"]) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
-        \app\inc\Redirect::to("/user/login");
+        \app\inc\Redirect::to("/dashboard");
     }
 } else {
     Route::miss();
