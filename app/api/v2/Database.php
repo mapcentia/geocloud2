@@ -8,6 +8,7 @@
 
 namespace app\api\v2;
 
+use \app\inc\Route;
 use \app\inc\Controller;
 use \app\models\User as UserModel;
 use \app\models\Database as DatabaseModel;
@@ -57,4 +58,43 @@ class Database extends Controller
             ];
         }
     }
+
+    /**
+     * @return array
+     * 
+     * @OA\Get(
+     *   path="/v2/database/search",
+     *   tags={"database"},
+     *   summary="Returns databases found according to provided filters",
+     *   @OA\Parameter(
+     *     name="userName",
+     *     in="query",
+     *     required=false,
+     *     description="Filters databases that have user with specified name registered",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    function get_search(): array
+    {
+        $queryParameters = array();
+        parse_str($_SERVER['QUERY_STRING'], $queryParameters);
+        if (empty($queryParameters['userName'])) {
+            return [
+                'message' => 'No search parameters were specified',
+                'success' => false,
+                'code' => 400
+            ];
+        } else {
+            $model = new UserModel();
+            return $model->getDatabasesForUser($queryParameters['userName']);
+        }
+    }
+
 }

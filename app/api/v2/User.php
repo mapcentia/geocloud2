@@ -39,8 +39,8 @@ class User extends Controller
      */
     function get_index(): array
     {
+        $action = Route::getParam("action");
         if (Session::isAuth()) {
-            $action = Route::getParam("action");
             if (empty($action)) {
                 return $this->get_default();
             } else if ($action === "subusers") {
@@ -52,10 +52,14 @@ class User extends Controller
                 ];
             }
         } else {
-            return [
-                'success' => false,
-                'code' => 401
-            ];
+            if ($action === "databases") {
+                return $this->get_databases();
+            } else {
+                return [
+                    'success' => false,
+                    'code' => 401
+                ];
+            }
         }
     }
 
