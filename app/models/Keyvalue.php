@@ -19,8 +19,6 @@ class Keyvalue extends Model
 
     public function get($key, $urlVars): array
     {
-       // print_r($urlVars);
-
         $params = [];
 
         $fetchingAll = true;
@@ -35,7 +33,7 @@ class Keyvalue extends Model
             foreach ($paths as $path) {
                 $tmp[] = "'{$path}'::text,value#>'{{$path}}'";
             }
-            $value = "json_build_object(" . implode(",", $tmp). ") as value";
+            $value = "json_build_object(" . implode(",", $tmp) . ") as value";
 
         } else {
             $value = "value";
@@ -51,6 +49,24 @@ class Keyvalue extends Model
         if (isset($urlVars["like"])) {
             $sql .= " AND key LIKE :where";
             $params["where"] = $urlVars["like"];
+        }
+
+        if (isset($urlVars["filter"])) {
+            $sql .= " AND value#>>{$urlVars["filter"]}";
+            //$params["filter"] = $urlVars["filter"];
+        }
+
+        if (strpos($sql, ';') !== false) {
+            $response['success'] = false;
+            $response['code'] = 403;
+            $response['message'] = "You can't use ';'";
+            return $response;
+        }
+        if (strpos($sql, '--') !== false) {
+            $response['success'] = false;
+            $response['code'] = 403;
+            $response['message'] = "SQL comments '--' are not allowed";
+            return $response;
         }
 
         $response = [];

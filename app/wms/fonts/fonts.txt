@@ -1,10 +1,11 @@
-arialnormal     arial.ttf
-arialbold  arialbd.ttf
-arialbolditalic  arialbi.ttf
-arialitalic   ariali.ttf
-couriernormal cour.ttf
-courierbold courbd.ttf
-courierbolditalic courbi.ttf
-courieritalic couri.ttf
+arialnormal                     Arial.ttf
+arialbold                       Arial_Bold.ttf
+arialitalic                     Arial_Italic.ttf
+arialbolditalic                 Arial_Bold_Italic.ttf
+
+couriernormal                   Courier_New.ttf
+courierbold                     Courier_New_Bold.ttf
+courieritalic                   Courier_New_Bold.ttf
+courierbolditalic               Courier_New_Bold_Italic.ttf
 
 

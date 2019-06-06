@@ -1,6 +1,6 @@
 /*
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -28,7 +28,8 @@ tileLayer.init = function (record) {
             format: 'Format' + __('Image format that will be used to return tile data to clients. Defaults to PNG.', true),
             lock: 'Lock' + __("Lock the tile cache, so it can not be busted.", true),
             layers: 'Layers' + __("Merged other layers on top of this one. Comma separated list of schema qulified layers names.", true),
-            cache: 'Cache' + __("", true)
+            s3_tile_set: 'S3 tile set name' + __("Only apply to S3 type cache. Default to layer name.", true),
+            cache: 'Cache' + __("Choose cache type", true),
         },
 
         customEditors: {

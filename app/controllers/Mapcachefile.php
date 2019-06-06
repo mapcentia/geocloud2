@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -209,6 +209,31 @@ class Mapcachefile extends \app\inc\Controller
                                 <creation_retry>3</creation_retry>
                             </cache>
 
+                        <?php }
+
+                        if ($cache == "s3" && $def->s3_tile_set) {
+
+
+                            ?>
+
+                            <cache name="s3_<?php echo $table ?>" type="s3">
+                                <url>https://<?php echo App::$param["s3"]["host"] . "/" . $def->s3_tile_set ?>/{grid}/{z}/{x}/{y}/{ext}</url>
+                                <headers>
+                                    <Host><?php echo App::$param["s3"]["host"] ?></Host>
+                                </headers>
+                                <id><?php echo App::$param["s3"]["id"] ?></id>
+                                <secret><?php echo App::$param["s3"]["secret"] ?></secret>
+                                <region><?php echo App::$param["s3"]["region"] ?></region>
+                                <operation type="put">
+                                    <headers>
+                                        <x-amz-storage-class>REDUCED_REDUNDANCY</x-amz-storage-class>
+                                        <x-amz-acl>public-read</x-amz-acl>
+                                    </headers>
+                                </operation>
+                                <symlink_blank/>
+                                <creation_retry>3</creation_retry>
+                            </cache>
+
                         <?php } ?>
 
                         <source name="<?php echo $table ?>" type="wms">
@@ -236,7 +261,7 @@ class Mapcachefile extends \app\inc\Controller
                         </source>
                         <tileset name="<?php echo $table ?>">
                             <source><?php echo $table ?></source>
-                            <cache><?php echo $cache ?></cache>
+                            <cache><?php if ($cache == "s3" && $def->s3_tile_set) { echo "s3_{$table}";} else {echo $cache;} ?></cache>
                             <grid>g20</grid>
                             <?php
                             foreach ($grids as $k => $v) {

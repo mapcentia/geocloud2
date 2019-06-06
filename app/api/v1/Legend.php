@@ -55,7 +55,7 @@ class Legend extends \app\inc\Controller
 
             try {
 
-                $layers = $meta->getAll(implode(",", $layerNames), Session::isAuth())["data"];
+                $layers = $meta->getAll(implode(",", $layerNames), Session::isAuth(), false, false,  false, \app\inc\Session::getUser())["data"];
 
             } catch (\PDOException $e) {
 
