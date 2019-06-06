@@ -61,11 +61,14 @@ class Session extends Model
 
         $isAuthenticated = false;
         $sPassword = \app\models\Setting::encryptPw($pw);
-        if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
+        if (isset(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($sQuery);
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
+            if (isset($row)) {
+                $isAuthenticated = true;
+            }
         } else {
             $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
             $res = $this->prepare($sQuery);
