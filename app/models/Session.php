@@ -36,6 +36,7 @@ class Session extends Model
             $response['data']['session'] = true;
             $response['data']['db'] = $_SESSION['screen_name'];
             $response['data']['screen_name'] = $_SESSION['screen_name'];
+            $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['email'] = $_SESSION['email'];
             $response['data']['passwordExpired'] = $_SESSION['passwordExpired'];
             $response['data']['subuser'] = $_SESSION['subuser'];
@@ -54,7 +55,7 @@ class Session extends Model
      * @param string $schema
      * @return array
      */
-    public function start(string $sUserID, string $pw, $schema = "public"): array
+    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
@@ -67,17 +68,24 @@ class Session extends Model
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
         } else {
+            $sUserID = Model::toAscii($sUserID, NULL, "_");
+
             $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
             $res = $this->prepare($sQuery);
             $res->execute(array(":sUserID" => $sUserID));
             $rows = $this->fetchAll($res);
 
-            // Trying to authenticate with regular user name
-            if (sizeof($rows) === 0) {
+            // If there are more than one records found, eliminate options by specifying the parent database
+            if (sizeof($rows) > 1 && $parentdb !== false) {
+
                 $sUserID = Model::toAscii($sUserID, NULL, "_");
-                $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID)";
+                $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID AND parentdb = :parentDb)";
                 $res = $this->prepare($sQuery);
-                $res->execute(array(":sUserID" => $sUserID));
+                $res->execute([
+                    ":sUserID" => $sUserID,
+                    ":parentDb" => $parentdb
+                ]);
+
                 $rows = $this->fetchAll($res);
             }
 

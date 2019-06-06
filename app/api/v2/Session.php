@@ -71,7 +71,7 @@ class Session extends \app\inc\Controller
     {
         if (!empty(Input::get("user")) && !empty(Input::get("password"))) {
             try {
-                return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"));
+                return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"), Input::get("database"));
             } catch (\TypeError $exception) {
                 return [
                     "success" => false,
@@ -105,6 +105,7 @@ class Session extends \app\inc\Controller
      *         @OA\Property(property="user",type="string"),
      *         @OA\Property(property="password",type="string"),
      *         @OA\Property(property="schema",type="string"),
+     *         @OA\Property(property="database",type="string")
      *       )
      *     )
      *   ),
@@ -122,6 +123,7 @@ class Session extends \app\inc\Controller
                 "user" => $data["user"],
                 "password" => $data["password"],
                 "schema" => $data["schema"],
+                "database" => $data["database"],
             ]
         );
         return $this->get_start();
