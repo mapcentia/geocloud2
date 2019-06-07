@@ -19,6 +19,11 @@ class UserManagementCest
     private $subUserName;
     private $subUserEmail;
 
+    private $secondSubUserId;
+    private $secondSubUserAuthCookie;
+    private $secondSubUserName;
+    private $secondSubUserEmail;
+
     public function __construct()
     {
         $this->date = new DateTime();
@@ -31,6 +36,9 @@ class UserManagementCest
 
         $this->subUserName = 'Test sub user name ' . $this->date->getTimestamp();
         $this->subUserEmail = 'subtest' . $this->date->getTimestamp() . '@example.com';
+
+        $this->secondSubUserName = 'Test sub user name ' . $this->date->getTimestamp();
+        $this->secondSubUserEmail = 'anothersubtest' . $this->date->getTimestamp() . '@example.com';
     }
 
     public function shouldCreateSuperUserWitnNonASCIICharactersInNameAndAllowAuthorizeWithName(\ApiTester $I)
@@ -222,10 +230,11 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldAllowSubUserWithConflictingNameAuthorizeWithNameAndEmail(\ApiTester $I)
+    public function shouldAllowSubUserWithConflictingNameAuthorizeWithNameAndDatabase(\ApiTester $I)
     {
         $I->sendPOST('session/start', json_encode([
-            'user' => 'another_' . $this->subUserEmail,
+            'user' => $this->subUserName,
+            'database' => $this->userId,
             'password' => 'A1abcabcabc',
         ]));
 
@@ -235,9 +244,24 @@ class UserManagementCest
             'success' => true,
             'message' => 'Session started',
             'data' => [
-                'parentdb' => $this->secondUserId,
+                'parentdb' => $this->userId,
                 'subuser' => true
             ]
+        ]);
+    }
+
+    public function shouldNotAllowSubUserWithConflictingNameAuthorizeWithNameAndEmail(\ApiTester $I)
+    {
+        $I->sendPOST('session/start', json_encode([
+            'user' => 'another_' . $this->subUserEmail,
+            'password' => 'A1abcabcabc',
+        ]));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+            'message' => 'Session not started',
         ]);
     }
 

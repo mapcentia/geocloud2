@@ -53,6 +53,31 @@ class User extends Model
     /**
      * @return array
      */
+    public function getDatabasesForUser($userName): array
+    {
+        if (empty($userName)) {
+            throw new Exception('User name should not be empty');
+        }
+
+        $userId = Model::toAscii($userName, NULL, "_");
+
+        $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
+        $res = $this->prepare($query);
+        $res->execute(array(":sUserID" => $userId));
+
+        $data = [];
+        while ($row = $this->fetchRow($res, "assoc")) {
+            array_push($data, $row);
+        }
+
+        return [
+            'databases' => $data,
+        ];
+    }
+
+    /**
+     * @return array
+     */
     public function getData(): array
     {
         $domain = \app\conf\App::$param['domain'];
@@ -114,7 +139,7 @@ class User extends Model
                         'code' => 400,
                         'success' => false,
                         'errorCode' => 'SUB_USER_ALREADY_EXISTS',
-                        'message' => "User identifier $userId already exists"
+                        'message' => "User identifier $userId already exists for parent database " . $this->userId
                     );
                 }
             } else {
