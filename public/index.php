@@ -35,22 +35,20 @@ $executionStartTime = microtime(true);
 $memoryReserve = str_repeat('*', 1024 * 1024);
 
 // Register a shutdown callback if fatal a error occurs
-register_shutdown_function(function()
-{
+register_shutdown_function(function () {
     global $memoryReserve;
     global $executionStartTime;
     $memoryReserve = null; // Free memory reserve
-    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING])))
-    {
+    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING]))) {
         $code = "500";
         $response = new Response();
         $body = [
             "message" => $err["message"],
 //            "file" => $err["file"],
 //            "line" => $err["line"],
-            "code" => $code  . " " . Util::httpCodeText($code),
+            "code" => $code . " " . Util::httpCodeText($code),
             "execute_time" => microtime(true) - $executionStartTime,
-            "memory_peak_usage" => round(memory_get_peak_usage()/1024) . " KB",
+            "memory_peak_usage" => round(memory_get_peak_usage() / 1024) . " KB",
             "success" => false,
         ];
         header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
@@ -111,8 +109,7 @@ if (Input::getPath()->part(1) == "api") {
 
         function () {
             Session::start();
-            $r = func_get_arg(0);
-            $db = $r["user"];
+            $db = Route::getParam("user");
             $dbSplit = explode("@", $db);
             if (sizeof($dbSplit) == 2) {
                 $db = $dbSplit[1];
@@ -207,12 +204,20 @@ if (Input::getPath()->part(1) == "api") {
     });
 
     // User API
-    Route::add("api/v2/user/[userId]/[action]", function () { Session::start(); });
-    Route::add("api/v2/user/[userId]", function () { Session::start(); });
-    Route::add("api/v2/user", function () { Session::start(); });
+    Route::add("api/v2/user/[userId]/[action]", function () {
+        Session::start();
+    });
+    Route::add("api/v2/user/[userId]", function () {
+        Session::start();
+    });
+    Route::add("api/v2/user", function () {
+        Session::start();
+    });
 
     // Database API
-    Route::add("api/v2/database", function () { Session::start(); });
+    Route::add("api/v2/database", function () {
+        Session::start();
+    });
 
     // Configuration API
     Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
@@ -352,7 +357,7 @@ if (Input::getPath()->part(1) == "api") {
     if (App::$param["redirectTo"]) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
-        \app\inc\Redirect::to("/user/login");
+        \app\inc\Redirect::to("/dashboard");
     }
 } else {
     Route::miss();
