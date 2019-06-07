@@ -48,6 +48,7 @@ register_shutdown_function(function()
             "code" => $code  . " " . Util::httpCodeText($code),
             "execute_time" => microtime(true) - $executionStartTime,
             "memory_peak_usage" => round(memory_get_peak_usage()/1024) . " KB",
+            "success" => false,
         ];
         header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
         echo $response->toJson($body);
