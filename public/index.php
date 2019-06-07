@@ -7,14 +7,13 @@
  */
 
 ini_set("display_errors", "off");
-ini_set('memory_limit', '1024M');
-ini_set('max_execution_time', 0);
 error_reporting(3);
 
 use \app\inc\Input;
 use \app\inc\Session;
 use \app\inc\Route;
 use \app\inc\Util;
+use \app\inc\Response;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
@@ -24,6 +23,38 @@ include_once('../app/vendor/autoload.php');
 include_once("../app/conf/App.php");
 
 new \app\conf\App();
+
+$memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
+ini_set('memory_limit', $memoryLimit);
+ini_set('max_execution_time', 30);
+
+$executionStartTime = microtime(true);
+
+// Reserve some memory in case of the limit is reached
+$memory = str_repeat('*', 1024 * 1024);
+register_shutdown_function(function()
+{
+    global $memory;
+    global $executionStartTime;
+    $memory = null;
+    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING])))
+    {
+        $code = "500";
+        $response = new Response();
+        $body = [
+            "message" => $err["message"],
+//            "file" => $err["file"],
+//            "line" => $err["line"],
+            "code" => $code  . " " . Util::httpCodeText($code),
+            "execute_time" => microtime(true) - $executionStartTime,
+            "memory_peak_usage" => round(memory_get_peak_usage()/1024) . " KB",
+        ];
+        header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
+        echo $response->toJson($body);
+
+    }
+    return false;
+});
 
 // Setup host
 App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();

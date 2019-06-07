@@ -1,15 +1,8 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\api\v2
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
@@ -19,6 +12,8 @@ use \app\inc\Input;
 use \app\inc\Util;
 use \app\conf\App;
 use \GuzzleHttp\Client;
+
+ini_set('max_execution_time', 0);
 
 /**
  * Class Elasticsearch
@@ -52,7 +47,6 @@ class Elasticsearch extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
-
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
         $defaultSettings = array(
