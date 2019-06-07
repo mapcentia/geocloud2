@@ -68,6 +68,11 @@ class Sql extends \app\inc\Controller
      */
     private $cacheInfo;
 
+    /**
+     * @var
+     */
+    private $streamFlag;
+
     function __construct()
     {
         try {
@@ -226,6 +231,11 @@ class Sql extends \app\inc\Controller
         } else {
             return $this->get_index(func_get_arg(0));
         }
+    }
+
+    public function get_stream() {
+        $this->streamFlag = true;
+        $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -419,6 +429,10 @@ class Sql extends \app\inc\Controller
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
+            if ($this->streamFlag) {
+
+            }
+
             $lifetime = (Input::get('lifetime')) ?: 0;
 
             // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.

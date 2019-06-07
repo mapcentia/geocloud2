@@ -1,13 +1,12 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 ini_set("display_errors", "off");
-error_reporting(3);
 
 use \app\inc\Input;
 use \app\inc\Session;
@@ -28,15 +27,19 @@ $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : 
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
 
+
+// Get start time of script
 $executionStartTime = microtime(true);
 
-// Reserve some memory in case of the limit is reached
-$memory = str_repeat('*', 1024 * 1024);
+// Reserve some memory in case of the memory limit is reached
+$memoryReserve = str_repeat('*', 1024 * 1024);
+
+// Register a shutdown callback if fatal a error occurs
 register_shutdown_function(function()
 {
-    global $memory;
+    global $memoryReserve;
     global $executionStartTime;
-    $memory = null;
+    $memoryReserve = null; // Free memory reserve
     if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING])))
     {
         $code = "500";
@@ -68,6 +71,7 @@ if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App
     header("Access-Control-Allow-Origin: " . $http_origin);
     header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
     header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
@@ -90,6 +94,19 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb($db);
     });
 
+    Route::add("api/v2/sql/[action]/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
+
     Route::add("api/v2/sql/{user}",
 
         function () {
@@ -103,18 +120,7 @@ if (Input::getPath()->part(1) == "api") {
             Database::setDb($db);
         });
 
-    Route::add("api/v2/sql/{action}/{user}",
 
-        function () {
-            Session::start();
-            $r = func_get_arg(0);
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
 
 
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
@@ -201,6 +207,21 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v1/ckan", function () {
         Session::start();
     });
+
+    // User API
+    Route::add("api/v2/user/[userId]/[action]", function () { Session::start(); });
+    Route::add("api/v2/user/[userId]", function () { Session::start(); });
+    Route::add("api/v2/user", function () { Session::start(); });
+
+    // Database API
+    Route::add("api/v2/database", function () { Session::start(); });
+
+    // Configuration API
+    Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
+        Session::start();
+    });
+
+    //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
@@ -333,9 +354,8 @@ if (Input::getPath()->part(1) == "api") {
     if (App::$param["redirectTo"]) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
-        \app\inc\Redirect::to("/user/login");
+        \app\inc\Redirect::to("/dashboard/");
     }
 } else {
     Route::miss();
 }
-
