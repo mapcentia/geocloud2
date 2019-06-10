@@ -85,7 +85,7 @@ class Database extends Controller
     {
         $queryParameters = array();
         parse_str($_SERVER['QUERY_STRING'], $queryParameters);
-        if (empty($queryParameters['userName'])) {
+        if (empty($queryParameters['userIdentifier'])) {
             return [
                 'message' => 'No search parameters were specified',
                 'success' => false,
@@ -93,7 +93,7 @@ class Database extends Controller
             ];
         } else {
             $model = new UserModel();
-            return $model->getDatabasesForUser($queryParameters['userName']);
+            return $model->getDatabasesForUser($queryParameters['userIdentifier']);
         }
     }
 
