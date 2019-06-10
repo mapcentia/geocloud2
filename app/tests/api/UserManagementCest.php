@@ -250,18 +250,18 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldNotAllowSubUserWithConflictingNameAuthorizeWithNameAndEmail(\ApiTester $I)
+    public function shouldAllowSubUserWithConflictingNameAuthorizeWithEmail(\ApiTester $I)
     {
         $I->sendPOST('session/start', json_encode([
             'user' => 'another_' . $this->subUserEmail,
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
-            'success' => false,
-            'message' => 'Session not started',
+            'success' => true,
+            'message' => 'Session started',
         ]);
     }
 

@@ -68,21 +68,25 @@ class Session extends Model
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
         } else {
+            $sUserIDNotConverted = $sUserID;
             $sUserID = Model::toAscii($sUserID, NULL, "_");
 
-            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sUserID)";
+            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sEmail)";
             $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $sUserID));
+            $res->execute([
+                ":sUserID" => $sUserID,
+                ":sEmail" => $sUserIDNotConverted
+            ]);
+
             $rows = $this->fetchAll($res);
 
             // If there are more than one records found, eliminate options by specifying the parent database
             if (sizeof($rows) > 1 && $parentdb !== false) {
-
-                $sUserID = Model::toAscii($sUserID, NULL, "_");
-                $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID AND parentdb = :parentDb)";
+                $sQuery = "SELECT * FROM users WHERE ((screenname = :sUserID OR email = :sEmail) AND parentdb = :parentDb)";
                 $res = $this->prepare($sQuery);
                 $res->execute([
                     ":sUserID" => $sUserID,
+                    ":sEmail" => $sUserIDNotConverted,
                     ":parentDb" => $parentdb
                 ]);
 
@@ -102,8 +106,8 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = $sUserID;
-            $_SESSION['parentdb'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['screen_name'] = $row['screenname'];
+            $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
             $_SESSION['subuser'] = $row['parentdb'] ? true : false;
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
