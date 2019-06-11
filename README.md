@@ -25,6 +25,7 @@ The GC2 project aims to make it easy for organizations to use open source softwa
 - Get data from PostGIS indexed in Elasticsearch by clicking an button!
 
 ![GC2 Admin](https://i.imgur.com/9FoOzId.png "GC2 Admin")
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmapcentia%2Fgeocloud2.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmapcentia%2Fgeocloud2?ref=badge_shield)
 
 ![Upload files](https://i.imgur.com/OjzY7ql.png "Manage the PostGIS database")
 
@@ -62,3 +63,7 @@ After you've created a database you can request Vidi at http://localhost:3000/ap
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
 
 [MapCentia.com](http://mapcentia.com)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmapcentia%2Fgeocloud2.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmapcentia%2Fgeocloud2?ref=badge_large)
