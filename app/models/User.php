@@ -53,21 +53,31 @@ class User extends Model
     /**
      * @return array
      */
-    public function getDatabasesForUser($userName): array
+    public function getDatabasesForUser($userIdentifier): array
     {
-        if (empty($userName)) {
-            throw new Exception('User name should not be empty');
+        if (empty($userIdentifier)) {
+            throw new Exception('User name or email should not be empty');
         }
 
-        $userId = Model::toAscii($userName, NULL, "_");
-
-        $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
-        $res = $this->prepare($query);
-        $res->execute(array(":sUserID" => $userId));
-
         $data = [];
-        while ($row = $this->fetchRow($res, "assoc")) {
-            array_push($data, $row);
+        if (strrpos($userIdentifier, '@') === false) {
+            $userName = Model::toAscii($userIdentifier, NULL, "_");
+
+            $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
+            $res = $this->prepare($query);
+            $res->execute(array(":sUserID" => $userName));
+    
+            while ($row = $this->fetchRow($res, "assoc")) {
+                array_push($data, $row);
+            }
+        } else {
+            $query = "SELECT screenname, email, parentdb FROM users WHERE email = :sUserEmail";
+            $res = $this->prepare($query);
+            $res->execute(array(":sUserEmail" => $userIdentifier));
+
+            while ($row = $this->fetchRow($res, "assoc")) {
+                array_push($data, $row);
+            }
         }
 
         return [
@@ -152,8 +162,16 @@ class User extends Model
             }
         }
 
-        // Check if such email already exists
-        $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '$email'");
+        // Check if such email already exists in the database - there can not be two super-user with the same email,
+        // but there can be tow sub-users with the same email in different databases
+        $sql = false;
+        if (empty($this->userId)) {
+            $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email'";
+        } else {
+            $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email' AND parentdb = '" . $this->userId . "'";
+        }
+
+        $res = $this->execQuery($sql);
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
             return array(
