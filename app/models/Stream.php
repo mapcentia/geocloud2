@@ -6,13 +6,16 @@
  *
  */
 
+
+
 namespace app\models;
 
+ini_set('max_execution_time', 0);
+
 use app\inc\Model;
-use GuzzleHttp\Client;
 
 /**
- * Class Sql_to_es
+ * Class Stream
  * @package app\models
  */
 class Stream extends Model
@@ -26,68 +29,41 @@ class Stream extends Model
      * Sql_to_es constructor.
      * @param string $srs
      */
-    function __construct($srs = "900913")
+    function __construct($srs = "4326")
     {
         parent::__construct();
         $this->srs = $srs;
     }
 
     /**
-     * @param string $q
-     * @param string $index
-     * @param string $type
-     * @param string $id
-     * @param string $db
-     * @return array
+     * @param $q
+     * @return string
      */
-    public function runSql($q, $index, $type, $id, $db)
+    public function runSql($q): string
     {
-        $response = [];
         $i = 0;
-
-        $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
-        $client = new Client([
-            'timeout' => 10.0,
-            'headers' => [
-                'Content-Type' => 'application/json'
-            ]
-        ]);
-        $bulKCount = 0;
-        $bulkSize = 500;
         $geometries = [];
         $features = [];
-        $json = "";
-        // We create a unique index name
-        $errors = false;
-        $errors_in = [];
-        $index = $db . "_" . $index . "_" . $type;
         $name = "_" . rand(1, 999999999) . microtime();
         $view = $this->toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
-        $res = $this->prepare($sqlView);
 
         try {
+            $res = $this->prepare($sqlView);
             $res->execute();
         } catch (\PDOException $e) {
-            $this->rollback();
+            //$this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
-            return $response;
+            return serialize($response);
         }
 
         $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
-        $postgisVersion = $this->postgisVersion();
-        $bits = explode(".", $postgisVersion["version"]);
-        if ((int)$bits[1] > 0) {
-            $ST_Force2D = "ST_Force2D";
-        } else {
-            $ST_Force2D = "ST_Force_2D";
-        }
         $fieldsArr = [];
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
-                $fieldsArr[] = "ST_asGeoJson(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
+                $fieldsArr[] = "ST_asGeoJson(ST_Transform(ST_Force2D(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
             } else {
                 $fieldsArr[] = "\"{$key}\"";
             }
@@ -99,22 +75,18 @@ class Stream extends Model
         $this->begin();
 
         try {
-
             $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
-
             $innerStatement = $this->prepare("FETCH 1 FROM curs");
-
         } catch (\PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
-            return $response;
+            return serialize($response);
         }
 
+        header('Content-type: text/plain; charset=utf-8');
         try {
-
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
-
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -129,46 +101,20 @@ class Stream extends Model
                     $features = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
                 }
                 if (sizeof($geometries) == 1) {
-                    $features = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
                 }
                 if (sizeof($geometries) == 0) {
                     $features = array("type" => "Feature", "properties" => $arr);
                 }
-
                 unset($geometries);
-
-                $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
+                $json = json_encode($features);
                 $json .= "\n";
-                $json .= json_encode($features);
-                $json .= "\n";
-
-                if (is_int($i / $bulkSize)) {
-
-                    $esResponse = $client->post($esUrl, ['body' => $json]);
-                    $obj = json_decode($esResponse->getBody(), true);
-
-                    if (isset($obj["errors"]) && $obj["errors"] == true) {
-                        $errors = true;
-                        $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
-                    }
-                    $json = "";
-                    $bulKCount++;
-                    error_log($i);
-                    error_log(number_format(memory_get_usage()));
-
-                }
-
+                $json .= $i . " " . memory_get_usage(true) ."\n";
+                echo $json;
+                flush();
+                ob_flush();
                 $i++;
             }
-
-            // Index the last bulk
-            $esResponse = $client->post($esUrl, ['body' => $json]);
-            $obj = json_decode($esResponse->getBody(), true);
-            if (isset($obj["errors"]) && $obj["errors"] == true) {
-                $errors = true;
-                $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
-            }
-
             $this->execQuery("CLOSE curs");
             $this->commit();
 
@@ -178,19 +124,7 @@ class Stream extends Model
             $response['code'] = 410;
             return $response;
         }
-
-
-        if ($errors) {
-            \app\inc\Session::createLogEs($errors_in);
-        }
-
-        $response['success'] = true;
-        $response['errors'] = $errors;
-        $response['errors_in'] = $errors_in;
-        $response['num_of_bulks'] = $bulKCount;
-        $response['message'] = "Indexed {$i} documents";
-
-        return $response;
+        die();
     }
 
     /**
@@ -204,5 +138,4 @@ class Stream extends Model
         $array[$key] = $value;
         return $array;
     }
-
 }

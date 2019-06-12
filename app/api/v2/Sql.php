@@ -235,7 +235,7 @@ class Sql extends \app\inc\Controller
 
     public function get_stream() {
         $this->streamFlag = true;
-        $this->get_index(func_get_arg(0));
+        return $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -430,7 +430,9 @@ class Sql extends \app\inc\Controller
             $this->addAttr($response);
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
             if ($this->streamFlag) {
-
+                $stream = new \app\models\Stream();
+                $res = $stream->runSql($this->q);
+                return ($res);
             }
 
             $lifetime = (Input::get('lifetime')) ?: 0;
