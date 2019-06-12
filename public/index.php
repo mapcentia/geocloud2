@@ -247,7 +247,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::miss();
 } elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
-    Session::authenticate(App::$param['userHostName'] . "/user/login/");
+    Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
     include_once("admin.php");
     if (\app\conf\App::$param['intercom_io']) {
@@ -255,7 +255,7 @@ if (Input::getPath()->part(1) == "api") {
     }
 } elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
-    Session::authenticate(App::$param['userHostName'] . "/user/login/");
+    Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     include_once("editor.php");
 } elseif (Input::getPath()->part(1) == "controllers") {
     Session::start();
