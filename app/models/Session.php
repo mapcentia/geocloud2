@@ -109,7 +109,7 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = $row['screenname'];
+            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
             $_SESSION['subuser'] = $row['parentdb'] ? true : false;
             $_SESSION['email'] = $row['email'];
