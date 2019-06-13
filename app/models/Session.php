@@ -111,7 +111,8 @@ class Session extends Model
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
-            $_SESSION['subuser'] = $row['parentdb'] ? true : false;
+            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
+
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
             $_SESSION['created'] = strtotime($row['created']);
