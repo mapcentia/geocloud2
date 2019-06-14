@@ -62,11 +62,14 @@ class Session extends Model
 
         $isAuthenticated = false;
         $sPassword = \app\models\Setting::encryptPw($pw);
-        if ($sPassword == \app\conf\App::$param['masterPw'] && (\app\conf\App::$param['masterPw'])) {
+        if (isset(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($sQuery);
             $res->execute(array(":sUserID" => $sUserID));
             $row = $this->fetchRow($res);
+            if (isset($row)) {
+                $isAuthenticated = true;
+            }
         } else {
             $sUserIDNotConverted = $sUserID;
             $sUserID = Model::toAscii($sUserID, NULL, "_");
@@ -122,6 +125,17 @@ class Session extends Model
             $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['subuser'] = $_SESSION['subuser'];
             $response['data']['email'] = $row['email'];
+
+            // Fetch sub-users
+            $_SESSION['subusers'] = [];
+            $_SESSION['subuserEmails'] = [];
+            $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
+            $res = $this->prepare($sQuery);
+            $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+            while ($rowSubUSers = $this->fetchRow($res)) {
+                $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+                $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+            };
 
             // Check if user has secure password (bcrypt hash)
             if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {

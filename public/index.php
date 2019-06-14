@@ -1,29 +1,18 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-// @todo Remove
-
-$debug = false;
-if ($debug) {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-} else {
-    ini_set("display_errors", "off");
-    ini_set('memory_limit', '1024M');
-    ini_set('max_execution_time', 0);
-    error_reporting(3);
-}
+ini_set("display_errors", "off");
 
 use \app\inc\Input;
 use \app\inc\Session;
 use \app\inc\Route;
 use \app\inc\Util;
+use \app\inc\Response;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
@@ -33,6 +22,43 @@ include_once('../app/vendor/autoload.php');
 include_once("../app/conf/App.php");
 
 new \app\conf\App();
+
+$memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
+ini_set('memory_limit', $memoryLimit);
+ini_set('max_execution_time', 30);
+
+
+// Get start time of script
+$executionStartTime = microtime(true);
+
+// Reserve some memory in case of the memory limit is reached
+$memoryReserve = str_repeat('*', 1024 * 1024);
+
+// Register a shutdown callback if fatal a error occurs
+register_shutdown_function(function()
+{
+    global $memoryReserve;
+    global $executionStartTime;
+    $memoryReserve = null; // Free memory reserve
+    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING])))
+    {
+        $code = "500";
+        $response = new Response();
+        $body = [
+            "message" => $err["message"],
+//            "file" => $err["file"],
+//            "line" => $err["line"],
+            "code" => $code  . " " . Util::httpCodeText($code),
+            "execute_time" => microtime(true) - $executionStartTime,
+            "memory_peak_usage" => round(memory_get_peak_usage()/1024) . " KB",
+            "success" => false,
+        ];
+        header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
+        echo $response->toJson($body);
+
+    }
+    return false;
+});
 
 // Setup host
 App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
@@ -68,6 +94,19 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb($db);
     });
 
+    Route::add("api/v2/sql/[action]/{user}",
+
+        function () {
+            Session::start();
+            $r = func_get_arg(0);
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
+        });
+
     Route::add("api/v2/sql/{user}",
 
         function () {
@@ -81,18 +120,7 @@ if (Input::getPath()->part(1) == "api") {
             Database::setDb($db);
         });
 
-    Route::add("api/v2/sql/{action}/{user}",
 
-        function () {
-            Session::start();
-            $r = func_get_arg(0);
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
 
 
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
@@ -219,7 +247,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::miss();
 } elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
-    Session::authenticate(App::$param['userHostName'] . "/user/login/");
+    Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
     include_once("admin.php");
     if (\app\conf\App::$param['intercom_io']) {
@@ -227,7 +255,7 @@ if (Input::getPath()->part(1) == "api") {
     }
 } elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
-    Session::authenticate(App::$param['userHostName'] . "/user/login/");
+    Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     include_once("editor.php");
 } elseif (Input::getPath()->part(1) == "controllers") {
     Session::start();
@@ -326,9 +354,8 @@ if (Input::getPath()->part(1) == "api") {
     if (App::$param["redirectTo"]) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
-        \app\inc\Redirect::to("/user/login");
+        \app\inc\Redirect::to("/dashboard/");
     }
 } else {
     Route::miss();
 }
-

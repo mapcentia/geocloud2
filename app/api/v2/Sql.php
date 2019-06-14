@@ -68,6 +68,11 @@ class Sql extends \app\inc\Controller
      */
     private $cacheInfo;
 
+    /**
+     * @var
+     */
+    private $streamFlag;
+
     function __construct()
     {
         try {
@@ -137,7 +142,7 @@ class Sql extends \app\inc\Controller
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
-            $this->q = urldecode(base64_decode(urldecode(Input::get('q'))));
+            $this->q = base64_decode(Input::get('q'));
         } else {
             $this->q = urldecode(Input::get('q'));
         }
@@ -170,7 +175,11 @@ class Sql extends \app\inc\Controller
             $this->data = $this->response;
         }
         $response = unserialize($this->data);
-        $response["cache_hit"] = $this->cacheInfo;
+        if ($this->cacheInfo) {
+            $response["cache_hit"] = $this->cacheInfo;
+        }
+        $response["peak_memory_usage"] = round(memory_get_peak_usage()/1024) . " KB";
+
         return $response;
     }
 
@@ -222,6 +231,11 @@ class Sql extends \app\inc\Controller
         } else {
             return $this->get_index(func_get_arg(0));
         }
+    }
+
+    public function get_stream() {
+        $this->streamFlag = true;
+        return $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -415,6 +429,12 @@ class Sql extends \app\inc\Controller
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
         } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
+            if ($this->streamFlag) {
+                $stream = new \app\models\Stream();
+                $res = $stream->runSql($this->q);
+                return ($res);
+            }
+
             $lifetime = (Input::get('lifetime')) ?: 0;
 
             // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.
@@ -450,12 +470,12 @@ class Sql extends \app\inc\Controller
                 $this->addAttr($response);
 
                 echo serialize($this->response);
-                // Cache script
                 $this->data = ob_get_contents();
-                $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
-                $this->cacheInfo["cache_hit"] = false;
-
+                if ($lifetime > 0) {
+                    $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
+                    $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+                    $this->cacheInfo["cache_hit"] = false;
+                }
                 ob_get_clean();
             }
         } else {
