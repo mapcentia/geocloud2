@@ -61,6 +61,7 @@ class Baselayerjs extends \app\inc\Controller
         if (\app\conf\App::$param['baseLayers']) $overallSettings["setBaseLayers"] = (\app\conf\App::$param['baseLayers']);
         if (\app\conf\App::$param['baseLayersCollector']) $overallSettings["setBaseLayersCollector"] = (\app\conf\App::$param['baseLayersCollector']);
         if (\app\conf\App::$param['mapAttribution']) $overallSettings["mapAttribution"] = \app\conf\App::$param['mapAttribution'];
+        if (\app\conf\App::$param['vidiUrl']) $overallSettings["vidiUrl"] = \app\conf\App::$param['vidiUrl'];
 
         $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT", "de_DE", "ru_RU");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
