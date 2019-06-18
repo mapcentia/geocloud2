@@ -35,6 +35,7 @@ class Configuration extends Controller
         parent::__construct();
         $this->keyvalue = new Keyvalue();
         $this->postgisdb = "mapcentia";
+        $this->keyValuePrefix = "configuration_";
     }
 
     /**
@@ -79,7 +80,7 @@ class Configuration extends Controller
             $returnNonPublished = true;
         }
 
-        $configurations = $this->keyvalue->get(false, []);
+        $configurations = $this->keyvalue->get(false, ['like' => $this->keyValuePrefix . '%']);
         $filteredData = [];
         foreach($configurations['data'] as $item) {
             $parsedConfiguration = json_decode($item['value'], true);
@@ -228,7 +229,7 @@ class Configuration extends Controller
                 ];
             }
 
-            $keyPrefix = $this->keyvalue->toAscii($data["name"], NULL, "_") . '_';
+            $keyPrefix = $this->keyValuePrefix . $this->keyvalue->toAscii($data["name"], NULL, "_") . '_';
             $key = str_replace('.', '', uniqid($keyPrefix, TRUE));
             $data['key'] = $key;
             return $this->keyvalue->insert($key, json_encode($data));
