@@ -102,6 +102,11 @@ class Sql extends \app\inc\Controller
         // /{user}
         $r = func_get_arg(0);
 
+        if (isset($r["method"]) && $r["method"] == "stream") {
+            $this->streamFlag = true;
+
+        }
+
         $db = $r["user"];
         $dbSplit = explode("@", $db);
 
@@ -178,7 +183,7 @@ class Sql extends \app\inc\Controller
         if ($this->cacheInfo) {
             $response["cache_hit"] = $this->cacheInfo;
         }
-        $response["peak_memory_usage"] = round(memory_get_peak_usage()/1024) . " KB";
+        $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
 
         return $response;
     }
@@ -233,7 +238,8 @@ class Sql extends \app\inc\Controller
         }
     }
 
-    public function get_stream() {
+    public function get_stream()
+    {
         $this->streamFlag = true;
         return $this->get_index(func_get_arg(0));
     }
