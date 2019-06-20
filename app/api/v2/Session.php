@@ -122,7 +122,7 @@ class Session extends \app\inc\Controller
             [
                 "user" => $data["user"],
                 "password" => $data["password"],
-                "schema" => $data["schema"],
+                "schema" => isset($data["schema"]) ? $data["schema"] : null,
                 "database" => $data["database"],
             ]
         );

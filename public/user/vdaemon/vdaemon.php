@@ -66,7 +66,7 @@ define('VD_E_VALIDATOR_NOT_FOUND', 'Validator referenced by Validators attribute
 define('VD_E_DISPLAYMODE_INVALID', 'Invalid DisplayMode attribute value');
 define('VD_E_SERIALIZE', 'Can\'t serialize validators information.');
 define('VD_E_UNSERIALIZE', 'Can\'t unserialize validators information.');
-define('VD_E_POST_SECURITY', 'Page is accessed using POST method, but validators information isn\'t defined.');
+//define('VD_E_POST_SECURITY', 'Page is accessed using POST method, but validators information isn\'t defined.');
 define('VD_E_JS_NOT_FOUND', 'VDaemon can\'t find vdaemon.js file.');
 define('VD_E_INVALID_INSTALL_DIR', 'VDaemon is installed to the wrong place. It must be installed to any folder under website root.');
 define('VD_E_SERVERPATH', 'Web server environment variable \'PATH_TRANSLATED\' is not defined.');

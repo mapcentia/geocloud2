@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -130,7 +130,9 @@ class Database extends \app\inc\Model
             return $response;
         }
         while ($row = $this->fetchRow($res, "assoc")) {
-            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']]);
+            if (isset($count[$row['schema_name']])) {
+                $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']]);
+            }
         }
         $response['success'] = true;
         $response['data'] = $arr;

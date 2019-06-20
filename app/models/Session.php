@@ -53,7 +53,9 @@ class Session extends Model
      * @param string $sUserID
      * @param string $pw
      * @param string $schema
+     * @param bool $parentdb
      * @return array
+     * @throws \Exception
      */
     public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false): array
     {
@@ -61,7 +63,8 @@ class Session extends Model
         $pw = $this->VDFormat($pw, true);
 
         $isAuthenticated = false;
-        $sPassword = \app\models\Setting::encryptPw($pw);
+        $setting = new \app\models\Setting();
+        $sPassword = $setting->encryptPw($pw);
         if (isset(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
             $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($sQuery);

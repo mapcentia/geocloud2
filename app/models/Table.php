@@ -21,7 +21,7 @@ class Table extends Model
     public $table;
     public $schema;
     public $geometryColumns;
-    private $InstanceCache;
+    protected $InstanceCache;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
@@ -630,10 +630,16 @@ class Table extends Model
         $isSorted = false;
         $arr = [];
         foreach ($fieldsArr as $value) {
-            if (!$isSorted) {
-                $isSorted = ($fieldconfArr[$value]->sort_id) ? true : false;
+            if (isset($fieldconfArr[$value]) && is_object($fieldconfArr[$value])) {
+                if (!$isSorted) {
+                    $isSorted = $fieldconfArr[$value]->sort_id ? true : false;
+                }
+            } else {
+                $fieldconfArr[$value] = new \stdClass();
+                $fieldconfArr[$value]->sort_id = false;
             }
             $arr[] = array($fieldconfArr[$value]->sort_id, $value);
+
         }
         if ($isSorted) {
             usort($arr, function ($a, $b) {
@@ -653,7 +659,7 @@ class Table extends Model
                         "dataIndex" => $key,
                         "type" => $value['type'],
                         "typeObj" => $value['typeObj'],
-                        "properties" => $fieldconfArr[$key]->properties ?: null,
+                        "properties" => isset($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null,
                         "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
                 }
             }

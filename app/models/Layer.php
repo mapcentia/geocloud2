@@ -9,28 +9,11 @@
 namespace app\models;
 
 use app\conf\App;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 class Layer extends \app\models\Table
 {
-    private $InstanceCache;
-
     function __construct()
     {
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    'securityKey' => parent::CACHE_SECURITY_KEY,
-                    'path' => '/var/www/geocloud2/app/tmp',
-                    'itemDetailedDate' => true
-                ])
-            );
-
-        } catch (\Exception $exception) {
-            die($exception->getMessage());
-        }
-
         try {
             parent::__construct("settings.geometry_columns_view");
         } catch (\PDOException $e) {

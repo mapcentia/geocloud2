@@ -89,11 +89,10 @@ class Input
         if (isset(self::$params)) {
 
             if (isset($key)) {
-                return self::$params[$key];
+                return isset(self::$params[$key]) ? self::$params[$key] : null;
             } else {
                 return self::$params;
             }
-
         }
 
         $query = "";
@@ -117,7 +116,7 @@ class Input
             return str_replace("__gc2_plus__", "+", key($query));
         else {
             if ($key != null)
-                return $query[$key];
+                return isset($query[$key]) ? $query[$key] : null;
             else
                 return $query;
         }
@@ -171,7 +170,7 @@ class GetPart
      */
     function part(string $e)
     {
-        return $this->parts[$e];
+        return isset($this->parts[$e]) ? $this->parts[$e] : null;
     }
 
     /**

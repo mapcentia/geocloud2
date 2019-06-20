@@ -35,22 +35,20 @@ $executionStartTime = microtime(true);
 $memoryReserve = str_repeat('*', 1024 * 1024);
 
 // Register a shutdown callback if fatal a error occurs
-register_shutdown_function(function()
-{
+register_shutdown_function(function () {
     global $memoryReserve;
     global $executionStartTime;
     $memoryReserve = null; // Free memory reserve
-    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING])))
-    {
+    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING]))) {
         $code = "500";
         $response = new Response();
         $body = [
             "message" => $err["message"],
 //            "file" => $err["file"],
 //            "line" => $err["line"],
-            "code" => $code  . " " . Util::httpCodeText($code),
+            "code" => $code . " " . Util::httpCodeText($code),
             "execute_time" => microtime(true) - $executionStartTime,
-            "memory_peak_usage" => round(memory_get_peak_usage()/1024) . " KB",
+            "memory_peak_usage" => round(memory_get_peak_usage() / 1024) . " KB",
             "success" => false,
         ];
         header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
@@ -61,12 +59,12 @@ register_shutdown_function(function()
 });
 
 // Setup host
-App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
+App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();
 App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
 App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host'];
 
 // Write Access-Control-Allow-Origin if origin is white listed
-$http_origin = $_SERVER['HTTP_ORIGIN'];
+$http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
     header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
@@ -119,8 +117,6 @@ if (Input::getPath()->part(1) == "api") {
             }
             Database::setDb($db);
         });
-
-
 
 
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
@@ -209,12 +205,20 @@ if (Input::getPath()->part(1) == "api") {
     });
 
     // User API
-    Route::add("api/v2/user/[userId]/[action]", function () { Session::start(); });
-    Route::add("api/v2/user/[userId]", function () { Session::start(); });
-    Route::add("api/v2/user", function () { Session::start(); });
+    Route::add("api/v2/user/[userId]/[action]", function () {
+        Session::start();
+    });
+    Route::add("api/v2/user/[userId]", function () {
+        Session::start();
+    });
+    Route::add("api/v2/user", function () {
+        Session::start();
+    });
 
     // Database API
-    Route::add("api/v2/database", function () { Session::start(); });
+    Route::add("api/v2/database", function () {
+        Session::start();
+    });
 
     // Configuration API
     Route::add("api/v2/configuration/[userId]/[configurationId]", function () {

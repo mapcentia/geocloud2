@@ -40,7 +40,7 @@ class Session
 
     static function isAuth()
     {
-        return $_SESSION['auth'];
+        return isset($_SESSION['auth']) ? $_SESSION['auth'] : false;
     }
 
     static function getUser()
