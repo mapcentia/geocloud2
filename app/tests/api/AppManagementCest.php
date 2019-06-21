@@ -6,7 +6,6 @@ class AppManagementCest
     {
     }
 
-    /*
     public function shouldProvidePubliclyAvailableSettingsInFormOfJavaScriptCode(\ApiTester $I)
     {
         $I->sendGET('http://localhost:80/api/v1/baselayerjs');
@@ -23,10 +22,7 @@ class AppManagementCest
     {
         $I->sendGET('http://localhost:80/api/v1/baselayerjs?format=json');
 
-        //var_dump(json_decode($I->grabResponse()));
-
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
     }
-    */
 }

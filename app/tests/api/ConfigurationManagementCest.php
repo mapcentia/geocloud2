@@ -107,6 +107,24 @@ class ConfigurationManagementCest
         $I->assertEquals($this->publishedConfigurationId, $response['data']['key']);
     }
 
+    public function shouldGetNoKeyValueItemsExceptConfigurations(\ApiTester $I) {
+        // Create non-configuration key-value item
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPOST('keyvalue/' . $this->userId . '/somekey', json_encode([
+            "abc" => 123
+        ]));
+
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendGET('configuration/' . $this->userId);
+
+        $response = json_decode($I->grabResponse(), true);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson(['success' => true]);
+        $I->assertEquals(1, sizeof($response['data']));
+    }
+
+
     public function shouldGetPublishedConfigurationsForGuest(\ApiTester $I) {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('configuration/' . $this->userId);

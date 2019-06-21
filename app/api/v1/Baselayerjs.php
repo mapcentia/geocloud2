@@ -36,8 +36,8 @@ class Baselayerjs extends \app\inc\Controller
             echo json_encode($overallSettings, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
         } else {
             header("Content-Type: application/javascript");
-            echo "window.gc2Options = " . json_encode($overallSettings["main"], JSON_UNESCAPED_SLASHES) . ";\n";
-            
+            echo "window.gc2Options = " . json_encode($overallSettings["gc2Options"], JSON_UNESCAPED_SLASHES) . ";\n";
+
             if ($overallSettings['bingApiKey']) {
                 echo "window.bingApiKey = '" . $overallSettings['bingApiKey'] . "';\n";
             }
