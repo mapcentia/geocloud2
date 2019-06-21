@@ -36,6 +36,7 @@ class Baselayerjs extends \app\inc\Controller
         $settingsRawJSON .= "\"enablePrint\": " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
         $settingsRawJSON .= "\"enableWorkflow\": " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
         $settingsRawJSON .= "\"hereApp\": " . json_encode(\app\conf\App::$param['hereApp']).",\n";
+        $settingsRawJSON .= "\"vidiUrl\": " . (json_encode(\app\conf\App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) ? : "null") . ",\n";
         $settingsRawJSON .= "\"subDomainsForTiles\": " . (json_encode(\app\conf\App::$param['subDomainsForTiles']) ? : "null").",\n";
         if ($settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $settingsRawJSON .= "\"es_settings\": ". $settings.",\n";
@@ -51,9 +52,7 @@ class Baselayerjs extends \app\inc\Controller
 
         $settingsMainParsed = json_decode($settingsRawJSON, true);
 
-        $overallSettings = [
-            'main' => $settingsMainParsed
-        ];
+        $overallSettings = ['gc2Options' => $settingsMainParsed];
 
         if (\app\conf\App::$param['bingApiKey']) $overallSettings["bingApiKey"] = \app\conf\App::$param['bingApiKey'];
         if (\app\conf\App::$param['googleApiKey']) $overallSettings["googleApiKey"] = \app\conf\App::$param['googleApiKey'];
