@@ -35,6 +35,7 @@ class Configuration extends Controller
         parent::__construct();
         $this->keyvalue = new Keyvalue();
         $this->postgisdb = "mapcentia";
+        $this->keyValuePrefix = "configuration_";
     }
 
     /**
@@ -51,7 +52,7 @@ class Configuration extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Get(
      *   path="/v2/configuration/{userId}",
      *   tags={"configuration"},
@@ -79,7 +80,7 @@ class Configuration extends Controller
             $returnNonPublished = true;
         }
 
-        $configurations = $this->keyvalue->get(false, []);
+        $configurations = $this->keyvalue->get(false, ['like' => $this->keyValuePrefix . '%']);
         $filteredData = [];
         foreach($configurations['data'] as $item) {
             $parsedConfiguration = json_decode($item['value'], true);
@@ -96,7 +97,7 @@ class Configuration extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Get(
      *   path="/v2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
@@ -161,7 +162,7 @@ class Configuration extends Controller
         if ($parsedConfiguration['published'] || $returnNonPublished) {
             if ($requestedAsFile) {
                 header('Content-disposition: attachment; filename=' . $requestedConfiguration . '.json');
-                header('Content-type: application/json');                
+                header('Content-type: application/json');
                 echo $parsedConfiguration['body'];
                 exit();
             } else {
@@ -177,7 +178,7 @@ class Configuration extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Post(
      *   path="/v2/configuration/{userId}/",
      *   tags={"configuration"},
@@ -228,7 +229,7 @@ class Configuration extends Controller
                 ];
             }
 
-            $keyPrefix = $this->keyvalue->toAscii($data["name"], NULL, "_") . '_';
+            $keyPrefix = $this->keyValuePrefix . $this->keyvalue->toAscii($data["name"], NULL, "_") . '_';
             $key = str_replace('.', '', uniqid($keyPrefix, TRUE));
             $data['key'] = $key;
             return $this->keyvalue->insert($key, json_encode($data));
@@ -242,7 +243,7 @@ class Configuration extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Put(
      *   path="/v2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
@@ -309,7 +310,7 @@ class Configuration extends Controller
                     'message' => 'Configuration identifier is missing',
                     'code' => 400
                 ];
-            } 
+            }
 
             $data['key'] = $key;
             return $this->keyvalue->update($key, json_encode($data));
@@ -324,7 +325,7 @@ class Configuration extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Delete(
      *   path="/v2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
@@ -364,13 +365,13 @@ class Configuration extends Controller
                     'code' => 401
                 ];
             }
-    
+
             $userId = Route::getParam('userId');
             $isOwner = false;
             if (Session::getUser() && empty($userId) === false && $userId === Session::getUser()) {
                 $isOwner = true;
             }
-    
+
             $configuration = $this->keyvalue->get($requestedConfiguration, []);
             if (empty($configuration['data'])) {
                 return [
@@ -379,7 +380,7 @@ class Configuration extends Controller
                     'code' => 404
                 ];
             }
-    
+
             if ($isOwner) {
                 return $this->keyvalue->delete($requestedConfiguration);
             } else {
