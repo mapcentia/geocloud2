@@ -48,8 +48,6 @@ class Layer extends \app\models\Table
      * @param bool $es
      * @param $db
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $db): array
     {
@@ -60,14 +58,24 @@ class Layer extends \app\models\Table
         }
 
         $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
-        $CachedString = $this->InstanceCache->getItem($key);
+
+        try {
+            $CachedString = $this->InstanceCache->getItem($key);
+        } catch (\Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException $exception) {
+            $CachedString = null;
+        }
+
         $timeToLive = (60 * 60 * 240);
         //$timeToLive = (1); // disabled
 
-        if ($CachedString->isHit()) {
+        if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();
             $response = $data;
-            $response["cache_hit"] = $CachedString->getCreationDate();
+            try {
+                $response["cache_hit"] = $CachedString->getCreationDate();
+            } catch (\Phpfastcache\Exceptions\PhpfastcacheLogicException $exception) {
+                $response["cache_hit"] = $exception->getMessage();
+            }
             $response["cache_signature"] = md5(serialize($data));
             return $response;
 
@@ -414,9 +422,18 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $data
+     * @param $_key_
+     * @return mixed
+     */
     public function updateElasticsearchMapping($data, $_key_)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $table = new Table("settings.geometry_columns_join");
         $data = $table->makeArray($data);
@@ -458,9 +475,18 @@ class Layer extends \app\models\Table
         return $array;
     }
 
+    /**
+     * @param $tableName
+     * @param $data
+     * @return mixed
+     */
     public function rename($tableName, $data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $split = explode(".", $tableName);
         $newName = \app\inc\Model::toAscii($data->name, array(), "_");
@@ -511,9 +537,18 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $tables
+     * @param $schema
+     * @return mixed
+     */
     public function setSchema($tables, $schema)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $this->begin();
         foreach ($tables as $table) {
@@ -580,7 +615,11 @@ class Layer extends \app\models\Table
      */
     public function delete(array $tables)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -644,16 +683,14 @@ class Layer extends \app\models\Table
     /**
      * @param $data
      * @return mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updatePrivileges($data)
     {
-        $this->InstanceCache->clear();
-
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;
@@ -674,16 +711,14 @@ class Layer extends \app\models\Table
     /**
      * @param $_key_
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updateLastmodified($_key_)
     {
-        $this->InstanceCache->clear();
-
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $response = [];
         $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
         $table = new Table("settings.geometry_columns_join");
@@ -726,7 +761,11 @@ class Layer extends \app\models\Table
      */
     public function updateRoles($data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
@@ -833,15 +872,14 @@ class Layer extends \app\models\Table
      * @param $to
      * @param $from
      * @return array|mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function copyMeta($to, $from)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);

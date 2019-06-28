@@ -416,7 +416,11 @@ class Table extends Model
      */
     public function destroy()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
@@ -464,14 +468,20 @@ class Table extends Model
     }
 
     /**
-     * Makes a UPSERT
      * @param $data
      * @param $keyName
+     * @param bool $raw
+     * @param bool $append
      * @return array
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
+
         $response = [];
         $data = $this->makeArray($data);
         foreach ($data as $set) {
@@ -726,7 +736,11 @@ class Table extends Model
      */
     public function purgeFieldConf($_key_)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
@@ -744,13 +758,17 @@ class Table extends Model
     }
 
     /**
-     * @param mixed $data
-     * @param string $key
+     * @param $data
+     * @param $key
      * @return array
      */
     public function updateColumn($data, $key) // Only geometry tables
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->purgeFieldConf($key); // TODO What?
@@ -823,14 +841,18 @@ class Table extends Model
     }
 
     /**
-     * @param mixed $data
+     * @param $data
      * @param null $whereClause
      * @param $_key_
      * @return array
      */
     public function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $data = $this->makeArray($data);
@@ -870,7 +892,11 @@ class Table extends Model
      */
     public function addColumn(array $data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $safeColumn = $this->toAscii($data['column'], array(), "_");
@@ -938,7 +964,11 @@ class Table extends Model
      */
     public function addVersioning()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1008,7 +1038,11 @@ class Table extends Model
      */
     public function removeVersioning()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1078,7 +1112,11 @@ class Table extends Model
      */
     public function addWorkflow()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1127,7 +1165,11 @@ class Table extends Model
      */
     public function point2multipoint()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $sql = "BEGIN;";
         $sql .= "ALTER TABLE {$this->table} DROP CONSTRAINT enforce_geotype_the_geom;";
@@ -1147,7 +1189,11 @@ class Table extends Model
      */
     public function create($table, $type, $srid = 4326)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->PDOerror = NULL;
@@ -1177,7 +1223,11 @@ class Table extends Model
      */
     public function createAsRasterTable($srid = 4326)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->PDOerror = NULL;
