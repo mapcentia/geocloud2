@@ -27,7 +27,7 @@ class Session
 
     static function authenticate($redirect = " / ")
     {
-        if ($_SESSION['auth'] == true) {
+        if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             return true;
         } elseif ($redirect) {
             \app\inc\Redirect::to($redirect);

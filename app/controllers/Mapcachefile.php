@@ -156,15 +156,15 @@ class Mapcachefile extends \app\inc\Controller
                     if (!in_array($table, $arr)) {
                         array_push($arr, $table);
                         $def = json_decode($row['def']);
-                        $meta_size = $def->meta_size ?: null;
-                        $meta_buffer = $def->meta_buffer ?: 0;
-                        $expire = $def->ttl < 30 ? 30 : $def->ttl;
+                        $meta_size = isset($def->meta_size) ? $def->meta_size : null;
+                        $meta_buffer = isset($def->meta_buffer) ? $def->meta_buffer : 0;
+                        $expire = isset($def->ttl) ? ($def->ttl < 30 ? 30 : $def->ttl) : 30;
                         // It seems that auto expire makes the server hang!
                         //$auto_expire = $def->lock ? null : ($def->auto_expire ?: ($row['filesource'] ? null : 3600));
-                        $auto_expire = $def->auto_expire ?: null;
-                        $format = $def->format ?: "PNG";
-                        $cache = $def->cache ?: App::$param["mapCache"]["type"];
-                        $layers = $def->layers ? "," . $def->layers : "";
+                        $auto_expire = isset($def->auto_expire) ?$def->auto_expire: null;
+                        $format = isset($def->format) ? $def->format : "PNG";
+                        $cache = isset($def->cache) ? $def->cache : App::$param["mapCache"]["type"];
+                        $layers = isset($def->layers) ? "," . $def->layers : "";
 
                         if (strpos($row["wmssource"], "qgis_mapserv.fcgi")) {
                             parse_str(parse_url($row["wmssource"])["query"], $getArr);
@@ -341,7 +341,7 @@ class Mapcachefile extends \app\inc\Controller
                         <http>
                             <url><?php
 
-                                if (!App::$param["useQgisForMergedLayers"][$k]) {
+                                if (empty(App::$param["useQgisForMergedLayers"][$k])) {
                                     echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
                                 } else {
                                     echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
@@ -383,7 +383,7 @@ class Mapcachefile extends \app\inc\Controller
                     <http>
                         <url><?php
 
-                            if (!App::$param["useQgisForMergedLayers"][$k]) {
+                            if (empty(App::$param["useQgisForMergedLayers"][$k])) {
                                 echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
                             } else {
                                 echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
@@ -415,7 +415,7 @@ class Mapcachefile extends \app\inc\Controller
             /**
              * Group start
              */
-            foreach ($groupArr as $k => $v) {
+            if (!empty($groupArr)) foreach ($groupArr as $k => $v) {
 
                 //$cache = App::$param["mapCache"]["type"] ?: "sqlite";
                 $cache = "disk";
@@ -443,7 +443,7 @@ class Mapcachefile extends \app\inc\Controller
                     <http>
                         <url><?php
 
-                            if (!App::$param["useQgisForMergedLayers"][$tileSetName]) {
+                            if (empty(App::$param["useQgisForMergedLayers"][$tileSetName])) {
                                 echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
                             } else {
                                 echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$tileSetName] . "&transparent=true";
