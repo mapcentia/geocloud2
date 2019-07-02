@@ -211,6 +211,11 @@ if (Input::getPath()->part(1) == "api") {
         Session::start();
     });
 
+    // Admin API
+    Route::add("api/v2/admin/{action}/{user}", function () {
+        $db = Route::getParam("user");
+        Database::setDb($db);
+    });
     //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");

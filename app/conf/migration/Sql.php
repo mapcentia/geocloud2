@@ -80,6 +80,8 @@ class Sql
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
+        $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
+
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT t.matviewname::character varying(256) AS f_table_name,

@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\models;
@@ -37,11 +37,29 @@ class Qgis extends Model
         return $response;
     }
 
+    public function flagAsOld($id): array
+    {
+        $response = [];
+        $sql = "UPDATE settings.qgis_files SET old=TRUE WHERE id=:id";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute(["id" => $id]);
+        } catch (\PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = "QGIS file flagged";
+        return $response;
+    }
+
     public function writeAll($db): array
     {
         $response = [];
         $files = [];
-        $sql = "SELECT * FROM settings.qgis_files WHERE db=:db";
+        $sql = "SELECT *,extract(EPOCH FROM timestamp) AS unixtimestamp FROM settings.qgis_files WHERE db=:db AND old !=TRUE ORDER BY timestamp";
         $res = $this->prepare($sql);
         try {
             $res->execute(["db" => $db]);
@@ -59,7 +77,7 @@ class Qgis extends Model
             @$fh = fopen($path . $row["id"], 'w');
             if (!$fh) {
                 $response['success'] = false;
-                $response['message'] = "Couldn't open file for writing: ". $row["id"];
+                $response['message'] = "Couldn't open file for writing: " . $row["id"];
                 $response['code'] = 401;
                 return $response;
             }
@@ -69,6 +87,8 @@ class Qgis extends Model
                 $response['message'] = "Couldn't write the file: " . $row["id"];
                 $response['code'] = 401;
                 return $response;
+            } else {
+                touch($path . $row["id"], $row["unixtimestamp"]);
             }
             fclose($fh);
             $files[] = $row["id"];
@@ -79,7 +99,8 @@ class Qgis extends Model
         return $response;
     }
 
-    private function parse($xml){
+    private function parse($xml)
+    {
         $xml = preg_replace("/port='?[0-9]*'?/", "port=" . Connection::$param["postgisport"] . "", $xml);
         $xml = preg_replace("/user=\'?[^\s\\\\]*\'?/", "user=" . Connection::$param["postgisuser"] . "", $xml);
         $xml = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . Connection::$param["postgispw"] . "", $xml);

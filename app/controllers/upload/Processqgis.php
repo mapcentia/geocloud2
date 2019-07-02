@@ -35,10 +35,11 @@ class Processqgis extends \app\inc\Controller
         $this->sridStr = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
     }
 
-    public function get_index()
+    public function get_index($file = null)
     {
-        $file = Input::get("file");
-        $qgs = @simplexml_load_file(App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $file);
+        $file = !empty($file) ? $file : Input::get("file");
+        $filePath = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $file;
+        $qgs = @simplexml_load_file($filePath);
         $arrT = [];
         $arrG = [];
         $arrN = [];
@@ -194,7 +195,7 @@ class Processqgis extends \app\inc\Controller
             $tableName = $arrT[$i][1][0] . "." . $arrT[$i][1][1];
             $layerKey = $tableName . "." . $arrG[$i][1][0];
             $wmsLayerName = $arrN[$i];
-            $layers[] = $layerKey;
+            $layers[] = $layerKey . " (" . $provider . ")";
             $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $wmsLayerName . "&transparent=true&";
             $urls[] = $url;
             $data = new \stdClass;
@@ -253,6 +254,7 @@ class Processqgis extends \app\inc\Controller
         if (!$w) {
             return ["success" => false, "message" => "Couldn't write file: " . $name, "code" => 401];
         }
+        touch($path . $name, filemtime($filePath));
         fclose($fh);
 
         // Write the a copy of the qgs-file with out hash
@@ -267,6 +269,7 @@ class Processqgis extends \app\inc\Controller
         if (!$w) {
             return ["success" => false, "message" => "Couldn't write file: " . $nameWithoutHash, "code" => 401];
         }
+        touch($path . $nameWithoutHash, filemtime($filePath));
         fclose($fh);
 
         $resDb = $this->qgis->insert([
