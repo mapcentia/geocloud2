@@ -736,11 +736,6 @@ class Table extends Model
      */
     public function purgeFieldConf($_key_)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
