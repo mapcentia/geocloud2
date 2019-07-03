@@ -112,7 +112,7 @@ class Wms extends \app\inc\Controller
         // Check if WMS filters are set
         if ((isset($_GET["filters"]) || isset($_GET["FILTERS"])) && $this->service == "wms") {
             // Parse filter
-            $filters = json_decode($_GET["filters"], true);
+            $filters = json_decode(base64_decode($_GET["filters"]), true);
             $layer = $this->layers[0];
             $split = explode(".", $layer);
             $wmsUrl = $model->getGeometryColumns($layer, "*")["wmssource"];
