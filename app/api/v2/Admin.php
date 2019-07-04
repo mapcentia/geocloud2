@@ -16,6 +16,7 @@ namespace app\api\v2;
 ini_set('max_execution_time', 0);
 
 use \app\inc\Controller;
+use \app\inc\Input;
 use \app\models\Database;
 use \app\conf\App;
 use \app\conf\Connection;
@@ -38,7 +39,7 @@ class Admin extends Controller
     /**
      * @return array
      */
-    public function get_buildmapfiles():array
+    public function get_buildmapfiles(): array
     {
         $response = [];
         $database = new Database();
@@ -47,7 +48,7 @@ class Admin extends Controller
         if (!empty($schemas["data"])) foreach ($schemas["data"] as $schema) {
             Connection::$param['postgisschema'] = $schema["schema"];
             $res = $mapfile->get_index();
-            $response["data"][] = [$res[0]["ch"],$res[1]["ch"]];
+            $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
         }
         $response["success"] = true;
         return $response;
@@ -56,7 +57,7 @@ class Admin extends Controller
     /**
      * @return array
      */
-    public function get_buildmapcachefile():array
+    public function get_buildmapcachefile(): array
     {
         $response = [];
         $mapcachefile = new \app\controllers\Mapcachefile();
@@ -83,7 +84,19 @@ class Admin extends Controller
     {
         $response = [];
         $index = 7;
-        $files = glob(App::$param['path'] . "app/wms/qgsfiles/*.{qgs}", GLOB_BRACE);
+        $file = !empty(Input::get("file")) ? Input::get("file") : null;
+
+        if ($file) {
+            $files = glob(App::$param['path'] . "app/wms/qgsfiles/" . $file, GLOB_BRACE);
+        } else {
+            $files = glob(App::$param['path'] . "app/wms/qgsfiles/*.{qgs}", GLOB_BRACE);
+        }
+        if (sizeof($files) == 0) {
+            $response["code"] = 400;
+            $response["success"] = false;
+            $response["message"] = "No files";
+            return $response;
+        }
         $qgis = new \app\models\Qgis();
         $processqgis = new \app\controllers\upload\Processqgis();
 
