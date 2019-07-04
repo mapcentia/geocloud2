@@ -109,7 +109,9 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v2/sql/{user}/[method]",
 
         function () {
-            Session::start();
+            if (empty(Input::get("key"))) {
+                Session::start();
+            }
             $r = func_get_arg(0);
             $db = $r["user"];
             $dbSplit = explode("@", $db);
