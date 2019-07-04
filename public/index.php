@@ -16,6 +16,8 @@ use \app\inc\Response;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
+use Phpfastcache\CacheManager;
+use Phpfastcache\Drivers\Files\Config;
 
 include_once('../app/vendor/autoload.php');
 
@@ -57,6 +59,18 @@ register_shutdown_function(function () {
     }
     return false;
 });
+
+$globalInstanceCache = null;
+try {
+    $globalInstanceCache = CacheManager::getInstance('Files',
+        new Config([
+            'securityKey' => "phpfastcache",
+            'path' => '/var/www/geocloud2/app/tmp',
+            'itemDetailedDate' => true
+        ])
+    );
+} catch (\Exception $exception) {
+}
 
 // Setup host
 App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();

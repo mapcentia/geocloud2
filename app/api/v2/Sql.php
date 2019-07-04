@@ -9,8 +9,6 @@
 namespace app\api\v2;
 
 use app\inc\Input;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 /**
  * Class Sql
@@ -75,20 +73,11 @@ class Sql extends \app\inc\Controller
 
     function __construct()
     {
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    "securityKey" => \app\models\Table::CACHE_SECURITY_KEY,
-                    "path" => "/var/www/geocloud2/app/tmp",
-                    "itemDetailedDate" => true,
-                    "defaultTtl" => 1
-                ])
-            );
+        global $globalInstanceCache;
 
-        } catch (\Exception $exception) {
-            die($exception->getMessage());
-        }
         parent::__construct();
+
+        $this->InstanceCache = $globalInstanceCache;
     }
 
     /**
@@ -408,16 +397,16 @@ class Sql extends \app\inc\Controller
             }
         }
 
-        if ($parsedSQL['DROP']) {
+        if (!empty($parsedSQL['DROP'])) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "DROP is not allowed through the API";
-        } elseif ($parsedSQL['ALTER']) {
+        } elseif (!empty($parsedSQL['ALTER'])) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
-        } elseif ($parsedSQL['CREATE']) {
-            if (isset($parsedSQL['CREATE']) && (isset($parsedSQL['VIEW']) || isset($parsedSQL['TABLE']))) {
+        } elseif (!empty($parsedSQL['CREATE'])) {
+            if (!empty($parsedSQL['CREATE']) && (!empty($parsedSQL['VIEW']) || !empty($parsedSQL['TABLE']))) {
                 if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                     $this->response = $this->api->transaction($this->q);
                     $this->addAttr($response);
@@ -431,10 +420,10 @@ class Sql extends \app\inc\Controller
                 $this->response['message'] = "Only CREATE VIEW is allowed through the API";
                 $this->response['code'] = 403;
             }
-        } elseif ($parsedSQL['UPDATE'] || $parsedSQL['INSERT'] || $parsedSQL['DELETE']) {
+        } elseif (!empty($parsedSQL['UPDATE']) || !empty($parsedSQL['INSERT']) || !empty($parsedSQL['DELETE'])) {
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
-        } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
+        } elseif (!empty($parsedSQL['SELECT']) || !empty($parsedSQL['UNION'])) {
             if ($this->streamFlag) {
                 $stream = new \app\models\Stream();
                 $res = $stream->runSql($this->q);

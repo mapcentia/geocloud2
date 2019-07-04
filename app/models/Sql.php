@@ -142,7 +142,7 @@ class Sql extends \app\inc\Model
             }
             foreach ($arrayWithFields as $key => $value) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj']);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
             }
             $this->free($result);
             $result = $this->execQuery($sql);

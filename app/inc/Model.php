@@ -281,7 +281,7 @@ class Model
         $arr = [];
         $foreignConstrains = [];
         preg_match("/^[\w'-]*\./", $table, $matches);
-        $_schema = $matches[0];
+        $_schema = !empty($matches[0]) ? $matches[0] : null;
 
         preg_match("/[\w'-]*$/", $table, $matches);
         $_table = $matches[0];

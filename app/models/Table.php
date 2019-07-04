@@ -12,8 +12,6 @@ use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
 use app\inc\Util;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 class Table extends Model
 {
@@ -31,7 +29,6 @@ class Table extends Model
     var $sysCols;
     var $primeryKey;
     var $specialChars;
-    const CACHE_SECURITY_KEY = "phpfastcache";
 
     /**
      * Table constructor.
@@ -41,18 +38,11 @@ class Table extends Model
      */
     function __construct($table, $temp = false, $addGeomType = false)
     {
+        global $globalInstanceCache;
+
         parent::__construct();
 
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    'securityKey' => self::CACHE_SECURITY_KEY,
-                    'path' => '/var/www/geocloud2/app/tmp',
-                    'itemDetailedDate' => true
-                ])
-            );
-        } catch (\Exception $exception) {
-        }
+        $this->InstanceCache = $globalInstanceCache;
 
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
