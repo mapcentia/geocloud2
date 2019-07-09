@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+use app\conf\migration\Sql;
 header("Content-type: text/plain");
 include_once("../App.php");
 include_once("Sql.php");
