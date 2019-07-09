@@ -24,6 +24,10 @@ RewriteRule ^dashboard/(.*) dashboard/index.html [L]
 RewriteRule user/login/$ dashboard [L]
 RewriteRule user/login/p$ dashboard [L]
 
+# Rewrite URL to HTML map viewer
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
+
 # Rewrite URL to HTML widget map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule apps/widgets/gc2map/(.*) apps/widgets/gc2map/index.html [L]
