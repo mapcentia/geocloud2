@@ -20,6 +20,7 @@ use \app\inc\Input;
 use \app\models\Database;
 use \app\conf\App;
 use \app\conf\Connection;
+use \app\conf\migration\Sql;
 
 /**
  * Class Admin
@@ -75,6 +76,48 @@ class Admin extends Controller
     {
         $qgis = new \app\models\Qgis();
         return $qgis->writeAll(Database::getDb());
+    }
+
+    /**
+     * @return array
+     */
+    public function get_runmigrations(): array
+    {
+        $response = [];
+        $data = [];
+
+        $arr = ["mapcentia", "gc2scheduler", Database::getDb()];
+        foreach ($arr as $db) {
+            \app\models\Database::setDb($db);
+            $conn = new \app\inc\Model();
+
+            switch ($db) {
+                case "mapcentia":
+                    $sqls = Sql::mapcentia();
+                    break;
+                case "gc2scheduler":
+                    $sqls = Sql::gc2scheduler();
+                    break;
+                default:
+                    $sqls = Sql::get();
+                    break;
+            }
+
+            foreach ($sqls as $sql) {
+                $conn->execQuery($sql, "PDO", "transaction");
+                if ($conn->PDOerror[0]) {
+                    $data[$db].= "-";
+                } else {
+                    $data[$db].= "+";
+                }
+                $conn->PDOerror = NULL;
+            }
+            $conn->db = NULL;
+            $conn = NULL;
+        }
+        $response["success"] = true;
+        $response["data"] = $data;
+        return $response;
     }
 
     /**
@@ -136,5 +179,10 @@ class Admin extends Controller
         }
         $response["success"] = true;
         return $response;
+    }
+
+    public function get_createschema() :array {
+        $admin = new \app\models\Admin();
+        return $admin->install();
     }
 }
