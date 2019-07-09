@@ -66,7 +66,7 @@ class User extends Model
             $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($query);
             $res->execute(array(":sUserID" => $userName));
-    
+
             while ($row = $this->fetchRow($res, "assoc")) {
                 array_push($data, $row);
             }
@@ -117,7 +117,7 @@ class User extends Model
      */
     public function createUser(array $data): array
     {
-        $mandatoryParameters = ['name', 'email', 'password'];   
+        $mandatoryParameters = ['name', 'email', 'password'];
         foreach ($mandatoryParameters as $item) {
             if (empty($data[$item])) {
                 return array(
@@ -199,9 +199,10 @@ class User extends Model
         if ($data['subuser'] === false) {
             $db = new Database();
             $db->postgisdb = $this->postgisdb;
-            $dbObj = $db->createdb($userId, App::$param['databaseTemplate'], "UTF8");
-            if ($dbObj !== true) {
-                die("Unable to create database for user identifier $userId");
+            try {
+                $db->createdb($userId, App::$param['databaseTemplate'], "UTF8");
+            } catch (\Exception $e) {
+                // PASS
             }
         }
 

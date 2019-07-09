@@ -65,7 +65,7 @@ class User extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Post(
      *   path="/v2/user",
      *   tags={"user"},
@@ -93,7 +93,7 @@ class User extends Controller
      */
     function post_index(): array
     {
-        $data = json_decode(Input::getBody(), true) ? : [];
+        $data = json_decode(Input::getBody(), true) ?: [];
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
             $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) || Session::isAuth();
@@ -117,7 +117,7 @@ class User extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Get(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
@@ -164,7 +164,7 @@ class User extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Put(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
@@ -200,7 +200,7 @@ class User extends Controller
     function put_index(): array
     {
         if (Session::isAuth()) {
-            $data = json_decode(Input::getBody(), true) ? : [];
+            $data = json_decode(Input::getBody(), true) ?: [];
 
             $requestedUserId = Route::getParam("userId");
             $currentUserId = Session::getUser();
@@ -252,7 +252,7 @@ class User extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Delete(
      *   path="/v2/user/{userId}",
      *   tags={"user"},
@@ -302,7 +302,7 @@ class User extends Controller
 
     /**
      * @return array
-     * 
+     *
      * @OA\Get(
      *   path="/v2/user/{userId}/subusers",
      *   tags={"user"},

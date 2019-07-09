@@ -18,12 +18,12 @@ class Database extends \app\inc\Model
 {
     private function createUser($name)
     {
-        $sql = "create user {$name} with password '1234'";
+        $sql = "CREATE USER {$name}";
         $this->execQuery($sql);
-
-        if (!$this->PDOerror) {
+        try {
+            $this->execQuery($sql);
             return true;
-        } else {
+        } catch (\Exception $e) {
             return false;
         }
     }
