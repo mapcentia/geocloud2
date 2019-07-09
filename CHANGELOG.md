@@ -18,7 +18,10 @@ and this project adheres to [CalVer](https://calver.org/).
 - `memory_limit` can now be set in app/conf/App.php
 - Handling of reach-of-memory-limit by reserving on 1MB, which is release, so a exception response can be send.
 - Referencing tables is now exposed in Meta for layers.
-- Foreign key constrains are now exposed in as `restriction` in `fields` properties of Meta. 
+- Foreign key constrains are now exposed in Meta as `restriction` in `fields` properties of Meta.
+- Admin API for administration tasks like restoring MapFiles, QGS Files and MapCache files. Can also re-process QGS if e.g. the database connection changes.
+- New Dashboard module: https://github.com/mapcentia/dashboard.
+- New Stream mode in SQL API, which can stream huge amount of data, by sending one-line JSON.
 
 ### Changed
 - Change how cached/not-cached layer work in the Map tab:
@@ -33,6 +36,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - CDATA is handled in Feature API, so something like HTML included in GeoJSON won't crash the API.
 - Serious security bug in Meta API.
 - Avoid double group names when using name with different upper/lower case.
+- A lot of PHP notices are gone from log.
 
 ## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
