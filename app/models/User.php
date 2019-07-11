@@ -152,6 +152,17 @@ class User extends Model
                         'message' => "User identifier $userId already exists for parent database " . $this->userId
                     );
                 }
+                $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb ISNULL");
+                $result = $this->fetchRow($res);
+                if ($result['count'] > 0) {
+                    return array(
+                        'code' => 400,
+                        'success' => false,
+                        'errorCode' => 'PARENT_USER_EXISTS_WITH_NAME',
+                        'message' => "User identifier $userId already exists as database"
+                    );
+                }
+
             } else {
                 return array(
                     'code' => 400,
