@@ -65,47 +65,41 @@ class Session extends Model
         $isAuthenticated = false;
         $setting = new \app\models\Setting();
         $sPassword = $setting->encryptPw($pw);
-        if (isset(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
-            $sQuery = "SELECT * FROM users WHERE screenname = :sUserID";
-            $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $sUserID));
-            $row = $this->fetchRow($res);
-            if (isset($row)) {
-                $isAuthenticated = true;
-            }
-        } else {
-            $sUserIDNotConverted = $sUserID;
-            $sUserID = Model::toAscii($sUserID, NULL, "_");
 
-            $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sEmail)";
+        $sUserIDNotConverted = $sUserID;
+        $sUserID = Model::toAscii($sUserID, NULL, "_");
+
+        $sQuery = "SELECT * FROM users WHERE (screenname = :sUserID OR email = :sEmail)";
+        $res = $this->prepare($sQuery);
+        $res->execute([
+            ":sUserID" => $sUserID,
+            ":sEmail" => $sUserIDNotConverted
+        ]);
+
+        $rows = $this->fetchAll($res);
+
+        // If there are more than one records found, eliminate options by specifying the parent database
+        if (sizeof($rows) > 1 && $parentdb !== false) {
+            $sQuery = "SELECT * FROM users WHERE ((screenname = :sUserID OR email = :sEmail) AND parentdb = :parentDb)";
             $res = $this->prepare($sQuery);
             $res->execute([
                 ":sUserID" => $sUserID,
-                ":sEmail" => $sUserIDNotConverted
+                ":sEmail" => $sUserIDNotConverted,
+                ":parentDb" => $parentdb
             ]);
 
             $rows = $this->fetchAll($res);
+        }
 
-            // If there are more than one records found, eliminate options by specifying the parent database
-            if (sizeof($rows) > 1 && $parentdb !== false) {
-                $sQuery = "SELECT * FROM users WHERE ((screenname = :sUserID OR email = :sEmail) AND parentdb = :parentDb)";
-                $res = $this->prepare($sQuery);
-                $res->execute([
-                    ":sUserID" => $sUserID,
-                    ":sEmail" => $sUserIDNotConverted,
-                    ":parentDb" => $parentdb
-                ]);
-
-                $rows = $this->fetchAll($res);
-            }
-
-            if (sizeof($rows) === 1) {
-                $row = $rows[0];
-                if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
-                    $isAuthenticated = true;
-                }
+        if (sizeof($rows) === 1) {
+            $row = $rows[0];
+            if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
+                $isAuthenticated = true;
+            } elseif (!empty(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
+                $isAuthenticated = true;
             }
         }
+
 
         if ($isAuthenticated) {
             // Login successful.
@@ -123,7 +117,7 @@ class Session extends Model
 
             $response['success'] = true;
             $response['message'] = "Session started";
-	        $response['data'] = [];
+            $response['data'] = [];
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];

@@ -32,7 +32,8 @@ class Session extends \app\inc\Controller
 
     /**
      * @return array
-     * 
+     * @throws \Exception
+     *
      * @OA\Get(
      *   path="/v2/session/start",
      *   tags={"session"},
