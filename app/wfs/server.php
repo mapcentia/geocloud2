@@ -673,6 +673,8 @@ function doSelect($table, $sql, $sql2, $from)
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
             $postgisObject->free($result);
+            flush();
+            ob_flush();
         }
     }
     $totalTime = microtime_float() - $startTime;
@@ -1560,8 +1562,7 @@ function makeExceptionReport($value)
     die();
 }
 
-print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
+print("<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
 print($sessionComment);
 print ("<!--\n");
-include("README");
 print ("\n-->\n");
