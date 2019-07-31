@@ -56,7 +56,8 @@ class Database extends \app\inc\Model
         $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
         $this->execQuery($sql);
 
-        $sql = "GRANT {$screenName} to {$this->postgisuser}";
+        $postgisUser = explode('@', $this->postgisuser)[0];
+        $sql = "GRANT {$screenName} to {$postgisUser}";
         $this->execQuery($sql);
 
         $this->changeOwner($screenName, $screenName);
