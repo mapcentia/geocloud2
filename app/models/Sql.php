@@ -145,8 +145,6 @@ class Sql extends \app\inc\Model
                 $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
             }
             $this->free($result);
-            $result = $this->execQuery($sql);
-            $this->free($result);
             $response['success'] = true;
             $response['forStore'] = $fieldsForStore;
             $response['forGrid'] = $columnsForGrid;
