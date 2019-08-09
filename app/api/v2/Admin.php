@@ -120,10 +120,16 @@ class Admin extends Controller
         return $response;
     }
 
+    public function get_reprocessqgis(): array
+    {
+        // TODO
+        // SELECT FROM settings.qgis_files WHERE db=....
+    }
+
     /**
      * @return array
      */
-    public function get_reprocessqgis(): array
+    public function get_reprocessqgisfromfiles(): array
     {
         $response = [];
         $index = 7;

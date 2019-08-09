@@ -78,6 +78,11 @@ class Input
         return file_get_contents('php://input');
     }
 
+    public static function getCookies(): array
+    {
+        return $_COOKIE;
+    }
+
     /**
      * @param string|null $key
      * @param bool $raw
