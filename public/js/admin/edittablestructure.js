@@ -94,6 +94,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'content',
+            allowBlank: true
+        },
+        {
             name: 'linkprefix',
             allowBlank: true
         },
@@ -179,9 +183,28 @@ tableStructure.init = function (record, screenName) {
     tableStructure.store.setDefaultSort('sort_id', 'asc');
     tableStructure.store.load();
 
+
     /**
      *
      */
+    var contentCombo = new Ext.form.ComboBox({
+        store: new Ext.data.ArrayStore({
+            fields: ['key', 'text'],
+            data: [
+                ['plain', 'Plain'],
+                ['image', 'Image'],
+                ['video', 'Video']
+            ]
+        }),
+        displayField: 'text',
+        valueField: 'key',
+        mode: 'local',
+        typeAhead: false,
+        editable: false,
+        triggerAction: 'all',
+        lazyRender:true
+    });
+
     tableStructure.grid = new Ext.grid.EditorGridPanel({
         iconCls: 'silk-grid',
         store: tableStructure.store,
@@ -300,10 +323,11 @@ tableStructure.init = function (record, screenName) {
                     //width: 35
                 },
                 {
-                    id: "image",
-                    xtype: 'checkcolumn',
-                    header: __("Image"),
-                    dataIndex: 'image',
+                    id: "content",
+                    header: __("Content"),
+                    dataIndex: 'content',
+                    renderer: Ext.util.Format.comboRenderer(contentCombo),
+                    editor: contentCombo
                     //width: 35
                 },
                 {

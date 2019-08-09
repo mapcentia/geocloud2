@@ -702,6 +702,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias ?: "");
                 $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
                 $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
+                $arr = $this->array_push_assoc($arr, "content", $fieldconfArr[$key]->content);
                 $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
                 $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
                 $arr = $this->array_push_assoc($arr, "is_nullable", $value['is_nullable']);
