@@ -22,6 +22,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Admin API for administration tasks like restoring MapFiles, QGS Files and MapCache files. Can also re-process QGS if e.g. the database connection changes.
 - New Dashboard module: https://github.com/mapcentia/dashboard.
 - New Stream mode in SQL API, which can stream huge amount of data, by sending one-line JSON.
+- New content property in table-structure, which replaces image property. Three options are available: Plain, image and video, which Vidi will react upon.
 
 ### Changed
 - Change how cached/not-cached layer work in the Map tab:
