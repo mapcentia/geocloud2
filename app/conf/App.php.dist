@@ -62,6 +62,9 @@ class App
             "App_Id" => "your_app_id",
             "App_Code" => "your_code",
         ),
+        
+        // Google key
+        "googleApiKey" => "your_google_api_key",
 
         //Force a locale. If not set it'll set set from the browsers language settings.
         //"locale" => "en_US",
