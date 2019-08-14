@@ -7,6 +7,7 @@
  */
 
 ini_set("display_errors", "off");
+ob_start("ob_gzhandler");
 
 use \app\inc\Input;
 use \app\inc\Session;
@@ -28,6 +29,9 @@ new \app\conf\App();
 $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
+
+//ini_set('session.save_handler', 'redis');
+//ini_set('session.save_path', "tcp://172.18.0.4:6379");
 
 
 // Get start time of script
@@ -96,8 +100,9 @@ if (Input::getPath()->part(1) == "api") {
     Database::setDb(Input::getPath()->part(4)); // Default
 
     Route::add("api/v1/sql", function () {
-        Session::start();
-        $db = Input::getPath()->part(4);
+        if (empty(Input::get("key"))) {
+               Session::start();
+        }        $db = Input::getPath()->part(4);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
@@ -109,7 +114,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v2/sql/{user}/[method]",
 
         function () {
-            if (empty(Input::get("key"))) {
+            if (empty(Input::get("key"))) { // Only start session if no API key is provided
                 Session::start();
             }
             $r = func_get_arg(0);
@@ -125,8 +130,8 @@ if (Input::getPath()->part(1) == "api") {
 
         function () {
             $r = func_get_arg(0);
-            if ($r["action"] == "river") {
-                Session::start(); // So we can create a session log from the indexing
+            if ($r["action"] == "river") { // Only start session if no API key is provided
+                Session::start();
             }
             Database::setDb($r["user"]);
         }
@@ -316,7 +321,9 @@ if (Input::getPath()->part(1) == "api") {
     Route::miss();
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
-    Session::start();
+    if (!empty(Input::getCookies()["PHPSESSID"])){ // Do not start session if no cookie is set
+        Session::start();
+    }
     $db = Input::getPath()->part(2);
     $dbSplit = explode("@", $db);
     if (sizeof($dbSplit) == 2) {
@@ -330,23 +337,16 @@ if (Input::getPath()->part(1) == "api") {
     Database::setDb($db);
     new \app\controllers\Wms();
 
-} elseif (Input::getPath()->part(1) == "tilecache") {
-    Session::start();
-    $tileCache = new \app\controllers\Tilecache();
-    $tileCache->fetch();
-
 } elseif (Input::getPath()->part(1) == "mapcache") {
-    // Use TileCache instead if there is no MapCache settings
-    Session::start();
-    if (isset(App::$param["mapCache"])) {
-        $cache = new \app\controllers\Mapcache();
-    } else {
-        $cache = new \app\controllers\Tilecache();
-    }
-    $cache->fetch();
+// Is not in use. Apache redirects all request to MapCache CGI
+//    Session::start();
+//    $cache = new \app\controllers\Mapcache();
+//    $cache->fetch();
 
 } elseif (Input::getPath()->part(1) == "wfs") {
-    Session::start();
+    if (!empty(Input::getCookies()["PHPSESSID"])){
+        Session::start();
+    }
     $db = Input::getPath()->part(2);
     $dbSplit = explode("@", $db);
     if (sizeof($dbSplit) == 2) {

@@ -33,6 +33,12 @@ Ext.MessageBox.buttonText = {
     yes: "<i class='fa fa-check'></i> " + __("Yes"),
     no: "<i class='fa fa-remove'></i> " + __("No")
 };
+Ext.util.Format.comboRenderer = function(combo){
+    return function(value){
+        var record = combo.findRecord(combo.valueField, value);
+        return record ? record.get(combo.displayField) : combo.valueNotFoundText;
+    }
+};
 
 /**
  * Set vars in function scope
