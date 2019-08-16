@@ -7,6 +7,7 @@
  */
 
 include("html_header.php");
+use \app\conf\App;
 ?>
 
 <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
@@ -165,7 +166,7 @@ include("html_header.php");
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
 
-<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
+<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key=<?php echo App::$param["googleApiKey"]; ?>&v=3&libraries=places"></script>
 <script type="text/javascript" src="/js/OpenLayers-2.12/OpenLayers.gc2.js?d8c5c284b9bacb96"></script>
 
 <!-- build:js /js/admin/build/all.min.js -->
