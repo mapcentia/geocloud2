@@ -437,9 +437,11 @@ class Sql extends \app\inc\Controller
                 $this->InstanceCache->clear();
             }
 
-            $CachedString = $this->InstanceCache->getItem(md5($this->q));
+            if ($lifetime > 0) {
+                $CachedString = $this->InstanceCache->getItem(md5($this->q));
+            }
 
-            if ($CachedString->isHit()) {
+            if ($lifetime > 0 && $CachedString->isHit()) {
                 $this->data = $CachedString->get();
                 $this->cacheInfo["cache_hit"] = $CachedString->getCreationDate();
                 $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
