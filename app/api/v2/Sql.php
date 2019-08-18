@@ -432,9 +432,15 @@ class Sql extends \app\inc\Controller
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.
+            // If ttl is set to 0. when clear cache, because 0 secs means cache will life for ever.
             if ($lifetime == 0) {
-                $this->InstanceCache->clear();
+               try {
+                   $this->InstanceCache->clear();
+               } catch (\Exception $e) {
+                   // Pass
+               } catch (\Error $e) {
+                   // Pass
+               }
             }
 
             if ($lifetime > 0) {
