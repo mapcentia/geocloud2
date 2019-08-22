@@ -63,6 +63,8 @@ class Layer extends \app\models\Table
             $CachedString = $this->InstanceCache->getItem($key);
         } catch (\Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException $exception) {
             $CachedString = null;
+        } catch (\Error $exception) {
+            $CachedString = null;
         }
 
         $timeToLive = (60 * 60 * 240);
@@ -348,8 +350,12 @@ class Layer extends \app\models\Table
                 $response['code'] = 401;
             }
 
-            $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
-            $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            try {
+                $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
+                $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            } catch (\Error $exception) {
+                // Pass
+            }
             $response["cache_hit"] = false;
 
         }
@@ -716,6 +722,8 @@ class Layer extends \app\models\Table
     {
         try {
             $this->InstanceCache->clear();
+        } catch (\Error $exception) {
+            error_log($exception->getMessage());
         } catch (\Exception $exception) {
             error_log($exception->getMessage());
         }

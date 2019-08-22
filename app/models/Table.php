@@ -468,6 +468,8 @@ class Table extends Model
     {
         try {
             $this->InstanceCache->clear();
+        } catch (\Error $exception) {
+            error_log($exception->getMessage());
         } catch (\Exception $exception) {
             error_log($exception->getMessage());
         }
