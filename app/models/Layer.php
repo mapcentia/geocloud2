@@ -67,8 +67,8 @@ class Layer extends \app\models\Table
             $CachedString = null;
         }
 
-        $timeToLive = (60 * 60 * 240);
-        //$timeToLive = (1); // disabled
+        //$timeToLive = (60 * 60 * 240);
+        $timeToLive = (1); // disabled
 
         if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();
@@ -156,7 +156,13 @@ class Layer extends \app\models\Table
             // Check if Es is online
             // =====================
             $esOnline = false;
-            $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+            $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+            if (!empty($split[2])) {
+                $port = $split[2];
+            } else {
+                $port = "9200";
+            }
+            $esUrl = $split[0] . ":" . $split[1] . ":" . $port;
             $ch = curl_init($esUrl);
             curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
             curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -259,7 +265,7 @@ class Layer extends \app\models\Table
                     if ($httpcode == "200") {
                         $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
                         // Get mapping
-                        $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
+                        $url = "{$esUrl}/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
                         $ch = curl_init($url);
                         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");

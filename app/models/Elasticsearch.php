@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\models;
@@ -20,6 +20,7 @@ class Elasticsearch extends Model
      * @var string
      */
     protected $host;
+    protected $port;
 
     /**
      * Elasticsearch constructor.
@@ -29,6 +30,13 @@ class Elasticsearch extends Model
         parent::__construct();
 
         $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $split = explode(":", $this->host);
+        if (!empty($split[2])) {
+            $this->port = $split[2];
+        } else {
+            $this->port = "9200";
+        }
+        $this->host = $split[0] . ":" . $split[1] . ":" . $this->port;
     }
 
     /**
@@ -40,7 +48,7 @@ class Elasticsearch extends Model
     public function map($index, $type, $map)
     {
         $response = [];
-        $ch = curl_init($this->host . ":9200/{$index}/_mapping/{$type}");
+        $ch = curl_init($this->host . "/{$index}/_mapping/{$type}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -62,7 +70,7 @@ class Elasticsearch extends Model
     public function createIndex($index, $map)
     {
         $response = [];
-        $ch = curl_init($this->host . ":9200/{$index}");
+        $ch = curl_init($this->host . "/{$index}");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -82,20 +90,19 @@ class Elasticsearch extends Model
      * @param null $id
      * @return array
      */
-    public function delete($index, $type = null, $id = null)
+    public function delete($index, $type = null, $id = null): array
     {
         $response = [];
         if ($id) {
-            $ch = curl_init($this->host . ":9200/{$index}_{$type}/{$type}/{$id}");
+            $ch = curl_init($this->host . "/{$index}_{$type}/{$type}/{$id}");
         } elseif ($type) {
-            $ch = curl_init($this->host . ":9200/{$index}_{$type}");
+            $ch = curl_init($this->host . "/{$index}_{$type}");
         } else {
-            $ch = curl_init($this->host . ":9200/{$index}");
+            $ch = curl_init($this->host . "/{$index}");
         }
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
             'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);

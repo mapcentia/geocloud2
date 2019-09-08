@@ -27,6 +27,11 @@ class Elasticsearch extends \app\inc\Controller
     protected $host;
 
     /**
+     * @var null
+     */
+    protected $port;
+
+    /**
      * @var string
      */
     protected $clientIp;
@@ -49,6 +54,13 @@ class Elasticsearch extends \app\inc\Controller
         parent::__construct();
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
+        $split = explode(":", $this->host);
+        if (!empty($split[2])) {
+            $this->port = $split[2];
+        } else {
+            $this->port = "9200";
+        }
+        $this->host = $split[0] . ":" . $split[1] . ":" . $this->port;
         $defaultSettings = array(
             "settings" => array(
                 "number_of_shards" => 5,
@@ -187,6 +199,13 @@ class Elasticsearch extends \app\inc\Controller
 
         $arr = [];
 
+        if (empty($r["indices"])) {
+            $response['success'] = false;
+            $response['message'] = "No index";
+            $response['code'] = "500";
+            return $response;
+        }
+
         $indices = explode(",", $r["indices"]);
 
         foreach ($indices as $v) {
@@ -195,7 +214,7 @@ class Elasticsearch extends \app\inc\Controller
 
         $index = implode(",", $arr);
 
-        $searchUrl = $this->host . ":9200/{$index}/{$type}/_search";
+        $searchUrl = $this->host . "/{$index}/{$type}/_search";
 
         try {
 
@@ -246,6 +265,33 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
+     * @return mixed
+     */
+    public function delete_delete(): array
+    {
+        $type = Input::getPath()->part(7);
+        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
+            $type = "a" . $type;
+        }
+        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+            return $response;
+        }
+        $index = Input::getPath()->part(5) . (Input::getPath()->part(6) ? "_" . Input::getPath()->part(6) : "");
+        $es = new \app\models\Elasticsearch();
+        $res = $es->delete($index, $type, Input::getPath()->part(8));
+        $obj = json_decode($res["json"], true);
+        if (isset($obj["error"]) && $obj["error"] != false) {
+            $response['success'] = false;
+            $response['message'] = $obj["error"];
+            $response['code'] = $obj["status"];
+            return $response;
+        }
+        $response['success'] = true;
+        $response['message'] = $obj;
+        return $response;
+    }
+
+    /**
      * @return array|mixed
      */
     public function post_river()
@@ -253,15 +299,13 @@ class Elasticsearch extends \app\inc\Controller
 
         // Check if Es is online
         // =====================
-        $url = $this->host . ":9200";
-        $ch = curl_init($url);
+        //die($this->host);
+        $ch = curl_init("http://search-gc2-4hhhdlk6ypwhgioijcianyoafi.eu-west-1.es.amazonaws.com");
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-        ));
+
         curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -271,11 +315,10 @@ class Elasticsearch extends \app\inc\Controller
             $response['code'] = $httpcode;
             return $response;
         }
-
         // Auth
         // ====
 
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
             return $response;
         }
 
@@ -351,15 +394,14 @@ class Elasticsearch extends \app\inc\Controller
         // Delete the index if exist
         // =========================
 
-        $url = $this->host . ":9200/{$fullIndex}";
+        $url = $this->host . "/{$fullIndex}";
+
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-        ));
+
         curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -376,7 +418,6 @@ class Elasticsearch extends \app\inc\Controller
 
         // Create the index with settings
         // ==============================
-
         $res = $es->createIndex($fullIndex, $this->settings);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
@@ -521,7 +562,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Check if Es is online
         // =====================
-        $url = $this->host . ":9200";
+        $url = $this->host;
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -588,7 +629,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Delete the index if exist
         // =========================
-        $url = $this->host . ":9200/{$fullIndex}";
+        $url = $this->host . "/{$fullIndex}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -670,7 +711,7 @@ class Elasticsearch extends \app\inc\Controller
     public function put_upsert()
     {
         $put = Input::get();
-        if ($response = $this->checkAuth(Input::getPath()->part(5), $put['key'])) {
+        if ($response = $this->checkAuth(Input::getPath()->part(5), !empty($put['key']) ?: "")) {
             return $response;
         }
         $schema = Input::getPath()->part(6);

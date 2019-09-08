@@ -31,6 +31,11 @@ class Elasticsearch extends \app\inc\Controller
     protected $host;
 
     /**
+     * @var null
+     */
+    protected $port;
+
+    /**
      * @var string
      */
     protected $clientIp;
@@ -49,6 +54,12 @@ class Elasticsearch extends \app\inc\Controller
 
         $this->clientIp = Util::clientIp();
         $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
+        $split = explode(":", $this->host);
+        if (!empty($split[2])) {
+            $this->port = $split[2];
+        } else {
+            $this->port = "9200";
+        }
         $defaultSettings = array(
             "settings" => array(
                 "number_of_shards" => 5,
@@ -172,7 +183,7 @@ class Elasticsearch extends \app\inc\Controller
             $arr[] = $db . ($v ? "_" . $v : "") . ($type ? "_" . $type : "_*");
         }
         $index = implode(",", $arr);
-        $searchUrl = $this->host . ":9200/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
+        $searchUrl = $this->host . ":{$this->port}/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
         $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
@@ -265,7 +276,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Check if Es is online
         // =====================
-        $url = $this->host . ":9200";
+        $url = $this->host . ":{$this->port}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -363,7 +374,7 @@ class Elasticsearch extends \app\inc\Controller
         // Delete the index if exist
         // =========================
 
-        $url = $this->host . ":9200/{$fullIndex}";
+        $url = $this->host . ":{$this->port}/{$fullIndex}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body

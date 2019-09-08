@@ -68,13 +68,22 @@ class Sql_to_es extends Model
         $response = [];
         $i = 0;
 
-        $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
+        $esUrl = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $split = explode(":", $esUrl);
+        if (!empty($split[2])) {
+            $port = $split[2];
+        } else {
+            $port = "9200";
+        }
+        $esUrl = $split[0] . ":" . $split[1] . ":" . $port . "/_bulk";
+
         $client = new Client([
             'timeout' => 10.0,
             'headers' => [
                 'Content-Type' => 'application/json'
             ]
         ]);
+
         $bulKCount = 0;
         $bulkSize = 500;
         $geometries = [];
@@ -164,9 +173,7 @@ class Sql_to_es extends Model
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
-
                 if (is_int($i / $bulkSize)) {
-
                     $esResponse = $client->post($esUrl, ['body' => $json]);
                     $obj = json_decode($esResponse->getBody(), true);
 

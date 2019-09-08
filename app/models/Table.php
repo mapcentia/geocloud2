@@ -248,16 +248,19 @@ class Table extends Model
         // Check if Es is online
         // =====================
         $esOnline = false;
-        $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+        $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+        if (!empty($split[2])) {
+            $port = $split[2];
+        } else {
+            $port = "9200";
+        }
+        $esUrl = $split[0] . ":" . $split[1] . ":" . $port;
         $ch = curl_init($esUrl);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-        ));
         curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -330,9 +333,6 @@ class Table extends Model
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                     curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
                     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                        'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-                    ));
                     curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
