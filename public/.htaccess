@@ -37,6 +37,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/fpm-status
 RewriteCond %{REQUEST_URI} !^/fpm-ping
+RewriteCond %{REQUEST_URI} !^/mapcache
 RewriteRule ^(.*)$ index.php [L]
 
 </IfModule>
