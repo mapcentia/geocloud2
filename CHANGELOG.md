@@ -15,7 +15,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - The config `googleApiKey` for setting a Google API key for use in Vidi.
 - It is now possible to set a custom path for S3 caches. This makes it possible to point a layer into an existing cache.
 - Microsoft's Core Fonts are added, so QGIS Server can use them.
-- `memory_limit` can now be set in app/conf/App.php
+- `memory_limit` can now be set in app/conf/App.php.
 - Handling of reach-of-memory-limit by reserving on 1MB, which is release, so a exception response can be send.
 - Referencing tables is now exposed in Meta for layers.
 - Foreign key constrains are now exposed in Meta as `restriction` in `fields` properties of Meta.
@@ -29,6 +29,8 @@ and this project adheres to [CalVer](https://calver.org/).
     - Default is now to display layers as not-cached.
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
+- Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
+- Optimized non-geometry meta VIEWs in database.
    
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
