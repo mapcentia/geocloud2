@@ -10,7 +10,7 @@
                 "tags": [
                     "configuration"
                 ],
-                "summary": "Returns all configurations (unpublished configurations are returned if authorized user is the author)",
+                "summary": "Returns all configurations (unpublisasasashed configurations are returned if authorized user is the author)",
                 "operationId": "app\\api\\v2\\Configuration::get_all",
                 "parameters": [
                     {
@@ -41,7 +41,7 @@
                     {
                         "name": "userId",
                         "in": "path",
-                        "description": "User identifier",
+                        "description": "User identifierc scsddd",
                         "required": true,
                         "schema": {
                             "type": "string"
