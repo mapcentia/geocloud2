@@ -41,19 +41,17 @@ class Elasticsearch extends Model
 
     /**
      * @param $index
-     * @param $type
      * @param $map
      * @return array
      */
-    public function map($index, $type, $map)
+    public function map($index, $map)
     {
         $response = [];
-        $ch = curl_init($this->host . "/{$index}/_mapping/{$type}");
+        $ch = curl_init($this->host . "/{$index}/_mapping");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
             'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
@@ -75,7 +73,6 @@ class Elasticsearch extends Model
         curl_setopt($ch, CURLOPT_POSTFIELDS, $map);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
             'Content-Type: application/json',
         ));
         $buffer = curl_exec($ch);
@@ -90,14 +87,13 @@ class Elasticsearch extends Model
      * @param null $id
      * @return array
      */
-    public function delete($index, $type = null, $id = null): array
+    public function delete($index, $id = null): array
     {
         $response = [];
         if ($id) {
-            $ch = curl_init($this->host . "/{$index}_{$type}/{$type}/{$id}");
-        } elseif ($type) {
-            $ch = curl_init($this->host . "/{$index}_{$type}");
-        } else {
+            $ch = curl_init($this->host . "/{$index}/{$id}");
+        }
+        else {
             $ch = curl_init($this->host . "/{$index}");
         }
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -119,13 +115,9 @@ class Elasticsearch extends Model
     {
         $split = explode(".", $table);
         $type = $split[1];
-        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
-            $type = "a" . $type;
-        }
         $tableObj = new \app\models\Table($table);
         $schema = $tableObj->getMapForEs();
-        $map = array("mappings" =>
-            array($type =>
+        $map =
                 array("properties" =>
                     array("properties" =>
                         array(
@@ -133,8 +125,7 @@ class Elasticsearch extends Model
                             "properties" => array()
                         )
                     )
-                )
-            )
+
         );
         $layer = new \app\models\Layer();
         $esTypes = $layer->getElasticsearchMapping($table);
@@ -165,12 +156,12 @@ class Elasticsearch extends Model
             if (isset($arr[$key]["fielddata"]) && ($arr[$key]["fielddata"])) $mapArr["fielddata"] = $arr[$key]["fielddata"];
             if ($pgType == "geometry") {
                 if ($mapArr["type"] == "geo_point") {
-                    $map["mappings"][$type]["properties"]["geometry"]["properties"]["coordinates"] = $mapArr;
+                    $map["mappings"]["properties"]["geometry"]["properties"]["coordinates"] = $mapArr;
                 } else {
-                    $map["mappings"][$type]["properties"]["geometry"] = $mapArr;
+                    $map["mappings"]["properties"]["geometry"] = $mapArr;
                 }
             } else {
-                $map["mappings"][$type]["properties"]["properties"]["properties"][$key] = $mapArr;
+                $map["mappings"]["properties"]["properties"]["properties"][$key] = $mapArr;
             }
         }
         $response = array("map" => $map);

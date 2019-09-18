@@ -56,14 +56,14 @@ class Sql_to_es extends Model
     }
 
     /**
-     * @param string $q
-     * @param string $index
-     * @param string $type
-     * @param string $id
-     * @param string $db
+     * @param $q
+     * @param $schema
+     * @param $rel
+     * @param $key
+     * @param $db
      * @return array
      */
-    public function runSql($q, $index, $type, $id, $db)
+    public function runSql($q, $schema, $rel, $key, $db)
     {
         $response = [];
         $i = 0;
@@ -92,7 +92,7 @@ class Sql_to_es extends Model
         // We create a unique index name
         $errors = false;
         $errors_in = [];
-        $index = $db . "_" . $index . "_" . $type;
+        $index = $db . "_" . $schema . "_" . $rel;
         $name = "_" . rand(1, 999999999) . microtime();
         $view = $this->toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
@@ -146,7 +146,6 @@ class Sql_to_es extends Model
         try {
 
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
-
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -169,7 +168,7 @@ class Sql_to_es extends Model
 
                 unset($geometries);
 
-                $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
+                $json .= json_encode(array("index" => array("_index" => $index, "_id" => $arr[$key])));
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
@@ -192,7 +191,9 @@ class Sql_to_es extends Model
             }
 
             // Index the last bulk
-            $esResponse = $client->post($esUrl, ['body' => $json]);
+            if ($json) {
+                $esResponse = $client->post($esUrl, ['body' => $json]);
+            };
             $obj = json_decode($esResponse->getBody(), true);
             if (isset($obj["errors"]) && $obj["errors"] == true) {
                 $errors = true;

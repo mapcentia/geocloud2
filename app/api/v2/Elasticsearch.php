@@ -10,6 +10,7 @@ namespace app\api\v2;
 
 use \app\inc\Input;
 use \app\inc\Util;
+use \app\inc\Route;
 use \app\conf\App;
 use \GuzzleHttp\Client;
 
@@ -146,14 +147,15 @@ class Elasticsearch extends \app\inc\Controller
     {
 
         // Get the URI params from request
-        // /{action}/{user}/[indices]/[type]
-        $r = func_get_arg(0);
+        // /{action}/{user}/{schema}/{rel}
 
         $response = [];
         $esResponse = null;
-        $db = $r["user"];
-        $type = isset($r["type"]) ? $r["type"] : false;
+        $db = Route::getParam("user");
+        $schema = Route::getParam("schema");
+        $rel = Route::getParam("rel");
         $hasBody = false;
+        $index = $db . "_" . $schema . "_" . $rel;
 
         // TODO auth using header instead of payload
         /*
@@ -165,12 +167,6 @@ class Elasticsearch extends \app\inc\Controller
             }
         }
         */
-
-        // Leading underscore can not be used i Es
-        // So we add a "a"
-        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
-            $type = "a" . $type;
-        }
 
         // Support for query string search. The string is passed to Es unaltered
         // =====================================================================
@@ -197,24 +193,8 @@ class Elasticsearch extends \app\inc\Controller
             $q = "";
         }
 
-        $arr = [];
 
-        if (empty($r["indices"])) {
-            $response['success'] = false;
-            $response['message'] = "No index";
-            $response['code'] = "500";
-            return $response;
-        }
-
-        $indices = explode(",", $r["indices"]);
-
-        foreach ($indices as $v) {
-            $arr[] = $db . ($v ? "_" . $v : "") . ($type ? "_" . $type : "_*");
-        }
-
-        $index = implode(",", $arr);
-
-        $searchUrl = $this->host . "/{$index}/{$type}/_search";
+        $searchUrl = $this->host . "/{$index}/_search";
 
         try {
 
@@ -255,7 +235,7 @@ class Elasticsearch extends \app\inc\Controller
     public function get_map()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
-            return $response;
+           // return $response;
         }
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
@@ -269,16 +249,18 @@ class Elasticsearch extends \app\inc\Controller
      */
     public function delete_delete(): array
     {
-        $type = Input::getPath()->part(7);
-        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
-            $type = "a" . $type;
-        }
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key'))) {
+        $db = Route::getParam("user");
+        $schema = Route::getParam("schema");
+        $rel = Route::getParam("rel");
+        $id = Route::getParam("id");
+        $index = $db . "_" . $schema . "_" . $rel;
+
+        if ($response = $this->checkAuth($db, Input::get('key'))) {
             return $response;
         }
-        $index = Input::getPath()->part(5) . (Input::getPath()->part(6) ? "_" . Input::getPath()->part(6) : "");
+
         $es = new \app\models\Elasticsearch();
-        $res = $es->delete($index, $type, Input::getPath()->part(8));
+        $res = $es->delete($index, $id);
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;
@@ -299,8 +281,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Check if Es is online
         // =====================
-        //die($this->host);
-        $ch = curl_init("http://search-gc2-4hhhdlk6ypwhgioijcianyoafi.eu-west-1.es.amazonaws.com");
+        $ch = curl_init($this->host);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -431,7 +412,7 @@ class Elasticsearch extends \app\inc\Controller
         // ==============
 
         $map = $es->createMapFromTable($fullTable);
-        $res = $es->map($fullIndex, $type, json_encode($map));
+        $res = $es->map($fullIndex, json_encode($map));
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;
@@ -712,31 +693,25 @@ class Elasticsearch extends \app\inc\Controller
     {
         $put = Input::get();
         if ($response = $this->checkAuth(Input::getPath()->part(5), !empty($put['key']) ?: "")) {
-            return $response;
+            //return $response;
         }
-        $schema = Input::getPath()->part(6);
-        $table = Input::getPath()->part(7);
-        $priKey = Input::getPath()->part(8);
-        $id = Input::getPath()->part(9);
-        $index = $schema;
-        $type = $table;
-        $db = Input::getPath()->part(5);
-        $fullTable = $schema . "." . $table;
-        $fullIndex = $db . "_" . $schema . "_" . $table;
+        $db = Route::getParam("user");
+        $schema = Route::getParam("schema");
+        $rel = Route::getParam("rel");
+        $id = Route::getParam("id");
+        $fullTable = $schema . "." . $rel;
+        $index = $db . "_" . $schema . "_" . $rel;
 
-        if (mb_substr($type, 0, 1, 'utf-8') == "_") {
-            $type = "a" . $type;
-        }
 
-        $sql = "SELECT * FROM {$fullTable} WHERE \"{$priKey}\"='{$id}'";
+
+        $sql = "SELECT * FROM {$fullTable} WHERE gid='{$id}'";
         $api = new \app\models\Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
-        $res = $api->sql($sql, $index, $type, $priKey, $db);
+        $res = $api->runSql($sql, $schema, $rel, "gid", $db);
         if (!$res["success"]) {
             return $res;
         }
-        $res["_index"] = $fullIndex;
-        $res["_type"] = $type;
+        $res["_index"] = $index;
         $res["_id"] = $id;
         return $res;
     }

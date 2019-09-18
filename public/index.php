@@ -138,14 +138,13 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
-    Route::add("api/v2/elasticsearch/{action}/{user}/[indices]/[type]",
+    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/{rel}/[id]",
 
         function () {
-            $r = func_get_arg(0);
-            if ($r["action"] == "river") {
+            if (Route::getParam("action") == "river") {
                 Session::start(); // So we can create a session log from the indexing
             }
-            Database::setDb($r["user"]);
+            Database::setDb(Route::getParam("user"));
         }
 
     );
