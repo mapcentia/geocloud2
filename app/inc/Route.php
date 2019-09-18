@@ -37,20 +37,20 @@ class Route
              } else {*/
 
         for ($i = 0; $i < sizeof($routeSignature); $i++) {
-
-            if ((isset($routeSignature[$i]) == true && isset($requestSignature[$i]) == true)) {
                 if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                    $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
-                    $signatureMatch = $requestSignature[$i] ? true : false;
-
+                    if (!empty($requestSignature[$i])) {
+                        $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
+                    } else {
+                        $signatureMatch = false;
+                    }
                 } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                    $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+                    if (!empty($requestSignature[$i])) {
+                        $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+                    }
                 } else {
                     $e[] = $requestSignature[$i];
                     $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
                 }
-            }
-
             if (!$signatureMatch) {
                 break;
             }
