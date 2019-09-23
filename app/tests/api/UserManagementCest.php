@@ -166,7 +166,6 @@ class UserManagementCest
             'success' => true,
             'message' => 'Session started',
             'data' => [
-                'subuser' => true,
                 'passwordExpired' => false
             ]
         ]);
@@ -245,7 +244,6 @@ class UserManagementCest
             'message' => 'Session started',
             'data' => [
                 'parentdb' => $this->userId,
-                'subuser' => true
             ]
         ]);
     }

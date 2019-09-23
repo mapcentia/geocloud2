@@ -12,10 +12,7 @@ class AppManagementCest
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseContains('window.gc2Options = {');
-        $I->seeResponseContains("window.bingApiKey = 'your_bing_map_key';");
         $I->seeResponseContains("window.setBaseLayers = [{");
-        $I->seeResponseContains("window.mapAttribution = 'Powered by <a href=\"http://geocloud.mapcentia.com\">MapCentia</a> ';");
-        $I->seeResponseContains("window.gc2Al='en_US'");
     }
 
     public function shouldProvidePubliclyAvailableSettingsInFormOfJSON(\ApiTester $I)
