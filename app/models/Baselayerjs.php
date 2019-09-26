@@ -8,45 +8,48 @@
 
 namespace app\models;
 
+use \app\conf\App;
+
 class Baselayerjs extends \app\inc\Controller
 {
-    public function getSettings() {
+    public function getSettings()
+    {
         $settingsRawJSON = '';
         $settingsRawJSON .= "{";
-        $settingsRawJSON .= "\"leafletDraw\": " . ((\app\conf\App::$param['leafletDraw']) ? "true" : "false") . ",\n";
-        $settingsRawJSON .= "\"reverseLayerOrder\": " . ((\app\conf\App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"leafletDraw\": " . (!empty(App::$param['leafletDraw']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"reverseLayerOrder\": " . (!empty(App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
 
-        $settingsRawJSON .= "\"epsg\": \"" . ((\app\conf\App::$param['epsg']) ? : "4326") . "\",\n";
-        $settingsRawJSON .= "\"extraShareFields\": " . ((\app\conf\App::$param['extraShareFields']) ? "true": "false") . ",\n";
-        $settingsRawJSON .= "\"showDownloadOtionsInHeron\": " . ((\app\conf\App::$param['showDownloadOtionsInHeron']) ? "true": "false") . ",\n";
-        $settingsRawJSON .= "\"esIndexingInGui\": " . ((\app\conf\App::$param['esIndexingInGui']) ? "true": "false") . ",\n";
-        $settingsRawJSON .= "\"hideUngroupedLayers\": " . ((\app\conf\App::$param['hideUngroupedLayers']) ? "true": "false") . ",\n";
-        $settingsRawJSON .= "\"staticMapHost\": \"" . ((\app\conf\App::$param['staticMapHost']) ? : \app\conf\App::$param['host']) . "\",\n";
-        $settingsRawJSON .= "\"geoserverHost\": \"" . ((\app\conf\App::$param['geoserverHost']) ? : \app\conf\App::$param['host']) . "\",\n";
-        $settingsRawJSON .= "\"encoding\": \"" . ((\app\conf\App::$param['encoding']) ? : "UTF8") . "\",\n";
-        $settingsRawJSON .= "\"osmConfig\": " . json_encode(\app\conf\App::$param['osmConfig']) . ",\n";
-        $settingsRawJSON .= "\"customPrintParams\": " . json_encode(\app\conf\App::$param['customPrintParams']) . ",\n";
-        $settingsRawJSON .= "\"gc2scheduler\": " . json_encode(\app\conf\App::$param['gc2scheduler']) . ",\n";
-        $settingsRawJSON .= "\"mergeSchemata\": " . json_encode(\app\conf\App::$param['mergeSchemata']) . ",\n";
-        $settingsRawJSON .= "\"showConflictOptions\": " . (json_encode(\app\conf\App::$param['showConflictOptions']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"showExtraLayerProperty\": " . (json_encode(\app\conf\App::$param['showExtraLayerProperty']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"extraLayerPropertyName\": " . (json_encode(\app\conf\App::$param['extraLayerPropertyName']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"clientConfig\": " . (json_encode(\app\conf\App::$param['clientConfig']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"metaConfig\": " . (json_encode(\app\conf\App::$param['metaConfig']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"enablePrint\": " . (json_encode(\app\conf\App::$param['enablePrint']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"enableWorkflow\": " . (json_encode(\app\conf\App::$param['enableWorkflow']) ? : "null")  .",\n";
-        $settingsRawJSON .= "\"hereApp\": " . json_encode(\app\conf\App::$param['hereApp']).",\n";
-        $settingsRawJSON .= "\"vidiUrl\": " . (json_encode(\app\conf\App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) ? : "null") . ",\n";
-        $settingsRawJSON .= "\"subDomainsForTiles\": " . (json_encode(\app\conf\App::$param['subDomainsForTiles']) ? : "null").",\n";
-        if ($settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
-            $settingsRawJSON .= "\"es_settings\": ". $settings.",\n";
+        $settingsRawJSON .= "\"epsg\": \"" . (!empty(App::$param['epsg']) ? App::$param['epsg'] : "4326") . "\",\n";
+        $settingsRawJSON .= "\"extraShareFields\": " . (!empty(App::$param['extraShareFields']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"showDownloadOtionsInHeron\": " . ((App::$param['showDownloadOtionsInHeron']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"esIndexingInGui\": " . (!empty(App::$param['esIndexingInGui']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"hideUngroupedLayers\": " . (!empty(App::$param['hideUngroupedLayers']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"staticMapHost\": \"" . (!empty(App::$param['staticMapHost']) ? App::$param['staticMapHost'] : App::$param['host']) . "\",\n";
+        $settingsRawJSON .= "\"geoserverHost\": \"" . (!empty(App::$param['geoserverHost']) ? App::$param['geoserverHost'] : App::$param['host']) . "\",\n";
+        $settingsRawJSON .= "\"encoding\": \"" . (!empty(App::$param['encoding']) ? App::$param['encoding'] : "UTF8") . "\",\n";
+        $settingsRawJSON .= "\"osmConfig\": " . (!empty(App::$param['osmConfig']) ? json_encode(App::$param['osmConfig']) : "null") . ",\n";
+        $settingsRawJSON .= "\"customPrintParams\": " . (!empty(App::$param['customPrintParams']) ? json_encode(App::$param['customPrintParams']) : "null") . ",\n";
+        $settingsRawJSON .= "\"gc2scheduler\": " . (!empty(App::$param['gc2scheduler']) ? json_encode(App::$param['gc2scheduler']) : "null") . ",\n";
+        $settingsRawJSON .= "\"mergeSchemata\": " . (!empty(App::$param['mergeSchemata']) ? json_encode(App::$param['mergeSchemata']) : "null") . ",\n";
+        $settingsRawJSON .= "\"showConflictOptions\": " . (!empty(App::$param['showConflictOptions']) ? json_encode(App::$param['showConflictOptions']) : "null") . ",\n";
+        $settingsRawJSON .= "\"showExtraLayerProperty\": " . (!empty(App::$param['showExtraLayerProperty']) ? json_encode(App::$param['showExtraLayerProperty']) : "null") . ",\n";
+        $settingsRawJSON .= "\"extraLayerPropertyName\": " . (!empty(App::$param['extraLayerPropertyName']) ? json_encode(App::$param['extraLayerPropertyName']) : "null") . ",\n";
+        $settingsRawJSON .= "\"clientConfig\": " . (!empty(App::$param['clientConfig']) ? json_encode(App::$param['clientConfig']) : "null") . ",\n";
+        $settingsRawJSON .= "\"metaConfig\": " . (!empty(App::$param['metaConfig']) ? json_encode(App::$param['metaConfig']) : "null") . ",\n";
+        $settingsRawJSON .= "\"enablePrint\": " . (!empty(App::$param['enablePrint']) ? json_encode(App::$param['enablePrint']) : "null") . ",\n";
+        $settingsRawJSON .= "\"enableWorkflow\": " . (!empty(App::$param['enableWorkflow']) ? json_encode(App::$param['enableWorkflow']) : "null") . ",\n";
+        $settingsRawJSON .= "\"hereApp\": " . (!empty(App::$param['hereApp']) ? json_encode(App::$param['hereApp']) : "null") . ",\n";
+        $settingsRawJSON .= "\"vidiUrl\": " . (!empty(App::$param['vidiUrl']) ? json_encode(App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
+        $settingsRawJSON .= "\"subDomainsForTiles\": " . (!empty(App::$param['subDomainsForTiles']) ? json_encode(App::$param['subDomainsForTiles']) : "null") . ",\n";
+        if ($settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+            $settingsRawJSON .= "\"es_settings\": " . $settings . ",\n";
         }
 
         foreach (\app\controllers\Mapcache::getGrids() as $k => $v) {
             $gridNames[] = $k;
         }
 
-        $settingsRawJSON .= "\"grids\": " . (json_encode($gridNames) ? : "null")  ."\n";
+        $settingsRawJSON .= "\"grids\": " . (json_encode($gridNames) ?: "null") . "\n";
 
         $settingsRawJSON .= "}";
 
@@ -54,16 +57,16 @@ class Baselayerjs extends \app\inc\Controller
 
         $overallSettings = ['gc2Options' => $settingsMainParsed];
 
-        if (\app\conf\App::$param['bingApiKey']) $overallSettings["bingApiKey"] = \app\conf\App::$param['bingApiKey'];
-        if (\app\conf\App::$param['googleApiKey']) $overallSettings["googleApiKey"] = \app\conf\App::$param['googleApiKey'];
-        if (\app\conf\App::$param['digitalGlobeKey']) $overallSettings["digitalGlobeKey"] = \app\conf\App::$param['digitalGlobeKey'];
-        if (\app\conf\App::$param['baseLayers']) $overallSettings["setBaseLayers"] = (\app\conf\App::$param['baseLayers']);
-        if (\app\conf\App::$param['baseLayersCollector']) $overallSettings["setBaseLayersCollector"] = (\app\conf\App::$param['baseLayersCollector']);
-        if (\app\conf\App::$param['mapAttribution']) $overallSettings["mapAttribution"] = \app\conf\App::$param['mapAttribution'];
+        if (!empty(App::$param['bingApiKey'])) $overallSettings["bingApiKey"] = App::$param['bingApiKey'];
+        if (!empty(App::$param['googleApiKey'])) $overallSettings["googleApiKey"] = App::$param['googleApiKey'];
+        if (!empty(App::$param['digitalGlobeKey'])) $overallSettings["digitalGlobeKey"] = App::$param['digitalGlobeKey'];
+        if (!empty(App::$param['baseLayers'])) $overallSettings["setBaseLayers"] = (App::$param['baseLayers']);
+        if (!empty(App::$param['baseLayersCollector'])) $overallSettings["setBaseLayersCollector"] = (App::$param['baseLayersCollector']);
+        if (!empty(App::$param['mapAttribution'])) $overallSettings["mapAttribution"] = App::$param['mapAttribution'];
 
         $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT", "de_DE", "ru_RU");
         $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-        $requestedLan = (\app\conf\App::$param['locale']) ? : str_replace("-", "_", $arr[0]);
+        $requestedLan = !empty(App::$param['locale']) ? App::$param['locale'] : str_replace("-", "_", $arr[0]);
         // Match both language and country
         if (in_array($requestedLan, $locales)) {
             $overallSettings["gc2Al"] = $requestedLan;
