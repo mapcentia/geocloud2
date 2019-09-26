@@ -90,8 +90,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $domain = \app\conf\App::$param['domain'];
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone, '{$domain}' as host FROM users WHERE screenname = :sUserID AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE screenname = :sUserID AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
@@ -305,7 +304,11 @@ class User extends Model
 
         }
 
-        $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup";
+        if (!empty($data["parentdb"])) {
+            $sQuery .= " WHERE screenname=:sUserID AND parentdb=:sParentDb RETURNING screenname,email,usergroup";
+        } else {
+            $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup";
+        }
 
         try {
             $res = $this->prepare($sQuery);
@@ -313,6 +316,8 @@ class User extends Model
             if ($email) $res->bindParam(":sEmail", $email);
             if ($userGroup) $res->bindParam(":sUsergroup", $userGroup);
             $res->bindParam(":sUserID", $user);
+            if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
+
 
             $res->execute();
             $row = $this->fetchRow($res, "assoc");

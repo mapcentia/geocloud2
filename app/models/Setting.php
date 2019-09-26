@@ -283,7 +283,7 @@ class Setting extends Model
      * 
      * @return array
      */
-    public function checkPasswordStrength($password)
+    public static function checkPasswordStrength($password)
     {
         $validationErrors = [];
 
@@ -305,7 +305,7 @@ class Setting extends Model
     /**
      * Encrypts password
      */
-    public function encryptPwSecure($password) {
+    public static function encryptPwSecure($password) {
         return password_hash($password, PASSWORD_BCRYPT);
     }
 

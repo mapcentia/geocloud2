@@ -204,7 +204,6 @@ class User extends Controller
 
             $requestedUserId = Route::getParam("userId");
             $currentUserId = Session::getUser();
-
             $data['user'] = $requestedUserId;
 
             if ($currentUserId === $requestedUserId) {
@@ -219,6 +218,9 @@ class User extends Controller
                             'code' => 403
                         ];
                     } else if ($this->user->hasPassword($currentUserId, $data['currentPassword'])) {
+                        $userModelLocal = new UserModel($requestedUserId, Session::getDatabase());
+                        $user = $userModelLocal->getData();
+                        $data["parentdb"] = $user['data']['parentdb'];
                         return $this->user->updateUser($data);
                     } else {
                         return [
@@ -233,6 +235,7 @@ class User extends Controller
                 $userModelLocal = new UserModel($requestedUserId, Session::getDatabase());
                 $user = $userModelLocal->getData();
                 if ($user['data']['parentdb'] === $currentUserId) {
+                    $data["parentdb"] = $user['data']['parentdb'];
                     return $userModelLocal->updateUser($data);
                 } else {
                     return [

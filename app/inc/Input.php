@@ -142,7 +142,7 @@ class Input
         }
         $pairs = explode("&", $str);
         foreach ($pairs as $pair) {
-            list($k, $v) = array_map("urldecode", explode("=", $pair));
+            list($k, $v) = array_pad(array_map("urldecode", explode("=", $pair)), 2, null);
             $op[$k] = $v;
         }
         return $op;

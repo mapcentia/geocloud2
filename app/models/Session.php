@@ -10,7 +10,7 @@ namespace app\models;
 
 use \app\inc\Model;
 use \app\conf\App;
-use \Firebase\JWT;
+use \Firebase\JWT\JWT;
 
 class Session extends Model
 {
@@ -33,10 +33,10 @@ class Session extends Model
     {
         $response = [];
 
-        if ($_SESSION['auth']) {
+        if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
-            $response['data']['db'] = $_SESSION['screen_name'];
+            $response['data']['db'] = $_SESSION['parentdb'];
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['email'] = $_SESSION['email'];
@@ -108,9 +108,9 @@ class Session extends Model
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
-            $_SESSION['screen_name'] = $row['parentdb'] ?: $sUserID;
+            $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
-            $_SESSION['subuser'] = $row['parentdb'] ? $row['screenname'] : false;
+            $_SESSION['subuser'] = $row['parentdb'] ? true : false;
 
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
@@ -123,7 +123,7 @@ class Session extends Model
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];
-            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['subuser'] = $row['parentdb'] ? true : false;;
             $response['data']['email'] = $row['email'];
 
             // Fetch sub-users
@@ -149,7 +149,7 @@ class Session extends Model
             Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
             $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
-            $response['token'] = self::createJWT($response['data']['api_key'], $response['data']['parentdb'], $response['data']['screen_name'], $response['data']['subuser']);
+            //$response['token'] = self::createJWT($response['data']['api_key'], $response['data']['parentdb'], $response['data']['subuser'] ?:$response['data']['screen_name'], !$response['data']['subuser']);
         } else {
             session_unset();
             $response['success'] = false;
@@ -187,13 +187,13 @@ class Session extends Model
             "exp" => time() + 3600,
             "iat" => time(),
             "database" => $db,
-            "isSubUser" => $isSubUser,
+            "superUser" => $isSubUser,
         ];
         $jwt = JWT::encode($token, $secret);
         print_r($secret."\n");
         print_r($jwt."\n");
         print_r(JWT::decode($jwt, $secret,array('HS256')));
-        die();
+        //die();
         return $jwt;
     }
 
