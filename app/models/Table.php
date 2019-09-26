@@ -694,19 +694,19 @@ class Table extends Model
             if ($key != $this->primeryKey['attname'] || $includePriKey == true) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
-                $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
-                $arr = $this->array_push_assoc($arr, "querable", $fieldconfArr[$key]->querable);
-                $arr = $this->array_push_assoc($arr, "mouseover", $fieldconfArr[$key]->mouseover);
-                $arr = $this->array_push_assoc($arr, "filter", $fieldconfArr[$key]->filter);
-                $arr = $this->array_push_assoc($arr, "searchable", $fieldconfArr[$key]->searchable);
-                $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
-                $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias ?: "");
-                $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
-                $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
-                $arr = $this->array_push_assoc($arr, "content", $fieldconfArr[$key]->content);
-                $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
-                $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
-                $arr = $this->array_push_assoc($arr, "is_nullable", $value['is_nullable']);
+                $arr = $this->array_push_assoc($arr, "sort_id", !empty($fieldconfArr[$key]->sort_id) ? (int)$fieldconfArr[$key]->sort_id : 0);
+                $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);
+                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);;
+                $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) ? (bool)$fieldconfArr[$key]->filter : false);
+                $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) ? (bool)$fieldconfArr[$key]->searchable : false);
+                $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) ? (bool)$fieldconfArr[$key]->conflict : false);
+                $arr = $this->array_push_assoc($arr, "alias", !empty($fieldconfArr[$key]->alias) ? $fieldconfArr[$key]->alias : "");
+                $arr = $this->array_push_assoc($arr, "link", !empty($fieldconfArr[$key]->link) ? (bool)$fieldconfArr[$key]->link : false);
+                $arr = $this->array_push_assoc($arr, "image", !empty($fieldconfArr[$key]->image) ? (bool)$fieldconfArr[$key]->image : false);
+                $arr = $this->array_push_assoc($arr, "content", !empty($fieldconfArr[$key]->content) ? $fieldconfArr[$key]->content : null);
+                $arr = $this->array_push_assoc($arr, "linkprefix", !empty($fieldconfArr[$key]->linkprefix) ? $fieldconfArr[$key]->linkprefix : null);
+                $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
+                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) ? (bool)$value['is_nullable'] : false);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
