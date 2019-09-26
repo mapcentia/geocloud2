@@ -8,7 +8,9 @@
 
 namespace app\models;
 
-use app\inc\Model;
+use \app\inc\Model;
+use \app\conf\App;
+use \Firebase\JWT;
 
 class Session extends Model
 {
@@ -147,6 +149,7 @@ class Session extends Model
             Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
             $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
+            $response['token'] = self::createJWT($response['data']['api_key'], $response['data']['parentdb'], $response['data']['screen_name'], $response['data']['subuser']);
         } else {
             session_unset();
             $response['success'] = false;
@@ -169,4 +172,29 @@ class Session extends Model
         return $response;
 
     }
+
+    /**
+     * @param string $secret
+     * @param $db
+     * @param string $userId
+     * @param bool $isSubUser
+     * @return string
+     */
+    private static function createJWT(string $secret, $db, string $userId, bool $isSubUser): string {
+        $token = [
+            "iss" => App::$param["host"],
+            "uid" => $userId,
+            "exp" => time() + 3600,
+            "iat" => time(),
+            "database" => $db,
+            "isSubUser" => $isSubUser,
+        ];
+        $jwt = JWT::encode($token, $secret);
+        print_r($secret."\n");
+        print_r($jwt."\n");
+        print_r(JWT::decode($jwt, $secret,array('HS256')));
+        die();
+        return $jwt;
+    }
+
 }
