@@ -9,8 +9,6 @@
 namespace app\models;
 
 use \app\inc\Model;
-use \app\models\Dbcheck;
-
 
 class Admin extends Model
 {

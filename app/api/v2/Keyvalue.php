@@ -28,9 +28,9 @@ class Keyvalue extends \app\inc\Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/keyvalue/{userId}",
-     *   tags={"configuration"},
-     *   summary="Returns all configurations (unpublished configurations are returned if authorized user is the author)",
+     *   path="/api/v2/keyvalue/{userId}",
+     *   tags={"keyvalue"},
+     *   summary="Coming",
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",

@@ -1,15 +1,14 @@
 <?php
 /**
+ * @OA\Info(title="GC2 API", version="0.1")
+ */
+
+/**
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
-
-/**
- * @OA\Info(title="Geocloud API", version="0.1")
- */
-
 
 namespace app\api\v2;
 
@@ -21,6 +20,8 @@ use \app\models\Database;
 use \app\conf\App;
 use \app\conf\Connection;
 use \app\conf\migration\Sql;
+use \OpenApi\Annotations as OA;
+
 
 /**
  * Class Admin
@@ -39,6 +40,25 @@ class Admin extends Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/buildmapfiles/{userId}",
+     *   tags={"admin"},
+     *   summary="Write out all MapFiles for the given user/database",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_buildmapfiles(): array
     {
@@ -57,6 +77,25 @@ class Admin extends Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/buildmapcachefile/{userId}",
+     *   tags={"admin"},
+     *   summary="Write out the MapCache for the given user/database",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_buildmapcachefile(): array
     {
@@ -71,6 +110,25 @@ class Admin extends Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/restoreqgisfiles/{userId}",
+     *   tags={"admin"},
+     *   summary="Write out the QGIS files for the given user/database",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_restoreqgisfiles(): array
     {
@@ -80,13 +138,32 @@ class Admin extends Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/runmigrations/{userId}",
+     *   tags={"admin"},
+     *   summary="Run database migrations for the given user/database",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_runmigrations(): array
     {
         $response = [];
         $data = [];
 
-        $arr = ["mapcentia", "gc2scheduler", "template_geocloud", Database::getDb()];
+        $arr = [Database::getDb()];
         foreach ($arr as $db) {
             \app\models\Database::setDb($db);
             $conn = new \app\inc\Model();
@@ -104,11 +181,17 @@ class Admin extends Controller
             }
 
             foreach ($sqls as $sql) {
-                $conn->execQuery($sql, "PDO", "transaction");
+                try {
+                    $conn->execQuery($sql, "PDO", "transaction");
+                } catch (\PDOException $e) {
+                    $response["success"] = false;
+                    $response["message"] = $e->getMessage();
+                    return $response;
+                }
                 if ($conn->PDOerror[0]) {
-                    $data[$db].= "-";
+                    $data[$db] .= "-";
                 } else {
-                    $data[$db].= "+";
+                    $data[$db] .= "+";
                 }
                 $conn->PDOerror = NULL;
             }
@@ -128,6 +211,25 @@ class Admin extends Controller
 
     /**
      * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/reprocessqgisfromfiles/{userId}",
+     *   tags={"admin"},
+     *   summary="Reprocess QGIS files from the file system. This process will pick up each file and run it through the QGIS project importer. Use only this on old but updated installations, where QGIS files are not stored in the database.",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
     public function get_reprocessqgisfromfiles(): array
     {
@@ -187,7 +289,30 @@ class Admin extends Controller
         return $response;
     }
 
-    public function get_createschema() :array {
+    /**
+     * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v2/admin/createschema/{userId}",
+     *   tags={"admin"},
+     *   summary="Install GC2 schema in a PostGIS enabled database.",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier (Name of database)",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
+     */
+    public function get_createschema(): array
+    {
         $admin = new \app\models\Admin();
         return $admin->install();
     }

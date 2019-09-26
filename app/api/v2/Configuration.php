@@ -1,6 +1,6 @@
 <?php
 /**
- * @OA\Info(title="Geocloud API", version="0.1")
+ * @OA\Info(title="GC2 API", version="0.1")
  */
 
 /**
@@ -17,6 +17,8 @@ use \app\inc\Input;
 use \app\inc\Controller;
 use \app\models\Keyvalue;
 use \app\inc\Session;
+use \OpenApi\Annotations as OA;
+
 
 /**
  * Class Configuration
@@ -54,7 +56,7 @@ class Configuration extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/configuration/{userId}",
+     *   path="/api/v2/configuration/{userId}",
      *   tags={"configuration"},
      *   summary="Returns all configurations (unpublished configurations are returned if authorized user is the author)",
      *   @OA\Parameter(
@@ -76,6 +78,7 @@ class Configuration extends Controller
     {
         $userId = Route::getParam('userId');
         $returnNonPublished = false;
+
         if (Session::getUser() && empty($userId) === false && $userId === Session::getUser()) {
             $returnNonPublished = true;
         }
@@ -90,7 +93,6 @@ class Configuration extends Controller
                 }
             }
         }
-
         $configurations['data'] = $filteredData;
         return $configurations;
     }
@@ -99,7 +101,7 @@ class Configuration extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/configuration/{userId}/{configurationId}",
+     *   path="/api/v2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
      *   summary="Returns specific configuration (unpublished configuration is returned if authorized user is the author)",
      *   @OA\Parameter(
@@ -180,7 +182,7 @@ class Configuration extends Controller
      * @return array
      *
      * @OA\Post(
-     *   path="/v2/configuration/{userId}/",
+     *   path="/api/v2/configuration/{userId}/",
      *   tags={"configuration"},
      *   summary="Creates configuration",
      *   @OA\Parameter(
@@ -245,7 +247,7 @@ class Configuration extends Controller
      * @return array
      *
      * @OA\Put(
-     *   path="/v2/configuration/{userId}/{configurationId}",
+     *   path="/apiv2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
      *   summary="Creates configuration",
      *   @OA\Parameter(
@@ -327,7 +329,7 @@ class Configuration extends Controller
      * @return array
      *
      * @OA\Delete(
-     *   path="/v2/configuration/{userId}/{configurationId}",
+     *   path="/api/v2/configuration/{userId}/{configurationId}",
      *   tags={"configuration"},
      *   summary="Deletes configuration",
      *   @OA\Parameter(
