@@ -62,6 +62,9 @@ class App
             "App_Id" => "your_app_id",
             "App_Code" => "your_code",
         ),
+        
+        // Google key
+        "googleApiKey" => "your_google_api_key",
 
         //Force a locale. If not set it'll set set from the browsers language settings.
         //"locale" => "en_US",
@@ -132,6 +135,9 @@ class App
             "mapComment" => "Map comment",
             "mapFooter" => "Map footer",
         ),
+        
+         "vidiUrl" => "http://127.0.0.1:3000",
+
     );
     function __construct(){
         // This is the autoload function and include path setting. No need to fiddle with this.
