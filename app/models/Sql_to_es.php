@@ -59,7 +59,7 @@ class Sql_to_es extends Model
      * @param $q
      * @param $schema
      * @param $rel
-     * @param $key
+     * @param $priKey
      * @param $db
      * @return array
      */
@@ -156,13 +156,13 @@ class Sql_to_es extends Model
                         $arr = $this->array_push_assoc($arr, $key, $value);
                     }
                 }
-                if (isset($geometries) && sizeof($geometries) > 1) {
+                if (sizeof($geometries) > 1) {
                     $features = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
                 }
-                if (isset($geometries) && sizeof($geometries) == 1) {
+                if (sizeof($geometries) == 1) {
                     $features = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
                 }
-                if (isset($geometries) && sizeof($geometries) == 0) {
+                if (sizeof($geometries) == 0) {
                     $features = array("type" => "Feature", "properties" => $arr);
                 }
 
