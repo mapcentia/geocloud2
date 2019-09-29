@@ -48,7 +48,7 @@ class Sql_to_es extends Model
             if ($item[$key]["status"] != "201") {
                 $res[] = array(
                     "id" => $item[$key]["_id"],
-                    "error" => $item[$key]["error"],
+                    "error" => isset($item[$key]["error"]) ? $item[$key]["error"] : null,
                 );
             }
         }
@@ -63,7 +63,7 @@ class Sql_to_es extends Model
      * @param $db
      * @return array
      */
-    public function runSql($q, $schema, $rel, $key, $db)
+    public function runSql($q, $schema, $rel, $priKey, $db)
     {
         $response = [];
         $i = 0;
@@ -156,19 +156,19 @@ class Sql_to_es extends Model
                         $arr = $this->array_push_assoc($arr, $key, $value);
                     }
                 }
-                if (sizeof($geometries) > 1) {
+                if (isset($geometries) && sizeof($geometries) > 1) {
                     $features = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
                 }
-                if (sizeof($geometries) == 1) {
+                if (isset($geometries) && sizeof($geometries) == 1) {
                     $features = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
                 }
-                if (sizeof($geometries) == 0) {
+                if (isset($geometries) && sizeof($geometries) == 0) {
                     $features = array("type" => "Feature", "properties" => $arr);
                 }
 
                 unset($geometries);
 
-                $json .= json_encode(array("index" => array("_index" => $index, "_id" => $arr[$key])));
+                $json .= json_encode(array("index" => array("_index" => $index, "_id" => $arr[$priKey])));
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
@@ -180,10 +180,12 @@ class Sql_to_es extends Model
                         $errors = true;
                         $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
                     }
+                    error_log($json);
+
                     $json = "";
                     $bulKCount++;
-                    error_log($i);
-                    error_log(number_format(memory_get_usage()));
+                    //error_log($i);
+                    //error_log(number_format(memory_get_usage()));
 
                 }
 

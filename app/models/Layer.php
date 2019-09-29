@@ -310,7 +310,7 @@ class Layer extends \app\models\Table
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
-                    $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
+                    $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
                 // If session is sub-user we always check privileges
@@ -412,18 +412,18 @@ class Layer extends \app\models\Table
         $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ?: false); // Add geometry types (or not)
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
-            $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);
+            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT" ? true : false);
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
-            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
+            $arr = $this->array_push_assoc($arr, "format", !empty($elasticsearchArr[$key]->format) ? $elasticsearchArr[$key]->format : !empty($esType["format"]) ? $esType["format"] : "");
             $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
-            $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
-            $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
-            $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
-            $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
-            $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
-            $arr = $this->array_push_assoc($arr, "fielddata", $elasticsearchArr[$key]->fielddata);
+            $arr = $this->array_push_assoc($arr, "analyzer", !empty($elasticsearchArr[$key]->analyzer) ? $elasticsearchArr[$key]->analyzer : null);
+            $arr = $this->array_push_assoc($arr, "index_analyzer", !empty($elasticsearchArr[$key]->index_analyzer) ? $elasticsearchArr[$key]->index_analyzer : null);
+            $arr = $this->array_push_assoc($arr, "search_analyzer", !empty($elasticsearchArr[$key]->search_analyzer) ? $elasticsearchArr[$key]->search_analyzer : null);
+            $arr = $this->array_push_assoc($arr, "boost", !empty($elasticsearchArr[$key]->boost) ? $elasticsearchArr[$key]->boost : null);
+            $arr = $this->array_push_assoc($arr, "null_value", !empty($elasticsearchArr[$key]->null_value) ? $elasticsearchArr[$key]->null_value : null);
+            $arr = $this->array_push_assoc($arr, "fielddata", !empty($elasticsearchArr[$key]->fielddata) ? $elasticsearchArr[$key]->fielddata : null);
             if ($value['typeObj']['type'] == "decimal") {
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
             } else {

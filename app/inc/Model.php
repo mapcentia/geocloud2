@@ -72,7 +72,7 @@ class Model
     public function fetchAll(PDOStatement $result, $result_type = "both")
     {
         $rows = [];
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             throw new Exception($this->PDOerror[0]);
         }
         switch ($result_type) {

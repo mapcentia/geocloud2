@@ -361,7 +361,7 @@ if (Input::getPath()->part(1) == "api") {
     include_once("app/wfs/server.php");
 
 } elseif (!Input::getPath()->part(1)) {
-    if (App::$param["redirectTo"]) {
+    if (!empty(App::$param["redirectTo"])) {
         \app\inc\Redirect::to(App::$param["redirectTo"]);
     } else {
         \app\inc\Redirect::to("/dashboard/");
