@@ -157,6 +157,11 @@ class Elasticsearch extends \app\inc\Controller
         $hasBody = false;
         $index = $db . "_" . $schema . "_" . $rel;
 
+        // Dirty hack
+        if ($index == "dk_matrikel_") {
+            $index = "dk_matrikel_jordstykke_view";
+        }
+
         // TODO auth using header instead of payload
         /*
         $get = Input::get();

@@ -138,7 +138,7 @@ if (Input::getPath()->part(1) == "api") {
 
     );
 
-    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/{rel}/[id]",
+    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]",
 
         function () {
             if (Route::getParam("action") == "river") {
