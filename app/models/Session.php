@@ -190,10 +190,9 @@ class Session extends Model
             "superUser" => $isSubUser,
         ];
         $jwt = JWT::encode($token, $secret);
-        print_r($secret."\n");
-        print_r($jwt."\n");
-        print_r(JWT::decode($jwt, $secret,array('HS256')));
-        //die();
+//        print_r($secret."\n");
+//        print_r($jwt."\n");
+//        print_r(JWT::decode($jwt, $secret,array('HS256')));
         return $jwt;
     }
 
