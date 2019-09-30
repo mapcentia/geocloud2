@@ -180,13 +180,8 @@ class Sql_to_es extends Model
                         $errors = true;
                         $errors_in = array_merge($errors_in, $this->checkForErrors($obj));
                     }
-                    error_log($json);
-
                     $json = "";
                     $bulKCount++;
-                    //error_log($i);
-                    //error_log(number_format(memory_get_usage()));
-
                 }
 
                 $i++;
