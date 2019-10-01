@@ -307,7 +307,7 @@ class User extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/user/{userId}/subusers",
+     *   path="/api/v2/user/{userId}/subusers",
      *   tags={"user"},
      *   summary="Returns subusers",
      *   @OA\Parameter(
@@ -327,7 +327,7 @@ class User extends Controller
      */
     function get_subusers(): array
     {
-        if (isset($_SESSION['subuser']) && $_SESSION['subuser'] === false) {
+        if (isset($_SESSION["subuser"]) && $_SESSION["subuser"] === false) {
             $currentUser = Session::getUser();
             return $this->user->getSubusers($currentUser);
         } else {

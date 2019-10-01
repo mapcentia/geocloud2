@@ -67,7 +67,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo !empty(\app\conf\App::$param["epsg"]) ? \app\conf\App::$param["epsg"] : "4326" ?>"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo !empty(\app\conf\App::$param["epsg"]) ? \app\conf\App::$param["epsg"] : "4326" ?>"
                     />
                 </td>
             </tr>
@@ -83,7 +83,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
                 </td>
             </tr>
             </tbody>
@@ -98,7 +98,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>/[wms|wmts|gmaps|tms]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/[wms|wmts|gmaps|tms]"
                     />
                 </td>
             </tr>
@@ -114,7 +114,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['subuser'] . "@" : "") . $_SESSION['screen_name']; ?>?q=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>?q=[query]&key=[your_api_key]"
                     />
                 </td>
             </tr>
@@ -130,7 +130,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['screen_name']; ?>/[index]/[type]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['parentdb']; ?>/[index]/[type]"
                     />
                 </td>
             </tr>

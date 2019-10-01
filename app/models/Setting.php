@@ -54,7 +54,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->api_key = $apiKey;
         } else {
-            $arr->api_key_subuser->{$_SESSION["subuser"]} = $apiKey;
+            $arr->api_key_subuser->{$_SESSION["screen_name"]} = $apiKey;
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -82,7 +82,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
         } else {
-            $arr->pw_subuser->{$_SESSION["subuser"]} = $this->encryptPw($pw);
+            $arr->pw_subuser->{$_SESSION["screen_name"]} = $this->encryptPw($pw);
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -232,8 +232,8 @@ class Setting extends Model
         }
 
         if ($_SESSION["subuser"]) {
-            $arr->pw = $arr->pw_subuser->{$_SESSION["subuser"]};
-            $arr->api_key = $arr->api_key_subuser->{$_SESSION["subuser"]};
+            $arr->pw = $arr->pw_subuser->{$_SESSION["screen_name"]};
+            $arr->api_key = $arr->api_key_subuser->{$_SESSION["screen_name"]};
             unset($arr->pw_subuser);
         }
         // If user has no key, we generate one.
@@ -252,6 +252,7 @@ class Setting extends Model
             $response['message'] = $this->PDOerror;
             $response['code'] = 400;
         }
+
         return $response;
     }
 
@@ -309,7 +310,7 @@ class Setting extends Model
         return password_hash($password, PASSWORD_BCRYPT);
     }
 
-    public function encryptPw($pass)
+    public static function encryptPw($pass)
     {
         $pass = strip_tags($pass);
         $pass = str_replace(" ", "", $pass); //remove spaces from password

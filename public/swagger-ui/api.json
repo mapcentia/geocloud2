@@ -417,7 +417,7 @@
                 }
             }
         },
-        "/v2/session/start": {
+        "/api/v2/session/start": {
             "get": {
                 "tags": [
                     "session"
@@ -493,7 +493,7 @@
                 }
             }
         },
-        "/v2/session": {
+        "/api/v2/session": {
             "get": {
                 "tags": [
                     "session"
@@ -507,7 +507,7 @@
                 }
             }
         },
-        "/v2/session/stop": {
+        "/api/v2/session/stop": {
             "get": {
                 "tags": [
                     "session"
@@ -660,7 +660,7 @@
                 }
             }
         },
-        "/v2/user/{userId}/subusers": {
+        "/api/v2/user/{userId}/subusers": {
             "get": {
                 "tags": [
                     "user"

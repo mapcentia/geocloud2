@@ -279,7 +279,7 @@ if (Input::getPath()->part(1) == "api") {
 
     Session::authenticate(null);
 
-    Database::setDb($_SESSION['screen_name']);
+    Database::setDb($_SESSION['parentdb']);
     Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
 
     Route::add("controllers/cfgfile");

@@ -21,7 +21,7 @@ class Workflow extends \app\inc\Controller
 
     public function get_index($showAll = false)
     {
-        return $this->workflow->getRecords($_SESSION["subuser"], $showAll);
+        return $this->workflow->getRecords($_SESSION["screen_name"], $showAll);
     }
 
     public function post_index()
@@ -31,6 +31,6 @@ class Workflow extends \app\inc\Controller
 
     public function put_index()
     {
-        return $this->workflow->touch(Input::getPath()->part(3), Input::getPath()->part(4), Input::getPath()->part(5), $_SESSION['subuser']);
+        return $this->workflow->touch(Input::getPath()->part(3), Input::getPath()->part(4), Input::getPath()->part(5), $_SESSION["screen_name"]);
     }
 }

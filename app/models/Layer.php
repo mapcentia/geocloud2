@@ -54,7 +54,7 @@ class Layer extends \app\models\Table
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
         if ($db != \app\inc\Session::getUser()) {
-            $auth = null;
+            //$auth = null;
         }
 
         $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
@@ -178,6 +178,7 @@ class Layer extends \app\models\Table
 
             while ($row = $this->fetchRow($res, "assoc")) {
                 $arr = array();
+                $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
                 $primeryKey = $this->getPrimeryKey($rel);
                 $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
@@ -314,11 +315,11 @@ class Layer extends \app\models\Table
                 }
 
                 // If session is sub-user we always check privileges
-                if (isset($_SESSION) && $_SESSION['subuser']) {
+                if (isset($_SESSION) && $_SESSION["subuser"]) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
+                    if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != false)) {
                         $response['data'][] = $arr;
-                    } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
+                    } elseif ($_SESSION['screen_name'] == $schema) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
                     } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {

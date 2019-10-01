@@ -21,7 +21,7 @@ class Session extends \app\inc\Controller
     public function get_user()
     {
         $response['data']['db'] = $_SESSION['screen_name'];
-        $response['data']['subuser'] = $_SESSION['subuser'];
+        $response['data']['subuser'] = $_SESSION["subuser"];
         $response['data']['subusers'] = $_SESSION['subusers'];
         $response['success'] = true;
         return $response;

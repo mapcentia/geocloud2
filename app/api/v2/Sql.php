@@ -102,7 +102,7 @@ class Sql extends \app\inc\Controller
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
         } elseif (isset($_SESSION["subuser"])) {
-            $this->subUser = $_SESSION["subuser"];
+            $this->subUser = $_SESSION["screen_name"];
         } else {
             $this->subUser = null;
         }

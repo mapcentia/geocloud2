@@ -35,7 +35,7 @@ class Session extends \app\inc\Controller
      * @throws \Exception
      *
      * @OA\Get(
-     *   path="/v2/session/start",
+     *   path="/api/v2/session/start",
      *   tags={"session"},
      *   summary="Starts the session",
      *   @OA\Parameter(
@@ -94,7 +94,7 @@ class Session extends \app\inc\Controller
      * @return array
      * 
      * @OA\Post(
-     *   path="/v2/session/start",
+     *   path="/api/v2/session/start",
      *   tags={"session"},
      *   summary="Starts the session",
      *   @OA\RequestBody(
@@ -134,7 +134,7 @@ class Session extends \app\inc\Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/session",
+     *   path="/api/v2/session",
      *   tags={"session"},
      *   summary="Checks the session",
      *   @OA\Response(
@@ -152,7 +152,7 @@ class Session extends \app\inc\Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/session/stop",
+     *   path="/api/v2/session/stop",
      *   tags={"session"},
      *   summary="Destroys the session",
      *   @OA\Response(

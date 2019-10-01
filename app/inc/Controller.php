@@ -40,7 +40,7 @@ class Controller
             if (sizeof($dbSplit) == 2) {
                 $this->sUser = $dbSplit[0];
             } elseif (isset($_SESSION["subuser"])) {
-                $this->sUser = $_SESSION["subuser"];
+                $this->sUser = $_SESSION["screen_name"];
             } else {
                 $this->sUser = null;
             }
@@ -69,12 +69,12 @@ class Controller
      * @param bool $neverAllowSubUser
      * @return array
      */
-    public function auth(string $key = null, array $level = array("all" => true), bool $neverAllowSubUser = false): array
+    public function auth(string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
         $response = [];
-        if ($_SESSION['subuser'] == \app\conf\Connection::$param['postgisschema'] && $neverAllowSubUser == false) {
+        if (($_SESSION["subuser"] == true && $_SESSION['screen_name'] == \app\conf\Connection::$param['postgisschema']) && $neverAllowSubUser == false) {
             $response['success'] = true;
-        } elseif ($_SESSION['subuser']) {
+        } elseif ($_SESSION["subuser"]) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
             if (sizeof($level) == 0) {
                 $response['success'] = false;
@@ -83,7 +83,7 @@ class Controller
             } else {
                 $layer = new \app\models\Layer();
                 $privileges = json_decode($layer->getValueFromKey($key, "privileges"));
-                $prop = $_SESSION['usergroup'] ?: $_SESSION['subuser'];
+                $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
                 $subuserLevel = $privileges->$prop;
                 if (!isset($level[$subuserLevel])) {
                     $response['success'] = false;
@@ -241,7 +241,7 @@ class Controller
                         $response['auth_level'] = $auth;
                         $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
                         $response['privileges'] = $privileges[$subUser];
-                        $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
+                        $response['session'] = $_SESSION["screen_name"];
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
@@ -258,7 +258,7 @@ class Controller
                     $response = array();
                     $response['auth_level'] = $auth;
                     $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
-                    $response['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
+                    $response['session'] = $_SESSION["screen_name"];
 
                     if ($auth == "Read/write" || ($transaction)) {
                         if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
@@ -280,7 +280,7 @@ class Controller
             }
         } else {
             $response3["success"] = true;
-            $response3['session'] = $_SESSION["subuser"] ?: $_SESSION["screen_name"];
+            $response3['session'] = $_SESSION["screen_name"];
             $response3['auth_level'] = $auth;
             return $response3;
         }

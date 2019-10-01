@@ -41,7 +41,7 @@ class Session extends Model
             $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['email'] = $_SESSION['email'];
             $response['data']['passwordExpired'] = $_SESSION['passwordExpired'];
-            $response['data']['subuser'] = $_SESSION['subuser'];
+            $response['data']['subuser'] = $_SESSION["subuser"];
             $response['data']['subusers'] = $_SESSION['subusers'];
         } else {
             $response['data']['message'] = "Session not started";
@@ -110,7 +110,7 @@ class Session extends Model
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
-            $_SESSION['subuser'] = $row['parentdb'] ? true : false;
+            $_SESSION["subuser"] = $row['parentdb'] ? true : false;
 
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;

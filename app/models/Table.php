@@ -270,9 +270,9 @@ class Table extends Model
 
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
-            $arr = array();
-            $prop = $_SESSION['usergroup'] ?: $_SESSION['subuser'];
-            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges->$prop != "none" && $privileges->$prop != false)) {
+            $arr = [];
+            $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
+            if ($_SESSION["subuser"] == false || ($_SESSION["subuser"] == true && $_SESSION['screen_name'] == Connection::$param['postgisschema']) || ($_SESSION["subuser"] == true && $privileges->$prop != "none" && $privileges->$prop != false)) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {

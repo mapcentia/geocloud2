@@ -53,7 +53,6 @@ class Meta extends \app\inc\Controller
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            //$_SESSION['subuser'] = $dbSplit[0];
         }
         return $this->layers->getAll(Route::getParam("query"), Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"), $db);
     }
