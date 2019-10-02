@@ -66,7 +66,11 @@ class Vector extends \app\inc\Controller
 
         if ($cleanupTargetDir) {
             if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 100, "message": "Failed to open temp directory."}, "id" : "id"}');
+                return [
+                    "success" => false,
+                    "code" => "400",
+                    "message" => "Failed to open temp directory.",
+                ];
             }
             while (($file = readdir($dir)) !== false) {
                 $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
@@ -85,21 +89,37 @@ class Vector extends \app\inc\Controller
         }
         // Open temp file
         if (!$out = @fopen("{$filePath}.part", $chunks ? "ab" : "wb")) {
-            die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
+            return [
+                "success" => false,
+                "code" => "400",
+                "message" => "Failed to open output stream.",
+            ];
         }
 
         if (!empty($_FILES)) {
             if ($_FILES["file"]["error"] || !is_uploaded_file($_FILES["file"]["tmp_name"])) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
+                return [
+                    "success" => false,
+                    "code" => "400",
+                    "message" => "Failed to move uploaded file.",
+                ];
             }
 
             // Read binary input stream and append it to temp file
             if (!$in = @fopen($_FILES["file"]["tmp_name"], "rb")) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+                return [
+                    "success" => false,
+                    "code" => "400",
+                    "message" => "Failed to open input stream.",
+                ];
             }
         } else {
             if (!$in = @fopen("php://input", "rb")) {
-                die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+                return [
+                    "success" => false,
+                    "code" => "400",
+                    "message" => "Failed to open input stream.",
+                ];
             }
         }
 
@@ -115,6 +135,9 @@ class Vector extends \app\inc\Controller
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
         }
-        die('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
+        return [
+            "success" => true,
+            "message" => "File uploaded"
+        ];
     }
 }
