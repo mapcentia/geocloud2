@@ -67,8 +67,8 @@ class Layer extends \app\models\Table
             $CachedString = null;
         }
 
-        //$timeToLive = (60 * 60 * 240);
-        $timeToLive = (1); // disabled
+        $timeToLive = (60 * 60 * 240);
+        //$timeToLive = (1); // disabled
 
         if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();

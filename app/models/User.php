@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -22,6 +22,7 @@ require(__DIR__ . '/../../public/user/vdaemon/vdaemon.php');
 class User extends Model
 {
     public $userId;
+    public $parentdb;
 
     function __construct($userId = null, $parentdb = null)
     {
@@ -292,7 +293,7 @@ class User extends Model
             $sQuery .= ", usergroup=:sUsergroup";
             $obj[$user] = $userGroup;
 
-            Database::setDb($this->getData()["data"]["userid"]);
+            Database::setDb($this->parentdb);
             $settings = new \app\models\Setting();
             if (!$settings->updateUserGroups((object)$obj)['success']) {
                 $response['success'] = false;
