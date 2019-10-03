@@ -454,6 +454,10 @@ tableStructure.init = function (record, screenName) {
                                     value: 'date'
                                 },
                                 {
+                                    name: 'Timestamp',
+                                    value: 'timestamp'
+                                },
+                                {
                                     name: 'Boolean',
                                     value: 'bool'
                                 },
@@ -464,6 +468,10 @@ tableStructure.init = function (record, screenName) {
                                 {
                                     name: 'Hstore',
                                     value: 'Hstore'
+                                },
+                                {
+                                    name: 'Json',
+                                    value: 'json'
                                 },
                                 {
                                     name: 'Geometry',

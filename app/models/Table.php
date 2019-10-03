@@ -130,9 +130,9 @@ class Table extends Model
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
-        } elseif (preg_match("/timestamptz/", $field['type'])) {
-            $field['typeObj'] = array("type" => "timestamptz");
-            $field['type'] = "timestamptz";
+        } elseif (preg_match("/timestamp/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timestamp");
+            $field['type'] = "timestamp";
         } elseif (preg_match("/date/", $field['type'])) {
             $field['typeObj'] = array("type" => "date");
             $field['type'] = "date";
@@ -143,6 +143,9 @@ class Table extends Model
         } elseif (preg_match("/hstore/", $field['type'])) {
             $field['typeObj'] = array("type" => "hstore");
             $field['type'] = "hstore";
+        } elseif (preg_match("/json/", $field['type'])) {
+            $field['typeObj'] = array("type" => "json");
+            $field['type'] = "json";
         } elseif (preg_match("/bytea/", $field['type'])) {
             $field['typeObj'] = array("type" => "bytea");
             $field['type'] = "bytea";
@@ -917,6 +920,9 @@ class Table extends Model
             case "Date":
                 $type = "date";
                 break;
+            case "Timestamp":
+                $type = "Timestamp";
+                break;
             case "Boolean":
                 $type = "bool";
                 break;
@@ -925,6 +931,9 @@ class Table extends Model
                 break;
             case "Hstore":
                 $type = "hstore";
+                break;
+            case "Json":
+                $type = "jsonb";
                 break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
