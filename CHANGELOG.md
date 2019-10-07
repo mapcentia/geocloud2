@@ -23,6 +23,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - New Dashboard module: https://github.com/mapcentia/dashboard.
 - New Stream mode in SQL API, which can stream huge amount of data, by sending one-line JSON.
 - New content property in table-structure, which replaces image property. Three options are available: Plain, image and video, which Vidi will react upon.
+- Support of time, date and timestamp fields. In Admin editor and data grid, all types are handled as strings, so different PG formats doesn't need to be handled.
 
 ### Changed
 - Change how cached/not-cached layer work in the Map tab:

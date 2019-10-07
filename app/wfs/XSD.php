@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -147,11 +147,20 @@ foreach ($tables as $table) {
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "text") {
                 $atts["type"] = "xsd:string";
             }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
+                $atts["type"] = "xsd:dateTime";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "date") {
                 $atts["type"] = "xsd:date";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "time") {
+                $atts["type"] = "xsd:time";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
                 $atts["type"] = "xsd:base64Binary";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "json") {
+                $atts["type"] = "xsd:string";
             }
             else {
                 $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
@@ -174,8 +183,13 @@ foreach ($tables as $table) {
             if ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            if ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+            if ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
+                $tableObj->metaData[$atts["name"]]['type'] = "datetime";
+            }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "date") {
                 $tableObj->metaData[$atts["name"]]['type'] = "date";
+                $maxLength = "256";
+
             }
             if ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
                 $tableObj->metaData[$atts["name"]]['type'] = "base64Binary";

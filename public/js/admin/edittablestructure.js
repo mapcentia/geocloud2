@@ -352,55 +352,6 @@ tableStructure.init = function (record, screenName) {
                 }
             ]
         }),
-        listeners: {
-            "render": {
-                scope: this,
-                fn: function (grid) {
-
-                    // Enable sorting Rows via Drag & Drop
-                    // this drop target listens for a row drop
-                    // and handles rearranging the rows
-
-                    var ddrow = new Ext.dd.DropTarget(grid.container, {
-                        ddGroup: 'mygridDD',
-                        copy: false,
-                        notifyDrop: function (dd, e, data) {
-
-                            var ds = grid.store;
-
-                            // NOTE:
-                            // you may need to make an ajax call here
-                            // to send the new order
-                            // and then reload the store
-
-                            // alternatively, you can handle the changes
-                            // in the order of the row as demonstrated below
-
-                            // ***************************************
-
-                            var sm = grid.getSelectionModel();
-                            var rows = sm.getSelections();
-                            if (dd.getDragData(e)) {
-                                var cindex = dd.getDragData(e).rowIndex;
-                                if (typeof (cindex) != "undefined") {
-                                    for (i = 0; i < rows.length; i++) {
-                                        ds.remove(ds.getById(rows[i].id));
-                                    }
-                                    ds.insert(cindex, data.selections);
-                                    sm.clearSelections();
-                                }
-                            }
-
-                            // ************************************
-                        }
-                    });
-
-                    // load the grid store
-                    // after the grid has been rendered
-                    // store.load();
-                }
-            }
-        },
         tbar: [
             {
                 xtype: 'form',
@@ -456,6 +407,10 @@ tableStructure.init = function (record, screenName) {
                                 {
                                     name: 'Timestamp',
                                     value: 'timestamp'
+                                },
+                                {
+                                    name: 'Time',
+                                    value: 'time'
                                 },
                                 {
                                     name: 'Boolean',

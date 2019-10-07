@@ -127,16 +127,15 @@ class Table extends Model
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
-        } elseif (preg_match("/text/", $field['type'])) {
-            $field['typeObj'] = array("type" => "text");
-            $field['type'] = "text";
         } elseif (preg_match("/timestamp/", $field['type'])) {
             $field['typeObj'] = array("type" => "timestamp");
             $field['type'] = "timestamp";
+        } elseif (preg_match("/time/", $field['type'])) {
+            $field['typeObj'] = array("type" => "time");
+            $field['type'] = "time";
         } elseif (preg_match("/date/", $field['type'])) {
             $field['typeObj'] = array("type" => "date");
-            $field['type'] = "date";
-
+            $field['type'] = "timestamp"; // So Extjs renderer becomes string
         } elseif (preg_match("/uuid/", $field['type'])) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
@@ -149,12 +148,6 @@ class Table extends Model
         } elseif (preg_match("/bytea/", $field['type'])) {
             $field['typeObj'] = array("type" => "bytea");
             $field['type'] = "bytea";
-        } elseif (preg_match("/json/", $field['type'])) {
-            $field['typeObj'] = array("type" => "json");
-            $field['type'] = "json";
-        } elseif (preg_match("/timestamp/", $field['type'])) {
-            $field['typeObj'] = array("type" => "timestamp");
-            $field['type'] = "timestamp";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";

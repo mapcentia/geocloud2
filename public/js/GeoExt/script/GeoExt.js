@@ -2178,7 +2178,6 @@ GeoExt.form.recordToField = function (i, q) {
         labelStyle: c ? "" : q.mandatoryFieldLabelStyle != null ? q.mandatoryFieldLabelStyle : "font-weight:bold;"
     };
     var a = GeoExt.form.recordToField.REGEXES;
-    console.log(l)
     if (l.match(a.text)) {
         var e = g.maxLength !== undefined ? parseFloat(g.maxLength) : undefined;
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
@@ -2214,14 +2213,12 @@ GeoExt.form.recordToField = function (i, q) {
         n = Ext.apply({xtype: "checkbox"}, h);
         var p = q.checkboxLabelProperty || "boxLabel";
         n[p] = o
+    } else if (l.match(a.datetime)) {
+        n = Ext.apply(new Ext.form.TextField({fieldLabel: o}), h)
     } else if (l.match(a.date)) {
-        n = Ext.apply(new Ext.form.DateField({
-            fieldLabel: o,
-            convert: function (value, records) {
-                var rcptDate = new Date(value);
-                return Ext.Date.format(rcptDate, 'm-d-Y g:i A');
-            }
-        }), h)
+        n = Ext.apply(new Ext.form.TextField({fieldLabel: o}), h)
+    } else if (l.match(a.time)) {
+        n = Ext.apply(new Ext.form.TextField({fieldLabel: o}), h)
     } else if (l.match(a.imageType)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
@@ -2250,11 +2247,11 @@ GeoExt.form.recordToField = function (i, q) {
                         "accept": "image/*"
                     });
                     var resetBtn = el.insertSibling(new Ext.Element(document.createElement('button')).set({"style": "clear:both"})).update("Reset");
-                    var createImg = function(){
+                    var createImg = function () {
                         el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}))
                     }
                     createImg();
-                    resetBtn.dom.onclick = function(){
+                    resetBtn.dom.onclick = function () {
                         el.dom.value = "";
                         resetBtn.next().remove();
                         createImg();
@@ -2308,9 +2305,10 @@ GeoExt.form.recordToField = function (i, q) {
 GeoExt.form.recordToField.REGEXES = {
     text: new RegExp("^(text|string)$", "i"),
     number: new RegExp("^(number|float|decimal|double|int|long|integer|short)$", "i"),
-    "boolean": new RegExp("^(boolean)$", "i"),
-    "json": new RegExp("^(json)$", "i"),
-    date: new RegExp("^(date|dateTime)$", "i"),
+    boolean: new RegExp("^(boolean)$", "i"),
+    json: new RegExp("^(json)$", "i"),
+    date: new RegExp("^(date)$", "i"),
+    time: new RegExp("^(time)$", "i"),
     base64Binary: new RegExp("^(base64Binary)$", "i"),
     imageType: new RegExp("^(imageType)$", "i")
 };
@@ -2557,7 +2555,8 @@ GeoExt.Popup = Ext.extend(Ext.Window, {
             }
         }
         if (this.isVisible()) {
-            var g = this.map.getPixelFromLonLat(this.location), e = Ext.fly(this.map.div).getBox(true), h = g.y + e.y, c = g.x + e.x, i = this.el.getSize(), a = this.anc.getSize(), b = this.anchorPosition;
+            var g = this.map.getPixelFromLonLat(this.location), e = Ext.fly(this.map.div).getBox(true), h = g.y + e.y,
+                c = g.x + e.x, i = this.el.getSize(), a = this.anc.getSize(), b = this.anchorPosition;
             if (b.indexOf("right") > -1 || g.x > e.width / 2) {
                 this.anc.addClass("right");
                 var d = this.el.getX(true) + i.width - this.anc.getX(true) - a.width;
@@ -4673,7 +4672,7 @@ GeoExt.data.FeatureStoreMixin = function () {
                         b.fields.each(function (i) {
                             var h = i.mapping || i.name;
                             if (!g.containsKey(h)) {
-                                c[h] = b.get(i.name)
+                                c[h] = b.get(i.name);
                             }
                         });
                         this._updating = true;
