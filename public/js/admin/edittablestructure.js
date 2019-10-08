@@ -413,6 +413,14 @@ tableStructure.init = function (record, screenName) {
                                     value: 'time'
                                 },
                                 {
+                                    name: 'Timestamptz',
+                                    value: 'timestamptz'
+                                },
+                                {
+                                    name: 'Timetz',
+                                    value: 'timetz'
+                                },
+                                {
                                     name: 'Boolean',
                                     value: 'bool'
                                 },

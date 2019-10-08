@@ -3702,7 +3702,6 @@ $(document).ready(function () {
                                                         }
                                                     }
                                                 }
-                                                console.log(columnsForGrid)
                                                 var proxy = new Ext.data.HttpProxy({
                                                     restful: true,
                                                     type: 'json',
@@ -4904,6 +4903,10 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                     } else if (columnsForGrid[i].typeObj.type === "timestamp") {
                         columnsForGrid[i].editor = new Ext.form.TextField();
                     } else if (columnsForGrid[i].typeObj.type === "time") {
+                        columnsForGrid[i].editor = new Ext.form.TextField();
+                    } else if (columnsForGrid[i].typeObj.type === "timestamptz") {
+                        columnsForGrid[i].editor = new Ext.form.TextField();
+                    } else if (columnsForGrid[i].typeObj.type === "timetz") {
                         columnsForGrid[i].editor = new Ext.form.TextField();
                     }
                 }

@@ -127,9 +127,15 @@ class Table extends Model
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
+        } elseif (preg_match("/timestamp with time zone/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timestamptz");
+            $field['type'] = "timestamptz";
         } elseif (preg_match("/timestamp/", $field['type'])) {
             $field['typeObj'] = array("type" => "timestamp");
             $field['type'] = "timestamp";
+        } elseif (preg_match("/time with time zone/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timetz");
+            $field['type'] = "timetz";
         } elseif (preg_match("/time/", $field['type'])) {
             $field['typeObj'] = array("type" => "time");
             $field['type'] = "time";
@@ -915,6 +921,15 @@ class Table extends Model
                 break;
             case "Timestamp":
                 $type = "Timestamp";
+                break;
+            case "Timestamptz":
+                $type = "Timestamptz";
+                break;
+            case "Time":
+                $type = "Time";
+                break;
+            case "Timetz":
+                $type = "Timetz";
                 break;
             case "Boolean":
                 $type = "bool";
