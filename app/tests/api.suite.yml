@@ -4,6 +4,6 @@ modules:
         - Asserts
         - \Helper\Api
         - REST:
-            url: http://localhost:80/api/v2/
+            url: http://localhost:80
             depends: PhpBrowser
             part: Json

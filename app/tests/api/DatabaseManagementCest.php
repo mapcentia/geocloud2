@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 class DatabaseManagementCest
 {
@@ -6,11 +6,14 @@ class DatabaseManagementCest
     private $userName;
     private $userEmail;
     private $userAuthCookie;
+    private $userApiKey;
     private $subUserAuthCookie;
     private $subUserName;
     private $subUserEmail;
     private $userId;
     private $subUserId;
+    private $subUserApiKey;
+
 
     private $userName1;
     private $userEmail1;
@@ -50,31 +53,34 @@ class DatabaseManagementCest
         $this->subUserEmail2 = 'anotherdatabasesubtest' . $this->date->getTimestamp() . '@example.com';
     }
 
-    public function shouldPrepareForTestFirstUser(\ApiTester $I) {
+    public function shouldPrepareForTestFirstUser(\ApiTester $I)
+    {
         // Create a super and subuser
-        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName,
             'email' => $this->userEmail,
             'password' => 'A1abcabcabc',
         ]));
-
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->userId = $response->data->screenname;
 
-        $I->sendPOST('session/start', json_encode([
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId,
             'password' => 'A1abcabcabc',
+            'schema' => 'public',
         ]));
-
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
         $this->userAuthCookie = $sessionCookie;
+        $response = json_decode($I->grabResponse());
+        $this->userApiKey = $response->data->api_key;
+
 
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
-        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName,
             'email' => $this->subUserEmail,
             'password' => 'A1abcabcabc',
@@ -85,21 +91,30 @@ class DatabaseManagementCest
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->subUserId = $response->data->screenname;
+    }
 
-        $I->sendPOST('session/start', json_encode([
+    public function shouldStartSessionWithFirstSubuser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId,
             'password' => 'A1abcabcabc',
+            'schema' => 'public',
         ]));
 
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
         $this->subUserAuthCookie = $sessionCookie;
+        $response = json_decode($I->grabResponse());
+        $this->subUserApiKey = $response->data->api_key;
+
     }
 
-    public function shouldPrepareForTestSecondUser(\ApiTester $I) {
+    public function shouldPrepareForTestSecondUser(\ApiTester $I)
+    {
         // Create another super and subuser
-        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName1,
             'email' => $this->userEmail1,
             'password' => 'A1abcabcabc',
@@ -109,7 +124,7 @@ class DatabaseManagementCest
         $response = json_decode($I->grabResponse());
         $this->userId1 = $response->data->screenname;
 
-        $I->sendPOST('session/start', json_encode([
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId1,
             'password' => 'A1abcabcabc',
         ]));
@@ -119,8 +134,8 @@ class DatabaseManagementCest
         $this->userAuthCookie1 = $sessionCookie;
 
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie1);
-        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName1,
             'email' => $this->subUserEmail1,
             'password' => 'A1abcabcabc',
@@ -132,7 +147,7 @@ class DatabaseManagementCest
         $response = json_decode($I->grabResponse());
         $this->subUserId1 = $response->data->screenname;
 
-        $I->sendPOST('session/start', json_encode([
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId1,
             'password' => 'A1abcabcabc',
         ]));
@@ -142,10 +157,11 @@ class DatabaseManagementCest
         $this->subUserAuthCookie1 = $sessionCookie;
     }
 
-    public function shouldPrepareForTestThirdUser(\ApiTester $I) {
+    public function shouldPrepareForTestThirdUser(\ApiTester $I)
+    {
         // Create another super and subuser
-        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName2,
             'email' => $this->userEmail2,
             'password' => 'A1abcabcabc',
@@ -155,7 +171,7 @@ class DatabaseManagementCest
         $response = json_decode($I->grabResponse());
         $this->userId2 = $response->data->screenname;
 
-        $I->sendPOST('session/start', json_encode([
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId2,
             'password' => 'A1abcabcabc',
         ]));
@@ -166,7 +182,7 @@ class DatabaseManagementCest
 
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie2);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendPOST('user', json_encode([
+        $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName2,
             'email' => $this->subUserEmail2,
             'password' => 'A1abcabcabc',
@@ -178,7 +194,7 @@ class DatabaseManagementCest
         $response = json_decode($I->grabResponse());
         $this->subUserId2 = $response->data->screenname;
 
-        $I->sendPOST('session/start', json_encode([
+        $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId2,
             'password' => 'A1abcabcabc',
         ]));
@@ -188,10 +204,11 @@ class DatabaseManagementCest
         $this->subUserAuthCookie2 = $sessionCookie;
     }
 
-    public function shouldListSchemasForSuperUser(\ApiTester $I) {
+    public function shouldListSchemasForSuperUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendGET('database/schemas');
+        $I->sendGET('/api/v2/database/schemas');
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
@@ -204,9 +221,10 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldListDatabasesForSubUserUsingName(\ApiTester $I) {
+    public function shouldListDatabasesForSubUserUsingName(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendGET('database/search?userIdentifier=' . urlencode($this->subUserName));
+        $I->sendGET('/api/v2/database/search?userIdentifier=' . urlencode($this->subUserName));
 
         $response = json_decode($I->grabResponse());
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
@@ -214,9 +232,10 @@ class DatabaseManagementCest
         $I->assertEquals(2, sizeof($response->databases));
     }
 
-    public function shouldListDatabasesForSubUserUsingNameAndSearchingForUsersWithSameEmail(\ApiTester $I) {
+    public function shouldListDatabasesForSubUserUsingNameAndSearchingForUsersWithSameEmail(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $I->sendGET('database/search?userIdentifier=' . urlencode($this->subUserEmail1));
+        $I->sendGET('/api/v2/database/search?userIdentifier=' . urlencode($this->subUserEmail1));
 
         $response = json_decode($I->grabResponse());
 
@@ -227,4 +246,234 @@ class DatabaseManagementCest
         $I->assertEquals($response->databases[0]->parentdb, $this->userId1);
         $I->assertEquals($response->databases[1]->parentdb, $this->userId2);
     }
+
+    public function shouldUploadGmlFile(\ApiTester $I)
+    {
+        $data = ["key" => "value"];
+        $files = [
+            "file" => '/var/www/geocloud2/app/tests/_data/Parkeringsomraade.gml',
+        ];
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPOST('/controllers/upload/vector', $data, $files);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'File uploaded',
+        ]);
+    }
+
+    public function shouldProcessGmlFile(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('/controllers/upload/processvector?srid=25832&file=Parkeringsomraade.gml&name=Parkeringsomraade&type=polygon&encoding=UTF8&ignoreerrors=false&overwrite=false&append=false&delete=false');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'type' => 'POLYGON',
+        ]);
+    }
+
+    // *************************************
+    // Start of testing read/write access
+    // *************************************
+
+    // Super user SQL API request to unprotected data source from outside session
+    public function shouldGetDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => 'dymmy'
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+        ]);
+    }
+
+    // Set Read and Write protection on the layer
+    public function shouldChangeTheAuthenticationLevelFromWriteToReadwrite(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('/controllers/layer/records/public.parkeringsomraade.the_geom', json_encode([
+            'data' => [
+                "authentication" => "Read/write",
+                "_key_" => "public.parkeringsomraade.the_geom",
+            ],
+        ]));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Row updated',
+        ]);
+    }
+
+    // Super user SQL API request to protected data source from outside session
+    public function shouldNotGetDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => 'dymmy'
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
+
+    // Super user SQL API request to protected data source with API key
+    public function shouldGetDataFromSqlApiAsSuperUserWithApiKey(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => $this->userApiKey
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+        ]);
+    }
+
+    // Super user SQL API request to protected data source from inside session
+    public function shouldGetDataFromSqlApiAsSuperUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+        ]);
+    }
+
+    // Sub user SQL API request to protected data source from outside session
+    public function shouldNotGetDataFromSqlApiAsSubUserOutsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => 'dymmy'
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
+
+    // Sub user SQL API request to protected data source from inside session
+    public function shouldNotGetDataFromSqlApiAsSubUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
+
+    // Set read privileges on data source to sub user
+    public function shouldGiveReadPrivilegesToSubUser(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('/controllers/layer/privileges', json_encode([
+            'data' => [
+                "subuser" => $this->subUserId,
+                "privileges" => "read",
+                "_key_" => "public.parkeringsomraade.the_geom",
+            ],
+        ]));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Privileges updates',
+        ]);
+    }
+
+    // Sub user SQL API request to protected data source with wrong API key
+    public function shouldNotGetDataFromSqlApiAsSubUserWithWrongApiKey(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => 'dymmy'
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
+
+    // Sub user SQL API request to protected data source with right API key
+    public function shouldGetDataFromSqlApiAsSubUserWithApiKey(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+                'key' => $this->subUserApiKey,
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+        ]);
+    }
+
+    // Sub user SQL API request to protected data source from within session
+    public function shouldGetDataFromSqlApiAsSubUserFromWithinSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
+            [
+                'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
+            ]
+        ));
+
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+        ]);
+    }
+
+    // *************************************
+    // End of testing read/write access
+    // *************************************
+
 }
