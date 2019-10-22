@@ -124,7 +124,7 @@ class Session extends \app\inc\Controller
                 "user" => $data["user"],
                 "password" => $data["password"],
                 "schema" => isset($data["schema"]) ? $data["schema"] : null,
-                "database" => $data["database"],
+                "database" => isset($data["database"]) ? $data["database"] : null,
             ]
         );
         return $this->get_start();

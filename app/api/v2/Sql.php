@@ -118,17 +118,17 @@ class Sql extends \app\inc\Controller
             // ==========================
             Input::setParams(
                 [
-                    "q" => $json["q"],
-                    "client_encoding" => $json["client_encoding"],
-                    "srs" => $json["srs"],
-                    "format" => $json["format"],
-                    "geoformat" => $json["geoformat"],
-                    "key" => $json["key"],
-                    "geojson" => $json["geojson"],
-                    "allstr" => $json["allstr"],
-                    "alias" => $json["alias"],
-                    "lifetime" => $json["lifetime"],
-                    "base64" => $json["base64"],
+                    "q" => !empty($json["q"]) ? $json["q"] : null,
+                    "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
+                    "srs" => !empty($json["srs"]) ? $json["srs"] : null,
+                    "format" => !empty($json["format"]) ? $json["format"] : null,
+                    "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : null,
+                    "key" => !empty($json["key"]) ? $json["key"] : null,
+                    "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
+                    "allstr" => !empty($json["allstr"]) ? $json["allstr"] : null,
+                    "alias" => !empty($json["alias"]) ? $json["alias"] : null,
+                    "lifetime" => !empty($json["lifetime"]) ? $json["lifetime"] : null,
+                    "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                 ]
             );
         }

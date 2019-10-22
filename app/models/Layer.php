@@ -180,8 +180,8 @@ class Layer extends \app\models\Table
                 $arr = array();
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
-                $primeryKey = $this->getPrimeryKey($rel);
-                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
+                $primeryKey = $this->getPrimeryKey($rel); // TODO Slows down
+                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // TODO Slows down
                 $versioning = $resVersioning["exists"];
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
@@ -300,10 +300,11 @@ class Layer extends \app\models\Table
                 }
 
                 // Restrictions
+                // TODO Slows down
                 $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
 
                 // References
-                if ($row["meta"] != false && $row["meta"] != "" &&
+                if (!empty($row["meta"]) &&
                     json_decode($row["meta"]) != false &&
                     isset(json_decode($row["meta"], true)["referenced_by"]) &&
                     json_decode($row["meta"], true)["referenced_by"] != false
@@ -311,6 +312,7 @@ class Layer extends \app\models\Table
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
+                    // TODO Slows down
                     $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
