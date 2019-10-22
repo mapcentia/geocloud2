@@ -82,8 +82,6 @@ class Sql extends \app\inc\Controller
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function get_index(): array
     {
@@ -179,8 +177,6 @@ class Sql extends \app\inc\Controller
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function post_index(): array
     {
@@ -227,6 +223,9 @@ class Sql extends \app\inc\Controller
         }
     }
 
+    /**
+     * @return array
+     */
     public function get_stream()
     {
         $this->streamFlag = true;
@@ -288,8 +287,6 @@ class Sql extends \app\inc\Controller
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     private function transaction(string $sql, string $clientEncoding = null)
     {
@@ -432,24 +429,24 @@ class Sql extends \app\inc\Controller
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            // If ttl is set to 0. when clear cache, because 0 secs means cache will life for ever.
-            if ($lifetime == 0) {
-               try {
-                   $this->InstanceCache->clear();
-               } catch (\Exception $e) {
-                   // Pass
-               } catch (\Error $e) {
-                   // Pass
-               }
-            }
+            $cacheId = md5($this->q . "_" . $lifetime);
 
             if ($lifetime > 0) {
-                $CachedString = $this->InstanceCache->getItem(md5($this->q));
+                try {
+                    $CachedString = $this->InstanceCache->getItem($cacheId);
+                } catch (\Exception $e) {
+                    $CachedString = null;
+                }
             }
 
-            if ($lifetime > 0 && $CachedString->isHit()) {
+            if ($lifetime > 0 && !empty($CachedString) && $CachedString->isHit()) {
                 $this->data = $CachedString->get();
-                $this->cacheInfo["cache_hit"] = $CachedString->getCreationDate();
+                try {
+                    $CreationDate = $CachedString->getCreationDate();
+                } catch (\Exception $e) {
+                    $CreationDate = $e->getMessage();
+                }
+                $this->cacheInfo["cache_hit"] = $CreationDate;
                 $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
 
             } else {
