@@ -82,7 +82,7 @@ class Legend extends \app\inc\Controller
 
                 $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . "_wms.map";
 
-                $this->legendArr[$layerName]['title'] = $layer["wms_title"];
+                $this->legendArr[$layerName]['title'] = !empty($layer["wms_title"]) ? $layer["wms_title"] : "";
 
                 if (isset($layer["wmssource"])) {
 

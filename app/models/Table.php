@@ -488,7 +488,6 @@ class Table extends Model
                     } else {
                         $gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
                         $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
-                        error_log($url);
                         Util::asyncRequest($url);
                     }
                 }

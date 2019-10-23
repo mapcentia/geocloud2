@@ -1007,7 +1007,7 @@ class Layer extends \app\models\Table
         // Get the default "ckan_org_id" value
         $ckanOrgIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_org_id") {
+            if (!empty($value["name"]) == "ckan_org_id") {
                 $ckanOrgIdDefault = $value["default"];
             }
         }
@@ -1015,7 +1015,7 @@ class Layer extends \app\models\Table
         // Get the default "update" flag
         $updateDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_update") {
+            if (!empty($value["name"]) == "ckan_update") {
                 $updateDefault = $value["default"];
             }
         }
@@ -1023,7 +1023,7 @@ class Layer extends \app\models\Table
         // Get the default "update" value
         $licenseIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "license_id") {
+            if (!empty($value["name"]) == "license_id") {
                 $licenseIdDefault = $value["default"];
             }
         }

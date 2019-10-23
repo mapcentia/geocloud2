@@ -224,9 +224,9 @@ class Wms extends \app\inc\Controller
                 $this->type = trim($bits[1]);
             }
             // Send text/xml instead of application/vnd.ogc.se_xml
-            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
+            if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
-            } elseif ($bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
+            } elseif (sizeof($bits) > 1 && $bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);

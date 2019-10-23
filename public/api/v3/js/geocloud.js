@@ -105,7 +105,7 @@ geocloud = (function () {
         visibility: true,
         lifetime: 0,
         host: host,
-        uri: "/api/v1/sql",
+        uri: "/api/v2/sql",
         db: null,
         sql: null,
         q: null,
@@ -129,7 +129,7 @@ geocloud = (function () {
         size: 100,
         clientEncoding: "UTF8",
         async: true,
-        jsonp: true,
+        jsonp: false,
         method: "GET",
         clickable: true,
         error: function () {
