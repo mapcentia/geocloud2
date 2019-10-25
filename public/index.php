@@ -50,8 +50,8 @@ register_shutdown_function(function () {
         $response = new Response();
         $body = [
             "message" => $err["message"],
-//            "file" => $err["file"],
-//            "line" => $err["line"],
+            "file" => $err["file"],
+            "line" => $err["line"],
             "code" => $code . " " . Util::httpCodeText($code),
             "execute_time" => microtime(true) - $executionStartTime,
             "memory_peak_usage" => round(memory_get_peak_usage() / 1024) . " KB",

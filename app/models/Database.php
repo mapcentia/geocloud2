@@ -30,7 +30,7 @@ class Database extends \app\inc\Model
 
     public function createSchema($name)
     {
-        $sql = "CREATE SCHEMA " . $this->toAscii($name, NULL, "_");
+        $sql = "CREATE SCHEMA " . self::toAscii($name, NULL, "_");
         $this->execQuery($sql);
         if (!$this->PDOerror) {
             $response['success'] = true;
@@ -223,7 +223,7 @@ class Database extends \app\inc\Model
             $response['code'] = 401;
             return $response;
         }
-        $newName = Model::toAscii($name, array(), "_");
+        $newName = self::toAscii($name, array(), "_");
         $this->connect();
         $this->begin();
         $whereClauseG = "f_table_schema=''{$schema}''";

@@ -454,7 +454,7 @@ class Layer extends \app\models\Table
         $data = $table->makeArray($data);
         $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
         foreach ($data as $value) {
-            //$safeColumn = $table->toAscii($value->column, array(), "_");
+            //$safeColumn = self::toAscii($value->column, array(), "_");
             $safeColumn = $value->column;
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
                 unset($elasticsearchArr[$value->id]);
@@ -504,7 +504,7 @@ class Layer extends \app\models\Table
         }
 
         $split = explode(".", $tableName);
-        $newName = \app\inc\Model::toAscii($data->name, array(), "_");
+        $newName = self::toAscii($data->name, array(), "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }

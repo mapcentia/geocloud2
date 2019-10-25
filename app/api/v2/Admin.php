@@ -316,4 +316,11 @@ class Admin extends Controller
         $admin = new \app\models\Admin();
         return $admin->install();
     }
+
+    public function get_cache(): array
+    {
+        global $globalInstanceCache;
+        print_r($globalInstanceCache->getStats());
+        die();
+    }
 }

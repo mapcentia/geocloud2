@@ -887,7 +887,7 @@ class Table extends Model
         }
 
         $response = [];
-        $safeColumn = $this->toAscii($data['column'], array(), "_");
+        $safeColumn = self::toAscii($data['column'], array(), "_");
         $sql = "";
         if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
@@ -1200,7 +1200,7 @@ class Table extends Model
 
         $response = [];
         $this->PDOerror = NULL;
-        $table = $this->toAscii($table, array(), "_");
+        $table = self::toAscii($table, array(), "_");
         if (is_numeric(\mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
@@ -1235,7 +1235,7 @@ class Table extends Model
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
-        //$table = $this->toAscii($table, array(), "_");
+        //$table = self::toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }

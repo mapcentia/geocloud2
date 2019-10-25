@@ -231,7 +231,7 @@ class Configuration extends Controller
                 ];
             }
 
-            $keyPrefix = $this->keyValuePrefix . $this->keyvalue->toAscii($data["name"], NULL, "_") . '_';
+            $keyPrefix = $this->keyValuePrefix . $this->keyvalue::toAscii($data["name"], NULL, "_") . '_';
             $key = str_replace('.', '', uniqid($keyPrefix, TRUE));
             $data['key'] = $key;
             return $this->keyvalue->insert($key, json_encode($data));

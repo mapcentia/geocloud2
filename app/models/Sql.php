@@ -47,7 +47,7 @@ class Sql extends \app\inc\Model
             $limit = 100000;
         }
         $name = "_" . rand(1, 999999999) . microtime();
-        $view = $this->toAscii($name, null, "_");
+        $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
         try {

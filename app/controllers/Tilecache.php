@@ -261,7 +261,7 @@ class Tilecache extends \app\inc\Controller
         return $response;
     }
 
-    private function unlinkTiles($dir, $layerName)
+    private static function unlinkTiles($dir, $layerName)
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());

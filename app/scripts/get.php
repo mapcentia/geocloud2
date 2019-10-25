@@ -699,6 +699,10 @@ function getCmdZip()
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
+// Begin transaction
+// =================
+$table->begin();
+
 $sql = "CREATE SCHEMA IF NOT EXISTS {$workingSchema}";
 $res = $table->prepare($sql);
 try {
@@ -782,9 +786,7 @@ if ($deleteAppend == "1") {
 $pkSql = null;
 $idxSql = null;
 
-// Begin transaction
-// =================
-$table->begin();
+
 
 // Count features
 // ==============
