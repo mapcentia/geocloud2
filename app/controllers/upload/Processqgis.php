@@ -75,8 +75,8 @@ class Processqgis extends \app\inc\Controller
                     $table = $matches[1][1][0];
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll($fullTable, true, false);
                     $db = Database::getDb();
+                    $rec = $this->layer->getAll($fullTable, true, false, false, false, $db);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
@@ -125,7 +125,7 @@ class Processqgis extends \app\inc\Controller
 
                     $fullTable = $schema . "." . $table;
 
-                    $rec = $this->layer->getAll($fullTable, true, false);
+                    $rec = $this->layer->getAll($fullTable, true, false, false, false, $db);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
