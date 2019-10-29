@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -40,9 +40,9 @@ if (!function_exists("makeExceptionReport")) {
     }
 }
 
-if (sizeof($dbSplit) == 2 || $_SESSION["subuser"] == true) { //Sub-user
+if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { //Sub-user
     $db = $dbSplit[1];
-    if (!$_SESSION["subuser"]) {
+    if (empty($_SESSION["subuser"])) {
         $_SESSION["subuser"] = true; // Coming from outside session
         $subUser = $_SESSION["screen_name"] = $dbSplit[0];
     } else {
@@ -50,7 +50,7 @@ if (sizeof($dbSplit) == 2 || $_SESSION["subuser"] == true) { //Sub-user
     }
 
     $settings_viewer = new \app\models\Setting();
-    $userGroup = $response->data->userGroups->$subUser;
+    $userGroup = !empty($response->data->userGroups->$subUser) ? $response->data->userGroups->$subUser : null;
 
     if ($dbSplit[0] != $postgisschema) {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
@@ -66,23 +66,14 @@ if (sizeof($dbSplit) == 2 || $_SESSION["subuser"] == true) { //Sub-user
         while ($row = $postgisObject->fetchRow($res, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $prop = $userGroup ?: $subUser;
-            switch ($transaction) {
-                case false:
-                    if ($privileges->$prop == false || $privileges->$prop == "none") {
-                        makeExceptionReport(array("You don't have privileges to see this layer. Please contact the database owner, which can grant you privileges."));
-                    }
-                    break;
-                case true:
-                    if ($privileges->$prop == false || $privileges->$prop == "none" || $privileges->$prop == "read") {
-                        makeExceptionReport(array("You don't have privileges to edit this layer. Please contact the database owner, which can grant you privileges."));
-                    }
-                    break;
+            if ($privileges->$prop == false || $privileges->$prop == "none") {
+                makeExceptionReport(array("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges."));
             }
         }
     }
 }
 
-if ((!$_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
+if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
     $settings_viewer = new \app\models\Setting();
     $response = $settings_viewer->get();
     \app\inc\Log::write("Auth");
@@ -96,7 +87,7 @@ if ((!$_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
         if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic') === 0)
             list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
     }
-    if (is_null($username)) {
+    if (empty($username)) {
         header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
         header('HTTP/1.0 401 Unauthorized');
         header("Cache-Control: no-cache, must-revalidate");

@@ -76,7 +76,11 @@ foreach ($tables as $table) {
     // Start sorting the fields by sort_id
     $arr = array();
     foreach ($fieldsArr[$table] as $value) {
-        $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+        if (!empty($fieldConfArr[$value]["sort_id"])) {
+            $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+        } else {
+            $arr[] = array(0, $value);
+        }
     }
     usort($arr, function ($a, $b) {
         return $a[0] - $b[0];
@@ -88,8 +92,8 @@ foreach ($tables as $table) {
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
-        $properties = $fieldConf->{$atts["name"]};
-        $atts["label"] = $properties->alias ?: $atts["name"];
+        $properties = !empty($fieldConf->{$atts["name"]}) ? $fieldConf->{$atts["name"]} : null;
+        $atts["label"] = !empty($properties->alias) ? $properties->alias : $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }
@@ -197,7 +201,7 @@ foreach ($tables as $table) {
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            if ($fieldConf->{$atts["name"]}->properties) {
+            if (!empty($fieldConf->{$atts["name"]}->properties)) {
                 echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
 
                 if ($fieldConf->{$atts["name"]}->properties == "*") {
