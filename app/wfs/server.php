@@ -240,7 +240,7 @@ if (!(empty($featureids[0]))) {
         foreach ($tables as $table) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $table);
             if ($table == $__u[0]) {
-                $wheresArr[$table][] = "{$primeryKey['attname']}={$__u[1]}";
+                $wheresArr[$table][] = "{$primeryKey['attname']}='{$__u[1]}'";
             }
             $wheres[$table] = implode(" OR ", $wheresArr[$table]);
         }
@@ -397,12 +397,10 @@ function doQuery($queryType)
         case "Select":
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
-                if (!$trusted) {
-                    //include_once("inc/http_basic_authen.php");
-                }
                 $tableObj = new table($postgisschema . "." . $table);
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
-                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom", "fieldconf"));
+                $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
+                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"));
                 $sql = "SELECT ";
                 if ($resultType != "hits") {
                     if (!(empty($fields[$table]))) {
@@ -418,6 +416,24 @@ function doQuery($queryType)
                             }
                         }
                     }
+
+                    // Start sorting the fields by sort_id
+                    $arr = array();
+                    foreach ($fieldsArr[$table] as $value) {
+                        if (!empty($fieldConfArr[$value]->sort_id)) {
+                            $arr[] = array($fieldConfArr[$value]->sort_id, $value);
+                        } else {
+                            $arr[] = array(0, $value);
+                        }
+                    }
+                    usort($arr, function ($a, $b) {
+                        return $a[0] - $b[0];
+                    });
+                    $fieldsArr[$table] = array();
+                    foreach ($arr as $value) {
+                        $fieldsArr[$table][] = $value[1];
+                    }
+
                     // We add "" around field names in sql, so sql keywords don't mess things up
                     foreach ($fieldsArr[$table] as $key => $value) {
                         $fieldsArr[$table][$key] = "\"{$value}\"";
