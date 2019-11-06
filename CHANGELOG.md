@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [2019.1.0.rc1] - 2019-06-10
 ### Added
 - Phpfastcache added to speed up Meta API.
 - MapServer/MapCache now exposes layers as Mapbox Vector tiles. In MapServer just use `format=mvt` and in MapCache MVT layers are prefixed with `.mvt` like public.foo.mvt.
@@ -26,7 +26,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Support of time, date and timestamp fields. In Admin editor and data grid, all types are handled as strings, so different PG formats doesn't need to be handled.
 
 ### Changed
-- Change how cached/not-cached layer work in the Map tab:
+- Change how cached/not-cached layers works in the Map tab:
     - Default is now to display layers as not-cached.
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
