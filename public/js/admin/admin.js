@@ -2021,8 +2021,8 @@ $(document).ready(function () {
                         title: '<i class="fa fa-arrow-right"></i> ' + __("Move") + " " + records.length + " " + __("selected to another schema"),
                         modal: true,
                         layout: 'fit',
-                        width: 270,
-                        height: 80,
+                        width: 300,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2053,7 +2053,7 @@ $(document).ready(function () {
                                                         triggerAction: 'all',
                                                         value: schema,
                                                         name: 'schema',
-                                                        width: 150
+                                                        width: 200
                                                     }
                                                 ]
                                             }
@@ -2143,7 +2143,7 @@ $(document).ready(function () {
                         modal: true,
                         layout: 'fit',
                         width: 270,
-                        height: 80,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2307,8 +2307,8 @@ $(document).ready(function () {
                         title: '<i class="fa fa-copy"></i> ' + __("Copy all properties from another layer"),
                         modal: true,
                         layout: 'fit',
-                        width: 350,
-                        height: 120,
+                        width: 580,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2334,7 +2334,7 @@ $(document).ready(function () {
                                                 triggerAction: 'all',
                                                 lazyRender: true,
                                                 name: 'schema',
-                                                width: 150,
+                                                width: 200,
                                                 allowBlank: false,
                                                 emptyText: __('Schema'),
                                                 listeners: {
@@ -2389,51 +2389,52 @@ $(document).ready(function () {
                                                 mode: 'local',
                                                 triggerAction: 'all',
                                                 name: 'key',
-                                                width: 150,
+                                                width: 300,
                                                 allowBlank: false,
                                                 emptyText: __('Layer')
-                                            }
-
-                                        ]
-                                    },
-                                    {
-                                        layout: 'form',
-                                        bodyStyle: 'padding: 10px',
-                                        items: [
+                                            },
                                             {
-                                                xtype: 'button',
-                                                text: __('Copy'),
-                                                handler: function () {
-                                                    var f = Ext.getCmp('copyMetaForm');
-                                                    if (f.form.isValid()) {
-                                                        Ext.Ajax.request({
-                                                            url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
-                                                            method: 'put',
-                                                            headers: {
-                                                                'Content-Type': 'application/json; charset=utf-8'
-                                                            },
-                                                            success: function () {
-                                                                reLoadTree();
-                                                                App.setAlert(App.STATUS_OK, __("Layer properties copied"));
-                                                            },
-                                                            failure: function (response) {
-                                                                Ext.MessageBox.show({
-                                                                    title: __('Failure'),
-                                                                    msg: __(Ext.decode(response.responseText).message),
-                                                                    buttons: Ext.MessageBox.OK,
-                                                                    width: 400,
-                                                                    height: 300,
-                                                                    icon: Ext.MessageBox.ERROR
+                                                layout: 'form',
+                                                bodyStyle: 'padding-left: 10px',
+
+                                                items: [
+                                                    {
+                                                        xtype: 'button',
+                                                        text: __('Copy'),
+
+                                                        handler: function () {
+                                                            var f = Ext.getCmp('copyMetaForm');
+                                                            if (f.form.isValid()) {
+                                                                Ext.Ajax.request({
+                                                                    url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
+                                                                    method: 'put',
+                                                                    headers: {
+                                                                        'Content-Type': 'application/json; charset=utf-8'
+                                                                    },
+                                                                    success: function () {
+                                                                        reLoadTree();
+                                                                        App.setAlert(App.STATUS_OK, __("Layer properties copied"));
+                                                                    },
+                                                                    failure: function (response) {
+                                                                        Ext.MessageBox.show({
+                                                                            title: __('Failure'),
+                                                                            msg: __(Ext.decode(response.responseText).message),
+                                                                            buttons: Ext.MessageBox.OK,
+                                                                            width: 400,
+                                                                            height: 300,
+                                                                            icon: Ext.MessageBox.ERROR
+                                                                        });
+                                                                    }
                                                                 });
+                                                            } else {
+                                                                var s = '';
+                                                                Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                    s += String.format("{0} = {1}<br />", key, value);
+                                                                }, this);
                                                             }
-                                                        });
-                                                    } else {
-                                                        var s = '';
-                                                        Ext.iterate(f.form.getValues(), function (key, value) {
-                                                            s += String.format("{0} = {1}<br />", key, value);
-                                                        }, this);
+                                                        }
                                                     }
-                                                }
+                                                ]
                                             }
                                         ]
                                     }
