@@ -284,6 +284,49 @@ wmsClass.init = function (id) {
         meta.style = meta.style + "background-color:" + value;
         return value;
     };
+    var labelPositionCombo = new Ext.form.ComboBox({
+        displayField: 'name',
+        valueField: 'value',
+        mode: 'local',
+        store: new Ext.data.JsonStore({
+            fields: ['name', 'value'],
+            data: [
+                {
+                    name: 'Auto',
+                    value: 'auto'
+                }, {
+                    name: '↖',
+                    value: 'ul'
+                }, {
+                    name: '↑',
+                    value: 'uc'
+                }, {
+                    name: '↗',
+                    value: 'ur'
+                }, {
+                    name: '←',
+                    value: 'cl'
+                }, {
+                    name: '.',
+                    value: 'cc'
+                }, {
+                    name: '→',
+                    value: 'cr'
+                }, {
+                    name: '↙',
+                    value: 'll'
+                }, {
+                    name: '↓',
+                    value: 'lc'
+                }, {
+                    name: '↘',
+                    value: 'lr'
+                }
+            ]
+        }),
+        editable: false,
+        triggerAction: 'all'
+    });
     wmsClass.classId = id;
     wmsClass.store = new Ext.data.JsonStore({
         autoLoad: true,
@@ -795,7 +838,7 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'geomtransform': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'bbox','centroid','end','labelpnt','labelpoly','start','vertices'],
+                store: ['', 'bbox', 'centroid', 'end', 'labelpnt', 'labelpoly', 'start', 'vertices'],
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -809,11 +852,11 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-         /*   'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),*/
+            /*   'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                   decimalPrecision: 0,
+                   decimalSeparator: '¤'// Some strange char
+                   // nobody is using
+               }), {}),*/
             'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -848,11 +891,6 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
-            }), {}),
-            'label_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['auto', 'ul', 'uc', 'ur', 'cl', 'cc', 'cr', 'll', 'lc', 'lr'],
-                editable: false,
-                triggerAction: 'all'
             }), {}),
             'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
@@ -974,7 +1012,8 @@ wmsClass.init = function (id) {
         },
         customRenderers: {
             overlaycolor: cc,
-            overlayoutlinecolor: cc
+            overlayoutlinecolor: cc,
+            label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
         },
         customEditors: {
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1042,49 +1081,9 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'label_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                displayField: 'name',
-                valueField: 'value',
-                mode: 'local',
-                store: new Ext.data.JsonStore({
-                    fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'Auto',
-                            value: 'auto'
-                        }, {
-                            name: '↖',
-                            value: 'ul'
-                        }, {
-                            name: '↑',
-                            value: 'uc'
-                        }, {
-                            name: '↗',
-                            value: 'ur'
-                        }, {
-                            name: '←',
-                            value: 'cl'
-                        }, {
-                            name: '.',
-                            value: 'cc'
-                        }, {
-                            name: '→',
-                            value: 'cr'
-                        }, {
-                            name: '↙',
-                            value: 'll'
-                        }, {
-                            name: '↓',
-                            value: 'lc'
-                        }, {
-                            name: '↘',
-                            value: 'lr'
-                        }
-                    ]
-                }),
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
+            'label_position': new Ext.grid.GridEditor(labelPositionCombo, {
+                renderer: Ext.util.Format.comboRenderer(labelPositionCombo),
+            }),
             'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -1120,7 +1119,7 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaygeomtransform': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'bbox','centroid','end','labelpnt','labelpoly','start','vertices'],
+                store: ['', 'bbox', 'centroid', 'end', 'labelpnt', 'labelpoly', 'start', 'vertices'],
                 editable: true,
                 triggerAction: 'all'
             }), {}),
@@ -1216,7 +1215,9 @@ wmsClass.init = function (id) {
         customRenderers: {
             label_color: cc,
             label_outlinecolor: cc,
-            label_backgroundcolor: cc
+            label_backgroundcolor: cc,
+            label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
+
         },
         customEditors: {
             'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1260,49 +1261,9 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'label_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                displayField: 'name',
-                valueField: 'value',
-                mode: 'local',
-                store: new Ext.data.JsonStore({
-                    fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'Auto',
-                            value: 'auto'
-                        }, {
-                            name: '↖',
-                            value: 'ul'
-                        }, {
-                            name: '↑',
-                            value: 'uc'
-                        }, {
-                            name: '↗',
-                            value: 'ur'
-                        }, {
-                            name: '←',
-                            value: 'cl'
-                        }, {
-                            name: '.',
-                            value: 'cc'
-                        }, {
-                            name: '→',
-                            value: 'cr'
-                        }, {
-                            name: '↙',
-                            value: 'll'
-                        }, {
-                            name: '↓',
-                            value: 'lc'
-                        }, {
-                            name: '↘',
-                            value: 'lr'
-                        }
-                    ]
-                }),
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
+            'label_position': new Ext.grid.GridEditor(labelPositionCombo, {
+                renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
+            }),
             'label_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 displayField: 'name',
                 valueField: 'value',
@@ -1411,7 +1372,9 @@ wmsClass.init = function (id) {
         customRenderers: {
             label2_color: cc,
             label2_outlinecolor: cc,
-            label2_backgroundcolor: cc
+            label2_backgroundcolor: cc,
+            label2_position: Ext.util.Format.comboRenderer(labelPositionCombo)
+
         },
         customEditors: {
             'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1455,49 +1418,9 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
-            'label2_position': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                displayField: 'name',
-                valueField: 'value',
-                mode: 'local',
-                store: new Ext.data.JsonStore({
-                    fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'Auto',
-                            value: 'auto'
-                        }, {
-                            name: '↖',
-                            value: 'ul'
-                        }, {
-                            name: '↑',
-                            value: 'uc'
-                        }, {
-                            name: '↗',
-                            value: 'ur'
-                        }, {
-                            name: '←',
-                            value: 'cl'
-                        }, {
-                            name: '.',
-                            value: 'cc'
-                        }, {
-                            name: '→',
-                            value: 'cr'
-                        }, {
-                            name: '↙',
-                            value: 'll'
-                        }, {
-                            name: '↓',
-                            value: 'lc'
-                        }, {
-                            name: '↘',
-                            value: 'lr'
-                        }
-                    ]
-                }),
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
+            'label2_position': new Ext.grid.GridEditor(labelPositionCombo, {
+                renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
+            }),
             'label2_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 displayField: 'name',
                 valueField: 'value',

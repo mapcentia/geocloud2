@@ -94,6 +94,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'content',
+            allowBlank: true
+        },
+        {
             name: 'linkprefix',
             allowBlank: true
         },
@@ -179,9 +183,28 @@ tableStructure.init = function (record, screenName) {
     tableStructure.store.setDefaultSort('sort_id', 'asc');
     tableStructure.store.load();
 
+
     /**
      *
      */
+    var contentCombo = new Ext.form.ComboBox({
+        store: new Ext.data.ArrayStore({
+            fields: ['key', 'text'],
+            data: [
+                ['plain', 'Plain'],
+                ['image', 'Image'],
+                ['video', 'Video']
+            ]
+        }),
+        displayField: 'text',
+        valueField: 'key',
+        mode: 'local',
+        typeAhead: false,
+        editable: false,
+        triggerAction: 'all',
+        lazyRender:true
+    });
+
     tableStructure.grid = new Ext.grid.EditorGridPanel({
         iconCls: 'silk-grid',
         store: tableStructure.store,
@@ -300,10 +323,11 @@ tableStructure.init = function (record, screenName) {
                     //width: 35
                 },
                 {
-                    id: "image",
-                    xtype: 'checkcolumn',
-                    header: __("Image"),
-                    dataIndex: 'image',
+                    id: "content",
+                    header: __("Content"),
+                    dataIndex: 'content',
+                    renderer: Ext.util.Format.comboRenderer(contentCombo),
+                    editor: contentCombo
                     //width: 35
                 },
                 {
@@ -328,55 +352,6 @@ tableStructure.init = function (record, screenName) {
                 }
             ]
         }),
-        listeners: {
-            "render": {
-                scope: this,
-                fn: function (grid) {
-
-                    // Enable sorting Rows via Drag & Drop
-                    // this drop target listens for a row drop
-                    // and handles rearranging the rows
-
-                    var ddrow = new Ext.dd.DropTarget(grid.container, {
-                        ddGroup: 'mygridDD',
-                        copy: false,
-                        notifyDrop: function (dd, e, data) {
-
-                            var ds = grid.store;
-
-                            // NOTE:
-                            // you may need to make an ajax call here
-                            // to send the new order
-                            // and then reload the store
-
-                            // alternatively, you can handle the changes
-                            // in the order of the row as demonstrated below
-
-                            // ***************************************
-
-                            var sm = grid.getSelectionModel();
-                            var rows = sm.getSelections();
-                            if (dd.getDragData(e)) {
-                                var cindex = dd.getDragData(e).rowIndex;
-                                if (typeof (cindex) != "undefined") {
-                                    for (i = 0; i < rows.length; i++) {
-                                        ds.remove(ds.getById(rows[i].id));
-                                    }
-                                    ds.insert(cindex, data.selections);
-                                    sm.clearSelections();
-                                }
-                            }
-
-                            // ************************************
-                        }
-                    });
-
-                    // load the grid store
-                    // after the grid has been rendered
-                    // store.load();
-                }
-            }
-        },
         tbar: [
             {
                 xtype: 'form',
@@ -430,6 +405,22 @@ tableStructure.init = function (record, screenName) {
                                     value: 'date'
                                 },
                                 {
+                                    name: 'Timestamp',
+                                    value: 'timestamp'
+                                },
+                                {
+                                    name: 'Time',
+                                    value: 'time'
+                                },
+                                {
+                                    name: 'Timestamptz',
+                                    value: 'timestamptz'
+                                },
+                                {
+                                    name: 'Timetz',
+                                    value: 'timetz'
+                                },
+                                {
                                     name: 'Boolean',
                                     value: 'bool'
                                 },
@@ -440,6 +431,10 @@ tableStructure.init = function (record, screenName) {
                                 {
                                     name: 'Hstore',
                                     value: 'Hstore'
+                                },
+                                {
+                                    name: 'Json',
+                                    value: 'json'
                                 },
                                 {
                                     name: 'Geometry',
@@ -637,7 +632,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2] : "");
                 Ext.Ajax.request(
                     {
-                        url: '/api/v1/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'post',
                         params: param,
                         headers: {
@@ -686,7 +681,7 @@ tableStructure.onDeleteFromElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key;
                 Ext.Ajax.request(
                     {
-                        url: '/api/v1/elasticsearch/delete/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/delete/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'delete',
                         params: param,
                         headers: {

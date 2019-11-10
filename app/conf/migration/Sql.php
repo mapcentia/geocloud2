@@ -1,4 +1,12 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2019 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
+namespace app\conf\migration;
 
 class Sql
 {
@@ -69,6 +77,7 @@ class Sql
                     )";
         $sqls[] = "CREATE UNIQUE INDEX key_value_key_uindex ON settings.key_value (key)";
         $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, '127.0.0.1', 'gc2core')";
+       // $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, 'gc2core', '127.0.0.1')";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN authentication TYPE VARCHAR(255) USING authentication::VARCHAR(255)";
         $sqls[] = "CREATE INDEX geometry_columns_join_authentication_idx ON settings.geometry_columns_join (authentication)";
         $sqls[] = "CREATE INDEX geometry_columns_join_baselayer_idx ON settings.geometry_columns_join (baselayer)";
@@ -80,74 +89,63 @@ class Sql
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
+        $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
+
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
-                    SELECT t.matviewname::character varying(256) AS f_table_name,
-                        t.schemaname::character varying(256) AS f_table_schema,
-                        'gc2_non_postgis'::character varying(256) AS f_geometry_column,
-                        NULL::integer AS coord_dimension,
-                        NULL::integer AS srid,
-                        NULL::character varying(30) AS type
-                       FROM pg_matviews t
-                          WHERE
-                                NOT (EXISTS ( SELECT 1
-                                  FROM geometry_columns
-                                      WHERE
-                                            t.matviewname::text = geometry_columns.f_table_name::text AND t.schemaname::text = geometry_columns.f_table_schema::text
-                                      )) AND
-
-                                NOT (EXISTS ( SELECT 1
-                                  FROM raster_columns
-                                      WHERE
-                                            t.matviewname::text = raster_columns.r_table_name::text AND t.schemaname::text = raster_columns.r_table_schema::text
-                                      ))
-
-                              AND
-                                  NOT t.matviewname::text = 'settings'::text AND
-                                  NOT (t.matviewname::text = 'public'::text AND
-                                  t.matviewname::text = 'spatial_ref_sys'::text) AND
-                                  NOT (t.matviewname::text = 'public'::text AND t.matviewname::text = 'geometry_columns'::text) AND
-                                  NOT (t.matviewname::text = 'public'::text AND t.matviewname::text = 'geography_columns'::text) AND
-                                  NOT (t.matviewname::text = 'public'::text AND t.matviewname::text = 'raster_columns'::text) AND
-                                  NOT (t.matviewname::text = 'public'::text AND t.matviewname::text = 'raster_overviews'::text) AND
-                                  NOT (t.matviewname::text = 'public'::text AND t.matviewname::text = 'non_postgis_tables'::text) AND
-                                  NOT t.matviewname::text = 'pg_catalog'::text AND NOT t.matviewname::text = 'information_schema'::text;
+                    SELECT
+                      t.matviewname :: CHARACTER VARYING(256)     AS f_table_name,
+                      t.schemaname :: CHARACTER VARYING(256)      AS f_table_schema,
+                      'gc2_non_postgis' :: CHARACTER VARYING(256) AS f_geometry_column,
+                      NULL :: INTEGER                             AS coord_dimension,
+                      NULL :: INTEGER                             AS srid,
+                      NULL :: CHARACTER VARYING(30)               AS type
+                    FROM pg_matviews t
+                      LEFT JOIN geometry_columns
+                        ON t.matviewname = geometry_columns.f_table_name AND t.schemaname = geometry_columns.f_table_schema
+                      LEFT JOIN raster_columns
+                        ON t.matviewname = raster_columns.r_table_name AND t.schemaname = raster_columns.r_table_schema
+                    WHERE
+                      geometry_columns.f_geometry_column ISNULL AND
+                      raster_columns.r_raster_column ISNULL AND
+                      NOT t.schemaname :: TEXT = 'settings' :: TEXT AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND
+                           t.schemaname :: TEXT = 'spatial_ref_sys' :: TEXT) AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND t.matviewname :: TEXT = 'geometry_columns' :: TEXT) AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND t.matviewname :: TEXT = 'geography_columns' :: TEXT) AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND t.matviewname :: TEXT = 'raster_columns' :: TEXT) AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND t.matviewname :: TEXT = 'raster_overviews' :: TEXT) AND
+                      NOT (t.schemaname :: TEXT = 'public' :: TEXT AND t.matviewname :: TEXT = 'non_postgis_tables' :: TEXT) AND
+                      NOT t.schemaname :: TEXT = 'pg_catalog' :: TEXT AND NOT t.schemaname :: TEXT = 'information_schema' :: TEXT;
                     ";
 
         $sqls[] = "DROP VIEW non_postgis_tables CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_tables AS
-                     SELECT t.table_name::character varying(256) AS f_table_name,
-                        t.table_schema::character varying(256) AS f_table_schema,
-                        'gc2_non_postgis'::character varying(256) AS f_geometry_column,
-                        NULL::integer AS coord_dimension,
-                        NULL::integer AS srid,
-                        NULL::character varying(30) AS type
-                       FROM information_schema.tables t
-                          WHERE
-                                NOT (EXISTS ( SELECT 1
-                                  FROM geometry_columns
-                                      WHERE
-                                            t.table_name::text = geometry_columns.f_table_name::text AND t.table_schema::text = geometry_columns.f_table_schema::text
-
-                                      )) AND
-
-                                NOT (EXISTS ( SELECT 1
-                                  FROM raster_columns
-                                      WHERE
-                                            t.table_name::text = raster_columns.r_table_name::text AND t.table_schema::text = raster_columns.r_table_schema::text
-                                      ))
-
-                              AND
-                                  NOT t.table_schema::text = 'settings'::text AND
-                                  NOT (t.table_schema::text = 'public'::text AND
-                                  t.table_name::text = 'spatial_ref_sys'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'geometry_columns'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'geography_columns'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_columns'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'raster_overviews'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_tables'::text) AND
-                                  NOT (t.table_schema::text = 'public'::text AND t.table_name::text = 'non_postgis_matviews'::text) AND
-                                  NOT t.table_schema::text = 'pg_catalog'::text AND NOT t.table_schema::text = 'information_schema'::text;
+                     SELECT
+                      t.table_name :: CHARACTER VARYING(256)      AS f_table_name,
+                      t.table_schema :: CHARACTER VARYING(256)    AS f_table_schema,
+                      'gc2_non_postgis' :: CHARACTER VARYING(256) AS f_geometry_column,
+                      NULL :: INTEGER                             AS coord_dimension,
+                      NULL :: INTEGER                             AS srid,
+                      NULL :: CHARACTER VARYING(30)               AS type
+                    FROM information_schema.tables t
+                      LEFT JOIN geometry_columns
+                        ON t.table_name = geometry_columns.f_table_name AND t.table_schema = geometry_columns.f_table_schema
+                      LEFT JOIN raster_columns
+                        ON t.table_name = raster_columns.r_table_name AND t.table_schema = raster_columns.r_table_schema
+                    WHERE
+                      geometry_columns.f_geometry_column ISNULL AND
+                      raster_columns.r_raster_column ISNULL AND
+                      NOT t.table_schema :: TEXT = 'settings' :: TEXT AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND
+                           t.table_name :: TEXT = 'spatial_ref_sys' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'geometry_columns' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'geography_columns' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'raster_columns' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'raster_overviews' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'non_postgis_tables' :: TEXT) AND
+                      NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'non_postgis_matviews' :: TEXT) AND
+                      NOT t.table_schema :: TEXT = 'pg_catalog' :: TEXT AND NOT t.table_schema :: TEXT = 'information_schema' :: TEXT;
                     ";
 
 
@@ -597,7 +595,8 @@ class Sql
         $sqls[] = "ALTER TABLE users ADD COLUMN usergroup VARCHAR(255)";
         $sqls[] = "ALTER TABLE users ALTER COLUMN screenname SET NOT NULL";
         $sqls[] = "ALTER TABLE users ALTER COLUMN pw SET NOT NULL";
-        $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname)";
+        $sqls[] = "ALTER TABLE users DROP CONSTRAINT user_unique";
+        $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname, parentdb)";
         return $sqls;
     }
 

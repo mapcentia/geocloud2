@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [2019.1.0.rc1] - 2019-06-10
 ### Added
 - Phpfastcache added to speed up Meta API.
 - MapServer/MapCache now exposes layers as Mapbox Vector tiles. In MapServer just use `format=mvt` and in MapCache MVT layers are prefixed with `.mvt` like public.foo.mvt.
@@ -15,16 +15,23 @@ and this project adheres to [CalVer](https://calver.org/).
 - The config `googleApiKey` for setting a Google API key for use in Vidi.
 - It is now possible to set a custom path for S3 caches. This makes it possible to point a layer into an existing cache.
 - Microsoft's Core Fonts are added, so QGIS Server can use them.
-- `memory_limit` can now be set in app/conf/App.php
+- `memory_limit` can now be set in app/conf/App.php.
 - Handling of reach-of-memory-limit by reserving on 1MB, which is release, so a exception response can be send.
 - Referencing tables is now exposed in Meta for layers.
-- Foreign key constrains are now exposed in as `restriction` in `fields` properties of Meta. 
+- Foreign key constrains are now exposed in Meta as `restriction` in `fields` properties of Meta.
+- Admin API for administration tasks like restoring MapFiles, QGS Files and MapCache files. Can also re-process QGS if e.g. the database connection changes.
+- New Dashboard module: https://github.com/mapcentia/dashboard.
+- New Stream mode in SQL API, which can stream huge amount of data, by sending one-line JSON.
+- New content property in table-structure, which replaces image property. Three options are available: Plain, image and video, which Vidi will react upon.
+- Support of time, date and timestamp fields. In Admin editor and data grid, all types are handled as strings, so different PG formats doesn't need to be handled.
 
 ### Changed
-- Change how cached/not-cached layer work in the Map tab:
+- Change how cached/not-cached layers works in the Map tab:
     - Default is now to display layers as not-cached.
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
+- Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
+- Optimized non-geometry meta VIEWs in database.
    
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
@@ -33,6 +40,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - CDATA is handled in Feature API, so something like HTML included in GeoJSON won't crash the API.
 - Serious security bug in Meta API.
 - Avoid double group names when using name with different upper/lower case.
+- A lot of PHP notices are gone from log.
 
 ## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  

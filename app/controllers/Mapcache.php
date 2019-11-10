@@ -144,8 +144,8 @@ class Mapcache extends \app\inc\Controller
     {
         $gridNames = array();
         $pathToGrids = App::$param['path'] . "app/conf/grids/";
-        $grids = scandir($pathToGrids);
-        foreach ($grids as $grid) {
+        $grids = @scandir($pathToGrids);
+        if (!empty($grids)) foreach ($grids as $grid) {
             $bits = explode(".", $grid);
             if ($bits[1] == "xml") {
                 $str = file_get_contents($pathToGrids . $grid);
@@ -161,8 +161,8 @@ class Mapcache extends \app\inc\Controller
     {
         $arr = array();
         $pathToSources = App::$param['path'] . "app/conf/mapcache/sources/";
-        $sources = scandir($pathToSources);
-        foreach ($sources as $source) {
+        $sources = @scandir($pathToSources);
+        if (!empty($sources)) foreach ($sources as $source) {
             $bits = explode(".", $source);
             if ($bits[1] == "xml") {
                 $str = file_get_contents($pathToSources . $source);
@@ -180,8 +180,8 @@ class Mapcache extends \app\inc\Controller
     {
         $arr = array();
         $pathToTilesets = App::$param['path'] . "app/conf/mapcache/tilesets/";
-        $tilesets = scandir($pathToTilesets);
-        foreach ($tilesets as $tileset) {
+        $tilesets = @scandir($pathToTilesets);
+        if (!empty($tilesets)) foreach ($tilesets as $tileset) {
             $bits = explode(".", $tileset);
             if ($bits[1] == "xml") {
                 $str = file_get_contents($pathToTilesets . $tileset);

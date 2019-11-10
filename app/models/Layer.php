@@ -9,28 +9,11 @@
 namespace app\models;
 
 use app\conf\App;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 class Layer extends \app\models\Table
 {
-    private $InstanceCache;
-
     function __construct()
     {
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    'securityKey' => parent::CACHE_SECURITY_KEY,
-                    'path' => '/var/www/geocloud2/app/tmp',
-                    'itemDetailedDate' => true
-                ])
-            );
-
-        } catch (\Exception $exception) {
-            die($exception->getMessage());
-        }
-
         try {
             parent::__construct("settings.geometry_columns_view");
         } catch (\PDOException $e) {
@@ -65,26 +48,36 @@ class Layer extends \app\models\Table
      * @param bool $es
      * @param $db
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $db): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
         if ($db != \app\inc\Session::getUser()) {
-            $auth = null;
+            //$auth = null;
         }
 
         $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
-        $CachedString = $this->InstanceCache->getItem($key);
+
+        try {
+            $CachedString = $this->InstanceCache->getItem($key);
+        } catch (\Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException $exception) {
+            $CachedString = null;
+        } catch (\Error $exception) {
+            $CachedString = null;
+        }
+
         $timeToLive = (60 * 60 * 240);
         //$timeToLive = (1); // disabled
 
-        if ($CachedString->isHit()) {
+        if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();
             $response = $data;
-            $response["cache_hit"] = $CachedString->getCreationDate();
+            try {
+                $response["cache_hit"] = $CachedString->getCreationDate();
+            } catch (\Phpfastcache\Exceptions\PhpfastcacheLogicException $exception) {
+                $response["cache_hit"] = $exception->getMessage();
+            }
             $response["cache_signature"] = md5(serialize($data));
             return $response;
 
@@ -163,7 +156,13 @@ class Layer extends \app\models\Table
             // Check if Es is online
             // =====================
             $esOnline = false;
-            $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+            $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+            if (!empty($split[2])) {
+                $port = $split[2];
+            } else {
+                $port = "9200";
+            }
+            $esUrl = $split[0] . ":" . $split[1] . ":" . $port;
             $ch = curl_init($esUrl);
             curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
             curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -179,9 +178,10 @@ class Layer extends \app\models\Table
 
             while ($row = $this->fetchRow($res, "assoc")) {
                 $arr = array();
+                $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
-                $primeryKey = $this->getPrimeryKey($rel);
-                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
+                $primeryKey = $this->getPrimeryKey($rel); // TODO Slows down
+                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // TODO Slows down
                 $versioning = $resVersioning["exists"];
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
@@ -253,7 +253,7 @@ class Layer extends \app\models\Table
                     if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -266,7 +266,7 @@ class Layer extends \app\models\Table
                     if ($httpcode == "200") {
                         $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
                         // Get mapping
-                        $url = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
+                        $url = "{$esUrl}/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
                         $ch = curl_init($url);
                         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
@@ -300,10 +300,11 @@ class Layer extends \app\models\Table
                 }
 
                 // Restrictions
+                // TODO Slows down
                 $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
 
                 // References
-                if ($row["meta"] != false && $row["meta"] != "" &&
+                if (!empty($row["meta"]) &&
                     json_decode($row["meta"]) != false &&
                     isset(json_decode($row["meta"], true)["referenced_by"]) &&
                     json_decode($row["meta"], true)["referenced_by"] != false
@@ -311,15 +312,16 @@ class Layer extends \app\models\Table
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
-                    $arr = $this->array_push_assoc($arr, "children", $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]);
+                    // TODO Slows down
+                    $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
                 // If session is sub-user we always check privileges
-                if (isset($_SESSION) && $_SESSION['subuser']) {
+                if (isset($_SESSION) && $_SESSION["subuser"]) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if ($_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['subuser']] != false)) {
+                    if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != false)) {
                         $response['data'][] = $arr;
-                    } elseif ($schema != false && $_SESSION['subuser'] == $schema) {
+                    } elseif ($_SESSION['screen_name'] == $schema) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
                     } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
@@ -357,8 +359,12 @@ class Layer extends \app\models\Table
                 $response['code'] = 401;
             }
 
-            $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
-            $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            try {
+                $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
+                $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            } catch (\Error $exception) {
+                // Pass
+            }
             $response["cache_hit"] = false;
 
         }
@@ -409,18 +415,18 @@ class Layer extends \app\models\Table
         $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ?: false); // Add geometry types (or not)
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
-            $esType = $elasticsearch->mapPg2EsType($value['type'], $value['geom_type'] == "POINT" ? true : false);
+            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT" ? true : false);
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
-            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?: $esType["format"] ?: "");
+            $arr = $this->array_push_assoc($arr, "format", !empty($elasticsearchArr[$key]->format) ? $elasticsearchArr[$key]->format : !empty($esType["format"]) ? $esType["format"] : "");
             $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
-            $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer);
-            $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer);
-            $arr = $this->array_push_assoc($arr, "search_analyzer", $elasticsearchArr[$key]->search_analyzer);
-            $arr = $this->array_push_assoc($arr, "boost", $elasticsearchArr[$key]->boost);
-            $arr = $this->array_push_assoc($arr, "null_value", $elasticsearchArr[$key]->null_value);
-            $arr = $this->array_push_assoc($arr, "fielddata", $elasticsearchArr[$key]->fielddata);
+            $arr = $this->array_push_assoc($arr, "analyzer", !empty($elasticsearchArr[$key]->analyzer) ? $elasticsearchArr[$key]->analyzer : null);
+            $arr = $this->array_push_assoc($arr, "index_analyzer", !empty($elasticsearchArr[$key]->index_analyzer) ? $elasticsearchArr[$key]->index_analyzer : null);
+            $arr = $this->array_push_assoc($arr, "search_analyzer", !empty($elasticsearchArr[$key]->search_analyzer) ? $elasticsearchArr[$key]->search_analyzer : null);
+            $arr = $this->array_push_assoc($arr, "boost", !empty($elasticsearchArr[$key]->boost) ? $elasticsearchArr[$key]->boost : null);
+            $arr = $this->array_push_assoc($arr, "null_value", !empty($elasticsearchArr[$key]->null_value) ? $elasticsearchArr[$key]->null_value : null);
+            $arr = $this->array_push_assoc($arr, "fielddata", !empty($elasticsearchArr[$key]->fielddata) ? $elasticsearchArr[$key]->fielddata : null);
             if ($value['typeObj']['type'] == "decimal") {
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
             } else {
@@ -431,15 +437,24 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $data
+     * @param $_key_
+     * @return mixed
+     */
     public function updateElasticsearchMapping($data, $_key_)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $table = new Table("settings.geometry_columns_join");
         $data = $table->makeArray($data);
         $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
         foreach ($data as $value) {
-            //$safeColumn = $table->toAscii($value->column, array(), "_");
+            //$safeColumn = self::toAscii($value->column, array(), "_");
             $safeColumn = $value->column;
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
                 unset($elasticsearchArr[$value->id]);
@@ -475,12 +490,21 @@ class Layer extends \app\models\Table
         return $array;
     }
 
+    /**
+     * @param $tableName
+     * @param $data
+     * @return mixed
+     */
     public function rename($tableName, $data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $split = explode(".", $tableName);
-        $newName = \app\inc\Model::toAscii($data->name, array(), "_");
+        $newName = self::toAscii($data->name, array(), "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }
@@ -528,9 +552,18 @@ class Layer extends \app\models\Table
         return $response;
     }
 
+    /**
+     * @param $tables
+     * @param $schema
+     * @return mixed
+     */
     public function setSchema($tables, $schema)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $this->begin();
         foreach ($tables as $table) {
@@ -597,7 +630,11 @@ class Layer extends \app\models\Table
      */
     public function delete(array $tables)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -661,16 +698,14 @@ class Layer extends \app\models\Table
     /**
      * @param $data
      * @return mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updatePrivileges($data)
     {
-        $this->InstanceCache->clear();
-
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;
@@ -691,16 +726,16 @@ class Layer extends \app\models\Table
     /**
      * @param $_key_
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function updateLastmodified($_key_)
     {
-        $this->InstanceCache->clear();
-
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Error $exception) {
+            error_log($exception->getMessage());
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $response = [];
         $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
         $table = new Table("settings.geometry_columns_join");
@@ -743,7 +778,11 @@ class Layer extends \app\models\Table
      */
     public function updateRoles($data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
@@ -850,15 +889,14 @@ class Layer extends \app\models\Table
      * @param $to
      * @param $from
      * @return array|mixed
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverCheckException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheDriverNotFoundException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidConfigurationException
      */
     public function copyMeta($to, $from)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
@@ -969,7 +1007,7 @@ class Layer extends \app\models\Table
         // Get the default "ckan_org_id" value
         $ckanOrgIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_org_id") {
+            if (!empty($value["name"]) == "ckan_org_id") {
                 $ckanOrgIdDefault = $value["default"];
             }
         }
@@ -977,7 +1015,7 @@ class Layer extends \app\models\Table
         // Get the default "update" flag
         $updateDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "ckan_update") {
+            if (!empty($value["name"]) == "ckan_update") {
                 $updateDefault = $value["default"];
             }
         }
@@ -985,7 +1023,7 @@ class Layer extends \app\models\Table
         // Get the default "update" value
         $licenseIdDefault = null;
         foreach ($metaConfig as $value) {
-            if ($value["name"] == "license_id") {
+            if (!empty($value["name"]) == "license_id") {
                 $licenseIdDefault = $value["default"];
             }
         }

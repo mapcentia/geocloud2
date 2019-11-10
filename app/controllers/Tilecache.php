@@ -12,6 +12,7 @@ use \app\inc\Response;
 use \app\inc\Input;
 use \app\conf\Connection;
 use \app\conf\App;
+use \app\models\Database;
 
 class Tilecache extends \app\inc\Controller
 {
@@ -110,7 +111,7 @@ class Tilecache extends \app\inc\Controller
     public function delete_index()
     {
         $layer = new \app\models\Layer();
-        $cache = $layer->getAll(Input::getPath()->part(4), true, false, true, false)["data"][0]["def"]->cache;
+        $cache = $layer->getAll(Input::getPath()->part(4), true, false, true, false, Database::getDb())["data"][0]["def"]->cache;
 
         // Default
         // =======
@@ -196,7 +197,7 @@ class Tilecache extends \app\inc\Controller
     static function bust($layerName)
     {
         $layer = new \app\models\Layer();
-        $cache = isset($layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache) ? $layer->getAll($layerName, true, false, true, false)["data"][0]["def"]->cache : null;
+        $cache = isset($layer->getAll($layerName, true, false, true, false, Database::getDb())["data"][0]["def"]->cache) ? $layer->getAll($layerName, true, false, true, false, Database::getDb())["data"][0]["def"]->cache : null;
 
         // Default
         // =======
@@ -229,7 +230,7 @@ class Tilecache extends \app\inc\Controller
     private function deleteFromTileset($layerName)
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll($layerName, true, false, true, false);
+        $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());
         if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
@@ -260,10 +261,10 @@ class Tilecache extends \app\inc\Controller
         return $response;
     }
 
-    private function unlinkTiles($dir, $layerName)
+    private static function unlinkTiles($dir, $layerName)
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll($layerName, true, false, true, false);
+        $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());
         if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";

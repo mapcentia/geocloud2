@@ -12,8 +12,6 @@ use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
 use app\inc\Util;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 class Table extends Model
 {
@@ -21,7 +19,7 @@ class Table extends Model
     public $table;
     public $schema;
     public $geometryColumns;
-    private $InstanceCache;
+    protected $InstanceCache;
     var $tableWithOutSchema;
     var $metaData;
     var $geomField;
@@ -31,7 +29,6 @@ class Table extends Model
     var $sysCols;
     var $primeryKey;
     var $specialChars;
-    const CACHE_SECURITY_KEY = "phpfastcache";
 
     /**
      * Table constructor.
@@ -41,18 +38,11 @@ class Table extends Model
      */
     function __construct($table, $temp = false, $addGeomType = false)
     {
+        global $globalInstanceCache;
+
         parent::__construct();
 
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    'securityKey' => self::CACHE_SECURITY_KEY,
-                    'path' => '/var/www/geocloud2/app/tmp',
-                    'itemDetailedDate' => true
-                ])
-            );
-        } catch (\Exception $exception) {
-        }
+        $this->InstanceCache = $globalInstanceCache;
 
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
@@ -109,6 +99,8 @@ class Table extends Model
      */
     private function getType(array $field)
     {
+        $field['isArray'] = preg_match("/\[\]/", $field['type']) ? true : false;
+
         if (preg_match("/smallint/", $field['type']) ||
             preg_match("/integer/", $field['type']) ||
             preg_match("/bigint/", $field['type']) ||
@@ -137,31 +129,33 @@ class Table extends Model
         } elseif (preg_match("/text/", $field['type'])) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
-        } elseif (preg_match("/text/", $field['type'])) {
-            $field['typeObj'] = array("type" => "text");
-            $field['type'] = "text";
-        } elseif (preg_match("/timestamptz/", $field['type'])) {
+        } elseif (preg_match("/timestamp with time zone/", $field['type'])) {
             $field['typeObj'] = array("type" => "timestamptz");
             $field['type'] = "timestamptz";
+        } elseif (preg_match("/timestamp/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timestamp");
+            $field['type'] = "timestamp";
+        } elseif (preg_match("/time with time zone/", $field['type'])) {
+            $field['typeObj'] = array("type" => "timetz");
+            $field['type'] = "timetz";
+        } elseif (preg_match("/time/", $field['type'])) {
+            $field['typeObj'] = array("type" => "time");
+            $field['type'] = "time";
         } elseif (preg_match("/date/", $field['type'])) {
             $field['typeObj'] = array("type" => "date");
-            $field['type'] = "date";
-
+            $field['type'] = "timestamp"; // So Extjs renderer becomes string
         } elseif (preg_match("/uuid/", $field['type'])) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
         } elseif (preg_match("/hstore/", $field['type'])) {
             $field['typeObj'] = array("type" => "hstore");
             $field['type'] = "hstore";
-        } elseif (preg_match("/bytea/", $field['type'])) {
-            $field['typeObj'] = array("type" => "bytea");
-            $field['type'] = "bytea";
         } elseif (preg_match("/json/", $field['type'])) {
             $field['typeObj'] = array("type" => "json");
             $field['type'] = "json";
-        } elseif (preg_match("/timestamp/", $field['type'])) {
-            $field['typeObj'] = array("type" => "timestamp");
-            $field['type'] = "timestamp";
+        } elseif (preg_match("/bytea/", $field['type'])) {
+            $field['typeObj'] = array("type" => "bytea");
+            $field['type'] = "bytea";
         } else {
             $field['typeObj'] = array("type" => "string");
             $field['type'] = "string";
@@ -258,16 +252,19 @@ class Table extends Model
         // Check if Es is online
         // =====================
         $esOnline = false;
-        $esUrl = (App::$param['esHost'] ?: "http://127.0.0.1") . ":9200";
+        $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+        if (!empty($split[2])) {
+            $port = $split[2];
+        } else {
+            $port = "9200";
+        }
+        $esUrl = $split[0] . ":" . $split[1] . ":" . $port;
         $ch = curl_init($esUrl);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-        ));
         curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -277,9 +274,9 @@ class Table extends Model
 
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
-            $arr = array();
-            $prop = $_SESSION['usergroup'] ?: $_SESSION['subuser'];
-            if ($_SESSION['subuser'] == Connection::$param['postgisschema'] || $_SESSION['subuser'] == false || ($_SESSION['subuser'] != false && $privileges->$prop != "none" && $privileges->$prop != false)) {
+            $arr = [];
+            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : !empty($_SESSION['screen_name']) ? $_SESSION['screen_name'] : null;
+            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema']) || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
@@ -333,16 +330,12 @@ class Table extends Model
                     if (\mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
-                    curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                     curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
                     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                        'Authorization: Basic ZWxhc3RpYzpjaGFuZ2VtZQ==',
-                    ));
                     curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
@@ -416,7 +409,11 @@ class Table extends Model
      */
     public function destroy()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
         $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
@@ -464,14 +461,22 @@ class Table extends Model
     }
 
     /**
-     * Makes a UPSERT
      * @param $data
      * @param $keyName
+     * @param bool $raw
+     * @param bool $append
      * @return array
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Error $exception) {
+            error_log($exception->getMessage());
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
+
         $response = [];
         $data = $this->makeArray($data);
         foreach ($data as $set) {
@@ -485,7 +490,6 @@ class Table extends Model
                     } else {
                         $gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
                         $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
-                        error_log($url);
                         Util::asyncRequest($url);
                     }
                 }
@@ -630,10 +634,16 @@ class Table extends Model
         $isSorted = false;
         $arr = [];
         foreach ($fieldsArr as $value) {
-            if (!$isSorted) {
-                $isSorted = ($fieldconfArr[$value]->sort_id) ? true : false;
+            if (isset($fieldconfArr[$value]) && is_object($fieldconfArr[$value])) {
+                if (!$isSorted) {
+                    $isSorted = $fieldconfArr[$value]->sort_id ? true : false;
+                }
+            } else {
+                $fieldconfArr[$value] = new \stdClass();
+                $fieldconfArr[$value]->sort_id = false;
             }
             $arr[] = array($fieldconfArr[$value]->sort_id, $value);
+
         }
         if ($isSorted) {
             usort($arr, function ($a, $b) {
@@ -653,7 +663,7 @@ class Table extends Model
                         "dataIndex" => $key,
                         "type" => $value['type'],
                         "typeObj" => $value['typeObj'],
-                        "properties" => $fieldconfArr[$key]->properties ?: null,
+                        "properties" => isset($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null,
                         "editable" => ($value['type'] == "bytea" || $key == $this->primeryKey['attname']) ? false : true);
                 }
             }
@@ -687,18 +697,19 @@ class Table extends Model
             if ($key != $this->primeryKey['attname'] || $includePriKey == true) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
-                $arr = $this->array_push_assoc($arr, "sort_id", (int)$fieldconfArr[$key]->sort_id);
-                $arr = $this->array_push_assoc($arr, "querable", $fieldconfArr[$key]->querable);
-                $arr = $this->array_push_assoc($arr, "mouseover", $fieldconfArr[$key]->mouseover);
-                $arr = $this->array_push_assoc($arr, "filter", $fieldconfArr[$key]->filter);
-                $arr = $this->array_push_assoc($arr, "searchable", $fieldconfArr[$key]->searchable);
-                $arr = $this->array_push_assoc($arr, "conflict", $fieldconfArr[$key]->conflict);
-                $arr = $this->array_push_assoc($arr, "alias", $fieldconfArr[$key]->alias ?: "");
-                $arr = $this->array_push_assoc($arr, "link", $fieldconfArr[$key]->link);
-                $arr = $this->array_push_assoc($arr, "image", $fieldconfArr[$key]->image);
-                $arr = $this->array_push_assoc($arr, "linkprefix", $fieldconfArr[$key]->linkprefix);
-                $arr = $this->array_push_assoc($arr, "properties", $fieldconfArr[$key]->properties);
-                $arr = $this->array_push_assoc($arr, "is_nullable", $value['is_nullable']);
+                $arr = $this->array_push_assoc($arr, "sort_id", !empty($fieldconfArr[$key]->sort_id) ? (int)$fieldconfArr[$key]->sort_id : 0);
+                $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);
+                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);;
+                $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) ? (bool)$fieldconfArr[$key]->filter : false);
+                $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) ? (bool)$fieldconfArr[$key]->searchable : false);
+                $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) ? (bool)$fieldconfArr[$key]->conflict : false);
+                $arr = $this->array_push_assoc($arr, "alias", !empty($fieldconfArr[$key]->alias) ? $fieldconfArr[$key]->alias : "");
+                $arr = $this->array_push_assoc($arr, "link", !empty($fieldconfArr[$key]->link) ? (bool)$fieldconfArr[$key]->link : false);
+                $arr = $this->array_push_assoc($arr, "image", !empty($fieldconfArr[$key]->image) ? (bool)$fieldconfArr[$key]->image : false);
+                $arr = $this->array_push_assoc($arr, "content", !empty($fieldconfArr[$key]->content) ? $fieldconfArr[$key]->content : null);
+                $arr = $this->array_push_assoc($arr, "linkprefix", !empty($fieldconfArr[$key]->linkprefix) ? $fieldconfArr[$key]->linkprefix : null);
+                $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
+                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) ? (bool)$value['is_nullable'] : false);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
@@ -720,7 +731,6 @@ class Table extends Model
      */
     public function purgeFieldConf($_key_)
     {
-        $this->InstanceCache->clear();
         // Set metaData again in case of a column was dropped
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
@@ -738,13 +748,17 @@ class Table extends Model
     }
 
     /**
-     * @param mixed $data
-     * @param string $key
+     * @param $data
+     * @param $key
      * @return array
      */
     public function updateColumn($data, $key) // Only geometry tables
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->purgeFieldConf($key); // TODO What?
@@ -817,14 +831,18 @@ class Table extends Model
     }
 
     /**
-     * @param mixed $data
+     * @param $data
      * @param null $whereClause
      * @param $_key_
      * @return array
      */
     public function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $data = $this->makeArray($data);
@@ -864,10 +882,14 @@ class Table extends Model
      */
     public function addColumn(array $data)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
-        $safeColumn = $this->toAscii($data['column'], array(), "_");
+        $safeColumn = self::toAscii($data['column'], array(), "_");
         $sql = "";
         if (is_numeric(\mb_substr($safeColumn, 0, 1, 'utf-8'))) {
             $safeColumn = "_" . $safeColumn;
@@ -898,6 +920,18 @@ class Table extends Model
             case "Date":
                 $type = "date";
                 break;
+            case "Timestamp":
+                $type = "Timestamp";
+                break;
+            case "Timestamptz":
+                $type = "Timestamptz";
+                break;
+            case "Time":
+                $type = "Time";
+                break;
+            case "Timetz":
+                $type = "Timetz";
+                break;
             case "Boolean":
                 $type = "bool";
                 break;
@@ -906,6 +940,9 @@ class Table extends Model
                 break;
             case "Hstore":
                 $type = "hstore";
+                break;
+            case "Json":
+                $type = "jsonb";
                 break;
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
@@ -932,7 +969,11 @@ class Table extends Model
      */
     public function addVersioning()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1002,7 +1043,11 @@ class Table extends Model
      */
     public function removeVersioning()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1072,7 +1117,11 @@ class Table extends Model
      */
     public function addWorkflow()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->begin();
@@ -1121,7 +1170,11 @@ class Table extends Model
      */
     public function point2multipoint()
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $sql = "BEGIN;";
         $sql .= "ALTER TABLE {$this->table} DROP CONSTRAINT enforce_geotype_the_geom;";
@@ -1141,11 +1194,15 @@ class Table extends Model
      */
     public function create($table, $type, $srid = 4326)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->PDOerror = NULL;
-        $table = $this->toAscii($table, array(), "_");
+        $table = self::toAscii($table, array(), "_");
         if (is_numeric(\mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
@@ -1171,12 +1228,16 @@ class Table extends Model
      */
     public function createAsRasterTable($srid = 4326)
     {
-        $this->InstanceCache->clear();
+        try {
+            $this->InstanceCache->clear();
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage());
+        }
 
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
-        //$table = $this->toAscii($table, array(), "_");
+        //$table = self::toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }

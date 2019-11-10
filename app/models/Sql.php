@@ -47,7 +47,7 @@ class Sql extends \app\inc\Model
             $limit = 100000;
         }
         $name = "_" . rand(1, 999999999) . microtime();
-        $view = $this->toAscii($name, null, "_");
+        $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
         try {
@@ -142,10 +142,8 @@ class Sql extends \app\inc\Model
             }
             foreach ($arrayWithFields as $key => $value) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => $value['typeObj']);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
             }
-            $this->free($result);
-            $result = $this->execQuery($sql);
             $this->free($result);
             $response['success'] = true;
             $response['forStore'] = $fieldsForStore;

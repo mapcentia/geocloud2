@@ -24,11 +24,11 @@ include "libs/PEAR/Cache_Lite/Lite.php";
 include 'convertgeom.php';
 include 'explodefilter.php';
 
-if (!$gmlNameSpace) {
+if (empty($gmlNameSpace)) {
     $gmlNameSpace = Connection::$param["postgisdb"];
 }
 
-if (!$gmlNameSpaceUri) {
+if (empty($gmlNameSpaceUri)) {
     $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
 }
 
@@ -92,7 +92,7 @@ $unserializer_options = array(
 );
 $unserializer = new XML_Unserializer($unserializer_options);
 
-$sessionComment = "<!-- subuser: {$_SESSION['subuser']} -->\n<!-- screenname: {$_SESSION['screen_name']} -->\n<!-- usergroup: {$_SESSION['usergroup']} -->\n<!-- schema: {$_SESSION['postgisschema']} -->\n";
+$sessionComment = "";
 
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
@@ -180,7 +180,7 @@ if ($HTTP_RAW_POST_DATA) {
         $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case insensative
         $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
 
-        if ($HTTP_FORM_VARS['FILTER']) {
+        if (!empty($HTTP_FORM_VARS['FILTER'])) {
             @$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
             if ($checkXml === FALSE) {
                 makeExceptionReport("Filter is not valid");
@@ -199,10 +199,10 @@ if ($HTTP_RAW_POST_DATA) {
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
 $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]);
 $tables = explode(",", $HTTP_FORM_VARS["TYPENAME"]);
-$properties = explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"]));
-$featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
-$bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
-$resultType = $HTTP_FORM_VARS["RESULTTYPE"];
+$properties = !empty($HTTP_FORM_VARS["PROPERTYNAME"]) ? explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"])) : null;
+$featureids = !empty($HTTP_FORM_VARS["FEATUREID"]) ? explode(",", $HTTP_FORM_VARS["FEATUREID"]) : null;
+$bbox = !empty($HTTP_FORM_VARS["BBOX"]) ? explode(",", $HTTP_FORM_VARS["BBOX"]) : null;
+$resultType = !empty($HTTP_FORM_VARS["RESULTTYPE"]) ? $HTTP_FORM_VARS["RESULTTYPE"] : null;
 
 
 // Start HTTP basic authentication
@@ -240,7 +240,7 @@ if (!(empty($featureids[0]))) {
         foreach ($tables as $table) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $table);
             if ($table == $__u[0]) {
-                $wheresArr[$table][] = "{$primeryKey['attname']}={$__u[1]}";
+                $wheresArr[$table][] = "{$primeryKey['attname']}='{$__u[1]}'";
             }
             $wheres[$table] = implode(" OR ", $wheresArr[$table]);
         }
@@ -280,7 +280,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
-        if (!$gmlFeatureCollection) {
+        if (empty($gmlFeatureCollection)) {
             $gmlFeatureCollection = "wfs:FeatureCollection";
         }
         print "<" . $gmlFeatureCollection . "\n";
@@ -290,7 +290,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         print "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n";
         print "xmlns:{$gmlNameSpace}=\"{$gmlNameSpaceUri}\"\n";
 
-        if ($gmlSchemaLocation) {
+        if (!empty($gmlSchemaLocation)) {
             print "xsi:schemaLocation=\"{$gmlSchemaLocation}\"";
         } else {
             print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] .
@@ -397,12 +397,10 @@ function doQuery($queryType)
         case "Select":
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
-                if (!$trusted) {
-                    include_once("inc/http_basic_authen_subuser.php");
-                }
                 $tableObj = new table($postgisschema . "." . $table);
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
-                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom", "fieldconf"));
+                $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
+                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"));
                 $sql = "SELECT ";
                 if ($resultType != "hits") {
                     if (!(empty($fields[$table]))) {
@@ -418,6 +416,24 @@ function doQuery($queryType)
                             }
                         }
                     }
+
+                    // Start sorting the fields by sort_id
+                    $arr = array();
+                    foreach ($fieldsArr[$table] as $value) {
+                        if (!empty($fieldConfArr[$value]->sort_id)) {
+                            $arr[] = array($fieldConfArr[$value]->sort_id, $value);
+                        } else {
+                            $arr[] = array(0, $value);
+                        }
+                    }
+                    usort($arr, function ($a, $b) {
+                        return $a[0] - $b[0];
+                    });
+                    $fieldsArr[$table] = array();
+                    foreach ($arr as $value) {
+                        $fieldsArr[$table][] = $value[1];
+                    }
+
                     // We add "" around field names in sql, so sql keywords don't mess things up
                     foreach ($fieldsArr[$table] as $key => $value) {
                         $fieldsArr[$table][$key] = "\"{$value}\"";
@@ -617,20 +633,17 @@ function doSelect($table, $sql, $sql2, $from)
             for ($i = 0; $i < $numFields; $i++) {
                 $FieldName = $keys[$i];
                 $FieldValue = $myrow[$FieldName];
-                if (($tableObj->metaData[$FieldName]['type'] != "geometry") && ($FieldName != "txmin") && ($FieldName != "tymin") && ($FieldName != "txmax") && ($FieldName != "tymax") && ($FieldName != "tymax") && ($FieldName != "oid")) {
-                    if ($gmlUseAltFunctions['altFieldValue']) {
+                if ((!empty($tableObj->metaData[$FieldName]) && $tableObj->metaData[$FieldName]['type'] != "geometry") && ($FieldName != "txmin") && ($FieldName != "tymin") && ($FieldName != "txmax") && ($FieldName != "tymax") && ($FieldName != "tymax") && ($FieldName != "oid")) {
+                    if (!empty($gmlUseAltFunctions['altFieldValue'])) {
                         $FieldValue = altFieldValue($FieldName, $FieldValue);
                     }
-                    if ($gmlUseAltFunctions['altFieldNameToUpper']) {
+                    if (!empty($gmlUseAltFunctions['altFieldNameToUpper'])) {
                         $FieldName = altFieldNameToUpper($FieldName);
                     }
-                    if ($gmlUseAltFunctions['changeFieldName']) {
+                    if (!empty($gmlUseAltFunctions['changeFieldName'])) {
                         $FieldName = changeFieldName($FieldName);
                     }
-                    $fieldProperties = ((array)json_decode($fieldConfArr[$FieldName]->properties));
-                    if ($fieldProperties['cartomobilePictureUrl']) {
-                        $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
-                    }
+                    $fieldProperties = !empty($fieldConfArr[$FieldName]->properties) ? (array)json_decode($fieldConfArr[$FieldName]->properties) : null;
 
                     // Important to use $FieldValue !== or else will int 0 evaluate to false
                     if ($FieldValue !== false && ($FieldName != "fid" && $FieldName != "FID")) {
@@ -644,9 +657,9 @@ function doSelect($table, $sql, $sql2, $from)
                         echo (string)$FieldValue;
                         writeTag("close", $gmlNameSpace, $FieldName, null, False, True);
                     }
-                } elseif ($tableObj->metaData[$FieldName]['type'] == "geometry") {
+                } elseif (!empty($tableObj->metaData[$FieldName]) && $tableObj->metaData[$FieldName]['type'] == "geometry") {
                     // Check if the geometry field use another name space and element name
-                    if (!$gmlGeomFieldName[$table]) {
+                    if (empty($gmlGeomFieldName[$table])) {
                         $gmlGeomFieldName[$table] = $FieldName;
                     }
                     if ($gmlNameSpaceGeom) {
@@ -673,6 +686,8 @@ function doSelect($table, $sql, $sql2, $from)
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
             $postgisObject->free($result);
+            flush();
+            ob_flush();
         }
     }
     $totalTime = microtime_float() - $startTime;
@@ -1560,8 +1575,7 @@ function makeExceptionReport($value)
     die();
 }
 
-print("<!-- Memory used: " . number_format(memory_get_usage()) . " bytes -->\n");
+print("<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
 print($sessionComment);
 print ("<!--\n");
-include("README");
 print ("\n-->\n");

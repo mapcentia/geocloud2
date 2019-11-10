@@ -20,7 +20,7 @@ class Drawing extends \app\inc\Controller
         parent::__construct();
 
         $this->drawing = new \app\models\Drawing();
-        $this->username = (isset($_SESSION['subuser']) && $_SESSION['subuser'] != "") ? $_SESSION['subuser'] : $_SESSION['screen_name'];
+        $this->username = $_SESSION["subuser"] ? $_SESSION['screen_name'] : $_SESSION['parentdb'];
 
     }
 

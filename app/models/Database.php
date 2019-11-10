@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -18,19 +18,19 @@ class Database extends \app\inc\Model
 {
     private function createUser($name)
     {
-        $sql = "create user {$name} with password '1234'";
+        $sql = "CREATE USER {$name}";
         $this->execQuery($sql);
-
-        if (!$this->PDOerror) {
+        try {
+            $this->execQuery($sql);
             return true;
-        } else {
+        } catch (\Exception $e) {
             return false;
         }
     }
 
     public function createSchema($name)
     {
-        $sql = "CREATE SCHEMA " . $this->toAscii($name, NULL, "_");
+        $sql = "CREATE SCHEMA " . self::toAscii($name, NULL, "_");
         $this->execQuery($sql);
         if (!$this->PDOerror) {
             $response['success'] = true;
@@ -56,7 +56,8 @@ class Database extends \app\inc\Model
         $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
         $this->execQuery($sql);
 
-        $sql = "GRANT {$screenName} to {$this->postgisuser}";
+        $postgisUser = explode('@', $this->postgisuser)[0];
+        $sql = "GRANT {$screenName} to {$postgisUser}";
         $this->execQuery($sql);
 
         $this->changeOwner($screenName, $screenName);
@@ -130,7 +131,7 @@ class Database extends \app\inc\Model
             return $response;
         }
         while ($row = $this->fetchRow($res, "assoc")) {
-            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']]);
+            $arr[] = array("schema" => $row['schema_name'], "count" => isset($count[$row['schema_name']]) ? $count[$row['schema_name']] : 0);
         }
         $response['success'] = true;
         $response['data'] = $arr;
@@ -222,7 +223,7 @@ class Database extends \app\inc\Model
             $response['code'] = 401;
             return $response;
         }
-        $newName = Model::toAscii($name, array(), "_");
+        $newName = self::toAscii($name, array(), "_");
         $this->connect();
         $this->begin();
         $whereClauseG = "f_table_schema=''{$schema}''";

@@ -250,6 +250,7 @@ class Processvector extends \app\inc\Controller
             \app\controllers\Tilecache::bust(Connection::$param["postgisschema"] . "." . $safeName);
         } else {
             $response['success'] = false;
+            $response['code'] = "400";
             $response['message'] = $safeName . ": Some thing went wrong. Check the log.";
             $response['out'] = $out[0];
             Session::createLog($out, $_REQUEST['file']);

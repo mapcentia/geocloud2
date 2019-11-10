@@ -9,8 +9,6 @@
 namespace app\api\v2;
 
 use app\inc\Input;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 /**
  * Class Sql
@@ -68,28 +66,22 @@ class Sql extends \app\inc\Controller
      */
     private $cacheInfo;
 
+    /**
+     * @var
+     */
+    private $streamFlag;
+
     function __construct()
     {
-        try {
-            $this->InstanceCache = CacheManager::getInstance('Files',
-                new Config([
-                    "securityKey" => \app\models\Table::CACHE_SECURITY_KEY,
-                    "path" => "/var/www/geocloud2/app/tmp",
-                    "itemDetailedDate" => true,
-                    "defaultTtl" => 1
-                ])
-            );
+        global $globalInstanceCache;
 
-        } catch (\Exception $exception) {
-            die($exception->getMessage());
-        }
         parent::__construct();
+
+        $this->InstanceCache = $globalInstanceCache;
     }
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function get_index(): array
     {
@@ -97,13 +89,18 @@ class Sql extends \app\inc\Controller
         // /{user}
         $r = func_get_arg(0);
 
+        if (isset($r["method"]) && $r["method"] == "stream") {
+            $this->streamFlag = true;
+
+        }
+
         $db = $r["user"];
         $dbSplit = explode("@", $db);
 
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
-        } elseif (isset($_SESSION["subuser"])) {
-            $this->subUser = $_SESSION["subuser"];
+        } elseif (!empty($_SESSION["subuser"])) {
+            $this->subUser = $_SESSION["screen_name"];
         } else {
             $this->subUser = null;
         }
@@ -121,17 +118,17 @@ class Sql extends \app\inc\Controller
             // ==========================
             Input::setParams(
                 [
-                    "q" => $json["q"],
-                    "client_encoding" => $json["client_encoding"],
-                    "srs" => $json["srs"],
-                    "format" => $json["format"],
-                    "geoformat" => $json["geoformat"],
-                    "key" => $json["key"],
-                    "geojson" => $json["geojson"],
-                    "allstr" => $json["allstr"],
-                    "alias" => $json["alias"],
-                    "lifetime" => $json["lifetime"],
-                    "base64" => $json["base64"],
+                    "q" => !empty($json["q"]) ? $json["q"] : null,
+                    "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
+                    "srs" => !empty($json["srs"]) ? $json["srs"] : null,
+                    "format" => !empty($json["format"]) ? $json["format"] : null,
+                    "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : null,
+                    "key" => !empty($json["key"]) ? $json["key"] : null,
+                    "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
+                    "allstr" => !empty($json["allstr"]) ? $json["allstr"] : null,
+                    "alias" => !empty($json["alias"]) ? $json["alias"] : null,
+                    "lifetime" => !empty($json["lifetime"]) ? $json["lifetime"] : null,
+                    "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                 ]
             );
         }
@@ -173,15 +170,13 @@ class Sql extends \app\inc\Controller
         if ($this->cacheInfo) {
             $response["cache_hit"] = $this->cacheInfo;
         }
-        $response["peak_memory_usage"] = round(memory_get_peak_usage()/1024) . " KB";
+        $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
 
         return $response;
     }
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function post_index(): array
     {
@@ -226,6 +221,15 @@ class Sql extends \app\inc\Controller
         } else {
             return $this->get_index(func_get_arg(0));
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function get_stream()
+    {
+        $this->streamFlag = true;
+        return $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -283,8 +287,6 @@ class Sql extends \app\inc\Controller
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     private function transaction(string $sql, string $clientEncoding = null)
     {
@@ -392,16 +394,16 @@ class Sql extends \app\inc\Controller
             }
         }
 
-        if ($parsedSQL['DROP']) {
+        if (!empty($parsedSQL['DROP'])) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "DROP is not allowed through the API";
-        } elseif ($parsedSQL['ALTER']) {
+        } elseif (!empty($parsedSQL['ALTER'])) {
             $this->response['success'] = false;
             $this->response['code'] = 403;
             $this->response['message'] = "ALTER is not allowed through the API";
-        } elseif ($parsedSQL['CREATE']) {
-            if (isset($parsedSQL['CREATE']) && (isset($parsedSQL['VIEW']) || isset($parsedSQL['TABLE']))) {
+        } elseif (!empty($parsedSQL['CREATE'])) {
+            if (!empty($parsedSQL['CREATE']) && (!empty($parsedSQL['VIEW']) || !empty($parsedSQL['TABLE']))) {
                 if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
                     $this->response = $this->api->transaction($this->q);
                     $this->addAttr($response);
@@ -415,22 +417,36 @@ class Sql extends \app\inc\Controller
                 $this->response['message'] = "Only CREATE VIEW is allowed through the API";
                 $this->response['code'] = 403;
             }
-        } elseif ($parsedSQL['UPDATE'] || $parsedSQL['INSERT'] || $parsedSQL['DELETE']) {
+        } elseif (!empty($parsedSQL['UPDATE']) || !empty($parsedSQL['INSERT']) || !empty($parsedSQL['DELETE'])) {
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
-        } elseif (isset($parsedSQL['SELECT']) || isset($parsedSQL['UNION'])) {
-            $lifetime = (Input::get('lifetime')) ?: 0;
-
-            // If ttl is set to 0. when clear cache, because 0 secs means cache will life foe ever.
-            if ($lifetime == 0) {
-                $this->InstanceCache->clear();
+        } elseif (!empty($parsedSQL['SELECT']) || !empty($parsedSQL['UNION'])) {
+            if ($this->streamFlag) {
+                $stream = new \app\models\Stream();
+                $res = $stream->runSql($this->q);
+                return ($res);
             }
 
-            $CachedString = $this->InstanceCache->getItem(md5($this->q));
+            $lifetime = (Input::get('lifetime')) ?: 0;
 
-            if ($CachedString->isHit()) {
+            $cacheId = md5($this->q . "_" . $lifetime);
+
+            if ($lifetime > 0) {
+                try {
+                    $CachedString = $this->InstanceCache->getItem($cacheId);
+                } catch (\Exception $e) {
+                    $CachedString = null;
+                }
+            }
+
+            if ($lifetime > 0 && !empty($CachedString) && $CachedString->isHit()) {
                 $this->data = $CachedString->get();
-                $this->cacheInfo["cache_hit"] = $CachedString->getCreationDate();
+                try {
+                    $CreationDate = $CachedString->getCreationDate();
+                } catch (\Exception $e) {
+                    $CreationDate = $e->getMessage();
+                }
+                $this->cacheInfo["cache_hit"] = $CreationDate;
                 $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
 
             } else {

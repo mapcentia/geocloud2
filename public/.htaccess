@@ -13,29 +13,20 @@ Header add X-UA-Compatible "IE=edge"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Rewrite URLs for user module
-RewriteRule user/login/p$ user/login/login_p.php [L]
-RewriteRule user/login/$ user/login/login_f.php [L]
-RewriteRule user/logout/$ user/logout/logout_p.php [L]
-RewriteRule user/signup/$ user/signup/signup_f.php [L]
-RewriteRule user/signup/p$ user/signup/signup_p.php [L]
-RewriteRule user/createstore/$ user/createstore/createstore_p.php [L]
-RewriteRule user/edit/$ user/edit/edit_f.php [L]
-RewriteRule user/edit/p$ user/edit/edit_p.php [L]
-RewriteRule user/edit/u$ user/edit/edit_fu.php [L]
-RewriteRule user/edit/pu$ user/edit/edit_pu.php [L]
-RewriteRule user/new/$ user/new/new_f.php [L]
-RewriteRule user/new/p$ user/new/new_p.php [L]
-RewriteRule user/delete/$ user/delete/delete_f.php [L]
-RewriteRule user/delete/p$ user/delete/delete_p.php [L]
+# Rewrite rules for React app, located in dashboard subdirectory - return
+# the index.html unless the requested file / directory exists
+RewriteRule ^dashboard/index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^dashboard/(.*) dashboard/index.html [L]
+
+# Rewrite URLs old user user module
+RewriteRule user/login/$ dashboard [L]
+RewriteRule user/login/p$ dashboard [L]
 
 # Rewrite URL to HTML map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule apps/viewer/(.*)/(.*) apps/viewer/index.html [L]
-
-# Rewrite URL to HTML Heron map viewer
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule apps/mapclient/(.*)/(.*) apps/mapclient/index.html [L]
 
 # Rewrite URL to HTML widget map viewer
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -46,6 +37,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/fpm-status
 RewriteCond %{REQUEST_URI} !^/fpm-ping
+RewriteCond %{REQUEST_URI} !^/mapcache
 RewriteRule ^(.*)$ index.php [L]
 
 </IfModule>

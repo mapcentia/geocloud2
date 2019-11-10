@@ -27,7 +27,7 @@ class Session
 
     static function authenticate($redirect = " / ")
     {
-        if ($_SESSION['auth'] == true) {
+        if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             return true;
         } elseif ($redirect) {
             \app\inc\Redirect::to($redirect);
@@ -40,7 +40,7 @@ class Session
 
     static function isAuth()
     {
-        return $_SESSION['auth'];
+        return isset($_SESSION['auth']) ? $_SESSION['auth'] : false;
     }
 
     static function getUser()
@@ -48,9 +48,19 @@ class Session
         return $_SESSION['screen_name'];
     }
 
+    static function getDatabase()
+    {
+        return $_SESSION['parentdb'];
+    }
+
+    static function isSubUser()
+    {
+        return $_SESSION["subuser"];
+    }
+
     static function getFullUseName()
     {
-        return $_SESSION['subuser'] ? $_SESSION['subuser'] . "@" . $_SESSION['screen_name'] : $_SESSION['screen_name'];
+        return $_SESSION["subuser"] ? $_SESSION["screen_name"] . "@" . $_SESSION['parentdb'] : $_SESSION['screen_name'];
     }
 
     static function getLog()
@@ -58,6 +68,7 @@ class Session
         if (!$_SESSION["log"]) {
             $_SESSION["log"] = "<i > Session log started @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
         }
+
         return $_SESSION["log"];
     }
 

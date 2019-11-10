@@ -72,7 +72,7 @@ class Model
     public function fetchAll(PDOStatement $result, $result_type = "both")
     {
         $rows = [];
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             throw new Exception($this->PDOerror[0]);
         }
         switch ($result_type) {
@@ -281,7 +281,7 @@ class Model
         $arr = [];
         $foreignConstrains = [];
         preg_match("/^[\w'-]*\./", $table, $matches);
-        $_schema = $matches[0];
+        $_schema = !empty($matches[0]) ? $matches[0] : null;
 
         preg_match("/[\w'-]*$/", $table, $matches);
         $_table = $matches[0];
@@ -499,7 +499,7 @@ class Model
         }
     }
 
-    public function toAscii($str, $replace = array(), $delimiter = '-')
+    public static function toAscii($str, $replace = array(), $delimiter = '-')
     {
         if (!empty($replace)) {
             $str = str_replace((array)$replace, ' ', $str);

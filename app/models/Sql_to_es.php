@@ -48,7 +48,7 @@ class Sql_to_es extends Model
             if ($item[$key]["status"] != "201") {
                 $res[] = array(
                     "id" => $item[$key]["_id"],
-                    "error" => $item[$key]["error"],
+                    "error" => isset($item[$key]["error"]) ? $item[$key]["error"] : null,
                 );
             }
         }
@@ -56,25 +56,34 @@ class Sql_to_es extends Model
     }
 
     /**
-     * @param string $q
-     * @param string $index
-     * @param string $type
-     * @param string $id
-     * @param string $db
+     * @param $q
+     * @param $schema
+     * @param $rel
+     * @param $priKey
+     * @param $db
      * @return array
      */
-    public function runSql($q, $index, $type, $id, $db)
+    public function runSql($q, $schema, $rel, $priKey, $db)
     {
         $response = [];
         $i = 0;
 
-        $esUrl = \app\conf\App::$param['esHost'] . ":9200/_bulk";
+        $esUrl = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $split = explode(":", $esUrl);
+        if (!empty($split[2])) {
+            $port = $split[2];
+        } else {
+            $port = "9200";
+        }
+        $esUrl = $split[0] . ":" . $split[1] . ":" . $port . "/_bulk";
+
         $client = new Client([
             'timeout' => 10.0,
             'headers' => [
                 'Content-Type' => 'application/json'
             ]
         ]);
+
         $bulKCount = 0;
         $bulkSize = 500;
         $geometries = [];
@@ -83,9 +92,9 @@ class Sql_to_es extends Model
         // We create a unique index name
         $errors = false;
         $errors_in = [];
-        $index = $db . "_" . $index . "_" . $type;
+        $index = $db . "_" . $schema . "_" . $rel;
         $name = "_" . rand(1, 999999999) . microtime();
-        $view = $this->toAscii($name, null, "_");
+        $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
 
@@ -137,7 +146,6 @@ class Sql_to_es extends Model
         try {
 
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
-
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -160,13 +168,11 @@ class Sql_to_es extends Model
 
                 unset($geometries);
 
-                $json .= json_encode(array("index" => array("_index" => $index, "_type" => $type, "_id" => $arr[$id])));
+                $json .= json_encode(array("index" => array("_index" => $index, "_id" => $arr[$priKey])));
                 $json .= "\n";
                 $json .= json_encode($features);
                 $json .= "\n";
-
                 if (is_int($i / $bulkSize)) {
-
                     $esResponse = $client->post($esUrl, ['body' => $json]);
                     $obj = json_decode($esResponse->getBody(), true);
 
@@ -176,16 +182,15 @@ class Sql_to_es extends Model
                     }
                     $json = "";
                     $bulKCount++;
-                    error_log($i);
-                    error_log(number_format(memory_get_usage()));
-
                 }
 
                 $i++;
             }
 
             // Index the last bulk
-            $esResponse = $client->post($esUrl, ['body' => $json]);
+            if ($json) {
+                $esResponse = $client->post($esUrl, ['body' => $json]);
+            };
             $obj = json_decode($esResponse->getBody(), true);
             if (isset($obj["errors"]) && $obj["errors"] == true) {
                 $errors = true;

@@ -2,7 +2,13 @@
 header('Content-Type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
-<html>
+<!--
+  ~ @author     Martin Høgh <mh@mapcentia.com>
+  ~ @copyright  2013-2019 MapCentia ApS
+  ~ @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+  ~ @version    2019.1
+  -->
+<html lang="en">
 <head>
     <title>GC2 Admin</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>

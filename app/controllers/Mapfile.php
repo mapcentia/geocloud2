@@ -27,9 +27,10 @@ class Mapfile extends \app\inc\Controller
 
     public function get_index()
     {
-        $this->writeWms();
-        $this->writeWfs();
-        return;
+        $res = [];
+        $res[] = $this->writeWms();
+        $res[] = $this->writeWfs();
+        return $res;
     }
 
     private function writeWms()
@@ -44,7 +45,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
         SIZE 2000 1500
         MAXSIZE 4096
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
@@ -79,7 +80,7 @@ class Mapfile extends \app\inc\Controller
             IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
             METADATA
                 "wms_title"    "<?php echo $user; ?>'s OWS"
-                "wms_srs"    <?php echo "\"" . (isset(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+                "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
                 "wms_name"    "<?php echo $user; ?>"
                 "wms_format"    "image/png"
                 "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
@@ -319,7 +320,7 @@ class Mapfile extends \app\inc\Controller
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
-                    if (!$arr[$field]) {
+                    if (empty($arr[$field]) || $arr[$field] == false) {
                         $arr[$field] = "";
                     }
                 }
@@ -346,20 +347,20 @@ class Mapfile extends \app\inc\Controller
                     $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
                     $arrNew[$i]['id'] = $i;
                 }
-                $classArr = array("data" => $arrNew);
+                $classArr = array("data" => !empty($arrNew) ? $arrNew : null);
                 $primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-                unset($arrNew);
+                if (!empty($arrNew)) unset($arrNew);
                 ?>
                 LAYER
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-                GROUP "<?php echo $postgisObject->toAscii($row['layergroup']) ?>"
+                GROUP "<?php echo $postgisObject::toAscii($row['layergroup']) ?>"
                 <?php if ($row['filter']) { ?>
                     FILTER "<?php echo $row['filter']; ?>"
                 <?php } ?>
                 <?php
-                if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
+                if (!empty($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
@@ -407,7 +408,7 @@ class Mapfile extends \app\inc\Controller
                     DATA "<?php echo App::$param['path'] . "/app/wms/files/" . Connection::$param["postgisdb"] . "/__bitmaps/" . $row['bitmapsource']; ?>"
                     PROCESSING "RESAMPLE=AVERAGE"
                     <?php
-                    if ($layerArr['data'][0]['bands']) {
+                    if (!empty($layerArr['data'][0]['bands'])) {
                         echo "PROCESSING \"BANDS={$layerArr['data'][0]['bands']}\"\n";
                     }
                     ?>
@@ -435,11 +436,11 @@ class Mapfile extends \app\inc\Controller
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ({$dataSql}) as bar /*FILTER_{$layerName}*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
-                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']); ?><?php echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ?Connection::$param['mapserverhost']: Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ?Connection::$param['mapserverport']: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
                         <?php
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
-                        echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport'] ?: "5432");
+                        echo " port=" . (!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : !empty(Connection::$param['postgisport']) ? Connection::$param['postgisport'] : "5432");
                         echo " dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'
 		                    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                         echo "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
@@ -449,34 +450,34 @@ class Mapfile extends \app\inc\Controller
 
                 <?php } ?>
                 #OFFSITE
-                <?php if ($layerArr['data'][0]['offsite']) echo "OFFSITE " . $layerArr['data'][0]['offsite'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['offsite'])) echo "OFFSITE " . $layerArr['data'][0]['offsite'] . "\n"; ?>
 
                 #CLASSITEM
-                <?php if ($layerArr['data'][0]['theme_column']) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['theme_column'])) echo "CLASSITEM '" . $layerArr['data'][0]['theme_column'] . "'\n"; ?>
 
                 #LABELITEM
-                <?php if ($layerArr['data'][0]['label_column']) echo "LABELITEM '" . $layerArr['data'][0]['label_column'] . "'\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['label_column'])) echo "LABELITEM '" . $layerArr['data'][0]['label_column'] . "'\n"; ?>
 
                 #LABELMAXSCALEDENOM
-                <?php if ($layerArr['data'][0]['label_max_scale']) echo "LABELMAXSCALEDENOM " . $layerArr['data'][0]['label_max_scale'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['label_max_scale'])) echo "LABELMAXSCALEDENOM " . $layerArr['data'][0]['label_max_scale'] . "\n"; ?>
 
                 #LABELMINSCALEDENOM
-                <?php if ($layerArr['data'][0]['label_min_scale']) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['label_min_scale'])) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
 
                 #OPACITY
-                <?php if ($layerArr['data'][0]['opacity']) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['opacity'])) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
 
                 #MAXSCALEDENOM
-                <?php if ($layerArr['data'][0]['maxscaledenom']) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['maxscaledenom'])) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
 
                 #MINSCALEDENOM
-                <?php if ($layerArr['data'][0]['minscaledenom']) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['minscaledenom'])) echo "MINSCALEDENOM  " . $layerArr['data'][0]['minscaledenom'] . "\n"; ?>
 
                 #SYMBOLSCALEDENOM
-                <?php if ($layerArr['data'][0]['symbolscaledenom']) echo "SYMBOLSCALEDENOM " . $layerArr['data'][0]['symbolscaledenom'] . "\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['symbolscaledenom'])) echo "SYMBOLSCALEDENOM " . $layerArr['data'][0]['symbolscaledenom'] . "\n"; ?>
 
                 #MINSCALEDENOM
-                <?php if ($layerArr['data'][0]['cluster']) {
+                <?php if (!empty($layerArr['data'][0]['cluster'])) {
                     echo "CLUSTER\n";
                     echo "MAXDISTANCE {$layerArr['data'][0]['cluster']}\n";
                     echo "REGION \"ellipse\"\n";
@@ -506,15 +507,15 @@ class Mapfile extends \app\inc\Controller
                     $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
                 } ?>
-                <?php if ($layerArr['data'][0]['query_buffer']) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
+                <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
-                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = json_decode($row['fieldconf'],true);
-                        foreach($fields as $field=>$name) {
+                        if (!empty($fields)) foreach($fields as $field=>$name) {
                             $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                         }
                 ?>
-                UTFDATA "<?php echo "{" . implode(",", $fieldsArr) . "}";
+                #UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
                 $fieldsArr=[];
                 ?>"
 
@@ -531,46 +532,46 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         CLASS
                         #NAME
-                        <?php if ($class['name']) echo "NAME '" . addslashes($class['name']) . "'\n"; ?>
+                        <?php if (!empty($class['name'])) echo "NAME '" . addslashes($class['name']) . "'\n"; ?>
 
                         #EXPRESSION
-                        <?php if ($class['expression']) {
-                            if ($layerArr['data'][0]['theme_column']) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
+                        <?php if (!empty($class['expression'])) {
+                            if (!empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
                             else echo "EXPRESSION (" . $class['expression'] . ")\n";
-                        } elseif ((!$class['expression']) AND ($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
+                        } elseif (empty($class['expression']) AND !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                         ?>
 
                         #MAXSCALEDENOM
-                        <?php if ($class['class_maxscaledenom']) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
+                        <?php if (!empty($class['class_maxscaledenom'])) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
 
                         #MINSCALEDENOM
-                        <?php if ($class['class_minscaledenom']) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
+                        <?php if (!empty($class['class_minscaledenom'])) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
 
                         STYLE
                         #SYMBOL
-                        <?php if ($class['symbol']) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
+                        <?php if (!empty($class['symbol'])) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
 
                         #PATTERN
-                        <?php if ($class['pattern']) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
+                        <?php if (!empty($class['pattern'])) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
 
                         #LINECAP
-                        <?php if ($class['linecap']) echo "LINECAP " . $class['linecap'] . "\n"; ?>
+                        <?php if (!empty($class['linecap'])) echo "LINECAP " . $class['linecap'] . "\n"; ?>
 
                         #WIDTH
-                        <?php if ($class['width']) echo "WIDTH " . $class['width'] . "\n"; ?>
+                        <?php if (!empty($class['width'])) echo "WIDTH " . $class['width'] . "\n"; ?>
 
                         #COLOR
-                        <?php if ($class['color']) echo "COLOR " . Util::hex2RGB($class['color'], true, " ") . "\n"; ?>
+                        <?php if (!empty($class['color'])) echo "COLOR " . Util::hex2RGB($class['color'], true, " ") . "\n"; ?>
 
                         #OUTLINECOLOR
-                        <?php if ($class['outlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
+                        <?php if (!empty($class['outlinecolor'])) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
 
                         #OPACITY
-                        <?php if ($class['style_opacity']) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
+                        <?php if (!empty($class['style_opacity'])) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
 
                         #SIZE
                         <?php
-                        if ($class['size']) {
+                        if (!empty($class['size'])) {
                             if (is_numeric($class['size']))
                                 echo "SIZE " . $class['size'];
                             else
@@ -581,7 +582,7 @@ class Mapfile extends \app\inc\Controller
 
                         #ANGLE
                         <?php
-                        if ($class['angle']) {
+                        if (!empty($class['angle'])) {
                             if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto")
                                 echo "ANGLE " . $class['angle'];
                             else
@@ -591,7 +592,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         #GEOMTRANSFORM
                         <?php
-                        if ($class['geomtransform']) {
+                        if (!empty($class['geomtransform'])) {
 
                             echo "GEOMTRANSFORM '{$class['geomtransform']}'";
                         }
@@ -600,7 +601,7 @@ class Mapfile extends \app\inc\Controller
 
                         #MAXSIZE
                         <?php
-                        if ($class['maxsize']) {
+                        if (!empty($class['maxsize'])) {
 
                             echo "MAXSIZE {$class['maxsize']}";
                         }
@@ -609,14 +610,14 @@ class Mapfile extends \app\inc\Controller
 
                         #OFFSET
                         <?php
-                            echo "OFFSET " . ($class['style_offsetx'] ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
-                                ($class['style_offsety'] ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                            echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
+                                (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
-                        echo "POLAROFFSET " . ($class['style_polaroffsetr'] ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
-                            ($class['style_polaroffsetd'] ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
+                        echo "POLAROFFSET " . (!empty($class['style_polaroffsetr']) ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
+                            (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
 
@@ -624,28 +625,28 @@ class Mapfile extends \app\inc\Controller
 
                         STYLE
                         #SYMBOL
-                        <?php if ($class['overlaysymbol']) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
+                        <?php if (!empty($class['overlaysymbol'])) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
 
                         #PATTERN
-                        <?php if ($class['overlaypattern']) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
+                        <?php if (!empty($class['overlaypattern'])) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
 
                         #LINECAP
-                        <?php if ($class['overlaylinecap']) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
+                        <?php if (!empty($class['overlaylinecap'])) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
 
                         #WIDTH
-                        <?php if ($class['overlaywidth']) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
+                        <?php if (!empty($class['overlaywidth'])) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
 
                         #COLOR
-                        <?php if ($class['overlaycolor']) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
+                        <?php if (!empty($class['overlaycolor'])) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
 
                         #OUTLINECOLOR
-                        <?php if ($class['overlayoutlinecolor']) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
+                        <?php if (!empty($class['overlayoutlinecolor'])) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
 
                         #OPACITY
-                        <?php if ($class['overlaystyle_opacity']) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
+                        <?php if (!empty($class['overlaystyle_opacity'])) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
                         #SIZE
                         <?php
-                        if ($class['overlaysize']) {
+                        if (!empty($class['overlaysize'])) {
                             if (is_numeric($class['overlaysize']))
                                 echo "SIZE " . $class['overlaysize'];
                             else
@@ -655,7 +656,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         #ANGLE
                         <?php
-                        if ($class['overlayangle']) {
+                        if (!empty($class['overlayangle'])) {
                             if (is_numeric($class['overlayangle']) || strtolower($class['overlayangle']) == "auto")
                                 echo "ANGLE " . $class['overlayangle'];
                             else
@@ -665,7 +666,7 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         #GEOMTRANSFORM
                         <?php
-                        if ($class['overlaygeomtransform']) {
+                        if (!empty($class['overlaygeomtransform'])) {
                             echo "GEOMTRANSFORM '{$class['overlaygeomtransform']}'";
                         }
                         echo "\n";
@@ -673,14 +674,14 @@ class Mapfile extends \app\inc\Controller
 
                         #OFFSET
                         <?php
-                        echo "OFFSET " . ($class['overlaystyle_offsetx'] ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
-                            ($class['overlaystyle_offsety'] ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                        echo "OFFSET " . (!empty($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
+                            (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
-                        echo "POLAROFFSET " . ($class['overlaystyle_polaroffsetr'] ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
-                            ($class['overlaystyle_polaroffsetd'] ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
+                        echo "POLAROFFSET " . (!empty($class['overlaystyle_polaroffsetr']) ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
+                            (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
                         END # style
@@ -688,13 +689,13 @@ class Mapfile extends \app\inc\Controller
                         #TEMPLATE "ttt"
 
                         #LABEL
-                        <?php if ($class['label']) { ?>
+                        <?php if (!empty($class['label'])) { ?>
                             LABEL
-                            <?php if ($class['label_text']) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
+                            <?php if (!empty($class['label_text'])) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                             TYPE truetype
                             FONT <?php echo ($class['label_font'] ?: "arial") . ($class['label_fontweight'] ?: "normal") . "\n" ?>
                             SIZE <?php
-                            if ($class['label_size']) {
+                            if (!empty($class['label_size'])) {
                                 if (is_numeric($class['label_size']))
                                     echo $class['label_size'];
                                 else
@@ -704,40 +705,40 @@ class Mapfile extends \app\inc\Controller
                             }
                             echo "\n";
                             ?>
-                            COLOR <?php echo ($class['label_color']) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
+                            COLOR <?php echo (!empty($class['label_color'])) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
                             echo "\n"; ?>
-                            OUTLINECOLOR <?php echo ($class['label_outlinecolor']) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
+                            OUTLINECOLOR <?php echo (!empty($class['label_outlinecolor'])) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
                             echo "\n"; ?>
                             SHADOWSIZE 2 2
                             ANTIALIAS true
-                            FORCE <?php echo ($class['label_force']) ? "true" : "false";
+                            FORCE <?php echo (!empty($class['label_force'])) ? "true" : "false";
                             echo "\n"; ?>
-                            POSITION <?php echo ($class['label_position']) ?: "auto";
+                            POSITION <?php echo (!empty($class['label_position'])) ? $class['label_position'] : "auto";
                             echo "\n"; ?>
                             PARTIALS false
                             MINSIZE 1
 
                             #MAXSIZE
                             <?php
-                            if ($class['label_maxsize']) {
+                            if (!empty($class['label_maxsize'])) {
 
                                 echo "MAXSIZE {$class['label_maxsize']}";
                             }
                             echo "\n";
                             ?>
-                            <?php if ($class['label_maxscaledenom']) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
-                            <?php if ($class['label_minscaledenom']) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
-                            <?php if ($class['label_buffer']) echo "BUFFER {$class['label_buffer']}\n"; ?>
-                            <?php if ($class['label_repeatdistance']) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
-                            <?php if ($class['label_minfeaturesize']) echo "MINFEATURESIZE {$class['label_minfeaturesize']}\n"; ?>
+                            <?php if (!empty($class['label_maxscaledenom'])) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label_minscaledenom'])) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label_buffer'])) echo "BUFFER {$class['label_buffer']}\n"; ?>
+                            <?php if (!empty($class['label_repeatdistance'])) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+                            <?php if (!empty($class['label_minfeaturesize'])) echo "MINFEATURESIZE {$class['label_minfeaturesize']}\n"; ?>
 
-                            <?php if ($class['label_expression']) {
+                            <?php if (!empty($class['label_expression'])) {
                                 echo "EXPRESSION (" . $class['label_expression'] . ")\n";
                             }
                             ?>
                             #ANGLE
                             <?php
-                            if ($class['label_angle']) {
+                            if (!empty($class['label_angle'])) {
                                 if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
                                     or $class['label_angle'] == 'follow'
                                 )
@@ -749,11 +750,11 @@ class Mapfile extends \app\inc\Controller
                             ?>
                             WRAP "\n"
 
-                            OFFSET <?php echo ($class['label_offsetx'] ?: "0") . " " . ($class['label_offsety'] ?: "0") . "\n" ?>
+                            OFFSET <?php echo (!empty($class['label_offsetx']) ? $class['label_offsetx'] : "0") . " " . (!empty($class['label_offsety']) ? $class['label_offsety'] : "0") . "\n" ?>
 
 
                             STYLE
-                            <?php if ($class['label_backgroundcolor']) {
+                            <?php if (!empty($class['label_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
                                 echo
                                     "GEOMTRANSFORM 'labelpoly'\n" .
@@ -769,9 +770,9 @@ class Mapfile extends \app\inc\Controller
                             END #Label
                         <?php } ?>
                         #LABEL2
-                        <?php if ($class['label2']) { ?>
+                        <?php if (!empty($class['label2'])) { ?>
                             LABEL
-                            <?php if ($class['label2_text']) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
+                            <?php if (!empty($class['label2_text'])) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
                             FONT <?php echo ($class['label2_font'] ?: "arial") . ($class['label2_fontweight'] ?: "normal") . "\n" ?>
                             SIZE <?php
@@ -785,7 +786,7 @@ class Mapfile extends \app\inc\Controller
                             }
                             echo "\n";
                             ?>
-                            COLOR <?php echo ($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
+                            COLOR <?php echo !empty($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
                             echo "\n"; ?>
                             OUTLINECOLOR <?php echo ($class['label2_outlinecolor']) ? Util::hex2RGB($class['label2_outlinecolor'], true, " ") : "255 255 255";
                             echo "\n"; ?>
@@ -799,25 +800,25 @@ class Mapfile extends \app\inc\Controller
                             MINSIZE 1
                             #MAXSIZE
                             <?php
-                            if ($class['label2_maxsize']) {
+                            if (!empty($class['label2_maxsize'])) {
 
                                 echo "MAXSIZE {$class['label2_maxsize']}";
                             }
                             echo "\n";
                             ?>
-                            <?php if ($class['label2_maxscaledenom']) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
-                            <?php if ($class['label2_minscaledenom']) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
-                            <?php if ($class['label2_buffer']) echo "BUFFER {$class['label2_buffer']}\n"; ?>
-                            <?php if ($class['label2_repeatdistance']) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
-                            <?php if ($class['label2_minfeaturesize']) echo "MINFEATURESIZE {$class['label2_minfeaturesize']}\n"; ?>
+                            <?php if (!empty($class['label2_maxscaledenom'])) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label2_minscaledenom'])) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label2_buffer'])) echo "BUFFER {$class['label2_buffer']}\n"; ?>
+                            <?php if (!empty($class['label2_repeatdistance'])) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+                            <?php if (!empty($class['label2_minfeaturesize'])) echo "MINFEATURESIZE {$class['label2_minfeaturesize']}\n"; ?>
 
-                            <?php if ($class['label2_expression']) {
+                            <?php if (!empty($class['label2_expression'])) {
                                 echo "EXPRESSION (" . $class['label2_expression'] . ")\n";
                             }
                             ?>
                             #ANGLE
                             <?php
-                            if ($class['label2_angle']) {
+                            if (!empty($class['label2_angle'])) {
                                 if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
                                     or $class['label2_angle'] == 'follow'
                                 )
@@ -829,16 +830,16 @@ class Mapfile extends \app\inc\Controller
                             ?>
                             WRAP "\n"
 
-                            OFFSET <?php echo ($class['label2_offsetx'] ?: "0") . " " . ($class['label2_offsety'] ?: "0") . "\n" ?>
+                            OFFSET <?php echo (!empty($class['label2_offsetx']) ? $class['label2_offsetx'] : "0") . " " . ($class['label2_offsety'] ?: "0") . "\n" ?>
 
                             STYLE
-                            <?php if ($class['label2_backgroundcolor']) {
+                            <?php if (!empty($class['label2_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
                                 echo
                                     "GEOMTRANSFORM 'labelpoly'\n" .
                                     "COLOR {$labelBackgroundColor}\n";
 
-                                if ($class['label2_backgroundpadding']) {
+                                if (!empty($class['label2_backgroundpadding'])) {
                                     echo
                                         "OUTLINECOLOR {$labelBackgroundColor}\n" .
                                         "WIDTH {$class['label2_backgroundpadding']}\n";
@@ -849,7 +850,7 @@ class Mapfile extends \app\inc\Controller
                             END #Label
                         <?php } ?>
 
-                        <?php if ($class['leader']) { ?>
+                        <?php if (!empty($class['leader'])) { ?>
                             LEADER
                             GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5";
                             echo "\n"; ?>
@@ -895,7 +896,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (isset(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
         UNITS METERS
 
         OUTPUTFORMAT
@@ -913,7 +914,7 @@ class Mapfile extends \app\inc\Controller
         WEB
             METADATA
                 "wfs_title"    "<?php echo $user; ?>'s OWS"
-                "wfs_srs"    <?php echo "\"" . (isset(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+                "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
                 "wfs_name"    "<?php echo $user; ?>"
                 "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
                 "wfs_enable_request" "*"
@@ -951,7 +952,7 @@ class Mapfile extends \app\inc\Controller
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
-                    if (!$arr[$field]) {
+                    if (empty($arr[$field])) {
                         $arr[$field] = "";
                     }
                 }
@@ -964,7 +965,7 @@ class Mapfile extends \app\inc\Controller
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
                 <?php
-                if (($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
+                if (!empty($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
@@ -1015,7 +1016,7 @@ class Mapfile extends \app\inc\Controller
                 echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM ({$dataSql}) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                 ?>
                 CONNECTIONTYPE POSTGIS
-                CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']); ?><?php echo " port=" . (Connection::$param['mapserverport'] ?: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
                 <?php ?>
                 TYPE <?php echo $type . "\n"; ?>
                 METADATA
@@ -1029,13 +1030,13 @@ class Mapfile extends \app\inc\Controller
                     "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                     "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END
-                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = json_decode($row['fieldconf'],true);
-                foreach($fields as $field=>$name) {
+                if (!empty($fields)) foreach($fields as $field=>$name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
-                UTFDATA "<?php echo "{" . implode(",", $fieldsArr) . "}";
+                #UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
                 $fieldsArr=[];
                 ?>"
 

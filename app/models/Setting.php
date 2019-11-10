@@ -54,7 +54,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->api_key = $apiKey;
         } else {
-            $arr->api_key_subuser->{$_SESSION["subuser"]} = $apiKey;
+            $arr->api_key_subuser->{$_SESSION["screen_name"]} = $apiKey;
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -82,7 +82,7 @@ class Setting extends Model
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
         } else {
-            $arr->pw_subuser->{$_SESSION["subuser"]} = $this->encryptPw($pw);
+            $arr->pw_subuser->{$_SESSION["screen_name"]} = $this->encryptPw($pw);
         }
         if (\app\conf\App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
@@ -231,10 +231,10 @@ class Setting extends Model
 
         }
 
-        if ($_SESSION["subuser"]) {
-            $arr->pw = $arr->pw_subuser->{$_SESSION["subuser"]};
-            $arr->api_key = $arr->api_key_subuser->{$_SESSION["subuser"]};
-            unset($arr->pw_subuser);
+        if (!empty($_SESSION["subuser"])) {
+            $arr->pw = isset($arr->pw_subuser) ? $arr->pw_subuser->{$_SESSION["screen_name"]} : null;
+            $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
+            if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
         }
         // If user has no key, we generate one.
         if (!$arr->api_key) {
@@ -252,6 +252,7 @@ class Setting extends Model
             $response['message'] = $this->PDOerror;
             $response['code'] = 400;
         }
+
         return $response;
     }
 
@@ -275,7 +276,41 @@ class Setting extends Model
         return $response;
     }
 
-    public function encryptPw($pass)
+    /**
+     * Password is required to have
+     * - at least one capital letter
+     * - at least one digit
+     * - be longer than 7 characters
+     * 
+     * @return array
+     */
+    public static function checkPasswordStrength($password)
+    {
+        $validationErrors = [];
+
+        if (strlen($password) < 8) {
+            $validationErrors[] = "has to be at least 8 characters long";
+        }
+
+        if (!preg_match("#[0-9]+#", $password)) {
+            $validationErrors[] = "must include at least one number";
+        }
+    
+        if (!preg_match("#[A-Z]+#", $password)) {
+            $validationErrors[] = "must include at least one capital letter";
+        }
+
+        return $validationErrors;
+    }
+
+    /**
+     * Encrypts password
+     */
+    public static function encryptPwSecure($password) {
+        return password_hash($password, PASSWORD_BCRYPT);
+    }
+
+    public static function encryptPw($pass)
     {
         $pass = strip_tags($pass);
         $pass = str_replace(" ", "", $pass); //remove spaces from password

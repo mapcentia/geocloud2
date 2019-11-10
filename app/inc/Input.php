@@ -78,6 +78,11 @@ class Input
         return file_get_contents('php://input');
     }
 
+    public static function getCookies(): array
+    {
+        return $_COOKIE;
+    }
+
     /**
      * @param string|null $key
      * @param bool $raw
@@ -89,11 +94,10 @@ class Input
         if (isset(self::$params)) {
 
             if (isset($key)) {
-                return self::$params[$key];
+                return isset(self::$params[$key]) ? self::$params[$key] : null;
             } else {
                 return self::$params;
             }
-
         }
 
         $query = "";
@@ -117,7 +121,7 @@ class Input
             return str_replace("__gc2_plus__", "+", key($query));
         else {
             if ($key != null)
-                return $query[$key];
+                return isset($query[$key]) ? $query[$key] : null;
             else
                 return $query;
         }
@@ -138,7 +142,7 @@ class Input
         }
         $pairs = explode("&", $str);
         foreach ($pairs as $pair) {
-            list($k, $v) = array_map("urldecode", explode("=", $pair));
+            list($k, $v) = array_pad(array_map("urldecode", explode("=", $pair)), 2, null);
             $op[$k] = $v;
         }
         return $op;
@@ -171,7 +175,7 @@ class GetPart
      */
     function part(string $e)
     {
-        return $this->parts[$e];
+        return isset($this->parts[$e]) ? $this->parts[$e] : null;
     }
 
     /**
