@@ -32,6 +32,7 @@ and this project adheres to [CalVer](https://calver.org/).
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
 - Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
 - Optimized non-geometry meta VIEWs in database.
+- The schema select widget is now ordered by schema name.
    
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.

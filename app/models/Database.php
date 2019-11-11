@@ -120,7 +120,7 @@ class Database extends \app\inc\Model
             $count[$row['f_table_schema']] = $row['count'];
         }
 
-        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi'";
+        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi' ORDER BY schema_name";
         $res = $this->prepare($sql);
         try {
             $res->execute();
