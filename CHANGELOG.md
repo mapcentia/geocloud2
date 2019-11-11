@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [Unreleased]
+### Changed
+- The schema select widget is now ordered by schema name.
+
 ## [2019.1.0.rc1] - 2019-06-10
 ### Added
 - Phpfastcache added to speed up Meta API.
@@ -31,9 +35,7 @@ and this project adheres to [CalVer](https://calver.org/).
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
 - Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
-- Optimized non-geometry meta VIEWs in database.
-- The schema select widget is now ordered by schema name.
-   
+- Optimized non-geometry meta VIEWs in database.   
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
 - Style issue in Firefox for color picker in class property grid.
