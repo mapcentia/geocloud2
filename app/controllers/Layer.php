@@ -134,7 +134,7 @@ class Layer extends \app\inc\Controller
     public function put_roles()
     {
         $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->updateRoles(json_decode(Input::get())->data);
+        return (!$response['success']) ? $response : $this->table->updateRoles(json_decode(Input::get(), true)->data);
     }
 
     public function get_tags()
