@@ -66,6 +66,8 @@ class Tile extends Model
             "bands",
             "cache",
             "s3_tile_set",
+            "label_no_clip",
+            "polyline_no_clip",
         );
         $oldData = $this->get();
         $newData = array();

@@ -243,7 +243,8 @@ ul.x-tab-strip-bottom {
 }
 
 .x-editor .x-form-check-wrap {
-    background-color: #fff;
+    background-color: #404040;
+    padding-left: 5px;
 }
 
 .x-form-field-wrap .x-form-trigger {

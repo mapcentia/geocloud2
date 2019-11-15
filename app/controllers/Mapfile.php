@@ -437,6 +437,9 @@ class Mapfile extends \app\inc\Controller
                         ?>
                         CONNECTIONTYPE POSTGIS
                         CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ?Connection::$param['mapserverhost']: Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ?Connection::$param['mapserverport']: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                        <?php if (!empty($layerArr['data'][0]['label_no_clip'])) echo "PROCESSING \"LABEL_NO_CLIP=True\"\n"; ?>
+                        <?php if (!empty($layerArr['data'][0]['polyline_no_clip'])) echo "PROCESSING \"POLYLINE_NO_CLIP=True\"\n"; ?>
+
                         <?php
                     } else {
                         echo "DATA \"PG:host=" . (Connection::$param['mapserverhost'] ?: Connection::$param['postgishost']);
@@ -595,6 +598,15 @@ class Mapfile extends \app\inc\Controller
                         if (!empty($class['geomtransform'])) {
 
                             echo "GEOMTRANSFORM '{$class['geomtransform']}'";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #MINSIZE
+                        <?php
+                        if (!empty($class['minsize'])) {
+
+                            echo "MINSIZE {$class['minsize']}";
                         }
                         echo "\n";
                         ?>

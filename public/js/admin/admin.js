@@ -2903,6 +2903,15 @@ $(document).ready(function () {
                     name: 'offsite'
                 },
                 {
+                    name: 'label_no_clip',
+                    type: 'boolean'
+
+                },
+                {
+                    name: 'polyline_no_clip',
+
+                },
+                {
                     name: 'bands'
                 },
                 {
@@ -2956,6 +2965,8 @@ $(document).ready(function () {
                                 "symbolscaledenom": store.getAt(0).data.symbolscaledenom,
                                 "geotype": store.getAt(0).data.geotype,
                                 "offsite": store.getAt(0).data.offsite,
+                                "label_no_clip": store.getAt(0).data.label_no_clip,
+                                "polyline_no_clip": store.getAt(0).data.polyline_no_clip,
                                 "bands": store.getAt(0).data.bands
                             });
                         }

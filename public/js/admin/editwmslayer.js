@@ -7,10 +7,16 @@
 
 Ext.namespace('wmsLayer');
 wmsLayer.init = function (record) {
+    var checkboxRender = function (d) {
+        var checked = d ? 'property-grid-check-on' : '';
+        return '<div class="' + checked + '">';
+
+    };
     wmsLayer.fieldsForStore = [];
     wmsLayer.numFieldsForStore = [];
     wmsLayer.fieldsForStoreBrackets = [];
     wmsLayer.defaultSql = record.data || "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name;
+
     $.ajax({
         url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
         async: false,
@@ -51,14 +57,21 @@ wmsLayer.init = function (record) {
             theme_column: 'Class item',
             opacity: 'Opacity',
             label_max_scale: __('Label max scale denominator') + __('Minimum scale at which this LAYER is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true), //LABELMAXSCALEDENOM
-            label_min_scale: __('Label min scale denominator') +__('Maximum scale at which this LAYER is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true), //LABELMINSCALEDENOM
+            label_min_scale: __('Label min scale denominator') + __('Maximum scale at which this LAYER is labeled. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true), //LABELMINSCALEDENOM
             cluster: 'Clustering distance',
             maxscaledenom: __('Max scale denominator') + __('Minimum scale at which this LAYER is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
             minscaledenom: __('Min scale denominator') + __('Maximum scale at which this LAYER is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.', true),
             symbolscaledenom: 'Symbol scale denominator' + __("The scale at which symbols and/or text appear full size. This allows for dynamic scaling of objects based on the scale of the map. If not set then this layer will always appear at the same size. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             geotype: 'Geom type',
             offsite: 'Offsite' + __("This parameter tells MapServer what pixel values to render as background (or ignore). You can get the pixel values using image processing or image manipulation programs (i.e. Imagine, Photoshop, Gimp).", true),
+            label_no_clip: 'No clipping of labels' + __("Can be used to skip clipping of shapes when determining associated label anchor points. This avoids changes in label position as extents change between map draws. It also avoids duplicate labels where features appear in multiple adjacent tiles when creating tiled maps.", true),
+            polyline_no_clip: 'No clipping of polylines' + __("Can be used to skip clipping of shapes when rendering styled lines (dashed or styled with symbols). This avoids changes in the line styling as extents change between map draws. It also avoids edge effects where features appear in multiple adjacent tiles when creating tiled maps.", true),
             bands: 'Bands' + __("This directive allows a specific band or bands to be selected from a raster file. If one band is selected, it is treated as greyscale. If 3 are selected, they are treated as red, green and blue. If 4 are selected they are treated as red, green, blue and alpha (opacity). Example: 4,2,1", true)
+        },
+
+        customRenderers: {
+            label_no_clip: checkboxRender,
+            polyline_no_clip: checkboxRender,
         },
 
         customEditors: {
@@ -112,7 +125,9 @@ wmsLayer.init = function (record) {
             'cluster': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char nobody is using
-            }), {})
+            }), {}),
+            'label_no_clip': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
+            'polyline_no_clip': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {})
         },
         viewConfig: {
             forceFit: true,
@@ -166,8 +181,8 @@ wmsLayer.init = function (record) {
         items: [
             {
                 html: '<table>' +
-                    '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
-                    '</table>',
+                '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
+                '</table>',
                 border: false,
                 bodyStyle: 'padding-left: 3px'
             },

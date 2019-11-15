@@ -1000,11 +1000,11 @@ textarea {
 }
 
 .x-form-check-wrap input{
-    vertical-align: bottom;
 }
 
 .x-editor .x-form-check-wrap {
-    padding:3px;
+    padding-top:3px;
+    padding-left:3px;
 }
 
 .x-editor .x-form-checkbox {
@@ -2705,8 +2705,7 @@ a.x-grid3-hd-btn:hover {
 }
 
 .x-grid-editor .x-form-check-wrap {
-    text-align: center;
-    margin-top: -4px;
+    margin-top: -1px;
 }
 
 .ext-ie .x-props-grid .x-editor .x-form-text {

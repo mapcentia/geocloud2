@@ -383,6 +383,9 @@ wmsClass.init = function (id) {
                 name: "geomtransform"
             },
             {
+                name: "minsize"
+            },
+            {
                 name: "maxsize"
             },
             {
@@ -577,6 +580,9 @@ wmsClass.init = function (id) {
                 name: "overlaygeomtransform"
             },
             {
+                name: "overlayminsize"
+            },
+            {
                 name: "overlaymaxsize"
             },
             {
@@ -637,6 +643,7 @@ wmsClass.init = function (id) {
                             'angle',
                             'style_opacity',
                             'geomtransform',
+                            'minsize',
                             'maxsize',
                             'style_offsetx',
                             'style_offsety',
@@ -662,6 +669,7 @@ wmsClass.init = function (id) {
                             'overlayangle',
                             'overlaystyle_opacity',
                             'overlaygeomtransform',
+                            'overlayminsize',
                             'overlaymaxsize',
                             'overlaystyle_offsetx',
                             'overlaystyle_offsety',
@@ -811,7 +819,8 @@ wmsClass.init = function (id) {
             linecap: 'Style: line cap',
             pattern: 'Style: pattern',
             geomtransform: 'Style: geomtransform',
-            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
+            minsize: 'Style: minsize' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
+            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
             style_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
             style_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
             style_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
@@ -957,6 +966,11 @@ wmsClass.init = function (id) {
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
             }), {}),
+            'minsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
             'maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -1004,7 +1018,8 @@ wmsClass.init = function (id) {
             overlaylinecap: 'Style: line cap',
             overlaypattern: 'Style: pattern',
             overlaygeomtransform: 'Style: geomtransform',
-            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500.", true),
+            overlayminsize: 'Style: minsize' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
+            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
             overlaystyle_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
             overlaystyle_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
             overlaystyle_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
@@ -1149,6 +1164,11 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'overlayminsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using
