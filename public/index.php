@@ -7,6 +7,8 @@
  */
 
 ini_set("display_errors", "off");
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
 use \app\inc\Input;
