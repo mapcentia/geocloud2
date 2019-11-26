@@ -93,7 +93,9 @@ class Database extends Controller
             ];
         } else {
             $model = new UserModel();
-            return $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            $res = $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            $res["success"] = true;
+            return $res;
         }
     }
 
