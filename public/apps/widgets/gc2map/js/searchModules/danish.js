@@ -5,6 +5,7 @@ gc2map.createSearch = function (me, komKode) {
     var MHOST = "https://dk.gc2.io";
     var MDB = "dk";
     var onlyAddress = false;
+    var size = 4;
     placeStore = new geocloud.geoJsonStore({
         host: "//dk.gc2.io",
         db: "dk",
@@ -45,7 +46,7 @@ gc2map.createSearch = function (me, komKode) {
                     case "vejnavn,bynavn":
                         dsl1 = {
                             "from": 0,
-                            "size": 7,
+                            "size": size,
                             "query": {
                                 "bool": {
                                     "must": {
@@ -66,7 +67,7 @@ gc2map.createSearch = function (me, komKode) {
                                 "properties.postnrnavn": {
                                     "terms": {
                                         "field": "properties.postnrnavn",
-                                        "size": 7,
+                                        "size": size,
                                         "order": {
                                             "_term": "asc"
                                         }
@@ -75,19 +76,19 @@ gc2map.createSearch = function (me, komKode) {
                                         "properties.postnr": {
                                             "terms": {
                                                 "field": "properties.postnr",
-                                                "size": 7
+                                                "size": size
                                             },
                                             "aggregations": {
                                                 "properties.kommunekode": {
                                                     "terms": {
                                                         "field": "properties.kommunekode",
-                                                        "size": 7
+                                                        "size": size
                                                     },
                                                     "aggregations": {
                                                         "properties.regionskode": {
                                                             "terms": {
                                                                 "field": "properties.regionskode",
-                                                                "size": 7
+                                                                "size": size
                                                             }
                                                         }
                                                     }
@@ -100,7 +101,7 @@ gc2map.createSearch = function (me, komKode) {
                         };
                         dsl2 = {
                             "from": 0,
-                            "size": 7,
+                            "size": size,
                             "query": {
                                 "bool": {
                                     "must": {
@@ -121,7 +122,7 @@ gc2map.createSearch = function (me, komKode) {
                                 "properties.vejnavn": {
                                     "terms": {
                                         "field": "properties.vejnavn",
-                                        "size": 7,
+                                        "size": size,
                                         "order": {
                                             "_term": "asc"
                                         }
@@ -130,13 +131,13 @@ gc2map.createSearch = function (me, komKode) {
                                         "properties.kommunekode": {
                                             "terms": {
                                                 "field": "properties.kommunekode",
-                                                "size": 7
+                                                "size": size
                                             },
                                             "aggregations": {
                                                 "properties.regionskode": {
                                                     "terms": {
                                                         "field": "properties.regionskode",
-                                                        "size": 7
+                                                        "size": size
                                                     }
                                                 }
                                             }
@@ -149,7 +150,7 @@ gc2map.createSearch = function (me, komKode) {
                     case "vejnavn_bynavn":
                         dsl1 = {
                             "from": 0,
-                            "size": 7,
+                            "size": size,
                             "query": {
                                 "bool": {
                                     "must": {
@@ -170,7 +171,7 @@ gc2map.createSearch = function (me, komKode) {
                                 "properties.vejnavn": {
                                     "terms": {
                                         "field": "properties.vejnavn",
-                                        "size": 7,
+                                        "size": size,
                                         "order": {
                                             "_term": "asc"
                                         }
@@ -179,19 +180,19 @@ gc2map.createSearch = function (me, komKode) {
                                         "properties.postnrnavn": {
                                             "terms": {
                                                 "field": "properties.postnrnavn",
-                                                "size": 7
+                                                "size": size
                                             },
                                             "aggregations": {
                                                 "properties.kommunekode": {
                                                     "terms": {
                                                         "field": "properties.kommunekode",
-                                                        "size": 7
+                                                        "size": size
                                                     },
                                                     "aggregations": {
                                                         "properties.regionskode": {
                                                             "terms": {
                                                                 "field": "properties.regionskode",
-                                                                "size": 7
+                                                                "size": size
                                                             }
                                                         }
                                                     }
@@ -206,7 +207,7 @@ gc2map.createSearch = function (me, komKode) {
                     case "adresse":
                         dsl1 = {
                             "from": 0,
-                            "size": 7,
+                            "size": size,
                             "query": {
                                 "bool": {
                                     "must": {
@@ -341,7 +342,7 @@ gc2map.createSearch = function (me, komKode) {
                         case "jordstykke":
                             dslM = {
                                 "from": 0,
-                                "size": 7,
+                                "size": size,
                                 "query": {
                                     "bool": {
                                         "must": {
@@ -380,7 +381,7 @@ gc2map.createSearch = function (me, komKode) {
                         case "ejerlav":
                             dslM = {
                                 "from": 0,
-                                "size": 7,
+                                "size": size,
                                 "query": {
                                     "bool": {
                                         "must": {
@@ -404,13 +405,13 @@ gc2map.createSearch = function (me, komKode) {
                                             "order": {
                                                 "_term": "asc"
                                             },
-                                            "size": 7
+                                            "size": size
                                         },
                                         "aggregations": {
                                             "properties.kommunekode": {
                                                 "terms": {
                                                     "field": "properties.kommunekode",
-                                                    "size": 7
+                                                    "size": size
                                                 }
                                             }
                                         }
