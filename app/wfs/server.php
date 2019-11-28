@@ -17,7 +17,6 @@ header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
 include "libs/phpgeometry_class.php";
-include "models/versions.php";
 include "libs/PEAR/XML/Unserializer.php";
 include "libs/PEAR/XML/Serializer.php";
 include "libs/PEAR/Cache_Lite/Lite.php";
@@ -914,9 +913,10 @@ function doParse($arr)
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
 
+                        $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
+
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
-                            $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
                             $role = $roleObj["data"][$user];
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
