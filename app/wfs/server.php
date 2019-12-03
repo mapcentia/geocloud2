@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -859,6 +859,7 @@ function doParse($arr)
     global $transaction;
     global $db;
     global $trusted;
+    global $rowIdsChanged;
 
     $serializer_options = array(
         'indent' => '  ',
@@ -895,8 +896,9 @@ function doParse($arr)
                         /**
                          * Load pre-processors
                          */
-                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                            $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                            $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                                "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                             $preProcessor = new $class($postgisObject);
                             $preRes = $preProcessor->processInsert($feature, $typeName);
                             if (!$preRes["success"]) {
@@ -1011,8 +1013,9 @@ function doParse($arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                        "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processUpdate($hey, $hey["typeName"]);
                     if (!$preRes["success"]) {
@@ -1093,8 +1096,9 @@ function doParse($arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                        "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processDelete($hey, $hey['typeName']);
                     if (!$preRes["success"]) {
@@ -1360,13 +1364,16 @@ function doParse($arr)
         }
     }
     // We fire the sqls
-    if (isset($sqls)) foreach ($sqls as $operation => $sql) {
-        foreach ($sql as $singleSql) {
-            $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
-            Log::write("Sqls fired\n");
-            Log::write("{$singleSql}\n");
+    if (isset($sqls)) {
+        foreach ($sqls as $operation => $sql) {
+            foreach ($sql as $singleSql) {
+                $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
+                Log::write("Sqls fired\n");
+                Log::write("{$singleSql}\n");
+            }
         }
     }
+
     // If a layer is not editable, PDOerror is set.
     if (sizeof($notEditable) > 0) {
         $postgisObject->PDOerror[0] = "Layer not editable";
@@ -1377,6 +1384,7 @@ function doParse($arr)
     echo '</wfs:Message>';
 
     // TransactionResult
+    $rowIdsChanged = []; // Global Array that holds ids from all affected rows. Can be used in post-processes
     if (sizeof($postgisObject->PDOerror) == 0) {
         echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
     } else {
@@ -1402,7 +1410,7 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql['tables'])) echo current($forSql['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfInserts++;
@@ -1438,7 +1446,7 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql2['tables'])) echo current($forSql2['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfUpdates++;
@@ -1471,7 +1479,7 @@ function doParse($arr)
         if (isset($forSql3['tables'])) reset($forSql3['tables']);
         foreach ($results['delete'] as $res) {
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfDeletes++;
@@ -1532,8 +1540,9 @@ function doParse($arr)
     /**
      * Load post-processors
      */
-    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/post/*.php") as $filename) {
-        $class = "app\\conf\\wfsprocessors\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/post/*.php") as $filename) {
+        $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+            "\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
         $postProcessor = new $class($postgisObject);
         $postRes = $postProcessor->process();
         if (!$postRes["success"]) {

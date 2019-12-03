@@ -5009,11 +5009,11 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
+            url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
-            featureNS: "http://mapcentia.com/" + screenName,
-            featurePrefix: screenName,
+            featureNS: "http://mapcentia.com/" + parentdb,
+            featurePrefix: parentdb,
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic
             defaultFilter: wfsFilter
