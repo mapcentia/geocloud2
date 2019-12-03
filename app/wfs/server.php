@@ -1003,8 +1003,6 @@ function doParse($arr)
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
-
-
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
@@ -1037,6 +1035,8 @@ function doParse($arr)
                 if (!$gc2_status_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_status", "Value" => null);
                 if (!$gc2_workflow_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_workflow", "Value" => null);
 
+                $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
+
                 foreach ($hey['Property'] as $pair) {
                     // Some clients use ns in the Name element, so it must be stripped
                     $split = explode(":", $pair['Name']);
@@ -1044,7 +1044,6 @@ function doParse($arr)
                         $pair['Name'] = dropAllNameSpaces($pair['Name']);
                     }
                     $fields[$fid][] = $pair['Name'];
-                    $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                     $role = $roleObj["data"][$user];
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
