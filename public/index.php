@@ -25,6 +25,7 @@ use Phpfastcache\Drivers\Files\Config;
 include_once('../app/vendor/autoload.php');
 
 include_once("../app/conf/App.php");
+include_once("../app/inc/Global.php");
 
 new \app\conf\App();
 
