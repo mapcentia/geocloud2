@@ -216,8 +216,8 @@ class Model
                     $this->connect("PG");
                 }
                 $result = pg_query($this->db, $query);
-                return ($result);
                 break;
+
             case "PDO" :
                 if (!$this->db) {
                     try {
@@ -227,7 +227,7 @@ class Model
                     }
                 }
                 if ($this->connectionFailed) {
-                    return false;
+                    $result = false;
                 }
                 try {
                     $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -243,9 +243,9 @@ class Model
                 } catch (\PDOException $e) {
                     $this->PDOerror[] = $e->getMessage();
                 }
-                return ($result);
                 break;
         }
+        return $result;
     }
 
     /**
@@ -430,6 +430,7 @@ class Model
 
     function getGeometryColumns(string $table, string $field)
     {
+        $response = [];
         preg_match("/^[\w'-]*\./", $table, $matches);
         $_schema = $matches[0];
 
@@ -441,8 +442,8 @@ class Model
         } else {
             $_schema = str_replace(".", "", $_schema);
         }
-        $query = "SELECT * FROM settings.getColumns('f_table_name=''{$_table}'' AND f_table_schema=''{$_schema}''',
-                    'raster_columns.r_table_name=''{$_table}'' AND raster_columns.r_table_schema=''{$_schema}''')";
+        $query = "SELECT * FROM settings.getColumns('f_table_schema = ''{$_schema}'' AND f_table_name = ''{$_table}''',
+                    'raster_columns.r_table_schema = ''{$_schema}'' AND raster_columns.r_table_name = ''{$_table}''')";
 
         try {
             $result = $this->execQuery($query);
@@ -457,46 +458,47 @@ class Model
         elseif ($row)
             $this->theGeometry = $row['type'];
         if ($field == 'f_geometry_column') {
-            return $row['f_geometry_column'];
+            $response = $row['f_geometry_column'];
         }
         if ($field == 'srid') {
-            return $row['srid'];
+            $response = $row['srid'];
         }
         if ($field == 'type') {
             $arr = (array)json_decode($row['def']);
             if (isset($arr['geotype']) && ($arr['geotype']) && $arr['geotype'] != "Default") {
-                return $arr['geotype'];
+                $response = $arr['geotype'];
             } else {
-                return $row['type'];
+                $response = $row['type'];
             }
         }
         if ($field == 'tweet') {
-            return $row['tweet'];
+            $response = $row['tweet'];
         }
         if ($field == 'editable') {
-            return $row['editable'];
+            $response = $row['editable'];
         }
         if ($field == 'authentication') {
-            return $row['authentication'];
+            $response = $row['authentication'];
         }
         if ($field == 'fieldconf') {
-            return $row['fieldconf'];
+            $response = $row['fieldconf'];
         }
         if ($field == 'def') {
-            return $row['def'];
+            $response = $row['def'];
         }
         if ($field == 'id') {
-            return $row['id'];
+            $response = $row['id'];
         }
         if ($field == 'elasticsearch') {
-            return $row['elasticsearch'];
+            $response = $row['elasticsearch'];
         }
         if ($field == 'featureid') {
-            return $row['featureid'];
+            $response = $row['featureid'];
         }
         if ($field == '*') {
-            return $row;
+            $response = $row;
         }
+        return $response;
     }
 
     public static function toAscii($str, $replace = array(), $delimiter = '-')
