@@ -6,10 +6,11 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
 ### Changed
-- The schema select widget is now ordered by schema name.
+- The schema select widget in Admin is now ordered by schema name.
 - Allowed minimum size of scaled symbols added to GUI
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
-- Boolean fields in Settings property grids are now renders as check icons and the widget is a standard checkbox.  
+- Boolean fields in Settings property grids are now renders as check icons and the widget is a standard checkbox.
+- Optimizing by reducing SELECTs in Layer.php
 
 ## [2019.1.0.rc1] - 2019-06-10
 ### Added
