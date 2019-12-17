@@ -91,7 +91,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE screenname = :sUserID AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
