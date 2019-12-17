@@ -89,8 +89,15 @@ class Wms extends \app\inc\Controller
             // Get service. Only WFS for now
             $this->service = strtolower($arr["service"]);
 
+            $typeName = !empty($arr["wfs:Query"]["typeName"]) ? $arr["wfs:Query"]["typeName"] : $arr["Query"]["typeName"];
+
+            if (empty($typeName)) {
+                \app\wfs\ServiceException::report("Could not get the typeName from the requests");
+                exit();
+            }
+
             // Get the layer name
-            $layer = sizeof(explode(":", $arr["wfs:Query"]["typeName"])) > 1 ? explode(":", $arr["wfs:Query"]["typeName"])[1] : $arr["wfs:Query"]["typeName"];
+            $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
 
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
