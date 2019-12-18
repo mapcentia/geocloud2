@@ -10,7 +10,8 @@
         "phayes/geoPHP": "^1.2",
         "phpFastCache/phpFastCache": "^7.0",
         "zircote/swagger-php": "^3.0",
-        "firebase/php-jwt": "^5.0"
+        "firebase/php-jwt": "^5.0",
+        "predis/predis": "^1.1"
     },
     "require-dev": {
         "codeception/codeception": "^2.5"

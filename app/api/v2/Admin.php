@@ -16,6 +16,7 @@ ini_set('max_execution_time', 0);
 
 use \app\inc\Controller;
 use \app\inc\Input;
+use \app\inc\Cache;
 use \app\models\Database;
 use \app\conf\App;
 use \app\conf\Connection;
@@ -317,10 +318,18 @@ class Admin extends Controller
         return $admin->install();
     }
 
-    public function get_cache(): array
+    public function get_cachestats(): array
     {
-        global $globalInstanceCache;
-        print_r($globalInstanceCache->getStats());
-        die();
+        return ["stats" => Cache::getStats()];
+    }
+
+    public function get_clearcache(): array
+    {
+        return Cache::clear();
+    }
+
+    public function get_cacheitems(): array
+    {
+        return ["items" => json_decode(Cache::getItemsByTagsAsJsonString([Connection::$param["postgisdb"]]))];
     }
 }

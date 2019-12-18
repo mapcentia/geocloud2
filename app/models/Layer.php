@@ -8,7 +8,10 @@
 
 namespace app\models;
 
-use app\conf\App;
+use \app\conf\App;
+use \app\inc\Cache;
+use \app\inc\Session;
+
 
 class Layer extends \app\models\Table
 {
@@ -17,6 +20,13 @@ class Layer extends \app\models\Table
         try {
             parent::__construct("settings.geometry_columns_view");
         } catch (\PDOException $e) {
+        }
+    }
+
+    private function clearCacheOnSchemaChanges() {
+        $arr = ["meta"];
+        foreach ($arr as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
         }
     }
 
@@ -57,32 +67,26 @@ class Layer extends \app\models\Table
             //$auth = null;
         }
 
-        $key = md5($query . "_" . (int)$auth . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es . "_" . \app\inc\Session::getFullUseName());
+        $cacheType = "meta";
+        $cacheId =  $this->postgisdb . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
 
-        try {
-            $CachedString = $this->InstanceCache->getItem($key);
-        } catch (\Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException $exception) {
-            $CachedString = null;
-        } catch (\Error $exception) {
-            $CachedString = null;
-        }
+        $CachedString = Cache::getItem($cacheId);
 
         $timeToLive = (60 * 60 * 240);
-        //$timeToLive = (1); // disabled
+        //$timeToLive = (0.00000001); // disabled
 
         if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();
             $response = $data;
             try {
-                $response["cache_hit"] = $CachedString->getCreationDate();
+                $response["cache"]["hit"] = $CachedString->getCreationDate();
+                $response["cache"]["tags"] = $CachedString->getTags();
             } catch (\Phpfastcache\Exceptions\PhpfastcacheLogicException $exception) {
-                $response["cache_hit"] = $exception->getMessage();
+                $response["cache"] = $exception->getMessage();
             }
-            $response["cache_signature"] = md5(serialize($data));
+            $response["cache"]["signature"] = md5(serialize($data));
             return $response;
-
         } else {
-
             $response = [];
             $schemata = [];
             $layers = [];
@@ -120,21 +124,17 @@ class Layer extends \app\models\Table
             }
 
             if (sizeof($layers) > 0) {
-
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
                     $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY {$sort})";
                 }
-
             }
 
             if (sizeof($tags) > 0) {
-
                 foreach ($tags as $tag) {
                     $tag = urldecode($tag);
                     $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
                 }
-
             }
 
             if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
@@ -180,8 +180,8 @@ class Layer extends \app\models\Table
                 $arr = array();
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
-                $primeryKey = $this->getPrimeryKey($rel); // TODO Slows down
-                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // TODO Slows down
+                $primeryKey = $this->getPrimeryKey($rel); // Is cached
+                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // Is cached
                 $versioning = $resVersioning["exists"];
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
@@ -300,7 +300,7 @@ class Layer extends \app\models\Table
                 }
 
                 // Restrictions
-                // TODO Slows down
+                // Cached
                 $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
 
                 // References
@@ -312,7 +312,7 @@ class Layer extends \app\models\Table
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
-                    // TODO Slows down
+                    // Cached
                     $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
@@ -361,11 +361,13 @@ class Layer extends \app\models\Table
 
             try {
                 $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
-                $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+                $CachedString->addTags([$cacheType, $this->postgisdb]);
             } catch (\Error $exception) {
                 // Pass
             }
-            $response["cache_hit"] = false;
+            Cache::save($CachedString);
+
+            $response["cache"]["hit"] = false;
 
         }
         return $response;
@@ -444,12 +446,7 @@ class Layer extends \app\models\Table
      */
     public function updateElasticsearchMapping($data, $_key_)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
         $data = $table->makeArray($data);
         $elasticsearchArr = (array)json_decode($this->getValueFromKey($_key_, "elasticsearch"));
@@ -497,12 +494,7 @@ class Layer extends \app\models\Table
      */
     public function rename($tableName, $data)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $split = explode(".", $tableName);
         $newName = self::toAscii($data->name, array(), "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
@@ -559,12 +551,7 @@ class Layer extends \app\models\Table
      */
     public function setSchema($tables, $schema)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $this->begin();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
@@ -630,12 +617,7 @@ class Layer extends \app\models\Table
      */
     public function delete(array $tables)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
         foreach ($tables as $table) {
@@ -701,11 +683,7 @@ class Layer extends \app\models\Table
      */
     public function updatePrivileges($data)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
+        $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;
@@ -729,13 +707,7 @@ class Layer extends \app\models\Table
      */
     public function updateLastmodified($_key_)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Error $exception) {
-            error_log($exception->getMessage());
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
         $table = new Table("settings.geometry_columns_join");
@@ -778,12 +750,7 @@ class Layer extends \app\models\Table
      */
     public function updateRoles($data)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
         $role = json_decode($this->getValueFromKey($data['_key_'], "roles") ?: "{}");
@@ -892,12 +859,7 @@ class Layer extends \app\models\Table
      */
     public function copyMeta($to, $from)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
         try {
@@ -931,17 +893,7 @@ class Layer extends \app\models\Table
 
     public function getRole($schema, $table, $user)
     {
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$schema}'' AND f_table_name=''{$table}''','raster_columns.r_table_schema=''{$schema}'' AND raster_columns.r_table_name=''{$table}''') ORDER BY sort_id";
-        $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (\PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e;
-            $response['code'] = 403;
-            return $response;
-        }
-        $row = $this->fetchRow($res, "assoc");
+        $row = $this->getColumns($schema, $table);
         $response['success'] = true;
         $response['data'] = json_decode($row['roles'], true);
         return $response;

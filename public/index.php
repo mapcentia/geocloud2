@@ -16,16 +16,14 @@ use \app\inc\Session;
 use \app\inc\Route;
 use \app\inc\Util;
 use \app\inc\Response;
+use \app\inc\Cache;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 include_once('../app/vendor/autoload.php');
-
 include_once("../app/conf/App.php");
-include_once("../app/inc/Global.php");
+include_once("../app/inc/Globals.php");
 
 new \app\conf\App();
 
@@ -33,9 +31,10 @@ $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : 
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
 
-//ini_set('session.save_handler', 'redis');
-//ini_set('session.save_path', "tcp://172.18.0.4:6379");
-
+if (!empty(App::$param['redisHost'])) {
+    ini_set('session.save_handler', 'redis');
+    ini_set('session.save_path', App::$param['redisHost']);
+}
 
 // Get start time of script
 $executionStartTime = microtime(true);
@@ -67,17 +66,7 @@ register_shutdown_function(function () {
     return false;
 });
 
-$globalInstanceCache = null;
-try {
-    $globalInstanceCache = CacheManager::getInstance('Files',
-        new Config([
-            'securityKey' => "phpfastcache",
-            'path' => '/var/www/geocloud2/app/tmp',
-            'itemDetailedDate' => true
-        ])
-    );
-} catch (\Exception $exception) {
-}
+Cache::setInstance();
 
 // Setup host
 App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();

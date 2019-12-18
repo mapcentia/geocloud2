@@ -9,8 +9,12 @@ and this project adheres to [CalVer](https://calver.org/).
 - The schema select widget in Admin is now ordered by schema name.
 - Allowed minimum size of scaled symbols added to GUI
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
-- Boolean fields in Settings property grids are now renders as check icons and the widget is a standard checkbox.
-- Optimizing by reducing SELECTs in Layer.php
+- Boolean fields in Settings property grids are now rendered as check icons and the widget is a standard checkbox.
+- Optimizing by reducing SELECTs in Layer.php.
+- More fine grained caching in Layer, Setting and Model, so pri-keys, column info and more is cached.
+- Redis added as backend for Phpfastcache and session control:
+    - Just set `redisHost` in \app\conf\App.php to enable Redis for sessions.
+    - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
 
 ## [2019.1.0.rc1] - 2019-06-10
 ### Added

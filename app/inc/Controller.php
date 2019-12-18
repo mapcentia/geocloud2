@@ -182,18 +182,10 @@ class Controller
             } else {
                 $apiKey = $response['data']->api_key;
             }
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''{$schema}'' AND f_table_name = ''{$unQualifiedName}''','raster_columns.r_table_schema = ''{$schema}'' AND raster_columns.r_table_name = ''{$unQualifiedName}''')";
-            $res = $postgisObject->prepare($sql);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                $response = array();
-                $response2['success'] = false;
-                $response2['message'] = $e->getMessage();
-                $response2['code'] = 401;
-                die(Response::toJson($response));
-            }
-            while ($row = $postgisObject->fetchRow($res, "assoc")) {
+
+            $rows = $postgisObject->getColumns($schema, $unQualifiedName);
+
+            foreach ($rows as $row){
                 // Check if we got the right layer from the database
                 if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
                     continue;

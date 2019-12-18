@@ -3,11 +3,13 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\models;
 
+use app\inc\Cache;
+use app\inc\Globals;
 use app\inc\Model;
 
 class Setting extends Model
@@ -17,9 +19,15 @@ class Setting extends Model
         parent::__construct();
     }
 
+    private function clearCacheOnSchemaChanges() {
+        $arr = ["settings"];
+        foreach ($arr as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
+        }
+    }
+
     /**
      * @return mixed
-     * @throws \PDOException;
      */
     public function getArray()
     {
@@ -49,6 +57,7 @@ class Setting extends Model
 
     public function updateApiKey()
     {
+        $this->clearCacheOnSchemaChanges();
         $apiKey = md5(microtime() . rand());
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
@@ -77,8 +86,8 @@ class Setting extends Model
 
     public function updatePw($pw)
     {
+        $this->clearCacheOnSchemaChanges();
         $arr = $this->getArray();
-
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
         } else {
@@ -104,8 +113,8 @@ class Setting extends Model
 
     public function updateExtent($extent)
     {
+        $this->clearCacheOnSchemaChanges();
         $arr = $this->getArray();
-
         $obj = (array)$arr->extents;
         $obj[\app\conf\Connection::$param['postgisschema']] = $extent->extent;
         $arr->extents = $obj;
@@ -140,10 +149,10 @@ class Setting extends Model
      * @param $extentrestrict
      * @return array
      */
-    public function updateExtentRestrict($extentrestrict) : array
+    public function updateExtentRestrict($extentrestrict): array
     {
+        $this->clearCacheOnSchemaChanges();
         $response = [];
-
         try {
             $arr = $this->getArray();
         } catch (\PDOException $e) {
@@ -183,10 +192,10 @@ class Setting extends Model
      * @param $userGroup
      * @return array
      */
-    public function updateUserGroups($userGroup) : array
+    public function updateUserGroups($userGroup): array
     {
+        $this->clearCacheOnSchemaChanges();
         $response = [];
-
         try {
             $arr = $this->getArray();
         } catch (\PDOException $e) {
@@ -221,39 +230,63 @@ class Setting extends Model
 
     public function get($unsetPw = false)
     {
-        try {
-            $arr = $this->getArray();
-        } catch (\PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
+        $cacheType = "settings";
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $_SESSION["screen_name"];
+
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            $response = $CachedString->get();
+            try {
+                $response["cache"]["hit"] = $CachedString->getCreationDate();
+                $response["cache"]["tags"] = $CachedString->getTags();
+            } catch (\Phpfastcache\Exceptions\PhpfastcacheLogicException $exception) {
+                $response["cache"] = $exception->getMessage();
+            }
+            $response["cache"]["signature"] = md5(serialize($response));
             return $response;
-
-        }
-
-        if (!empty($_SESSION["subuser"])) {
-            $arr->pw = isset($arr->pw_subuser) ? $arr->pw_subuser->{$_SESSION["screen_name"]} : null;
-            $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
-            if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
-        }
-        // If user has no key, we generate one.
-        if (!$arr->api_key) {
-            $res = $this->updateApiKey();
-            $arr->api_key = $res['key'];
-        }
-        if ($unsetPw) {
-            unset($arr->pw);
-        }
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['data'] = $arr;
         } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+            try {
+                $arr = $this->getArray();
+            } catch (\PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
 
-        return $response;
+            if (!empty($_SESSION["subuser"])) {
+                $arr->pw = isset($arr->pw_subuser) ? $arr->pw_subuser->{$_SESSION["screen_name"]} : null;
+                $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
+                if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
+            }
+            // If user has no key, we generate one.
+            if (!$arr->api_key) {
+                $res = $this->updateApiKey();
+                $arr->api_key = $res['key'];
+            }
+            if ($unsetPw) {
+                unset($arr->pw);
+            }
+            if (!$this->PDOerror) {
+                $response['success'] = true;
+                $response['data'] = $arr;
+            } else {
+                $response['success'] = false;
+                $response['message'] = $this->PDOerror;
+                $response['code'] = 400;
+            }
+            try {
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+                $CachedString->addTags([$cacheType, $this->postgisdb]);
+
+            } catch (\Error $exception) {
+                die($exception->getMessage());
+            }
+            Cache::save($CachedString);
+            $response["cache"]["hit"] = false;
+
+            return $response;
+        }
     }
 
     public function getForPublic()
@@ -281,7 +314,7 @@ class Setting extends Model
      * - at least one capital letter
      * - at least one digit
      * - be longer than 7 characters
-     * 
+     *
      * @return array
      */
     public static function checkPasswordStrength($password)
@@ -295,7 +328,7 @@ class Setting extends Model
         if (!preg_match("#[0-9]+#", $password)) {
             $validationErrors[] = "must include at least one number";
         }
-    
+
         if (!preg_match("#[A-Z]+#", $password)) {
             $validationErrors[] = "must include at least one capital letter";
         }
@@ -306,7 +339,8 @@ class Setting extends Model
     /**
      * Encrypts password
      */
-    public static function encryptPwSecure($password) {
+    public static function encryptPwSecure($password)
+    {
         return password_hash($password, PASSWORD_BCRYPT);
     }
 

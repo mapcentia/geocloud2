@@ -8,7 +8,9 @@
 
 namespace app\api\v2;
 
+use app\inc\Cache;
 use app\inc\Input;
+use app\inc\Session;
 
 /**
  * Class Sql
@@ -57,11 +59,6 @@ class Sql extends \app\inc\Controller
     const USEDRELSKEY = "checked_relations";
 
     /**
-     * @var \Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface
-     */
-    private $InstanceCache;
-
-    /**
      * @var
      */
     private $cacheInfo;
@@ -71,13 +68,11 @@ class Sql extends \app\inc\Controller
      */
     private $streamFlag;
 
+    private $db;
+
     function __construct()
     {
-        global $globalInstanceCache;
-
         parent::__construct();
-
-        $this->InstanceCache = $globalInstanceCache;
     }
 
     /**
@@ -99,10 +94,13 @@ class Sql extends \app\inc\Controller
 
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
+            $this->db = $dbSplit[1];
         } elseif (!empty($_SESSION["subuser"])) {
             $this->subUser = $_SESSION["screen_name"];
+            $this->db = Session::getDatabase();
         } else {
             $this->subUser = null;
+            $this->db = $db;
         }
 
         // Check if body is JSON
@@ -168,10 +166,9 @@ class Sql extends \app\inc\Controller
         }
         $response = unserialize($this->data);
         if ($this->cacheInfo) {
-            $response["cache_hit"] = $this->cacheInfo;
+            $response["cache"] = $this->cacheInfo;
         }
         $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
-
         return $response;
     }
 
@@ -429,14 +426,10 @@ class Sql extends \app\inc\Controller
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            $cacheId = md5($this->q . "_" . $lifetime);
+            $key = md5(\app\conf\Connection::$param["postgisdb"]. "_" . $this->q . "_" . $lifetime);
 
             if ($lifetime > 0) {
-                try {
-                    $CachedString = $this->InstanceCache->getItem($cacheId);
-                } catch (\Exception $e) {
-                    $CachedString = null;
-                }
+                $CachedString = Cache::getItem($key);
             }
 
             if ($lifetime > 0 && !empty($CachedString) && $CachedString->isHit()) {
@@ -446,8 +439,9 @@ class Sql extends \app\inc\Controller
                 } catch (\Exception $e) {
                     $CreationDate = $e->getMessage();
                 }
-                $this->cacheInfo["cache_hit"] = $CreationDate;
-                $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
+                $this->cacheInfo["hit"] = $CreationDate;
+                $this->cacheInfo["tags"] = $CachedString->getTags();
+                $this->cacheInfo["signature"] = md5(serialize($this->data));
 
             } else {
                 ob_start();
@@ -473,8 +467,9 @@ class Sql extends \app\inc\Controller
                 $this->data = ob_get_contents();
                 if ($lifetime > 0) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
-                    $this->cacheInfo["cache_hit"] = false;
+                    $CachedString->addTags(["sql", \app\conf\Connection::$param["postgisdb"]]);
+                    Cache::save($CachedString); // Save the cache item just like you do with doctrine and entities
+                    $this->cacheInfo["hit"] = false;
                 }
                 ob_get_clean();
             }

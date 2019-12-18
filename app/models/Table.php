@@ -8,10 +8,14 @@
 
 namespace app\models;
 
+use app\inc\Globals;
 use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
+use app\inc\Session;
 use app\inc\Util;
+use app\inc\Geometrycolums;
+use app\inc\Cache;
 
 class Table extends Model
 {
@@ -19,17 +23,16 @@ class Table extends Model
     public $table;
     public $schema;
     public $geometryColumns;
-    protected $InstanceCache;
-    var $tableWithOutSchema;
-    var $metaData;
-    var $geomField;
-    var $geomType;
-    var $exits;
-    var $versioning;
-    var $workflow;
-    var $sysCols;
-    var $primeryKey;
-    var $specialChars;
+    public $tableWithOutSchema;
+    public $metaData;
+    public $geomField;
+    public $geomType;
+    public $exits;
+    public $versioning;
+    public $workflow;
+    public $sysCols;
+    public $primeryKey;
+    public $specialChars;
 
     /**
      * Table constructor.
@@ -39,11 +42,16 @@ class Table extends Model
      */
     function __construct($table, $temp = false, $addGeomType = false)
     {
-        global $globalInstanceCache;
-
         parent::__construct();
 
-        $this->InstanceCache = $globalInstanceCache;
+        // Make sure db connection is init
+        if (!$this->db) {
+            try {
+                $this->connect("PDO");
+            } catch (\PDOException $e) {
+                throw new \PDOException($e->getMessage());
+            }
+        }
 
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
@@ -61,17 +69,35 @@ class Table extends Model
         $this->table = $table;
 
         if ($this->schema != "settings") {
-            $sql = "SELECT 1 FROM {$table} LIMIT 1";
-            try {
-                $this->execQuery($sql);
-            } catch (\PDOException $e) {
-
-            }
-            if ($this->PDOerror) {
-                $this->exits = false;
+            $cacheType = "relExist";
+            $cacheRel = $this->table;
+            $cacheId = $this->postgisdb . "_" . $cacheType ."_" . $cacheRel;
+            $CachedString = Cache::getItem($cacheId);
+            if ($CachedString != null && $CachedString->isHit()) {
+                $this->exits = $CachedString->get();
             } else {
+                $sql = "SELECT 1 FROM {$table} LIMIT 1";
+                try {
+                    $this->execQuery($sql);
+                } catch (\PDOException $e) {
+
+                }
+                if ($this->PDOerror) {
+                    $this->exits = false;
+                } else {
+                    $this->exits = true;
+                }
+                try {
+                    $CachedString->set($this->exits)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+                    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+                } catch (\Error $exception) {
+                    die($exception->getMessage());
+                }
+                Cache::save($CachedString);
+            }
+
+            if ($this->exits) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
-                $this->geometryColumns = false;
                 $this->metaData = $this->getMetaData($this->table, $temp);
                 $this->geomField = $this->geometryColumns["f_geometry_column"];
                 $this->geomType = $this->geometryColumns["type"];
@@ -85,368 +111,16 @@ class Table extends Model
             }
         } else {
             $this->geometryColumns = false;
-            // Make sure db connection is init
-            if (!$this->db) {
-                try {
-                    $this->connect("PDO");
-                } catch (\PDOException $e) {
-                    throw new \PDOException($e->getMessage());
-                }
-            }
-            $this->metaData = array (
-                'f_table_schema' =>
-                    array (
-                        'num' => 1,
-                        'type' => 'name',
-                        'full_type' => 'name',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'f_table_name' =>
-                    array (
-                        'num' => 2,
-                        'type' => 'name',
-                        'full_type' => 'name',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'f_geometry_column' =>
-                    array (
-                        'num' => 3,
-                        'type' => 'name',
-                        'full_type' => 'name',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'coord_dimension' =>
-                    array (
-                        'num' => 4,
-                        'type' => 'integer',
-                        'full_type' => 'integer',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'srid' =>
-                    array (
-                        'num' => 5,
-                        'type' => 'integer',
-                        'full_type' => 'integer',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'type' =>
-                    array (
-                        'num' => 6,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                '_key_' =>
-                    array (
-                        'num' => 7,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'f_table_abstract' =>
-                    array (
-                        'num' => 8,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(256)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'f_table_title' =>
-                    array (
-                        'num' => 9,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(256)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'tweet' =>
-                    array (
-                        'num' => 10,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'editable' =>
-                    array (
-                        'num' => 11,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'created' =>
-                    array (
-                        'num' => 12,
-                        'type' => 'timestamp with time zone',
-                        'full_type' => 'timestamp with time zone',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'lastmodified' =>
-                    array (
-                        'num' => 13,
-                        'type' => 'timestamp with time zone',
-                        'full_type' => 'timestamp with time zone',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'authentication' =>
-                    array (
-                        'num' => 14,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'fieldconf' =>
-                    array (
-                        'num' => 15,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'meta_url' =>
-                    array (
-                        'num' => 16,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'layergroup' =>
-                    array (
-                        'num' => 17,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'def' =>
-                    array (
-                        'num' => 18,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'class' =>
-                    array (
-                        'num' => 19,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'wmssource' =>
-                    array (
-                        'num' => 20,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'baselayer' =>
-                    array (
-                        'num' => 21,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'sort_id' =>
-                    array (
-                        'num' => 22,
-                        'type' => 'integer',
-                        'full_type' => 'integer',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'tilecache' =>
-                    array (
-                        'num' => 23,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'data' =>
-                    array (
-                        'num' => 24,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'not_querable' =>
-                    array (
-                        'num' => 25,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'single_tile' =>
-                    array (
-                        'num' => 26,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'cartomobile' =>
-                    array (
-                        'num' => 27,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'filter' =>
-                    array (
-                        'num' => 28,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'bitmapsource' =>
-                    array (
-                        'num' => 29,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'privileges' =>
-                    array (
-                        'num' => 30,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'enablesqlfilter' =>
-                    array (
-                        'num' => 31,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'triggertable' =>
-                    array (
-                        'num' => 32,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'classwizard' =>
-                    array (
-                        'num' => 33,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'extra' =>
-                    array (
-                        'num' => 34,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'skipconflict' =>
-                    array (
-                        'num' => 35,
-                        'type' => 'boolean',
-                        'full_type' => 'boolean',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'roles' =>
-                    array (
-                        'num' => 36,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'elasticsearch' =>
-                    array (
-                        'num' => 37,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'uuid' =>
-                    array (
-                        'num' => 38,
-                        'type' => 'uuid',
-                        'full_type' => 'uuid',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'tags' =>
-                    array (
-                        'num' => 39,
-                        'type' => 'jsonb',
-                        'full_type' => 'jsonb',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'meta' =>
-                    array (
-                        'num' => 40,
-                        'type' => 'jsonb',
-                        'full_type' => 'jsonb',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'wmsclientepsgs' =>
-                    array (
-                        'num' => 41,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'featureid' =>
-                    array (
-                        'num' => 42,
-                        'type' => 'character varying',
-                        'full_type' => 'character varying(255)',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-                'note' =>
-                    array (
-                        'num' => 43,
-                        'type' => 'text',
-                        'full_type' => 'text',
-                        'is_nullable' => true,
-                        'restriction' => NULL,
-                    ),
-            );
+            $this->metaData = $this->tableWithOutSchema == "geometry_columns_view" ? array_merge(Geometrycolums::$geometry, Geometrycolums::$join) : Geometrycolums::$join;
             $this->geomField = null;
             $this->geomType = null;
-            $this->primeryKey = "_key_";
+            $this->primeryKey["attname"] = "_key_";
             $this->setType();
             $this->exits = true;
             $this->versioning = false;
             $this->workflow = false;
         }
+
         $this->sysCols = array("gc2_version_gid", "gc2_version_start_date", "gc2_version_end_date", "gc2_version_uuid", "gc2_version_user");
         $this->specialChars = "/['^£$%&*()}{@#~?><>,|=+¬.]/";
     }
@@ -459,11 +133,19 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
+    private function clearCacheOnSchemaChanges() {
+        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
+        foreach ($arr as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, $this->table, $this->postgisdb]);
+        }
+        Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
+    }
+
     /**
      * @param array $field
      * @return array
      */
-    private function getType(array $field)
+    private function getType(array $field) : array
     {
         $field['isArray'] = preg_match("/\[\]/", $field['type']) ? true : false;
 
@@ -548,7 +230,7 @@ class Table extends Model
      * @param null $createKeyFrom
      * @return mixed
      */
-    public function getRecords($createKeyFrom = NULL) //
+    public function getRecords($createKeyFrom = NULL)
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
@@ -559,6 +241,7 @@ class Table extends Model
         $matViewDefinitions = array();
 
         $whereClause = Connection::$param["postgisschema"];
+
         if ($whereClause) {
             $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
         } else {
@@ -775,11 +458,7 @@ class Table extends Model
      */
     public function destroy()
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
@@ -835,14 +514,7 @@ class Table extends Model
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Error $exception) {
-            error_log($exception->getMessage());
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $data = $this->makeArray($data);
         foreach ($data as $set) {
@@ -1065,7 +737,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", !empty($fieldconfArr[$key]->sort_id) ? (int)$fieldconfArr[$key]->sort_id : 0);
                 $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);
-                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);;
+                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->mouseover) ? (bool)$fieldconfArr[$key]->mouseover : false);;
                 $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) ? (bool)$fieldconfArr[$key]->filter : false);
                 $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) ? (bool)$fieldconfArr[$key]->searchable : false);
                 $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) ? (bool)$fieldconfArr[$key]->conflict : false);
@@ -1092,12 +764,13 @@ class Table extends Model
     }
 
     /**
+     * Set metaData again in case of a column was dropped
      * @param string $_key_
      * @return array
      */
     public function purgeFieldConf($_key_)
     {
-        // Set metaData again in case of a column was dropped
+        $this->clearCacheOnSchemaChanges();
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
         $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
@@ -1120,12 +793,7 @@ class Table extends Model
      */
     public function updateColumn($data, $key) // Only geometry tables
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        //$this->clearCacheOnSchemaChanges();
         $response = [];
         $this->purgeFieldConf($key); // TODO What?
         $data = $this->makeArray($data);
@@ -1204,12 +872,7 @@ class Table extends Model
      */
     public function deleteColumn($data, $whereClause = NULL, $_key_) // Only geometry tables
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
@@ -1248,12 +911,7 @@ class Table extends Model
      */
     public function addColumn(array $data)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $safeColumn = self::toAscii($data['column'], array(), "_");
         $sql = "";
@@ -1335,12 +993,7 @@ class Table extends Model
      */
     public function addVersioning()
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
@@ -1409,12 +1062,7 @@ class Table extends Model
      */
     public function removeVersioning()
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_gid";
@@ -1483,12 +1131,7 @@ class Table extends Model
      */
     public function addWorkflow()
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_status integer";
@@ -1536,12 +1179,7 @@ class Table extends Model
      */
     public function point2multipoint()
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $sql = "BEGIN;";
         $sql .= "ALTER TABLE {$this->table} DROP CONSTRAINT enforce_geotype_the_geom;";
         $sql .= "UPDATE {$this->table} SET {$this->geomField} = ST_Multi({$this->geomField});";
@@ -1560,12 +1198,7 @@ class Table extends Model
      */
     public function create($table, $type, $srid = 4326)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->PDOerror = NULL;
         $table = self::toAscii($table, array(), "_");
@@ -1594,12 +1227,7 @@ class Table extends Model
      */
     public function createAsRasterTable($srid = 4326)
     {
-        try {
-            $this->InstanceCache->clear();
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage());
-        }
-
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
@@ -1809,7 +1437,6 @@ class Table extends Model
             }
         }
         $sql .= " FROM " . $this->table . " WHERE " . $this->primeryKey['attname'] . "=:pkey";
-        //die($sql);
         $res = $this->prepare($sql);
         try {
             $res->execute(array("pkey" => $pkey));
@@ -1817,7 +1444,7 @@ class Table extends Model
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
-            die($e->getMessage());
+            die($sql);
         }
         $row = $this->fetchRow($res, "assoc");
         $response['success'] = true;
