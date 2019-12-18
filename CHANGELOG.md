@@ -11,7 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
 - Boolean fields in Settings property grids are now rendered as check icons and the widget is a standard checkbox.
 - Optimizing by reducing SELECTs in Layer.php.
-- More fine grained caching in Layer, Setting and Model, so pri-keys, column info and more is cached.
+- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more is cached.
 - Redis added as backend for Phpfastcache and session control:
     - Just set `redisHost` in \app\conf\App.php to enable Redis for sessions.
     - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
@@ -43,7 +43,9 @@ and this project adheres to [CalVer](https://calver.org/).
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
 - Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
-- Optimized non-geometry meta VIEWs in database.   
+- Optimized non-geometry meta VIEWs in database.
+- Support of Elasticsearch 7.x
+
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
 - Style issue in Firefox for color picker in class property grid.
