@@ -35,9 +35,9 @@ Ext.ux.grid.CheckColumn = Ext.extend(
 /**
  *
  * @param record
- * @param screenName
+ * @param db
  */
-tableStructure.init = function (record, screenName) {
+tableStructure.init = function (record, db) {
     tableStructure.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -313,7 +313,7 @@ tableStructure.init = function (record, screenName) {
                     header: __("Show in conflict"),
                     dataIndex: 'conflict',
                     //width: 40,
-                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[db] === true) ? false : true
                 },
                 {
                     id: "link",
@@ -632,7 +632,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2] : "");
                 Ext.Ajax.request(
                     {
-                        url: '/api/v2/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/river/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'post',
                         params: param,
                         headers: {
@@ -681,7 +681,7 @@ tableStructure.onDeleteFromElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key;
                 Ext.Ajax.request(
                     {
-                        url: '/api/v2/elasticsearch/delete/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/delete/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'delete',
                         params: param,
                         headers: {

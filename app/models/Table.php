@@ -514,6 +514,8 @@ class Table extends Model
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
+        $data = $this->makeArray($data);
+
         // $this->table is set to settings.geometry_columns_view,
         // so we have to extract key from data
         // and use that for busting cache.
@@ -521,7 +523,6 @@ class Table extends Model
         $this->clearCacheOnSchemaChanges($keySplit[0] . "." . $keySplit[1]);
 
         $response = [];
-        $data = $this->makeArray($data);
         foreach ($data as $set) {
             $set = $this->makeArray($set);
             foreach ($set as $row) {

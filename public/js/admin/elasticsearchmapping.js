@@ -32,7 +32,7 @@ Ext.ux.grid.CheckColumn = Ext.extend(
         init: Ext.emptyFn
     }
 );
-elasticsearch.init = function (record, screenName) {
+elasticsearch.init = function (record) {
     'use strict';
     var analyzers = [];
 

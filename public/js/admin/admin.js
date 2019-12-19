@@ -49,7 +49,7 @@ var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, ac
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
     dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
-    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
+    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[parentdb] !== "undefined" && window.gc2Options.enableWorkflow[parentdb] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 var cloud, gc2, layer, grid, featureStore, map, viewport, drawControl, gridPanel, modifyControl, tree,
     viewerSettings,
@@ -112,7 +112,7 @@ $(document).ready(function () {
         ];
     }
 
-    cloud = new mygeocloud_ol.map(null, screenName, {
+    cloud = new mygeocloud_ol.map(null, parentdb, {
         controls: [
             new OpenLayers.Control.Navigation({}),
             new OpenLayers.Control.Zoom(),
@@ -145,7 +145,7 @@ $(document).ready(function () {
         clicktimer = undefined;
     });
     gc2.on("click", function (e) {
-        var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = screenName;
+        var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = parentdb;
         if (clicktimer) {
             clearTimeout(clicktimer);
         }
@@ -854,11 +854,11 @@ $(document).ready(function () {
                     }
                 },
                 {
-                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
+                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[parentdb]) ? window.gc2Options.extraLayerPropertyName[parentdb] : "Extra",
                     dataIndex: "extra",
                     sortable: true,
                     width: 60,
-                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
+                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[parentdb] === true) ? false : true
 
                 },
                 {
@@ -905,7 +905,7 @@ $(document).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Skip conflict"),
                     dataIndex: 'skipconflict',
-                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[parentdb] === true) ? false : true,
                     width: 40
                 }
             ]
@@ -2342,7 +2342,7 @@ $(document).ready(function () {
                                                         Ext.getCmp('copyMetaFormKeys').clearValue();
                                                         (function () {
                                                             Ext.Ajax.request({
-                                                                url: '/api/v1/meta/' + screenName + '/' + combo.getValue(),
+                                                                url: '/api/v1/meta/' + parentdb + '/' + combo.getValue(),
                                                                 method: 'GET',
                                                                 headers: {
                                                                     'Content-Type': 'application/json; charset=utf-8'
@@ -2515,7 +2515,7 @@ $(document).ready(function () {
                                                                         params: param,
                                                                         success: function (response) {
                                                                             var data = eval('(' + response.responseText + ')');
-                                                                            window.location = "/admin/" + screenName + "/" + data.data.name;
+                                                                            window.location = "/admin/" + parentdb + "/" + data.data.name;
                                                                         },
                                                                         failure: function (response) {
                                                                             winSchemaRename.close();
@@ -2557,7 +2557,7 @@ $(document).ready(function () {
                                                 'Content-Type': 'application/json; charset=utf-8'
                                             },
                                             success: function (response) {
-                                                window.location = "/admin/" + screenName + "/public";
+                                                window.location = "/admin/" + parentdb + "/public";
                                             },
                                             failure: function (response) {
                                                 Ext.MessageBox.show({
@@ -2801,14 +2801,14 @@ $(document).ready(function () {
             s = Ext.getCmp("structurepanel"),
             detailPanel = Ext.getCmp('detailPanel'),
             detailPanelTemplate = new Ext.Template(['<table border="0">' +
-            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe"></td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe"></td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td>{tags}</td></tr>' +
-            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe"></td><td class="bottom-info-bar-param"><b>' + __('Dimensions') + '</b></td><td>{coord_dimension}</td><td class="bottom-info-bar-pipe"></td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
+            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td>{tags}</td></tr>' +
+            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Dimensions') + '</b></td><td>{coord_dimension}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
             '</table>']);
         if (records.length === 1) {
             detailPanelTemplate.overwrite(detailPanel.body, records[0].data);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
-            tableStructure.init(records[0], screenName);
+            tableStructure.init(records[0], parentdb);
             s.removeAll();
             s.add(tableStructure.grid);
             s.doLayout();
@@ -3865,7 +3865,7 @@ $(document).ready(function () {
                                                 console.log(ex.message)
                                             }
                                             elasticsearch.grid = null;
-                                            elasticsearch.init(grid.getSelectionModel().getSelected(), screenName);
+                                            elasticsearch.init(grid.getSelectionModel().getSelected(), parentdb);
                                             esPanel.add(elasticsearch.grid);
                                             esPanel.doLayout();
                                         }
@@ -4030,7 +4030,7 @@ $(document).ready(function () {
                                             App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
                                         }
                                         Ext.Ajax.request({
-                                            url: '/api/v1/meta/' + screenName + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
+                                            url: '/api/v1/meta/' + parentdb + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
                                             method: 'GET',
                                             headers: {
                                                 'Content-Type': 'application/json; charset=utf-8'
@@ -4285,7 +4285,7 @@ $(document).ready(function () {
         var b = Ext.getCmp("wizardLegend");
         if (activeLayer !== undefined) {
             $.ajax({
-                url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
+                url: '/api/v1/legend/html/' + parentdb + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
@@ -4329,7 +4329,7 @@ $(document).ready(function () {
      * Add listener on schema select box
      */
     Ext.getCmp("schemabox").on('select', function (e) {
-        window.location = "/admin/" + screenName + "/" + e.value;
+        window.location = "/admin/" + parentdb + "/" + e.value;
     });
 
     /**
@@ -4366,7 +4366,7 @@ $(document).ready(function () {
      * Hide tab if scheduler is not available for the db
      */
     if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
+        if (window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) {
             tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
         }
     } else {
@@ -4612,7 +4612,7 @@ $(document).ready(function () {
                                 return false;
                             }
                             Ext.Ajax.request({
-                                url: '/api/v1/extent/' + screenName + '/' + e.id + '/900913',
+                                url: '/api/v1/extent/' + parentdb + '/' + e.id + '/900913',
                                 method: 'get',
                                 headers: {
                                     'Content-Type': 'application/json; charset=utf-8'
