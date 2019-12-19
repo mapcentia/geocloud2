@@ -1039,6 +1039,7 @@ class Mapfile extends \app\inc\Controller
                     "gml_include_items" "all"
                     "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                     "gml_types" "auto"
+                    "wfs_geomtype" "<?php echo $row['type']; echo $row['coord_dimension'] == 3 ? "25D": ""; ?>"
                     "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                     "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END

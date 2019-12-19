@@ -83,6 +83,7 @@ gc2i18n = {
         "Database": "Database",
         "Created": "Created",
         "Geom field": "Geom field",
+        "Dimensions": "Dimensions",
         "Last modified": "Last modified",
         "Classes": "Classes",
         "Style is updated": "Style is updated",

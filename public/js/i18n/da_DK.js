@@ -83,6 +83,7 @@ gc2i18n = {
         "Database": "Database",
         "Created": "Skabt",
         "Geom field": "Geom felt",
+        "Dimensions": "Dimensioner",
         "Last modified": "Senest ændret",
         "Classes": "Klasser",
         "Style is updated": "Stil er opdateret",

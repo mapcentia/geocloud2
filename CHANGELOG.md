@@ -11,10 +11,12 @@ and this project adheres to [CalVer](https://calver.org/).
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
 - Boolean fields in Settings property grids are now rendered as check icons and the widget is a standard checkbox.
 - Optimizing by reducing SELECTs in Layer.php.
-- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more is cached.
+- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached.
 - Redis added as backend for Phpfastcache and session control:
     - Just set `redisHost` in \app\conf\App.php to enable Redis for sessions.
     - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
+- `"wfs_geomtype" "[type]"25d` is added in MapFiles for layers with three dimensions, so WFS returns 3D data. MapServer needs to be build with `DWITH_POINT_Z_M=ON`, which is done in [3134fc9](https://github.com/mapcentia/dockerfiles/commit/610382d42bfdb6a5ee74244cc3f30b8c9b73419a)
+- Dimensions of a layer are now displayed in the Database tab footer in Admin.
 
 ## [2019.1.0.rc1] - 2019-06-10
 ### Added
