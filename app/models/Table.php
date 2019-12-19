@@ -12,7 +12,6 @@ use app\inc\Globals;
 use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
-use app\inc\Session;
 use app\inc\Util;
 use app\inc\Geometrycolums;
 use app\inc\Cache;
@@ -133,10 +132,11 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
-    private function clearCacheOnSchemaChanges() {
+    private function clearCacheOnSchemaChanges($relName = null) {
         $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
+        $relName = $relName ?:$this->table;
         foreach ($arr as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, $this->table, $this->postgisdb]);
+            Cache::deleteItemsByTagsAll([$tag, $relName, $this->postgisdb]);
         }
         Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
     }
@@ -514,7 +514,12 @@ class Table extends Model
      */
     public function updateRecord($data, $keyName, $raw = false, $append = false)
     {
-        $this->clearCacheOnSchemaChanges();
+        // $this->table is set to settings.geometry_columns_view,
+        // so we have to extract key from data
+        // and use that for busting cache.
+        $keySplit = explode(".", $data["data"]->_key_);
+        $this->clearCacheOnSchemaChanges($keySplit[0] . "." . $keySplit[1]);
+
         $response = [];
         $data = $this->makeArray($data);
         foreach ($data as $set) {
