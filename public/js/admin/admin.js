@@ -1967,7 +1967,7 @@ $(document).ready(function () {
             },
             {
                 text: '<i class="fa fa-remove"></i> ' + __('Clear tile cache'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (screenName === schema || subUser === false) ? false : true,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
@@ -2001,7 +2001,7 @@ $(document).ready(function () {
             '->',
             {
                 text: '<i class="fa fa-plus-circle"></i> ' + __('New layer'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (screenName === schema || subUser === false) ? false : true,
                 handler: function () {
                     onAdd();
                 }
@@ -3297,7 +3297,7 @@ $(document).ready(function () {
                                                     tbar: [
                                                         {
                                                             text: '<i class="fa fa-plus-circle"></i> ' + __('New layer'),
-                                                            disabled: (subUser === schema || subUser === false) ? false : true,
+                                                            disabled: (screenName === schema || subUser === false) ? false : true,
                                                             handler: function () {
                                                                 onAdd();
                                                             }
@@ -4339,7 +4339,7 @@ $(document).ready(function () {
         var records = sm.getSelections();
         if (records.length === 1) {
             Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false || subUser === schema) {
+            if (subUser === false || screenName === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
@@ -4356,7 +4356,7 @@ $(document).ready(function () {
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
         }
-        if (records.length > 0 && (subUser === false || subUser === schema)) {
+        if (records.length > 0 && (subUser === false || screenName === schema)) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);
         }
         onEdit();
