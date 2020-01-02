@@ -11,7 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2019.1.0] - 2019-20-12
 ### Added
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
-- Allowed minimum size of scaled symbols added to GUI.
+- Allowed minimum size of scaled symbols setting added to GUI.
 - More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached.
 - Redis added as backend for Phpfastcache and session control:
     - Just set `redisHost` in \app\conf\App.php to enable Redis for sessions.
@@ -22,7 +22,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - The schema select widget in Admin is now ordered by schema name.
 - Boolean fields in Settings property grids are now rendered as check icons and the widget is a standard checkbox.
-- Optimizing by reducing SELECTs in Layer.php.
+- General optimization by reducing SELECTs in Layer.php.
 
 ### Fixed
 - Bugs regarding sub-users
