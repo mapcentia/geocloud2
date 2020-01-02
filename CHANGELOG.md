@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
+### Changed
+- The default primary key can now be set with `defaultPrimaryKey` in \app\conf\App.php. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty. 
 
 ## [2019.1.0] - 2019-20-12
 ### Added

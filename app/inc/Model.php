@@ -8,10 +8,11 @@
 
 namespace app\inc;
 
+use \app\conf\App;
 use Exception;
 use PDO;
 use PDOStatement;
-use app\conf\Connection;
+use \app\conf\Connection;
 
 /**
  * Class Model
@@ -115,7 +116,9 @@ class Model
         $cacheType = "prikey";
         $cacheRel = $table;
         $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
-        //return array("attname" => "objekt_id");
+        if (!empty(App::$param["defaultPrimaryKey"])) {
+            return ["attname" => App::$param["defaultPrimaryKey"]];
+        }
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
