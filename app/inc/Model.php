@@ -138,7 +138,7 @@ class Model
             }
 
             try {
-                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
                 $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
 
             } catch (\Error $exception) {

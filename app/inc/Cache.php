@@ -39,7 +39,7 @@ abstract class Cache
 
         $cacheType = !empty(App::$param["appCache"]["type"]) ? App::$param["appCache"]["type"] : "files";
 
-        \app\inc\Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : 0.00001; // Small number - must not be 0
+        Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : Globals::$cacheTtl;
 
         switch ($cacheType) {
             case "redis":
