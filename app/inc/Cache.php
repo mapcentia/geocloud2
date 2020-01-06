@@ -12,6 +12,7 @@ use \app\conf\App;
 use \Phpfastcache\CacheManager;
 use \Phpfastcache\Drivers\Files\Config as FilesConfig;
 use \Phpfastcache\Drivers\Redis\Config as RedisConfig;
+use \Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
 
 
 abstract class Cache
@@ -24,10 +25,17 @@ abstract class Cache
      */
     static public function setInstance()
     {
-        $split = explode(":", App::$param['redisHost'] ?: "127.0.0.1:6379");
+        $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
+
         $redisConfig = [
             'host' => $split[0],
             'port' => !empty($split[1]) ? (int)$split[1] : 6379,
+            'itemDetailedDate' => true
+        ];
+
+        $memcachedConfig = [
+            'host' => $split[0],
+            'port' => !empty($split[1]) ? (int)$split[1] : 11211,
             'itemDetailedDate' => true
         ];
 
@@ -46,6 +54,17 @@ abstract class Cache
                 try {
                     self::$instanceCache = CacheManager::getInstance('redis',
                         new RedisConfig($redisConfig)
+                    );
+                } catch
+                (\Exception $exception) {
+                    throw new \Exception($exception->getMessage());
+                }
+                break;
+
+            case "memcached":
+                try {
+                    self::$instanceCache = CacheManager::getInstance('memcached',
+                        new MemcachedConfig($memcachedConfig)
                     );
                 } catch
                 (\Exception $exception) {

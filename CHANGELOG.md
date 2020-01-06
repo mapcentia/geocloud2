@@ -6,15 +6,29 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [Unreleased]
 ### Changed
-- The default primary key can now be set with `defaultPrimaryKey` in \app\conf\App.php. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty. 
+- The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed to, so session handling and AppCache be set up independently:
+```php        
+         "sessionHandler" => [
+             "type" => "memcached", // or redis
+             "host" => "localhost:11211", // without tcp:
+         ],
+ 
+         "appCache" => [
+             "type" => "memcached", // or redis
+             "host" => "localhost:11211", // without tcp:
+             "ttl" => "100",
+         ],
+         
+```
 
 ## [2019.1.0] - 2019-20-12
 ### Added
 - LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
 - Allowed minimum size of scaled symbols setting added to GUI.
-- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached.
+- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached. This is called AppCache
 - Redis added as backend for Phpfastcache and session control:
-    - Just set `redisHost` in \app\conf\App.php to enable Redis for sessions.
+    - Just set `redisHost` in `\app\conf\App.php` to enable Redis for sessions.
     - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
 - `"wfs_geomtype" "[type]"25d` is added in MapFiles for layers with three dimensions, so WFS returns 3D data. MapServer needs to be build with `DWITH_POINT_Z_M=ON`, which is done in [3134fc9](https://github.com/mapcentia/dockerfiles/commit/610382d42bfdb6a5ee74244cc3f30b8c9b73419a)
 - Dimensions of a layer are now displayed in the Database tab footer in Admin.

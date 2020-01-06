@@ -17,6 +17,9 @@ use \app\conf\App;
 use \app\conf\Connection;
 use \app\inc\Util;
 
+\app\inc\Cache::setInstance();
+
+
 $report = [];
 
 $lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
@@ -153,6 +156,7 @@ function getCmd()
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}") .
         "";
+
     exec($cmd . ' 2>&1', $out, $err);
 }
 
@@ -695,7 +699,6 @@ function getCmdZip()
         "";
     exec($cmd . ' 2>&1', $out, $err);
 }
-
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 

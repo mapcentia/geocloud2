@@ -31,9 +31,15 @@ $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : 
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
 
-if (!empty(App::$param['redisHost'])) {
-    ini_set('session.save_handler', 'redis');
-    ini_set('session.save_path', App::$param['redisHost']);
+// Set session bac-end. PHP will use default port if not set explicit
+
+if (!empty(App::$param["sessionHandler"]["type"])) {
+    if (!empty(App::$param['sessionHandler']["host"])) {
+        ini_set('session.save_handler', App::$param['sessionHandler']["type"]);
+        ini_set('session.save_path', App::$param['sessionHandler']["host"]);
+    } else {
+        die("Session handler host not set");
+    }
 }
 
 // Get start time of script
@@ -93,8 +99,9 @@ if (Input::getPath()->part(1) == "api") {
 
     Route::add("api/v1/sql", function () {
         if (empty(Input::get("key"))) {
-               Session::start();
-        }        $db = Input::getPath()->part(4);
+            Session::start();
+        }
+        $db = Input::getPath()->part(4);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
@@ -312,7 +319,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::miss();
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
-    if (!empty(Input::getCookies()["PHPSESSID"])){ // Do not start session if no cookie is set
+    if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
         Session::start();
     }
     $db = Input::getPath()->part(2);
@@ -335,7 +342,7 @@ if (Input::getPath()->part(1) == "api") {
 //    $cache->fetch();
 
 } elseif (Input::getPath()->part(1) == "wfs") {
-    if (!empty(Input::getCookies()["PHPSESSID"])){
+    if (!empty(Input::getCookies()["PHPSESSID"])) {
         Session::start();
     }
     $db = Input::getPath()->part(2);
