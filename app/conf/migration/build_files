@@ -1,12 +1,18 @@
 #!/usr/bin/php
 <?php
-ini_set("display_errors", "Off");
+ini_set("display_errors", "on");
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 use \app\conf\Connection;
 use \app\conf\App;
+use \app\models\Database;
 
 header("Content-type: text/plain");
+include_once('/var/www/geocloud2/app/vendor/autoload.php');
 include_once("/var/www/geocloud2/app/conf/App.php");
+
+new \app\conf\App();
+\app\inc\Cache::setInstance();
 
 if (isset($argv[1])) {
     $_SERVER['HTTP_HOST'] = $argv[1];
@@ -16,26 +22,27 @@ if (isset($argv[1])) {
     exit(1);
 }
 
-new \app\conf\App();
+if (isset($argv[2])) {
+    $db = $argv[2];
+
+} else {
+    echo "Database is not set. Use ./build_files [host.com] [database]\n";
+    exit(1);
+}
+
 App::$param['host'] = $_SERVER['HTTP_HOST'];
 
-$database = new \app\models\Database();
-$arr = $database->listAllDbs();
-$mapfile = new \app\controllers\Mapfile();
-$mapcachefile = new \app\controllers\Mapcachefile();
-foreach ($arr['data'] as $db) {
-    Connection::$param['postgisdb'] = $db;
+Connection::$param['postgisdb'] = $db;
 
-    if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
-        $res = $mapcachefile->get_index();
-        echo $res["ch"]."\n";
-        $database2 = new \app\models\Database();
-        $schemas = $database2->listAllSchemas();
-        if (!empty($schemas["data"]))foreach($schemas["data"] as $schema){
-            //echo $db . ":" .$schema["schema"] . "\n";
-            Connection::$param['postgisschema'] = $schema["schema"];
-            $res = $mapfile->get_index();
-           print_r($res);
-        }
-    }
+$database = new Database();
+$schemas = $database->listAllSchemas();
+
+$response = [];
+$mapfile = new \app\controllers\Mapfile();
+if (!empty($schemas["data"])) foreach ($schemas["data"] as $schema) {
+    Connection::$param['postgisschema'] = $schema["schema"];
+    $res = $mapfile->get_index();
+    $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
 }
+$response["success"] = true;
+print_r($response);
