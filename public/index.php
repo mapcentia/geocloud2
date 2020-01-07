@@ -6,9 +6,9 @@
  *
  */
 
-ini_set("display_errors", "off");
-error_reporting(E_ERROR | E_WARNING | E_PARSE);
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+ini_set("display_errors", "no");
+//error_reporting(E_ERROR | E_WARNING | E_PARSE);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
 use \app\inc\Input;
@@ -235,6 +235,13 @@ if (Input::getPath()->part(1) == "api") {
         $db = Route::getParam("user");
         Database::setDb($db);
     });
+
+    // Appcache API
+    Route::add("api/v2/appcache/{action}");
+
+    // Disk API
+    Route::add("api/v2/disk/{action}");
+
     //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");

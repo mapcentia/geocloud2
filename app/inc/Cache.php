@@ -153,8 +153,8 @@ abstract class Cache
         return (array)self::$instanceCache->getStats();
     }
 
-    static public function getItemsByTagsAsJsonString(array $tags)
+    static public function getItemsByTagsAsJsonString()
     {
-        return self::$instanceCache->getItemsByTagsAsJsonString($tags);
+        return self::$instanceCache->getItems();
     }
 }
