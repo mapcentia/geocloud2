@@ -294,7 +294,7 @@ class Model
         return $response;
     }
 
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictionTable = false) : array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictionTable = false): array
     {
         $cacheType = "metadata";
         $cacheRel = $table;
@@ -730,8 +730,8 @@ class Model
     public function getForeignConstrains(string $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
-        $cacheRel = $schema.".".$table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $schema . "_" . $cacheRel;
+        $cacheRel = $schema . "." . $table;
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -864,7 +864,7 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = $schema. "." . $table;
+        $cacheRel = $schema . "." . $table;
         $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
