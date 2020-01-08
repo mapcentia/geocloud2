@@ -1,22 +1,22 @@
 #!/usr/bin/php
 <?php
-ini_set("display_errors", "on");
+ini_set("display_errors", "off");
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
+use \app\inc\Cache;
 
 header("Content-type: text/plain");
 include_once('/var/www/geocloud2/app/vendor/autoload.php');
 include_once("/var/www/geocloud2/app/conf/App.php");
 
-new \app\conf\App();
-\app\inc\Cache::setInstance();
+new App();
+Cache::setInstance();
 
 if (isset($argv[1])) {
     $_SERVER['HTTP_HOST'] = $argv[1];
-
 } else {
     echo "Host is not set. Use ./build_files [host.com]\n";
     exit(1);
@@ -24,25 +24,29 @@ if (isset($argv[1])) {
 
 if (isset($argv[2])) {
     $db = $argv[2];
-
 } else {
     echo "Database is not set. Use ./build_files [host.com] [database]\n";
     exit(1);
 }
 
 App::$param['host'] = $_SERVER['HTTP_HOST'];
-
 Connection::$param['postgisdb'] = $db;
 
 $database = new Database();
 $schemas = $database->listAllSchemas();
 
-$response = [];
+// Write out MapFiles
 $mapfile = new \app\controllers\Mapfile();
 if (!empty($schemas["data"])) foreach ($schemas["data"] as $schema) {
     Connection::$param['postgisschema'] = $schema["schema"];
     $res = $mapfile->get_index();
-    $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
+    print $res[0]["ch"] . "\n";
+    print $res[1]["ch"] . "\n";
 }
-$response["success"] = true;
-print_r($response);
+
+// Write out MapCache file
+$mapcachefile = new \app\controllers\Mapcachefile();
+$res = $mapcachefile->get_index();
+print $res["ch"] . "\n";
+
+exit(0);
