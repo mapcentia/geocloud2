@@ -71,6 +71,8 @@ class Wms extends \app\inc\Controller
             // If IP not trusted, when check auth on layers
             if (!$trusted) {
                 foreach ($this->layers as $layer) {
+                    // Strip name space if any
+                    $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                     $this->basicHttpAuthLayer($layer, $db, $subUser);
                 }
             }
