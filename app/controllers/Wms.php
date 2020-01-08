@@ -98,7 +98,7 @@ class Wms extends \app\inc\Controller
                 exit();
             }
 
-            // Get the layer name
+            // Strip name space if any
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
 
             // If IP not trusted, when check auth on layer
