@@ -1153,7 +1153,7 @@ class Layer extends \app\models\Table
         }
     }
 
-    public function deleteCkan($key)
+    public static function deleteCkan($key)
     {
         $ckanApiUrl = App::$param["ckan"]["host"];
         $requestJson = json_encode(array("id" => $key));

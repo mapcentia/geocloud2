@@ -527,7 +527,7 @@ class Table extends Model
             $set = $this->makeArray($set);
             foreach ($set as $row) {
                 if (isset(App::$param["ckan"])) {
-                    // Delete package from CKAN if "Update" is set to false
+                    // Delete package from CKAN if "Update" is being set to false
                     if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false) {
                         $uuid = $this->getUuid($row->_key_);
                         \app\models\Layer::deleteCkan($uuid["uuid"]);
@@ -801,7 +801,7 @@ class Table extends Model
     {
         //$this->clearCacheOnSchemaChanges();
         $response = [];
-        $this->purgeFieldConf($key); // TODO What?
+        $this->purgeFieldConf($key);
         $data = $this->makeArray($data);
         $sql = "";
         $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
