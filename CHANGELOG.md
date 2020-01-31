@@ -25,6 +25,7 @@ and this project adheres to [CalVer](https://calver.org/).
          ],
          
 ```
+- MapServer max map size set to 16384px, so its possible to create A0 single tile print.
 
 ## [2019.1.0] - 2019-20-12
 ### Added

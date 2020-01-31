@@ -47,7 +47,7 @@ class Mapfile extends \app\inc\Controller
         STATUS on
         EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
         SIZE 2000 1500
-        MAXSIZE 4096
+        MAXSIZE 16384
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
         IMAGECOLOR 255 2 255
         UNITS METERS
