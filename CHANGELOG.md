@@ -7,7 +7,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [Unreleased]
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
-- Tentative AppCache API. For getting stats and clear cache. 
+- Tentative AppCache API. For getting stats and clear cache.
+- User table now has a JSONB field called "properties". The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
 
 ### Changed
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.

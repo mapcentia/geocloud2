@@ -43,6 +43,7 @@ class Session extends Model
             $response['data']['passwordExpired'] = $_SESSION['passwordExpired'];
             $response['data']['subuser'] = $_SESSION["subuser"];
             $response['data']['subusers'] = $_SESSION['subusers'];
+            $response['data']['properties'] = $_SESSION['properties'];
         } else {
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
@@ -105,12 +106,14 @@ class Session extends Model
 
         if ($isAuthenticated) {
             // Login successful.
+            $properties = json_decode($row['properties']);
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
             $_SESSION["subuser"] = $row['parentdb'] ? true : false;
+            $_SESSION["properties"] = $properties;
 
             $_SESSION['email'] = $row['email'];
             $_SESSION['usergroup'] = $row['usergroup'] ?: false;
@@ -125,6 +128,7 @@ class Session extends Model
             $response['data']['parentdb'] = $_SESSION['parentdb'];
             $response['data']['subuser'] = $row['parentdb'] ? true : false;;
             $response['data']['email'] = $row['email'];
+            $response['data']['properties'] = $properties;
 
             // Fetch sub-users
             $_SESSION['subusers'] = [];
