@@ -597,6 +597,7 @@ class Sql
         $sqls[] = "ALTER TABLE users ALTER COLUMN pw SET NOT NULL";
         $sqls[] = "ALTER TABLE users DROP CONSTRAINT user_unique";
         $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname, parentdb)";
+        $sqls[] = "ALTER TABLE users ADD COLUMN properties JSONB";
         return $sqls;
     }
 
