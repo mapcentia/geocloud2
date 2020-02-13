@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [2020.2.0]
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
 - Tentative AppCache API. For getting stats and clear cache.
@@ -12,6 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
 
 ### Changed
+- CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
 - Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed to, so session handling and AppCache be set up independently:
 ```php        
