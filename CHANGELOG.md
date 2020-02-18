@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Added
+- Limits for SQL API can now be set in `\app\confApp.php` like (`sqlJson` will also set limit for CSV):
+```php
+"limits" => [
+    "sqlExcel" => 1000,
+    "sqlJson" => 10000,
+]
+```
+
 ## [2020.2.0]
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
@@ -14,19 +24,17 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
-- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed to, so session handling and AppCache be set up independently:
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
 ```php        
-         "sessionHandler" => [
-             "type" => "memcached", // or redis
-             "host" => "localhost:11211", // without tcp:
-         ],
- 
-         "appCache" => [
-             "type" => "memcached", // or redis
-             "host" => "localhost:11211", // without tcp:
-             "ttl" => "100",
-         ],
-         
+ "sessionHandler" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+ ],
+ "appCache" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+     "ttl" => "100",
+ ]    
 ```
 - MapServer max map size set to 16384px, so its possible to create A0 single tile print.
 
