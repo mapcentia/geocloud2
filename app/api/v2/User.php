@@ -1,4 +1,13 @@
 <?php
+/**
+ * @OA\Info(title="GC2 API", version="0.1")
+ * @OA\SecurityScheme(
+ *      securityScheme="cookieAuth",
+ *      in="cookie",
+ *      name="PHPSESSID",
+ *      type="apiKey"
+ * ),
+ */
 
 /**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
@@ -67,9 +76,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Post(
-     *   path="/v2/user",
+     *   path="/api/v2/user",
      *   tags={"user"},
      *   summary="Creates user",
+     *   security={{"cookieAuth":{}}},
      *   @OA\RequestBody(
      *     description="User data",
      *     @OA\MediaType(
@@ -119,9 +129,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/user/{userId}",
+     *   path="/api/v2/user/{userId}",
      *   tags={"user"},
      *   summary="Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -166,9 +177,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Put(
-     *   path="/v2/user/{userId}",
+     *   path="/api/v2/user/{userId}",
      *   tags={"user"},
      *   summary="Updates user information. User can only update himself or its subuser.",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -257,9 +269,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Delete(
-     *   path="/v2/user/{userId}",
+     *   path="/api/v2/user/{userId}",
      *   tags={"user"},
      *   summary="Deletes user. User can only delete himself or be deleted by its superuser.",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -310,6 +323,7 @@ class User extends Controller
      *   path="/api/v2/user/{userId}/subusers",
      *   tags={"user"},
      *   summary="Returns subusers",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",

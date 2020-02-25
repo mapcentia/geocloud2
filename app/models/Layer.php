@@ -23,10 +23,19 @@ class Layer extends \app\models\Table
         }
     }
 
-    private function clearCacheOnSchemaChanges() {
+    private function clearCacheOnSchemaChanges()
+    {
         $arr = ["meta"];
         foreach ($arr as $tag) {
             Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
+        }
+    }
+
+    private function clearCacheOfColumns($relName)
+    {
+        $arr = ["columns"];
+        foreach ($arr as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, $relName, $this->postgisdb]);
         }
     }
 
@@ -68,7 +77,7 @@ class Layer extends \app\models\Table
         }
 
         $cacheType = "meta";
-        $cacheId =  $this->postgisdb . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -683,7 +692,10 @@ class Layer extends \app\models\Table
      */
     public function updatePrivileges($data)
     {
+        $rel = explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1];
+        $this->clearCacheOfColumns($rel);
         $this->clearCacheOnSchemaChanges();
+
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;

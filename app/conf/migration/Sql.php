@@ -90,6 +90,15 @@ class Sql
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
         $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
+        $sqls[] = "CREATE TABLE settings.seed_jobs
+                    (
+                      uuid      UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      name      CHARACTER VARYING(255)    NOT NULL,
+                      pid       INTEGER                   NOT NULL,
+                      host      CHARACTER VARYING(255)    NOT NULL,
+                      created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
+                    )";
+
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS

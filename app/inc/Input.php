@@ -71,6 +71,23 @@ class Input
     }
 
     /**
+     * @return mixed|null
+     */
+    public static function getJwtToken()
+    {
+        if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
+            list($type, $data) = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
+            if (strcasecmp($type, "Bearer") == 0) {
+                return $data;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * @return string
      */
     public static function getBody(): string

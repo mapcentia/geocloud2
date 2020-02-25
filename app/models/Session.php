@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -103,7 +103,6 @@ class Session extends Model
             }
         }
 
-
         if ($isAuthenticated) {
             // Login successful.
             $properties = json_decode($row['properties']);
@@ -153,7 +152,9 @@ class Session extends Model
             Database::setDb($response['data']['parentdb']);
             $settings_viewer = new \app\models\Setting();
             $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
-            //$response['token'] = self::createJWT($response['data']['api_key'], $response['data']['parentdb'], $response['data']['subuser'] ?:$response['data']['screen_name'], !$response['data']['subuser']);
+            // Get super user key, which are used for JWT secret
+            $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
+            $response['data']['token'] = self::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
         } else {
             session_unset();
             $response['success'] = false;
@@ -174,7 +175,6 @@ class Session extends Model
         $response['success'] = true;
         $response['message'] = "Session stopped";
         return $response;
-
     }
 
     /**
@@ -184,7 +184,8 @@ class Session extends Model
      * @param bool $isSubUser
      * @return string
      */
-    private static function createJWT(string $secret, $db, string $userId, bool $isSubUser): string {
+    private static function createJWT(string $secret, $db, string $userId, bool $isSubUser): string
+    {
         $token = [
             "iss" => App::$param["host"],
             "uid" => $userId,
@@ -193,11 +194,6 @@ class Session extends Model
             "database" => $db,
             "superUser" => $isSubUser,
         ];
-        $jwt = JWT::encode($token, $secret);
-//        print_r($secret."\n");
-//        print_r($jwt."\n");
-//        print_r(JWT::decode($jwt, $secret,array('HS256')));
-        return $jwt;
+        return JWT::encode($token, $secret);
     }
-
 }

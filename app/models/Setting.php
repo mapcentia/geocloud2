@@ -309,6 +309,10 @@ class Setting extends Model
         return $response;
     }
 
+    public function getApiKeyForSuperUser(){
+        return  $this->getArray()->api_key;
+    }
+
     /**
      * Password is required to have
      * - at least one capital letter

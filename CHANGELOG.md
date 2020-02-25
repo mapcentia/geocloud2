@@ -6,13 +6,30 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
-- Limits for SQL API can now be set in `\app\confApp.php` like (`sqlJson` will also set limit for CSV):
+- Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
 "limits" => [
     "sqlExcel" => 1000,
     "sqlJson" => 10000,
 ]
 ```
+- JWT support. 
+    - A JWT bearer token is now return when using `/api/v2/session/start` 
+    - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
+    - A token can be validated in the front controller ´index.php´ and the database can be set from it like this:
+```php
+Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
+    $jwt = Jwt::validate();
+    if ($jwt["success"]){
+        Database::setDb($jwt["data"]["database"]);
+    } else {
+        echo Response::toJson($jwt);
+        exit();
+    }
+});
+```
+- New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
+- Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
 
 ## [2020.2.0]
 ### Added
