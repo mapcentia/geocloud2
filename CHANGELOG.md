@@ -31,6 +31,9 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
 - Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
 
+### Fixed
+- In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
+
 ## [2020.2.0]
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
