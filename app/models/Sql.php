@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\conf\App;
 
 /**
  * Class Sql
@@ -42,9 +43,9 @@ class Sql extends \app\inc\Model
     public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt", $csvAllToStr = false, $aliasesFrom = null)
     {
         if ($format == "excel") {
-            $limit = 10000;
+            $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
         } else {
-            $limit = 100000;
+            $limit = !empty(App::$param["limits"]["sqlJson"]) ? App::$param["limits"]["sqlJson"] : 100000;;
         }
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
@@ -75,11 +76,9 @@ class Sql extends \app\inc\Model
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
                 }
-            }
-            elseif ($arr['type'] == "bytea") {
+            } elseif ($arr['type'] == "bytea") {
                 $fieldsArr[] = "encode(\"" . $key . "\",'escape') as \"" . $key . "\"";
-            }
-            else {
+            } else {
                 $fieldsArr[] = "\"{$key}\"";
             }
         }

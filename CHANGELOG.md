@@ -4,7 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [UNRELEASED]
+### Added
+- Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
+```php
+"limits" => [
+    "sqlExcel" => 1000,
+    "sqlJson" => 10000,
+]
+```
+- JWT support. 
+    - A JWT bearer token is now return when using `/api/v2/session/start` 
+    - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
+    - A token can be validated in the front controller ´index.php´ and the database can be set from it like this:
+```php
+Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
+    $jwt = Jwt::validate();
+    if ($jwt["success"]){
+        Database::setDb($jwt["data"]["database"]);
+    } else {
+        echo Response::toJson($jwt);
+        exit();
+    }
+});
+```
+- New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
+- Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
+
+### Fixed
+- In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
+
+## [2020.2.0]
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
 - Tentative AppCache API. For getting stats and clear cache.
@@ -12,20 +42,19 @@ and this project adheres to [CalVer](https://calver.org/).
 - In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
 
 ### Changed
+- CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
-- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed to, so session handling and AppCache be set up independently:
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
 ```php        
-         "sessionHandler" => [
-             "type" => "memcached", // or redis
-             "host" => "localhost:11211", // without tcp:
-         ],
- 
-         "appCache" => [
-             "type" => "memcached", // or redis
-             "host" => "localhost:11211", // without tcp:
-             "ttl" => "100",
-         ],
-         
+ "sessionHandler" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+ ],
+ "appCache" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+     "ttl" => "100",
+ ]    
 ```
 - MapServer max map size set to 16384px, so its possible to create A0 single tile print.
 

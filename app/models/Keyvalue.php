@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -52,8 +52,8 @@ class Keyvalue extends Model
         }
 
         if (isset($urlVars["filter"])) {
-            $sql .= " AND value#>>{$urlVars["filter"]}";
-            //$params["filter"] = $urlVars["filter"];
+            $parsedFilter = preg_replace("/'{\w+}'/", 'value#>>${0}', $urlVars["filter"]);
+            $sql .= " AND {$parsedFilter}";
         }
 
         if (strpos($sql, ';') !== false) {
@@ -68,7 +68,6 @@ class Keyvalue extends Model
             $response['message'] = "SQL comments '--' are not allowed";
             return $response;
         }
-
         $response = [];
         try {
             $res = $this->prepare($sql);

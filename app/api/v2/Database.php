@@ -36,7 +36,7 @@ class Database extends Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/database/schemas",
+     *   path="/api/v2/database/schemas",
      *   tags={"database"},
      *   summary="Returns available schemas",
      *   @OA\Response(
@@ -63,11 +63,11 @@ class Database extends Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/database/search",
+     *   path="/api/v2/database/search",
      *   tags={"database"},
      *   summary="Returns databases found according to provided filters",
      *   @OA\Parameter(
-     *     name="userName",
+     *     name="userIdentifier",
      *     in="query",
      *     required=false,
      *     description="Filters databases that have user with specified name registered",

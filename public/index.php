@@ -17,6 +17,7 @@ use \app\inc\Route;
 use \app\inc\Util;
 use \app\inc\Response;
 use \app\inc\Cache;
+use \app\inc\Jwt;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
@@ -105,7 +106,6 @@ if (Input::getPath()->part(1) == "api") {
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            //$_SESSION['subuser'] = $dbSplit[0];
         }
         Database::setDb($db);
     });
@@ -242,13 +242,23 @@ if (Input::getPath()->part(1) == "api") {
     // Disk API
     Route::add("api/v2/disk/{action}");
 
+    // Tile seeder API
+    Route::add("api/v3/tileseeder/[uuid]", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]){
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+
     //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
     Route::add("api/v1/schema");
     Route::add("api/v1/setting");
     Route::add("api/v1/twitter");
-    Route::add("api/v1/cartomobile", null, true); // Returns xml
     Route::add("api/v1/user");
     Route::add("api/v1/legend", function () {
         Session::start();

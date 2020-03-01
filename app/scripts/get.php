@@ -331,6 +331,7 @@ function getCmdPaging()
 
     // If source has an "id" fields and identifier is gml:id, it will be mapped to id2 by GMLAS driver
     // We try to rename id2 to id and drop id1
+    $table->execQuery("SAVEPOINT rename_id2");
     $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME id2 TO id";
     $res = $table->prepare($sql);
     try {
@@ -338,7 +339,10 @@ function getCmdPaging()
     } catch (\PDOException $e) {
         print "Notice: Could not rename id2 to id. Source may not has an 'id' field.";
         print "\n\n";
+        $table->execQuery("ROLLBACK TO SAVEPOINT rename_id2");
     }
+
+    $table->execQuery("SAVEPOINT drop_id1");
     $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP id1";
     $res = $table->prepare($sql);
     try {
@@ -346,6 +350,7 @@ function getCmdPaging()
     } catch (\PDOException $e) {
         print "Notice: Could not drop id1. Source may not has an 'id' field.";
         print "\n\n";
+        $table->execQuery("ROLLBACK TO SAVEPOINT drop_id1");
     }
 
 
