@@ -47,7 +47,7 @@ class Disk extends Controller
                 rmdir($dir);
             }
         }
-        $dirs = [App::$param["path"] . 'app/tmp', App::$param["path"] . 'public/logs'];
+        $dirs = [App::$param["path"] . 'app/tmp'];
         foreach ($dirs as $dir) {
             rrmdir($dir, $result);
         }
