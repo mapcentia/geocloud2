@@ -253,6 +253,17 @@ if (Input::getPath()->part(1) == "api") {
         }
     });
 
+    // Scheduler API
+    Route::add("api/v3/scheduler/{id}", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]){
+            Database::setDb("gc2scheduler");
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+
     //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
