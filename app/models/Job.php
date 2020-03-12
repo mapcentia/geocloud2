@@ -1,9 +1,9 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\models;
@@ -111,23 +111,45 @@ class Job extends \app\inc\Model
         return $response;
     }
 
-    public function runJob($id, $db)
+    public function runJob($id, $db, $flush = false)
     {
+        ini_set('max_execution_time', 0);
+
         $cmd = null;
         $jobs = $this->getAll($db);
         foreach ($jobs["data"] as $job) {
             if ($id == $job["id"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
-                $cmd = " php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . (base64_encode($job["extra"]) ?: "null") . " " . (base64_encode($job["presql"]) ?: "null") . " " . (base64_encode($job["postsql"]) ?: "null") . " {$job["download_schema"]} > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n";
+                $cmd = "/usr/bin/timeout -s SIGINT 4h php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . (base64_encode($job["extra"]) ?: "null") . " " . (base64_encode($job["presql"]) ?: "null") . " " . (base64_encode($job["postsql"]) ?: "null") . " {$job["download_schema"]}";
                 break;
             }
         }
-        exec($cmd . ' 2>&1', $out, $err);
-        $response['cmd'] = $cmd;
-        $response['success'] = true;
-        $response['message'] = "Job completed";
-        return $response;
+
+        if (!$flush) {
+            exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  2>&1", $out, $err);
+            $response['cmd'] = $cmd;
+            $response['success'] = true;
+            $response['message'] = "Job completed";
+            return $response;
+        }
+
+        self::disable_ob();
+        header('Content-type: text/plain; charset=utf-8');
+
+        $descriptorspec = array(
+            0 => array("pipe", "r"),   // stdin is a pipe that the child will read from
+            1 => array("pipe", "w"),   // stdout is a pipe that the child will write to
+            2 => array("pipe", "w")    // stderr is a pipe that the child will write to
+        );
+
+        $process = proc_open($cmd, $descriptorspec, $pipes, realpath('./'), array());
+        if (is_resource($process)) {
+            while ($s = fgets($pipes[1])) {
+                print str_pad($s, 4096);
+                flush();
+            }
+        }
     }
 
     public function createCronJobs()
@@ -173,5 +195,30 @@ class Job extends \app\inc\Model
         }
 
         return true;
+    }
+
+    private static function disable_ob()
+    {
+        // Turn off output buffering
+        ini_set('output_buffering', 'off');
+        // Turn off PHP output compression
+        ini_set('zlib.output_compression', false);
+        // Implicitly flush the buffer(s)
+        ini_set('implicit_flush', true);
+        ob_implicit_flush(true);
+        // Clear, and turn off output buffering
+        while (ob_get_level() > 0) {
+            // Get the curent level
+            $level = ob_get_level();
+            // End the buffering
+            ob_end_clean();
+            // If the current level has not changed, abort
+            if (ob_get_level() == $level) break;
+        }
+        // Disable apache output buffering/compression
+        if (function_exists('apache_setenv')) {
+            apache_setenv('no-gzip', '1');
+            apache_setenv('dont-vary', '1');
+        }
     }
 }
