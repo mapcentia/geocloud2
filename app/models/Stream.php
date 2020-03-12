@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,6 +13,7 @@ namespace app\models;
 ini_set('max_execution_time', 0);
 
 use app\inc\Model;
+use app\inc\Util;
 
 /**
  * Class Stream
@@ -84,6 +85,7 @@ class Stream extends Model
             return serialize($response);
         }
 
+        Util::disableOb();
         header('Content-type: text/plain; charset=utf-8');
         try {
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
