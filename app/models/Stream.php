@@ -108,9 +108,9 @@ class Stream extends Model
                 }
                 unset($geometries);
                 $json = json_encode($features);
-                $json .= "\n";
-                $json .= $i . " " . memory_get_usage(true) ."\n";
-                echo $json;
+                //$json .= "\n";
+                //$json .= $i . " " . memory_get_usage(true) ."\n";
+                echo str_pad($json, 4096);;
                 flush();
                 ob_flush();
                 $i++;
