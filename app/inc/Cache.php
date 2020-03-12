@@ -25,23 +25,25 @@ abstract class Cache
      */
     static public function setInstance()
     {
-        $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
+        if (!empty(App::$param['appCache']["host"])) {
+            $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
 
-        $redisConfig = [
-            'host' => $split[0],
-            'port' => !empty($split[1]) ? (int)$split[1] : 6379,
-            'itemDetailedDate' => true
-        ];
+            $redisConfig = [
+                'host' => $split[0],
+                'port' => !empty($split[1]) ? (int)$split[1] : 6379,
+                'itemDetailedDate' => true
+            ];
 
-        $memcachedConfig = [
-            'host' => $split[0],
-            'port' => !empty($split[1]) ? (int)$split[1] : 11211,
-            'itemDetailedDate' => true
-        ];
+            $memcachedConfig = [
+                'host' => $split[0],
+                'port' => !empty($split[1]) ? (int)$split[1] : 11211,
+                'itemDetailedDate' => true
+            ];
+        }
 
         $fileConfig = [
             'securityKey' => "phpfastcache",
-            'path' => '/var/www/geocloud2/app/tmp',
+            'path' => '/var/www/geocloud2/app',
             'itemDetailedDate' => true
         ];
 
