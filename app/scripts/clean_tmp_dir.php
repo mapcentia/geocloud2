@@ -6,6 +6,7 @@
  *
  */
 
+
 include_once(__DIR__ . "/../conf/App.php");
 
 use \app\conf\App;
@@ -20,7 +21,7 @@ $iterator = new \RecursiveIteratorIterator($directory);
 $files = array();
 
 foreach ($iterator as $fileInfo) {
-    if ($fileInfo->isFile() && time() - $fileInfo->getCTime() >= $ttl) {
+    if ($fileInfo->isFile() && time() - $fileInfo->getCTime() >= $ttl && $fileInfo->getFilename() !=  ".gitignore") {
         echo $fileInfo->getRealPath() . "\n";
         unlink($fileInfo->getRealPath());
     }
