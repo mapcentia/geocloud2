@@ -39,7 +39,7 @@ const FILE = "File";
 const ZIP = "Zip";
 const SLEEP = "sleep";
 
-print "Info: Started at " . date(DATE_RFC822) . "\n\n";
+print "Info: Started at " . date(DATE_RFC822) . "\n";
 
 // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
 putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
@@ -63,6 +63,8 @@ $workingSchema = "_gc2scheduler";
 // Create lock file
 $lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
 $lockFile = $lockDir . "/" . $jobId . ".lock";
+
+$tmpDir = "/var/www/geocloud2/app/tmp/";
 
 if (!file_exists($lockDir)) {
     @mkdir($lockDir);
@@ -132,7 +134,7 @@ function getCmd()
 
     $report[DOWNLOADTYPE] = URL;
 
-    print "Info: Fetching remote data...\n\n";
+    print "Info: Fetching remote data...\n";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile, 'w+');
@@ -141,7 +143,7 @@ function getCmd()
     curl_close($ch);
     fclose($fp);
 
-    print "Info: Staring inserting in temp table using ogr2ogr...\n\n";
+    print "Info: Staring inserting in temp table using ogr2ogr...\n";
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
@@ -166,7 +168,7 @@ function getCmdPaging()
 
     $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS :  $report[DOWNLOADTYPE] = GML;
 
-    print "Info: Start paged download...\n\n";
+    print "Info: Start paged download...\n";
 
     $pass = true;
     $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax ORDER BY gid";
@@ -175,7 +177,7 @@ function getCmdPaging()
 
     function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id)
     {
-        global $pass, $count, $table, $cellTemps, $id, $numberOfFeatures, $srid, $out, $err;
+        global $pass, $count, $table, $cellTemps, $id, $numberOfFeatures, $srid, $out, $err, $tmpDir;
         $out = [];
         $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]},EPSG:{$srid}";
         $wfsUrl = $url . "&BBOX=";
@@ -183,7 +185,7 @@ function getCmdPaging()
 
         $cellTemp = "cell_" . md5(microtime() . rand());
 
-        if (!file_put_contents("/var/www/geocloud2/public/logs/" . $gmlName, Util::wget($wfsUrl . $bbox))) {
+        if (!file_put_contents($tmpDir . $gmlName, Util::wget($wfsUrl . $bbox))) {
             print "Error: could not get GML for cell #{$row["gid"]}\n";
             $pass = false;
         };
@@ -198,7 +200,7 @@ function getCmdPaging()
             "-lco 'PRECISION=NO' " .
             "-a_srs 'EPSG:{$srid}' " .
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-            ($downloadSchema ? "GMLAS:/var/www/geocloud2/public/logs/" . $gmlName . " " : "/var/www/geocloud2/public/logs/" . $gmlName . " ") .
+            ($downloadSchema ? "GMLAS:" . $tmpDir . $gmlName . " " : $tmpDir . $gmlName . " ") .
             "-nln {$workingSchema}.{$cellTemp} " .
             "-nlt {$type}";
 
@@ -228,9 +230,9 @@ function getCmdPaging()
             foreach ($out as $line) {
                 print $line . "\n";
             }
-            print "Request: " . $wfsUrl . $bbox . "\n\n";
-            print "\nInfo: Outputting the first few lines of the file:\n\n";
-            $handle = @fopen("/var/www/geocloud2/public/logs/" . $gmlName, "r");
+            print "Request: " . $wfsUrl . $bbox . "\n";
+            print "Info: Outputting the first few lines of the file:\n";
+            $handle = @fopen($tmpDir . $gmlName, "r");
             if ($handle) {
                 for ($i = 0; $i < 40; $i++) {
                     $buffer = fgets($handle, 4096);
@@ -241,12 +243,12 @@ function getCmdPaging()
                 }
                 fclose($handle);
             }
-            @unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+            @unlink($tmpDir . $gmlName);
             cleanUp();
             exit(1);
         }
 
-        @unlink("/var/www/geocloud2/public/logs/" . $gmlName);
+        @unlink($tmpDir . $gmlName);
 
         $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
 
@@ -259,16 +261,16 @@ function getCmdPaging()
         } catch (\PDOException $e) {
             $numberOfFeatures[] = 0;
         }
-        print $count;
+        print $count . "\n";
     }
 
-    print "Cells: ";
+    print "Cells:\n";
     while ($row = $table->fetchRow($res)) {
         global $count;
         $count = 1;
         fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
     }
-    print "\n\n";
+    print "\n";
 
     $selects = [];
     $drops = [];
@@ -302,7 +304,7 @@ function getCmdPaging()
 
     // Create UNION table
     if (sizeof($selects) == 0) {
-        print "Notice: No data for the area.\n\n";
+        print "Notice: No data for the area.\n";
         $report[FEATURECOUNT] = 0;
         cleanUp(1);
     }
@@ -338,7 +340,7 @@ function getCmdPaging()
         $res->execute();
     } catch (\PDOException $e) {
         print "Notice: Could not rename id2 to id. Source may not has an 'id' field.";
-        print "\n\n";
+        print "\n";
         $table->execQuery("ROLLBACK TO SAVEPOINT rename_id2");
     }
 
@@ -349,7 +351,7 @@ function getCmdPaging()
         $res->execute();
     } catch (\PDOException $e) {
         print "Notice: Could not drop id1. Source may not has an 'id' field.";
-        print "\n\n";
+        print "\n";
         $table->execQuery("ROLLBACK TO SAVEPOINT drop_id1");
     }
 
@@ -379,7 +381,7 @@ function getCmdPaging()
                             if ($row) {
                                 $id = "fid";
                             } else {
-                                print "Error: Could not find id or fid field. Please set identifier name in URL\n\n";
+                                print "Error: Could not find id or fid field. Please set identifier name in URL\n";
                                 cleanUp();
                                 exit(1);
                             }
@@ -405,7 +407,7 @@ function getCmdPaging()
         }
     }
 
-    print "Info: Identifier set to: {$id}\n\n";
+    print "Info: Identifier set to: {$id}\n";
 
     // Count dups
     $sql = "SELECT count(*) as num FROM (
@@ -419,10 +421,10 @@ function getCmdPaging()
         $res->execute();
         $row = $table->fetchRow($res);
         if (sizeof($row["num"]) > 0) {
-            print "Info: Removed " . $row["num"] . " duplicates.\n\n";
+            print "Info: Removed " . $row["num"] . " duplicates.\n";
             $report[DUPSCOUNT] = $row["num"];
         } else {
-            print "Notice: Removed no dups\n\n";
+            print "Notice: Removed no dups\n";
             $report[DUPSCOUNT] = 0;
         }
     } catch (\PDOException $e) {
@@ -460,7 +462,7 @@ function getCmdPaging()
         $res->execute();
     } catch (\PDOException $e) {
         print "Warning: Could not create a dummy gml_id field.";
-        print "\n\n";
+        print "\n";
     }
 
     // Alter gid so it becomes unique
@@ -512,18 +514,18 @@ function getCmdPaging()
     }
 
     rsort($numberOfFeatures);
-    print "Info: Highest number of features in cell: " . $numberOfFeatures[0] . "\n\n";
+    print "Info: Highest number of features in cell: " . $numberOfFeatures[0] . "\n";
     $report[MAXCELLCOUNT] = $numberOfFeatures[0];
 
 }
 
 function getCmdFile()
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err;
+    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err, $tmpDir;
 
     $report[DOWNLOADTYPE] = FILE;
 
-    print "Info: Staring inserting in temp table using file download...\n\n";
+    print "Info: Staring inserting in temp table using file download...\n";
 
     $randFileName = "_" . md5(microtime() . rand());
     $files = [];
@@ -572,7 +574,7 @@ function getCmdFile()
     }
 
     foreach ($files as $key => $file) {
-        $path = "/var/www/geocloud2/public/logs/" . $key;
+        $path = $tmpDir . $key;
         $fileRes = fopen($path, 'w');
         try {
             file_put_contents($path, Util::wget($file));
@@ -595,12 +597,12 @@ function getCmdFile()
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        "/var/www/geocloud2/public/logs/" . $fileSetName . " " .
+        $tmpDir . $fileSetName . " " .
         "-nln {$workingSchema}.{$randTableName} " .
         "-nlt {$type}";
     exec($cmd . ' 2>&1', $out, $err);
 
-    array_map('unlink', glob("/var/www/geocloud2/public/logs/" . $randFileName . ".*"));
+    array_map('unlink', glob($tmpDir . $randFileName . ".*"));
 }
 
 function getCmdZip()
@@ -609,7 +611,7 @@ function getCmdZip()
 
     $report[DOWNLOADTYPE] = ZIP;
 
-    print "Info: Fetching remote zip...\n\n";
+    print "Info: Fetching remote zip...\n";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
@@ -731,7 +733,7 @@ function poll()
     $maxJobs = 20;
     $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
     if (iterator_count($fi) > $maxJobs) {
-        print "info: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...\n\n";
+        print "info: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...\n";
         $report[SLEEP]+= $sleep;
         sleep($sleep);
         poll();
@@ -744,12 +746,12 @@ poll();
 // Check output
 // ============
 if ($err) {
-    print "Error " . $err . "\n\n";
+    print "Error " . $err . "\n";
     print_r($out);
-    print "\n\n";
+    print "\n";
     // Output the first few lines of file
     if ($grid == null) {
-        Print "Info: Outputting the first few lines of the file:\n\n";
+        Print "Info: Outputting the first few lines of the file:\n";
         $handle = @fopen($dir . "/" . $tempFile, "r");
         if ($handle) {
             for ($i = 0; $i < 40; $i++) {
@@ -776,18 +778,18 @@ if ($err) {
 }
 
 // Run for real if the dry run is passed.
-print "Info: Inserting in temp table done, proceeding...\n\n";
+print "Info: Inserting in temp table done, proceeding...\n";
 if ($deleteAppend == "1") {
-    print "Info: Delete/append is enabled.\n\n";
+    print "Info: Delete/append is enabled.\n";
     if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
-        print "Notice: Table doesn't exists.\n\n";
+        print "Notice: Table doesn't exists.\n";
         $o = "-overwrite";
     } else {
-        print "Info: Table exists.\n\n";
+        print "Info: Table exists.\n";
         $o = "-append";
     }
 } else {
-    print "Info: Overwrite is enabled.\n\n";
+    print "Info: Overwrite is enabled.\n";
     $o = "-overwrite";
 }
 
@@ -809,7 +811,7 @@ try {
     $report[FEATURECOUNT] = $n;
 
 } catch (\PDOException $e) {
-    print "Notice: No data for the area (a guess).\n\n";
+    print "Notice: No data for the area (a guess).\n";
     $report[FEATURECOUNT] = 0;
     $table->rollback();
     cleanUp(1);
@@ -853,9 +855,9 @@ foreach ($table->getMetaData("{$workingSchema}.{$randTableName}") as $k => $v) {
     }
 }
 
-print "\nInfo: Fields in source: ";
+print "Info: Fields in source: ";
 print implode(", ", $fields);
-print "\n\n";
+print "\n";
 
 // Delete/append
 // =============
@@ -872,7 +874,7 @@ if ($o != "-overwrite") {
         exit(1);
     }
 
-    print "Info: Data in existing table deleted.\n\n";
+    print "Info: Data in existing table deleted.\n";
     $sql = "INSERT INTO {$schema}.{$safeName} (SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$randTableName})";
 
 // Overwrite
@@ -909,8 +911,8 @@ if ($o != "-overwrite") {
 
 }
 
-print "Info: Create/update final table...\n\n";
-//print $sql . "\n\n";
+print "Info: Create/update final table...\n";
+//print $sql . "\n";
 $res = $table->prepare($sql);
 try {
     $res->execute();
@@ -948,7 +950,7 @@ if ($extra) {
     $fieldObj = json_decode($extra);
 
     if (!$fieldObj) {
-        print "\n\nWarning: Extra fields JSON string is not valid\n\n";
+        print "\nWarning: Extra fields JSON string is not valid\n";
     } else {
 
         if (gettype($fieldObj) == "object") {
@@ -962,7 +964,7 @@ if ($extra) {
             $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
             if (!$check["exists"]) {
                 $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-                print "info: Adding {$fieldName}\n\n";
+                print "info: Adding {$fieldName}\n";
                 $res = $table->prepare($sql);
                 try {
                     $res->execute();
@@ -974,10 +976,10 @@ if ($extra) {
                     exit(1);
                 }
             } else {
-                print "Info: Extra field {$fieldName} already exists.\n\n";
+                print "Info: Extra field {$fieldName} already exists.\n";
             }
             $sql = "UPDATE \"{$schema}\".\"{$safeName}\" SET {$fieldName} =:value";
-            print "Info: Updating extra field {$fieldName}...\n\n";
+            print "Info: Updating extra field {$fieldName}...\n";
             $res = $table->prepare($sql);
             try {
                 $res->execute(array(":value" => $fieldValue));
@@ -1018,7 +1020,7 @@ if ($postSql) {
 $table->commit();
 
 print "Info: Data imported into " . $schema . "." . $safeName . "\n";
-print "\nInfo: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["message"] . "\n";
+print "Info: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["message"] . "\n";
 
 // Clean up
 // ========
@@ -1101,7 +1103,7 @@ function cleanUp($success = 0)
         print "Warning: ";
         print_r($e->getMessage());
     }
-    print "\nInfo: Temp table dropped.\n\n";
+    print "Info: Temp table dropped.\n";
 
     if ($success) {
         \app\models\Database::setDb($db);
