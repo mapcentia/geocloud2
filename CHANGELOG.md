@@ -33,6 +33,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 
 ### Fixed
 - In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
+- Timeouts in both scheduler client and server is removed.
 
 ## [2020.2.0]
 ### Added
