@@ -8,6 +8,8 @@
 
 namespace app\models;
 
+ini_set('max_execution_time', 0);
+
 use app\inc\Util;
 
 class Job extends \app\inc\Model
