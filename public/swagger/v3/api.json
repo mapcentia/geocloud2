@@ -1,0 +1,113 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "GC2 API",
+        "version": "0.1"
+    },
+    "paths": {
+        "/api/v3/tileseeder": {
+            "get": {
+                "tags": [
+                    "tileseeder"
+                ],
+                "summary": "Get all running mapcache_seed processes started by user",
+                "operationId": "app\\api\\v3\\Tileseeder::get_index",
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "tileseeder"
+                ],
+                "summary": "Starts a mapcache_seed process",
+                "operationId": "app\\api\\v3\\Tileseeder::post_index",
+                "requestBody": {
+                    "description": "mapcache_seed parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "layer": {
+                                        "type": "string"
+                                    },
+                                    "start": {
+                                        "type": "integer"
+                                    },
+                                    "end": {
+                                        "type": "integer"
+                                    },
+                                    "extent": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/tileseeder/{uuid}": {
+            "delete": {
+                "tags": [
+                    "tileseeder"
+                ],
+                "summary": "Kills a mapcache_seed process by uuid. Use * to kill all processes started by user.",
+                "operationId": "app\\api\\v3\\Tileseeder::delete_index",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "description": "Uuid of Process",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "name": "bearerAuth",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
