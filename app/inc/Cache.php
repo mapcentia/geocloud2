@@ -31,6 +31,7 @@ abstract class Cache
             $redisConfig = [
                 'host' => $split[0],
                 'port' => !empty($split[1]) ? (int)$split[1] : 6379,
+                'database' => !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0,
                 'itemDetailedDate' => true
             ];
 

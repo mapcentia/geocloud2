@@ -16,7 +16,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - JWT support. 
     - A JWT bearer token is now return when using `/api/v2/session/start` 
     - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
-    - A token can be validated in the front controller ´index.php´ and the database can be set from it like this:
+    - A token can be validated in the front controller `index.php` and the database can be set from it like this:
 ```php
 Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
     $jwt = Jwt::validate();
@@ -41,6 +41,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - Tentative AppCache API. For getting stats and clear cache.
 - User table now has a JSONB field called "properties". The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
 - In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
+- It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
 
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.

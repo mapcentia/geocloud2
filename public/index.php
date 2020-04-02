@@ -32,12 +32,19 @@ $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : 
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
 
-// Set session bac-end. PHP will use default port if not set explicit
+// Set session back-end. PHP will use default port if not set explicit
 
 if (!empty(App::$param["sessionHandler"]["type"])) {
     if (!empty(App::$param['sessionHandler']["host"])) {
         ini_set('session.save_handler', App::$param['sessionHandler']["type"]);
-        ini_set('session.save_path', App::$param['sessionHandler']["host"]);
+        // If Redis then set the database
+        if (App::$param["sessionHandler"]["type"] == "redis") {
+            ini_set('session.save_path', "tcp://" . App::$param['sessionHandler']["host"] . "?database=" .
+                (!empty(App::$param["sessionHandler"]["db"]) ? App::$param["sessionHandler"]["db"] : "0")
+            );
+        } else {
+            ini_set('session.save_path', App::$param['sessionHandler']["host"]);
+        }
     } else {
         die("Session handler host not set");
     }
@@ -245,7 +252,7 @@ if (Input::getPath()->part(1) == "api") {
     // Tile seeder API
     Route::add("api/v3/tileseeder/[uuid]", function () {
         $jwt = Jwt::validate();
-        if ($jwt["success"]){
+        if ($jwt["success"]) {
             Database::setDb($jwt["data"]["database"]);
         } else {
             echo Response::toJson($jwt);
@@ -256,7 +263,7 @@ if (Input::getPath()->part(1) == "api") {
     // Scheduler API
     Route::add("api/v3/scheduler/{id}", function () {
         $jwt = Jwt::validate();
-        if ($jwt["success"]){
+        if ($jwt["success"]) {
             Database::setDb("gc2scheduler");
         } else {
             echo Response::toJson($jwt);
