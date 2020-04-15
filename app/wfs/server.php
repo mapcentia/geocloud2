@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -12,6 +12,8 @@ use \app\inc\Util;
 use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
+
+ini_set('max_execution_time', 0);
 
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
@@ -95,6 +97,8 @@ $sessionComment = "";
 
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
+$logFile = fopen("/var/www/geocloud2/public/logs/wfs_transactions.log", "a");
+
 // Post method is used
 // ===================
 
@@ -157,6 +161,11 @@ if ($HTTP_RAW_POST_DATA) {
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
             break;
         case "Transaction":
+            fwrite($logFile, \app\inc\Input::getPath()->part(2)."\n");
+            fwrite($logFile, $HTTP_RAW_POST_DATA);
+            fwrite($logFile, "\n");
+            fwrite($logFile, "--------------");
+            fwrite($logFile, "\n\n");
             $transaction = true;
             $HTTP_FORM_VARS["REQUEST"] = "Transaction";
             if (isset($arr["Insert"])) {
@@ -860,6 +869,7 @@ function doParse($arr)
     global $db;
     global $trusted;
     global $rowIdsChanged;
+    global $logFile;
 
     $serializer_options = array(
         'indent' => '  ',
@@ -1369,6 +1379,7 @@ function doParse($arr)
                 $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
                 Log::write("Sqls fired\n");
                 Log::write("{$singleSql}\n");
+                fwrite($logFile, "{$singleSql}\n\n\n");
             }
         }
     }
