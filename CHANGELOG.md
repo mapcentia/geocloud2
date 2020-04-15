@@ -31,9 +31,12 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
 - Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
 
+### Changed
+- It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
+
 ### Fixed
 - In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
-- Timeouts in both scheduler client and server is removed.
+- Timeouts in both Scheduler client and server is removed.
 
 ## [2020.2.0]
 ### Added
@@ -41,7 +44,6 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - Tentative AppCache API. For getting stats and clear cache.
 - User table now has a JSONB field called "properties". The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
 - In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
-- It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
 
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
