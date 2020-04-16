@@ -21,18 +21,14 @@
 
 namespace app\api\v3;
 
-
 use app\inc\Controller;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\conf\Connection;
 use app\models\Job;
 
 class Scheduler extends Controller
 {
-    private $tileSeeder;
-
     /**
      * Tileseeder constructor.
      */
@@ -46,8 +42,8 @@ class Scheduler extends Controller
      * @return array
      *
      * @OA\Post(
-     *   path="/api/v3/tileseeder",
-     *   tags={"tileseeder"},
+     *   path="/api/v3/scheduler",
+     *   tags={"scheduler"},
      *   summary="Starts a mapcache_seed process",
      *   security={{"bearerAuth":{}}},
      *   @OA\RequestBody(
@@ -72,12 +68,10 @@ class Scheduler extends Controller
      */
     public function get_index()
     {
-
         $id = Route::getParam("id");
         $job = new Job();
-        $job->runJob($id, "mydb", true);
+        $db = Jwt::extractPayload(Input::getJwtToken())["data"]["database"];
+        $job->runJob($id, $db, true);
         exit();
-
-
     }
 }
