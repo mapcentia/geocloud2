@@ -959,7 +959,7 @@ if ($extra) {
             $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
             if (!$check["exists"]) {
                 $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
-                print "\ninfo: Adding {$fieldName}";
+                print "\nInfo: Adding {$fieldName}";
                 $res = $table->prepare($sql);
                 try {
                     $res->execute();
