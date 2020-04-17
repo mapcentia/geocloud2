@@ -166,7 +166,7 @@ function getCmdPaging()
 {
     global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures;
 
-    $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS :  $report[DOWNLOADTYPE] = GML;
+    $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS : $report[DOWNLOADTYPE] = GML;
 
     print "\nInfo: Start paged download...";
 
@@ -220,7 +220,7 @@ function getCmdPaging()
 
         if (!$pass) {
             if ($count > 2) {
-                print "\nError; Too many recursive tries to fetch cell #{$row["gid"]}";
+                print "\nError; Too many recursive tries to fetch cell #{$cellNumber}";
                 cleanUp();
                 exit(1);
             }
@@ -228,7 +228,7 @@ function getCmdPaging()
             $count++;
             fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
             foreach ($out as $line) {
-                print "\n".$line;
+                print "\n" . $line;
             }
             print "\nRequest: " . $wfsUrl . $bbox;
             print "\nInfo: Outputting the first few lines of the file:";
@@ -250,15 +250,25 @@ function getCmdPaging()
 
         @unlink($tmpDir . $gmlName);
 
-        $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
-
-        $res = $table->prepare($sql);
-
-        try {
-            $res->execute();
-            $numberOfFeatures[] = $table->fetchRow($res)["number"];
-            $cellTemps[] = $cellTemp;
-        } catch (\PDOException $e) {
+        $checkSql = "SELECT EXISTS (
+           SELECT FROM pg_catalog.pg_class c
+           JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+           WHERE  n.nspname = '{$workingSchema}'
+           AND    c.relname = '{$cellTemp}'
+           AND    c.relkind = 'r'    -- only tables
+           ) AS exists"
+        $checkRes = $table->execQuery($checkSql);
+        if ($table->fetchRow($checkRes)["exists"]) {
+            $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
+            try {
+                $res = $table->prepare($sql);
+                $res->execute();
+                $numberOfFeatures[] = $table->fetchRow($res)["number"];
+                $cellTemps[] = $cellTemp;
+            } catch (\PDOException $e) {
+                $numberOfFeatures[] = 0;
+            }
+        } else {
             $numberOfFeatures[] = 0;
         }
     }
@@ -705,6 +715,7 @@ function getCmdZip()
         "";
     exec($cmd . ' 2>&1', $out, $err);
 }
+
 \app\models\Database::setDb($db);
 $table = new \app\models\Table($schema . "." . $safeName);
 
@@ -733,13 +744,14 @@ function poll()
     $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
     if (iterator_count($fi) > $maxJobs) {
         print "\nInfo: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...";
-        $report[SLEEP]+= $sleep;
+        $report[SLEEP] += $sleep;
         sleep($sleep);
         poll();
     } else {
         $getFunction();
     }
 }
+
 poll();
 
 // Check output
@@ -749,7 +761,7 @@ if ($err) {
     print_r($out);
     // Output the first few lines of file
     if ($grid == null) {
-        Print "\nInfo: Outputting the first few lines of the file:";
+        print "\nInfo: Outputting the first few lines of the file:";
         $handle = @fopen($dir . "/" . $tempFile, "r");
         if ($handle) {
             for ($i = 0; $i < 40; $i++) {
@@ -795,7 +807,6 @@ $pkSql = null;
 $idxSql = null;
 
 
-
 // Count features
 // ==============
 $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$randTableName}";
@@ -805,7 +816,7 @@ $res = $table->prepare($sql);
 try {
     $res->execute();
     $n = $table->fetchRow($res)["number"];
-    print "Info: Total number of fetched features: " . $n;
+    print "\nInfo: Total number of fetched features: " . $n;
     $report[FEATURECOUNT] = $n;
 
 } catch (\PDOException $e) {
