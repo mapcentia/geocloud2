@@ -1,14 +1,14 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 use \app\inc\Input;
 
-$db = \app\inc\Input::getPath()->part(2);
+$db = Input::getPath()->part(2);
 $dbSplit = explode("@", $db);
 
 if (!function_exists("makeExceptionReport")) {
@@ -40,7 +40,9 @@ if (!function_exists("makeExceptionReport")) {
     }
 }
 
-if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { //Sub-user
+$settings = null;
+
+if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
     $db = $dbSplit[1];
     if (empty($_SESSION["subuser"])) {
         $_SESSION["subuser"] = true; // Coming from outside session
@@ -49,8 +51,9 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { //Sub-user
         $subUser = $_SESSION["screen_name"];
     }
 
-    $settings_viewer = new \app\models\Setting();
-    $userGroup = !empty($response->data->userGroups->$subUser) ? $response->data->userGroups->$subUser : null;
+    $settingsModel = new \app\models\Setting();
+    $settings = $settingsModel->get();
+    $userGroup = !empty($settings["data"]->userGroups->$subUser) ? $settings["data"]->userGroups->$subUser : null;
 
     if ($dbSplit[0] != $postgisschema) {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
@@ -74,9 +77,10 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { //Sub-user
 }
 
 if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
-    $settings_viewer = new \app\models\Setting();
-    $response = $settings_viewer->get();
-    \app\inc\Log::write("Auth");
+    if (!$settings) {
+        $settingsModel = new \app\models\Setting();
+        $settings = $settingsModel->get();
+    }
     // mod_php
     if (isset($_SERVER['PHP_AUTH_USER'])) {
         $username = $_SERVER['PHP_AUTH_USER'];
@@ -87,34 +91,14 @@ if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
         if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic') === 0)
             list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
     }
-    if (empty($username)) {
+    if (empty($username) || $username != Input::getPath()->part(2) || \app\models\Setting::encryptPw($password) != $settings["data"]->pw) {
         header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
         header('HTTP/1.0 401 Unauthorized');
         header("Cache-Control: no-cache, must-revalidate");
-        // HTTP/1.1
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
         // Date in the past
+        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
         // Text to send if user hits Cancel button
-        die("Could not authenticate you 1");
-
-    } elseif ($username != Input::getPath()->part(2)) {
-        header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
-        header('HTTP/1.0 401 Unauthorized');
-        header("Cache-Control: no-cache, must-revalidate");
-        // HTTP/1.1
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-        // Date in the past
-        // Text to send if user hits Cancel button
-        die("Could not authenticate you 2");
-
-    } elseif (\app\models\Setting::encryptPw($password) != $response["data"]->pw) {
-        header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
-        header('HTTP/1.0 401 Unauthorized');
-        header("Cache-Control: no-cache, must-revalidate");
-        // HTTP/1.1
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-        // Date in the past
-        die("Could not authenticate you 3");
+        die("Attempt to login using Basic Auth was cancelled");
     } else {
         $_SESSION['http_auth'] = $db;
     }

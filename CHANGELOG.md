@@ -6,7 +6,8 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
-- Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
+- Limits for SQL API
+ can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
 "limits" => [
     "sqlExcel" => 1000,
@@ -29,7 +30,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 });
 ```
 - New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
-- Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
+- The Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
 
 ### Changed
 - It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
@@ -37,6 +38,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 ### Fixed
 - In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
 - Timeouts in both Scheduler client and server is removed.
+- Bugs regarding http basic auth of sub-users in WMS.
 
 ## [2020.2.0]
 ### Added

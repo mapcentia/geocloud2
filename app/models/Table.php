@@ -70,7 +70,7 @@ class Table extends Model
         if ($this->schema != "settings") {
             $cacheType = "relExist";
             $cacheRel = $this->table;
-            $cacheId = $this->postgisdb . "_" . $cacheType ."_" . $cacheRel;
+            $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exits = $CachedString->get();
@@ -132,9 +132,10 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
-    private function clearCacheOnSchemaChanges($relName = null) {
+    private function clearCacheOnSchemaChanges($relName = null)
+    {
         $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
-        $relName = $relName ?:$this->table;
+        $relName = $relName ?: $this->table;
         foreach ($arr as $tag) {
             Cache::deleteItemsByTagsAll([$tag, $relName, $this->postgisdb]);
         }
@@ -145,7 +146,7 @@ class Table extends Model
      * @param array $field
      * @return array
      */
-    private function getType(array $field) : array
+    private function getType(array $field): array
     {
         $field['isArray'] = preg_match("/\[\]/", $field['type']) ? true : false;
 
@@ -324,8 +325,9 @@ class Table extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $arr = [];
-            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : !empty($_SESSION['screen_name']) ? $_SESSION['screen_name'] : null;
-            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema']) || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
+            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup']  : $_SESSION['screen_name'];
+            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema'])
+                || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
@@ -528,7 +530,7 @@ class Table extends Model
             foreach ($set as $row) {
                 if (isset(App::$param["ckan"])) {
                     // Delete package from CKAN if "Update" is being set to false
-                    if (isset($row->meta->ckan_update) AND $row->meta->ckan_update === false) {
+                    if (isset($row->meta->ckan_update) and $row->meta->ckan_update === false) {
                         $uuid = $this->getUuid($row->_key_);
                         \app\models\Layer::deleteCkan($uuid["uuid"]);
                     } else {
