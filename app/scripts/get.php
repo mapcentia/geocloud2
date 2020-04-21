@@ -256,7 +256,7 @@ function getCmdPaging()
            WHERE  n.nspname = '{$workingSchema}'
            AND    c.relname = '{$cellTemp}'
            AND    c.relkind = 'r'    -- only tables
-           ) AS exists"
+           ) AS exists";
         $checkRes = $table->execQuery($checkSql);
         if ($table->fetchRow($checkRes)["exists"]) {
             $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
