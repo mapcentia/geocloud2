@@ -31,6 +31,8 @@ class Wms extends \app\inc\Controller
     {
         parent::__construct();
 
+        header("Cache-Control: no-store");
+
         $this->layers = [];
         $postgisschema = \app\inc\Input::getPath()->part(3);
         $db = \app\inc\Input::getPath()->part(2);
