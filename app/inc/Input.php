@@ -92,7 +92,7 @@ class Input
      */
     public static function getBody(): string
     {
-        return file_get_contents('php://input');
+        return urldecode(file_get_contents('php://input'));
     }
 
     public static function getCookies(): array
