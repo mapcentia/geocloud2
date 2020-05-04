@@ -10,6 +10,7 @@ namespace app\inc;
 
 use \app\conf\App;
 use \Phpfastcache\CacheManager;
+use \Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
 use \Phpfastcache\Drivers\Files\Config as FilesConfig;
 use \Phpfastcache\Drivers\Redis\Config as RedisConfig;
 use \Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
@@ -115,7 +116,7 @@ abstract class Cache
 
     static public function deleteItemsByTagsAll(array $tags)
     {
-        self::$instanceCache->deleteItemsByTagsAll($tags);
+        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
     }
 
     static public function deleteItemsByTags(array $tags)

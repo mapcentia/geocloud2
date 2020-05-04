@@ -6,6 +6,14 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
+
+### Changed
+- Updated PhpFastCache to V8, so PHP 7.3+ is required.
+
+### Fixed
+
+## [2020.5.0]
+### Added
 - Limits for SQL API
  can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
