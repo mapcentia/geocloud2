@@ -77,7 +77,7 @@ class Layer extends \app\models\Table
         }
 
         $cacheType = "meta";
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
+        $cacheId = $this->postgisdb . "_" . \app\inc\Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
 
         $CachedString = Cache::getItem($cacheId);
 
