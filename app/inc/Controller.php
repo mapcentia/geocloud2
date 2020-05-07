@@ -196,7 +196,8 @@ class Controller
                         $response = array();
                         $response['auth_level'] = $auth;
                         $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
-                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
+                        $response['session'] = $_SESSION['subuser'] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : null;
+                        $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
                         switch ($transaction) {
                             case false:
 //                              if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
@@ -232,7 +233,7 @@ class Controller
                     } else {
                         $response = array();
                         $response['auth_level'] = $auth;
-                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
+                        $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
                         $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
                         $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
@@ -250,7 +251,7 @@ class Controller
                 } else {
                     $response = array();
                     $response['auth_level'] = $auth;
-                    $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
+                    $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
                     $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
                     if ($auth == "Read/write" || ($transaction)) {
@@ -272,9 +273,10 @@ class Controller
                 }
             }
         } else {
-            $response3["success"] = true;
+            $response3['success'] = true;
             $response3['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
             $response3['auth_level'] = $auth;
+            $response3[\app\api\v2\Sql::USEDRELSKEY] = $rels;
             return $response3;
         }
     }
