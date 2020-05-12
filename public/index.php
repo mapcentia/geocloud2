@@ -271,6 +271,11 @@ if (Input::getPath()->part(1) == "api") {
         }
     });
 
+    // OAuth API
+    Route::add("api/v3/oauth", function () {
+        Database::setDb("mapcentia");
+    });
+
     //Route::add("api/v2/configuration", function () { Session::start(); });
 
     Route::add("api/v1/extent");
