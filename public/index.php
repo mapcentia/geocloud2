@@ -80,6 +80,7 @@ register_shutdown_function(function () {
     return false;
 });
 
+// Setup Cache
 Cache::setInstance();
 
 // Setup host
