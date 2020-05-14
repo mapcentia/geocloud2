@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -466,12 +466,25 @@ function getCmdPaging()
 
     // Create a dummy gml_id field
     // Support of legacy destination tables with gml_id field
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} ADD gml_id INT";
+    $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='gml_id'";
     $res = $table->prepare($sql);
     try {
         $res->execute();
+        $row = $table->fetchRow($res);
+        if ($row) {
+            print "\nNotice: gml_id field already exist.";
+        } else {
+            $sql = "ALTER TABLE {$workingSchema}.{$randTableName} ADD gml_id INT";
+            $res = $table->prepare($sql);
+            try {
+                $res->execute();
+                print "\nNotice: Dummy gml_id field created.";
+            } catch (\PDOException $e) {
+                print "\nWarning: Could not create a dummy gml_id field.";
+            }
+        }
     } catch (\PDOException $e) {
-        print "\nWarning: Could not create a dummy gml_id field.";
+        print "\nWarning: Could not detect gml_id field.";
     }
 
     // Alter gid so it becomes unique
