@@ -39,25 +39,19 @@ class Scheduler extends Controller
     }
 
     /**
-     * @return array
+     * @return void
      *
-     * @OA\Post(
-     *   path="/api/v3/scheduler",
+     * @OA\Get(
+     *   path="/api/v3/scheduler/{jobId}",
      *   tags={"scheduler"},
-     *   summary="Starts a mapcache_seed process",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\RequestBody(
-     *     description="mapcache_seed parameters",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="name",type="string"),
-     *         @OA\Property(property="layer",type="string"),
-     *         @OA\Property(property="start",type="integer"),
-     *         @OA\Property(property="end",type="integer"),
-     *         @OA\Property(property="extent",type="string")
-     *       )
+     *   summary="Coming",
+     *   @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     required=true,
+     *     description="User identifier",
+     *     @OA\Schema(
+     *       type="string"
      *     )
      *   ),
      *   @OA\Response(

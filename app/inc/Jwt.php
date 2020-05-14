@@ -8,10 +8,13 @@
 
 namespace app\inc;
 
+use app\conf\App;
 use app\models\Database;
 
 class Jwt
 {
+    const TOKEN_TTL = 3600;
+
     /**
      * @return array
      */
@@ -79,5 +82,28 @@ class Jwt
         $response["success"] = true;
         $response["data"] = $arr;
         return $response;
+    }
+
+    /**
+     * @param string $secret
+     * @param $db
+     * @param string $userId
+     * @param bool $isSubUser
+     * @return string
+     */
+    public static function createJWT(string $secret, $db, string $userId, bool $isSubUser): array
+    {
+        $token = [
+            "iss" => App::$param["host"],
+            "uid" => $userId,
+            "exp" => time() + self::TOKEN_TTL,
+            "iat" => time(),
+            "database" => $db,
+            "superUser" => $isSubUser,
+        ];
+        return [
+            "token" => \Firebase\JWT\JWT::encode($token, $secret),
+            "ttl" => self::TOKEN_TTL,
+        ];
     }
 }

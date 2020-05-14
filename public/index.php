@@ -238,17 +238,29 @@ if (Input::getPath()->part(1) == "api") {
         Session::start();
     });
 
-    // Admin API
-    Route::add("api/v2/admin/{action}/{user}", function () {
-        $db = Route::getParam("user");
-        Database::setDb($db);
-    });
-
     // Appcache API
     Route::add("api/v2/appcache/{action}");
 
     // Disk API
     Route::add("api/v2/disk/{action}");
+
+    /* V3 */
+
+    // Admin API
+    Route::add("api/v3/admin/{action}/", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson([
+                    
+                ]);
+            }
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
 
     // Tile seeder API
     Route::add("api/v3/tileseeder/[uuid]", function () {

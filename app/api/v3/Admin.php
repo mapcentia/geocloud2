@@ -10,7 +10,7 @@
  *
  */
 
-namespace app\api\v2;
+namespace app\api\v3;
 
 ini_set('max_execution_time', 0);
 

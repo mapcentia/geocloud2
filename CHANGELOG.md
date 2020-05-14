@@ -6,11 +6,16 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
+- OAuth API added with password grant: api/v3/oauth/token
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
+- JWT token removed from api/v2/session/start response. Moved to new OAuth API.
+- Admin and Scheduler API moved to api/v3 and now requires OAuth.
 
 ### Fixed
+- Bug in the scheduler get.php script regarding gridded download.
+- app/phpfastcache dir added with .gitignore file.
 
 ## [2020.5.0]
 ### Added

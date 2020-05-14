@@ -60,7 +60,7 @@ class Session extends Model
      * @return array
      * @throws \Exception
      */
-    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false): array
+    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, $tokenOnly = false): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
@@ -129,40 +129,58 @@ class Session extends Model
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
 
-            // Fetch sub-users
-            $_SESSION['subusers'] = [];
-            $_SESSION['subuserEmails'] = [];
-            $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
-            $res = $this->prepare($sQuery);
-            $res->execute(array(":sUserID" => $_SESSION['screen_name']));
-            while ($rowSubUSers = $this->fetchRow($res)) {
-                $_SESSION['subusers'][] = $rowSubUSers["screenname"];
-                $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
-            };
+            if (!$tokenOnly) { //NOT OAuth
+                // Fetch sub-users
+                $_SESSION['subusers'] = [];
+                $_SESSION['subuserEmails'] = [];
+                $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
+                $res = $this->prepare($sQuery);
+                $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+                while ($rowSubUSers = $this->fetchRow($res)) {
+                    $_SESSION['subusers'][] = $rowSubUSers["screenname"];
+                    $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+                };
 
-            // Check if user has secure password (bcrypt hash)
-            if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
-                $response['data']['passwordExpired'] = false;
-                $_SESSION['passwordExpired'] = false;
+                // Check if user has secure password (bcrypt hash)
+                if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
+                    $response['data']['passwordExpired'] = false;
+                    $_SESSION['passwordExpired'] = false;
+                } else {
+                    $response['data']['passwordExpired'] = true;
+                    $_SESSION['passwordExpired'] = true;
+                }
+                Database::setDb($response['data']['parentdb']);
+                $settings_viewer = new \app\models\Setting();
+                $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
             } else {
-                $response['data']['passwordExpired'] = true;
-                $_SESSION['passwordExpired'] = true;
+                // Get super user key, which are used for JWT secret
+                Database::setDb($response['data']['parentdb']);
+                $settings_viewer = new \app\models\Setting();
+                $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
+                $token = \app\inc\Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
+                return [
+                  "access_token" =>  $token['token'],
+                  "token_type" =>  "bearer",
+                  "expires_in" =>  $token["ttl"],
+                  "refresh_token" =>  "",
+                  "scope" =>  "",
+                ];
             }
-
-            Database::setDb($response['data']['parentdb']);
-            $settings_viewer = new \app\models\Setting();
-            $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
-            // Get super user key, which are used for JWT secret
-            $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-            $response['data']['token'] = self::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
         } else {
-            session_unset();
-            $response['success'] = false;
-            $response['message'] = "Session not started";
-            $response['code'] = "401";
+            if (!$tokenOnly) { //NOT OAuth
+                session_unset();
+                $response['success'] = false;
+                $response['message'] = "Session not started";
+                $response['code'] = "401";
+            } else {
+                return [
+                    "error" => "invalid_grant",
+                    "code" => "400"
+                ];
+            }
         }
 
-        return $response;
+        return $response; // In case it's NOT OAuth
     }
 
     /**
@@ -175,25 +193,5 @@ class Session extends Model
         $response['success'] = true;
         $response['message'] = "Session stopped";
         return $response;
-    }
-
-    /**
-     * @param string $secret
-     * @param $db
-     * @param string $userId
-     * @param bool $isSubUser
-     * @return string
-     */
-    private static function createJWT(string $secret, $db, string $userId, bool $isSubUser): string
-    {
-        $token = [
-            "iss" => App::$param["host"],
-            "uid" => $userId,
-            "exp" => time() + 3600,
-            "iat" => time(),
-            "database" => $db,
-            "superUser" => $isSubUser,
-        ];
-        return JWT::encode($token, $secret);
     }
 }
