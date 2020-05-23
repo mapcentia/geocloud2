@@ -146,7 +146,7 @@ abstract class Cache
     static public function save($CachedString)
     {
         try {
-            self::$instanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            self::$instanceCache->save($CachedString);
         } catch (\Error $exception) {
             error_log($exception->getMessage());
         }
