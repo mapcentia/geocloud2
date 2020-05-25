@@ -175,7 +175,8 @@ class Session extends Model
             } else {
                 return [
                     "error" => "invalid_grant",
-                    "code" => "400"
+                    "error_description" => "Could not authenticate the user. Check username and password",
+                    "code" => 400,
                 ];
             }
         }

@@ -25,7 +25,7 @@ class Jwt
         if ($jwtToken) {
             return self::parse($jwtToken);
         } else {
-            return ["success" => false, "message" => "No token in header"];
+            return ["code" => 400, "success" => false, "message" => "No token in header"];
         }
     }
 

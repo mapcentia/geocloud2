@@ -6,18 +6,6 @@
  *
  */
 
-/**
- * @OA\Info(title="GC2 API", version="0.1")
- * @OA\SecurityScheme(
- *      securityScheme="bearerAuth",
- *      in="header",
- *      name="bearerAuth",
- *      type="http",
- *      scheme="bearer",
- *      bearerFormat="JWT",
- * ),
- */
-
 
 namespace app\api\v3;
 
@@ -43,13 +31,14 @@ class Scheduler extends Controller
      *
      * @OA\Get(
      *   path="/api/v3/scheduler/{jobId}",
-     *   tags={"scheduler"},
-     *   summary="Coming",
+     *   tags={"Scheduler"},
+     *   summary="Start scheduled job by id.",
+     *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
-     *     name="userId",
+     *     name="jobId",
      *     in="path",
      *     required=true,
-     *     description="User identifier",
+     *     description="Job identifier",
      *     @OA\Schema(
      *       type="string"
      *     )

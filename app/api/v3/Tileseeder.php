@@ -6,21 +6,8 @@
  *
  */
 
-/**
- * @OA\Info(title="GC2 API", version="0.1")
- * @OA\SecurityScheme(
- *      securityScheme="bearerAuth",
- *      in="header",
- *      name="bearerAuth",
- *      type="http",
- *      scheme="bearer",
- *      bearerFormat="JWT",
- * ),
- */
-
 
 namespace app\api\v3;
-
 
 use app\inc\Controller;
 use app\inc\Route;
@@ -46,7 +33,7 @@ class Tileseeder extends Controller
      *
      * @OA\Post(
      *   path="/api/v3/tileseeder",
-     *   tags={"tileseeder"},
+     *   tags={"Tileseeder"},
      *   summary="Starts a mapcache_seed process",
      *   security={{"bearerAuth":{}}},
      *   @OA\RequestBody(
@@ -65,7 +52,15 @@ class Tileseeder extends Controller
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Return the UUID and process id",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="uuid", type="string", example="C4A3797E-EC6B-4DAC-9474-ADA9083620F3"),
+     *         @OA\Property(property="pid",type="integer", example=20326)
+     *       )
+     *     )
      *   )
      * )
      */
@@ -111,7 +106,7 @@ class Tileseeder extends Controller
      *
      * @OA\Delete(
      *   path="/api/v3/tileseeder/{uuid}",
-     *   tags={"tileseeder"},
+     *   tags={"Tileseeder"},
      *   summary="Kills a mapcache_seed process by uuid. Use * to kill all processes started by user.",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
@@ -125,7 +120,15 @@ class Tileseeder extends Controller
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Operation status",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="array", @OA\Items(type="object", @OA\Items(type="string"))),
+     *         @OA\Property(property="pid",type="integer", example=20326)
+     *       )
+     *     )
      *   )
      * )
      */
@@ -175,7 +178,7 @@ class Tileseeder extends Controller
      *
      * @OA\Get(
      *   path="/api/v3/tileseeder",
-     *   tags={"tileseeder"},
+     *   tags={"Tileseeder"},
      *   summary="Get all running mapcache_seed processes started by user",
      *   security={{"bearerAuth":{}}},
      *   @OA\Response(

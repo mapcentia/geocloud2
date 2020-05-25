@@ -1,11 +1,7 @@
 <?php
 /**
- * @OA\Info(title="GC2 API", version="0.1")
- */
-
-/**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -14,18 +10,18 @@ namespace app\api\v3;
 
 ini_set('max_execution_time', 0);
 
-use \app\inc\Controller;
-use \app\inc\Input;
-use \app\models\Database;
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\conf\migration\Sql;
-use \OpenApi\Annotations as OA;
+use app\inc\Cache;
+use app\inc\Controller;
+use app\inc\Input;
+use app\models\Database;
+use app\conf\App;
+use app\conf\Connection;
+use app\conf\migration\Sql;
 
 
 /**
  * Class Admin
- * @package app\api\v2
+ * @package app\api\v3
  */
 class Admin extends Controller
 {
@@ -42,25 +38,25 @@ class Admin extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v2/admin/buildmapfiles/{userId}",
-     *   tags={"admin"},
+     *   path="/api/v3/admin/mapfiles",
+     *   tags={"Admin"},
      *   summary="Write out all MapFiles for the given user/database",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
+     *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Returns a list of all created MapFiles",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="array", @OA\Items(type="array", @OA\Items(type="string"))),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
      *   )
      * )
      */
-    public function get_buildmapfiles(): array
+    public function get_mapfiles(): array
     {
         $response = [];
         $database = new Database();
@@ -79,25 +75,25 @@ class Admin extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v2/admin/buildmapcachefile/{userId}",
-     *   tags={"admin"},
+     *   path="/api/v3/admin/mapcachefile",
+     *   tags={"Admin"},
      *   summary="Write out the MapCache for the given user/database",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
+     *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Return the name of the created MapCacheFile",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data",type="string", example="/var/www/geocloud2/app/wms/mapcache/mydb.xml"),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
      *   )
      * )
      */
-    public function get_buildmapcachefile(): array
+    public function get_mapcachefile(): array
     {
         $response = [];
         $mapcachefile = new \app\controllers\Mapcachefile();
@@ -112,25 +108,25 @@ class Admin extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v2/admin/restoreqgisfiles/{userId}",
-     *   tags={"admin"},
-     *   summary="Write out the QGIS files for the given user/database",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
+     *   path="/api/v3/admin/qgisfiles",
+     *   tags={"Admin"},
+     *   summary="Write out the QGIS files for the given database",
+     *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Returns a list of all created QGIS files",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="array", @OA\Items(type="array", @OA\Items(type="string"))),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
      *   )
      * )
      */
-    public function get_restoreqgisfiles(): array
+    public function get_qgisfiles(): array
     {
         $qgis = new \app\models\Qgis();
         return $qgis->writeAll(Database::getDb());
@@ -140,30 +136,30 @@ class Admin extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v2/admin/runmigrations/{userId}",
-     *   tags={"admin"},
+     *   path="/api/v3/admin/migrations",
+     *   tags={"Admin"},
      *   summary="Run database migrations for the given user/database",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
+     *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Run database migration in user database and also in mapcentia and gc2scheduler",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="object", @OA\Schema(type="string")),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
      *   )
      * )
      */
-    public function get_runmigrations(): array
+    public function get_migrations(): array
     {
         $response = [];
         $data = [];
 
-        $arr = [Database::getDb()];
+        $arr = [Database::getDb(), "mapcentia", "gc2scheduler"];
         foreach ($arr as $db) {
             \app\models\Database::setDb($db);
             $conn = new \app\inc\Model();
@@ -212,26 +208,9 @@ class Admin extends Controller
     /**
      * @return array
      *
-     * @OA\Get(
-     *   path="/api/v2/admin/reprocessqgisfromfiles/{userId}",
-     *   tags={"admin"},
-     *   summary="Reprocess QGIS files from the file system. This process will pick up each file and run it through the QGIS project importer. Use only this on old but updated installations, where QGIS files are not stored in the database.",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
+     * DEPRECATED
      */
-    public function get_reprocessqgisfromfiles(): array
+    public function get_qgisfromfiles(): array
     {
         $response = [];
         $index = 7;
@@ -293,27 +272,127 @@ class Admin extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v2/admin/createschema/{userId}",
-     *   tags={"admin"},
-     *   summary="Install GC2 schema in a PostGIS enabled database.",
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier (Name of database)",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
+     *   path="/api/v3/admin/schema",
+     *   tags={"Admin"},
+     *   summary="Install GC2 schema in a PostGIS enabled database",
+     *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status"
+     *     description="Create the settings schema. Returns error if schema already exists",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="message", type="string", example="Schema is installed"),
+     *         @OA\Property(property="success",type="boolean", example=false)
+     *       )
+     *     )
      *   )
      * )
      */
-    public function get_createschema(): array
+    public function get_schema(): array
     {
         $admin = new \app\models\Admin();
         return $admin->install();
+    }
+
+    /**
+     * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v3/admin/diskcleanup",
+     *   tags={"Admin"},
+     *   summary="Clean up temporary files",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Response(
+     *     response="200",
+     *     description="Returns a list with unlinked files",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="array", @OA\Items(type="array", @OA\Items(type="string"))),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
+     *   )
+     * )
+     */
+    public function get_diskcleanup(): array
+    {
+        $result = [];
+        function rrmdir($dir, &$result)
+        {
+            if (is_dir($dir)) {
+                $objects = scandir($dir);
+                foreach ($objects as $object) {
+                    if ($object != "." && $object != ".." && $object != ".gitignore") {
+                        if (is_dir($dir . "/" . $object) && !is_link($dir . "/" . $object)) {
+                            rrmdir($dir . "/" . $object, $result);
+                        } else {
+                            unlink($dir . "/" . $object);
+                        }
+                        $result[] = $dir . "/" . $object;
+                    }
+                }
+                rmdir($dir);
+            }
+        }
+        $dirs = [App::$param["path"] . 'app/tmp'];
+        foreach ($dirs as $dir) {
+            rrmdir($dir, $result);
+        }
+        return ["success" => true, "message" => "Unlinked files", "data" => $result];
+    }
+
+    /**
+     * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v3/admin/cachestats",
+     *   tags={"Admin"},
+     *   summary="Get the cache stats",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Response(
+     *     response="200",
+     *     description="Returns the cache stats. Output depends on caching back-end",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object"
+     *       )
+     *     )
+     *   )
+     * )
+     */
+    public function get_cachestats(): array
+    {
+        return ["stats" => Cache::getStats()];
+    }
+
+    /**
+     * @return array
+     *
+     * @OA\Get(
+     *   path="/api/v3/admin/cachecleanup",
+     *   tags={"Admin"},
+     *   summary="Clean up the cache",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Response(
+     *     response="200",
+     *     description="Clean up the cache for ALL users",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
+     *   )
+     * )
+     */
+    public function get_cachecleanup(): array
+    {
+        return Cache::clear();
     }
 }

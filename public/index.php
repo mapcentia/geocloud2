@@ -106,6 +106,26 @@ if (Input::getPath()->part(1) == "api") {
 
     Database::setDb(Input::getPath()->part(4)); // Default
 
+    //======================
+    // V1
+    //======================
+    Route::add("api/v1/extent");
+    Route::add("api/v1/schema");
+    Route::add("api/v1/setting");
+    Route::add("api/v1/user");
+    Route::add("api/v1/legend", function () {
+        Session::start();
+        Database::setDb(Input::getPath()->part(5));
+    });
+    Route::add("api/v1/baselayerjs");
+    Route::add("api/v1/staticmap");
+    Route::add("api/v1/getheader");
+    Route::add("api/v1/decodeimg");
+    Route::add("api/v1/loriot");
+    Route::add("api/v1/session/[action]", function () {
+        Session::start();
+        Database::setDb("mapcentia");
+    });
     Route::add("api/v1/sql", function () {
         if (empty(Input::get("key"))) {
             Session::start();
@@ -117,58 +137,49 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-
-    Route::add("api/v2/sql/{user}/[method]",
-
-        function () {
-            if (empty(Input::get("key"))) { // Only start session if no API key is provided
-                Session::start();
-            }
-            $r = func_get_arg(0);
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-
-    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
-
-        function () {
-            $r = func_get_arg(0);
-            if ($r["action"] == "river") { // Only start session if no API key is provided
-                Session::start();
-            }
-            Database::setDb($r["user"]);
+    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
+        $r = func_get_arg(0);
+        if ($r["action"] == "river") { // Only start session if no API key is provided
+            Session::start();
         }
+        Database::setDb($r["user"]);
+    });
+    Route::add("api/v1/meta/{user}/[query]", function () {
+        Session::start();
+    });
+    Route::add("api/v1/ckan", function () {
+        Session::start();
+    });
 
-    );
-
-    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]",
-
-        function () {
-            if (Route::getParam("action") == "river") {
-                Session::start(); // So we can create a session log from the indexing
-            }
-            Database::setDb(Route::getParam("user"));
+    //======================
+    // V2
+    //======================
+    Route::add("api/v2/sql/{user}/[method]", function () {
+        if (empty(Input::get("key"))) { // Only start session if no API key is provided
+            Session::start();
         }
-
-    );
-
-    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]",
-
-        function () {
-            $db = Route::getParam("user");
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
+        $r = func_get_arg(0);
+        $db = $r["user"];
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
         }
-
-    );
-
+        Database::setDb($db);
+    });
+    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]", function () {
+        if (Route::getParam("action") == "river") {
+            Session::start(); // So we can create a session log from the indexing
+        }
+        Database::setDb(Route::getParam("user"));
+    });
+    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]", function () {
+        $db = Route::getParam("user");
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+        }
+        Database::setDb($db);
+    });
     Route::add("api/v2/keyvalue/{user}/[key]", function () {
         $db = Route::getParam("user");
         $dbSplit = explode("@", $db);
@@ -177,7 +188,6 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-
     Route::add("api/v2/preparedstatement/{user}", function () {
         $db = Route::getParam("user");
         $dbSplit = explode("@", $db);
@@ -186,38 +196,22 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-
     Route::add("api/v2/qgis/{action}/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/mapfile/{action}/{user}/{schema}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/mapcachefile/{action}/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/sqlwrapper/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/session", function () {
         Session::start();
         Database::setDb("mapcentia");
     });
-
-    Route::add("api/v1/meta/{user}/[query]", function () {
-        Session::start();
-    });
-
-
-    Route::add("api/v1/ckan", function () {
-        Session::start();
-    });
-
-    // User API
     Route::add("api/v2/user/[userId]/[action]", function () {
         Session::start();
     });
@@ -227,33 +221,26 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v2/user", function () {
         Session::start();
     });
-
-    // Database API
     Route::add("api/v2/database", function () {
         Session::start();
     });
-
-    // Configuration API
     Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
         Session::start();
     });
-
-    // Appcache API
     Route::add("api/v2/appcache/{action}");
 
-    // Disk API
-    Route::add("api/v2/disk/{action}");
-
-    /* V3 */
-
-    // Admin API
+    //======================
+    // V3 with OAuth
+    //======================
+    Route::add("api/v3/oauth", function () {
+        Database::setDb("mapcentia");
+    });
     Route::add("api/v3/admin/{action}/", function () {
         $jwt = Jwt::validate();
         if ($jwt["success"]) {
             if (!$jwt["data"]["superUser"]) {
-                echo Response::toJson([
-                    
-                ]);
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
             }
             Database::setDb($jwt["data"]["database"]);
         } else {
@@ -261,22 +248,26 @@ if (Input::getPath()->part(1) == "api") {
             exit();
         }
     });
-
-    // Tile seeder API
     Route::add("api/v3/tileseeder/[uuid]", function () {
         $jwt = Jwt::validate();
         if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
             Database::setDb($jwt["data"]["database"]);
         } else {
             echo Response::toJson($jwt);
             exit();
         }
     });
-
-    // Scheduler API
     Route::add("api/v3/scheduler/{id}", function () {
         $jwt = Jwt::validate();
         if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
             Database::setDb("gc2scheduler");
         } else {
             echo Response::toJson($jwt);
@@ -284,34 +275,8 @@ if (Input::getPath()->part(1) == "api") {
         }
     });
 
-    // OAuth API
-    Route::add("api/v3/oauth", function () {
-        Database::setDb("mapcentia");
-    });
-
-    //Route::add("api/v2/configuration", function () { Session::start(); });
-
-    Route::add("api/v1/extent");
-    Route::add("api/v1/schema");
-    Route::add("api/v1/setting");
-    Route::add("api/v1/twitter");
-    Route::add("api/v1/user");
-    Route::add("api/v1/legend", function () {
-        Session::start();
-        Database::setDb(Input::getPath()->part(5));
-    });
-    Route::add("api/v1/baselayerjs");
-    Route::add("api/v1/staticmap");
-    Route::add("api/v1/getheader");
-    Route::add("api/v1/collector");
-    Route::add("api/v1/decodeimg");
-    Route::add("api/v1/senti");
-    Route::add("api/v1/loriot");
-    Route::add("api/v1/session/[action]", function () {
-        Session::start();
-        Database::setDb("mapcentia");
-    });
     Route::miss();
+
 } elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/dashboard/");
