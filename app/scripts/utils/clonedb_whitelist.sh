@@ -98,6 +98,10 @@ psql -c "CREATE EXTENSION \"uuid-ossp\";"
 psql -c "CREATE EXTENSION dblink;"
 psql -c "CREATE EXTENSION hstore;"
 
+# Run any custom SQL before restoring
+psql -f ./custom_restore.sql
+if_error "No custom_restore.sql file."
+
 # pg_restore will ignore errors (some errors are harmless). In such case it will exit with status 1. Therefore can't we check.
 pg_restore dump.bak --no-owner --no-privileges --no-privileges --jobs=2 --dbname=$targetdb
 #if_error "Could not restore database."
