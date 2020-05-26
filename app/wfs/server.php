@@ -1162,7 +1162,7 @@ function doParse($arr)
                 if ($forSql['fields'][$i][$key] != "gc2_version_uuid" && $forSql['fields'][$i][$key] != "gc2_version_start_date" && $forSql['fields'][$i][$key] != "gc2_version_gid") {
                     if (is_array($value)) {
                         $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
-                    } elseif (!$value) {
+                    } elseif (!isset($value)) {
                         $values[] = "NULL";
                     } elseif ($forSql['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
                         $values[] = $value;
@@ -1271,7 +1271,7 @@ function doParse($arr)
                     }
                 } elseif ($field == "gc2_version_start_date") {
                     $value = "now()";
-                } elseif (!$forSql2['values'][$i][$key]) {
+                } elseif (!isset($forSql2['values'][$i][$key])) {
                     $value = "NULL";
                 } else {
                     $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
