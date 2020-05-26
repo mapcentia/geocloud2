@@ -2,13 +2,16 @@
     "openapi": "3.0.0",
     "info": {
         "title": "GC2 API",
-        "version": "0.1"
+        "contact": {
+            "email": "mh@mapcentia.com"
+        },
+        "version": "2.0.0"
     },
     "paths": {
         "/api/v2/configuration/{userId}": {
             "get": {
                 "tags": [
-                    "configuration"
+                    "Configuration"
                 ],
                 "summary": "Returns all configurations (unpublished configurations are returned if authorized user is the author)",
                 "operationId": "app\\api\\v2\\Configuration::get_all",
@@ -33,7 +36,7 @@
         "/api/v2/configuration/{userId}/{configurationId}": {
             "get": {
                 "tags": [
-                    "configuration"
+                    "Configuration"
                 ],
                 "summary": "Returns specific configuration (unpublished configuration is returned if authorized user is the author)",
                 "operationId": "app\\api\\v2\\Configuration::get_specific",
@@ -65,7 +68,7 @@
             },
             "delete": {
                 "tags": [
-                    "configuration"
+                    "Configuration"
                 ],
                 "summary": "Deletes configuration",
                 "operationId": "app\\api\\v2\\Configuration::delete_index",
@@ -93,13 +96,18 @@
                     "200": {
                         "description": "Operation status"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
             }
         },
         "/api/v2/configuration/{userId}/": {
             "post": {
                 "tags": [
-                    "configuration"
+                    "Configuration"
                 ],
                 "summary": "Creates configuration",
                 "operationId": "app\\api\\v2\\Configuration::post_index",
@@ -142,13 +150,18 @@
                     "200": {
                         "description": "Operation status"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
             }
         },
         "/apiv2/configuration/{userId}/{configurationId}": {
             "put": {
                 "tags": [
-                    "configuration"
+                    "Configuration"
                 ],
                 "summary": "Creates configuration",
                 "operationId": "app\\api\\v2\\Configuration::put_index",
@@ -200,13 +213,18 @@
                     "200": {
                         "description": "Operation status"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
             }
         },
         "/api/v2/database/schemas": {
             "get": {
                 "tags": [
-                    "database"
+                    "Database"
                 ],
                 "summary": "Returns available schemas",
                 "operationId": "app\\api\\v2\\Database::get_schemas",
@@ -214,13 +232,18 @@
                     "200": {
                         "description": "Operation status"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
             }
         },
         "/api/v2/database/search": {
             "get": {
                 "tags": [
-                    "database"
+                    "Database"
                 ],
                 "summary": "Returns databases found according to provided filters",
                 "operationId": "app\\api\\v2\\Database::get_search",
@@ -245,7 +268,7 @@
         "/api/v2/keyvalue/{userId}": {
             "get": {
                 "tags": [
-                    "keyvalue"
+                    "Keyvalue"
                 ],
                 "summary": "Coming",
                 "operationId": "app\\api\\v2\\Keyvalue::get_index",
@@ -270,7 +293,7 @@
         "/api/v2/session/start": {
             "get": {
                 "tags": [
-                    "session"
+                    "Session"
                 ],
                 "summary": "Starts the session",
                 "operationId": "app\\api\\v2\\Session::get_start",
@@ -308,7 +331,7 @@
             },
             "post": {
                 "tags": [
-                    "session"
+                    "Session"
                 ],
                 "summary": "Starts the session",
                 "operationId": "app\\api\\v2\\Session::post_start",
@@ -346,7 +369,7 @@
         "/api/v2/session": {
             "get": {
                 "tags": [
-                    "session"
+                    "Session"
                 ],
                 "summary": "Checks the session",
                 "operationId": "app\\api\\v2\\Session::get_index",
@@ -360,7 +383,7 @@
         "/api/v2/session/stop": {
             "get": {
                 "tags": [
-                    "session"
+                    "Session"
                 ],
                 "summary": "Destroys the session",
                 "operationId": "app\\api\\v2\\Session::get_stop",
@@ -374,7 +397,7 @@
         "/api/v2/user": {
             "post": {
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Creates user",
                 "operationId": "app\\api\\v2\\User::post_index",
@@ -423,7 +446,7 @@
         "/api/v2/user/{userId}": {
             "get": {
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
                 "operationId": "app\\api\\v2\\User::get_default",
@@ -451,7 +474,7 @@
             },
             "put": {
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Updates user information. User can only update himself or its subuser.",
                 "operationId": "app\\api\\v2\\User::put_index",
@@ -503,7 +526,7 @@
             },
             "delete": {
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Deletes user. User can only delete himself or be deleted by its superuser.",
                 "operationId": "app\\api\\v2\\User::delete_index",
@@ -533,7 +556,7 @@
         "/api/v2/user/{userId}/subusers": {
             "get": {
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Returns subusers",
                 "operationId": "app\\api\\v2\\User::get_subusers",
@@ -567,6 +590,13 @@
                 "type": "apiKey",
                 "name": "PHPSESSID",
                 "in": "cookie"
+            },
+            "bearerAuth": {
+                "type": "http",
+                "name": "bearerAuth",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
             }
         }
     }

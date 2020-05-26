@@ -1,9 +1,5 @@
 <?php
 /**
- * @OA\Info(title="GC2 API", version="0.1")
- */
-
-/**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
@@ -57,7 +53,7 @@ class Configuration extends Controller
      *
      * @OA\Get(
      *   path="/api/v2/configuration/{userId}",
-     *   tags={"configuration"},
+     *   tags={"Configuration"},
      *   summary="Returns all configurations (unpublished configurations are returned if authorized user is the author)",
      *   @OA\Parameter(
      *     name="userId",
@@ -102,7 +98,7 @@ class Configuration extends Controller
      *
      * @OA\Get(
      *   path="/api/v2/configuration/{userId}/{configurationId}",
-     *   tags={"configuration"},
+     *   tags={"Configuration"},
      *   summary="Returns specific configuration (unpublished configuration is returned if authorized user is the author)",
      *   @OA\Parameter(
      *     name="userId",
@@ -183,8 +179,9 @@ class Configuration extends Controller
      *
      * @OA\Post(
      *   path="/api/v2/configuration/{userId}/",
-     *   tags={"configuration"},
+     *   tags={"Configuration"},
      *   summary="Creates configuration",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -248,8 +245,9 @@ class Configuration extends Controller
      *
      * @OA\Put(
      *   path="/apiv2/configuration/{userId}/{configurationId}",
-     *   tags={"configuration"},
+     *   tags={"Configuration"},
      *   summary="Creates configuration",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -330,8 +328,9 @@ class Configuration extends Controller
      *
      * @OA\Delete(
      *   path="/api/v2/configuration/{userId}/{configurationId}",
-     *   tags={"configuration"},
+     *   tags={"Configuration"},
      *   summary="Deletes configuration",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",

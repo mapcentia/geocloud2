@@ -1,6 +1,5 @@
 <?php
 /**
- * @OA\Info(title="GC2 API", version="0.1")
  * @OA\SecurityScheme(
  *      securityScheme="cookieAuth",
  *      in="cookie",
@@ -77,7 +76,7 @@ class User extends Controller
      *
      * @OA\Post(
      *   path="/api/v2/user",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Creates user",
      *   security={{"cookieAuth":{}}},
      *   @OA\RequestBody(
@@ -130,7 +129,7 @@ class User extends Controller
      *
      * @OA\Get(
      *   path="/api/v2/user/{userId}",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
      *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
@@ -178,7 +177,7 @@ class User extends Controller
      *
      * @OA\Put(
      *   path="/api/v2/user/{userId}",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Updates user information. User can only update himself or its subuser.",
      *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
@@ -270,7 +269,7 @@ class User extends Controller
      *
      * @OA\Delete(
      *   path="/api/v2/user/{userId}",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Deletes user. User can only delete himself or be deleted by its superuser.",
      *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
@@ -321,7 +320,7 @@ class User extends Controller
      *
      * @OA\Get(
      *   path="/api/v2/user/{userId}/subusers",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Returns subusers",
      *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(

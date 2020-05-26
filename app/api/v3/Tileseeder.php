@@ -42,11 +42,11 @@ class Tileseeder extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="name",type="string"),
-     *         @OA\Property(property="layer",type="string"),
-     *         @OA\Property(property="start",type="integer"),
-     *         @OA\Property(property="end",type="integer"),
-     *         @OA\Property(property="extent",type="string")
+     *         @OA\Property(property="name",type="string", example="My seeder job"),
+     *         @OA\Property(property="layer",type="string", example="my_schema.my_table"),
+     *         @OA\Property(property="start",type="integer", example=10),
+     *         @OA\Property(property="end",type="integer", example=10),
+     *         @OA\Property(property="extent",type="string", example="my_schema.my_table_with_extent")
      *       )
      *     )
      *   ),

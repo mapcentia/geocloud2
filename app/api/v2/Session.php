@@ -36,7 +36,7 @@ class Session extends \app\inc\Controller
      *
      * @OA\Get(
      *   path="/api/v2/session/start",
-     *   tags={"session"},
+     *   tags={"Session"},
      *   summary="Starts the session",
      *   @OA\Parameter(
      *     name="user",
@@ -95,7 +95,7 @@ class Session extends \app\inc\Controller
      * 
      * @OA\Post(
      *   path="/api/v2/session/start",
-     *   tags={"session"},
+     *   tags={"Session"},
      *   summary="Starts the session",
      *   @OA\RequestBody(
      *     description="Credentials",
@@ -135,7 +135,7 @@ class Session extends \app\inc\Controller
      * 
      * @OA\Get(
      *   path="/api/v2/session",
-     *   tags={"session"},
+     *   tags={"Session"},
      *   summary="Checks the session",
      *   @OA\Response(
      *     response="200",
@@ -153,7 +153,7 @@ class Session extends \app\inc\Controller
      * 
      * @OA\Get(
      *   path="/api/v2/session/stop",
-     *   tags={"session"},
+     *   tags={"Session"},
      *   summary="Destroys the session",
      *   @OA\Response(
      *     response="200",

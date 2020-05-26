@@ -5,7 +5,7 @@
         "contact": {
             "email": "mh@mapcentia.com"
         },
-        "version": "1.0.0"
+        "version": "3.0.0"
     },
     "paths": {
         "/api/v3/admin/mapfiles": {
@@ -436,19 +436,24 @@
                             "schema": {
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "My seeder job"
                                     },
                                     "layer": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "my_schema.my_table"
                                     },
                                     "start": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "end": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "extent": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "my_schema.my_table_with_extent"
                                     }
                                 },
                                 "type": "object"
