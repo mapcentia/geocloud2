@@ -1297,7 +1297,7 @@ geocloud = (function () {
         //ol2 and leaflet
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "http://cdn.eu1.mapcentia.com/wms/dk/tilecache/";
+                url = "https://dk.gc2.io/mapcache/baselayers/tms";
 
             switch (MAPLIB) {
                 case "ol2":
@@ -1683,13 +1683,13 @@ geocloud = (function () {
                     o = this.addDtkSkaermkort("dtkSkaermkort", "dtk_skaermkort");
                     break;
                 case "dtkSkaermkortDaempet":
-                    o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "dtk_skaermkort_daempet");
+                    o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "kortforsyningen.dtk_skaermkort_daempet");
                     break;
                 case "dtkSkaermkort@25832":
                     o = this.addDtkSkaermkortUtm("dtkSkaermkort@25832", "dtk_skaermkort");
                     break;
                 case "dtkSkaermkortDaempet@25832":
-                    o = this.addDtkSkaermkortUtm("dtkSkaermkortDaempet@25832", "dtk_skaermkort_daempet");
+                    o = this.addDtkSkaermkortUtm("dtkSkaermkortDaempet@25832", "kortforsyningen.dtk_skaermkort_daempet");
                     break;
                 case "geodkBright":
                     o = this.addGeoDk("geodkBright", "geodk.bright");

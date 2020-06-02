@@ -420,7 +420,7 @@ var mygeocloud_ol = (function () {
         };
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "//eu1.mapcentia.com/wms/dk/tilecache";
+                url = "https://dk.gc2.io/mapcache/baselayers/wms";
             l = new OpenLayers.Layer.WMS(name, url, {
                 layers: layer
             }, {
