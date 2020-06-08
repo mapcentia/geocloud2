@@ -6,7 +6,16 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
-- OAuth API added with password grant: api/v3/oauth/token
+- OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.
+- Settings in `\app\confApp.php` for PostgreSQL settings:
+```php
+[
+    "SqlApiSettings" => [
+        "work_mem" => "2000 MB",
+        "statement_timeout" => 60000,
+    ]
+];
+```
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
@@ -19,13 +28,14 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2020.5.0]
 ### Added
-- Limits for SQL API
- can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
+- Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
-"limits" => [
-    "sqlExcel" => 1000,
-    "sqlJson" => 10000,
-]
+[
+    "limits" => [
+        "sqlExcel" => 1000,
+        "sqlJson" => 10000,
+    ]
+];
 ```
 - JWT support. 
     - A JWT bearer token is now return when using `/api/v2/session/start` 
@@ -64,16 +74,18 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
 - Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
-```php        
- "sessionHandler" => [
+```php
+[        
+    "sessionHandler" => [
      "type" => "memcached", // or redis
      "host" => "localhost:11211", // without tcp:
- ],
- "appCache" => [
+    ],
+    "appCache" => [
      "type" => "memcached", // or redis
      "host" => "localhost:11211", // without tcp:
      "ttl" => "100",
- ]    
+    ]
+];
 ```
 - MapServer max map size set to 16384px, so its possible to create A0 single tile print.
 

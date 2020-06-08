@@ -86,7 +86,17 @@ class Sql extends \app\inc\Model
         $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
 
         $this->begin();
-        $this->execQuery('SET LOCAL statement_timeout = 60000');
+
+        // Settings from App.php
+        if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
+            $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
+        }
+        if (!empty(App::$param["SqlApiSettings"]["statement_timeout"])) {
+            $this->execQuery("SET LOCAL statement_timeout = " . (string)App::$param["SqlApiSettings"]["statement_timeout"]);
+        } else {
+            $this->execQuery("SET LOCAL statement_timeout = 60000");
+        }
+
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
