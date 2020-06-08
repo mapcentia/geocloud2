@@ -227,7 +227,6 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
         Session::start();
     });
-    Route::add("api/v2/appcache/{action}");
 
     //======================
     // V3 with OAuth
