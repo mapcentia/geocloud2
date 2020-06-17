@@ -93,7 +93,7 @@ foreach ($tables as $table) {
         $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
         $properties = !empty($fieldConf->{$atts["name"]}) ? $fieldConf->{$atts["name"]} : null;
-        $atts["label"] = !empty($properties->alias) ? $properties->alias : $atts["name"];
+        //$atts["label"] = !empty($properties->alias) ? $properties->alias : $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }
@@ -175,6 +175,9 @@ foreach ($tables as $table) {
                 $atts["type"] = "xsd:base64Binary";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "json") {
+                $atts["type"] = "xsd:string";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
                 $atts["type"] = "xsd:string";
             }
             else {

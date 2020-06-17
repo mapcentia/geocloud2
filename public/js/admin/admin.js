@@ -148,8 +148,7 @@ $(document).ready(function () {
         var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = parentdb;
         if (clicktimer) {
             clearTimeout(clicktimer);
-        }
-        else {
+        } else {
             clicktimer = setTimeout(function (e) {
                 clicktimer = undefined;
                 var coords = event.getCoordinate();
@@ -157,8 +156,7 @@ $(document).ready(function () {
                     try {
                         st.reset();
                         gc2.removeGeoJsonStore(st);
-                    }
-                    catch (e) {
+                    } catch (e) {
 
                     }
                 });
@@ -240,8 +238,7 @@ $(document).ready(function () {
                                                                 });
                                                                 return false;
 
-                                                            }
-                                                            else {
+                                                            } else {
                                                                 var filter = new OpenLayers.Filter.Comparison({
                                                                     type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                                                     property: "\"" + pkey + "\"",
@@ -275,8 +272,7 @@ $(document).ready(function () {
                             if (!hit) {
                                 try {
                                     queryWin.hide();
-                                }
-                                catch (e) {
+                                } catch (e) {
                                 }
                             }
                             count++;
@@ -291,8 +287,7 @@ $(document).ready(function () {
                             sql = sql + " AND gc2_version_end_date IS NULL";
                         }
                         sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
-                    }
-                    else {
+                    } else {
                         sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
                         if (versioning) {
                             sql = sql + " AND gc2_version_end_date IS NULL";
@@ -402,7 +397,7 @@ $(document).ready(function () {
                         y: 175
                     });
                 }
-                if (typeof(objRef) === "object") {
+                if (typeof (objRef) === "object") {
                     searchWin.show(objRef);
                 } else {
                     searchWin.show();
@@ -423,8 +418,7 @@ $(document).ready(function () {
                             var dest = new Proj4js.Proj(d);
                             p = new Proj4js.Point(lat, lon);
                             Proj4js.transform(source, dest, p);
-                        }
-                        else {
+                        } else {
                             p.x = null;
                             p.y = null;
                         }
@@ -503,8 +497,7 @@ $(document).ready(function () {
                 extentRestricted = this.pressed;
                 if (extentRestricted) {
                     extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
-                }
-                else {
+                } else {
                     extentRestrictLayer.destroyFeatures();
                 }
                 Ext.Ajax.request({
@@ -1049,17 +1042,17 @@ $(document).ready(function () {
                                                 padding: '7px'
                                             },
                                             html: "<ul>" +
-                                            "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                            "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
-                                            "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                            "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
-                                            "<ul>" +
-                                            "<br><p>" +
-                                            __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
-                                            "</p>" +
-                                            "<br><p>" +
-                                            __("The privileges are granted for both Admin and external services like WMS and WFS.") +
-                                            "</p>"
+                                                "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                                "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                                "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
+                                                "<ul>" +
+                                                "<br><p>" +
+                                                __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
+                                                "</p>" +
+                                                "<br><p>" +
+                                                __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                                "</p>"
                                         }
                                     )
                                 ]
@@ -1216,13 +1209,13 @@ $(document).ready(function () {
                                                                         padding: '7px'
                                                                     },
                                                                     html: "<ul>" +
-                                                                    "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                                                    "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
-                                                                    "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                                                    "<ul>" +
-                                                                    "<br><p>" +
-                                                                    __("The privileges are granted for both Admin and external services like WMS and WFS.") +
-                                                                    "</p>"
+                                                                        "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                                                        "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                                                        "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                                                        "<ul>" +
+                                                                        "<br><p>" +
+                                                                        __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                                                        "</p>"
                                                                 }
                                                             )
                                                         ]
@@ -3353,8 +3346,7 @@ $(document).ready(function () {
                                                             handler: function (thisBtn, event) {
                                                                 try {
                                                                     stopEdit();
-                                                                }
-                                                                catch (e) {
+                                                                } catch (e) {
                                                                 }
                                                                 var node = tree.getSelectionModel().getSelectedNode();
                                                                 var id = node.id.split(".");
@@ -3370,13 +3362,11 @@ $(document).ready(function () {
                                                                         height: 300,
                                                                         icon: Ext.MessageBox.ERROR
                                                                     });
-                                                                }
-                                                                else {
+                                                                } else {
                                                                     var poll = function () {
                                                                         if (typeof filter.win === "object") {
                                                                             filter.win.show();
-                                                                        }
-                                                                        else {
+                                                                        } else {
                                                                             setTimeout(poll, 10);
                                                                         }
                                                                     };
@@ -3402,8 +3392,7 @@ $(document).ready(function () {
                                                                         icon: Ext.MessageBox.ERROR
                                                                     });
                                                                     return false;
-                                                                }
-                                                                else {
+                                                                } else {
                                                                     var filter = new OpenLayers.Filter.Comparison({
                                                                         type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                                                         property: "\"dummy\"",
@@ -3687,8 +3676,7 @@ $(document).ready(function () {
                                                                     triggerAction: 'all'
                                                                 });
                                                                 validProperties = false;
-                                                            }
-                                                            catch (e) {
+                                                            } catch (e) {
                                                                 alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
                                                             }
                                                         } else if (columnsForGrid[i].typeObj.type === "int") {
@@ -3879,7 +3867,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-users"></i> ' + __('Workflow'),
+                        '<i class="fa fa-users"></i> ' + __('Workflow'),
                     layout:
                         'border',
                     id:
@@ -4112,7 +4100,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-clock-o"></i> ' + __('Scheduler'),
+                        '<i class="fa fa-clock-o"></i> ' + __('Scheduler'),
                     layout:
                         'border',
                     id:
@@ -4131,7 +4119,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-list"></i> ' + __('Log'),
+                        '<i class="fa fa-list"></i> ' + __('Log'),
                     layout:
                         'border',
                     border:
@@ -4243,8 +4231,7 @@ $(document).ready(function () {
                         l.redraw();
                     }, 500);
 
-                }
-                else {
+                } else {
                     App.setAlert(App.STATUS_NOTICE, __(response.message));
                 }
             }
@@ -4294,8 +4281,7 @@ $(document).ready(function () {
                     try {
                         b.update(response.html);
                         b.doLayout();
-                    }
-                    catch (e) {
+                    } catch (e) {
                     }
                 }
             });
@@ -4345,8 +4331,7 @@ $(document).ready(function () {
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
                 Ext.getCmp('copy-properties-btn').setDisabled(false);
             }
-        }
-        else {
+        } else {
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('workflow-btn').setDisabled(true);
@@ -4409,11 +4394,11 @@ $(document).ready(function () {
                     cloud.removeTileLayerByName([
                         [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
                     ]);
-                }
-                catch (e) {
+                } catch (e) {
                 }
                 if (response.data[u].type) {
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                        db: subUser ? screenName + "@" + parentdb : screenName,
                         singleTile: true,
                         //isBaseLayer: isBaseLayer,
                         visibility: false,
@@ -4509,12 +4494,11 @@ $(document).ready(function () {
 
                         try {
                             stopEdit();
-                        }
-                        catch (error) {
+                        } catch (error) {
                         }
 
                         if (typeof filter.win !== "undefined") {
-                            if (typeof  filter.win.hide !== "undefined") {
+                            if (typeof filter.win.hide !== "undefined") {
                                 filter.win.hide();
                             }
                             filter.win = false;
@@ -4534,8 +4518,7 @@ $(document).ready(function () {
                         $("#edit-" + id).on("click", function () {
                             try {
                                 stopEdit();
-                            }
-                            catch (e) {
+                            } catch (e) {
                             }
                             var node = tree.getSelectionModel().getSelectedNode();
                             var id = node.id.split(".");
@@ -4551,13 +4534,11 @@ $(document).ready(function () {
                                     height: 300,
                                     icon: Ext.MessageBox.ERROR
                                 });
-                            }
-                            else {
+                            } else {
                                 var poll = function () {
                                     if (typeof filter.win === "object") {
                                         filter.win.show();
-                                    }
-                                    else {
+                                    } else {
                                         setTimeout(poll, 10);
                                     }
                                 };
@@ -4581,8 +4562,7 @@ $(document).ready(function () {
                                     icon: Ext.MessageBox.ERROR
                                 });
                                 return false;
-                            }
-                            else {
+                            } else {
                                 var filter = new OpenLayers.Filter.Comparison({
                                     type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                     property: "\"dummy\"",
@@ -4790,7 +4770,7 @@ $(document).ready(function () {
                 }
             });
         }
-        if (typeof(objRef) === "object") {
+        if (typeof (objRef) === "object") {
             measureWin.show(objRef);
         } else {
             measureWin.show();
@@ -4892,8 +4872,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                                 triggerAction: 'all'
                             });
                             validProperties = false;
-                        }
-                        catch (e) {
+                        } catch (e) {
                             alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
                         }
                     } else if (columnsForGrid[i].typeObj.type === "int") {
@@ -4927,11 +4906,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     });
     if (type === "Point") {
         handlerType = OpenLayers.Handler.Point;
-    }
-    else if (type === "Polygon") {
+    } else if (type === "Polygon") {
         handlerType = OpenLayers.Handler.Polygon;
-    }
-    else if (type === "Path") {
+    } else if (type === "Path") {
         handlerType = OpenLayers.Handler.Path;
     }
     south.expand(true);
@@ -5155,8 +5132,7 @@ function stopEdit() {
     try {
         filter.win.hide();
         filter.win = false;
-    }
-    catch (e) {
+    } catch (e) {
     }
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(true);

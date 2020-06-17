@@ -86,7 +86,17 @@ class Sql extends \app\inc\Model
         $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
 
         $this->begin();
-        $this->execQuery('SET LOCAL statement_timeout = 60000');
+
+        // Settings from App.php
+        if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
+            $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
+        }
+        if (!empty(App::$param["SqlApiSettings"]["statement_timeout"])) {
+            $this->execQuery("SET LOCAL statement_timeout = " . (string)App::$param["SqlApiSettings"]["statement_timeout"]);
+        } else {
+            $this->execQuery("SET LOCAL statement_timeout = 60000");
+        }
+
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
         }
@@ -116,7 +126,7 @@ class Sql extends \app\inc\Model
                     foreach ($row as $key => $value) {
                         if ($arrayWithFields[$key]['type'] == "geometry") {
                             $geometries[] = json_decode($row[$key]);
-                        } elseif ($arrayWithFields[$key]['type'] == "json") {
+                        } elseif ($arrayWithFields[$key]['type'] == "json" || $arrayWithFields[$key]['type'] == "jsonb") {
                             $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                         } else {
                             $arr = $this->array_push_assoc($arr, $key, $value);

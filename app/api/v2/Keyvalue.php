@@ -4,8 +4,6 @@
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
- * @OA\Info(title="Geocloud API", version="0.1")
- *
  */
 
 namespace app\api\v2;
@@ -29,7 +27,7 @@ class Keyvalue extends \app\inc\Controller
      *
      * @OA\Get(
      *   path="/api/v2/keyvalue/{userId}",
-     *   tags={"keyvalue"},
+     *   tags={"Keyvalue"},
      *   summary="Coming",
      *   @OA\Parameter(
      *     name="userId",

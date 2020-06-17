@@ -6,17 +6,41 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
+- OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.
+- Settings in `\app\confApp.php` for PostgreSQL settings:
+```php
+[
+    "SqlApiSettings" => [
+        "work_mem" => "2000 MB",
+        "statement_timeout" => 60000,
+    ]
+];
+```
+
+### Changed
+- Updated PhpFastCache to V8, so PHP 7.3+ is required.
+- JWT token removed from api/v2/session/start response. Moved to new OAuth API.
+- Admin and Scheduler API moved to api/v3 and now requires OAuth.
+
+### Fixed
+- Bug in the scheduler get.php script regarding gridded download.
+- app/phpfastcache dir added with .gitignore file.
+
+## [2020.5.0]
+### Added
 - Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
-"limits" => [
-    "sqlExcel" => 1000,
-    "sqlJson" => 10000,
-]
+[
+    "limits" => [
+        "sqlExcel" => 1000,
+        "sqlJson" => 10000,
+    ]
+];
 ```
 - JWT support. 
     - A JWT bearer token is now return when using `/api/v2/session/start` 
     - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
-    - A token can be validated in the front controller ´index.php´ and the database can be set from it like this:
+    - A token can be validated in the front controller `index.php` and the database can be set from it like this:
 ```php
 Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
     $jwt = Jwt::validate();
@@ -29,10 +53,15 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 });
 ```
 - New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
-- Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
+- The Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
+
+### Changed
+- It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
 
 ### Fixed
 - In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
+- Timeouts in both Scheduler client and server is removed.
+- Bugs regarding http basic auth of sub-users in WMS.
 
 ## [2020.2.0]
 ### Added
@@ -45,16 +74,18 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
 - Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
-```php        
- "sessionHandler" => [
+```php
+[        
+    "sessionHandler" => [
      "type" => "memcached", // or redis
      "host" => "localhost:11211", // without tcp:
- ],
- "appCache" => [
+    ],
+    "appCache" => [
      "type" => "memcached", // or redis
      "host" => "localhost:11211", // without tcp:
      "ttl" => "100",
- ]    
+    ]
+];
 ```
 - MapServer max map size set to 16384px, so its possible to create A0 single tile print.
 

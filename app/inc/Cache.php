@@ -10,6 +10,7 @@ namespace app\inc;
 
 use \app\conf\App;
 use \Phpfastcache\CacheManager;
+use \Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
 use \Phpfastcache\Drivers\Files\Config as FilesConfig;
 use \Phpfastcache\Drivers\Redis\Config as RedisConfig;
 use \Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
@@ -25,23 +26,26 @@ abstract class Cache
      */
     static public function setInstance()
     {
-        $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
+        if (!empty(App::$param['appCache']["host"])) {
+            $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
 
-        $redisConfig = [
-            'host' => $split[0],
-            'port' => !empty($split[1]) ? (int)$split[1] : 6379,
-            'itemDetailedDate' => true
-        ];
+            $redisConfig = [
+                'host' => $split[0],
+                'port' => !empty($split[1]) ? (int)$split[1] : 6379,
+                'database' => !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0,
+                'itemDetailedDate' => true
+            ];
 
-        $memcachedConfig = [
-            'host' => $split[0],
-            'port' => !empty($split[1]) ? (int)$split[1] : 11211,
-            'itemDetailedDate' => true
-        ];
+            $memcachedConfig = [
+                'host' => $split[0],
+                'port' => !empty($split[1]) ? (int)$split[1] : 11211,
+                'itemDetailedDate' => true
+            ];
+        }
 
         $fileConfig = [
             'securityKey' => "phpfastcache",
-            'path' => '/var/www/geocloud2/app/tmp',
+            'path' => '/var/www/geocloud2/app',
             'itemDetailedDate' => true
         ];
 
@@ -112,7 +116,7 @@ abstract class Cache
 
     static public function deleteItemsByTagsAll(array $tags)
     {
-        self::$instanceCache->deleteItemsByTagsAll($tags);
+        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
     }
 
     static public function deleteItemsByTags(array $tags)
@@ -142,7 +146,7 @@ abstract class Cache
     static public function save($CachedString)
     {
         try {
-            self::$instanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
+            self::$instanceCache->save($CachedString);
         } catch (\Error $exception) {
             error_log($exception->getMessage());
         }

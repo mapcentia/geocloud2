@@ -10,6 +10,12 @@ namespace app\inc;
 
 class Response
 {
+    const SUPER_USER_ONLY = [
+        "code" => 400,
+        "success" => false,
+        "message" => "Only a super user can use this API",
+    ];
+
     static function json($response)
     {
         return $response;
@@ -17,6 +23,8 @@ class Response
 
     static function toJson($response)
     {
+        $code = (isset($response["code"])) ? $response["code"] : "200";
+        header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
         $callback = Input::get('jsonp_callback') ?: Input::get('callback');
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');

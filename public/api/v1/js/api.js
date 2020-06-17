@@ -420,7 +420,7 @@ var mygeocloud_ol = (function () {
         };
         this.addDtkSkaermkort = function (name, layer) {
             var l,
-                url = "//eu1.mapcentia.com/wms/dk/tilecache";
+                url = "https://dk.gc2.io/mapcache/baselayers/wms";
             l = new OpenLayers.Layer.WMS(name, url, {
                 layers: layer
             }, {
@@ -517,10 +517,10 @@ var mygeocloud_ol = (function () {
                     o = this.addYandex();
                     break;
                 case "dtkSkaermkort":
-                    o = this.addDtkSkaermkort("dtkSkaermkort", "dtk_skaermkort");
+                    o = this.addDtkSkaermkort("dtkSkaermkort", "kortforsyningen.dtk_skaermkort");
                     break;
                 case "dtkSkaermkortDaempet":
-                    o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "dtk_skaermkort_daempet");
+                    o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "kortforsyningen.dtk_skaermkort_daempet");
                     break;
                 case "DigitalGlobe:Imagery":
                     o = this.addDigitalGlobe("DigitalGlobe:Imagery");

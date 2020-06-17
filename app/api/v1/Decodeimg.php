@@ -45,7 +45,7 @@ class Decodeimg extends \app\inc\Controller
     {
         header("Content-type: image/jpeg");
         $data = $this->table->getRecordByPri(Input::getPath()->part(7));
-        $data = explode(",", base64_decode($data["data"][Input::getPath()->part(6)]))[1];
+        $data = explode(",", $data["data"][Input::getPath()->part(6)])[1];
         echo base64_decode($data);
         exit();
     }

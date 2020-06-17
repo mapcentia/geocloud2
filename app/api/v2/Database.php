@@ -37,8 +37,9 @@ class Database extends Controller
      * 
      * @OA\Get(
      *   path="/api/v2/database/schemas",
-     *   tags={"database"},
+     *   tags={"Database"},
      *   summary="Returns available schemas",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Response(
      *     response="200",
      *     description="Operation status"
@@ -64,7 +65,7 @@ class Database extends Controller
      * 
      * @OA\Get(
      *   path="/api/v2/database/search",
-     *   tags={"database"},
+     *   tags={"Database"},
      *   summary="Returns databases found according to provided filters",
      *   @OA\Parameter(
      *     name="userIdentifier",

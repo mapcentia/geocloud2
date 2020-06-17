@@ -1,0 +1,557 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "GC2 API",
+        "contact": {
+            "email": "mh@mapcentia.com"
+        },
+        "version": "3.0.0"
+    },
+    "paths": {
+        "/api/v3/admin/mapfiles": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Write out all MapFiles for the given user/database",
+                "operationId": "app\\api\\v3\\Admin::get_mapfiles",
+                "responses": {
+                    "200": {
+                        "description": "Returns a list of all created MapFiles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/mapcachefile": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Write out the MapCache for the given user/database",
+                "operationId": "app\\api\\v3\\Admin::get_mapcachefile",
+                "responses": {
+                    "200": {
+                        "description": "Return the name of the created MapCacheFile",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "string",
+                                            "example": "/var/www/geocloud2/app/wms/mapcache/mydb.xml"
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/qgisfiles": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Write out the QGIS files for the given database",
+                "operationId": "app\\api\\v3\\Admin::get_qgisfiles",
+                "responses": {
+                    "200": {
+                        "description": "Returns a list of all created QGIS files",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/migrations": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Run database migrations for the given user/database",
+                "operationId": "app\\api\\v3\\Admin::get_migrations",
+                "responses": {
+                    "200": {
+                        "description": "Run database migration in user database and also in mapcentia and gc2scheduler",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/schema": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Install GC2 schema in a PostGIS enabled database",
+                "operationId": "app\\api\\v3\\Admin::get_schema",
+                "responses": {
+                    "200": {
+                        "description": "Create the settings schema. Returns error if schema already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Schema is installed"
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/diskcleanup": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Clean up temporary files",
+                "operationId": "app\\api\\v3\\Admin::get_diskcleanup",
+                "responses": {
+                    "200": {
+                        "description": "Returns a list with unlinked files",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/cachestats": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get the cache stats",
+                "operationId": "app\\api\\v3\\Admin::get_cachestats",
+                "responses": {
+                    "200": {
+                        "description": "Returns the cache stats. Output depends on caching back-end",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/admin/cachecleanup": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Clean up the cache",
+                "operationId": "app\\api\\v3\\Admin::get_cachecleanup",
+                "responses": {
+                    "200": {
+                        "description": "Clean up the cache for ALL users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/oauth": {
+            "get": {
+                "tags": [
+                    "OAuth"
+                ],
+                "summary": "Get token",
+                "operationId": "app\\api\\v3\\Oauth::post_token",
+                "requestBody": {
+                    "description": "OAuth password grant parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "grant_type": {
+                                        "type": "string",
+                                        "example": "password"
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "1234luggage"
+                                    },
+                                    "database": {
+                                        "type": "string",
+                                        "example": "roads"
+                                    },
+                                    "client_id": {
+                                        "type": "string",
+                                        "example": "xxxxxxxxxx"
+                                    },
+                                    "client_secret": {
+                                        "type": "string",
+                                        "example": "xxxxxxxxxx"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operation status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        },
+                                        "refresh_token": {
+                                            "type": "string",
+                                            "example": "IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk"
+                                        },
+                                        "scope": {
+                                            "type": "string",
+                                            "example": "sql"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/scheduler/{jobId}": {
+            "get": {
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Start scheduled job by id.",
+                "operationId": "app\\api\\v3\\Scheduler::get_index",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "description": "Job identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/tileseeder": {
+            "get": {
+                "tags": [
+                    "Tileseeder"
+                ],
+                "summary": "Get all running mapcache_seed processes started by user",
+                "operationId": "app\\api\\v3\\Tileseeder::get_index",
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Tileseeder"
+                ],
+                "summary": "Starts a mapcache_seed process",
+                "operationId": "app\\api\\v3\\Tileseeder::post_index",
+                "requestBody": {
+                    "description": "mapcache_seed parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "My seeder job"
+                                    },
+                                    "layer": {
+                                        "type": "string",
+                                        "example": "my_schema.my_table"
+                                    },
+                                    "start": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "end": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "extent": {
+                                        "type": "string",
+                                        "example": "my_schema.my_table_with_extent"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Return the UUID and process id",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "uuid": {
+                                            "type": "string",
+                                            "example": "C4A3797E-EC6B-4DAC-9474-ADA9083620F3"
+                                        },
+                                        "pid": {
+                                            "type": "integer",
+                                            "example": 20326
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/tileseeder/{uuid}": {
+            "delete": {
+                "tags": [
+                    "Tileseeder"
+                ],
+                "summary": "Kills a mapcache_seed process by uuid. Use * to kill all processes started by user.",
+                "operationId": "app\\api\\v3\\Tileseeder::delete_index",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "description": "Uuid of Process",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "pid": {
+                                            "type": "integer",
+                                            "example": 20326
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "name": "bearerAuth",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
