@@ -134,7 +134,7 @@ class Feature extends \app\inc\Controller
             return $response;
         }
 
-        $xml = $res->getBody();
+        $xml = (string)$res->getBody();
 
         // Unserialize the transaction response
         $status = $unserializer->unserialize($xml);
