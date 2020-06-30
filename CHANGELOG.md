@@ -21,6 +21,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
 - JWT token removed from api/v2/session/start response. Moved to new OAuth API.
 - Admin and Scheduler API moved to api/v3 and now requires OAuth.
+- The `Enable filtering` property of the Structure tab is now called `Disable filtering` and will is check omit the field in Vidi filtering. The property was not used before.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.

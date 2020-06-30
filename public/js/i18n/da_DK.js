@@ -202,6 +202,7 @@ gc2i18n = {
         "Copy all properties from another layer": "Kopier egenskaber fra et andet lag",
         "Layer properties copied": "Egenskaber er kopieret",
         "Enable filtering": "Aktiver filtrering",
+        "Disable filtering": "Deaktiver filtrering",
         "Show in conflict": "Vis i konflikt",
         "Make link": "Gør til link",
         "Show in click info": "Vis i klik-info",
@@ -230,6 +231,9 @@ gc2i18n = {
         "Append" : "Tilføj",
         "Write tag names into the field 'Tags'. Finish the tag name with an 'Enter' key stroke. If 'Append' is checked, new tags are appended to existing one. Append is only available when multiple layers are selected.": "Skriv tag-navne i feltet 'Tags'. Afslut tag-navnet ved at taste 'Enter'. Hvis 'Tilføj' er tjekket af, tilføjes nye tags til eksisterende. 'Tilføj' er kun tilgængelig, når flere lag er valgt.",
 
-        "Change between WMS and Tile Cache": "Skift mellem WMS og Tile Cache"
+        "Change between WMS and Tile Cache": "Skift mellem WMS og Tile Cache",
+
+        "Structure": "Struktur"
+
     }
 };

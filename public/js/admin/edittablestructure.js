@@ -308,7 +308,7 @@ tableStructure.init = function (record, db) {
                 {
                     id: "filter",
                     xtype: 'checkcolumn',
-                    header: __("Enable filtering"),
+                    header: __("Disable filtering"),
                     dataIndex: 'filter',
                     //width: 40
                 }, {
