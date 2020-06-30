@@ -34,7 +34,7 @@ ini_set('max_execution_time', 30);
 
 // Set session back-end. PHP will use default port if not set explicit
 
-if (!empty(App::$param["sessionHandler"]["type"])) {
+if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
     if (!empty(App::$param['sessionHandler']["host"])) {
         ini_set('session.save_handler', App::$param['sessionHandler']["type"]);
         // If Redis then set the database
