@@ -16,6 +16,7 @@ and this project adheres to [CalVer](https://calver.org/).
     ]
 ];
 ```
+- New `Autocomplete` boolean property in Structure tab. This will instruct Vidi in activating autocomplete in filtering for the specific field.
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
