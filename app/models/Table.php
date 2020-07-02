@@ -747,6 +747,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);
                 $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->mouseover) ? (bool)$fieldconfArr[$key]->mouseover : false);;
                 $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) ? (bool)$fieldconfArr[$key]->filter : false);
+                $arr = $this->array_push_assoc($arr, "autocomplete", !empty($fieldconfArr[$key]->autocomplete) ? (bool)$fieldconfArr[$key]->autocomplete : false);
                 $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) ? (bool)$fieldconfArr[$key]->searchable : false);
                 $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) ? (bool)$fieldconfArr[$key]->conflict : false);
                 $arr = $this->array_push_assoc($arr, "alias", !empty($fieldconfArr[$key]->alias) ? $fieldconfArr[$key]->alias : "");

@@ -78,6 +78,10 @@ tableStructure.init = function (record, db) {
             allowBlank: true
         },
         {
+            name: 'autocomplete',
+            allowBlank: true
+        },
+        {
             name: 'conflict',
             allowBlank: true
         },
@@ -296,7 +300,7 @@ tableStructure.init = function (record, db) {
                     xtype: 'checkcolumn',
                     header: __("Show in mouse-over"),
                     dataIndex: 'mouseover',
-                    //width: 40
+                    hidden: true
                 },
                 {
                     id: "searchable",
@@ -311,7 +315,15 @@ tableStructure.init = function (record, db) {
                     header: __("Disable filtering"),
                     dataIndex: 'filter',
                     //width: 40
-                }, {
+                },
+                {
+                    id: "autocomplete",
+                    xtype: 'checkcolumn',
+                    header: __("Autocomplete"),
+                    dataIndex: 'autocomplete',
+                    //width: 40
+                },
+                {
                     id: "conflict",
                     xtype: 'checkcolumn',
                     header: __("Show in conflict"),
