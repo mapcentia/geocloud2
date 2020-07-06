@@ -694,8 +694,6 @@ function doSelect($table, $sql, $sql2, $from)
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
             $postgisObject->free($result);
-            flush();
-            ob_flush();
         }
     }
     $totalTime = microtime_float() - $startTime;
