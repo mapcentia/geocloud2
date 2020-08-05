@@ -69,35 +69,6 @@
                     </HTTP>
                 </DCPType>
             </Transaction>
-            <!--<LockFeature>
-				<DCPType>
-					<HTTP>
-						<Get onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-				<DCPType>
-					<HTTP>
-
-						<Post onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-	</LockFeature>
-	<GetFeatureWithLock>
-				<ResultFormat>
-					<GML2/>
-				</ResultFormat>
-				<DCPType>
-
-					<HTTP>
-						<Get onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-				<DCPType>
-					<HTTP>
-						<Post onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-	</GetFeatureWithLock>-->
         </Request>
         <VendorSpecificCapabilities>
         </VendorSpecificCapabilities>
@@ -112,7 +83,6 @@
         <Insert/>
         <Update/>
         <Delete/>
-        <!--<Lock/>-->
     </Operations>
     <?php
     $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
@@ -167,6 +137,9 @@
                 try {
                     $result2->execute();
                     $row2 = $postgisObject->fetchRow($result2);
+                    if (empty($row2['txmin'])) {
+                        throw new PDOException('No estimated extent');
+                    }
                     writeTag("open", null, "LatLongBoundingBox", array("minx" => $row2['txmin'], "miny" => $row2['tymin'], "maxx" => $row2['txmax'], "maxy" => $row2['tymax']), True, False);
                     writeTag("close", null, "LatLongBoundingBox", null, False, True);
                 } catch (\PDOException $e) {
