@@ -111,7 +111,7 @@ class Sql extends \app\inc\Model
         }
         $this->commit();
 
-        $geometries = [];
+        $geometries = null;
         $fieldsForStore = [];
         $columnsForGrid = [];
         $features = [];
@@ -132,16 +132,14 @@ class Sql extends \app\inc\Model
                             $arr = $this->array_push_assoc($arr, $key, $value);
                         }
                     }
-                    if (sizeof($geometries) > 1) {
+                    if ($geometries == null) {
+                        $features[] = array("type" => "Feature", "properties" => $arr);
+                    } elseif (count($geometries) == 1) {
+                        $features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
+                    } else {
                         $features[] = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
                     }
-                    if (sizeof($geometries) == 1) {
-                        $features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
-                    }
-                    if (sizeof($geometries) == 0) {
-                        $features[] = array("type" => "Feature", "properties" => $arr);
-                    }
-                    unset($geometries);
+                    $geometries = null;
                 }
             } catch (\Exception $e) {
                 $response['success'] = false;
