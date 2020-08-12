@@ -1,16 +1,7 @@
 <?php
 /**
- * @OA\SecurityScheme(
- *      securityScheme="cookieAuth",
- *      in="cookie",
- *      name="PHPSESSID",
- *      type="apiKey"
- * ),
- */
-
-/**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -85,12 +76,13 @@ class User extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="name",type="string"),
-     *         @OA\Property(property="email",type="string"),
-     *         @OA\Property(property="password",type="string"),
-     *         @OA\Property(property="subuser",type="boolean"),
-     *         @OA\Property(property="usergroup",type="string"),
-     *         @OA\Property(property="zone",type="string")
+     *         required={"name","email","password"},
+     *         @OA\Property(property="name",type="string",example="user"),
+     *         @OA\Property(property="email",type="string",example="user@example.com"),
+     *         @OA\Property(property="password",type="string",example="1234Luggage"),
+     *         @OA\Property(property="subuser",type="boolean",example=true),
+     *         @OA\Property(property="usergroup",type="string",example="My group"),
+     *         @OA\Property(property="parentdb",type="string",example="mydatabase")
      *       )
      *     )
      *   ),

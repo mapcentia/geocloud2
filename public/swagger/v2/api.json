@@ -406,24 +406,35 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ],
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "user"
                                     },
                                     "email": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "user@example.com"
                                     },
                                     "password": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "1234luggage"
                                     },
                                     "subuser": {
-                                        "type": "boolean"
+                                        "type": "boolean",
+                                        "example": true
                                     },
                                     "usergroup": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "My group"
                                     },
-                                    "zone": {
-                                        "type": "string"
+                                    "parentdb": {
+                                        "type": "string",
+                                        "example": "mydatabase"
                                     }
                                 },
                                 "type": "object"
@@ -590,13 +601,6 @@
                 "type": "apiKey",
                 "name": "PHPSESSID",
                 "in": "cookie"
-            },
-            "bearerAuth": {
-                "type": "http",
-                "name": "bearerAuth",
-                "in": "header",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
             }
         }
     }

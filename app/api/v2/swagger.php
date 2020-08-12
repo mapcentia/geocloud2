@@ -7,12 +7,11 @@
  *     email="mh@mapcentia.com"
  *   )
  * )
+ *
  * @OA\SecurityScheme(
- *      securityScheme="bearerAuth",
- *      in="header",
- *      name="bearerAuth",
- *      type="http",
- *      scheme="bearer",
- *      bearerFormat="JWT",
- * )
+ *      securityScheme="cookieAuth",
+ *      in="cookie",
+ *      name="PHPSESSID",
+ *      type="apiKey"
+ * ),
  */
