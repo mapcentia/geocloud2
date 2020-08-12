@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 use \app\conf\App;
@@ -161,7 +161,7 @@ if ($HTTP_RAW_POST_DATA) {
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
             break;
         case "Transaction":
-            fwrite($logFile, \app\inc\Input::getPath()->part(2)."\n");
+            fwrite($logFile, \app\inc\Input::getPath()->part(2) . "\n");
             fwrite($logFile, $HTTP_RAW_POST_DATA);
             fwrite($logFile, "\n");
             fwrite($logFile, "--------------");
@@ -610,27 +610,29 @@ function doSelect($table, $sql, $sql2, $from)
     } else {
         print $defaultBoundedBox;
     }
-    //die($sql . $from);
-    $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
-    if ($postgisObject->numRows($result) < 1) {
-        $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
-        $from = str_replace("view", "join", $from);
-        $result = $postgisObject->execQuery($sql . $from);
-    }
-    Log::write("SQL fired\n\n");
-    Log::write($sql . $from . "\n");
-    $totalTime = microtime_float() - $startTime;
-    Log::write("\nQuery time {$totalTime}\n");
-    if ($postgisObject->PDOerror) {
-        makeExceptionReport($postgisObject->PDOerror);
-    }
+
+    $fullSql = $sql . $from . " LIMIT 5000";
+
     if ($resultType == "hits") {
+        $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
+        if ($postgisObject->numRows($result) < 1) {
+            $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
+            $from = str_replace("view", "join", $from);
+            $result = $postgisObject->execQuery($sql . $from);
+        }
         $myrow = $postgisObject->fetchRow($result);
         print "\nnumberOfFeatures=\"{$myrow['count']}\"\n";
         // Close the GeometryCollection tag
         print ">\n";
     } else {
-        while ($myrow = $postgisObject->fetchRow($result)) {
+        $postgisObject->begin();
+        try {
+            $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
+            $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
+        } catch (\PDOException $e) {
+            die($e->getMessage()); //TODO
+        }
+        while ($innerStatement->execute() && $myrow = $postgisObject->fetchRow($innerStatement, "assoc")) {
             writeTag("open", "gml", "featureMember", null, True, True);
             $depth++;
             writeTag("open", $gmlNameSpace, $gmlFeature[$table], array("fid" => "{$table}.{$myrow["fid"]}"), True, True);
@@ -659,7 +661,10 @@ function doSelect($table, $sql, $sql2, $from)
                             //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
                             $imageAttr = null;
-                            $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
+                            if (!empty($FieldValue) && ($tableObj->metaData[$FieldName]["type"] === "string" || $tableObj->metaData[$FieldName]["type"] === "text")) {
+                                $FieldValue = "<![CDATA[" . $FieldValue . "]]>";
+                                $FieldValue = str_replace("&", "&#38;", $FieldValue);
+                            }
                         }
                         writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
                         echo (string)$FieldValue;
@@ -693,11 +698,13 @@ function doSelect($table, $sql, $sql2, $from)
             writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True);
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
-            $postgisObject->free($result);
+            flush();
+            ob_flush();
         }
+        $postgisObject->execQuery("CLOSE curs");
+        $postgisObject->commit();
     }
     $totalTime = microtime_float() - $startTime;
-    $postgisObject->execQuery("ROLLBACK");
 }
 
 /**
@@ -831,7 +838,7 @@ function altFieldValue($field, $value)
  */
 function altUseCdataOnStrings($value, $name)
 {
-    if (!is_numeric($value) && ($value)) {
+    if (!empty($value) && !is_numeric($value)) {
         $value = "<![CDATA[" . $value . "]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
@@ -990,7 +997,7 @@ function doParse($arr)
                         // Start HTTP basic authentication
                         if (!$trusted) {
                             $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
-                            if ($auth == "Write" OR $auth == "Read/write") {
+                            if ($auth == "Write" or $auth == "Read/write") {
                                 $HTTP_FORM_VARS["TYPENAME"] = $typeName;
                                 include('inc/http_basic_authen.php');
                             }
@@ -1078,7 +1085,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" OR $auth == "Read/write") {
+                    if ($auth == "Write" or $auth == "Read/write") {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include('inc/http_basic_authen.php');
                     }
@@ -1126,7 +1133,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" OR $auth == "Read/write") {
+                    if ($auth == "Write" or $auth == "Read/write") {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include('inc/http_basic_authen.php');
                     }
@@ -1594,5 +1601,7 @@ function makeExceptionReport($value)
 
 print("<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
 print($sessionComment);
-print ("<!--\n");
-print ("\n-->\n");
+// Make sure all is flushed
+echo str_pad("", 4096);
+flush();
+ob_flush();

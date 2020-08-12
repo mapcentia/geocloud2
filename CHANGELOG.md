@@ -23,6 +23,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - JWT token removed from api/v2/session/start response. Moved to new OAuth API.
 - Admin and Scheduler API moved to api/v3 and now requires OAuth.
 - The `Enable filtering` property of the Structure tab is now called `Disable filtering` and will if check omit the field in Vidi filtering. The property was not used before.
+- WFS-T now uses a database cursor and flushes GML, so huge datasets can be opened in e.g. QGIS without draining the memory. 
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.

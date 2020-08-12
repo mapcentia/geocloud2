@@ -15,6 +15,8 @@ use \app\inc\Session;
 
 class Layer extends \app\models\Table
 {
+    private static $recordStore = [];
+
     function __construct()
     {
         try {
@@ -47,12 +49,16 @@ class Layer extends \app\models\Table
      */
     public function getValueFromKey(string $_key_, string $column)
     {
+        if (isset(self::$recordStore[$_key_])) {
+            return self::$recordStore[$_key_];
+        }
         $rows = $this->getRecords();
         $rows = $rows['data'];
         foreach ($rows as $row) {
             foreach ($row as $field => $value) {
                 if ($field == "_key_" && $value == $_key_) {
-                    return ($row[$column]);
+                    self::$recordStore[$_key_] = $row[$column];
+                    return (self::$recordStore[$_key_]);
                 }
             }
         }
