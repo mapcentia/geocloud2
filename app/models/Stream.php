@@ -43,7 +43,7 @@ class Stream extends Model
     public function runSql($q): string
     {
         $i = 0;
-        $geometries = [];
+        $geometries = null;
         $features = [];
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
@@ -99,20 +99,18 @@ class Stream extends Model
                         $arr = $this->array_push_assoc($arr, $key, $value);
                     }
                 }
-                if (sizeof($geometries) > 1) {
-                    $features = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
+
+                if ($geometries == null) {
+                    $features[] = array("type" => "Feature", "properties" => $arr);
+                } elseif (count($geometries) == 1) {
+                    $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
+                } else {
+                    $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
                 }
-                if (sizeof($geometries) == 1) {
-                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
-                }
-                if (sizeof($geometries) == 0) {
-                    $features = array("type" => "Feature", "properties" => $arr);
-                }
-                unset($geometries);
+                $geometries = null;
+
                 $json = json_encode($features);
-                //$json .= "\n";
-                //$json .= $i . " " . memory_get_usage(true) ."\n";
-                echo str_pad($json, 4096);;
+                echo str_pad($json, 4096) . "\n";
                 flush();
                 ob_flush();
                 $i++;

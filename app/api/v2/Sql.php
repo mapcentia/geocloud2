@@ -84,10 +84,7 @@ class Sql extends \app\inc\Controller
         // /{user}
         $r = func_get_arg(0);
 
-        if (isset($r["method"]) && $r["method"] == "stream") {
-            $this->streamFlag = true;
 
-        }
 
         $db = $r["user"];
         $dbSplit = explode("@", $db);
@@ -129,6 +126,10 @@ class Sql extends \app\inc\Controller
                     "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                 ]
             );
+        }
+
+        if (Input::get('format') == "ndjson" ) {
+            $this->streamFlag = true;
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
@@ -218,15 +219,6 @@ class Sql extends \app\inc\Controller
         } else {
             return $this->get_index(func_get_arg(0));
         }
-    }
-
-    /**
-     * @return array
-     */
-    public function get_stream()
-    {
-        $this->streamFlag = true;
-        return $this->get_index(func_get_arg(0));
     }
 
     /**

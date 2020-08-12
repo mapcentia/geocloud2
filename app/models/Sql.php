@@ -135,9 +135,9 @@ class Sql extends \app\inc\Model
                     if ($geometries == null) {
                         $features[] = array("type" => "Feature", "properties" => $arr);
                     } elseif (count($geometries) == 1) {
-                        $features[] = array("geometry" => $geometries[0], "type" => "Feature", "properties" => $arr);
+                        $features[] = array("type" => "Feature", "geometry" => $geometries[0], "properties" => $arr);
                     } else {
-                        $features[] = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
+                        $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
                     }
                     $geometries = null;
                 }
