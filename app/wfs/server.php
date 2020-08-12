@@ -13,6 +13,10 @@ use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
 
+Util::disableOb();
+
+const FEATURE_LIMIT = 1000000;
+
 ini_set('max_execution_time', 0);
 
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
@@ -317,7 +321,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         doParse($arr);
         break;
     default:
-        makeExceptionReport("Don't know that request");
+        makeExceptionReport("Unknown request");
         break;
 }
 
@@ -406,6 +410,9 @@ function doQuery($queryType)
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
                 $tableObj = new table($postgisschema . "." . $table);
+                if (!$tableObj->exits) {
+                    makeExceptionReport("Relation doesn't exist");
+                }
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
                 $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
                 $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"));
@@ -611,10 +618,10 @@ function doSelect($table, $sql, $sql2, $from)
         print $defaultBoundedBox;
     }
 
-    $fullSql = $sql . $from . " LIMIT 5000";
+    $fullSql = $sql . $from . " LIMIT " . FEATURE_LIMIT;
 
     if ($resultType == "hits") {
-        $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
+        $result = $postgisObject->execQuery($sql . $from . " LIMIT " . FEATURE_LIMIT);
         if ($postgisObject->numRows($result) < 1) {
             $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
             $from = str_replace("view", "join", $from);
@@ -630,7 +637,7 @@ function doSelect($table, $sql, $sql2, $from)
             $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
             $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
         } catch (\PDOException $e) {
-            die($e->getMessage()); //TODO
+            makeExceptionReport($e->getMessage());
         }
         while ($innerStatement->execute() && $myrow = $postgisObject->fetchRow($innerStatement, "assoc")) {
             writeTag("open", "gml", "featureMember", null, True, True);
