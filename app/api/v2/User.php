@@ -106,19 +106,35 @@ class User extends Controller
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
             $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) || Session::isAuth();
-
+            if (!empty($data['parentdb'])) {
+                return [
+                    'success' => false,
+                    'message' => "'parentdb' can't be set while client is authenticated or 'subuser' is set to false",
+                    'code' => 400
+                ];
+            }
             $response = $this->user->createUser($data);
             if (Session::isAuth()) {
                 Database::setDb(Session::getUser());
                 $database = new Database();
                 $database->createSchema($response['data']['screenname']);
             }
+            return $response;
+        } elseif (!empty($data['parentdb']) && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === true && !Session::isAuth()) {
+            if (empty(\app\conf\App::$param["allowUnauthenticatedClientsToCreateSubUsers"])) {
+                return [
+                    'success' => false,
+                    'message' => "Unauthenticated clients are not allowed to create sub users.",
+                    'code' => 400
+                ];
+            }
 
+            $response = $this->user->createUser($data);
             return $response;
         } else {
             return [
                 'success' => false,
-                'message' => "Sub users should be created only by authenticated clients and 'subuser' parameter set to 'true'",
+                'message' => "Sub users should be created only by authenticated clients and 'subuser' parameter set to 'true'. Or by unauthenticated clients and 'parentdb' set to an existing super user'",
                 'code' => 400
             ];
         }

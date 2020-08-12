@@ -9,7 +9,7 @@
 namespace app\models;
 
 use \app\conf\App;
-use app\inc\Model;
+use \app\inc\Model;
 
 define('VDAEMON_PARSE', false);
 define('VD_E_POST_SECURITY', false);
@@ -133,6 +133,26 @@ class User extends Model
         $password = VDFormat($data['password'], true);
         $group = (empty($data['usergroup']) ? null : VDFormat($data['usergroup'], true));
         $zone = (empty($data['zone']) ? null : VDFormat($data['zone'], true));
+        $parentDb = (empty($data['parentdb']) ? null : VDFormat($data['parentdb'], true));
+        if ($parentDb) {
+            $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
+            try {
+                $res = $this->prepare($sql);
+                $res->execute([":sDatabase" => $parentDb]);
+                $row = $this->fetchRow($res, "assoc");
+            } catch (\Exception $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+            if (!$row) {
+                $response['success'] = false;
+                $response['message'] = "Database '{$parentDb}' doesn't exist";
+                $response['code'] = 400;
+                return $response;
+            }
+        }
 
         // Generate user identifier from the name
         $userId = Model::toAscii($name, NULL, "_");
@@ -225,7 +245,7 @@ class User extends Model
                 ":sUserID" => $userId,
                 ":sPassword" => $encryptedPassword,
                 ":sEmail" => $email,
-                ":sParentDb" => $this->userId,
+                ":sParentDb" => $parentDb ?: $this->userId,
                 ":sUsergroup" => $group,
                 ":zone" => $zone
             ));

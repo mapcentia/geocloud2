@@ -25,6 +25,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - The `Enable filtering` property of the Structure tab is now called `Disable filtering` and will if check omit the field in Vidi filtering. The property was not used before.
 - WFS-T now uses a database cursor and flushes GML, so huge datasets can be opened in e.g. QGIS without draining the memory.
 - Format `ndjson` (http://ndjson.org/) is added as a `format` option in the SQL API. This will stream NDJSON (Newline delimited JSON).
+- It's now possible to create a subuser with an unauthenticated client. The property `allowUnauthenticatedClientsToCreateSubUsers` must be set to `true` in `\app\conf\App.php`
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.
