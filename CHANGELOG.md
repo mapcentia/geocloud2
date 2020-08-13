@@ -17,6 +17,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ];
 ```
 - New `Autocomplete` boolean property in Structure tab. This will instruct Vidi in activating autocomplete in filtering for the specific field.
+- The User API has now full suport (create, read and update) of the `properties` field in the user object. This field can be used to added custom properties to a (sub)user.
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
@@ -73,7 +74,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 ### Added
 - Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
 - Tentative AppCache API. For getting stats and clear cache.
-- User table now has a JSONB field called "properties". The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
+- User table now has a JSONB field called `properties`. The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
 - In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
 
 ### Changed

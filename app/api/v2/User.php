@@ -82,7 +82,8 @@ class User extends Controller
      *         @OA\Property(property="password",type="string",example="1234Luggage"),
      *         @OA\Property(property="subuser",type="boolean",example=true),
      *         @OA\Property(property="usergroup",type="string",example="My group"),
-     *         @OA\Property(property="parentdb",type="string",example="mydatabase")
+     *         @OA\Property(property="parentdb",type="string",example="mydatabase"),
+     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
      *       )
      *     )
      *   ),
@@ -203,10 +204,11 @@ class User extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="currentPassword",type="string"),
-     *         @OA\Property(property="password",type="string"),
-     *         @OA\Property(property="email",type="string"),
-     *         @OA\Property(property="usergroup",type="string"),
+     *         @OA\Property(property="currentPassword",type="string",example="1234Luggage"),
+     *         @OA\Property(property="password",type="string",example="1234Luggage"),
+     *         @OA\Property(property="email",type="string",example="user@example.com"),
+     *         @OA\Property(property="usergroup",type="string",example="My group"),
+     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
      *       )
      *     )
      *   ),

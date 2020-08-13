@@ -28,8 +28,8 @@ class Oauth extends Controller
     /**
      * @return array
      *
-     * @OA\Get(
-     *   path="/api/v3/oauth",
+     * @OA\Post(
+     *   path="/api/v3/oauth/token",
      *   tags={"OAuth"},
      *   summary="Get token",
      *   @OA\RequestBody(
@@ -40,7 +40,7 @@ class Oauth extends Controller
      *         type="object",
      *         @OA\Property(property="grant_type",type="string", example="password"),
      *         @OA\Property(property="username",type="string", example="user@example.com"),
-     *         @OA\Property(property="password",type="string", example="1234luggage"),
+     *         @OA\Property(property="password",type="string", example="1234Luggage"),
      *         @OA\Property(property="database",type="string", example="roads"),
      *         @OA\Property(property="client_id",type="string", example="xxxxxxxxxx"),
      *         @OA\Property(property="client_secret",type="string", example="xxxxxxxxxx")

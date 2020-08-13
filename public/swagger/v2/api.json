@@ -422,7 +422,7 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "1234luggage"
+                                        "example": "1234Luggage"
                                     },
                                     "subuser": {
                                         "type": "boolean",
@@ -435,6 +435,12 @@
                                     "parentdb": {
                                         "type": "string",
                                         "example": "mydatabase"
+                                    },
+                                    "properties": {
+                                        "type": "object",
+                                        "example": {
+                                            "org": "Ajax Inc."
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -507,16 +513,26 @@
                             "schema": {
                                 "properties": {
                                     "currentPassword": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "1234Luggage"
                                     },
                                     "password": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "1234Luggage"
                                     },
                                     "email": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "user@example.com"
                                     },
                                     "usergroup": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "My group"
+                                    },
+                                    "properties": {
+                                        "type": "object",
+                                        "example": {
+                                            "org": "Ajax Inc."
+                                        }
                                     }
                                 },
                                 "type": "object"

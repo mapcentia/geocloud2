@@ -296,8 +296,8 @@
                 ]
             }
         },
-        "/api/v3/oauth": {
-            "get": {
+        "/api/v3/oauth/token": {
+            "post": {
                 "tags": [
                     "OAuth"
                 ],
@@ -319,7 +319,7 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "1234luggage"
+                                        "example": "1234Luggage"
                                     },
                                     "database": {
                                         "type": "string",
