@@ -26,6 +26,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - WFS-T now uses a database cursor and flushes GML, so huge datasets can be opened in e.g. QGIS without draining the memory.
 - Format `ndjson` (http://ndjson.org/) is added as a `format` option in the SQL API. This will stream NDJSON (Newline delimited JSON).
 - It's now possible to create a subuser with an unauthenticated client. The property `allowUnauthenticatedClientsToCreateSubUsers` must be set to `true` in `\app\conf\App.php`
+- Legend API is now using MapScript, which is much faster for creation of legend icons. PHP MapScript is needed.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.
