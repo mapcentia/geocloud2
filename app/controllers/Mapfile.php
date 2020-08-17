@@ -48,7 +48,7 @@ class Mapfile extends \app\inc\Controller
         $user = Connection::$param['postgisdb'];
 
         if ($this->bbox) {
-            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},900913),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
             $result = $this->postgisObject->execQuery($sql);
             if (!$this->postgisObject->PDOerror) {
                 $row = $this->postgisObject->fetchRow($result);
@@ -938,7 +938,7 @@ class Mapfile extends \app\inc\Controller
         $user = Connection::$param['postgisdb'];
 
         if ($this->bbox) {
-            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},900913),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
             $result = $this->postgisObject->execQuery($sql);
             if (!$this->postgisObject->PDOerror) {
                 $row = $this->postgisObject->fetchRow($result);
@@ -991,7 +991,7 @@ class Mapfile extends \app\inc\Controller
         #
 
         PROJECTION
-        "init=epsg:4326"
+        "init=epsg:<?php echo $row['srid']; ?>"
         END
 
 
