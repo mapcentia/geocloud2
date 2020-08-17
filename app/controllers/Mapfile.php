@@ -339,8 +339,8 @@ class Mapfile extends \app\inc\Controller
                     $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']}})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
                     $result = $this->postgisObject->execQuery($sql);
                     if (!$this->postgisObject->PDOerror) {
-                        $row = $this->postgisObject->fetchRow($result);
-                        $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
+                        $rowExtent = $this->postgisObject->fetchRow($result);
+                        $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
                     } else {
                         $this->extent = [-180, -90, 180, 90];
                     }
@@ -1010,8 +1010,8 @@ class Mapfile extends \app\inc\Controller
                 $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']}})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
                 $result = $this->postgisObject->execQuery($sql);
                 if (!$this->postgisObject->PDOerror) {
-                    $row = $this->postgisObject->fetchRow($result);
-                    $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
+                    $rowExtent = $this->postgisObject->fetchRow($result);
+                    $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
                 } else {
                     $this->extent = [-180, -90, 180, 90];
                 }
