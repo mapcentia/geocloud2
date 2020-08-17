@@ -19,10 +19,30 @@ use \app\inc\Util;
 class Mapfile extends \app\inc\Controller
 {
     private $fonts;
+    private $extent;
+    private $postgisObject;
 
     function __construct()
     {
         parent::__construct();
+        $this->postgisObject = new \app\inc\Model();
+        $settings = new \app\models\Setting();
+        $extents = $settings->get()["data"]->extents;
+
+        $schema = Connection::$param['postgisschema'];
+        $bbox = property_exists($extents, $schema) ? $extents->$schema : null;
+        if ($bbox) {
+            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$bbox[0]},{$bbox[1]},{$bbox[2]},{$bbox[3]},900913),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+            $result = $this->postgisObject->execQuery($sql);
+            if (!$this->postgisObject->PDOerror) {
+                $row = $this->postgisObject->fetchRow($result);
+                $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
+            } else {
+                $this->extent = [-180, -90, 180, 90];
+            }
+        } else {
+            $this->extent = [-180, -90, 180, 90];
+        }
     }
 
     public function get_index()
@@ -45,7 +65,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
         SIZE 2000 1500
         MAXSIZE 16384
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
@@ -54,39 +74,40 @@ class Mapfile extends \app\inc\Controller
         INTERLACE OFF
 
         OUTPUTFORMAT
-            NAME "png"
-            DRIVER AGG/PNG
-            MIMETYPE "image/png"
-            IMAGEMODE RGBA
-            EXTENSION "png"
-            TRANSPARENT ON
-            FORMATOPTION "GAMMA=0.75"
+        NAME "png"
+        DRIVER AGG/PNG
+        MIMETYPE "image/png"
+        IMAGEMODE RGBA
+        EXTENSION "png"
+        TRANSPARENT ON
+        FORMATOPTION "GAMMA=0.75"
         END
 
         OUTPUTFORMAT
-            NAME "utfgrid"
-            DRIVER UTFGRID
-            MIMETYPE "application/json"
-            EXTENSION "json"
-            FORMATOPTION "UTFRESOLUTION=4"
-            FORMATOPTION "DUPLICATES=false"
+        NAME "utfgrid"
+        DRIVER UTFGRID
+        MIMETYPE "application/json"
+        EXTENSION "json"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
         END
 
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         #DEBUG 5
 
         WEB
-            IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
-            IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
-            METADATA
-                "wms_title"    "<?php echo $user; ?>'s OWS"
-                "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
-                "wms_name"    "<?php echo $user; ?>"
-                "wms_format"    "image/png"
-                "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
-                "wms_enable_request" "*"
-                "ows_encoding" "UTF-8"
-            END
+        IMAGEPATH "<?php echo App::$param['path']; ?>/tmp"
+        IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
+        METADATA
+        "wms_title"    "<?php echo $user; ?>'s OWS"
+        "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+        "wms_name"    "<?php echo $user; ?>"
+        "wms_format"    "image/png"
+        "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wms_enable_request" "*"
+        "ows_encoding" "UTF-8"
+        "wms_extent" "<?php echo implode(" ", $this->extent) ?>"
+        END
         END
 
         #
@@ -94,7 +115,7 @@ class Mapfile extends \app\inc\Controller
         #
 
         PROJECTION
-            "init=epsg:4326"
+        "init=epsg:4326"
         END
 
         #
@@ -105,13 +126,13 @@ class Mapfile extends \app\inc\Controller
         STATUS off
         IMAGECOLOR 255 255 255
         KEYSIZE 18 12
-            LABEL
-                WRAP "#"
-                TYPE truetype
-                FONT "arialnormal"
-                SIZE 8
-                COLOR 0 0 0
-            END
+        LABEL
+        WRAP "#"
+        TYPE truetype
+        FONT "arialnormal"
+        SIZE 8
+        COLOR 0 0 0
+        END
         END
 
         #
@@ -119,20 +140,20 @@ class Mapfile extends \app\inc\Controller
         #
 
         SCALEBAR
-            STATUS off
-            COLOR 255 255 255
-            OUTLINECOLOR 0 0 0
-            BACKGROUNDCOLOR 0 0 0
-            IMAGECOLOR 255 255 255
-            UNITS METERS
-            INTERVALS 3
-            SIZE 150 5
-            LABEL
-                FONT "courierb"
-                SIZE SMALL
-                COLOR 0 0 0
-                SHADOWSIZE 2 2
-            END
+        STATUS off
+        COLOR 255 255 255
+        OUTLINECOLOR 0 0 0
+        BACKGROUNDCOLOR 0 0 0
+        IMAGECOLOR 255 255 255
+        UNITS METERS
+        INTERVALS 3
+        SIZE 150 5
+        LABEL
+        FONT "courierb"
+        SIZE SMALL
+        COLOR 0 0 0
+        SHADOWSIZE 2 2
+        END
         END
 
         #
@@ -140,104 +161,104 @@ class Mapfile extends \app\inc\Controller
         #
 
         Symbol
-            Name 'triangle'
-            Type VECTOR
-            Filled TRUE
-            Points
-                0 1
-                .5 0
-                1 1
-                0 1
-            END
+        Name 'triangle'
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 1
+        .5 0
+        1 1
+        0 1
+        END
         END
 
         SYMBOL
-            NAME "circle"
-            TYPE ellipse
-            FILLED true
-            POINTS
-                1 1
-            END
+        NAME "circle"
+        TYPE ellipse
+        FILLED true
+        POINTS
+        1 1
+        END
         END
 
         Symbol
-            Name 'square'
-            Type VECTOR
-            Filled TRUE
-            Points
-                0 1
-                0 0
-                1 0
-                1 1
-                0 1
-            END
+        Name 'square'
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 1
+        0 0
+        1 0
+        1 1
+        0 1
+        END
         END
 
         Symbol
         Name 'star'
-            Type VECTOR
-            Filled TRUE
-            Points
-                0 .375
-                .35 .375
-                .5 0
-                .65 .375
-                1 .375
-                .75 .625
-                .875 1
-                .5 .75
-                .125 1
-                .25 .625
-            END
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 .375
+        .35 .375
+        .5 0
+        .65 .375
+        1 .375
+        .75 .625
+        .875 1
+        .5 .75
+        .125 1
+        .25 .625
+        END
         END
 
         SYMBOL
-            NAME "hatch1"
-            TYPE VECTOR
-            POINTS
-                0 1 1 0
-            END
+        NAME "hatch1"
+        TYPE VECTOR
+        POINTS
+        0 1 1 0
+        END
         END
 
         SYMBOL
-            NAME "dashed1"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                1 1
-            END
-            #STYLE 4 2 END
+        NAME "dashed1"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
+        #STYLE 4 2 END
         END
 
         SYMBOL
 
         NAME "arrow"
-            TYPE vector
-            FILLED true
-            POINTS
-                0 0.4
-                3 0.4
-                3 0
-                5 0.8
-                3 1.6
-                3 1.2
-                0 1.2
-                0 0.4
-            END
-            ANCHORPOINT 0 0.5
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.4
+        3 0.4
+        3 0
+        5 0.8
+        3 1.6
+        3 1.2
+        0 1.2
+        0 0.4
+        END
+        ANCHORPOINT 0 0.5
         END # SYMBOL
 
         SYMBOL
         NAME "arrow2"
-            TYPE vector
-            FILLED true
-            POINTS
-                0 0.8
-                1 0.4
-                0 0
-                0 0.8
-            END
-            ANCHORPOINT 0 0.5
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.8
+        1 0.4
+        0 0
+        0 0.8
+        END
+        ANCHORPOINT 0 0.5
         END
 
         #
@@ -245,57 +266,57 @@ class Mapfile extends \app\inc\Controller
         #
 
         SYMBOL
-            NAME "continue"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                1 1
-            END
+        NAME "continue"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
         END
 
         SYMBOL
-            NAME "dashed-line-short"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                10 1
-            END
+        NAME "dashed-line-short"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        10 1
+        END
         END
 
         SYMBOL
-            NAME "dashed-line-long"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                10 10
-            END
+        NAME "dashed-line-long"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        10 10
+        END
         END
 
         SYMBOL
-            NAME "dash-dot"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                20 6 2 6
-            END
+        NAME "dash-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        20 6 2 6
+        END
         END
 
         SYMBOL
-            NAME "dash-dot-dot"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                1 1
-            END
+        NAME "dash-dot-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
         END
 
         SYMBOL
-            NAME "dot-dot"
-            TYPE ELLIPSE
-            FILLED TRUE
-            POINTS
-                1 1
-            END
+        NAME "dot-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
         END
 
 
@@ -436,7 +457,7 @@ class Mapfile extends \app\inc\Controller
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ({$dataSql}) as bar /*FILTER_{$layerName}*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
-                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ?Connection::$param['mapserverhost']: Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ?Connection::$param['mapserverport']: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
                         <?php if (!empty($layerArr['data'][0]['label_no_clip'])) echo "PROCESSING \"LABEL_NO_CLIP=True\"\n"; ?>
                         <?php if (!empty($layerArr['data'][0]['polyline_no_clip'])) echo "PROCESSING \"POLYLINE_NO_CLIP=True\"\n"; ?>
 
@@ -497,7 +518,6 @@ class Mapfile extends \app\inc\Controller
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                #"ows_extent" "-180 -90 180 90"
                 "wms_format"    "image/png"
                 "wms_enable_request"    "*"
                 "gml_include_items" "all"
@@ -513,13 +533,13 @@ class Mapfile extends \app\inc\Controller
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
                 #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'],true);
-                        if (!empty($fields)) foreach($fields as $field=>$name) {
-                            $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
-                        }
+                <?php $fields = json_decode($row['fieldconf'], true);
+                if (!empty($fields)) foreach ($fields as $field => $name) {
+                    $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                }
                 ?>
                 #UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
-                $fieldsArr=[];
+                $fieldsArr = [];
                 ?>"
 
 
@@ -528,7 +548,7 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) AND (!$row['wmssource'])) {
+                if (is_array($classArr['data']) and (!$row['wmssource'])) {
 //                    print_r($classArr['data']);
 //                    die();
                     foreach ($classArr['data'] as $class) {
@@ -541,7 +561,7 @@ class Mapfile extends \app\inc\Controller
                         <?php if (!empty($class['expression'])) {
                             if (!empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
                             else echo "EXPRESSION (" . $class['expression'] . ")\n";
-                        } elseif (empty($class['expression']) AND !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
+                        } elseif (empty($class['expression']) and !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                         ?>
 
                         #MAXSCALEDENOM
@@ -622,8 +642,8 @@ class Mapfile extends \app\inc\Controller
 
                         #OFFSET
                         <?php
-                            echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
-                                (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                        echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
+                            (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
@@ -751,7 +771,7 @@ class Mapfile extends \app\inc\Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label_angle'])) {
-                                if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
+                                if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
                                     or $class['label_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label_angle'];
@@ -831,7 +851,7 @@ class Mapfile extends \app\inc\Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label2_angle'])) {
-                                if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
+                                if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
                                     or $class['label2_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label2_angle'];
@@ -908,32 +928,32 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
         UNITS METERS
 
         OUTPUTFORMAT
-            NAME "utfgrid"
-            DRIVER UTFGRID
-            MIMETYPE "application/json"
-            EXTENSION "json"
-            FORMATOPTION "UTFRESOLUTION=4"
-            FORMATOPTION "DUPLICATES=false"
+        NAME "utfgrid"
+        DRIVER UTFGRID
+        MIMETYPE "application/json"
+        EXTENSION "json"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
         END
 
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         #DEBUG 5
 
         WEB
-            METADATA
-                "wfs_title"    "<?php echo $user; ?>'s OWS"
-                "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
-                "wfs_name"    "<?php echo $user; ?>"
-                "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
-                "wfs_enable_request" "*"
-                "wfs_encoding" "UTF-8"
-                "wfs_namespace_prefix" "<?php echo $user; ?>"
-                "wfs_namespace_uri" "<?php echo App::$param['host']; ?>"
-            END
+        METADATA
+        "wfs_title"    "<?php echo $user; ?>'s OWS"
+        "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+        "wfs_name"    "<?php echo $user; ?>"
+        "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wfs_enable_request" "*"
+        "wfs_encoding" "UTF-8"
+        "wfs_namespace_prefix" "<?php echo $user; ?>"
+        "wfs_namespace_uri" "<?php echo App::$param['host']; ?>"
+        END
         END
 
         #
@@ -941,7 +961,7 @@ class Mapfile extends \app\inc\Controller
         #
 
         PROJECTION
-            "init=epsg:4326"
+        "init=epsg:4326"
         END
 
 
@@ -1032,40 +1052,42 @@ class Mapfile extends \app\inc\Controller
                 <?php ?>
                 TYPE <?php echo $type . "\n"; ?>
                 METADATA
-                    "wfs_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
-                    "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
-                    "wfs_name"    "<?php echo $layerName; ?>"
-                    "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                    "gml_include_items" "all"
-                    "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
-                    "gml_types" "auto"
-                    "wfs_geomtype" "<?php echo $row['type']; echo $row['coord_dimension'] == 3 ? "25D": ""; ?>"
-                    "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-                    "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
+                "wfs_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
+                "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
+                "wfs_name"    "<?php echo $layerName; ?>"
+                "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                "wfs_extent" "<?php echo implode(" ", $this->extent) ?>"
+                "gml_include_items" "all"
+                "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
+                "gml_types" "auto"
+                "wfs_geomtype" "<?php echo $row['type'];
+                echo $row['coord_dimension'] == 3 ? "25D" : ""; ?>"
+                "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
+                "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END
                 #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'],true);
-                if (!empty($fields)) foreach($fields as $field=>$name) {
+                <?php $fields = json_decode($row['fieldconf'], true);
+                if (!empty($fields)) foreach ($fields as $field => $name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
                 #UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
-                $fieldsArr=[];
+                $fieldsArr = [];
                 ?>"
 
                 PROJECTION
-                    "init=epsg:<?php echo $row['srid']; ?>"
+                "init=epsg:<?php echo $row['srid']; ?>"
                 END
 
                 TEMPLATE "test"
                 CLASS
-                    NAME 'Unnamed class'
-                    STYLE
-                        COLOR 0 0 0
-                    END # style
+                NAME 'Unnamed class'
+                STYLE
+                COLOR 0 0 0
+                END # style
                 END # Class
                 END #Layer
-                <?php } ?>
+            <?php } ?>
         <?php } ?>
         END #MapFile
         <?php

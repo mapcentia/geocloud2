@@ -28,6 +28,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Format `ndjson` (http://ndjson.org/) is added as a `format` option in the SQL API. This will stream NDJSON (Newline delimited JSON).
 - It's now possible to create a subuser with an unauthenticated client. The property `allowUnauthenticatedClientsToCreateSubUsers` must be set to `true` in `\app\conf\App.php`
 - Legend API is now using MapScript, which is much faster for creation of legend icons. PHP MapScript is needed.
+- In MapFiles the `wfs_extent` and `wms_extent` will always be set from the GC2 schema extent instead of leaving these properties out and let MapServer calculate the extent. The latter can be very inefficient.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.
