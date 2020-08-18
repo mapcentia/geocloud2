@@ -19,10 +19,19 @@ use \app\inc\Util;
 class Mapfile extends \app\inc\Controller
 {
     private $fonts;
+    private $extent;
+    private $postgisObject;
+    private $bbox;
 
     function __construct()
     {
         parent::__construct();
+        $this->postgisObject = new \app\inc\Model();
+        $settings = new \app\models\Setting();
+        $extents = $settings->get()["data"]->extents;
+
+        $schema = Connection::$param['postgisschema'];
+        $this->bbox = property_exists($extents, $schema) ? $extents->$schema : null;
     }
 
     public function get_index()
@@ -37,6 +46,20 @@ class Mapfile extends \app\inc\Controller
     {
         $postgisObject = new \app\inc\Model();
         $user = Connection::$param['postgisdb'];
+
+        if ($this->bbox) {
+            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+            $resultExtent = $postgisObject->execQuery($sql);
+            if (!$postgisObject->PDOerror) {
+                $row = $postgisObject->fetchRow($resultExtent);
+                $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
+            } else {
+                $this->extent = [-180, -90, 180, 90];
+            }
+        } else {
+            $this->extent = [-180, -90, 180, 90];
+        }
+
         ob_start();
         ?>
         MAP
@@ -45,9 +68,9 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
         SIZE 2000 1500
-        MAXSIZE 4096
+        MAXSIZE 16384
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
         IMAGECOLOR 255 2 255
         UNITS METERS
@@ -80,12 +103,13 @@ class Mapfile extends \app\inc\Controller
         IMAGEURL "<?php echo App::$param['host']; ?>/tmp"
         METADATA
         "wms_title"    "<?php echo $user; ?>'s OWS"
-        "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+        "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "wms_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
         "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "wms_enable_request" "*"
         "ows_encoding" "UTF-8"
+        "wms_extent" "<?php echo implode(" ", $this->extent) ?>"
         END
         END
 
@@ -311,6 +335,19 @@ class Mapfile extends \app\inc\Controller
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
+                if ($this->bbox) {
+                    $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']}})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+                    $resultExtent = $postgisObject->execQuery($sql);
+                    if (!$postgisObject->PDOerror) {
+                        $rowExtent = $postgisObject->fetchRow($resultExtent);
+                        $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                    } else {
+                        $this->extent = [-180, -90, 180, 90];
+                    }
+                } else {
+                    $this->extent = [-180, -90, 180, 90];
+                }
+
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
 
@@ -436,7 +473,7 @@ class Mapfile extends \app\inc\Controller
                         echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ({$dataSql}) as bar /*FILTER_{$layerName}*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
-                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ?Connection::$param['mapserverhost']: Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ?Connection::$param['mapserverport']: Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
+                        CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']); ?><?php echo " port=" . (!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport'] ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
                         <?php if (!empty($layerArr['data'][0]['label_no_clip'])) echo "PROCESSING \"LABEL_NO_CLIP=True\"\n"; ?>
                         <?php if (!empty($layerArr['data'][0]['polyline_no_clip'])) echo "PROCESSING \"POLYLINE_NO_CLIP=True\"\n"; ?>
 
@@ -497,8 +534,8 @@ class Mapfile extends \app\inc\Controller
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                #"ows_extent" "-180 -90 180 90"
                 "wms_format"    "image/png"
+                "wms_extent" "<?php echo implode(" ", $this->extent) ?>"
                 "wms_enable_request"    "*"
                 "gml_include_items" "all"
                 "wms_include_items" "all"
@@ -513,13 +550,13 @@ class Mapfile extends \app\inc\Controller
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
                 #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'],true);
-                if (!empty($fields)) foreach($fields as $field=>$name) {
+                <?php $fields = json_decode($row['fieldconf'], true);
+                if (!empty($fields)) foreach ($fields as $field => $name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
                 #UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
-                $fieldsArr=[];
+                $fieldsArr = [];
                 ?>"
 
 
@@ -528,7 +565,7 @@ class Mapfile extends \app\inc\Controller
                 END
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) AND (!$row['wmssource'])) {
+                if (is_array($classArr['data']) and (!$row['wmssource'])) {
 //                    print_r($classArr['data']);
 //                    die();
                     foreach ($classArr['data'] as $class) {
@@ -541,7 +578,7 @@ class Mapfile extends \app\inc\Controller
                         <?php if (!empty($class['expression'])) {
                             if (!empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
                             else echo "EXPRESSION (" . $class['expression'] . ")\n";
-                        } elseif (empty($class['expression']) AND !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
+                        } elseif (empty($class['expression']) and !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
                         ?>
 
                         #MAXSCALEDENOM
@@ -751,7 +788,7 @@ class Mapfile extends \app\inc\Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label_angle'])) {
-                                if (is_numeric($class['label_angle']) OR $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
+                                if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
                                     or $class['label_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label_angle'];
@@ -831,7 +868,7 @@ class Mapfile extends \app\inc\Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label2_angle'])) {
-                                if (is_numeric($class['label2_angle']) OR $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
+                                if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
                                     or $class['label2_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label2_angle'];
@@ -900,6 +937,20 @@ class Mapfile extends \app\inc\Controller
     {
         $postgisObject = new \app\inc\Model();
         $user = Connection::$param['postgisdb'];
+
+        if ($this->bbox) {
+            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+            $resultExtent = $postgisObject->execQuery($sql);
+            if (!$postgisObject->PDOerror) {
+                $row = $postgisObject->fetchRow($resultExtent);
+                $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
+            } else {
+                $this->extent = [-180, -90, 180, 90];
+            }
+        } else {
+            $this->extent = [-180, -90, 180, 90];
+        }
+
         ob_start();
         ?>
         MAP
@@ -908,7 +959,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?>
+        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
         UNITS METERS
 
         OUTPUTFORMAT
@@ -926,7 +977,7 @@ class Mapfile extends \app\inc\Controller
         WEB
         METADATA
         "wfs_title"    "<?php echo $user; ?>'s OWS"
-        "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ?  implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
+        "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "wfs_name"    "<?php echo $user; ?>"
         "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "wfs_enable_request" "*"
@@ -956,6 +1007,18 @@ class Mapfile extends \app\inc\Controller
             return false;
         }
         while ($row = $postgisObject->fetchRow($result)) {
+            if ($this->bbox) {
+                $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+                $resultExtent = $postgisObject->execQuery($sql);
+                if (!$postgisObject->PDOerror) {
+                    $rowExtent = $postgisObject->fetchRow($resultExtent);
+                    $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                } else {
+                    $this->extent = [-180, -90, 180, 90];
+                }
+            } else {
+                $this->extent = [-180, -90, 180, 90];
+            }
             if ($row['srid'] > 1) {
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
@@ -1036,21 +1099,23 @@ class Mapfile extends \app\inc\Controller
                 "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "wfs_name"    "<?php echo $layerName; ?>"
                 "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                "wfs_extent" "<?php echo implode(" ", $this->extent) ?>"
                 "gml_include_items" "all"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                 "gml_types" "auto"
-                "wfs_geomtype" "<?php echo $row['type']; echo $row['coord_dimension'] == 3 ? "25D": ""; ?>"
+                "wfs_geomtype" "<?php echo $row['type'];
+                echo $row['coord_dimension'] == 3 ? "25D" : ""; ?>"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 END
                 #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'],true);
-                if (!empty($fields)) foreach($fields as $field=>$name) {
+                <?php $fields = json_decode($row['fieldconf'], true);
+                if (!empty($fields)) foreach ($fields as $field => $name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
                 #UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
-                $fieldsArr=[];
+                $fieldsArr = [];
                 ?>"
 
                 PROJECTION
