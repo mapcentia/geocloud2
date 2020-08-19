@@ -19,7 +19,6 @@ use \app\inc\Util;
 class Mapfile extends \app\inc\Controller
 {
     private $fonts;
-    private $extent;
     private $postgisObject;
     private $bbox;
 
@@ -31,7 +30,7 @@ class Mapfile extends \app\inc\Controller
         $extents = $settings->get()["data"]->extents;
 
         $schema = Connection::$param['postgisschema'];
-        $this->bbox = property_exists($extents, $schema) ? $extents->$schema : null;
+        $this->bbox = property_exists($extents, $schema) ? $extents->$schema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     }
 
     public function get_index()
@@ -47,18 +46,10 @@ class Mapfile extends \app\inc\Controller
         $postgisObject = new \app\inc\Model();
         $user = Connection::$param['postgisdb'];
 
-        if ($this->bbox) {
-            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
-            $resultExtent = $postgisObject->execQuery($sql);
-            if (!$postgisObject->PDOerror) {
-                $row = $postgisObject->fetchRow($resultExtent);
-                $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
-            } else {
-                $this->extent = [-180, -90, 180, 90];
-            }
-        } else {
-            $this->extent = [-180, -90, 180, 90];
-        }
+        $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+        $resultExtent = $postgisObject->execQuery($sql);
+        $row = $postgisObject->fetchRow($resultExtent);
+        $extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
 
         ob_start();
         ?>
@@ -68,7 +59,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
+        EXTENT <?php echo implode(" ", $extent) . "\n" ?>
         SIZE 2000 1500
         MAXSIZE 16384
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
@@ -109,7 +100,7 @@ class Mapfile extends \app\inc\Controller
         "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
         "wms_enable_request" "*"
         "ows_encoding" "UTF-8"
-        "wms_extent" "<?php echo implode(" ", $this->extent) ?>"
+        "wms_extent" "<?php echo implode(" ", $extent) ?>"
         END
         END
 
@@ -335,18 +326,11 @@ class Mapfile extends \app\inc\Controller
         }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
-                if ($this->bbox) {
-                    $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']}})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
-                    $resultExtent = $postgisObject->execQuery($sql);
-                    if (!$postgisObject->PDOerror) {
-                        $rowExtent = $postgisObject->fetchRow($resultExtent);
-                        $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
-                    } else {
-                        $this->extent = [-180, -90, 180, 90];
-                    }
-                } else {
-                    $this->extent = [-180, -90, 180, 90];
-                }
+
+                $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+                $resultExtent = $postgisObject->execQuery($sql);
+                $rowExtent = $postgisObject->fetchRow($resultExtent);
+                $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
 
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
@@ -535,7 +519,7 @@ class Mapfile extends \app\inc\Controller
                 "ows_name"    "<?php echo $layerName; ?>"
                 "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
                 "wms_format"    "image/png"
-                "wms_extent" "<?php echo implode(" ", $this->extent) ?>"
+                "wms_extent" "<?php echo implode(" ", $extent) ?>"
                 "wms_enable_request"    "*"
                 "gml_include_items" "all"
                 "wms_include_items" "all"
@@ -938,18 +922,10 @@ class Mapfile extends \app\inc\Controller
         $postgisObject = new \app\inc\Model();
         $user = Connection::$param['postgisdb'];
 
-        if ($this->bbox) {
-            $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
-            $resultExtent = $postgisObject->execQuery($sql);
-            if (!$postgisObject->PDOerror) {
-                $row = $postgisObject->fetchRow($resultExtent);
-                $this->extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
-            } else {
-                $this->extent = [-180, -90, 180, 90];
-            }
-        } else {
-            $this->extent = [-180, -90, 180, 90];
-        }
+        $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
+        $resultExtent = $postgisObject->execQuery($sql);
+        $row = $postgisObject->fetchRow($resultExtent);
+        $extent = [$row["xmin"], $row["ymin"], $row["xmax"], $row["ymax"]];
 
         ob_start();
         ?>
@@ -959,7 +935,7 @@ class Mapfile extends \app\inc\Controller
         #
         NAME "<?php echo $user; ?>"
         STATUS on
-        EXTENT <?php echo implode(" ", $this->extent) . "\n" ?>
+        EXTENT <?php echo implode(" ", $extent) . "\n" ?>
         UNITS METERS
 
         OUTPUTFORMAT
@@ -1007,19 +983,14 @@ class Mapfile extends \app\inc\Controller
             return false;
         }
         while ($row = $postgisObject->fetchRow($result)) {
-            if ($this->bbox) {
+
+            if ($row['srid'] > 1) {
+
                 $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
                 $resultExtent = $postgisObject->execQuery($sql);
-                if (!$postgisObject->PDOerror) {
-                    $rowExtent = $postgisObject->fetchRow($resultExtent);
-                    $this->extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
-                } else {
-                    $this->extent = [-180, -90, 180, 90];
-                }
-            } else {
-                $this->extent = [-180, -90, 180, 90];
-            }
-            if ($row['srid'] > 1) {
+                $rowExtent = $postgisObject->fetchRow($resultExtent);
+                $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
                 $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_status");
@@ -1099,7 +1070,7 @@ class Mapfile extends \app\inc\Controller
                 "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "wfs_name"    "<?php echo $layerName; ?>"
                 "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
-                "wfs_extent" "<?php echo implode(" ", $this->extent) ?>"
+                "wfs_extent" "<?php echo implode(" ", $extent) ?>"
                 "gml_include_items" "all"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                 "gml_types" "auto"
