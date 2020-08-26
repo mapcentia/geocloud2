@@ -10,6 +10,7 @@ namespace app\models;
 
 use \app\conf\App;
 use \app\inc\Cache;
+use app\inc\Globals;
 use \app\inc\Session;
 
 
@@ -27,18 +28,14 @@ class Layer extends \app\models\Table
 
     private function clearCacheOnSchemaChanges()
     {
-        $arr = ["meta"];
-        foreach ($arr as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
-        }
+        $arr = ["meta", $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
     private function clearCacheOfColumns($relName)
     {
-        $arr = ["columns"];
-        foreach ($arr as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, $relName, $this->postgisdb]);
-        }
+        $arr = ["columns", $relName, $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
     /**
@@ -86,9 +83,6 @@ class Layer extends \app\models\Table
         $cacheId = $this->postgisdb . "_" . \app\inc\Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
 
         $CachedString = Cache::getItem($cacheId);
-
-        $timeToLive = (60 * 60 * 240);
-        //$timeToLive = (0.00000001); // disabled
 
         if ($CachedString != null && $CachedString->isHit()) {
             $data = $CachedString->get();
@@ -375,7 +369,7 @@ class Layer extends \app\models\Table
             }
 
             try {
-                $CachedString->set($response)->expiresAfter($timeToLive);//in seconds, also accepts Datetime
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                 $CachedString->addTags([$cacheType, $this->postgisdb]);
             } catch (\Error $exception) {
                 // Pass
