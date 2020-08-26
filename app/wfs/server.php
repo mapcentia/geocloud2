@@ -887,6 +887,8 @@ function doParse($arr)
     global $rowIdsChanged;
     global $logFile;
 
+    ob_start();
+
     $serializer_options = array(
         'indent' => '  ',
     );
@@ -1578,14 +1580,19 @@ function doParse($arr)
         }
     }
     $postgisObject->commit();
+
+    $data = ob_get_clean();
+    echo $data;
 }
 
 function makeExceptionReport($value)
 {
     global $sessionComment;
     global $postgisObject;
+
     ob_get_clean();
     ob_start();
+    header("HTTP/1.0 200 " . \app\inc\Util::httpCodeText("200"));
     //$postgisObject->rollback();
     echo '<ServiceExceptionReport
 	   version="1.2.0"
@@ -1605,7 +1612,6 @@ function makeExceptionReport($value)
     echo '</ServiceException>
 	</ServiceExceptionReport>';
     $data = ob_get_clean();
-    header("HTTP/1.0 200 " . \app\inc\Util::httpCodeText("200"));
     echo $data;
     print("\n" . $sessionComment);
     Log::write($data);
