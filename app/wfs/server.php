@@ -226,7 +226,6 @@ if (!$trusted) {
 }
 // End HTTP basic authentication
 
-print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
         $__u = explode(".", $property); // Is it "/" for get method?
@@ -292,6 +291,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
+        print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         if (empty($gmlFeatureCollection)) {
             $gmlFeatureCollection = "wfs:FeatureCollection";
         }
@@ -332,6 +332,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
  */
 function getCapabilities($postgisObject)
 {
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     global $srs;
     global $thePath;
     global $db;
@@ -350,6 +351,7 @@ function getCapabilities($postgisObject)
  */
 function getXSD($postgisObject)
 {
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     global $server;
     global $depth;
     global $db;
@@ -594,6 +596,8 @@ function doSelect($table, $sql, $sql2, $from)
     global $fieldConfArr;
     global $resultType;
     global $server;
+
+
 
     if (!$gmlFeature[$table]) {
         $gmlFeature[$table] = $table;
@@ -1149,6 +1153,8 @@ function doParse($arr)
             }
         }
     }
+
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 
     echo '<wfs:WFS_TransactionResponse version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs"
   xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
