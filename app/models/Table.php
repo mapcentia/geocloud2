@@ -134,11 +134,9 @@ class Table extends Model
 
     private function clearCacheOnSchemaChanges($relName = null)
     {
-        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
         $relName = $relName ?: $this->table;
-        foreach ($arr as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, $relName, $this->postgisdb]);
-        }
+        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables", $relName, $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
         Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
     }
 
@@ -325,7 +323,7 @@ class Table extends Model
         while ($row = $this->fetchRow($result, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $arr = [];
-            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup']  : $_SESSION['screen_name'];
+            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
             if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema'])
                 || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
