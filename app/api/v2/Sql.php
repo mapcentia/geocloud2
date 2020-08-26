@@ -280,18 +280,6 @@ class Sql extends \app\inc\Controller
     private function transaction(string $sql, string $clientEncoding = null)
     {
         $response = [];
-        if (strpos($sql, ';') !== false) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "You can't use ';'. Use the bulk transaction API instead";
-            return serialize($this->response);
-        }
-        if (strpos($sql, '--') !== false) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "SQL comments '--' are not allowed";
-            return serialize($this->response);
-        }
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
         try {
             $parser = new \PHPSQLParser($sql, false);
