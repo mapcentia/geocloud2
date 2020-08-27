@@ -1,0 +1,13 @@
+# Password for the gc2 Postgresql user
+GC2_HOST=postgis
+GC2_DATABASE=postgres
+GC2_USER=gc2
+GC2_PORT=5432
+GC2_PASSWORD=1234
+GC2_BOUNCER=false
+
+# Wanted timezone in database
+TIMEZONE=CET
+
+# Wanted locale in database
+LOCALE=en_US.UTF-8
