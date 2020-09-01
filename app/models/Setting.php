@@ -19,11 +19,10 @@ class Setting extends Model
         parent::__construct();
     }
 
-    private function clearCacheOnSchemaChanges() {
-        $arr = ["settings"];
-        foreach ($arr as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
-        }
+    private function clearCacheOnSchemaChanges()
+    {
+        // We clear all cache, because it can take long time to clear by tag
+        Cache::clear();
     }
 
     /**
@@ -309,8 +308,9 @@ class Setting extends Model
         return $response;
     }
 
-    public function getApiKeyForSuperUser(){
-        return  $this->getArray()->api_key;
+    public function getApiKeyForSuperUser()
+    {
+        return $this->getArray()->api_key;
     }
 
     /**

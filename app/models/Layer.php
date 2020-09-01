@@ -28,14 +28,14 @@ class Layer extends \app\models\Table
 
     private function clearCacheOnSchemaChanges()
     {
-        $arr = ["meta", $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        // We clear all cache, because it can take long time to clear by tag
+        Cache::clear();
     }
 
     private function clearCacheOfColumns($relName)
     {
-        $arr = ["columns", $relName, $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        // We clear all cache, because it can take long time to clear by tag
+        Cache::clear();
     }
 
     /**

@@ -134,10 +134,8 @@ class Table extends Model
 
     private function clearCacheOnSchemaChanges($relName = null)
     {
-        $relName = $relName ?: $this->table;
-        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables", $relName, $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
-        Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
+        // We clear all cache, because it can take long time to clear by tag
+        Cache::clear();
     }
 
     /**
