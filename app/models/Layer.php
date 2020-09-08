@@ -46,16 +46,17 @@ class Layer extends \app\models\Table
      */
     public function getValueFromKey(string $_key_, string $column)
     {
-        if (isset(self::$recordStore[$_key_])) {
-            return self::$recordStore[$_key_];
+        if (isset(self::$recordStore[$_key_][$column])) {
+            return self::$recordStore[$_key_][$column];
         }
         $rows = $this->getRecords();
         $rows = $rows['data'];
         foreach ($rows as $row) {
             foreach ($row as $field => $value) {
                 if ($field == "_key_" && $value == $_key_) {
-                    self::$recordStore[$_key_] = $row[$column];
-                    return (self::$recordStore[$_key_]);
+                    self::$recordStore[$_key_][$column] = $row[$column];
+                    print_r(self::$recordStore);
+                    return (self::$recordStore[$_key_][$column]);
                 }
             }
         }
