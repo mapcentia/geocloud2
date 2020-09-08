@@ -227,7 +227,7 @@ class Tilecache extends \app\inc\Controller
         return $response;
     }
 
-    private function deleteFromTileset($layerName)
+    private static function deleteFromTileset($layerName)
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());
