@@ -85,7 +85,6 @@ class Sql extends \app\inc\Controller
         $r = func_get_arg(0);
 
 
-
         $db = $r["user"];
         $dbSplit = explode("@", $db);
 
@@ -128,7 +127,7 @@ class Sql extends \app\inc\Controller
             );
         }
 
-        if (Input::get('format') == "ndjson" ) {
+        if (Input::get('format') == "ndjson") {
             $this->streamFlag = true;
         }
 
@@ -178,8 +177,22 @@ class Sql extends \app\inc\Controller
      */
     public function post_index(): array
     {
+        $r = func_get_arg(0);
+
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $this->subUser = $dbSplit[0];
+                $this->db = $dbSplit[1];
+            } elseif (!empty($_SESSION["subuser"])) {
+                $this->subUser = $_SESSION["screen_name"];
+                $this->db = Session::getDatabase();
+            } else {
+                $this->subUser = null;
+                $this->db = $db;
+            }
 
             // Set API key from headers
             Input::setParams(
@@ -201,8 +214,18 @@ class Sql extends \app\inc\Controller
             $this->api->connect();
             $this->apiKey = $res['data']->api_key;
 
+
+            if (empty(Input::getBody())) {
+                return [
+                    "success" => false,
+                    "message" => "Empty text body",
+                    "code" => "400"
+                ];
+            }
+
             $sqls = explode("\n", Input::getBody());
             $this->api->begin(); // Start transaction
+            $res = [];
             foreach ($sqls as $q) {
                 $this->q = $q;
                 if ($this->q != "") {
@@ -217,7 +240,7 @@ class Sql extends \app\inc\Controller
             return $res;
 
         } else {
-            return $this->get_index(func_get_arg(0));
+            return $this->get_index($r);
         }
     }
 
@@ -406,7 +429,7 @@ class Sql extends \app\inc\Controller
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            $key = md5(\app\conf\Connection::$param["postgisdb"]. "_" . $this->q . "_" . $lifetime);
+            $key = md5(\app\conf\Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
 
             if ($lifetime > 0) {
                 $CachedString = Cache::getItem($key);

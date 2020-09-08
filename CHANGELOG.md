@@ -33,6 +33,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.
 - app/phpfastcache dir added with .gitignore file.
+- SQL Bulk API now works with sub-user.
 
 ## [2020.5.0]
 ### Added
