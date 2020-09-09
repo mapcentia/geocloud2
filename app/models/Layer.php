@@ -55,7 +55,6 @@ class Layer extends \app\models\Table
             foreach ($row as $field => $value) {
                 if ($field == "_key_" && $value == $_key_) {
                     self::$recordStore[$_key_][$column] = $row[$column];
-                    print_r(self::$recordStore);
                     return (self::$recordStore[$_key_][$column]);
                 }
             }
