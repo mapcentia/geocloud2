@@ -7,7 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED]
 ### Added
 - OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.
-- Settings in `\app\confApp.php` for PostgreSQL settings:
+- Settings in `\app\conf\App.php` for PostgreSQL settings:
 ```php
 [
     "SqlApiSettings" => [
@@ -17,7 +17,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ];
 ```
 - New `Autocomplete` boolean property in Structure tab. This will instruct Vidi in activating autocomplete in filtering for the specific field.
-- The User API has now full suport (create, read and update) of the `properties` field in the user object. This field can be used to added custom properties to a (sub)user.
+- The User API has now full support (create, read and update) of the `properties` field in the user object. This field can be used to added custom properties to a (sub)user.
+- New table in the `mapcentia` database called `logins`. Each login wil be stamped in this table with database, user and timestamp.
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
@@ -37,7 +38,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2020.5.0]
 ### Added
-- Limits for SQL API can now be set in `\app\confApp.php` like this: (`sqlJson` will also set limit for CSV)
+- Limits for SQL API can now be set in `\app\conf\App.php` like this: (`sqlJson` will also set limit for CSV)
 ```php
 [
     "limits" => [
@@ -69,7 +70,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 
 ### Fixed
 - In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
-- Timeouts in both Scheduler client and server is removed.
+- Timeouts in both Scheduler client and server are removed.
 - Bugs regarding http basic auth of sub-users in WMS.
 
 ## [2020.2.0]

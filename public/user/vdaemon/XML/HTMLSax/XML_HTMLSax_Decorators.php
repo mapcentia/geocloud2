@@ -51,7 +51,7 @@ class XML_HTMLSax_Trim {
     * @param string original handler method
     * @access protected
     */
-    function XML_HTMLSax_Trim(&$orig_obj, $orig_method) {
+    function __construct(&$orig_obj, $orig_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_method = $orig_method;
     }
@@ -99,7 +99,7 @@ class XML_HTMLSax_CaseFolding {
     * @param string original close handler method
     * @access protected
     */
-    function XML_HTMLSax_CaseFolding(&$orig_obj, $orig_open_method, $orig_close_method) {
+    function __construct(&$orig_obj, $orig_open_method, $orig_close_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_open_method = $orig_open_method;
         $this->orig_close_method = $orig_close_method;
@@ -149,7 +149,7 @@ class XML_HTMLSax_Linefeed {
     * @param string original handler method
     * @access protected
     */
-    function XML_HTMLSax_LineFeed(&$orig_obj, $orig_method) {
+    function __construct(&$orig_obj, $orig_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_method = $orig_method;
     }
@@ -191,7 +191,7 @@ class XML_HTMLSax_Tab {
     * @param string original handler method
     * @access protected
     */
-    function XML_HTMLSax_Tab(&$orig_obj, $orig_method) {
+    function __construct(&$orig_obj, $orig_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_method = $orig_method;
     }
@@ -234,7 +234,7 @@ class XML_HTMLSax_Entities_Parsed {
     * @param string original handler method
     * @access protected
     */
-    function XML_HTMLSax_Entities_Parsed(&$orig_obj, $orig_method) {
+    function __construct(&$orig_obj, $orig_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_method = $orig_method;
     }
@@ -286,7 +286,7 @@ class XML_HTMLSax_Entities_Unparsed {
     * @param string original handler method
     * @access protected
     */
-    function XML_HTMLSax_Entities_Unparsed(&$orig_obj, $orig_method) {
+    function __construct(&$orig_obj, $orig_method) {
         $this->orig_obj =& $orig_obj;
         $this->orig_method = $orig_method;
     }

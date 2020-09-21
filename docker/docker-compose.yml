@@ -33,11 +33,16 @@ services:
     image: mapcentia/gc2core:gdal
     depends_on:
       - ecw
+  mapserver:
+    build: ./mapserver
+    image: mapcentia/gc2core:mapserver
+    depends_on:
+      - gdal
   gc2core:
     build: ./stable
     image: mapcentia/gc2core
     depends_on:
-      - gdal
+      - mapserver
     privileged: true
     volumes:
       - ../../geocloud2:/var/www/geocloud2

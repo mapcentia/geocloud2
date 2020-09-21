@@ -10,6 +10,7 @@ namespace app\models;
 
 use \app\inc\Model;
 use \app\conf\App;
+use app\inc\Util;
 use \Firebase\JWT\JWT;
 
 class Session extends Model
@@ -159,12 +160,24 @@ class Session extends Model
                 $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
                 $token = \app\inc\Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
                 return [
-                  "access_token" =>  $token['token'],
-                  "token_type" =>  "bearer",
-                  "expires_in" =>  $token["ttl"],
-                  "refresh_token" =>  "",
-                  "scope" =>  "",
+                    "access_token" => $token['token'],
+                    "token_type" => "bearer",
+                    "expires_in" => $token["ttl"],
+                    "refresh_token" => "",
+                    "scope" => "",
                 ];
+            }
+            // Insert into logins
+            //die(Util::clientIp());
+            $sql = "INSERT INTO logins (db, \"user\") VALUES(:parentDb, :sUserID)";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute([
+                    ":sUserID" => $sUserID,
+                    ":parentDb" => $parentdb
+                ]);
+            } catch (\PDOException $e) {
+                // We do not stop login in case of error
             }
         } else {
             if (!$tokenOnly) { //NOT OAuth
@@ -180,7 +193,6 @@ class Session extends Model
                 ];
             }
         }
-
         return $response; // In case it's NOT OAuth
     }
 

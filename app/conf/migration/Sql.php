@@ -607,6 +607,13 @@ class Sql
         $sqls[] = "ALTER TABLE users DROP CONSTRAINT user_unique";
         $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname, parentdb)";
         $sqls[] = "ALTER TABLE users ADD COLUMN properties JSONB";
+        $sqls[] = "CREATE TABLE logins
+                    (
+                      id SERIAL NOT NULL,
+                      db VARCHAR(255) NOT NULL,
+                      \"user\" VARCHAR(255) NOT NULL,
+                      timestamp TIMESTAMP DEFAULT now() NOT NULL
+                    )";
         return $sqls;
     }
 
