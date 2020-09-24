@@ -21,8 +21,8 @@ RUN	mkdir -p /var/www/geocloud2/public/dashboard && mkdir /dashboardtmp && cd /d
     rm -R /dashboardtmp
 
 # Add the custom config files from the Docker repo.
-ADD conf/gc2/App.php /var/www/geocloud2/app/conf/
-ADD conf/gc2/Connection.php /var/www/geocloud2/app/conf/
+COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
+COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 # Add Supervisor config and run the deamon
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

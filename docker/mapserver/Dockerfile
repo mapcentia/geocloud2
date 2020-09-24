@@ -6,6 +6,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Set php session timeout to one day
 RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/7.3/fpm/php.ini
+# Set max upload file size
+RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 100M/g" /etc/php/7.3/fpm/php.ini
+RUN sed -i "s/post_max_size = 8M/post_max_size = 100M/g" /etc/php/7.3/fpm/php.ini
+
 
 # Install MapServer 7.6 from source
 RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
