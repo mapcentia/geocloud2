@@ -10,6 +10,8 @@ namespace app\models;
 
 use \app\conf\App;
 use \app\inc\Model;
+use \Postmark\PostmarkClient;
+use \Postmark\Models\PostmarkException;
 
 define('VDAEMON_PARSE', false);
 define('VD_E_POST_SECURITY', false);
@@ -266,6 +268,39 @@ class User extends Model
             return $response;
         }
 
+        // Start email notification
+        if (!empty(App::$param["signupNotification"])) {
+            $client = new PostmarkClient(App::$param["signupNotification"]["key"]);
+            $messages = [];
+            // For the new user
+            $messages[] = [
+                'To' => $email,
+                'From' => App::$param["signupNotification"]["user"]["from"],
+                'TrackOpens' => false,
+                'Subject' => App::$param["signupNotification"]["user"]["subject"],
+                'HtmlBody' => App::$param["signupNotification"]["user"]["htmlBody"],
+            ];
+            // Notification of others
+            if (!empty(App::$param["signupNotification"]["others"])) {
+                $messages[] = [
+                    'Bcc' => implode(",", App::$param["signupNotification"]["others"]["bcc"]),
+                    'From' => App::$param["signupNotification"]["others"]["from"],
+                    'TrackOpens' => false,
+                    'Subject' => App::$param["signupNotification"]["others"]["subject"],
+                    'HtmlBody' => "<body><div>{$userId} : {$email}</div></body>",
+                ];
+            }
+
+            try {
+                $sendResult = $client->sendEmailBatch($messages);
+            } catch (PostmarkException $ex) {
+//                echo $ex->httpStatusCode . "\n";
+//                echo $ex->postmarkApiErrorCode . "\n";
+
+            } catch (Exception $generalException) {
+//                 A general exception is thown if the API
+            }
+        }
         $row["properties"] = json_decode($row["properties"]);
         $response['success'] = true;
         $response['message'] = 'User was created';

@@ -19,6 +19,27 @@ and this project adheres to [CalVer](https://calver.org/).
 - New `Autocomplete` boolean property in Structure tab. This will instruct Vidi in activating autocomplete in filtering for the specific field.
 - The User API has now full support (create, read and update) of the `properties` field in the user object. This field can be used to added custom properties to a (sub)user.
 - New table in the `mapcentia` database called `logins`. Each login wil be stamped in this table with database, user and timestamp.
+- Email notification for new users and for a list of predefined emails. The email body for others contains username and email of the new user. "Others" can be omitted. Add this to `\app\conf\App.php`:
+```php
+[
+    "signupNotification" => [
+                "key" => "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx", // Postmark key. Only email service supported for now
+                "user" => [
+                    "from" => "info@mapcentia.com",
+                    "subject" => "Welcome to GC2!",
+                    "htmlBody" => "<body>Welcome to GC2!</body>",
+                ],
+                "others" => [
+                    "bcc" => [
+                        "mh@example.com",
+                        "info@mapcentia.com",
+                    ],
+                    "from" => "info@mapcentia.com",
+                    "subject" => "New user has signed up",
+                ]
+            ]
+];
+```
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
