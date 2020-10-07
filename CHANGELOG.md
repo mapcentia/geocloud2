@@ -51,6 +51,8 @@ and this project adheres to [CalVer](https://calver.org/).
 - It's now possible to create a subuser with an unauthenticated client. The property `allowUnauthenticatedClientsToCreateSubUsers` must be set to `true` in `\app\conf\App.php`
 - Legend API is now using MapScript, which is much faster for creation of legend icons. PHP MapScript is needed.
 - In MapFiles the `wfs_extent` and `wms_extent` will always be set from the GC2 schema extent instead of leaving these properties out and let MapServer calculate the extent. The latter can be very inefficient.
+- A WMS request can now have a parameter called `labels`, which can be either `true` or `false`. If `false` the labels will be switched off Mapserver and QGIS backed layers.
+- A WMS request can now have a `qgs` parameter for QGIS backed layers. The value is the path to the qgs file for the layer (base64 encoded). The path will be used to send the request directly to qgis_serv instead of cascading it through MapServer. Used by Vidi.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.

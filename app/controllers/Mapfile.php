@@ -720,9 +720,10 @@ class Mapfile extends \app\inc\Controller
                         END # style
 
                         #TEMPLATE "ttt"
-
-                        #LABEL
                         <?php if (!empty($class['label'])) { ?>
+
+#START_LABEL1_<?php echo $layerName . "\n" ?>
+
                             LABEL
                             <?php if (!empty($class['label_text'])) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
                             TYPE truetype
@@ -800,10 +801,12 @@ class Mapfile extends \app\inc\Controller
                             }
                             ?>
                             END # STYLE
-                            END #Label
+                            END
+#END_LABEL1_<?php echo $layerName . "\n" ?>
                         <?php } ?>
                         #LABEL2
                         <?php if (!empty($class['label2'])) { ?>
+#START_LABEL2_<?php echo $layerName . "\n" ?>
                             LABEL
                             <?php if (!empty($class['label2_text'])) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
@@ -880,7 +883,9 @@ class Mapfile extends \app\inc\Controller
                             }
                             ?>
                             END # STYLE
-                            END #Label
+                            END
+#END_LABEL2_<?php echo $layerName . "\n" ?>
+
                         <?php } ?>
 
                         <?php if (!empty($class['leader'])) { ?>
