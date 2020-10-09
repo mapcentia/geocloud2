@@ -287,7 +287,10 @@ class User extends Model
                     'From' => App::$param["signupNotification"]["others"]["from"],
                     'TrackOpens' => false,
                     'Subject' => App::$param["signupNotification"]["others"]["subject"],
-                    'HtmlBody' => "<body><div>{$userId} : {$email}</div></body>",
+                    'HtmlBody' => "<p>
+                                        Navn: {$userId}<br>
+                                        E-mail: {$email}
+                                   </p>",
                 ];
             }
 
