@@ -94,7 +94,9 @@ class Wms extends \app\inc\Controller
             $this->service = strtolower($arr["service"]);
 
             $typeName = !empty($arr["wfs:Query"]["typeName"]) ? $arr["wfs:Query"]["typeName"] : $arr["Query"]["typeName"];
-
+            if (empty($typeName)) {
+                $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
+            }
             if (empty($typeName)) {
                 \app\wfs\ServiceException::report("Could not get the typeName from the requests");
                 exit();
