@@ -732,6 +732,11 @@ class Elasticsearch extends \app\inc\Controller
         return $this->put_upsert();
     }
 
+    public function get_delete()
+    {
+        return $this->delete_delete();
+    }
+
     public function post_search()
     {
         return $this->get_search(func_get_arg(0));
