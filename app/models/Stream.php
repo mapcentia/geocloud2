@@ -44,7 +44,8 @@ class Stream extends Model
     {
         $i = 0;
         $geometries = null;
-        $features = [];
+        $bulkSize = 1000;
+        $json = "";
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
@@ -101,20 +102,27 @@ class Stream extends Model
                 }
 
                 if ($geometries == null) {
-                    $features[] = array("type" => "Feature", "properties" => $arr);
+                    $features = array("type" => "Feature", "properties" => $arr);
                 } elseif (count($geometries) == 1) {
-                    $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
                 } else {
-                    $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
                 }
                 $geometries = null;
 
-                $json = json_encode($features);
-                echo str_pad($json, 4096) . "\n";
+                $json .= json_encode($features);
+                $json .= "\n";
+                $i++;
+                if (is_int($i/$bulkSize)) {
+                    echo str_pad($json, 4096);
+                    $json = "";
+                }
                 flush();
                 ob_flush();
-                $i++;
             }
+            if ($json) {
+                echo str_pad($json, 4096);
+            };
             $this->execQuery("CLOSE curs");
             $this->commit();
 
