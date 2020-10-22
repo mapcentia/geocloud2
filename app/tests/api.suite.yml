@@ -6,4 +6,3 @@ modules:
         - REST:
             url: http://localhost:80
             depends: PhpBrowser
-            part: Json
