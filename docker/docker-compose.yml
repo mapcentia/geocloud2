@@ -1,18 +1,3 @@
-#
-# This Docker-compose is for deploying GC2 and Vidi in a test environment.
-# It will expose GC2 on port 8080 and Vidi on 3000
-# PostgreSQL password is set to 12345
-#
-# The run following command to deploy:
-#
-# $ docker-compose up
-#
-# There will be created named volumes for persistence.
-#
-# 'docker-compose down' will not remove data
-# 'docker-compose down -v' will remove the volumes!!!
-#
-
 version: '3.3'
 
 networks:
