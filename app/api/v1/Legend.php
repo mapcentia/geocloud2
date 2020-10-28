@@ -42,10 +42,11 @@ class Legend extends Controller
                 }
             }
             foreach ($newLayerNames as $layerName) {
-                $splitName = explode(".", $layerName);
+                $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
+                $splitName = explode(".", $layerNameWithOutPrefix);
                 $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
                 $map = ms_newMapobj($path . $mapFile);
-                $layer = $map->getLayerByName($layerName);
+                $layer = $map->getLayerByName($layerNameWithOutPrefix);
                 if ($layer) {
 
                     $this->legendArr[$layerName]['title'] = $layer->getMetaData("ows_title");
