@@ -58,6 +58,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Bug in the scheduler get.php script regarding gridded download.
 - app/phpfastcache dir added with .gitignore file.
 - SQL Bulk API now works with sub-user.
+- Legend API will no longer fail if the client requests a vector representation of a layer (prefixed `v:`). The MapServer/QGIS Server legend will be returned.
 
 ## [2020.5.0]
 ### Added
