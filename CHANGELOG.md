@@ -53,6 +53,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - In MapFiles the `wfs_extent` and `wms_extent` will always be set from the GC2 schema extent instead of leaving these properties out and let MapServer calculate the extent. The latter can be very inefficient.
 - A WMS request can now have a parameter called `labels`, which can be either `true` or `false`. If `false` the labels will be switched off Mapserver and QGIS backed layers.
 - A WMS request can now have a `qgs` parameter for QGIS backed layers. The value is the path to the qgs file for the layer (base64 encoded). The path will be used to send the request directly to qgis_serv instead of cascading it through MapServer. Used by Vidi.
+- The Keyvalue API will output newest keys. The field `id` is ordered DESC.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.

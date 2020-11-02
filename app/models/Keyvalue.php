@@ -56,6 +56,8 @@ class Keyvalue extends Model
             $sql .= " AND {$parsedFilter}";
         }
 
+        $sql .= " ORDER BY id DESC"; // Newest first in output
+
         if (strpos($sql, ';') !== false) {
             $response['success'] = false;
             $response['code'] = 403;
