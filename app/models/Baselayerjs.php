@@ -41,6 +41,7 @@ class Baselayerjs extends \app\inc\Controller
         $settingsRawJSON .= "\"hereApp\": " . (!empty(App::$param['hereApp']) ? json_encode(App::$param['hereApp']) : "null") . ",\n";
         $settingsRawJSON .= "\"vidiUrl\": " . (!empty(App::$param['vidiUrl']) ? json_encode(App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
         $settingsRawJSON .= "\"subDomainsForTiles\": " . (!empty(App::$param['subDomainsForTiles']) ? json_encode(App::$param['subDomainsForTiles']) : "null") . ",\n";
+        $settingsRawJSON .= "\"colorPalette\": " . (!empty(App::$param['colorPalette']) ? json_encode(App::$param['colorPalette']) : "null") . ",\n";
         if ($settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $settingsRawJSON .= "\"es_settings\": " . $settings . ",\n";
         }

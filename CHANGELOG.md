@@ -40,6 +40,14 @@ and this project adheres to [CalVer](https://calver.org/).
             ]
 ];
 ```
+- The color palettes in the GUI can now be customized in `app/conf/App.php`. Add something like this:
+```php
+[
+    "colorPalette" => [
+        "fab400", "999a9a", "2a6d42", "b2d235", "1a506d", "0072bb", "67B15B", "0276ba"
+    ]
+];
+``` 
 
 ### Changed
 - Updated PhpFastCache to V8, so PHP 7.3+ is required.
