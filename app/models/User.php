@@ -204,6 +204,7 @@ class User extends Model
 
         // Check if such email already exists in the database - there can not be two super-user with the same email,
         // but there can be tow sub-users with the same email in different databases
+        // TODO use parentDb instead of $this->userID if allowUnauthenticatedClientsToCreateSubUsers and no session is started
         if (empty($this->userId)) {
             $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email'";
         } else {
