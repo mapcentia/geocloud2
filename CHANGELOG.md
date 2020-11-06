@@ -62,6 +62,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - A WMS request can now have a parameter called `labels`, which can be either `true` or `false`. If `false` the labels will be switched off Mapserver and QGIS backed layers.
 - A WMS request can now have a `qgs` parameter for QGIS backed layers. The value is the path to the qgs file for the layer (base64 encoded). The path will be used to send the request directly to qgis_serv instead of cascading it through MapServer. Used by Vidi.
 - The Keyvalue API will output newest keys. The field `id` is ordered DESC.
+- QOL: Added 'Z'-types of geometries when creating a layer from scratch.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.
